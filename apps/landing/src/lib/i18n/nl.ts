@@ -1,0 +1,1789 @@
+// Dutch translations for the Fluxby landing page
+
+export interface LandingTranslationKeys {
+  nav: {
+    features: string;
+    screenshots: string;
+    getStarted: string;
+  };
+  hero: {
+    title: string;
+    subtitle: string;
+    description: string;
+    getStarted: string;
+    scrollDown: string;
+  };
+  features: {
+    title: string;
+    titleHighlight: string;
+    subtitle: string;
+    items: Array<{
+      title: string;
+      description: string;
+    }>;
+  };
+  screenshots: {
+    title: string;
+    titleHighlight: string;
+    titleEnd: string;
+    subtitle: string;
+    items: Array<{
+      title: string;
+      description: string;
+      features: string[];
+    }>;
+  };
+  developer: {
+    badge: string;
+    title: string;
+    titleHighlight: string;
+    subtitle: string;
+    features: Array<{
+      title: string;
+      description: string;
+    }>;
+    endpointsTitle: string;
+    moreEndpoints: string;
+    viewDocs: string;
+    tryApp: string;
+  };
+  cta: {
+    title: {
+      part1: string;
+      highlight: string;
+      part2: string;
+    };
+    description: string;
+    getStarted: string;
+  };
+  footer: {
+    description: string;
+    product: {
+      title: string;
+      features: string;
+      pricing: string;
+      updates: string;
+      about: string;
+    };
+    support: {
+      title: string;
+      helpCenter: string;
+      developerDocs: string;
+      privacyPolicy: string;
+      termsOfService: string;
+    };
+    copyright: string;
+    github: string;
+  };
+  testimonials: {
+    title: string;
+    titleHighlight: string;
+    subtitle: string;
+    items: Array<{
+      name: string;
+      role: string;
+      content: string;
+      avatar: string;
+    }>;
+    stats: {
+      users: string;
+      usersLabel: string;
+      saved: string;
+      savedLabel: string;
+      rating: string;
+      ratingLabel: string;
+      countries: string;
+      countriesLabel: string;
+    };
+  };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  helpSection?: Record<string, any>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  docs?: Record<string, any>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  helpCenter?: Record<string, any>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  legal?: Record<string, any>;
+  errors: {
+    notFound: string;
+    notFoundDescription: string;
+    goHome: string;
+    goBack: string;
+  };
+  animations: {
+    dashboard: {
+      total: string;
+      categories: Record<string, string>;
+    };
+    transactions: {
+      date: string;
+      income: string;
+      categories: Record<string, string>;
+    };
+    categories: {
+      groups: Record<string, string>;
+      subcategories: Record<string, string>;
+    };
+    budgets: {
+      leftThisMonth: string;
+      spent: string;
+      budget: string;
+      remaining: string;
+      overBudget: string;
+      categories: Record<string, string>;
+    };
+    analytics: {
+      title: string;
+      month: string;
+      total: string;
+      income: string;
+      expenses: string;
+    };
+    import: {
+      dropzone: string;
+      or: string;
+      browse: string;
+      uploading: string;
+      processing: string;
+      detecting: string;
+      importing: string;
+      done: string;
+      transactionsImported: string;
+      dragHint: string;
+    };
+  };
+}
+
+export const nl: LandingTranslationKeys = {
+  // Navigation
+  nav: {
+    features: 'Functies',
+    screenshots: 'Screenshots',
+    getStarted: 'Aan de slag',
+  },
+
+  // Hero
+  hero: {
+    title: 'Ontmoet',
+    subtitle: 'je schattige financiële mascotte!',
+    description:
+      'Maak geldbeheer leuk met je eigen digitale mascotte. Volg uitgaven, stel doelen en krijg betere inzichten in je uitgaven!',
+    getStarted: 'Beginnen 🚀',
+    scrollDown: 'Scroll naar beneden',
+  },
+
+  // Features
+  features: {
+    title: 'Waarom kiezen voor',
+    titleHighlight: 'Fluxby',
+    subtitle:
+      'Meer dan alleen een financiële app - Fluxby is je financiële mascotte die geldbeheer heerlijk en stressvrij maakt.',
+    items: [
+      {
+        title: 'Slimme transactie tracking',
+        description:
+          'Categoriseer automatisch je uitgaven en inkomsten met AI-gestuurde herkenning. Fluxby leert je uitgavenpatronen en suggereert betere manieren om te sparen.',
+      },
+      {
+        title: 'Mooie analytics',
+        description:
+          'Prachtige grafieken die het begrijpen van je financiën leuk maken. Zie je geld groeien met interactieve visualisaties.',
+      },
+      {
+        title: 'Budget doelen',
+        description:
+          'Stel schattige budgetdoelen in met Fluxby die je aanmoedigt. Bekijk je voortgang met leuke animaties en feestelijke confetti.',
+      },
+      {
+        title: '100% lokaal & privé',
+        description:
+          'Je financiële data verlaat nooit je apparaat. Geen cloud, geen servers, geen tracking - alles blijft op je computer waar het thuishoort.',
+      },
+      {
+        title: 'Bank CSV import',
+        description:
+          'Exporteer eenvoudig transacties van je bank en importeer ze in Fluxby. Werkt met ING en meer banken komen binnenkort.',
+      },
+      {
+        title: 'Persoonlijke ervaring',
+        description:
+          "Pas Fluxby aan met verschillende thema's, avatars en meldingen. Maak financieel beheer uniek van jou.",
+      },
+    ],
+  },
+
+  // Screenshots
+  screenshots: {
+    title: 'Zie',
+    titleHighlight: 'Fluxby',
+    titleEnd: 'in actie',
+    subtitle:
+      'Mooie, intuïtieve interface ontworpen om financieel beheer leuk te maken voor iedereen.',
+    items: [
+      {
+        title: 'Dashboard overzicht',
+        description:
+          'Krijg een compleet beeld van je financiële gezondheid in één oogopslag. Zie je maandelijkse inkomsten, uitgaven en spaartrend met mooie visualisaties.',
+        features: [
+          'Realtime saldo updates',
+          'Maandelijkse inkomsten vs uitgaven grafiek',
+          'Recente transacties lijst',
+        ],
+      },
+      {
+        title: 'Transactie beheer',
+        description:
+          'Categoriseer en volg eenvoudig al je uitgaven en inkomsten. Slimme categorisatie helpt je uitgavenpatronen te begrijpen.',
+        features: [
+          'Auto-categorisatie',
+          'Zoeken en filteren',
+          'Bulk bewerking',
+        ],
+      },
+      {
+        title: 'Budget planning',
+        description:
+          'Stel je uitgavendoelen in en monitor ze met visuele voortgangsbalken. Blijf op koers en krijg meldingen wanneer je limieten nadert.',
+        features: [
+          'Aangepaste budget categorieën',
+          'Voortgang tracking',
+          'Uitgaven alerts',
+        ],
+      },
+      {
+        title: 'Analytics & inzichten',
+        description:
+          'Duik diep in je financiële data met uitgebreide analytics. Begrijp waar je geld naartoe gaat met categorie-indelingen.',
+        features: [
+          'Categorie cirkeldiagrammen',
+          'Trend analyse',
+          'Jaar-op-jaar vergelijking',
+        ],
+      },
+      {
+        title: 'Categorie beheer',
+        description:
+          'Maak en pas categorieën aan die passen bij je levensstijl. Wijs kleuren, iconen toe en stel automatische categorisatie regels in.',
+        features: [
+          'Aangepaste kleuren & iconen',
+          'Auto-categorisatie regels',
+          'Subcategorie ondersteuning',
+        ],
+      },
+      {
+        title: 'Eenvoudige CSV import',
+        description:
+          'Importeer je banktransacties in seconden. Sleep je ING CSV-export en Fluxby doet de rest.',
+        features: [
+          'Drag & drop upload',
+          'ING bank ondersteuning',
+          'Duplicaat detectie',
+        ],
+      },
+    ],
+  },
+
+  // Developer
+  developer: {
+    badge: 'Developer API',
+    title: 'Bouw met',
+    titleHighlight: 'Fluxby API',
+    subtitle:
+      'Krijg programmatisch toegang tot je financiële data. Maak aangepaste integraties, dashboards of automatiseer je workflows.',
+    features: [
+      {
+        title: 'RESTful API',
+        description:
+          'Schone REST endpoints voor alle data operaties. Transacties, categorieën, budgetten en analytics.',
+      },
+      {
+        title: 'OpenAPI/Swagger',
+        description:
+          'Interactieve API documentatie op /api/docs. Probeer endpoints direct in je browser.',
+      },
+      {
+        title: 'Eenvoudige integratie',
+        description:
+          'JSON responses, standaard HTTP methodes. Bouw aangepaste dashboards of automatiseringen.',
+      },
+    ],
+    endpointsTitle: 'API endpoints',
+    moreEndpoints: '... en 20+ meer endpoints',
+    viewDocs: 'Bekijk API docs',
+    tryApp: 'Probeer de app',
+  },
+
+  // Help Center Section (Landing)
+  helpSection: {
+    badge: 'Helpcentrum',
+    title: 'Hulp nodig?',
+    titleHighlight: 'We staan voor je klaar',
+    subtitle:
+      'Van startgidsen tot gedetailleerde API-documentatie, vind alles wat je nodig hebt om het meeste uit Fluxby te halen.',
+    avatarBadge: 'Hier om te helpen!',
+    cardTitle: 'Je vriendelijke gids voor Fluxby',
+    cardDescription:
+      'Of je nu net begint of op zoek bent naar geavanceerde tips, ons Helpcentrum heeft alles wat je nodig hebt. Blader door gidsen, leer over budgetteren of duik in de API.',
+    visitHelpCenter: 'Naar Helpcentrum',
+    viewApiDocs: 'API Docs',
+    features: [
+      {
+        title: 'Gebruikershandleiding',
+        description:
+          'Stap-voor-stap gidsen om je op weg te helpen en alle functies van Fluxby te leren beheersen.',
+      },
+      {
+        title: 'API Documentatie',
+        description:
+          'Complete API-referentie voor developers die integraties willen bouwen.',
+      },
+      {
+        title: 'Privacy & Beveiliging',
+        description:
+          'Leer hoe Fluxby je financiële data lokaal privé en veilig houdt.',
+      },
+    ],
+    quickLinks: 'Snelle links:',
+    linkBankConnection: 'Bank koppelen',
+    linkBudgeting: 'Budgetteren',
+    linkPrivacy: 'Privacy',
+  },
+
+  // CTA
+  cta: {
+    title: {
+      part1: 'Klaar om te zien',
+      highlight: 'waar',
+      part2: 'je geld naartoe gaat?',
+    },
+    description:
+      'Begin vandaag met Fluxby om transacties te volgen, uitgaven te categoriseren en te begrijpen waar je geld naartoe gaat — snel, privé en duidelijk.',
+    getStarted: 'Beginnen 🚀',
+  },
+
+  // Footer
+  footer: {
+    description:
+      'Fluxby is je persoonlijke financiële mascotte die geldbeheer leuk en stressvrij maakt. 100% lokaal, privé en schattig.',
+    product: {
+      title: 'Product',
+      features: 'Functies',
+      pricing: 'Prijzen',
+      updates: 'Updates',
+      about: 'Over',
+    },
+    support: {
+      title: 'Ondersteuning',
+      helpCenter: 'Helpcentrum',
+      developerDocs: 'Developer Docs',
+      privacyPolicy: 'Privacybeleid',
+      termsOfService: 'Gebruiksvoorwaarden',
+    },
+    copyright: '© Fluxby. Alle rechten voorbehouden.',
+    github: 'Bekijk op GitHub',
+  },
+  testimonials: {
+    title: 'Geliefd door',
+    titleHighlight: 'Iedereen',
+    subtitle:
+      'Sluit je aan bij duizenden blije gebruikers die hun relatie met geld hebben getransformeerd.',
+    items: [
+      {
+        name: 'Sarah Chen',
+        role: 'Freelance Designer',
+        content:
+          'Fluxby maakte het beheren van mijn freelance inkomsten zo leuk! De schattige animaties motiveren me echt om regelmatig mijn financiën te checken.',
+        avatar: '👩‍🎨',
+      },
+      {
+        name: 'Marcus Johnson',
+        role: 'Kleine Ondernemer',
+        content:
+          'Eindelijk een financiële app die niet als een verplichting voelt. De interface van Fluxby is prachtig en de inzichten zijn echt nuttig.',
+        avatar: '👨‍💼',
+      },
+      {
+        name: 'Emma Rodriguez',
+        role: 'Student',
+        content:
+          'Als iemand die een hekel had aan budgetteren, heeft Fluxby alles veranderd. De digitale mascotte maakt sparen belonend!',
+        avatar: '👩‍🎓',
+      },
+    ],
+    stats: {
+      users: '10K+',
+      usersLabel: 'Blije Gebruikers',
+      saved: '€2M+',
+      savedLabel: 'Geld Bespaard',
+      rating: '4.9⭐',
+      ratingLabel: 'App Store Score',
+      countries: '50+',
+      countriesLabel: 'Landen',
+    },
+  },
+  docs: {
+    badge: 'Docs',
+    backToHome: 'Terug naar Home',
+    swaggerDocs: 'Swagger Docs',
+    footerText: 'Gebouwd met ❤️ voor developers.',
+    nav: {
+      gettingStarted: 'Aan de slag',
+      introduction: 'Introductie',
+      authentication: 'Authenticatie',
+      profiles: 'Profielen & Multi-Tenancy',
+      errors: 'Foutafhandeling',
+      coreResources: 'Core Resources',
+      accounts: 'Rekeningen',
+      transactions: 'Transacties',
+      categories: 'Categorieën',
+      budgets: 'Budgetten',
+      analytics: 'Analytics',
+      addressBook: 'Adresboek',
+      import: 'Import',
+      data: 'Data beheer',
+      tools: 'Tools',
+      apiReference: 'Swagger Docs',
+      helpCenter: 'Helpcentrum',
+    },
+    // Introduction page
+    introduction: {
+      title: 'Fluxby API Documentatie',
+      subtitle:
+        'Bouw krachtige integraties met je financiële data. Krijg toegang tot transacties, categorieën, budgetten en analytics via onze RESTful API.',
+      quickStartTitle: 'Snel aan de slag',
+      quickStartText:
+        'Start binnen enkele minuten. De API draait lokaal op http://localhost:3001/api zonder authenticatie vereist voor lokale ontwikkeling.',
+      whatCanYouBuildTitle: 'Wat kun je bouwen?',
+      useCases: [
+        {
+          title: 'Custom Dashboards',
+          description:
+            'Bouw gepersonaliseerde financiële dashboards met je favoriete visualisatie library.',
+        },
+        {
+          title: 'Automatiseringen',
+          description:
+            'Maak scripts die automatisch transacties categoriseren of rapporten genereren.',
+        },
+        {
+          title: 'Mobiele Apps',
+          description:
+            'Bouw mobiele companion apps die synchroniseren met je Fluxby data.',
+        },
+        {
+          title: 'Notificaties',
+          description:
+            'Stel alerts in voor budgetlimieten, ongewone uitgaven of terugkerende betalingen.',
+        },
+      ],
+      makeFirstRequest: 'Maak je eerste request',
+      makeFirstRequestText:
+        'Hier is een eenvoudig voorbeeld om je dashboard statistieken op te halen:',
+      requestTitle: 'Request',
+      responseTitle: 'Response',
+      baseUrlTitle: 'Base URL',
+      baseUrlText: 'Alle API endpoints zijn relatief aan de base URL:',
+      nextStepsTitle: 'Volgende stappen',
+      nextSteps: [
+        'Leer over Authenticatie',
+        'Begrijp Profielen & Multi-Tenancy',
+        'Verken de Transacties API',
+      ],
+    },
+    // Authentication page
+    authentication: {
+      title: 'Authenticatie',
+      subtitle: 'Leer hoe je je API requests authenticeert met Fluxby.',
+      localNote: 'Lokale Ontwikkeling',
+      localNoteText:
+        'Fluxby draait volledig op je lokale machine. Er zijn geen API keys of OAuth flows nodig - neem simpelweg je Profiel ID op in requests.',
+      profileIdTitle: 'De Profiel ID gebruiken',
+      profileIdText:
+        'Alle API requests moeten de X-Profile-ID header bevatten. Dit identificeert welke profiel data je wilt benaderen.',
+      getProfileIdTitle: 'Je Profiel ID ophalen',
+      option1Title: 'Optie 1: Vanuit de App',
+      option1Text:
+        'Open Fluxby in je browser, ga naar Instellingen → Profiel, en kopieer je Profiel ID.',
+      option2Title: 'Optie 2: API Call',
+      option2Text: 'Lijst alle profielen via het profielen endpoint:',
+      errorHandlingTitle: 'Ontbrekende Profiel ID',
+      errorHandlingText:
+        'Als je de X-Profile-ID header niet opneemt, ontvang je een 401 foutmelding:',
+      errorResponse: 'Foutmelding Response',
+    },
+    // Profiles page
+    profiles: {
+      title: 'Profielen & Multi-Tenancy',
+      subtitle:
+        'Beheer meerdere financiële profielen voor verschillende doeleinden - persoonlijk, zakelijk of project-gebaseerde tracking.',
+      useCaseTitle: 'Toepassingen',
+      useCase1: 'Scheid persoonlijke en zakelijke financiën',
+      useCase2: 'Volg uitgaven voor specifieke projecten',
+      useCase3: 'Beheer financiën voor meerdere gezinsleden',
+      howItWorksTitle: 'Hoe Multi-Tenancy werkt',
+      howItWorksText:
+        'Elk profiel fungeert als een volledig geïsoleerde omgeving. Transacties, categorieën, budgetten en analytics zijn allemaal gebonden aan een specifiek profiel.',
+      isolation: 'Data Isolatie',
+      isolationDesc:
+        'Elk profiel heeft zijn eigen transacties, categorieën en budgetten.',
+      switching: 'Makkelijk Wisselen',
+      switchingDesc:
+        'Wissel tussen profielen door de X-Profile-ID header aan te passen.',
+      customization: 'Volledige Aanpassing',
+      customizationDesc:
+        'Elk profiel kan verschillende categorieën, budgetten en instellingen hebben.',
+      listProfilesTitle: 'Profielen Ophalen',
+      listProfilesText: 'Haal alle profielen op om te zien wat beschikbaar is:',
+      createProfileTitle: 'Profiel Aanmaken',
+      createProfileText:
+        'Maak een nieuw profiel aan met een naam en type (personal of business):',
+      profileTypesTitle: 'Profiel Types',
+      tableType: 'Type',
+      tableDescription: 'Beschrijving',
+      personalDesc:
+        'Voor het bijhouden van persoonlijke financiën, huishoudelijke uitgaven en spaardoelen.',
+      businessDesc:
+        'Voor freelance inkomsten, zakelijke uitgaven en project-gebaseerde tracking.',
+      profileTypes: [
+        {
+          type: 'personal',
+          description: 'Persoonlijke financiën',
+          emoji: '👤',
+        },
+        {
+          type: 'business',
+          description: 'Zakelijke/freelance financiën',
+          emoji: '💼',
+        },
+        {
+          type: 'shared',
+          description: 'Gezamenlijke/huishouden financiën',
+          emoji: '👥',
+        },
+        { type: 'savings', description: 'Spaardoelen tracking', emoji: '🎯' },
+        {
+          type: 'investing',
+          description: "Beleggingsportfolio's",
+          emoji: '📈',
+        },
+      ],
+      endpointsTitle: 'Profiel Endpoints',
+      listProfiles: 'Lijst alle profielen',
+      createProfile: 'Maak nieuw profiel',
+      getProfile: 'Haal profiel op op ID',
+      updateProfile: 'Update profiel',
+      deleteProfile: 'Verwijder profiel',
+      switchProfile: 'Wissel actief profiel',
+      exampleTitle: 'Voorbeeld: Maak een Profiel',
+      requestTitle: 'Request',
+      responseTitle: 'Response',
+      dataIsolationTitle: 'Data Isolatie',
+      dataIsolationText: 'Elk profiel bevat zijn eigen:',
+      dataIsolationItems: [
+        'Bankrekeningen',
+        'Transacties',
+        'Categorieën en auto-categorisatie regels',
+        'Budgetten',
+        'Adresboek contacten',
+      ],
+      dataIsolationNote:
+        'Data wordt nooit gedeeld tussen profielen. Het verwijderen van een profiel verwijdert permanent alle bijbehorende data.',
+    },
+    // Errors page
+    errors: {
+      title: 'Foutafhandeling',
+      subtitle:
+        'Leer hoe je fouten van de Fluxby API interpreteert en afhandelt.',
+      httpStatusTitle: 'HTTP Status Codes',
+      httpStatusText: 'De API gebruikt standaard HTTP status codes:',
+      statusCodes: [
+        { code: '200', description: 'OK - Request succesvol' },
+        { code: '201', description: 'Created - Resource succesvol aangemaakt' },
+        {
+          code: '400',
+          description: 'Bad Request - Ongeldige request parameters',
+        },
+        { code: '404', description: 'Not Found - Resource niet gevonden' },
+        {
+          code: '500',
+          description: 'Internal Server Error - Er ging iets mis',
+        },
+      ],
+      errorResponseTitle: 'Fout Response Formaat',
+      errorResponseText:
+        'Wanneer een fout optreedt, retourneert de API een JSON response met details:',
+      commonErrorsTitle: 'Veelvoorkomende Fouten',
+      invalidProfileTitle: 'Ongeldig Profiel ID',
+      invalidProfileText:
+        'Dit treedt op wanneer de X-Profile-ID header een ID bevat dat niet bestaat.',
+      missingFieldsTitle: 'Verplichte Velden Ontbreken',
+      missingFieldsText:
+        'Dit treedt op wanneer verplichte velden niet zijn opgegeven in de request body.',
+      resourceNotFoundTitle: 'Resource Niet Gevonden',
+      resourceNotFoundText:
+        'Dit treedt op wanneer je een resource probeert te benaderen die niet bestaat.',
+      bestPracticesTitle: 'Best Practices',
+      bestPractices: [
+        'Controleer altijd de HTTP status code voordat je de response body parsed',
+        'Implementeer retry logica voor 5xx fouten',
+        'Log foutdetails voor debugging doeleinden',
+        'Toon gebruikersvriendelijke foutmeldingen aan eindgebruikers',
+      ],
+    },
+    // Accounts page
+    accounts: {
+      title: 'Rekeningen',
+      subtitle:
+        'Beheer je bankrekeningen. Elke rekening houdt een saldo bij en is gekoppeld aan transacties.',
+      endpointsTitle: 'Rekening Endpoints',
+      endpoints: {
+        list: 'Lijst alle rekeningen',
+        create: 'Maak nieuwe rekening',
+        get: 'Haal rekening op op ID',
+        update: 'Update rekening',
+        delete: 'Verwijder rekening',
+        reorder: 'Verander rekening volgorde',
+      },
+      accountObjectTitle: 'Het Rekening Object',
+      fieldsTitle: 'Velden',
+      fields: {
+        id: 'Unieke identifier',
+        iban: 'IBAN rekeningnummer',
+        name: 'Display naam',
+        type: 'Rekening type (checking, savings, credit)',
+        currentBalance: 'Huidig saldo',
+        sortOrder: 'Display volgorde',
+        createdAt: 'Aanmaak timestamp',
+      },
+      createAccountTitle: 'Maak een Rekening',
+      requestTitle: 'Request',
+      responseTitle: 'Response',
+      accountTypesTitle: 'Rekening Types',
+      accountTypes: [
+        { type: 'checking', description: 'Standaard betaalrekening' },
+        { type: 'savings', description: 'Spaarrekening' },
+        { type: 'credit', description: 'Creditcard rekening' },
+      ],
+      deleteTitle: 'Verwijder rekening',
+      deleteText:
+        'Verwijder een rekening. Transacties gekoppeld aan deze rekening blijven behouden maar worden ontkoppeld.',
+      noteTitle: 'Opmerking',
+      noteText:
+        'Het verwijderen van een enkele rekening behoudt de transacties. Om alle rekeningen EN hun transacties te verwijderen, gebruik DELETE /api/accounts zonder ID.',
+    },
+    // Transactions page
+    transactions: {
+      title: 'Transacties',
+      subtitle:
+        'Het hart van Fluxby. Transacties representeren inkomsten en uitgaven gekoppeld aan je rekeningen.',
+      endpointsTitle: 'Transactie Endpoints',
+      endpoints: {
+        list: 'Lijst transacties (met filters)',
+        get: 'Haal transactie op op ID',
+        update: 'Update transactie',
+        delete: 'Verwijder transactie',
+        deleteAll: 'Verwijder alle transacties',
+      },
+      transactionObjectTitle: 'Het Transactie Object',
+      fieldsTitle: 'Velden',
+      fields: {
+        id: 'Unieke identifier',
+        accountId: 'Gekoppelde rekening ID',
+        date: 'Transactie datum',
+        amount: 'Bedrag (positief = inkomsten, negatief = uitgaven)',
+        description: 'Transactie omschrijving',
+        opposingAccountIban: 'Tegenrekening IBAN',
+        opposingAccountName: 'Tegenrekening naam',
+        categoryId: 'Gekoppelde categorie ID',
+        type: 'Type: income of expense',
+        notes: 'Gebruiker notities',
+      },
+      filteringTitle: 'Transacties Filteren',
+      filteringText:
+        'Het GET /api/transactions endpoint ondersteunt uitgebreide filtering:',
+      filterParams: {
+        accountId: 'Filter op rekening',
+        categoryId: 'Filter op categorie',
+        startDate: 'Transacties vanaf datum',
+        endDate: 'Transacties tot datum',
+        type: 'Filter op type (income/expense)',
+        search: 'Zoek in omschrijving',
+        minAmount: 'Minimum bedrag',
+        maxAmount: 'Maximum bedrag',
+      },
+      exampleTitle: 'Voorbeeld: Gefilterde Transacties',
+      requestTitle: 'Request',
+      responseTitle: 'Response',
+      updateTitle: 'Een Transactie Updaten',
+      updateText:
+        'Je kunt de categorie, notities en bepaalde velden van een transactie updaten:',
+    },
+    // Categories page
+    categories: {
+      title: 'Categorieën',
+      subtitle:
+        'Organiseer transacties met aangepaste categorieën. Stel automatische categorisatie regels in om transacties automatisch te taggen.',
+      endpointsTitle: 'Categorie Endpoints',
+      endpoints: {
+        list: 'Lijst alle categorieën',
+        create: 'Maak nieuwe categorie',
+        get: 'Haal categorie op op ID',
+        update: 'Update categorie',
+        delete: 'Verwijder categorie',
+      },
+      categoryObjectTitle: 'Het Categorie Object',
+      fieldsTitle: 'Velden',
+      fields: {
+        id: 'Unieke identifier',
+        name: 'Categorie naam',
+        icon: 'Emoji icoon',
+        color: 'Hex kleur code',
+        description: 'Optionele beschrijving',
+      },
+      createCategoryTitle: 'Maak een Categorie',
+      requestTitle: 'Request',
+      responseTitle: 'Response',
+      autoCategorizationTitle: 'Auto-categorisatie Regels',
+      autoCategorizationText:
+        'Stel regels in om transacties automatisch te categoriseren gebaseerd op patronen:',
+      ruleEndpoints: {
+        list: 'Lijst alle regels',
+        create: 'Maak nieuwe regel',
+        delete: 'Verwijder regel',
+        apply: 'Pas regel toe op bestaande transacties',
+        applyAll: 'Pas alle regels toe',
+      },
+      ruleExampleTitle: 'Voorbeeld: Maak een Regel',
+      ruleExampleText:
+        "Dit zal automatisch alle transacties die 'albert heijn' of 'jumbo' bevatten categoriseren:",
+    },
+    // Budgets page
+    budgets: {
+      title: 'Budgetten',
+      subtitle:
+        'Stel uitgavenlimieten in per categorie en volg je voortgang. Budgetten worden automatisch berekend op basis van transacties.',
+      listTitle: 'Budgetten ophalen',
+      listText: 'Haal alle budgetten op met huidige voortgang:',
+      progressNote: 'Voortgang Tracking',
+      progressNoteText:
+        'De API berekent automatisch het uitgegeven bedrag, het resterende budget en het percentage voor elke budgetperiode.',
+      createTitle: 'Budget aanmaken',
+      createText: 'Maak een nieuw budget met een uitgavenlimiet:',
+      requestBody: 'Request Body',
+      nameDesc: 'Weergavenaam van het budget',
+      amountDesc: 'Budget limiet in euros',
+      categoryIdDesc: 'Koppel aan een specifieke categorie',
+      periodDesc: 'weekly, monthly of yearly',
+      updateTitle: 'Budget bijwerken',
+      updateText: 'Wijzig een budget limiet of instellingen:',
+      deleteTitle: 'Budget verwijderen',
+      deleteText: 'Verwijder een budget:',
+      endpointsTitle: 'Budget Endpoints',
+      endpoints: {
+        list: 'Lijst alle budgetten met voortgang',
+        create: 'Maak nieuw budget',
+        update: 'Update budget',
+        delete: 'Verwijder budget',
+      },
+      budgetObjectTitle: 'Het Budget Object',
+      fieldsTitle: 'Velden',
+      fields: {
+        id: 'Unieke identifier',
+        categoryId: 'Gekoppelde categorie (null voor totaal budget)',
+        amount: 'Budget limiet in euros',
+        period: 'Budget periode',
+        spent: 'Uitgegeven dit periode (berekend)',
+        remaining: 'Resterend budget (berekend)',
+        percentage: 'Percentage gebruikt (berekend)',
+      },
+      createBudgetTitle: 'Maak een Budget',
+      requestTitle: 'Request',
+      responseTitle: 'Response',
+      budgetTypesTitle: 'Budget Types',
+      budgetTypes: [
+        {
+          type: 'Categorie Budget',
+          description:
+            'Stel een limiet in voor een specifieke categorie (bijv. €500 voor Boodschappen)',
+        },
+        {
+          type: 'Totaal Budget',
+          description:
+            'Stel een overall maandelijkse uitgavenlimiet in door categoryId weg te laten',
+        },
+      ],
+      progressTrackingTitle: 'Voortgang Volgen',
+      progressTrackingText:
+        'Wanneer je budgetten ophaalt, zijn de spent, remaining en percentage velden automatisch berekend op basis van transacties in de huidige periode.',
+    },
+    // Analytics page
+    analytics: {
+      title: 'Analytics',
+      subtitle:
+        'Krijg inzichten in je financiële data met voorgebouwde analytics endpoints.',
+      endpointsTitle: 'Analytics Endpoints',
+      endpoints: {
+        dashboard: 'Dashboard statistieken overzicht',
+        monthly: 'Maandelijkse breakdown',
+        categories: 'Uitgaven per categorie',
+        trends: 'Inkomsten/uitgaven trends',
+      },
+      dashboardTitle: 'Dashboard Analytics',
+      dashboardText: 'Haal een compleet overzicht op van de financiële status:',
+      dashboardFieldsTitle: 'Response Velden',
+      dashboardFields: {
+        totalIncome: 'Totaal inkomsten in periode',
+        totalExpenses: 'Totaal uitgaven in periode',
+        balance: 'Netto balans (inkomsten - uitgaven)',
+        transactionCount: 'Aantal transacties',
+        topCategories: 'Top uitgave categorieën',
+      },
+      monthlyTitle: 'Maandelijkse Breakdown',
+      monthlyText:
+        'Haal maand-voor-maand financiële data op voor grafieken en trends:',
+      categoryTitle: 'Categorie Analytics',
+      categoryText: 'Analyseer uitgaven per categorie:',
+    },
+    // Address Book page
+    addressBook: {
+      title: 'Adresboek',
+      subtitle:
+        'Beheer contacten en tegenpartijen uit je transacties. Link automatisch transacties aan contacten, schoon namen op en beheer gedeelde IBANs.',
+      overviewTitle: '📒 Wat is het Adresboek?',
+      overviewText:
+        'Het Adresboek extraheert automatisch tegenpartijen uit je transacties op basis van IBAN en naam. Het helpt je contacten te organiseren, rommelige banknamen op te schonen en uitgaven per merchant te volgen.',
+      endpointsTitle: 'Adresboek Endpoints',
+      endpoints: {
+        list: 'Lijst alle contacten met transactie statistieken',
+        create: 'Maak nieuw contact',
+        get: 'Haal contact op met ID',
+        update: 'Update contact',
+        delete: 'Verwijder contact',
+      },
+      listTitle: 'Lijst Contacten',
+      listText:
+        'Haal alle contacten op met transactie statistieken. Ondersteunt filteren en sorteren.',
+      params: {
+        search: 'Zoek op naam of IBAN',
+        sortBy:
+          'Sorteer veld: name, transactionCount, totalExpenses, lastTransactionDate',
+        sortOrder: 'Sorteer richting: asc of desc',
+      },
+      createTitle: 'Maak Contact',
+      createText:
+        'Maak handmatig een nieuw adresboek contact. Transacties worden automatisch gekoppeld.',
+      cleanupRulesTitle: 'Naam Opschoon Regels',
+      cleanupRulesText:
+        'Maak regels om automatisch rommelige banknamen op te schonen. Regels kunnen letterlijke strings of regex patronen gebruiken.',
+      cleanupEndpoints: {
+        list: 'Lijst alle opschoon regels',
+        create: 'Maak opschoon regel',
+        delete: 'Verwijder opschoon regel',
+        apply: 'Pas alle regels toe op contacten',
+      },
+      sharedIbansTitle: 'Gedeelde IBANs (Betalingsverwerkers)',
+      sharedIbansText:
+        'Sommige IBANs worden gedeeld door meerdere merchants (zoals iDEAL of PayPal). Markeer deze als gedeeld om merchant-niveau contact tracking mogelijk te maken.',
+      sharedIbansNote: 'Waarom Gedeelde IBANs?',
+      sharedIbansExplanation:
+        'Betalingsverwerkers zoals iDEAL, Mollie en PayPal gebruiken één IBAN voor duizenden verschillende merchants. Door deze als gedeeld te markeren, volgt Fluxby de echte merchantnaam in plaats van alleen de IBAN.',
+      sharedEndpoints: {
+        list: 'Lijst alle gedeelde IBANs',
+        create: 'Voeg gedeelde IBAN toe',
+        delete: 'Verwijder gedeelde IBAN',
+        detect: 'Auto-detecteer gedeelde IBANs',
+      },
+      mergeTitle: 'Samenvoegen & Splitsen Contacten',
+      mergeText:
+        'Combineer dubbele contacten of splits contacten die meerdere merchants representeren.',
+      mergeEndpoints: {
+        merge: 'Voeg contacten samen tot één',
+        duplicates: 'Auto-detecteer en voeg duplicaten samen',
+        split: 'Splits contact in meerdere',
+      },
+      multiIbanTitle: 'Multi-IBAN Contacten',
+      multiIbanText:
+        'Sommige contacten (zoals grote bedrijven) kunnen meerdere IBANs hebben. Je kunt extra IBANs koppelen aan één contact.',
+      ibanEndpoints: {
+        list: 'Lijst IBANs voor contact',
+        add: 'Voeg IBAN toe aan contact',
+        remove: 'Verwijder IBAN van contact',
+      },
+      objectTitle: 'Het Contact Object',
+      fields: {
+        id: 'Unieke identifier',
+        iban: 'Primaire IBAN',
+        name: 'Weergavenaam (kan opgeschoond zijn)',
+        originalName: 'Originele banknaam (voor gedeelde IBANs)',
+        description: 'Optionele beschrijving',
+        notes: 'Gebruiker notities',
+        transactionCount: 'Aantal gekoppelde transacties',
+        totalIncome: 'Totaal inkomsten van dit contact',
+        totalExpenses: 'Totaal uitgaven aan dit contact',
+        netAmount: 'Netto bedrag (inkomsten - uitgaven)',
+        lastTransactionDate: 'Datum van meest recente transactie',
+      },
+    },
+    // Import page
+    import: {
+      title: 'Import',
+      subtitle:
+        'Importeer banktransacties vanuit CSV-bestanden. Ondersteunt momenteel ING bankformaat met automatische accountdetectie en duplicaatpreventie.',
+      csvTitle: 'CSV importeren',
+      csvText:
+        'Upload en importeer een CSV-bestand met banktransacties. Het systeem detecteert automatisch accounts, voorkomt duplicaten, past categorieregels toe en schoont tegenpartijnamen op met je opschoonregels.',
+      formData: 'Form Data',
+      fileDesc: 'CSV-bestand (max 10MB)',
+      bankDesc:
+        "Banktype (standaard: 'ing'). Momenteel wordt alleen 'ing' ondersteund.",
+      previewTitle: 'CSV voorvertoning',
+      previewText:
+        'Bekijk een CSV-bestand voordat je importeert. Toont gedetecteerde accounts, datumbereik en voorbeeldtransacties.',
+      historyTitle: 'Importgeschiedenis',
+      historyText:
+        'Haal een lijst op van alle eerdere imports met hun status en transactieaantallen.',
+      tipTitle: 'Tip',
+      tipText:
+        'Het importsysteem past automatisch je categorieregels toe om transacties te categoriseren, past naam-opschoonregels toe om tegenpartijnamen op te schonen en voegt nieuwe contacten toe aan je adresboek.',
+    },
+    // Data management page
+    data: {
+      title: 'Data beheer',
+      subtitle:
+        'Exporteer en importeer volledige datasets voor backupdoeleinden, of reset alle data naar de demo-status.',
+      exportTitle: 'Data exporteren',
+      exportText:
+        'Exporteer alle data als JSON-bestand voor backup of migratie doeleinden.',
+      importTitle: 'Data importeren',
+      importText:
+        'Importeer een volledige dataset uit een JSON-backup. Let op: dit vervangt alle bestaande data.',
+      resetTitle: 'Data resetten',
+      resetText:
+        'Reset alle data en herstel de demo-status. Dit verwijdert ALLE data over alle profielen en maakt een nieuw demo-profiel aan met standaard categorieën. Dit kan niet ongedaan gemaakt worden.',
+      warningTitle: 'Let op',
+      warningText:
+        'De reset endpoint verwijdert ALLE data over ALLE profielen. Dit is bedoeld voor een volledige reset naar factory settings. Maak eerst een backup met de export functie als je je data wilt behouden.',
+    },
+    // Common docs strings
+    common: {
+      method: 'Methode',
+      endpoint: 'Endpoint',
+      description: 'Beschrijving',
+      queryParams: 'Query Parameters',
+      param: 'Parameter',
+      type: 'Type',
+      field: 'Veld',
+      tableField: 'Veld',
+      tableType: 'Type',
+      tableRequired: 'Verplicht',
+      tableDescription: 'Beschrijving',
+      yes: 'Ja',
+      no: 'Nee',
+    },
+  },
+  helpCenter: {
+    badge: 'Helpcentrum',
+    userGuide: 'Gebruikersgids',
+    developerHub: 'Developer Hub',
+    footerText: 'We helpen je graag verder.',
+    search: 'Zoeken...',
+    userSubtitle: 'Leer hoe je Fluxby gebruikt',
+    devSubtitle: 'Bouw met de Fluxby API',
+    userNav: {
+      gettingStarted: 'Aan de slag',
+      welcome: 'Welkom',
+      bankConnection: 'Bank verbinden',
+      firstSteps: 'Eerste stappen',
+      features: 'Functies',
+      transactions: 'Transacties',
+      categories: 'Categorieën',
+      accounts: 'Rekeningen',
+      addressBook: 'Adresboek',
+      budgeting: 'Budgetteren & Analytics',
+      createBudget: 'Budget maken',
+      understandAnalytics: 'Analytics begrijpen',
+      security: 'Beveiliging & Privacy',
+      dataPrivacy: 'Je data & privacy',
+    },
+    devNav: {
+      gettingStarted: 'Aan de slag',
+      introduction: 'Introductie',
+      apiKeys: 'API Keys',
+      apiReference: 'API Referentie',
+      endpoints: 'Endpoints',
+      webhooks: 'Webhooks',
+      resources: 'Resources',
+      swagger: 'Swagger Docs',
+      devDocs: 'Developer Docs',
+    },
+    home: {
+      title: 'Hoe kunnen we je helpen?',
+      subtitle: 'Vind antwoorden op je vragen over Fluxby',
+      userGuideTitle: 'Gebruikersgids',
+      userGuideDesc:
+        'Leer hoe je je geld beheert, budgetten instelt en uitgaven volgt met Fluxby.',
+      userItem1: 'Verbind je bankrekening',
+      userItem2: 'Maak budgetten & doelen',
+      userItem3: 'Begrijp je privacy',
+      devHubTitle: 'Developer Hub',
+      devHubDesc:
+        'Bouw integraties met de Fluxby API. Toegang tot documentatie, endpoints en webhooks.',
+      getStarted: 'Aan de slag',
+      viewDocs: 'Bekijk documentatie',
+      popularArticles: 'Populaire artikelen',
+      article1: 'Je bank verbinden',
+      article1Desc: 'Leer hoe je transacties importeert',
+      article2: 'Een budget maken',
+      article2Desc: 'Stel je eerste maandbudget in',
+      article3: 'API documentatie',
+      article3Desc: 'Volledige API referentie voor developers',
+    },
+    bankConnection: {
+      title: 'Je bankrekening verbinden',
+      subtitle: 'Importeer transacties van je bank om je financiën te volgen.',
+      howItWorksTitle: 'Hoe het werkt',
+      howItWorksText:
+        'Fluxby gebruikt CSV imports om je banktransacties in de app te brengen. Deze aanpak zorgt ervoor dat je data 100% lokaal op je apparaat blijft - geen cloud verbindingen nodig.',
+      step1Title: 'Stap 1: Exporteren van je bank',
+      step1Text:
+        'Log in op je online banking en download je transactiegeschiedenis als CSV-bestand. De meeste banken bieden deze optie in de rekening overzichten of transactie geschiedenis sectie.',
+      step2Title: 'Stap 2: Importeren in Fluxby',
+      step2Text:
+        'Navigeer naar de Import pagina in Fluxby en sleep je CSV-bestand, of klik om te bladeren.',
+      step3Title: 'Stap 3: Controleren en categoriseren',
+      step3Text:
+        'Na het importeren categoriseert Fluxby automatisch je transacties op basis van je regels. Je kunt categorieën controleren en aanpassen indien nodig.',
+      tipTitle: 'Pro Tip',
+      tipText:
+        'Stel auto-categorisatie regels in om transacties van specifieke verkopers automatisch te taggen. Dit bespaart je tijd bij toekomstige imports!',
+      supportedTitle: 'Ondersteunde banken',
+      supportedText: 'Momenteel ondersteunt Fluxby CSV imports van:',
+      moreComingSoon: 'Meer banken komen binnenkort...',
+    },
+    budgeting: {
+      title: 'Een maandbudget maken',
+      subtitle:
+        'Stel uitgavenlimieten in en volg je voortgang met visuele budgetten.',
+      whatIsTitle: 'Wat is een budget?',
+      whatIsText:
+        'Een budget in Fluxby is een uitgavenlimiet die je instelt voor een specifieke categorie of je totale maandelijkse uitgaven. Als je transacties doet, volgt Fluxby automatisch je uitgaven ten opzichte van deze limieten.',
+      createTitle: 'Je eerste budget maken',
+      step1: 'Navigeer naar de Budgetten pagina vanuit de zijbalk',
+      step2: 'Klik op "Nieuw Budget" om het aanmaak dialoog te openen',
+      step3: 'Selecteer een categorie (of laat leeg voor totaal budget)',
+      step4: 'Voer je budgetbedrag in en selecteer de periode',
+      step5: 'Klik op Opslaan om je budget te maken',
+      typesTitle: 'Budget types',
+      categoryBudgetTitle: 'Categorie budgetten',
+      categoryBudgetText:
+        'Stel een limiet in voor een specifieke categorie zoals Boodschappen, Entertainment of Vervoer. Dit helpt je uitgaven in specifieke gebieden te beheersen.',
+      totalBudgetTitle: 'Totaal budget',
+      totalBudgetText:
+        'Stel een totale maandelijkse uitgavenlimiet in over alle categorieën. Dit geeft je een overzicht van je totale uitgaven.',
+      bestPracticeTitle: 'Best Practice',
+      bestPracticeText:
+        'Begin met een totaal budget gebaseerd op je typische maandelijkse uitgaven, voeg dan categorie-specifieke budgetten toe voor gebieden waar je wilt bezuinigen.',
+      trackingTitle: 'Je voortgang volgen',
+      trackingText:
+        'De budget kaarten tonen je uitgaven voortgang in real-time. De circulaire voortgangsindicator vult zich naarmate je je limiet nadert, van kleur veranderend van groen naar geel naar rood.',
+    },
+    privacy: {
+      title: 'Je data & privacy',
+      subtitle:
+        'Fluxby is ontworpen met privacy voorop. Je financiële data blijft op je apparaat.',
+      localFirstTitle: '100% Lokaal',
+      localFirstText:
+        'In tegenstelling tot de meeste finance apps, draait Fluxby volledig op je computer. Je transactiedata, budgetten en categorieën worden opgeslagen in een lokale SQLite database - ze verlaten nooit je apparaat.',
+      noCloud: 'Geen cloud opslag',
+      noCloudDesc: 'Data blijft op je machine',
+      noTracking: 'Geen tracking',
+      noTrackingDesc: 'We analyseren je uitgaven nooit',
+      fullControl: 'Volledige controle',
+      fullControlDesc: 'Verwijder alle data op elk moment',
+      howWorksTitle: 'Hoe het werkt',
+      howWorksText:
+        'Fluxby gebruikt een lokale SQLite database opgeslagen in je project map. De API server draait op je machine op localhost:3001, en de web interface op localhost:5173. Er worden geen externe verbindingen gemaakt.',
+      dataLocationTitle: 'Waar wordt mijn data opgeslagen?',
+      dataLocationText:
+        'Je data wordt opgeslagen in een bestand genaamd fluxby.db in de data/ map van je Fluxby installatie. Je kunt dit bestand back-uppen om je data te bewaren, of verwijderen om opnieuw te beginnen.',
+      deleteDataTitle: 'Je data verwijderen',
+      deleteDataText:
+        'Om al je financiële data volledig te verwijderen, kun je de Data Management sectie in Instellingen gebruiken, of simpelweg het fluxby.db bestand verwijderen. Er is geen account om te sluiten of data om aan te vragen - het is allemaal lokaal.',
+      warningTitle: 'Belangrijk',
+      warningText:
+        'Aangezien alle data lokaal wordt opgeslagen, zorg ervoor dat je je fluxby.db bestand back-upt als je je data wilt bewaren. Er is geen cloud backup!',
+    },
+    devIntro: {
+      title: 'Developer Hub',
+      subtitle:
+        'Bouw integraties met de Fluxby API. Krijg programmatisch toegang tot je financiële data.',
+      quickStartTitle: 'Snel aan de slag',
+      quickStartText:
+        'De Fluxby API draait lokaal op http://localhost:3001/api. Geen API keys of authenticatie vereist voor lokale ontwikkeling.',
+      whatCanBuildTitle: 'Wat kun je bouwen?',
+      customDashboards: 'Aangepaste Dashboards',
+      customDashboardsDesc:
+        'Bouw gepersonaliseerde visualisaties met je favoriete charting library',
+      automations: 'Automatiseringen',
+      automationsDesc:
+        'Maak scripts die transacties categoriseren of rapporten genereren',
+      mobileApps: 'Mobiele Apps',
+      mobileAppsDesc:
+        'Bouw mobiele companions die synchroniseren met je Fluxby data',
+      notifications: 'Notificaties',
+      notificationsDesc:
+        'Stel alerts in voor budgetlimieten of ongewone uitgaven',
+      resourcesTitle: 'Resources',
+      fullDocsTitle: 'Volledige API Documentatie',
+      fullDocsDesc: 'Complete referentie voor alle endpoints',
+      swaggerTitle: 'Swagger UI',
+      swaggerDesc: 'Interactieve API explorer',
+    },
+    placeholders: {
+      bankExport: 'Bank Export Scherm',
+      bankExportDesc:
+        'Toon het bank selectie scherm met grote banken (ING, Rabobank, ABN AMRO). Markeer de export/download optie.',
+      importPage: 'Import Pagina',
+      importPageDesc:
+        'Toon de Fluxby import pagina met het drag & drop gebied gemarkeerd. Voeg een voorbeeld toe van een succesvolle import met transactie telling.',
+      budgetOverview: 'Budget Overzicht',
+      budgetOverviewDesc:
+        'Toon de Budget pagina met meerdere budget kaarten. Voeg een budget toe op 75% benutting met de circulaire voortgangsbalk, en categorie breakdown eronder.',
+      budgetProgress: 'Budget Voortgang',
+      budgetProgressDesc:
+        'Toon een budget kaart met de circulaire voortgangsindicator in verschillende stadia (25%, 75%, 100%). Toon de bestede vs resterende bedragen.',
+    },
+    animations: {
+      profile: {
+        title: 'Nieuw profiel',
+        placeholder: 'Persoonlijk',
+        button: 'Aanmaken',
+      },
+      import: {
+        dropText: 'Sleep CSV hier',
+        fileName: 'transacties.csv',
+        processing: 'Verwerken...',
+      },
+      dashboard: {
+        balance: 'Saldo',
+        income: 'Inkomsten',
+        expenses: 'Uitgaven',
+      },
+      transactions: {
+        search: 'Zoeken...',
+        items: ['🛒 Albert Heijn', '⛽ Shell', '🍽️ Restaurant', '📺 Netflix'],
+      },
+      categories: {
+        items: [
+          { emoji: '🛒', name: 'Boodschappen', color: '#34D399' },
+          { emoji: '🚗', name: 'Vervoer', color: '#3B82F6' },
+          { emoji: '🍽️', name: 'Uit eten', color: '#F97316' },
+          { emoji: '🎬', name: 'Entertainment', color: '#8B5CF6' },
+        ],
+      },
+      budget: {
+        title: 'Budget',
+        spent: 'Uitgegeven',
+        remaining: 'Resterend',
+      },
+      accounts: {
+        checking: 'Betaalrekening',
+        savings: 'Spaarrekening',
+      },
+      trends: {
+        months: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei'],
+        income: 'Inkomsten',
+        expenses: 'Uitgaven',
+      },
+      addressBook: {
+        contacts: [
+          { name: 'Albert Heijn', count: 24 },
+          { name: 'Shell', count: 12 },
+          { name: 'NS', count: 8 },
+        ],
+      },
+      export: {
+        formats: ['JSON', 'CSV'],
+        exporting: 'Exporteren...',
+      },
+    },
+  },
+
+  // Legal pages
+  legal: {
+    privacyTitle: 'Privacybeleid',
+    termsTitle: 'Gebruiksvoorwaarden',
+    privacy: {
+      lastUpdated: 'Laatst bijgewerkt:',
+      introTitle: '1. Introductie',
+      introText:
+        'Dit Privacybeleid beschrijft hoe Fluxby ("wij", "ons" of "de App") met jouw gegevens omgaat.',
+      introPhilosophy:
+        'Wij geloven dat jouw financiële gegevens alleen van jou zijn. De kernfilosofie van deze App is absolute privacy. Wij beheren geen servers, wij vereisen geen gebruikersaccounts, en wij volgen jouw gedrag niet.',
+      localFirstTitle: '2. De "Local-First" Architectuur',
+      localFirstSubtitle: 'Alle gegevens blijven op jouw apparaat.',
+      localFirstText:
+        'Deze App werkt als een standalone hulpmiddel. Wanneer je uitgaven invoert, transacties categoriseert, of bankafschriften importeert, wordt die informatie lokaal opgeslagen in de interne opslag van jouw apparaat.',
+      noCloudTitle: 'Geen Cloud Sync:',
+      noCloudText: 'Wij synchroniseren jouw gegevens niet naar cloudservers.',
+      noAccountsTitle: 'Geen Accounts:',
+      noAccountsText:
+        'Je hoeft geen gebruikersnaam of wachtwoord bij ons aan te maken.',
+      noAITitle: 'Geen Third-Party AI:',
+      noAIText:
+        'Wij sturen jouw financiële beschrijvingen of adresboekgegevens niet naar externe AI-modellen (zoals OpenAI of Google Gemini) voor verwerking. Alle logica wordt lokaal uitgevoerd op de processor van je apparaat.',
+      dataAccessTitle: '3. Gegevens Die We Benaderen',
+      dataAccessText:
+        'Om functionaliteit te bieden, kan de App toestemming vragen om specifieke gegevens op jouw apparaat te benaderen.',
+      transactionDataTitle: 'A. Financiële Transactiegegevens',
+      transactionDataText:
+        "Wanneer je handmatig gegevens invoert of bestanden importeert (zoals CSV's of bankafschriften), verwerkt de App deze informatie om grafieken en categorieën te maken. Deze verwerking gebeurt direct op jouw apparaat. Wij zien (en kunnen) deze gegevens niet zien.",
+      addressBookTitle: 'B. Adresboek / Contacten',
+      addressBookText:
+        'De App heeft een adresboekfunctie om transacties te koppelen aan specifieke personen of entiteiten. Als je toegang geeft tot je contacten, leest de App alleen deze gegevens om namen weer te geven binnen de App. Je contactenlijst wordt nooit geüpload of gedeeld.',
+      fileStorageTitle: 'C. Bestandsopslag',
+      fileStorageText:
+        'De App heeft toegang tot je bestandsopslag nodig om bankafschriften te importeren en back-ups van je administratie op te slaan.',
+      aiDisclosureTitle: '4. AI-Ontwikkeling Disclosure',
+      aiDisclosureText:
+        'Let op: de codebase voor deze App is volledig gegenereerd met behulp van Kunstmatige Intelligentie.',
+      aiDisclosureDetails:
+        'Vanuit een privacyperspectief betekent dit dat de app is ontworpen om te functioneren op basis van logica gegenereerd door AI-prompts. Hoewel we de AI hebben geïnstrueerd om strikt vast te houden aan lokale opslagprincipes, is er geen menselijk toezichtteam dat een backend database monitort—omdat er geen backend database is.',
+      securityTitle: '5. Gegevensbeveiliging en Back-ups',
+      securityText:
+        'Omdat wij jouw gegevens niet opslaan, kunnen wij jouw gegevens niet herstellen als ze verloren gaan.',
+      yourResponsibilityTitle: 'Jouw Verantwoordelijkheid:',
+      yourResponsibilityText:
+        'Jij bent verantwoordelijk voor de beveiliging van je fysieke apparaat.',
+      backupsTitle: 'Back-ups:',
+      backupsText:
+        'Als je de App verwijdert of je telefoon verliest, zijn je financiële gegevens verloren, tenzij je gebruik hebt gemaakt van de ingebouwde back-upfuncties van je apparaat (bijv. iCloud Backup of Android Backup) of handmatig je gegevens hebt geëxporteerd.',
+      thirdPartyTitle: '6. Third-Party Diensten',
+      thirdPartyText:
+        'De App integreert niet met third-party analytics of advertentienetwerken.',
+      thirdPartyOS:
+        'De App draait echter op een besturingssysteem (iOS of Android) dat mogelijk gebruiksstatistieken verzamelt onafhankelijk van onze App. Raadpleeg het privacybeleid van Apple of Google over hoe zij app-gebruiksgegevens verwerken.',
+      changesTitle: '7. Wijzigingen in Dit Beleid',
+      changesText:
+        'We kunnen dit Privacybeleid van tijd tot tijd bijwerken. Aangezien we geen e-mailadressen verzamelen, kunnen we je niet direct informeren over wijzigingen. Je wordt geadviseerd deze pagina periodiek te bekijken voor eventuele wijzigingen.',
+      contactTitle: '8. Contact',
+      contactText:
+        'Als je vragen hebt over hoe de App lokaal werkt op jouw apparaat, kun je',
+      contactGithub: 'contact met mij opnemen op GitHub',
+    },
+    terms: {
+      lastUpdated: 'Laatst bijgewerkt:',
+      aiDisclaimerTitle:
+        '1. De "Vibe Coded" Disclaimer (AI-Gegenereerde Software)',
+      aiDisclaimerImportant:
+        'BELANGRIJK: Je erkent en gaat ermee akkoord dat deze Applicatie volledig is geschreven en ontwikkeld door Kunstmatige Intelligentie (AI) op basis van prompts verstrekt door de ontwikkelaar.',
+      experimentalNatureTitle: 'Experimentele Aard:',
+      experimentalNatureText:
+        'Deze software moet worden beschouwd als experimenteel.',
+      noHumanReviewTitle: 'Geen Menselijke Code Review:',
+      noHumanReviewText:
+        'De code heeft geen professionele menselijke beveiligingsaudit of standaard enterprise-niveau kwaliteitsborging (QA) ondergaan.',
+      unpredictabilityTitle: 'Onvoorspelbaarheid:',
+      unpredictabilityText:
+        'AI-gegenereerde code kan hallucinaties, logische fouten, of onverwacht gedrag bevatten dat een menselijke ontwikkelaar zou vermijden.',
+      useAtOwnRisk: 'Je gebruikt deze applicatie volledig op eigen risico.',
+      noFinancialAdviceTitle: '2. Geen Financieel Advies',
+      noFinancialAdviceText:
+        'Deze App is een hulpmiddel voor organisatie en visualisatie. Het is geen financieel adviseur, accountant of belastingprofessional.',
+      calculationErrorsTitle: 'Rekenfouten:',
+      calculationErrorsText:
+        'Door de AI-gegenereerde aard van de code, kan de App wiskundige fouten maken, transacties verkeerd categoriseren, of onjuiste totalen weergeven.',
+      noRelianceTitle: 'Geen Afhankelijkheid:',
+      noRelianceText:
+        'Je mag nooit uitsluitend op deze App vertrouwen voor belastingaangifte, bedrijfsboekhouding, of kritieke financiële beslissingen. Controleer cijfers altijd met je daadwerkelijke bankafschriften.',
+      licenseTitle: '3. Gebruikslicentie',
+      licenseText:
+        'Wij verlenen je een persoonlijke, herroepbare, niet-exclusieve, niet-overdraagbare licentie om de App op je apparaat te gebruiken. Wij behouden het recht voor om de App op elk moment zonder kennisgeving stop te zetten.',
+      userDataTitle: '4. Gebruikersgegevens en Verantwoordelijkheid',
+      userDataText:
+        'Zoals vermeld in ons Privacybeleid, werkt deze App offline en slaat gegevens lokaal op.',
+      dataControllerTitle: 'Jij bent de Data Controller:',
+      dataControllerText:
+        'Jij bent als enige verantwoordelijk voor het maken van back-ups van je gegevens.',
+      dataLossTitle: 'Gegevensverlies:',
+      dataLossText:
+        'De Ontwikkelaar is niet verantwoordelijk voor enig verlies van gegevens, corruptie van bestanden, of onmogelijkheid om je uitgavengeschiedenis te benaderen.',
+      liabilityTitle: '5. Beperking van Aansprakelijkheid',
+      liabilityText:
+        'VOOR ZOVER WETTELIJK TOEGESTAAN, IS DE ONTWIKKELAAR NIET AANSPRAKELIJK VOOR ENIGE SCHADE.',
+      liabilityIncludes: 'Dit omvat, maar is niet beperkt tot:',
+      directDamagesTitle: 'Directe, Indirecte of Gevolgschade:',
+      directDamagesText: 'Verlies van winst, gegevens of goodwill.',
+      financialDiscrepanciesTitle: 'Financiële Discrepanties:',
+      financialDiscrepanciesText:
+        'Eventuele financiële verliezen als gevolg van vertrouwen op de berekeningen of categoriseringen van de App.',
+      bugsTitle: 'Bugs en Glitches:',
+      bugsText:
+        'Eventuele problemen voortkomend uit de AI-gegenereerde codebase.',
+      soleRemedy:
+        'Je enige remedie voor ontevredenheid met de App is om de App niet meer te gebruiken.',
+      asIsTitle: '6. "AS IS" en "AS AVAILABLE"',
+      asIsText:
+        'De App wordt geleverd op een "AS IS" basis. De Ontwikkelaar wijst expliciet alle garanties af, expliciet of impliciet, inclusief garanties van verkoopbaarheid, geschiktheid voor een bepaald doel, en niet-inbreuk.',
+      noGuarantee: 'Wij garanderen niet dat:',
+      requirementsGuarantee: 'De App aan je eisen zal voldoen.',
+      uninterruptedGuarantee:
+        'De App ononderbroken, tijdig, veilig of foutloos zal zijn.',
+      resultsGuarantee:
+        'De resultaten verkregen uit het gebruik van de App nauwkeurig of betrouwbaar zullen zijn.',
+      indemnificationTitle: '7. Vrijwaring',
+      indemnificationText:
+        'Je gaat ermee akkoord de Ontwikkelaar te vrijwaren en schadeloos te stellen voor alle claims, schade, aansprakelijkheden, kosten en uitgaven (inclusief juridische kosten) voortvloeiend uit jouw gebruik van de App of jouw schending van deze Voorwaarden.',
+      governingLawTitle: '8. Toepasselijk Recht',
+      governingLawText:
+        'Deze Voorwaarden worden beheerst door het recht van Nederland, zonder rekening te houden met de bepalingen inzake conflicten van wetgeving.',
+      acknowledgement:
+        'Door Fluxby te gebruiken, erken je dat je deze overeenkomst hebt gelezen, begrijpt, en akkoord gaat met het feit dat dit een AI-gegenereerde tool is die zonder garantie wordt geleverd.',
+    },
+    featuresTitle: 'Alle functies',
+    featuresPage: {
+      intro:
+        'Ontdek alles wat Fluxby te bieden heeft. Van slimme transactie tracking tot prachtige analytics - alles wat je nodig hebt om je financiën te beheren.',
+      smartTracking: {
+        title: 'Slimme transactie tracking',
+        description:
+          'Categoriseer automatisch je uitgaven en inkomsten met AI-gestuurde herkenning. Fluxby leert je uitgavenpatronen en suggereert betere manieren om te sparen.',
+        highlights: [
+          'Automatische categorisatie',
+          'Patroonherkenning',
+          'Slimme suggesties',
+        ],
+      },
+      analytics: {
+        title: 'Mooie analytics',
+        description:
+          'Prachtige grafieken die het begrijpen van je financiën leuk maken. Zie je geld groeien met interactieve visualisaties.',
+        highlights: [
+          'Interactieve grafieken',
+          'Trend analyse',
+          'Categorie verdeling',
+        ],
+      },
+      budgets: {
+        title: 'Budget doelen',
+        description:
+          'Stel schattige budgetdoelen in met Fluxby die je aanmoedigt. Bekijk je voortgang met leuke animaties.',
+        highlights: [
+          'Maandelijkse limieten',
+          'Voortgang tracking',
+          'Overschrijding alerts',
+        ],
+      },
+      privacy: {
+        title: '100% lokaal & privé',
+        description:
+          'Je financiële data verlaat nooit je apparaat. Geen cloud, geen servers, geen tracking - alles blijft op je computer.',
+        highlights: [
+          'Geen cloud opslag',
+          'Geen accounts nodig',
+          'Volledige privacy',
+        ],
+      },
+      bankImport: {
+        title: 'Bank CSV import',
+        description:
+          'Exporteer eenvoudig transacties van je bank en importeer ze in Fluxby. Werkt met ING en meer banken komen binnenkort.',
+        highlights: [
+          'ING ondersteuning',
+          'Drag & drop upload',
+          'Duplicaat detectie',
+        ],
+      },
+      customization: {
+        title: 'Persoonlijke ervaring',
+        description:
+          "Pas Fluxby aan met verschillende thema's en instellingen. Maak financieel beheer uniek van jou.",
+        highlights: [
+          'Donkere modus',
+          'Aanpasbare categorieën',
+          'Eigen kleuren & iconen',
+        ],
+      },
+      realtime: {
+        title: 'Realtime updates',
+        description:
+          'Zie je financiële overzicht direct veranderen wanneer je transacties toevoegt of bewerkt.',
+        highlights: [
+          'Directe dashboard updates',
+          'Live grafieken',
+          'Automatische herberekening',
+        ],
+      },
+      ai: {
+        title: 'AI-gestuurde inzichten',
+        description:
+          'Lokale AI helpt je bij het categoriseren en begrijpen van je uitgaven zonder je data te delen.',
+        highlights: [
+          'Categorisatie suggesties',
+          'Uitgavenpatronen',
+          'Bespaartips',
+        ],
+      },
+      multiAccount: {
+        title: 'Meerdere rekeningen',
+        description:
+          'Beheer al je bankrekeningen op één plek. Zie je totale vermogen en cashflow overzichtelijk.',
+        highlights: [
+          'Onbeperkt rekeningen',
+          'Gecombineerd overzicht',
+          'Per rekening filteren',
+        ],
+      },
+      addressBook: {
+        title: 'Adresboek',
+        description:
+          'Koppel transacties aan contacten. Zie hoeveel je uitgeeft aan specifieke winkels of personen.',
+        highlights: [
+          'Contact koppeling',
+          'Uitgaven per contact',
+          'Auto-suggesties',
+        ],
+      },
+      security: {
+        title: 'Veilig & betrouwbaar',
+        description:
+          'Geen externe verbindingen betekent geen risico op datalekken. Je data is zo veilig als je apparaat.',
+        highlights: [
+          'Offline beschikbaar',
+          'Geen externe API calls',
+          'Lokale database',
+        ],
+      },
+      sync: {
+        title: 'Export & backup',
+        description:
+          'Exporteer je data wanneer je wilt. Maak back-ups voor gemoedsrust.',
+        highlights: ['JSON export', 'CSV export', 'Database backup'],
+      },
+      languages: {
+        title: 'Nederlands & Engels',
+        description:
+          'Gebruik Fluxby in je voorkeurstaal. Volledig vertaald interface.',
+        highlights: ['Nederlandse UI', 'Engelse UI', 'Makkelijk wisselen'],
+      },
+      openSource: {
+        title: 'Open source',
+        description:
+          'Volledig open source en transparant. Bekijk de code, draag bij, of pas het aan.',
+        highlights: [
+          'GitHub repository',
+          'Community driven',
+          'Transparante code',
+        ],
+      },
+      ctaTitle: 'Klaar om te beginnen?',
+      ctaDescription:
+        'Download Fluxby en neem vandaag nog controle over je financiën.',
+      ctaButton: 'Beginnen',
+    },
+    pricingTitle: 'Prijzen',
+    pricingPage: {
+      intro:
+        'Fluxby is en blijft volledig gratis. Geen verborgen kosten, geen premium versie, geen abonnement.',
+      freeTitle: 'Gratis',
+      freeSubtitle: 'Voor altijd',
+      perMonth: 'maand',
+      feature1: 'Onbeperkt transacties importeren',
+      feature2: 'Alle analytics en grafieken',
+      feature3: 'Budget tracking en doelen',
+      feature4: 'Meerdere bankrekeningen',
+      feature5: 'Adresboek functionaliteit',
+      feature6: 'Export naar JSON/CSV',
+      feature7: 'Donkere modus',
+      feature8: 'Toekomstige updates',
+      whyFreeTitle: 'Waarom gratis?',
+      whyFreeText:
+        'Fluxby is gebouwd met de overtuiging dat iedereen toegang zou moeten hebben tot goede financiële tools. Omdat alle data lokaal blijft en we geen servers draaien, hebben we geen lopende kosten. Dit maakt het mogelijk om Fluxby voor altijd gratis aan te bieden.',
+      promiseTitle: 'Onze belofte',
+      promiseText:
+        'Er komt geen premium versie. Er komt geen abonnement. Er komen geen "pro" features achter een betaalmuur. Alles wat we bouwen blijft gratis beschikbaar voor iedereen.',
+      coffeeTitle: 'Koop een koffie',
+      coffeeDescription:
+        'Waardeer je Fluxby? Een kopje koffie is altijd welkom!',
+      contributeTitle: 'Help mee ontwikkelen',
+      contributeDescription:
+        'Draag bij aan de code of vraag nieuwe features aan op GitHub.',
+    },
+    updatesTitle: 'Updates',
+    updatesPage: {
+      intro:
+        'Bekijk wat er nieuw is in Fluxby. Hier vind je alle updates en nieuwe features.',
+      v100Date: '03 januari 2026',
+      v100Title: 'Eerste release',
+      v100Description:
+        'De eerste officiële versie van Fluxby is live! Dit is alles wat erin zit:',
+      f1Title: 'CSV Import',
+      f1Desc:
+        'Importeer je banktransacties eenvoudig via CSV-export van je bank. Op dit moment wordt ING ondersteund, met meer banken in de toekomst.',
+      f2Title: 'Dashboard & Analytics',
+      f2Desc:
+        'Krijg direct inzicht in je financiën met een overzichtelijk dashboard. Bekijk je inkomsten, uitgaven en trends in mooie interactieve grafieken.',
+      f3Title: 'Slimme categorisatie',
+      f3Desc:
+        'Transacties worden automatisch gecategoriseerd. Je kunt ook eigen categorieën maken met aangepaste kleuren en iconen.',
+      f4Title: 'Budget tracking',
+      f4Desc:
+        'Stel maandelijkse budgetten in per categorie en houd je voortgang bij. Krijg visueel overzicht van hoeveel je nog kunt uitgeven.',
+      f5Title: 'Meerdere rekeningen',
+      f5Desc:
+        'Beheer al je bankrekeningen op één plek. Betaalrekening, spaarrekening, creditcard - alles gecombineerd in één overzicht.',
+      f6Title: 'Adresboek',
+      f6Desc:
+        'Koppel transacties aan contacten en zie hoeveel je uitgeeft bij specifieke winkels of personen. Automatische suggesties maken het makkelijk.',
+      f7Title: '100% Privacy',
+      f7Desc:
+        'Al je data blijft lokaal op je apparaat. Geen cloud, geen accounts, geen tracking. Jouw financiële gegevens zijn alleen van jou.',
+      f8Title: 'AI-gestuurde herkenning',
+      f8Desc:
+        'Lokale AI helpt bij het herkennen en categoriseren van transacties zonder je data te delen met externe diensten.',
+      f9Title: 'Donkere modus',
+      f9Desc:
+        "Werk in de modus die bij je past. Schakel makkelijk tussen lichte en donkere thema's.",
+      f10Title: 'Nederlands & Engels',
+      f10Desc:
+        'Volledig vertaalde interface in het Nederlands en Engels. Wissel wanneer je wilt.',
+      f11Title: 'Export functionaliteit',
+      f11Desc:
+        'Exporteer je data naar JSON of CSV formaat. Maak back-ups wanneer je wilt voor gemoedsrust.',
+      f12Title: 'Developer API',
+      f12Desc:
+        'Volledige REST API documentatie voor developers die willen integreren of uitbreiden. Swagger UI inbegrepen.',
+      comingSoonTitle: 'Meer updates komen eraan',
+      comingSoonText:
+        'We werken continu aan nieuwe features en verbeteringen. Houd deze pagina in de gaten!',
+    },
+    aboutTitle: 'Over Fluxby',
+    aboutPage: {
+      heroStats: {
+        developer: '1 developer',
+        weeks: '2,5 weken',
+        models: '4 LLM modellen',
+        prompts: '~375 prompts',
+        codeLines: '0 regels code',
+        cost: '€30 totale kosten',
+      },
+      intro: {
+        title: 'Het verhaal van Fluxby',
+        content:
+          'Dit is het enige door mensen geschreven stuk content in dit hele project. Al het andere wat je ziet - prachtige visuele designs, inhoud, documentatie en letterlijk elke regel code - is tot stand gekomen door AI prompts. Dit is niet zomaar een app - het is een bewijs dat AI capabel genoeg is geworden om samen met een developer een volledige, professionele applicatie te bouwen zonder dat de developer zelf code hoeft te schrijven. Ik zat in mijn kerstvakantie en had geen zin om traditioneel code te schrijven, dus besloot ik dit experiment aan te gaan. Geen coderen van mij. Alleen prompts, feedback, en het kijken hoe AI ideeën in werkelijkheid omzet.',
+      },
+      background: {
+        title: 'Waarom ik dit deed',
+        content1:
+          'Ik ben frontend developer en hou van coderen. Maar gedurende dit jaar is AI een cruciaal onderdeel geworden van mijn ontwikkelwerk en mijn interesse verschoof sterk naar het benutten ervan. Toen ik begin december 2025 toegang kreeg tot Claude Opus 4.5 was ik direct onder de indruk van de output - dit was fundamenteel anders dan alles wat ik tot nu toe had gebruikt. De kwaliteit van de gegenereerde code, de architecturale suggesties, en de manier waarop het complexe problemen begreep was echt indrukwekkend.',
+        content2:
+          "Tot nu toe werkte ik met degelijke modellen, maar we hadden 'instructies' en constraints nodig om ervoor te zorgen dat modellen op een behoorlijk niveau werkten. De simpele, saaie, vervelende taken kon ik overlaten maar de echt moeilijke, creatieve taken hadden meestal mijn volle aandacht nodig. Dit veranderde fundamenteel met Claude Opus voor mij. Plotseling kon ik complexe architecturale problemen beschrijven en ze in slechts enkele prompts opgelost krijgen. De kwaliteit sprong dramatisch omhoog.",
+      },
+      experiment: {
+        title: 'Het grote experiment',
+        content:
+          "Tijdens mijn kerstvakantie besloot ik het model voor een echt uitgebreide test in te zetten. Het idee was briljant eenvoudig: ik wilde een kleine app bouwen die echt nuttig zou zijn voor mij en mijn vrouw, zonder zelf code te schrijven. Dus zou ik 'vibe coden' - de complete app ontwikkelen zonder me druk te maken over hoe de code eruit zag, maar wel intensief focussen op hoe de interface eruitzag en hoe alles aanvoelde voor de eindgebruiker. Geen zorgen over code quality, architectuur patterns, of best practices. Alleen focussen op: werkt het, ziet het er goed uit, voelt het goed aan?",
+        goal: 'Het doel werd om een volledig professioneel ogende, goed werkende financiële app te maken die mijn vrouw en ik echt zouden gaan gebruiken in ons dagelijks leven - allemaal zonder dat ik zelf een enkele regel code hoefde te schrijven.',
+      },
+      features: {
+        title: 'De geweldige functies',
+        categorization: {
+          title: 'Slimme categorisatie met regels',
+          content:
+            'Ik vroeg om een mooie categoriestructuur met subcategorieën voor persoonlijke financiën. Het antwoord was een elegant regel-gebaseerd systeem waar je trefwoorden kon toevoegen die automatisch transacties categoriseren. Zo simpel toch ingewikkeld in de implementatie. Nu kan je bijvoorbeeld zeggen: "elke keer dat ik ALBERT HEIJN in de transactie naam zie, categorieer het automatisch als groceries" en bam, het werkt voor altijd. Het LLM begreep dat dit een herhaalbave operatie moest zijn en bouwde alles zo in dat je dit makkelijk kon beheren.',
+        },
+        addressBook: {
+          title: 'Slim adresboek met IBAN tracking',
+          content:
+            'Een adresboek die ontzettend slim is. Als het een IBAN aan een naam kon koppelen, werd het automatisch toegevoegd aan je contacten. Nog cooler: het merkte zelfs betaalproviders op in transactienamen (via Mollie, via Buckaroo, etc.) en stelde voor om slimme regels te introduceren die deze providers automatisch uit transactie namen zouden strippen. Dat soort intelligentie wilde ik juist zien - niet alleen code schrijven, maar ook begrijpen wat het probleem is en proactief een oplossing suggereren.',
+        },
+        sharedIban: {
+          title: 'Gedeelde IBANs (de grappige edge case)',
+          content:
+            'Hier gebeurde iets grappigs en ingewikkelds tegelijk. Betaalproviders gebruiken namelijk een gedeelde IBAN waarbij ze zelf zorgen dat het geld bij de juiste merchant terechtkomt. Dus plotseling hadden we zowel Lidl als H&M voor dezelfde IBAN, wat verwarrend was. Het model begreep het probleem volledig en stelde een gedeelde IBAN interface voor waarbij je kon kiezen of je deze wilde samenvoegen als dezelfde merchant (als het eigenlijk dezelfde plek was met andere spelling) of juist splitsen als verschillende merchants (als het echt verschillende winkels waren die dezelfde provider gebruikten). Dit is precies het soort complexe UX probleem dat je graag door AI wilt zien ontdekt en opgelost.',
+        },
+        multiTenancy: {
+          title: 'Multi-account tracking',
+          content:
+            'Meerdere rekeningen tracken in dezelfde app was essentieel. Je wilt je persoonlijke rekening kunnen tracken, een gedeelde huishoudbudget rekening, en misschien zelfs een zakelijke rekening - allemaal in Fluxby. Dit is wat multi-tenancy heet - ondersteuning voor meerdere gescheiden "werkruimten" in dezelfde applicatie. Met één plan werden alle views en endpoints bijgewerkt om altijd correct rekening te houden met welke profiel/account je ingelogd was. Het LLM moest begrijpen dat dit een fundamentele feature was die door het hele systeem heen moest werken.',
+        },
+      },
+      challenges: {
+        title: 'De echte uitdagingen',
+        ui: {
+          title: '😅 UI inconsistentie overal',
+          content:
+            'Een rode draad door dit hele project was de inconsistente UI die Claude zou toevoegen. Ik kreeg 3 verschillende soorten badges in dezelfde app, verschillende button implementaties, hover-effecten die niet op elkaar afgestemd waren. Soms zou een delete button rood zijn, soms oranje. Soms was een badge met icoon, soms tekst-only. Dit frustreerde me echt omdat ik veel met design systems werk en dit definitief niet door onze design rules zou kunnen. Achteraf had ik een specifiek design systeem in mijn prompt kunnen specificeren maar ik wilde juist de UI capabilities van het LLM testen. Dit kostte me wel ~100 prompts aan het einde om elke view correct, consistent en mooi te maken. Belangrijke les: AI kan coderen maar design systems volgen en consistent toepassen? Dat is veel moeilijker.',
+        },
+        addressBookBugs: {
+          title: '🐛 Adresboek edge cases',
+          content:
+            'Dit was absoluut de moeilijkste feature. Ik bleef bugs tegenkomen en rare edge cases die ik niet verwachtte. Ik denk dat ik 50-70 prompts aan deze functie heb besteed, wat ongeveer 20% van alle prompts was. En eerlijk gezegd kan ik nog steeds niet garanderen dat het 100% bugvrij is. De combinatie van betaalproviders, gedeelde IBANs, merchant variaties, verschillende spellingen van dezelfde bedrijf... het was complex. Het LLM worstelde eraan, ik moest telkens weer de edge cases uitleggen, en fixes van de ene kant creëerden problemen aan de andere kant.',
+        },
+        darkMode: {
+          title: '🌙 Dark mode overal implementeren',
+          content:
+            'Dark mode toevoegen aan alles tegelijk? Slecht idee. Dus deed ik het per sectie (frontend, landing page, docs, help center). Maar het LLM had er echt moeite mee de kleurwaarden correct aan te passen. Het bleef zeggen dat alles in orde was, dat dark mode volledig geïmplementeerd was, maar wanneer ik het toggle aanzette en uitzette zag ik geen verandering. De darkMode context was er, de classNames waren daar, maar ergens faalde de logica. Uiteindelijk moest ik dit volledig van scratch herdoen. Soms is het gewoon makkelijker om het zelf te doen... maar dat mocht niet van mezelf volgens de regels van dit experiment.',
+        },
+      },
+      polish: {
+        title: 'De mooie afwerking ✨',
+        landing:
+          'Toen de branding eindelijk was gemaakt (Fluxby! wat een geweldige naam), vroeg ik om een prachtige, moderne landingspagina. Een paar prompts later en we hadden een ongelooflijk mooi uitziende one-pager die de app echt goed laat zien. Met hero section, features, screenshots, testimonials, CTA buttons - alles wat je nodig hebt.',
+        docs: 'Ik vroeg om Swagger/OpenAPI docs voor letterlijk alle 30+ endpoints en op basis daarvan professionele developer documentatie te maken zoals Stripe heeft. Compleet met interactieve voorbeelden, request/response voorbeelden, en zijde navigatie. Dit was complex omdat het LLM moest begrijpen wat goede dev docs zijn en consistent format moest blijven.',
+        onboarding:
+          'Een complete, immersieve onboarding ervaring waar elke feature rustig en duidelijk wordt uitgelegd aan nieuwe gebruikers, compleet met voortgang tracking zodat je altijd weet waar je bent in de tutorial. Dit moest intuïtief voelen en niet overwhelm zijn.',
+        mascot:
+          'Ik begon te brainstormen over een naam - Fluxby! Toen vroeg ik om een mascotte te maken met als doel: pluizig, benaderbaar en schattig. Iets wat finance minder serieus en intimiderend maakt. Toen liet ik het ademen, liet het je cursor volgen met zijn ogen, en voegde leuke animaties toe. Het voelt echt als een companion.',
+      },
+      costs: {
+        title: 'De financiën van dit experiment 💰',
+        content:
+          'Ik bereikte al snel mijn premium request limiet in mijn GitHub Copilot abonnement. Dit kwam doordat Claude Opus een 3x multiplier heeft, elke Opus prompt telt als 3 requests in je limiet. Om dit experiment voort te zetten stond ik een budget van $25 toe voor extra premium credits en ontwikkelde ik een slimme strategie voor wanneer welk model te gebruiken. Dit was strategisch resource management in plaats van gewoon blindelings geld uitgeven. Uiteindelijk besteedde ik ongeveer $30 (abonnementskosten en extra request kosten) totaal aan LLM kosten voor het hele project, wat ongelooflijk goedkoop is voor een volledige applicatie.',
+        strategy: {
+          free: 'Kleine refactors of content wijzigingen → gratis modellen (Grok Code Fast 1, Raptor mini) want deze zijn goedkoop en goed genoeg voor kleine taken',
+          gemini:
+            'Grotere wijzigingen in bestaande code → Google Gemini 3 Pro want die biedt een goede balans tussen prijs en prestatie voor middelgrote taken',
+          opus: 'Complexe architecturale wijzigingen of wanneer Gemini faalde → Claude Opus 4.5 omdat dit de beste en meest capable model is',
+        },
+      },
+      improvements: {
+        title: 'Wat nog beter kan (en gaat)',
+        items: [
+          'Toegankelijkheid (a11y) - heel veel verbeteringen mogelijk, niet alles is WCAG 2.1 AA compliant op dit moment',
+          'UI consistentie verder doorvoeren - badges, buttons, en spacing kunnen nog uniformer worden',
+          'Gedeelde database logica refactoren - er is veel duplication die we kunnen consolideren',
+          'E2E tests toevoegen - echte testers hebben bugs gevonden die automated tests hadden moeten pakken',
+          'Performance optimalisaties - sommige charts laden soms langzaam, vooral met veel data',
+          'Meer edge case handling in categorization engine - meer testgevallen nodig',
+        ],
+      },
+      conclusion: {
+        title: 'Het einde (en het begin)',
+        paragraphs: [
+          'Dus hier zijn we, ongeveer 375 prompts en 2,5 weken later. Een professioneel ogende, goed werkende financiële applicatie met features die ik niet eens initieel had gepland, compleet gebouwd door AI op basis van mijn prompts, feedback en voortdurende iteraties. De onderliggende regel was dat ik geen code zelf zou schrijven of repareren - ik mocht dit experiment niet "vals spelen" door zelf in de code te duiken.',
+          'Sterker nog, ik heb de codebase letterlijk helemaal niet bekeken. Ik gebruikte alleen de chat interface en accepteerde (of suggereerde aanpassingen op) elke wijziging die het model voorstelde. Dit was belangrijk omdat het me dwingt het model echt te gebruiken als een "AI developer" in plaats van als een hulptool.',
+          'Dit experiment bewijst dat AI nu echt capabel is voor real-world applicaties. Niet voor alles - edge cases zijn nog steeds lastig, bugs in edge cases lijken vaker voor te komen dan ik had verwacht, en het volgen van design systems is moeilijker dan ik dacht. Maar voor het merendeel van het werk? Absoluut ja. Een single developer kan nu echt sneller productieklare applicaties bouwen door AI als partner in te zetten.',
+          'De toekomst ziet er genuinely spannend uit. Als je me verteld had een jaar geleden dat ik in twee weken een volledige financiële app kon bouwen zonder zelf code te schrijven, zou ik je niet geloofd hebben. Toch is het gebeurd. De vraag is niet meer "kan AI software bouwen?" maar eerder "hoe bouwen we het meest effectief met AI?" en "welke problemen kunnen we nu oplossen die voordien te duur waren?"',
+        ],
+      },
+      exploreMore: {
+        title: 'Ontdek meer',
+        app: {
+          title: 'Probeer Fluxby nu',
+          description:
+            'Ervaar de magie zelf! Duik in de app en ontdek hoe AI-gestuurde financiën beheren aanvoelt.',
+        },
+        docs: {
+          title: 'Developer documentatie',
+          description:
+            'Voor developers die willen bouwen met Fluxby. Volledige API documentatie, voorbeelden en integratiegidsen.',
+        },
+        help: {
+          title: 'Helpcentrum',
+          description:
+            'Ontdek alle mogelijkheden! Gidsen, tips en alles wat je nodig hebt om het maximale uit Fluxby te halen.',
+        },
+        github: {
+          title: 'Bijdragen op GitHub',
+          description:
+            'Help Fluxby nog beter te maken! Meld bugs, stel features voor of draag code bij aan het project.',
+        },
+      },
+      personalMessage: {
+        text: 'Ik hoop dat je net zoveel plezier hebt met Fluxby als ik had bij het bouwen ervan! Bekijk de demo — ik heb gezorgd dat er een volledig werkend demo profiel beschikbaar is om alles uit te proberen! 🚀',
+        signature: 'Houke',
+      },
+    },
+  },
+  errors: {
+    notFound: 'Pagina niet gevonden',
+    notFoundDescription:
+      'De pagina die je zoekt bestaat niet of is verplaatst.',
+    goHome: 'Naar homepage',
+    goBack: 'Ga terug',
+  },
+  // Screenshot animation translations
+  animations: {
+    dashboard: {
+      total: 'totaal',
+      categories: {
+        supermarkt: 'Supermarkt',
+        restaurant: 'Restaurant',
+        brandstof: 'Brandstof',
+        energie: 'Energie',
+        streaming: 'Streaming',
+        transport: 'Transport',
+      },
+    },
+    transactions: {
+      date: 'dec',
+      income: 'Inkomen',
+      categories: {
+        supermarkt: 'Supermarkt',
+        inkomen: 'Inkomen',
+        brandstof: 'Brandstof',
+        streaming: 'Streaming',
+        restaurant: 'Restaurant',
+        energie: 'Energie',
+        transport: 'Transport',
+        inrichting: 'Inrichting',
+        drogisterij: 'Drogisterij',
+      },
+    },
+    budgets: {
+      leftThisMonth: 'over deze maand',
+      spent: 'Uitgegeven',
+      budget: 'Budget',
+      remaining: 'over',
+      overBudget: 'over budget!',
+      categories: {
+        boodschappen: 'Boodschappen',
+        uiteten: 'Uit eten',
+        brandstof: 'Brandstof',
+        streaming: 'Streaming',
+      },
+    },
+    categories: {
+      groups: {
+        wonen: 'Wonen & Huisvesting',
+        huishouden: 'Huishouden & Boodschappen',
+        vervoer: 'Vervoer & Transport',
+        eten: 'Eten & Drinken',
+      },
+      subcategories: {
+        huur: 'Huur & Hypotheek',
+        energie: 'Energie & Water',
+        inrichting: 'Inrichting & Tuin',
+        supermarkt: 'Supermarkt',
+        drogisterij: 'Drogisterij',
+        huisdieren: 'Huisdieren',
+        brandstof: 'Brandstof & Laden',
+        ov: 'Openbaar Vervoer',
+        parkeren: 'Parkeren & Taxi',
+        restaurant: 'Restaurant',
+        bezorging: 'Bezorging',
+        koffie: 'Koffie & Snacks',
+      },
+    },
+    analytics: {
+      title: 'Uitgaven per categorie',
+      month: 'december',
+      total: 'Totaal uitgegeven',
+      income: 'Inkomsten',
+      expenses: 'Uitgaven',
+    },
+    import: {
+      dropzone: 'Sleep je CSV bestand hier',
+      or: 'of',
+      browse: 'blader',
+      uploading: 'Uploaden...',
+      processing: 'Verwerken...',
+      detecting: 'Duplicaten worden gedetecteerd...',
+      importing: 'Importeren',
+      done: 'Import voltooid!',
+      transactionsImported: 'transacties geïmporteerd',
+      dragHint: 'Sleep je ING CSV bestand hierheen',
+    },
+  },
+};

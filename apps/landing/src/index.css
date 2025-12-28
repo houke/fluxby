@@ -1,0 +1,57 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-fluxby-purple hover:bg-fluxby-dark transform rounded-full px-8 py-4 text-lg font-bold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl;
+  }
+
+  .section-padding {
+    @apply px-4 py-20;
+  }
+
+  .gradient-bg {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  }
+
+  .fluffy-shadow {
+    box-shadow: 0 20px 40px rgba(139, 92, 246, 0.3);
+  }
+
+  .custom-h3-margin h3 {
+    margin-top: 0.5em;
+  }
+
+  @keyframes avatarBreathe {
+    0%,
+    100% {
+      transform: translateY(0px) scale(1);
+    }
+    50% {
+      transform: translateY(-6px) scale(1.02);
+    }
+  }
+
+  .avatar-breathe {
+    animation: avatarBreathe 6s ease-in-out infinite;
+    will-change: transform;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .avatar-breathe {
+      animation: none !important;
+    }
+  }
+
+  /* Remove margins from tables in prose content */
+  .prose table {
+    margin: 0;
+  }
+}

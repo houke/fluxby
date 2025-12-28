@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "jsx": "react-jsx",
+    "composite": false,
+    "lib": ["dom", "dom.iterable", "esnext"]
+  },
+
+  "include": ["src/**/*.ts", "src/**/*.tsx"]
+}

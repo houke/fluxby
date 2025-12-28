@@ -1,0 +1,38 @@
+{
+  "name": "@fluxby/api",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "migrate:payment-methods": "node ./scripts/migrate-payment-methods.mjs",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@fluxby/shared": "*",
+    "better-sqlite3": "^12.5.0",
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "multer": "^2.0.2",
+    "papaparse": "^5.4.1",
+    "swagger-jsdoc": "^6.2.1",
+    "swagger-ui-express": "^5.0.1",
+    "zod": "^4.2.1"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.12",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.0",
+    "@types/multer": "^2.0.0",
+    "@types/papaparse": "^5.3.15",
+    "@types/supertest": "^6.0.3",
+    "@types/swagger-jsdoc": "^6.0.4",
+    "@types/swagger-ui-express": "^4.1.8",
+    "supertest": "^7.1.4",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}

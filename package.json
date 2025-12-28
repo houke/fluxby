@@ -1,0 +1,52 @@
+{
+  "name": "fluxby",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Lokale financiële visualisatie app voor bank CSV exports",
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:api\" \"npm run dev:web\" \"npm run dev:landing\"",
+    "dev:api": "npm run dev -w apps/api",
+    "dev:web": "npm run dev -w apps/web",
+    "dev:landing": "npm run dev -w apps/landing",
+    "build": "npm run build -w packages/shared && npm run build -w apps/api && npm run build -w apps/web && npm run build -w apps/landing",
+    "build:dist": "node scripts/build-dist.mjs",
+    "build:api": "npm run build -w apps/api",
+    "build:web": "npm run build -w apps/web",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
+    "typecheck": "npm run typecheck -w apps/web && npm run typecheck -w apps/api",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "start": "npm run start -w apps/api",
+    "start:dist": "node dist/apps/api/dist/index.js"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "devDependencies": {
+    "@eslint/js": "^9.17.0",
+    "@testing-library/react": "^16.3.1",
+    "@vitest/coverage-v8": "^2.1.8",
+    "concurrently": "^9.1.0",
+    "eslint": "^9.17.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-prettier": "^5.2.1",
+    "eslint-plugin-react": "^7.37.2",
+    "eslint-plugin-react-hooks": "^5.1.0",
+    "eslint-plugin-react-refresh": "^0.4.16",
+    "jsdom": "^27.3.0",
+    "prettier": "^3.4.2",
+    "prettier-plugin-tailwindcss": "^0.7.2",
+    "typescript": "^5.7.2",
+    "typescript-eslint": "^8.18.1",
+    "vitest": "^2.1.8"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  }
+}

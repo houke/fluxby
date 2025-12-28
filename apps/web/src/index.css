@@ -1,0 +1,140 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 224 71% 95%;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    --primary: 262 83% 58%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 14% 96%;
+    --secondary-foreground: 222 47% 11%;
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 9% 46%;
+    --accent: 262 83% 58%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 160 84% 39%;
+    --success-foreground: 0 0% 100%;
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 262 83% 58%;
+    --radius: 1rem;
+  }
+
+  .dark {
+    --background: 222 47% 11%;
+    --foreground: 210 40% 98%;
+    --card: 223 47% 17%;
+    --card-foreground: 210 40% 98%;
+    --popover: 223 47% 17%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 262 83% 58%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 223 47% 23%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 223 47% 23%;
+    --muted-foreground: 215 20% 65%;
+    --accent: 262 83% 58%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 160 84% 39%;
+    --success-foreground: 0 0% 100%;
+    --border: 223 47% 23%;
+    --input: 223 47% 23%;
+    --ring: 262 83% 58%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings:
+      'rlig' 1,
+      'calt' 1;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply rounded-full bg-muted;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply rounded-full bg-muted-foreground/30;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-muted-foreground/50;
+}
+
+/* Number animations */
+@keyframes countUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-count-up {
+  animation: countUp 0.5s ease-out forwards;
+}
+
+/* Chart reveal from right animation */
+@keyframes revealFromRight {
+  from {
+    clip-path: inset(0 0 0 100%);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+.animate-reveal-from-right {
+  animation: revealFromRight 1.5s ease-out forwards;
+}
+
+/* Card hover effects */
+.card-hover {
+  @apply transition-all duration-200 ease-in-out;
+}
+
+.card-hover:hover {
+  @apply -translate-y-0.5 shadow-lg;
+}
+
+/* Remove focus outline from Recharts SVG elements */
+.recharts-wrapper svg,
+.recharts-wrapper svg *,
+.recharts-sector,
+.recharts-pie-sector {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.recharts-wrapper svg:focus,
+.recharts-wrapper svg *:focus,
+.recharts-wrapper svg:focus-visible,
+.recharts-wrapper svg *:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}

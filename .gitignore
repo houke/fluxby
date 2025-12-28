@@ -1,0 +1,47 @@
+# Build outputs
+dist/
+**/dist/
+
+# Dependencies
+node_modules/
+**/node_modules/
+
+# SQLite database (local + lock/WAL files)
+data/
+*.db
+*.db-wal
+*.db-shm
+
+# IDE & OS
+.DS_Store
+**/.DS_Store
+.vscode/
+*.swp
+*.swo
+*~
+.idea/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Exports & imports
+exports/
+imports/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Coverage
+coverage/
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Vite
+.vite/
+

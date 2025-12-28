@@ -1,0 +1,114 @@
+import { useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { api } from '@/lib/api';
+import { useFilterParams } from '@/contexts/FilterContext';
+
+// Minimal transaction type for totals calculation
+interface TransactionForTotals {
+  id: number;
+  amount: number;
+  type: 'income' | 'expense' | 'transfer';
+}
+
+interface TransactionTotals {
+  income: number;
+  expenses: number;
+  transferToSavings: number;
+  transferFromSavings: number;
+  netSavingsTransfer: number;
+  balance: number;
+  count: number;
+}
+
+/**
+ * Shared hook for calculating transaction totals.
+ * Uses the same calculation logic for both Dashboard and Transactions pages.
+ *
+ * Important: Transfers are NOT counted in income/expenses to avoid double counting.
+ * - Income = positive amounts where type != 'transfer'
+ * - Expenses = negative amounts where type != 'transfer'
+ * - TransferToSavings = negative transfer amounts (money leaving checking)
+ * - TransferFromSavings = positive transfer amounts (money coming back)
+ */
+export function useTransactionTotals(
+  transactions?: TransactionForTotals[]
+): TransactionTotals {
+  return useMemo(() => {
+    if (!transactions || transactions.length === 0) {
+      return {
+        income: 0,
+        expenses: 0,
+        transferToSavings: 0,
+        transferFromSavings: 0,
+        netSavingsTransfer: 0,
+        balance: 0,
+        count: 0,
+      };
+    }
+
+    const result = transactions.reduce(
+      (acc, tx) => {
+        if (tx.type === 'transfer') {
+          if (tx.amount < 0) {
+            acc.transferToSavings += Math.abs(tx.amount);
+          } else {
+            acc.transferFromSavings += tx.amount;
+          }
+        } else if (tx.type === 'income') {
+          acc.income += tx.amount;
+        } else if (tx.type === 'expense') {
+          acc.expenses += Math.abs(tx.amount);
+        }
+        return acc;
+      },
+      { income: 0, expenses: 0, transferToSavings: 0, transferFromSavings: 0 }
+    );
+
+    return {
+      ...result,
+      netSavingsTransfer: result.transferToSavings - result.transferFromSavings,
+      balance: result.income - result.expenses,
+      count: transactions.length,
+    };
+  }, [transactions]);
+}
+
+interface DashboardStats {
+  totalBalance: number;
+  totalIncome: number;
+  totalExpenses: number;
+  totalTransfers: number;
+  savingsRate: number;
+  transactionCount: number;
+}
+
+/**
+ * Hook to get totals from the API dashboard endpoint.
+ * This ensures consistency with the Dashboard page.
+ */
+export function useDashboardTotals() {
+  const { startDate, endDate, type, categoryIds } = useFilterParams();
+
+  const { data, isLoading } = useQuery<DashboardStats>({
+    queryKey: ['dashboard', startDate, endDate, type, categoryIds],
+    queryFn: () =>
+      api.getDashboardStats(
+        startDate,
+        endDate,
+        type,
+        categoryIds
+      ) as Promise<DashboardStats>,
+  });
+
+  return {
+    totals: {
+      income: data?.totalIncome || 0,
+      expenses: data?.totalExpenses || 0,
+      transfers: data?.totalTransfers || 0,
+      balance: data?.totalBalance || 0,
+      count: data?.transactionCount || 0,
+    },
+    isLoading,
+    data,
+  };
+}

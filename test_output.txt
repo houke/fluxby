@@ -1,0 +1,47 @@
+
+> fluxby@1.0.0 test:run
+> vitest run tests/api/multi-tenant-flow.test.ts
+
+
+ RUN  v2.1.9 /Users/houkebv/Apps/fluxby
+
+stdout | tests/api/multi-tenant-flow.test.ts > Multi-Tenant Integration Flow
+INITIALIZING DB AT: :memory:
+
+stdout | tests/api/multi-tenant-flow.test.ts > Multi-Tenant Integration Flow
+Read schema from /Users/houkebv/Apps/fluxby/apps/api/src/db/schema.sql
+Schema content preview: -- User profile (single user)
+CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY CHECK(id = 1),
+    name TEXT NOT NULL,
+    avatar TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Default user profile
+INSERT OR IGNORE INTO users (id, name, avatar) VALUES
+    (1, 'Gebruiker', 'linear-gradient(135deg, #6366F1, #A855F7)');
+
+-- Profiles table (multi-tenant support)
+CREATE TABLE IF NOT EXISTS profiles (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL DE
+Schema content accounts table:  (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    iban TEXT UNIQUE NOT NULL,
+    name TEXT NOT NULL,
+    type TEXT CHECK(type IN ('checking', 'savings', 'credit')) DEFAULT 'checking',
+    bank TEXT DEFAULT 'ing',
+    current_balance DECIMAL(10,2),
+    order_index INTEGER DEFAULT 0,
+    profile_id INT
+Error adding profile_id to accounts (likely exists): duplicate column name: profile_id
+Database initialized successfully
+
+ ✓ tests/api/multi-tenant-flow.test.ts (8 tests) 281ms
+
+ Test Files  1 passed (1)
+      Tests  8 passed (8)
+   Start at  17:49:21
+   Duration  527ms (transform 142ms, setup 8ms, collect 44ms, tests 281ms, environment 0ms, prepare 44ms)
+
