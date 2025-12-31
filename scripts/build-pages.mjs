@@ -49,7 +49,7 @@ async function main() {
 
   // 1) Build dependencies + OpenAPI
   run('npm', ['run', 'build:packages']);
-  run('npm', ['run', 'generate:openapi']);
+  run('npm', ['run', 'generate:api']);
 
   // 2) Build web + landing for the same base URL
   run('npm', ['run', 'build', '-w', 'apps/web'], env);
