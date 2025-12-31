@@ -298,6 +298,11 @@ export const api = {
     return ds.deleteAllBudgets();
   },
 
+  deleteAllAddressBook: async () => {
+    const ds = getDataService();
+    return ds.deleteAllAddressBook();
+  },
+
   // ============= Analytics =============
   getDashboardStats: async (
     startDate?: string,
@@ -1037,123 +1042,7 @@ export const api = {
     contactId?: string
   ) => {
     const ds = getDataService();
-
-    const db = (
-      ds as unknown as {
-        db: {
-          queryAsync: <T>(sql: string, params: unknown[]) => Promise<T[]>;
-          runAsync: (
-            sql: string,
-            params: unknown[]
-          ) => Promise<{ changes?: number }>;
-          queryOneAsync: <T>(
-            sql: string,
-            params: unknown[]
-          ) => Promise<T | null>;
-        };
-      }
-    ).db;
-
-    const pid =
-      typeof window !== 'undefined'
-        ? window.localStorage.getItem('fluxby.activeProfileId')
-        : null;
-    if (!pid) throw new Error('No active profile');
-
-    const normalizedIban = iban.toUpperCase().trim();
-    const normalizedName = name.trim();
-    const now = Date.now();
-
-    // If a contact with EXACT same name exists, always merge into it.
-    const existingByName = await db.queryAsync<{ id: string }>(
-      `SELECT id FROM address_book
-       WHERE profile_id = ? AND is_deleted = 0 AND TRIM(name) = TRIM(?)
-       LIMIT 1`,
-      [pid, normalizedName]
-    );
-
-    let addressBookId: string;
-    let isNewContact = false;
-
-    if (contactId) {
-      addressBookId = contactId;
-      await ds.updateAddressBookEntry(contactId, { name: normalizedName });
-    } else if (existingByName.length > 0) {
-      addressBookId = existingByName[0].id;
-    } else {
-      // Create a new contact. For shared IBANs we use original_name to disambiguate.
-      addressBookId = crypto.randomUUID();
-      isNewContact = true;
-      const primaryOriginalName = (originalNames[0] || normalizedName).trim();
-      await db.runAsync(
-        `INSERT INTO address_book (id, iban, name, original_name, profile_id, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        [
-          addressBookId,
-          normalizedIban,
-          normalizedName,
-          primaryOriginalName,
-          pid,
-          now,
-          now,
-        ]
-      );
-    }
-
-    // Ensure the IBAN is linked to the contact (shared IBANs can be linked to multiple contacts).
-    await db.runAsync(
-      'INSERT OR IGNORE INTO contact_ibans (id, contact_id, iban, is_primary, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)',
-      [
-        crypto.randomUUID(),
-        addressBookId,
-        normalizedIban,
-        isNewContact ? 1 : 0,
-        now,
-        now,
-      ]
-    );
-
-    // Update transactions with the new merchant name + link them to the contact.
-    let transactionsUpdated = 0;
-    if (originalNames.length > 0) {
-      for (const originalName of originalNames) {
-        const normalizedOriginal = originalName.trim();
-        const result = await db.runAsync(
-          `UPDATE transactions
-           SET merchant_name = ?, address_book_id = ?, updated_at = ?
-           WHERE profile_id = ?
-             AND opposing_account_iban = ?
-             AND (
-               LOWER(opposing_account_name) = LOWER(?) OR
-               LOWER(merchant_name) = LOWER(?)
-             )
-             AND is_deleted = 0`,
-          [
-            normalizedName,
-            addressBookId,
-            now,
-            pid,
-            normalizedIban,
-            normalizedOriginal,
-            normalizedOriginal,
-          ]
-        );
-        transactionsUpdated += result?.changes || 0;
-      }
-    } else {
-      // Fallback: link by IBAN only if no originalNames were provided.
-      const result = await db.runAsync(
-        `UPDATE transactions
-         SET merchant_name = ?, address_book_id = ?, updated_at = ?
-         WHERE profile_id = ?
-           AND opposing_account_iban = ?
-           AND is_deleted = 0`,
-        [normalizedName, addressBookId, now, pid, normalizedIban]
-      );
-      transactionsUpdated += result?.changes || 0;
-    }
-
-    return { success: true, data: { transactionsUpdated } };
+    return ds.resolveSharedIban(iban, name, originalNames, contactId);
   },
 
   addContactIban: async (contactId: string, iban: string) => {

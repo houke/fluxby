@@ -539,6 +539,7 @@ export interface TranslationKeys {
       createError: string;
       hideProfile: string;
       showProfile: string;
+      hidden: string;
       profileHidden: string;
       profileShown: string;
     };
@@ -1571,6 +1572,7 @@ export const nl: TranslationKeys = {
       createError: 'Er ging iets mis bij het aanmaken van het profiel.',
       hideProfile: 'Verberg profiel',
       showProfile: 'Toon profiel',
+      hidden: 'Verborgen',
       profileHidden: 'Profiel verborgen',
       profileShown: 'Profiel zichtbaar',
     },

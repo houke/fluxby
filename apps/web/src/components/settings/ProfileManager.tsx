@@ -111,6 +111,7 @@ export function ProfileManager() {
   const [editingProfile, setEditingProfile] = useState<Profile | null>(null);
   const [copiedProfileId, setCopiedProfileId] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [toastType, setToastType] = useState<'success' | 'error'>('success');
 
   // Step state for create dialog: 'profile' | 'accounts'
   const [createStep, setCreateStep] = useState<'profile' | 'accounts'>(
@@ -221,17 +222,21 @@ export function ProfileManager() {
         setCreateStep('accounts');
         setCreatedAccounts([]);
       } else {
+        setToastType('error');
         setToastMessage(
           t.settings?.profileManager?.createError ||
             'Er ging iets mis bij het aanmaken van het profiel.'
         );
+        setIsCreateOpen(false);
       }
     } catch (error) {
       console.error('Failed to create profile', error);
+      setToastType('error');
       setToastMessage(
         t.settings?.profileManager?.createError ||
           'Er ging iets mis bij het aanmaken van het profiel.'
       );
+      setIsCreateOpen(false);
     } finally {
       setIsCreating(false);
     }
@@ -312,6 +317,7 @@ export function ProfileManager() {
       try {
         await deleteProfile(id);
         if (isDemoProfile) {
+          setToastType('success');
           setToastMessage(
             t.settings?.profileManager?.demoDeleted ||
               'Demo profile deleted. Restart onboarding to create a new one.'
@@ -336,6 +342,7 @@ export function ProfileManager() {
     try {
       await navigator.clipboard.writeText(profileId);
       setCopiedProfileId(profileId);
+      setToastType('success');
       setToastMessage(
         t.settings?.profileManager?.idCopied ||
           'ID successfully copied to clipboard'
@@ -652,7 +659,13 @@ export function ProfileManager() {
           return (
             <Card
               key={profile.id}
-              className={`transition-all ${isActive ? 'border-primary ring-1 ring-primary' : 'hover:border-primary/50'}`}
+              className={cn(
+                'transition-all',
+                isActive
+                  ? 'border-primary ring-1 ring-primary'
+                  : 'hover:border-primary/50',
+                profile.isHidden && 'opacity-50'
+              )}
             >
               <CardHeader className='pb-3'>
                 <div className='flex items-start justify-between'>
@@ -740,15 +753,22 @@ export function ProfileManager() {
                 </div>
               </CardContent>
               <CardFooter className='flex justify-between border-t bg-muted/20 p-3'>
-                <Button
-                  variant='ghost'
-                  size='sm'
-                  onClick={() => switchProfile(profile.id)}
-                  disabled={isActive}
-                  className={isActive ? 'invisible' : ''}
-                >
-                  {t.settings.profileManager.switchTo}
-                </Button>
+                {/* Hide switch button for hidden profiles and when active */}
+                {profile.isHidden ? (
+                  <span className='text-xs text-muted-foreground'>
+                    {t.settings?.profileManager?.hidden || 'Hidden'}
+                  </span>
+                ) : (
+                  <Button
+                    variant='ghost'
+                    size='sm'
+                    onClick={() => switchProfile(profile.id)}
+                    disabled={isActive}
+                    className={isActive ? 'invisible' : ''}
+                  >
+                    {t.settings.profileManager.switchTo}
+                  </Button>
+                )}
                 <div className='flex gap-1'>
                   {/* Hide edit button for Demo profile - it's only removable, not editable */}
                   {profile.id !== DEMO_PROFILE_ID &&
@@ -961,7 +981,7 @@ export function ProfileManager() {
       {toastMessage && (
         <Toast
           message={toastMessage}
-          type='success'
+          type={toastType}
           onClose={() => setToastMessage(null)}
         />
       )}

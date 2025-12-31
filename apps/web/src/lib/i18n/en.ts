@@ -617,6 +617,7 @@ export const en: TranslationKeys = {
       createError: 'Something went wrong creating the profile.',
       hideProfile: 'Hide profile',
       showProfile: 'Show profile',
+      hidden: 'Hidden',
       profileHidden: 'Profile hidden',
       profileShown: 'Profile visible',
     },

@@ -927,7 +927,7 @@ export const nl: LandingTranslationKeys = {
         create: 'Maak nieuw contact',
         get: 'Haal contact op met ID',
         update: 'Update contact',
-        delete: 'Verwijder contact',
+        delete: 'Contacten verwijderen',
       },
       listTitle: 'Lijst Contacten',
       listText:

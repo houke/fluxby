@@ -671,9 +671,22 @@ export default function AddressBook() {
   };
 
   const startEditingContact = (contact: AddressBookEntry) => {
-    setEditingContactId(contact.id);
-    setEditContactName(contact.name);
-    setEditContactDescription(contact.description || '');
+    // If contact is merged (multiple IBANs), show split modal first
+    if (contact.isMerged && contact.ibans && contact.ibans.length > 1) {
+      setSplitContact(contact);
+      // Pre-fill mappings with current IBANs and default names
+      const init: Record<string, string> = {};
+      (contact.ibans || []).forEach((i) => {
+        init[i] = contact.name + '';
+      });
+      setSplitIbanNames(init);
+      setSplitModalOpen(true);
+    } else {
+      // Regular contact - open inline edit mode
+      setEditingContactId(contact.id);
+      setEditContactName(contact.name);
+      setEditContactDescription(contact.description || '');
+    }
   };
 
   const handleUpdateContact = () => {

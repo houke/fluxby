@@ -179,7 +179,16 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
       // trigger navigation). This ensures the mascot click starts onboarding
       // at the active tab.
       const normalizePath = (p: string) => {
-        const trimmed = p.replace(/\/+$/, '');
+        // Strip any base path (e.g., /app/) to get the route path
+        let trimmed = p.replace(/\/+$/, '');
+        // Check for common base paths
+        const basePaths = ['/app', '/dashboard'];
+        for (const base of basePaths) {
+          if (trimmed.startsWith(base)) {
+            trimmed = trimmed.slice(base.length);
+            break;
+          }
+        }
         return trimmed === '' ? '/' : trimmed;
       };
       const requestedPath = normalizePath(window.location.pathname);
@@ -208,11 +217,8 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
       // Find chapter matching current route
       let startChapterIndex = 0;
 
-      // If starting at current page, but user never completed initial setup, start from beginning
-      if (startAtCurrentPage && !hasCompletedInitialSetup) {
-        startAtCurrentPage = false;
-      }
-
+      // If starting at current page (mascot click), find the matching chapter
+      // Note: We always honor startAtCurrentPage when explicitly requested
       if (startAtCurrentPage) {
         const currentPath = requestedPath;
         // Find all chapters matching this route (excluding welcome at index 0 and completion at last index)
@@ -249,12 +255,23 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
       }
 
       setState((prev) => {
-        // If starting at current page, always start fresh at that chapter
+        // If starting at current page (mascot click), always start at that chapter
+        // Note: startChapterIndex > 0 because index 0 is welcome, and we found a content chapter
         if (startAtCurrentPage && startChapterIndex > 0) {
           return {
             ...prev,
             isActive: true,
             currentChapterIndex: startChapterIndex,
+            currentStepIndex: 0,
+          };
+        }
+
+        // If mascot was clicked but no matching chapter found, still start but from navigation (index 1)
+        if (startAtCurrentPage) {
+          return {
+            ...prev,
+            isActive: true,
+            currentChapterIndex: 1, // Start at navigation chapter
             currentStepIndex: 0,
           };
         }
@@ -269,27 +286,17 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
           };
         }
 
-        // Otherwise resume from saved position only if it matches the current route
-        const savedChapter = onboardingChapters[prev.currentChapterIndex];
-        const currentPath = window.location.pathname;
-        if (savedChapter && savedChapter.route === currentPath) {
-          // Resume at saved position since we're on the same page
+        // Resume from saved position (continue session)
+        // Only resume if we have made progress (not at the start)
+        if (prev.currentChapterIndex > 0 || prev.currentStepIndex > 0) {
+          // Navigate to the saved chapter's route
+          const savedChapter = onboardingChapters[prev.currentChapterIndex];
+          if (savedChapter) {
+            navigate(savedChapter.route);
+          }
           return {
             ...prev,
             isActive: true,
-          };
-        }
-
-        // If on different page, find matching chapter and start there
-        const matchingChapter = onboardingChapters.findIndex(
-          (chapter) => chapter.route === currentPath
-        );
-        if (matchingChapter > 0) {
-          return {
-            ...prev,
-            isActive: true,
-            currentChapterIndex: matchingChapter,
-            currentStepIndex: 0,
           };
         }
 

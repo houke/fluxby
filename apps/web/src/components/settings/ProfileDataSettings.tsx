@@ -111,6 +111,23 @@ export function ProfileDataSettings() {
       fallbackError: 'Fout bij verwijderen budgetten',
       fallbackButton: 'Verwijder budgetten',
     },
+    {
+      titleKey: 'deleteAddressBookTitle',
+      descKey: 'deleteAddressBookDescription',
+      confirmKey: 'deleteAddressBookConfirm',
+      successKey: 'deleteAddressBookSuccess',
+      errorKey: 'deleteAddressBookError',
+      buttonKey: 'deleteAddressBookButton',
+      action: api.deleteAllAddressBook,
+      fallbackTitle: 'Adresboek verwijderen',
+      fallbackDesc:
+        'Verwijder alle contacten (IBANs verschijnen weer in voorgestelde adressen)',
+      fallbackConfirm:
+        'Weet je zeker dat je alle contacten wilt verwijderen? De IBANs worden weer voorgesteld.',
+      fallbackSuccess: 'Alle contacten verwijderd',
+      fallbackError: 'Fout bij verwijderen contacten',
+      fallbackButton: 'Verwijder contacten',
+    },
   ];
 
   // Helper to get translation with fallback

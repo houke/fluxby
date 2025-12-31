@@ -20,6 +20,8 @@ import {
   type ProfileType,
   flattenCategoriesForDB,
   SEED_CATEGORIES,
+  DEFAULT_NAME_CLEANUP_RULES,
+  DEFAULT_PAYMENT_PROVIDER_RULES,
 } from '@fluxby/shared';
 import { processINGRow } from './importers/ing-importer';
 
@@ -207,6 +209,26 @@ export function createDataService(db: Database) {
             [ruleId, rule, subId, 0, id, now, now]
           );
         }
+      }
+
+      // Seed default name cleanup rules for the new profile
+      for (const pattern of DEFAULT_NAME_CLEANUP_RULES) {
+        const ruleId = crypto.randomUUID();
+        await db.runAsync(
+          `INSERT OR IGNORE INTO name_cleanup_rules (id, pattern, profile_id, is_active, created_at, updated_at)
+           VALUES (?, ?, ?, 1, ?, ?)`,
+          [ruleId, pattern, id, now, now]
+        );
+      }
+
+      // Seed default payment provider rules for the new profile
+      for (const rule of DEFAULT_PAYMENT_PROVIDER_RULES) {
+        const ruleId = crypto.randomUUID();
+        await db.runAsync(
+          `INSERT OR IGNORE INTO payment_provider_rules (id, name, patterns, profile_id, created_at, updated_at)
+           VALUES (?, ?, ?, ?, ?, ?)`,
+          [ruleId, rule.name, rule.patterns, id, now, now]
+        );
       }
 
       const profile = await this.getProfile(id);
@@ -1411,6 +1433,115 @@ export function createDataService(db: Database) {
       };
     },
 
+    /**
+     * Resolve a shared IBAN entry to address book
+     * Used for adding contacts from shared IBANs (payment processors)
+     */
+    async resolveSharedIban(
+      iban: string,
+      name: string,
+      originalNames: string[],
+      contactId?: string
+    ): Promise<{ success: boolean; data: { transactionsUpdated: number } }> {
+      const pid = profileId();
+      if (!pid) throw new Error('No active profile');
+
+      const normalizedIban = iban.toUpperCase().trim();
+      const normalizedName = name.trim();
+      const now = Date.now();
+
+      // If a contact with EXACT same name exists, always merge into it.
+      const existingByName = await db.queryAsync<{ id: string }>(
+        `SELECT id FROM address_book
+         WHERE profile_id = ? AND is_deleted = 0 AND TRIM(name) = TRIM(?)
+         LIMIT 1`,
+        [pid, normalizedName]
+      );
+
+      let addressBookId: string;
+      let isNewContact = false;
+
+      if (contactId) {
+        addressBookId = contactId;
+        await this.updateAddressBookEntry(contactId, { name: normalizedName });
+      } else if (existingByName.length > 0) {
+        addressBookId = existingByName[0].id;
+      } else {
+        // Create a new contact. For shared IBANs we use original_name to disambiguate.
+        addressBookId = crypto.randomUUID();
+        isNewContact = true;
+        const primaryOriginalName = (originalNames[0] || normalizedName).trim();
+        await db.runAsync(
+          `INSERT INTO address_book (id, iban, name, original_name, profile_id, created_at, updated_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?)`,
+          [
+            addressBookId,
+            normalizedIban,
+            normalizedName,
+            primaryOriginalName,
+            pid,
+            now,
+            now,
+          ]
+        );
+      }
+
+      // Ensure the IBAN is linked to the contact (shared IBANs can be linked to multiple contacts).
+      await db.runAsync(
+        'INSERT OR IGNORE INTO contact_ibans (id, contact_id, iban, is_primary, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)',
+        [
+          crypto.randomUUID(),
+          addressBookId,
+          normalizedIban,
+          isNewContact ? 1 : 0,
+          now,
+          now,
+        ]
+      );
+
+      // Update transactions with the new merchant name + link them to the contact.
+      let transactionsUpdated = 0;
+      if (originalNames.length > 0) {
+        for (const originalName of originalNames) {
+          const normalizedOriginal = originalName.trim();
+          const result = await db.runAsync(
+            `UPDATE transactions
+             SET merchant_name = ?, address_book_id = ?, updated_at = ?
+             WHERE profile_id = ?
+               AND opposing_account_iban = ?
+               AND (
+                 LOWER(opposing_account_name) = LOWER(?) OR
+                 LOWER(merchant_name) = LOWER(?)
+               )
+               AND is_deleted = 0`,
+            [
+              normalizedName,
+              addressBookId,
+              now,
+              pid,
+              normalizedIban,
+              normalizedOriginal,
+              normalizedOriginal,
+            ]
+          );
+          transactionsUpdated += result?.changes || 0;
+        }
+      } else {
+        // Fallback: link by IBAN only if no originalNames were provided.
+        const result = await db.runAsync(
+          `UPDATE transactions
+           SET merchant_name = ?, address_book_id = ?, updated_at = ?
+           WHERE profile_id = ?
+             AND opposing_account_iban = ?
+             AND is_deleted = 0`,
+          [normalizedName, addressBookId, now, pid, normalizedIban]
+        );
+        transactionsUpdated += result?.changes || 0;
+      }
+
+      return { success: true, data: { transactionsUpdated } };
+    },
+
     // ============= Category Rules =============
     async getCategoryRules(): Promise<
       Array<{
@@ -2148,6 +2279,35 @@ export function createDataService(db: Database) {
       const result = await db.runAsync(
         'UPDATE accounts SET is_deleted = 1, updated_at = ? WHERE profile_id = ? AND is_deleted = 0',
         [Date.now(), pid]
+      );
+
+      return { deleted: result.changes };
+    },
+
+    async deleteAllAddressBook() {
+      const pid = profileId();
+      if (!pid) return { deleted: 0 };
+
+      const now = Date.now();
+
+      // Delete contact_ibans for contacts in this profile
+      await db.runAsync(
+        `UPDATE contact_ibans SET is_deleted = 1, updated_at = ? 
+         WHERE contact_id IN (SELECT id FROM address_book WHERE profile_id = ? AND is_deleted = 0)`,
+        [now, pid]
+      );
+
+      // Delete address book entries
+      const result = await db.runAsync(
+        'UPDATE address_book SET is_deleted = 1, updated_at = ? WHERE profile_id = ? AND is_deleted = 0',
+        [now, pid]
+      );
+
+      // Clear address_book_id from transactions so they show up in proposed addresses
+      await db.runAsync(
+        `UPDATE transactions SET address_book_id = NULL, updated_at = ? 
+         WHERE profile_id = ? AND address_book_id IS NOT NULL`,
+        [now, pid]
       );
 
       return { deleted: result.changes };
@@ -3337,6 +3497,7 @@ export function createDataService(db: Database) {
     },
 
     // Helper to add IBAN to address book if not already present
+    // Detects shared IBANs (same IBAN with multiple different names) and moves them to shared_ibans
     async _addToAddressBookIfNew(
       iban: string,
       name: string,
@@ -3346,12 +3507,36 @@ export function createDataService(db: Database) {
       const normalizedIban = iban.toUpperCase().trim();
       if (!normalizedIban) return false;
 
+      // Check if IBAN is already marked as a shared IBAN
+      const isShared = await db.queryOneAsync<{ id: string }>(
+        'SELECT id FROM shared_ibans WHERE iban = ?',
+        [normalizedIban]
+      );
+      if (isShared) return false;
+
       // Check if IBAN already exists in address_book
-      const existing = await db.queryOneAsync<{ id: string }>(
-        'SELECT id FROM address_book WHERE iban = ? AND profile_id = ? AND is_deleted = 0',
+      const existing = await db.queryOneAsync<{ id: string; name: string }>(
+        'SELECT id, name FROM address_book WHERE iban = ? AND profile_id = ? AND is_deleted = 0',
         [normalizedIban, pid]
       );
-      if (existing) return false;
+      
+      if (existing) {
+        // Check if the name is different - this indicates a shared IBAN
+        if (existing.name.toLowerCase().trim() !== name.toLowerCase().trim()) {
+          // This IBAN has multiple different names - it's a shared IBAN
+          // Move it to shared_ibans table and remove from address_book
+          await db.runAsync(
+            'INSERT OR IGNORE INTO shared_ibans (id, iban, created_at, updated_at) VALUES (?, ?, ?, ?)',
+            [crypto.randomUUID(), normalizedIban, now, now]
+          );
+          // Delete from address_book so user can resolve via shared IBANs UI
+          await db.runAsync(
+            'UPDATE address_book SET is_deleted = 1, updated_at = ? WHERE iban = ? AND profile_id = ?',
+            [now, normalizedIban, pid]
+          );
+        }
+        return false;
+      }
 
       // Check if IBAN already exists in contact_ibans
       const existingLink = await db.queryOneAsync<{ contact_id: string }>(
@@ -3361,6 +3546,23 @@ export function createDataService(db: Database) {
         [normalizedIban, pid]
       );
       if (existingLink) return false;
+
+      // Check if this IBAN already has multiple names in transactions for this profile
+      const nameCount = await db.queryOneAsync<{ name_count: number }>(
+        `SELECT COUNT(DISTINCT opposing_account_name) as name_count 
+         FROM transactions 
+         WHERE opposing_account_iban = ? AND profile_id = ? AND is_deleted = 0`,
+        [normalizedIban, pid]
+      );
+
+      if (nameCount && nameCount.name_count > 1) {
+        // This IBAN has multiple merchants - add to shared_ibans instead
+        await db.runAsync(
+          'INSERT OR IGNORE INTO shared_ibans (id, iban, created_at, updated_at) VALUES (?, ?, ?, ?)',
+          [crypto.randomUUID(), normalizedIban, now, now]
+        );
+        return false;
+      }
 
       // Check if a contact with this name already exists
       const existingByName = await db.queryOneAsync<{

@@ -61,9 +61,29 @@ export async function processINGRow(
 
   const rawDescription = row[mapping.description] || '';
   const mededelingen = mapping.notes ? row[mapping.notes] : '';
-  const paymentMethod = mapping.paymentMethod
+  const rawPaymentMethod = mapping.paymentMethod
     ? row[mapping.paymentMethod]
     : null;
+
+  // Map ING payment method names to standardized terms (lowercase to match UI badges)
+  let paymentMethod = rawPaymentMethod;
+  if (rawPaymentMethod) {
+    const methodLower = rawPaymentMethod.toLowerCase().trim();
+    // Map to lowercase payment method values that match the transaction badge filter
+    const methodMap: Record<string, string> = {
+      betaalautomaat: 'pin',
+      pin: 'pin',
+      overschrijving: 'overschrijving', // Keep as overschrijving to match badge filter
+      overboeking: 'overschrijving',
+      incasso: 'incasso',
+      diversen: 'incasso',
+      geldautomaat: 'geldautomaat',
+      storting: 'storting',
+      ideal: 'ideal',
+      'online bankieren': 'overschrijving',
+    };
+    paymentMethod = methodMap[methodLower] || methodLower || 'overig';
+  }
 
   // Use counterparty field for opposing IBAN (Tegenrekening)
   const opposingIban = mapping.counterparty
@@ -86,43 +106,49 @@ export async function processINGRow(
 
   let opposingAccountName = rawDescription;
 
-  // Oranje Spaarrekening logic
+  // Oranje Spaarrekening logic - detect transfers to/from ING savings account
+  // Check both mededelingen (notes) and description fields for the pattern
   const isOranjeSpaar =
     (mededelingen && /oranje\s*spaarrekening/i.test(mededelingen)) ||
-    (rawDescription && /oranje\s*spaarrekening/i.test(rawDescription));
+    (rawDescription && /oranje\s*spaarrekening/i.test(rawDescription)) ||
+    (description && /oranje\s*spaarrekening/i.test(description));
 
-  if (isOranjeSpaar && opposingIban) {
+  if (isOranjeSpaar) {
     opposingAccountName = 'ING Oranje Spaarrekening';
-
-    // Check if this savings account already exists in the selected profile
-    const existingSavings = await db.queryOneAsync<{ id: string }>(
-      'SELECT id FROM accounts WHERE profile_id = ? AND (iban = ? OR name = ?) AND is_deleted = 0',
-      [profileId, opposingIban, 'ING Oranje Spaarrekening']
-    );
-
-    if (!existingSavings) {
-      // Create the Oranje spaarrekening as a savings account in the selected profile
-      const savingsAccountId = crypto.randomUUID();
-      const now = Date.now();
-      await db.runAsync(
-        `INSERT INTO accounts (id, iban, name, type, bank, profile_id, order_index, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [
-          savingsAccountId,
-          opposingIban,
-          'ING Oranje Spaarrekening',
-          'savings',
-          'ING',
-          profileId,
-          99,
-          now,
-          now,
-        ]
-      );
-      // Add to ownAccountIbans so it's recognized as a transfer
-      ownAccountIbans.add(opposingIban);
-    }
+    // Always mark as transfer regardless of whether opposingIban exists
     type = 'transfer';
+
+    // If we have an opposing IBAN, create/verify the savings account
+    if (opposingIban) {
+      // Check if this savings account already exists in the selected profile
+      const existingSavings = await db.queryOneAsync<{ id: string }>(
+        'SELECT id FROM accounts WHERE profile_id = ? AND (iban = ? OR name = ?) AND is_deleted = 0',
+        [profileId, opposingIban, 'ING Oranje Spaarrekening']
+      );
+
+      if (!existingSavings) {
+        // Create the Oranje spaarrekening as a savings account in the selected profile
+        const savingsAccountId = crypto.randomUUID();
+        const now = Date.now();
+        await db.runAsync(
+          `INSERT INTO accounts (id, iban, name, type, bank, profile_id, order_index, created_at, updated_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            savingsAccountId,
+            opposingIban,
+            'ING Oranje Spaarrekening',
+            'savings',
+            'ING',
+            profileId,
+            99,
+            now,
+            now,
+          ]
+        );
+        // Add to ownAccountIbans so it's recognized as a transfer
+        ownAccountIbans.add(opposingIban);
+      }
+    }
   }
 
   // Get own IBAN for hash

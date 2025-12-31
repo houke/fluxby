@@ -1093,6 +1093,18 @@ export const DEFAULT_PAYMENT_PROVIDER_RULES = [
 ];
 
 /**
+ * Default name cleanup rules for merchant names
+ * These are patterns to remove from transaction descriptions
+ */
+export const DEFAULT_NAME_CLEANUP_RULES = [
+  'by Buckaroo',
+  'SumUp *',
+  'BCK*',
+  'CCV*',
+  '/\\s*via\\s+[^,]+$/gi', // Removes " via Provider" at end of names
+];
+
+/**
  * Default budgets for demo data
  */
 export const DEFAULT_DEMO_BUDGETS = [
