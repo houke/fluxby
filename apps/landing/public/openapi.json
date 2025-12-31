@@ -344,6 +344,7 @@
       },
       "post": {
         "summary": "Maak een nieuwe adresboek entry aan of voeg IBAN toe aan bestaand contact",
+        "description": "Als een contact met dezelfde naam al bestaat, wordt de nieuwe IBAN toegevoegd aan het bestaande contact. Dit voorkomt duplicaten. Als de IBAN een gedeelde IBAN is (payment processor), wordt de entry toegevoegd aan shared_iban_merchants in plaats van address_book.\n",
         "tags": [
           "AddressBook"
         ],
@@ -365,15 +366,15 @@
                     "type": "string",
                     "description": "Weergavenaam voor het contact"
                   },
+                  "originalName": {
+                    "type": "string",
+                    "description": "Originele naam uit transactie (voor gedeelde IBANs)"
+                  },
                   "description": {
                     "type": "string"
                   },
                   "notes": {
                     "type": "string"
-                  },
-                  "originalName": {
-                    "type": "string",
-                    "description": "Originele naam uit transactie (voor gedeelde IBANs)"
                   }
                 }
               }
@@ -387,8 +388,7 @@
           "400": {
             "description": "Validatiefout"
           }
-        },
-        "description": "Als een contact met dezelfde naam al bestaat, wordt de nieuwe IBAN toegevoegd aan het bestaande contact. Dit voorkomt duplicaten. Als de IBAN een gedeelde IBAN is (payment processor), wordt de entry toegevoegd aan shared_iban_merchants in plaats van address_book.\n"
+        }
       }
     },
     "/api/addressbook/top-accounts": {

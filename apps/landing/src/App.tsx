@@ -45,6 +45,7 @@ import HelpAccounts from './pages/help/HelpAccounts';
 import HelpAnalytics from './pages/help/HelpAnalytics';
 import HelpAddressBook from './pages/help/HelpAddressBook';
 import { HeadManager } from './components/HeadManager';
+import ScrollToTop from './components/ScrollToTop';
 
 function LegalModals() {
   const { activeModal, closeModal } = useLegal();
@@ -129,6 +130,7 @@ function App() {
     <ThemeProvider>
       <LanguageProvider>
         <Router basename={import.meta.env.BASE_URL}>
+          <ScrollToTop />
           <HeadManager />
           <LegalProvider>
             <Routes>

@@ -1,18 +1,11 @@
-name: 'Build Tauri Release'
+name: 'Fluxby Release'
+description: 'Builds, tags, and publishes a new Fluxby release when a version tag (v*) is pushed. Do not run manually.'
+
 
 on:
   push:
     tags:
       - 'v*'
-  workflow_dispatch:
-    inputs:
-      version:
-        description: 'Version number (e.g., 1.0.1)'
-        required: true
-      dry_run:
-        description: 'Dry run (skip building and publishing)'
-        type: boolean
-        default: false
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}

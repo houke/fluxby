@@ -1,4 +1,5 @@
-name: 'Build Tauri (PR Check)'
+name: 'Fluxby PR Check'
+description: 'Checks that Fluxby builds and passes tests for all platforms on every pull request.'
 
 on:
   pull_request:
