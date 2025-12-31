@@ -16,26 +16,26 @@ const Downloads = () => {
       id: 'mac',
       name: 'macOS',
       icon: Apple,
-      description: 'Voor Intel & Apple Silicon',
+      description: 'Native ervaring voor Apple Silicon & Intel Macs.',
       // We use the DMG for the public download link as it's the standard for macOS distribution
       link: getDownloadLink('fluxby_1.0.0_aarch64.dmg'), 
-      type: 'Universal',
+      type: 'Universal DMG',
     },
     {
       id: 'windows',
       name: 'Windows',
       icon: Monitor,
-      description: 'Binnenkort beschikbaar',
-      type: 'x64',
-      disabled: true,
+      description: 'Eenvoudige installatie voor Windows 10 & 11.',
+      link: getDownloadLink('fluxby_1.0.0_x64-setup.exe'),
+      type: 'x64 EXE',
     },
     {
       id: 'linux',
       name: 'Linux',
       icon: AppWindow,
-      description: 'Binnenkort beschikbaar',
-      type: 'AppImage / Deb',
-      disabled: true,
+      description: 'Standalone AppImage voor alle distributies.',
+      link: getDownloadLink('fluxby_1.0.0_amd64.AppImage'),
+      type: 'AMD64 AppImage',
     },
   ];
 
@@ -62,11 +62,7 @@ const Downloads = () => {
             return (
               <div
                 key={platform.id}
-                className={`group relative rounded-3xl border border-gray-200 bg-white p-8 shadow-xl transition-all duration-300 dark:border-gray-700 dark:bg-gray-800 ${
-                  platform.disabled
-                    ? 'cursor-not-allowed opacity-75 grayscale'
-                    : 'hover:-translate-y-2 hover:border-purple-200 hover:shadow-2xl dark:hover:border-purple-800'
-                }`}
+                className="group relative rounded-3xl border border-gray-200 bg-white p-8 shadow-xl transition-all duration-300 dark:border-gray-700 dark:bg-gray-800 hover:-translate-y-2 hover:border-purple-200 hover:shadow-2xl dark:hover:border-purple-800"
               >
                 <div className='mb-6 flex items-center justify-between'>
                   <div className='flex h-16 w-16 items-center justify-center rounded-2xl bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-300'>
@@ -84,33 +80,22 @@ const Downloads = () => {
                   {platform.description}
                 </p>
 
-                {platform.disabled ? (
-                  <button
-                    disabled
-                    className='flex w-full items-center justify-center gap-2 rounded-xl bg-gray-100 py-3 font-semibold text-gray-400 dark:bg-gray-700 dark:text-gray-500'
-                  >
-                    Binnenkort
-                  </button>
-                ) : (
-                  <a
-                    href={platform.link}
-                    download
-                    className='flex w-full items-center justify-center gap-2 rounded-xl bg-fluxby-purple py-3 font-bold text-white transition-colors hover:bg-fluxby-dark'
-                  >
-                    <Download className='h-5 w-5' />
-                    Download
-                  </a>
-                )}
+                <a
+                  href={platform.link}
+                  className='flex w-full items-center justify-center gap-2 rounded-xl bg-fluxby-purple py-3 font-bold text-white transition-colors hover:bg-fluxby-dark'
+                >
+                  <Download className='h-5 w-5' />
+                  Download
+                </a>
               </div>
             );
           })}
         </div>
 
         <div className='mt-16 text-center text-sm text-gray-500 dark:text-gray-400'>
-          <p>
-            Op zoek naar mobiele apps? Bekijk onze{' '}
-            <span className='font-semibold text-fluxby-purple'>roadmap</span>{' '}
-            voor iOS en Android updates.
+          <p className="max-w-xl mx-auto">
+            Je hoeft niets te installeren om Fluxby te gebruiken; het werkt <span className='font-semibold text-fluxby-purple'>volledig in je browser</span>. 
+            Deze downloads zijn beschikbaar voor wie de voorkeur geeft aan een dedicated applicatie op hun systeem.
           </p>
         </div>
       </div>

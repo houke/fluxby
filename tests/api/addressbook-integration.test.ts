@@ -134,6 +134,90 @@ describe('AddressBook Integration Tests', () => {
     });
   });
 
+  describe('Address Book Creation Rules', () => {
+    it('should merge contacts when adding a second IBAN with the exact same name', async () => {
+      const { run, queryOne } = await import('../../apps/api/src/db/index.js');
+      const profileInsert = run(
+        "INSERT INTO profiles (user_id, name, type) VALUES (1, 'AB Merge Test', 'personal')"
+      );
+      const testProfileId = Number(profileInsert.lastInsertRowid);
+
+      const name = 'Merge Me';
+      const iban1 = 'NL11TEST0000000001';
+      const iban2 = 'NL11TEST0000000002';
+
+      const res1 = await request(app)
+        .post('/api/addressbook')
+        .set('X-Profile-Id', String(testProfileId))
+        .send({ iban: iban1, name });
+
+      expect(res1.status).toBe(201);
+      expect(res1.body.success).toBe(true);
+
+      const res2 = await request(app)
+        .post('/api/addressbook')
+        .set('X-Profile-Id', String(testProfileId))
+        .send({ iban: iban2, name });
+
+      expect(res2.status).toBe(201);
+      expect(res2.body.success).toBe(true);
+      expect(res2.body.merged).toBe(true);
+      expect(res2.body.data?.ibans).toEqual(
+        expect.arrayContaining([iban1, iban2])
+      );
+
+      const row = queryOne<{ count: number }>(
+        'SELECT COUNT(*) as count FROM address_book WHERE profile_id = ? AND LOWER(name) = LOWER(?)',
+        [testProfileId, name]
+      );
+      expect(row?.count).toBe(1);
+    });
+
+    it('should allow creating multiple shared-IBAN contacts as long as the name is unique', async () => {
+      const { run, queryOne } = await import('../../apps/api/src/db/index.js');
+      const profileInsert = run(
+        "INSERT INTO profiles (user_id, name, type) VALUES (1, 'AB Shared Test', 'personal')"
+      );
+      const testProfileId = Number(profileInsert.lastInsertRowid);
+
+      run(
+        'INSERT OR IGNORE INTO shared_ibans (iban, provider_name) VALUES (?, ?)',
+        [SHARED_IBAN, 'Adyen']
+      );
+
+      const res1 = await request(app)
+        .post('/api/addressbook')
+        .set('X-Profile-Id', String(testProfileId))
+        .send({
+          iban: SHARED_IBAN,
+          name: 'Merchant One',
+          originalName: 'Merchant One via Adyen',
+        });
+
+      expect([200, 201]).toContain(res1.status);
+      expect(res1.body.success).toBe(true);
+
+      const res2 = await request(app)
+        .post('/api/addressbook')
+        .set('X-Profile-Id', String(testProfileId))
+        .send({
+          iban: SHARED_IBAN,
+          name: 'Merchant Two',
+          originalName: 'Merchant Two via Adyen',
+        });
+
+      expect([200, 201]).toContain(res2.status);
+      expect(res2.body.success).toBe(true);
+
+      const count = queryOne<{ count: number }>(
+        'SELECT COUNT(*) as count FROM address_book WHERE profile_id = ? AND iban = ? AND original_name IS NOT NULL',
+        [testProfileId, SHARED_IBAN]
+      );
+
+      expect(count?.count).toBeGreaterThanOrEqual(2);
+    });
+  });
+
   describe('Resolve Shared IBAN Merchants', () => {
     let merchantAContactId: number;
 

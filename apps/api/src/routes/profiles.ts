@@ -1111,6 +1111,20 @@ router.post('/:id/seed-demo', (req, res) => {
         !processorIbans.has(iban) &&
         !multiIbanSet.has(iban)
       ) {
+        // Ensure unique names: if a contact with this name already exists, merge the IBAN into it
+        const existingByName = queryOne<{ id: number }>(
+          'SELECT id FROM address_book WHERE profile_id = ? AND LOWER(TRIM(name)) = LOWER(TRIM(?))',
+          [profileId, name]
+        );
+
+        if (existingByName) {
+          run(
+            'INSERT OR IGNORE INTO contact_ibans (contact_id, iban, is_primary) VALUES (?, ?, 0)',
+            [existingByName.id, iban]
+          );
+          continue;
+        }
+
         // Only add ~60% of contacts to address book to show unidentified counterparties
         if (Math.random() < 0.6) {
           const abResult = run(
@@ -1135,12 +1149,20 @@ router.post('/:id/seed-demo', (req, res) => {
       const primaryIban = contact.ibans.find((iban) => uniqueIbans.has(iban));
       if (!primaryIban) continue;
 
-      // Create the main address_book entry with primary IBAN
-      const abResult = run(
-        'INSERT INTO address_book (iban, name, profile_id) VALUES (?, ?, ?)',
-        [primaryIban, contact.name, profileId]
+      // Ensure unique name: reuse an existing contact if present
+      const existingByName = queryOne<{ id: number }>(
+        'SELECT id FROM address_book WHERE profile_id = ? AND LOWER(TRIM(name)) = LOWER(TRIM(?))',
+        [profileId, contact.name]
       );
-      const contactId = Number(abResult.lastInsertRowid);
+
+      const contactId = existingByName
+        ? existingByName.id
+        : Number(
+            run(
+              'INSERT INTO address_book (iban, name, profile_id) VALUES (?, ?, ?)',
+              [primaryIban, contact.name, profileId]
+            ).lastInsertRowid
+          );
 
       // Add primary IBAN to contact_ibans junction table
       run(

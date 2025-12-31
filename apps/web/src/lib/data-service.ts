@@ -937,10 +937,63 @@ export function createDataService(db: Database) {
       const id = crypto.randomUUID();
       const now = Date.now();
 
+      const normalizedIban = data.iban.toUpperCase().trim();
+      const normalizedName = data.name.trim();
+
+      // 1) Merge by exact same name (trimmed)
+      const existingByName = await db.queryAsync<{
+        id: string;
+        name: string;
+        iban: string;
+      }>(
+        `SELECT id, name, iban
+         FROM address_book
+         WHERE profile_id = ? AND is_deleted = 0 AND TRIM(name) = TRIM(?)
+         LIMIT 1`,
+        [pid, normalizedName]
+      );
+
+      if (existingByName.length > 0) {
+        const existingContactId = existingByName[0].id;
+
+        // Ensure the contact's primary IBAN is represented in contact_ibans
+        await db.runAsync(
+          'INSERT OR IGNORE INTO contact_ibans (contact_id, iban, is_primary) VALUES (?, ?, 1)',
+          [existingContactId, existingByName[0].iban]
+        );
+
+        // Link IBAN to the existing contact
+        await db.runAsync(
+          'INSERT OR IGNORE INTO contact_ibans (contact_id, iban, is_primary) VALUES (?, ?, 0)',
+          [existingContactId, normalizedIban]
+        );
+
+        // Sync transactions by IBAN (regular contacts) to the existing contact
+        const syncResult = await db.runAsync(
+          `UPDATE transactions
+           SET address_book_id = ?, merchant_name = ?, updated_at = ?
+           WHERE profile_id = ?
+             AND opposing_account_iban = ?
+             AND (address_book_id IS NULL OR address_book_id = '')
+             AND is_deleted = 0`,
+          [existingContactId, existingByName[0].name, now, pid, normalizedIban]
+        );
+
+        return {
+          success: true,
+          data: {
+            id: existingContactId,
+            iban: normalizedIban,
+            name: existingByName[0].name,
+            transactionsUpdated: syncResult?.changes || 0,
+          },
+        };
+      }
+
       // Check if a contact with this IBAN already exists
       const existing = await db.queryAsync<{ id: string; name: string }>(
         'SELECT id, name FROM address_book WHERE iban = ? AND profile_id = ? AND is_deleted = 0',
-        [data.iban, pid]
+        [normalizedIban, pid]
       );
       if (existing.length > 0) {
         throw new Error(
@@ -956,7 +1009,7 @@ export function createDataService(db: Database) {
         `SELECT ci.contact_id, ab.name FROM contact_ibans ci
          JOIN address_book ab ON ab.id = ci.contact_id
          WHERE ci.iban = ? AND ab.profile_id = ? AND ab.is_deleted = 0`,
-        [data.iban, pid]
+        [normalizedIban, pid]
       );
       if (existingIban.length > 0) {
         throw new Error(
@@ -970,8 +1023,8 @@ export function createDataService(db: Database) {
          VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           id,
-          data.iban,
-          data.name,
+          normalizedIban,
+          normalizedName,
           data.description || null,
           data.notes || null,
           pid,
@@ -983,7 +1036,7 @@ export function createDataService(db: Database) {
       // Add to contact_ibans junction table for consistent lookup
       await db.runAsync(
         `INSERT OR IGNORE INTO contact_ibans (contact_id, iban, is_primary) VALUES (?, ?, 1)`,
-        [id, data.iban]
+        [id, normalizedIban]
       );
 
       // Sync transactions to the new contact - link by IBAN
@@ -994,15 +1047,15 @@ export function createDataService(db: Database) {
            AND opposing_account_iban = ? 
            AND (address_book_id IS NULL OR address_book_id = '')
            AND is_deleted = 0`,
-        [id, data.name, now, pid, data.iban]
+        [id, normalizedName, now, pid, normalizedIban]
       );
 
       return {
         success: true,
         data: {
           id,
-          iban: data.iban,
-          name: data.name,
+          iban: normalizedIban,
+          name: normalizedName,
           transactionsUpdated: result?.changes || 0,
         },
       };
@@ -1059,6 +1112,11 @@ export function createDataService(db: Database) {
 
       const normalizedIban = iban.toUpperCase().trim();
 
+      const isSharedIban = await db.queryAsync<{ id: string }>(
+        'SELECT id FROM shared_ibans WHERE iban = ? AND is_deleted = 0',
+        [normalizedIban]
+      );
+
       // Check if contact exists and belongs to the profile
       const contact = await db.queryAsync<{
         id: string;
@@ -1082,7 +1140,11 @@ export function createDataService(db: Database) {
          WHERE ci.iban = ? AND ab.profile_id = ? AND ab.is_deleted = 0`,
         [normalizedIban, pid]
       );
-      if (existingIban.length > 0 && existingIban[0].contact_id !== contactId) {
+      if (
+        isSharedIban.length === 0 &&
+        existingIban.length > 0 &&
+        existingIban[0].contact_id !== contactId
+      ) {
         throw new Error(
           `IBAN is already assigned to contact "${existingIban[0].name}"`
         );
@@ -3284,6 +3346,9 @@ export function createDataService(db: Database) {
       const processorIbans = new Set(PAYMENT_PROCESSORS.map((p) => p.iban));
       const multiIbanSet = new Set(MULTI_IBAN_CONTACTS.flatMap((c) => c.ibans));
 
+      // Ensure unique address book names by merging IBANs into a single contact.
+      const nameToContactId = new Map<string, string>();
+
       for (const [iban, name] of uniqueIbans) {
         if (
           iban !== savingsAccountIban &&
@@ -3291,11 +3356,30 @@ export function createDataService(db: Database) {
           !processorIbans.has(iban) &&
           !multiIbanSet.has(iban)
         ) {
-          // Always add contacts for demo data (removed randomization for consistency)
-          await db.runAsync(
-            'INSERT INTO address_book (id, iban, name, profile_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)',
-            [crypto.randomUUID(), iban, name, targetProfileId, now, now]
-          );
+          const normalizedName = String(name).trim();
+          const existingContactId = nameToContactId.get(normalizedName);
+
+          if (existingContactId) {
+            // Merge additional IBAN into existing contact
+            await db.runAsync(
+              'INSERT OR IGNORE INTO contact_ibans (id, contact_id, iban, is_primary, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)',
+              [crypto.randomUUID(), existingContactId, iban, 0, now, now]
+            );
+          } else {
+            // Create new contact
+            const contactId = crypto.randomUUID();
+            nameToContactId.set(normalizedName, contactId);
+
+            await db.runAsync(
+              'INSERT INTO address_book (id, iban, name, profile_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)',
+              [contactId, iban, normalizedName, targetProfileId, now, now]
+            );
+
+            await db.runAsync(
+              'INSERT OR IGNORE INTO contact_ibans (id, contact_id, iban, is_primary, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)',
+              [crypto.randomUUID(), contactId, iban, 1, now, now]
+            );
+          }
         }
       }
 
@@ -3304,23 +3388,28 @@ export function createDataService(db: Database) {
         const primaryIban = contact.ibans.find((iban) => uniqueIbans.has(iban));
         if (!primaryIban) continue;
 
-        const contactId = crypto.randomUUID();
+        const normalizedName = String(contact.name).trim();
+        const existingContactId = nameToContactId.get(normalizedName);
+        const contactId = existingContactId || crypto.randomUUID();
 
-        await db.runAsync(
-          'INSERT INTO address_book (id, iban, name, profile_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)',
-          [contactId, primaryIban, contact.name, targetProfileId, now, now]
-        );
+        if (!existingContactId) {
+          nameToContactId.set(normalizedName, contactId);
+          await db.runAsync(
+            'INSERT INTO address_book (id, iban, name, profile_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)',
+            [contactId, primaryIban, normalizedName, targetProfileId, now, now]
+          );
+        }
 
         // Persist primary + secondary IBANs so the UI can show merged contacts.
         await db.runAsync(
-          'INSERT INTO contact_ibans (id, contact_id, iban, is_primary, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)',
+          'INSERT OR IGNORE INTO contact_ibans (id, contact_id, iban, is_primary, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)',
           [crypto.randomUUID(), contactId, primaryIban, 1, now, now]
         );
 
         for (const iban of contact.ibans) {
           if (iban !== primaryIban && uniqueIbans.has(iban)) {
             await db.runAsync(
-              'INSERT INTO contact_ibans (id, contact_id, iban, is_primary, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)',
+              'INSERT OR IGNORE INTO contact_ibans (id, contact_id, iban, is_primary, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)',
               [crypto.randomUUID(), contactId, iban, 0, now, now]
             );
           }

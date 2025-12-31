@@ -418,6 +418,7 @@ export default function AddressBook() {
       queryClient.invalidateQueries({
         queryKey: ['topAccounts', activeProfileId],
       });
+      setToastType('info');
       setToastMessage(
         t.addressBook?.namesUpdatedInAddressBook ||
           'Cleanup rules applied to address book'
@@ -434,6 +435,7 @@ export default function AddressBook() {
       queryClient.invalidateQueries({
         queryKey: ['sharedIbans', activeProfileId],
       });
+      setToastType('info');
       setToastMessage(
         t.addressBook?.transactionNamesUpdated ||
           'Cleanup rules applied to transactions'
