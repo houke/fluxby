@@ -15,6 +15,9 @@ import {
   Copy,
   PiggyBank,
   CreditCard,
+  Loader2,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -53,7 +56,11 @@ import { Toast } from '@/components/ui/toast';
 import { useProfile } from '@/contexts/ProfileContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { api } from '@/lib/api';
-import type { ProfileType, Profile } from '@fluxby/shared';
+import {
+  type ProfileType,
+  type Profile,
+  DEMO_PROFILE_ID,
+} from '@fluxby/shared';
 
 // Available profile types with icons
 const PROFILE_TYPES: {
@@ -94,6 +101,7 @@ export function ProfileManager() {
     createProfile,
     updateProfile,
     deleteProfile,
+    setProfileHidden,
     isLoading: _isLoading,
   } = useProfile();
   const { t } = useLanguage();
@@ -108,6 +116,7 @@ export function ProfileManager() {
   const [createStep, setCreateStep] = useState<'profile' | 'accounts'>(
     'profile'
   );
+  const [isCreating, setIsCreating] = useState(false);
   const [newlyCreatedProfileId, setNewlyCreatedProfileId] = useState<
     string | null
   >(null);
@@ -198,7 +207,8 @@ export function ProfileManager() {
   });
 
   const handleCreate = async () => {
-    if (!formData.name.trim()) return;
+    if (!formData.name.trim() || isCreating) return;
+    setIsCreating(true);
     try {
       const newProfile = await createProfile({
         name: formData.name,
@@ -222,6 +232,8 @@ export function ProfileManager() {
         t.settings?.profileManager?.createError ||
           'Er ging iets mis bij het aanmaken van het profiel.'
       );
+    } finally {
+      setIsCreating(false);
     }
   };
 
@@ -268,6 +280,7 @@ export function ProfileManager() {
     setNewAccountIban('');
     setNewAccountName('');
     setNewAccountType('checking');
+    setIsCreating(false);
   };
 
   const handleUpdate = async () => {
@@ -314,7 +327,7 @@ export function ProfileManager() {
     setFormData({
       name: profile.name,
       type: profile.type as ProfileType,
-      avatarUrl: profile.avatarUrl,
+      avatarUrl: profile.avatarUrl || avatarOptions[0] || null,
     });
     setEditingProfile(profile);
   };
@@ -377,7 +390,7 @@ export function ProfileManager() {
                     {t.settings.profileManager.createDescription}
                   </DialogDescription>
                 </DialogHeader>
-                <div className='space-y-6 py-4'>
+                <fieldset disabled={isCreating} className='space-y-6 py-4'>
                   <div className='space-y-4'>
                     <div className='space-y-2'>
                       <label className='text-sm font-medium'>
@@ -400,6 +413,7 @@ export function ProfileManager() {
                         onValueChange={(v) =>
                           setFormData({ ...formData, type: v as ProfileType })
                         }
+                        disabled={isCreating}
                       >
                         <SelectTrigger>
                           <SelectValue />
@@ -476,15 +490,22 @@ export function ProfileManager() {
                       ))}
                     </div>
                   </div>
-                </div>
+                </fieldset>
                 <DialogFooter>
-                  <Button variant='outline' onClick={handleCloseCreateDialog}>
+                  <Button
+                    variant='outline'
+                    onClick={handleCloseCreateDialog}
+                    disabled={isCreating}
+                  >
                     {t.settings.profileManager.cancel}
                   </Button>
                   <Button
                     onClick={handleCreate}
-                    disabled={!formData.name.trim()}
+                    disabled={!formData.name.trim() || isCreating}
                   >
+                    {isCreating && (
+                      <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                    )}
                     {t.settings.profileManager.create}
                   </Button>
                 </DialogFooter>
@@ -730,162 +751,205 @@ export function ProfileManager() {
                 </Button>
                 <div className='flex gap-1'>
                   {/* Hide edit button for Demo profile - it's only removable, not editable */}
-                  {profile.name !== 'Demo' && (
-                    <Dialog
-                      open={editingProfile?.id === profile.id}
-                      onOpenChange={(open) => !open && setEditingProfile(null)}
-                    >
-                      <DialogTrigger asChild>
-                        <Button
-                          variant='ghost'
-                          size='icon'
-                          className='h-8 w-8'
-                          onClick={() => openValidEdit(profile)}
-                        >
-                          <Settings2 className='h-4 w-4' />
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle>
-                            {t.settings.profileManager.editTitle}
-                          </DialogTitle>
-                        </DialogHeader>
-                        <div className='space-y-6 py-4'>
-                          <div className='space-y-4'>
-                            <div className='space-y-2'>
-                              <label className='text-sm font-medium'>
-                                {t.settings.profileManager.profileName}
-                              </label>
-                              <Input
-                                value={formData.name}
-                                onChange={(e) =>
-                                  setFormData({
-                                    ...formData,
-                                    name: e.target.value,
-                                  })
-                                }
-                              />
-                            </div>
-                            <div className='space-y-2'>
-                              <label className='text-sm font-medium'>
-                                {t.settings.profileManager.type}
-                              </label>
-                              <Select
-                                value={formData.type}
-                                onValueChange={(v) =>
-                                  setFormData({
-                                    ...formData,
-                                    type: v as ProfileType,
-                                  })
-                                }
-                              >
-                                <SelectTrigger>
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {PROFILE_TYPES.map((type) => (
-                                    <SelectItem
-                                      key={type.value}
-                                      value={type.value}
-                                    >
-                                      <div className='flex items-center gap-2'>
-                                        <type.icon className='h-4 w-4' />
-                                        <span>
-                                          {
-                                            t.settings.profileManager.types[
-                                              type.labelKey
-                                            ]
-                                          }
-                                        </span>
-                                      </div>
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-                          </div>
-
-                          {/* Avatar Selection */}
-                          <div className='space-y-4 border-t pt-4'>
-                            <div className='flex items-center justify-between'>
-                              <div className='space-y-1'>
+                  {profile.id !== DEMO_PROFILE_ID &&
+                    profile.name !== 'Demo' && (
+                      <Dialog
+                        open={editingProfile?.id === profile.id}
+                        onOpenChange={(open) =>
+                          !open && setEditingProfile(null)
+                        }
+                      >
+                        <DialogTrigger asChild>
+                          <Button
+                            variant='ghost'
+                            size='icon'
+                            className='h-8 w-8'
+                            onClick={() => openValidEdit(profile)}
+                          >
+                            <Settings2 className='h-4 w-4' />
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>
+                              {t.settings.profileManager.editTitle}
+                            </DialogTitle>
+                          </DialogHeader>
+                          <div className='space-y-6 py-4'>
+                            <div className='space-y-4'>
+                              <div className='space-y-2'>
                                 <label className='text-sm font-medium'>
-                                  {t.settings.profile.avatarLabel}
+                                  {t.settings.profileManager.profileName}
                                 </label>
-                                <p className='text-xs text-muted-foreground'>
-                                  {t.settings.profile.avatarDescription}
-                                </p>
-                              </div>
-                              <Button
-                                variant='ghost'
-                                size='sm'
-                                onClick={refreshAvatars}
-                                disabled={isRefreshingAvatars}
-                                className='h-8'
-                              >
-                                {isRefreshingAvatars ? (
-                                  <RefreshCcw className='h-3 w-3 animate-spin' />
-                                ) : (
-                                  t.settings.profile.newPatterns
-                                )}
-                              </Button>
-                            </div>
-                            <div className='flex flex-wrap gap-2'>
-                              {getDisplayAvatars().map((pattern, _idx) => (
-                                <button
-                                  key={pattern}
-                                  type='button'
-                                  onClick={() =>
+                                <Input
+                                  value={formData.name}
+                                  onChange={(e) =>
                                     setFormData({
                                       ...formData,
-                                      avatarUrl: pattern,
+                                      name: e.target.value,
                                     })
                                   }
-                                  className={cn(
-                                    'relative h-11 w-11 shrink-0 rounded-full border shadow-sm transition-all hover:scale-105',
-                                    formData.avatarUrl === pattern &&
-                                      'ring-2 ring-purple-600 ring-offset-2 ring-offset-background dark:ring-purple-400'
-                                  )}
-                                  style={{
-                                    backgroundImage: pattern,
-                                    backgroundSize: 'cover',
-                                  }}
+                                />
+                              </div>
+                              <div className='space-y-2'>
+                                <label className='text-sm font-medium'>
+                                  {t.settings.profileManager.type}
+                                </label>
+                                <Select
+                                  value={formData.type}
+                                  onValueChange={(v) =>
+                                    setFormData({
+                                      ...formData,
+                                      type: v as ProfileType,
+                                    })
+                                  }
                                 >
-                                  {formData.avatarUrl === pattern && (
-                                    <div className='absolute inset-0 flex items-center justify-center rounded-full bg-black/20'>
-                                      <Check className='h-4 w-4 text-white' />
-                                    </div>
+                                  <SelectTrigger>
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {PROFILE_TYPES.map((type) => (
+                                      <SelectItem
+                                        key={type.value}
+                                        value={type.value}
+                                      >
+                                        <div className='flex items-center gap-2'>
+                                          <type.icon className='h-4 w-4' />
+                                          <span>
+                                            {
+                                              t.settings.profileManager.types[
+                                                type.labelKey
+                                              ]
+                                            }
+                                          </span>
+                                        </div>
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            </div>
+
+                            {/* Avatar Selection */}
+                            <div className='space-y-4 border-t pt-4'>
+                              <div className='flex items-center justify-between'>
+                                <div className='space-y-1'>
+                                  <label className='text-sm font-medium'>
+                                    {t.settings.profile.avatarLabel}
+                                  </label>
+                                  <p className='text-xs text-muted-foreground'>
+                                    {t.settings.profile.avatarDescription}
+                                  </p>
+                                </div>
+                                <Button
+                                  variant='ghost'
+                                  size='sm'
+                                  onClick={refreshAvatars}
+                                  disabled={isRefreshingAvatars}
+                                  className='h-8'
+                                >
+                                  {isRefreshingAvatars ? (
+                                    <RefreshCcw className='h-3 w-3 animate-spin' />
+                                  ) : (
+                                    t.settings.profile.newPatterns
                                   )}
-                                </button>
-                              ))}
+                                </Button>
+                              </div>
+                              <div className='flex flex-wrap gap-2'>
+                                {getDisplayAvatars().map((pattern, _idx) => (
+                                  <button
+                                    key={pattern}
+                                    type='button'
+                                    onClick={() =>
+                                      setFormData({
+                                        ...formData,
+                                        avatarUrl: pattern,
+                                      })
+                                    }
+                                    className={cn(
+                                      'relative h-11 w-11 shrink-0 rounded-full border shadow-sm transition-all hover:scale-105',
+                                      formData.avatarUrl === pattern &&
+                                        'ring-2 ring-purple-600 ring-offset-2 ring-offset-background dark:ring-purple-400'
+                                    )}
+                                    style={{
+                                      backgroundImage: pattern,
+                                      backgroundSize: 'cover',
+                                    }}
+                                  >
+                                    {formData.avatarUrl === pattern && (
+                                      <div className='absolute inset-0 flex items-center justify-center rounded-full bg-black/20'>
+                                        <Check className='h-4 w-4 text-white' />
+                                      </div>
+                                    )}
+                                  </button>
+                                ))}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                        <DialogFooter>
-                          <Button
-                            variant='outline'
-                            onClick={() => setEditingProfile(null)}
-                          >
-                            {t.settings.profileManager.cancel}
-                          </Button>
-                          <Button onClick={handleUpdate}>
-                            {t.settings.profileManager.save}
-                          </Button>
-                        </DialogFooter>
-                      </DialogContent>
-                    </Dialog>
-                  )}
+                          <DialogFooter>
+                            <Button
+                              variant='outline'
+                              onClick={() => setEditingProfile(null)}
+                            >
+                              {t.settings.profileManager.cancel}
+                            </Button>
+                            <Button onClick={handleUpdate}>
+                              {t.settings.profileManager.save}
+                            </Button>
+                          </DialogFooter>
+                        </DialogContent>
+                      </Dialog>
+                    )}
 
-                  <Button
-                    variant='ghost'
-                    size='icon'
-                    className='h-8 w-8 text-destructive hover:bg-destructive hover:text-white'
-                    onClick={() => handleDelete(profile.id)}
-                    disabled={profiles.length <= 1} // Prevent deleting last profile
-                  >
-                    <Trash2 className='h-4 w-4' />
-                  </Button>
+                  {/* Demo profile: show hide/show toggle instead of delete */}
+                  {profile.id === DEMO_PROFILE_ID || profile.name === 'Demo' ? (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant='ghost'
+                            size='icon'
+                            className='h-8 w-8 rounded-md hover:bg-purple-600 hover:text-white'
+                            onClick={() =>
+                              setProfileHidden(profile.id, !profile.isHidden)
+                            }
+                            disabled={
+                              // Can only hide if > 1 visible profile and demo is not the active profile
+                              !profile.isHidden &&
+                              (profiles.filter((p) => !p.isHidden).length <=
+                                1 ||
+                                profile.id === activeProfileId)
+                            }
+                          >
+                            {profile.isHidden ? (
+                              <EyeOff className='h-4 w-4' />
+                            ) : (
+                              <Eye className='h-4 w-4' />
+                            )}
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>
+                            {profile.isHidden
+                              ? t.settings?.profileManager?.showProfile ||
+                                'Show profile'
+                              : t.settings?.profileManager?.hideProfile ||
+                                'Hide profile'}
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  ) : (
+                    <Button
+                      variant='ghost'
+                      size='icon'
+                      className='h-8 w-8 rounded-md text-destructive hover:bg-destructive hover:text-white'
+                      onClick={() => handleDelete(profile.id)}
+                      disabled={profiles.filter((p) => !p.isHidden).length <= 1} // Prevent deleting last visible profile
+                    >
+                      <Trash2 className='h-4 w-4' />
+                    </Button>
+                  )}
                 </div>
               </CardFooter>
             </Card>

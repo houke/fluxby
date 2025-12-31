@@ -66,6 +66,11 @@ export const api = {
     await ds.deleteProfile(id);
   },
 
+  setProfileHidden: async (id: string, isHidden: boolean): Promise<void> => {
+    const ds = getDataService();
+    await ds.setProfileHidden(id, isHidden);
+  },
+
   // ============= Accounts =============
   getAccounts: async () => {
     const ds = getDataService();
@@ -554,10 +559,10 @@ export const api = {
   },
 
   // ============= Import =============
-  // Import history is stored in-memory for local-first mode
-  // No persistent history in OPFS mode, return empty array
+  // Import history is now stored in the database for local-first mode
   getImportHistory: async () => {
-    return [];
+    const ds = getDataService();
+    return ds.getImportHistory();
   },
 
   // Parse CSV file for generic import
@@ -583,6 +588,8 @@ export const api = {
       counterparty?: string;
       balance?: string;
       direction?: string;
+      notes?: string;
+      paymentMethod?: string;
     },
     accountId?: string,
     bank?: string
@@ -654,8 +661,12 @@ export const api = {
         iban: mapping.iban,
         counterparty: mapping.counterparty,
         balance: mapping.balance,
+        notes: mapping.notes,
+        paymentMethod: mapping.paymentMethod,
       },
       direction: mapping.direction,
+      filename: file.name,
+      bank: bank || 'generic',
     });
 
     return {

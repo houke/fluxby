@@ -204,7 +204,7 @@ export const SEED_CATEGORIES: SeedCategory[] = [
           'Vomar',
           'Hoogvliet',
           'Picnic',
-          'Spar',
+          '\\bSpar\\b',
           'Ekoplaza',
           'HelloFresh',
           'Crisp',

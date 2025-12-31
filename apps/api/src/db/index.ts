@@ -142,7 +142,10 @@ export function initializeDatabase(): void {
       "CREATE UNIQUE INDEX IF NOT EXISTS idx_transactions_import_hash_scoped ON transactions(import_hash, profile_id) WHERE import_hash IS NOT NULL AND TRIM(import_hash) != ''"
     );
   } catch (error) {
-    console.warn('Failed to update import_hash index (might be expected):', error);
+    console.warn(
+      'Failed to update import_hash index (might be expected):',
+      error
+    );
   }
 
   // Backfill missing import_hash values so older data also dedupes correctly
@@ -357,7 +360,9 @@ function backfillMissingProfileIds(): void {
         .prepare(`UPDATE ${table} SET profile_id = ? WHERE profile_id IS NULL`)
         .run(defaultProfileId);
       if (result.changes > 0) {
-        console.warn(`Backfilled profile_id for ${result.changes} rows in ${table}`);
+        console.warn(
+          `Backfilled profile_id for ${result.changes} rows in ${table}`
+        );
       }
     }
   } catch (error) {

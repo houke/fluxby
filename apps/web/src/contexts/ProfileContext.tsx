@@ -31,6 +31,7 @@ interface ProfileContextValue {
     data: { name?: string; type?: ProfileType; avatarUrl?: string | null }
   ) => Promise<void>;
   deleteProfile: (id: string) => Promise<void>;
+  setProfileHidden: (id: string, isHidden: boolean) => Promise<void>;
   refreshProfiles: () => Promise<void>;
 }
 
@@ -168,6 +169,15 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
     [activeProfileId, dataService, profiles, switchProfile]
   );
 
+  const setProfileHidden = useCallback(
+    async (id: string, isHidden: boolean) => {
+      if (!dataService) throw new Error('Database not ready');
+      await dataService.setProfileHidden(id, isHidden);
+      await fetchProfiles();
+    },
+    [dataService, fetchProfiles]
+  );
+
   const activeProfile = useMemo(() => {
     return profiles.find((p) => p.id === activeProfileId) || null;
   }, [profiles, activeProfileId]);
@@ -183,6 +193,7 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
       createProfile,
       updateProfile,
       deleteProfile,
+      setProfileHidden,
       refreshProfiles,
     }),
     [
@@ -195,6 +206,7 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
       createProfile,
       updateProfile,
       deleteProfile,
+      setProfileHidden,
       refreshProfiles,
     ]
   );

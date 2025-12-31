@@ -285,10 +285,16 @@ export default function Dashboard() {
     // Auto-scroll daily chart container to the end when data changes
     if (dailyScrollRef.current) {
       const el = dailyScrollRef.current;
-      // Use setTimeout to ensure DOM has updated after render
-      setTimeout(() => {
-        el.scrollLeft = el.scrollWidth - el.clientWidth;
-      }, 100);
+      // Use setTimeout + requestAnimationFrame to ensure chart is fully rendered
+      const scrollToEnd = () => {
+        requestAnimationFrame(() => {
+          el.scrollLeft = el.scrollWidth - el.clientWidth;
+        });
+      };
+      // Multiple attempts to handle slow chart rendering
+      setTimeout(scrollToEnd, 100);
+      setTimeout(scrollToEnd, 300);
+      setTimeout(scrollToEnd, 500);
     }
   }, [dailyExpenses]);
 

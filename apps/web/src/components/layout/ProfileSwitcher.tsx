@@ -46,7 +46,10 @@ export function ProfileSwitcher() {
     return null;
   }
 
-  const otherProfiles = profiles.filter((p) => p.id !== activeProfile.id);
+  // Filter out hidden profiles from the dropdown (but show all in the profile manager)
+  const otherProfiles = profiles.filter(
+    (p) => p.id !== activeProfile.id && !p.isHidden
+  );
   const Icon = PROFILE_TYPE_ICONS[activeProfile.type] || User;
   const typeColor =
     PROFILE_TYPE_COLORS[activeProfile.type] || 'from-gray-500 to-gray-600';

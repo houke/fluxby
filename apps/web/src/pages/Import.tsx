@@ -43,15 +43,18 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useProfile } from '@/contexts/ProfileContext';
 
 interface ImportHistorySkippedRow {
-  rowIndex: number;
-  date: string;
-  amount: number;
-  description: string;
-  error: string;
+  rowIndex?: number;
+  row?: number;
+  date?: string;
+  amount?: number;
+  description?: string;
+  error?: string;
+  reason?: string;
+  data?: string;
 }
 
 interface ImportHistory {
-  id: number;
+  id: number | string;
   filename: string;
   bank: string;
   importedAt: string;
@@ -274,7 +277,9 @@ function HistoryCard({
                   <span className='text-xs text-muted-foreground'>
                     #{row.rowIndex}
                   </span>
-                  <span className='truncate'>{row.description || '-'}</span>
+                  <span className='truncate'>
+                    {row.description || row.reason || '-'}
+                  </span>
                 </div>
                 <div className='flex items-center gap-2'>
                   <span>{row.date || '-'}</span>
@@ -282,7 +287,7 @@ function HistoryCard({
                     {row.amount ? formatCurrency(row.amount) : '-'}
                   </span>
                   <span className='rounded bg-destructive/10 px-1.5 py-0.5 text-xs text-destructive'>
-                    {getErrorLabel(row.error)}
+                    {getErrorLabel(row.error || row.reason || 'Unknown error')}
                   </span>
                 </div>
               </div>

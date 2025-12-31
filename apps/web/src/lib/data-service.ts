@@ -13,6 +13,7 @@ import { type Database } from '@fluxby/database';
 import {
   type Profile,
   type Transaction,
+  type TransactionCreate,
   type Category,
   type Account,
   type Budget,
@@ -20,6 +21,7 @@ import {
   flattenCategoriesForDB,
   SEED_CATEGORIES,
 } from '@fluxby/shared';
+import { processINGRow } from './importers/ing-importer';
 
 /**
  * Get the active profile ID from localStorage
@@ -67,6 +69,7 @@ export function createDataService(db: Database) {
         name: string;
         type: ProfileType;
         avatarUrl: string | null;
+        isHidden: number;
         createdAt: number;
       }>(
         `SELECT
@@ -75,6 +78,7 @@ export function createDataService(db: Database) {
            name,
            type,
            avatar_url as avatarUrl,
+           is_hidden as isHidden,
            created_at as createdAt
          FROM profiles
          WHERE is_deleted = 0
@@ -84,6 +88,7 @@ export function createDataService(db: Database) {
 
       return rows.map((row) => ({
         ...row,
+        isHidden: row.isHidden === 1,
         createdAt: new Date(Number(row.createdAt)).toISOString(),
       }));
     },
@@ -95,6 +100,7 @@ export function createDataService(db: Database) {
         name: string;
         type: ProfileType;
         avatarUrl: string | null;
+        isHidden: number;
         createdAt: number;
       }>(
         `SELECT
@@ -103,6 +109,7 @@ export function createDataService(db: Database) {
            name,
            type,
            avatar_url as avatarUrl,
+           is_hidden as isHidden,
            created_at as createdAt
          FROM profiles
          WHERE id = ? AND is_deleted = 0`,
@@ -112,6 +119,7 @@ export function createDataService(db: Database) {
       if (!row) return null;
       return {
         ...row,
+        isHidden: row.isHidden === 1,
         createdAt: new Date(Number(row.createdAt)).toISOString(),
       };
     },
@@ -239,9 +247,56 @@ export function createDataService(db: Database) {
     },
 
     async deleteProfile(id: string): Promise<void> {
+      const now = Date.now();
+
+      // Soft-delete all related data to ensure clean state for duplicates/reimport
+      // Transactions
+      await db.runAsync(
+        'UPDATE transactions SET is_deleted = 1, updated_at = ? WHERE profile_id = ?',
+        [now, id]
+      );
+      // Accounts
+      await db.runAsync(
+        'UPDATE accounts SET is_deleted = 1, updated_at = ? WHERE profile_id = ?',
+        [now, id]
+      );
+      // Categories
+      await db.runAsync(
+        'UPDATE categories SET is_deleted = 1, updated_at = ? WHERE profile_id = ?',
+        [now, id]
+      );
+      // Budgets
+      await db.runAsync(
+        'UPDATE budgets SET is_deleted = 1, updated_at = ? WHERE profile_id = ?',
+        [now, id]
+      );
+      // Category rules (for categories in this profile)
+      await db.runAsync(
+        `UPDATE category_rules SET is_deleted = 1, updated_at = ? 
+         WHERE category_id IN (SELECT id FROM categories WHERE profile_id = ?)`,
+        [now, id]
+      );
+      // Imports
+      await db.runAsync(
+        'UPDATE imports SET is_deleted = 1, updated_at = ? WHERE profile_id = ?',
+        [now, id]
+      );
+      // Address book
+      await db.runAsync(
+        'UPDATE address_book SET is_deleted = 1, updated_at = ? WHERE profile_id = ?',
+        [now, id]
+      );
+      // Finally, soft-delete the profile itself
       await db.runAsync(
         'UPDATE profiles SET is_deleted = 1, updated_at = ? WHERE id = ?',
-        [Date.now(), id]
+        [now, id]
+      );
+    },
+
+    async setProfileHidden(id: string, isHidden: boolean): Promise<void> {
+      await db.runAsync(
+        'UPDATE profiles SET is_hidden = ?, updated_at = ? WHERE id = ?',
+        [isHidden ? 1 : 0, Date.now(), id]
       );
     },
 
@@ -321,6 +376,9 @@ export function createDataService(db: Database) {
       id: string,
       data: { name?: string; type?: string; currentBalance?: number }
     ): Promise<void> {
+      const pid = profileId();
+      if (!pid) throw new Error('No active profile');
+
       const updates: string[] = [];
       const params: unknown[] = [];
 
@@ -342,17 +400,21 @@ export function createDataService(db: Database) {
       updates.push('updated_at = ?');
       params.push(Date.now());
       params.push(id);
+      params.push(pid);
 
       await db.runAsync(
-        `UPDATE accounts SET ${updates.join(', ')} WHERE id = ?`,
+        `UPDATE accounts SET ${updates.join(', ')} WHERE id = ? AND profile_id = ?`,
         params
       );
     },
 
     async deleteAccount(id: string): Promise<void> {
+      const pid = profileId();
+      if (!pid) throw new Error('No active profile');
+
       await db.runAsync(
-        'UPDATE accounts SET is_deleted = 1, updated_at = ? WHERE id = ?',
-        [Date.now(), id]
+        'UPDATE accounts SET is_deleted = 1, updated_at = ? WHERE id = ? AND profile_id = ?',
+        [Date.now(), id, pid]
       );
     },
 
@@ -433,6 +495,9 @@ export function createDataService(db: Database) {
         parentId?: string | null;
       }
     ): Promise<void> {
+      const pid = profileId();
+      if (!pid) throw new Error('No active profile');
+
       const updates: string[] = [];
       const params: unknown[] = [];
 
@@ -462,17 +527,21 @@ export function createDataService(db: Database) {
       updates.push('updated_at = ?');
       params.push(Date.now());
       params.push(id);
+      params.push(pid);
 
       await db.runAsync(
-        `UPDATE categories SET ${updates.join(', ')} WHERE id = ?`,
+        `UPDATE categories SET ${updates.join(', ')} WHERE id = ? AND profile_id = ?`,
         params
       );
     },
 
     async deleteCategory(id: string): Promise<void> {
+      const pid = profileId();
+      if (!pid) throw new Error('No active profile');
+
       await db.runAsync(
-        'UPDATE categories SET is_deleted = 1, updated_at = ? WHERE id = ?',
-        [Date.now(), id]
+        'UPDATE categories SET is_deleted = 1, updated_at = ? WHERE id = ? AND profile_id = ?',
+        [Date.now(), id, pid]
       );
     },
 
@@ -699,6 +768,9 @@ export function createDataService(db: Database) {
         addressBookId?: string | null;
       }
     ): Promise<void> {
+      const pid = profileId();
+      if (!pid) throw new Error('No active profile');
+
       const updates: string[] = [];
       const params: unknown[] = [];
 
@@ -736,17 +808,21 @@ export function createDataService(db: Database) {
       updates.push('updated_at = ?');
       params.push(Date.now());
       params.push(id);
+      params.push(pid);
 
       await db.runAsync(
-        `UPDATE transactions SET ${updates.join(', ')} WHERE id = ?`,
+        `UPDATE transactions SET ${updates.join(', ')} WHERE id = ? AND profile_id = ?`,
         params
       );
     },
 
     async deleteTransaction(id: string): Promise<void> {
+      const pid = profileId();
+      if (!pid) throw new Error('No active profile');
+
       await db.runAsync(
-        'UPDATE transactions SET is_deleted = 1, updated_at = ? WHERE id = ?',
-        [Date.now(), id]
+        'UPDATE transactions SET is_deleted = 1, updated_at = ? WHERE id = ? AND profile_id = ?',
+        [Date.now(), id, pid]
       );
     },
 
@@ -908,18 +984,24 @@ export function createDataService(db: Database) {
     },
 
     async updateBudget(id: string, data: { amount?: number }): Promise<void> {
+      const pid = profileId();
+      if (!pid) throw new Error('No active profile');
+
       if (data.amount === undefined) return;
 
       await db.runAsync(
-        'UPDATE budgets SET amount = ?, updated_at = ? WHERE id = ?',
-        [data.amount, Date.now(), id]
+        'UPDATE budgets SET amount = ?, updated_at = ? WHERE id = ? AND profile_id = ?',
+        [data.amount, Date.now(), id, pid]
       );
     },
 
     async deleteBudget(id: string): Promise<void> {
+      const pid = profileId();
+      if (!pid) throw new Error('No active profile');
+
       await db.runAsync(
-        'UPDATE budgets SET is_deleted = 1, updated_at = ? WHERE id = ?',
-        [Date.now(), id]
+        'UPDATE budgets SET is_deleted = 1, updated_at = ? WHERE id = ? AND profile_id = ?',
+        [Date.now(), id, pid]
       );
     },
 
@@ -1213,6 +1295,9 @@ export function createDataService(db: Database) {
       id: string,
       data: { name?: string; description?: string; notes?: string }
     ) {
+      const pid = profileId();
+      if (!pid) throw new Error('No active profile');
+
       const updates: string[] = [];
       const params: unknown[] = [];
 
@@ -1234,17 +1319,21 @@ export function createDataService(db: Database) {
       updates.push('updated_at = ?');
       params.push(Date.now());
       params.push(id);
+      params.push(pid);
 
       await db.runAsync(
-        `UPDATE address_book SET ${updates.join(', ')} WHERE id = ?`,
+        `UPDATE address_book SET ${updates.join(', ')} WHERE id = ? AND profile_id = ?`,
         params
       );
     },
 
     async deleteAddressBookEntry(id: string) {
+      const pid = profileId();
+      if (!pid) throw new Error('No active profile');
+
       await db.runAsync(
-        'UPDATE address_book SET is_deleted = 1, updated_at = ? WHERE id = ?',
-        [Date.now(), id]
+        'UPDATE address_book SET is_deleted = 1, updated_at = ? WHERE id = ? AND profile_id = ?',
+        [Date.now(), id, pid]
       );
     },
 
@@ -1366,9 +1455,12 @@ export function createDataService(db: Database) {
     },
 
     async deleteCategoryRule(id: string) {
+      const pid = profileId();
+      if (!pid) throw new Error('No active profile');
+
       await db.runAsync(
-        'UPDATE category_rules SET is_deleted = 1, updated_at = ? WHERE id = ?',
-        [Date.now(), id]
+        'UPDATE category_rules SET is_deleted = 1, updated_at = ? WHERE id = ? AND profile_id = ?',
+        [Date.now(), id, pid]
       );
     },
 
@@ -1777,6 +1869,12 @@ export function createDataService(db: Database) {
       const rules = await this.getCategoryRules();
       if (!rules || rules.length === 0) return { updated: 0, processed: 0 };
 
+      // Sort rules by pattern length descending to ensure more specific patterns (like 'sparen')
+      // match before shorter, less specific ones (like 'spar')
+      const sortedRules = [...rules].sort(
+        (a, b) => b.pattern.length - a.pattern.length
+      );
+
       const uncategorized = await db.queryAsync<{
         id: string;
         merchant_name: string | null;
@@ -1796,7 +1894,7 @@ export function createDataService(db: Database) {
       for (const tx of uncategorized) {
         const textToMatch = `${tx.merchant_name || ''} ${tx.description || ''} ${tx.opposing_account_name || ''}`;
 
-        for (const rule of rules) {
+        for (const rule of sortedRules) {
           try {
             const pattern = new RegExp(rule.pattern, 'i');
             if (pattern.test(textToMatch)) {
@@ -2270,8 +2368,12 @@ export function createDataService(db: Database) {
     async getCleanupRules(): Promise<
       { id: string; pattern: string; is_active: number; created_at: number }[]
     > {
+      const pid = profileId();
+      if (!pid) return [];
+
       return (await db.queryAsync(
-        'SELECT * FROM name_cleanup_rules WHERE is_deleted = 0 ORDER BY created_at ASC'
+        'SELECT * FROM name_cleanup_rules WHERE profile_id = ? AND is_deleted = 0 ORDER BY created_at ASC',
+        [pid]
       )) as {
         id: string;
         pattern: string;
@@ -2281,21 +2383,27 @@ export function createDataService(db: Database) {
     },
 
     async createCleanupRule(pattern: string) {
+      const pid = profileId();
+      if (!pid) throw new Error('No active profile');
+
       const id = crypto.randomUUID();
       const now = Date.now();
 
       await db.runAsync(
-        'INSERT INTO name_cleanup_rules (id, pattern, is_active, created_at, updated_at) VALUES (?, ?, 1, ?, ?)',
-        [id, pattern, now, now]
+        'INSERT INTO name_cleanup_rules (id, pattern, profile_id, is_active, created_at, updated_at) VALUES (?, ?, ?, 1, ?, ?)',
+        [id, pattern, pid, now, now]
       );
 
       return { id, pattern, isActive: true };
     },
 
     async deleteCleanupRule(id: string) {
+      const pid = profileId();
+      if (!pid) throw new Error('No active profile');
+
       await db.runAsync(
-        'UPDATE name_cleanup_rules SET is_deleted = 1, updated_at = ? WHERE id = ?',
-        [Date.now(), id]
+        'UPDATE name_cleanup_rules SET is_deleted = 1, updated_at = ? WHERE id = ? AND profile_id = ?',
+        [Date.now(), id, pid]
       );
     },
 
@@ -2546,7 +2654,8 @@ export function createDataService(db: Database) {
 
       // Get payment provider rules for pattern-based detection
       const providerRules = (await db.queryAsync(
-        'SELECT name, patterns FROM payment_provider_rules WHERE is_deleted = 0'
+        'SELECT name, patterns FROM payment_provider_rules WHERE profile_id = ? AND is_deleted = 0',
+        [pid]
       )) as Array<{ name: string; patterns: string }>;
 
       // Helper function to detect payment processor from transaction data
@@ -2655,31 +2764,89 @@ export function createDataService(db: Database) {
     async getPaymentProviderRules(): Promise<
       { id: string; name: string; patterns: string }[]
     > {
+      const pid = profileId();
+      if (!pid) return [];
+
       return (await db.queryAsync(
-        'SELECT * FROM payment_provider_rules WHERE is_deleted = 0 ORDER BY name ASC'
+        'SELECT * FROM payment_provider_rules WHERE profile_id = ? AND is_deleted = 0 ORDER BY name ASC',
+        [pid]
       )) as { id: string; name: string; patterns: string }[];
     },
 
     async createPaymentProviderRule(rule: { name: string; patterns: string }) {
+      const pid = profileId();
+      if (!pid) throw new Error('No active profile');
+
       const id = crypto.randomUUID();
       const now = Date.now();
 
       await db.runAsync(
-        'INSERT INTO payment_provider_rules (id, name, patterns, created_at, updated_at) VALUES (?, ?, ?, ?, ?)',
-        [id, rule.name, rule.patterns, now, now]
+        'INSERT INTO payment_provider_rules (id, name, patterns, profile_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)',
+        [id, rule.name, rule.patterns, pid, now, now]
       );
 
       return { id, name: rule.name, patterns: rule.patterns };
     },
 
     async deletePaymentProviderRule(id: string) {
+      const pid = profileId();
+      if (!pid) throw new Error('No active profile');
+
       await db.runAsync(
-        'UPDATE payment_provider_rules SET is_deleted = 1, updated_at = ? WHERE id = ?',
-        [Date.now(), id]
+        'UPDATE payment_provider_rules SET is_deleted = 1, updated_at = ? WHERE id = ? AND profile_id = ?',
+        [Date.now(), id, pid]
       );
     },
 
     // ============= Import Methods =============
+    async getImportHistory(): Promise<
+      Array<{
+        id: string;
+        filename: string;
+        bank: string;
+        importedAt: string;
+        transactionCount: number;
+        status: string;
+        skippedRows: Array<{ row: number; reason: string; data?: string }>;
+        duplicatesSkipped: number;
+        parseErrors: number;
+      }>
+    > {
+      const pid = profileId();
+      if (!pid) return [];
+
+      const rows = await db.queryAsync<{
+        id: string;
+        filename: string;
+        bank: string;
+        transaction_count: number;
+        status: string;
+        skipped_rows: string | null;
+        duplicates_skipped: number | null;
+        parse_errors: number | null;
+        created_at: number;
+      }>(
+        `SELECT id, filename, bank, transaction_count, status, skipped_rows, duplicates_skipped, parse_errors, created_at
+         FROM imports
+         WHERE profile_id = ? AND is_deleted = 0
+         ORDER BY created_at DESC
+         LIMIT 10`,
+        [pid]
+      );
+
+      return rows.map((row) => ({
+        id: row.id,
+        filename: row.filename,
+        bank: row.bank,
+        importedAt: new Date(row.created_at).toISOString(),
+        transactionCount: row.transaction_count,
+        status: row.status,
+        skippedRows: row.skipped_rows ? JSON.parse(row.skipped_rows) : [],
+        duplicatesSkipped: row.duplicates_skipped || 0,
+        parseErrors: row.parse_errors || 0,
+      }));
+    },
+
     async previewCsvImport(csvContent: string) {
       // Basic CSV parsing for preview
       const lines = csvContent.trim().split('\n');
@@ -2726,8 +2893,12 @@ export function createDataService(db: Database) {
           iban?: string;
           counterparty?: string;
           balance?: string;
+          notes?: string;
+          paymentMethod?: string;
         };
         direction?: string;
+        filename?: string;
+        bank?: string;
       }
     ) {
       const pid = profileId();
@@ -2756,8 +2927,8 @@ export function createDataService(db: Database) {
       const directionColumn = options.direction;
 
       const account = await db.queryOneAsync<{ iban: string }>(
-        'SELECT iban FROM accounts WHERE id = ?',
-        [options.accountId]
+        'SELECT iban FROM accounts WHERE id = ? AND profile_id = ?',
+        [options.accountId, pid]
       );
 
       // Load cleanup rules for name processing
@@ -2786,123 +2957,151 @@ export function createDataService(db: Database) {
       for (let i = 0; i < preview.rows.length; i++) {
         const row = preview.rows[i];
         try {
-          const dateStr = row[mapping.date];
-          const date = this._parseFlexibleDate(dateStr);
-          if (!date) {
-            errors.push(`Row ${i + 1}: Invalid date "${dateStr}"`);
-            continue;
-          }
+          let transactionData: TransactionCreate;
+          let hash: string;
+          let opposingIban: string | null;
+          let merchantName: string;
 
-          let amount = this._parseFlexibleAmount(row[mapping.amount]);
-          if (amount === null) {
-            errors.push(
-              `Row ${i + 1}: Invalid amount "${row[mapping.amount]}"`
+          if (options.bank?.toLowerCase() === 'ing') {
+            const result = await processINGRow(
+              db,
+              row,
+              {
+                accountId: options.accountId,
+                profileId: pid,
+                mapping: mapping as {
+                  date: string;
+                  amount: string;
+                  description: string;
+                  iban?: string;
+                  counterparty?: string;
+                  balance?: string;
+                  notes?: string;
+                  paymentMethod?: string;
+                },
+                ownAccountIbans,
+              },
+              {
+                parseDate: (val) => this._parseFlexibleDate(val),
+                parseAmount: (val) => this._parseFlexibleAmount(val),
+                applyCleanupRules: (name) =>
+                  this._applyCleanupRulesToName(name, cleanupRules),
+                generateHash: (date, amount, desc, iban) =>
+                  this._generateHash(date, amount, desc, iban),
+              }
             );
-            continue;
-          }
 
-          // Handle direction column (Af/Bij, Debit/Credit)
-          if (directionColumn && row[directionColumn]) {
-            const direction = row[directionColumn].toLowerCase().trim();
-            if (
-              direction === 'af' ||
-              direction === 'debit' ||
-              direction === 'd'
-            ) {
-              amount = -Math.abs(amount);
-            } else if (
-              direction === 'bij' ||
-              direction === 'credit' ||
-              direction === 'c'
-            ) {
-              amount = Math.abs(amount);
+            if ('error' in result) {
+              errors.push(`Row ${i + 1}: ${result.error}`);
+              continue;
             }
-          }
 
-          const description = row[mapping.description] || '';
-          // Use counterparty field for opposing IBAN (e.g., 'Tegenrekening' for ING)
-          // mapping.iban is the user's own account (e.g., 'Rekening' for ING)
-          const opposingIban = mapping.counterparty
-            ? row[mapping.counterparty]?.replace(/\s/g, '').toUpperCase()
-            : null;
-          // The merchant name comes from description (e.g., 'Naam / Omschrijving' for ING)
-          // which contains the counterparty name, not from the counterparty column which is the IBAN
-          let merchantName = description;
+            transactionData = result.transaction;
+            hash = result.hash;
+            opposingIban = result.opposingIban;
+            merchantName = result.merchantName;
+          } else {
+            // Generic processing
+            const dateStr = row[mapping.date];
+            const date = this._parseFlexibleDate(dateStr);
+            if (!date) {
+              errors.push(`Row ${i + 1}: Invalid date "${dateStr}"`);
+              continue;
+            }
 
-          // Apply cleanup rules to merchant name
-          if (merchantName && cleanupRules.length > 0) {
-            merchantName = this._applyCleanupRulesToName(
-              merchantName,
-              cleanupRules
+            let amount = this._parseFlexibleAmount(row[mapping.amount]);
+            if (amount === null) {
+              errors.push(
+                `Row ${i + 1}: Invalid amount "${row[mapping.amount]}"`
+              );
+              continue;
+            }
+
+            // Handle direction column (Af/Bij, Debit/Credit)
+            if (directionColumn && row[directionColumn]) {
+              const direction = row[directionColumn].toLowerCase().trim();
+              if (
+                direction === 'af' ||
+                direction === 'debit' ||
+                direction === 'd'
+              ) {
+                amount = -Math.abs(amount);
+              } else if (
+                direction === 'bij' ||
+                direction === 'credit' ||
+                direction === 'c'
+              ) {
+                amount = Math.abs(amount);
+              }
+            }
+
+            const rawDescription = row[mapping.description] || '';
+            const mededelingen = mapping.notes ? row[mapping.notes] : null;
+            const paymentMethod = mapping.paymentMethod
+              ? row[mapping.paymentMethod]
+              : null;
+
+            // Use counterparty field for opposing IBAN
+            opposingIban = mapping.counterparty
+              ? row[mapping.counterparty]?.replace(/\s/g, '').toUpperCase()
+              : null;
+
+            merchantName = rawDescription;
+
+            // Apply cleanup rules to merchant name
+            if (merchantName && cleanupRules.length > 0) {
+              merchantName = this._applyCleanupRulesToName(
+                merchantName,
+                cleanupRules
+              );
+            }
+
+            // Generate hash to detect duplicates
+            hash = this._generateHash(
+              date,
+              amount,
+              rawDescription,
+              account?.iban || ''
             );
+
+            let type: 'income' | 'expense' | 'transfer' =
+              amount > 0 ? 'income' : 'expense';
+
+            // Check if opposing IBAN is one of our own accounts (internal transfer)
+            if (opposingIban && ownAccountIbans.has(opposingIban)) {
+              type = 'transfer';
+            }
+
+            transactionData = {
+              date,
+              amount,
+              type,
+              description: rawDescription,
+              merchantName,
+              accountId: options.accountId,
+              opposingAccountIban: opposingIban,
+              opposingAccountName: rawDescription,
+              notes: mededelingen,
+              paymentMethod,
+              importHash: hash,
+            };
           }
 
-          // Generate hash to detect duplicates
-          const hash = this._generateHash(
-            date,
-            amount,
-            description,
-            account?.iban || ''
-          );
-
-          // Check for duplicate
+          // Check for duplicate - only within the current profile and non-deleted transactions
           const existing = await db.queryOneAsync(
-            'SELECT id FROM transactions WHERE import_hash = ?',
-            [hash]
+            'SELECT id FROM transactions WHERE import_hash = ? AND profile_id = ? AND is_deleted = 0',
+            [hash, pid]
           );
 
           if (existing) continue;
 
           const id = crypto.randomUUID();
-          let type: 'income' | 'expense' | 'transfer' =
-            amount > 0 ? 'income' : 'expense';
           let categoryId: string | null = null;
-
-          // Check if opposing IBAN is one of our own accounts (internal transfer)
-          if (opposingIban && ownAccountIbans.has(opposingIban)) {
-            type = 'transfer';
-          }
-
-          // ING specific: Detect "Oranje spaarrekening" in description
-          // Auto-create savings account and mark as internal transfer
-          const isOranjeSpaar =
-            description && /oranje\s*spaarrekening/i.test(description);
-          if (isOranjeSpaar && opposingIban) {
-            // Check if this savings account already exists
-            const existingSavings = await db.queryOneAsync<{ id: string }>(
-              'SELECT id FROM accounts WHERE profile_id = ? AND iban = ? AND is_deleted = 0',
-              [pid, opposingIban]
-            );
-
-            if (!existingSavings) {
-              // Create the Oranje spaarrekening as a savings account
-              const savingsAccountId = crypto.randomUUID();
-              await db.runAsync(
-                `INSERT INTO accounts (id, iban, name, type, bank, profile_id, order_index, created_at, updated_at)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-                [
-                  savingsAccountId,
-                  opposingIban,
-                  'ING Oranje Spaarrekening',
-                  'savings',
-                  'ING',
-                  pid,
-                  99, // Put at end
-                  now,
-                  now,
-                ]
-              );
-              // Add to ownAccountIbans so future transactions are also marked as transfers
-              ownAccountIbans.add(opposingIban);
-            }
-            // Mark as internal transfer
-            type = 'transfer';
-          }
 
           // Apply category rules for auto-categorization
           if (categoryRules.length > 0) {
             const matchedRule = this._findMatchingCategoryRule(
-              description,
+              transactionData.description || '',
               merchantName,
               categoryRules
             );
@@ -2913,19 +3112,21 @@ export function createDataService(db: Database) {
 
           await db.runAsync(
             `INSERT INTO transactions (id, date, amount, type, description, merchant_name, account_id, 
-             opposing_account_iban, opposing_account_name, category_id, import_hash, profile_id, created_at, updated_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+             opposing_account_iban, opposing_account_name, category_id, notes, payment_method, import_hash, profile_id, created_at, updated_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
               id,
-              date,
-              amount,
-              type,
-              description,
-              merchantName,
-              options.accountId,
-              opposingIban,
-              merchantName,
+              transactionData.date,
+              transactionData.amount,
+              transactionData.type,
+              transactionData.description,
+              transactionData.merchantName,
+              transactionData.accountId,
+              transactionData.opposingAccountIban,
+              transactionData.opposingAccountName,
               categoryId,
+              transactionData.notes,
+              transactionData.paymentMethod,
               hash,
               pid,
               now,
@@ -2967,9 +3168,32 @@ export function createDataService(db: Database) {
         await this._linkTransactionsToAddressBook(importedTxIds, pid, now);
       }
 
+      // Create import history record
+      const importId = crypto.randomUUID();
+      const duplicatesSkipped = preview.rows.length - imported - errors.length;
+      await db.runAsync(
+        `INSERT INTO imports (id, filename, bank, transaction_count, status, skipped_rows, duplicates_skipped, parse_errors, profile_id, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          importId,
+          options.filename || 'CSV Import',
+          options.bank || 'generic',
+          imported,
+          'completed',
+          errors.length > 0
+            ? JSON.stringify(errors.map((e, i) => ({ row: i + 1, reason: e })))
+            : null,
+          duplicatesSkipped,
+          errors.length,
+          pid,
+          now,
+          now,
+        ]
+      );
+
       return {
         imported,
-        skipped: preview.rows.length - imported - errors.length,
+        skipped: duplicatesSkipped,
         errors,
       };
     },
@@ -3937,8 +4161,15 @@ export function createDataService(db: Database) {
       // 6. Seed payment provider rules
       for (const rule of DEFAULT_PAYMENT_PROVIDER_RULES) {
         await db.runAsync(
-          'INSERT OR IGNORE INTO payment_provider_rules (id, name, patterns, created_at) VALUES (?, ?, ?, ?)',
-          [crypto.randomUUID(), rule.name, rule.patterns, now]
+          'INSERT OR IGNORE INTO payment_provider_rules (id, name, patterns, profile_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)',
+          [
+            crypto.randomUUID(),
+            rule.name,
+            rule.patterns,
+            targetProfileId,
+            now,
+            now,
+          ]
         );
       }
 
@@ -4417,11 +4648,12 @@ export function createDataService(db: Database) {
         // Name cleanup rules
         for (const nr of nameCleanupRules) {
           await db.runAsync(
-            `INSERT INTO name_cleanup_rules (id, pattern, is_active, updated_at, is_deleted, device_id, created_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            `INSERT INTO name_cleanup_rules (id, pattern, profile_id, is_active, updated_at, is_deleted, device_id, created_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
             [
               pick<string>(nr, 'id') ?? crypto.randomUUID(),
               pick<string>(nr, 'pattern') ?? '',
+              pick<string | null>(nr, 'profile_id', 'profileId') ?? null,
               Number(pick<number>(nr, 'is_active', 'isActive') ?? 1),
               toMs(pick(nr, 'updated_at', 'updatedAt'), now),
               Number(pick<number>(nr, 'is_deleted', 'isDeleted') ?? 0),
@@ -4434,12 +4666,13 @@ export function createDataService(db: Database) {
         // Payment provider rules
         for (const pr of paymentProviderRules) {
           await db.runAsync(
-            `INSERT INTO payment_provider_rules (id, name, patterns, updated_at, is_deleted, device_id, created_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            `INSERT INTO payment_provider_rules (id, name, patterns, profile_id, updated_at, is_deleted, device_id, created_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
             [
               pick<string>(pr, 'id') ?? crypto.randomUUID(),
               pick<string>(pr, 'name') ?? '',
               pick<string>(pr, 'patterns') ?? '',
+              pick<string | null>(pr, 'profile_id', 'profileId') ?? null,
               toMs(pick(pr, 'updated_at', 'updatedAt'), now),
               Number(pick<number>(pr, 'is_deleted', 'isDeleted') ?? 0),
               pick<string | null>(pr, 'device_id', 'deviceId') ?? null,

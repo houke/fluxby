@@ -615,6 +615,10 @@ export const en: TranslationKeys = {
       profileCreated: 'Profile "{name}" has been created!',
       addedAccounts: 'Added accounts:',
       createError: 'Something went wrong creating the profile.',
+      hideProfile: 'Hide profile',
+      showProfile: 'Show profile',
+      profileHidden: 'Profile hidden',
+      profileShown: 'Profile visible',
     },
     server: {
       title: 'Server',

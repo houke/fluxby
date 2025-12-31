@@ -570,6 +570,37 @@ export class Database implements DatabaseConnection {
       }
     }
 
+    // Migration to v7: Add profile_id to rules tables
+    if (currentVersion > 0 && currentVersion < 7) {
+      wasmLog('Ensuring rules tables have profile_id column (v7)...');
+      try {
+        await this.execAsync(
+          'ALTER TABLE name_cleanup_rules ADD COLUMN profile_id TEXT REFERENCES profiles(id) ON DELETE CASCADE;'
+        );
+      } catch (err) {
+        if (
+          err instanceof Error &&
+          (err.message.includes('duplicate column') ||
+            err.message.includes('already exists'))
+        ) {
+          wasmLog('profile_id already exists in name_cleanup_rules');
+        }
+      }
+      try {
+        await this.execAsync(
+          'ALTER TABLE payment_provider_rules ADD COLUMN profile_id TEXT REFERENCES profiles(id) ON DELETE CASCADE;'
+        );
+      } catch (err) {
+        if (
+          err instanceof Error &&
+          (err.message.includes('duplicate column') ||
+            err.message.includes('already exists'))
+        ) {
+          wasmLog('profile_id already exists in payment_provider_rules');
+        }
+      }
+    }
+
     // --- SEEDING ---
     // Seed default data (only categories with NULL profile_id)
     const deviceId = getDeviceId();

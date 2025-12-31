@@ -592,6 +592,12 @@ export const api = {
   deleteProfile: (id: number) =>
     fetchAPI(`/profiles/${id}`, { method: 'DELETE' }),
 
+  setProfileHidden: (id: number, isHidden: boolean) =>
+    fetchAPI<void>(`/profiles/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ isHidden }),
+    }),
+
   // Address Book
   getAddressBook: () => fetchAPI('/addressbook'),
 

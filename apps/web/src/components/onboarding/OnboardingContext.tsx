@@ -40,8 +40,7 @@ const checkRestartFlag = (): boolean => {
 };
 
 // Load state from localStorage
-// On page refresh, set isActive to false - user must manually restart
-// Exception: if restart flag is set, start onboarding
+// On page refresh, resume if it was active
 const loadState = (): OnboardingState => {
   const shouldRestart = checkRestartFlag();
 
@@ -54,8 +53,8 @@ const loadState = (): OnboardingState => {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
       const parsed = JSON.parse(stored);
-      // Always set isActive to false on load - closing/refreshing the page closes onboarding
-      return { ...defaultState, ...parsed, isActive: false };
+      // Resume isActive state from storage instead of forcing false
+      return { ...defaultState, ...parsed };
     }
   } catch {
     // Ignore parse errors
@@ -77,7 +76,8 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { isReady: isDatabaseReady } = useDatabase();
-  const { switchProfile, profiles, activeProfileId } = useProfile();
+  const { switchProfile, profiles, activeProfileId, setProfileHidden } =
+    useProfile();
   const { isEncryptionEnabled } = useEncryption();
   const [state, setState] = useState<OnboardingState>(loadState);
   // isCreatingDemo is kept for the context value but we don't set it anymore
@@ -184,13 +184,22 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
       };
       const requestedPath = normalizePath(window.location.pathname);
 
-      // If demo profile exists but not active, switch to it
+      // If demo profile exists, unhide it and switch to it
       try {
-        const demoProfile = profiles.find((p) => p.id === DEMO_PROFILE_ID);
-        if (demoProfile && activeProfileId !== DEMO_PROFILE_ID) {
-          switchProfile(DEMO_PROFILE_ID);
-          await queryClient.invalidateQueries();
-          await new Promise((resolve) => setTimeout(resolve, 100));
+        const demoProfile = profiles.find(
+          (p) => p.id === DEMO_PROFILE_ID || p.name === 'Demo'
+        );
+        if (demoProfile) {
+          // Unhide demo profile if it was hidden
+          if (demoProfile.isHidden) {
+            await setProfileHidden(demoProfile.id, false);
+          }
+          // Switch to demo profile if not already active
+          if (activeProfileId !== demoProfile.id) {
+            switchProfile(demoProfile.id);
+            await queryClient.invalidateQueries();
+            await new Promise((resolve) => setTimeout(resolve, 100));
+          }
         }
       } catch (error) {
         console.error('Error switching to demo profile:', error);
@@ -208,19 +217,26 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
         const currentPath = requestedPath;
         // Find all chapters matching this route (excluding welcome at index 0 and completion at last index)
         const lastIndex = onboardingChapters.length - 1;
+
+        // Special case for dashboard: it's at '/' but we want to skip 'welcome' and 'navigation'
+        // if we are specifically starting from the dashboard page.
         const matchingChapters = onboardingChapters
           .map((chapter, index) => ({ chapter, index }))
-          .filter(
-            ({ chapter, index }) =>
-              normalizePath(chapter.route) === currentPath &&
-              index > 0 &&
-              index < lastIndex
-          );
+          .filter(({ chapter, index }) => {
+            const chapterRoute = normalizePath(chapter.route);
+            // Exact match for route
+            if (chapterRoute !== currentPath) return false;
+
+            // Skip welcome (0) and completion (last)
+            if (index === 0 || index === lastIndex) return false;
+
+            return true;
+          });
 
         // If we found matching chapters, use the first content chapter (after navigation chapters)
-        // For dashboard route, this will find the 'dashboard' chapter, not 'welcome' or 'navigation'
         if (matchingChapters.length > 0) {
           // Prefer chapter with id matching the menuItem (content chapters)
+          // For dashboard, this will be the 'dashboard' chapter (index 2)
           const contentChapter = matchingChapters.find(
             ({ chapter }) =>
               chapter.id === chapter.menuItem &&
@@ -299,6 +315,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
       hasCompletedInitialSetup,
       profiles,
       switchProfile,
+      setProfileHidden,
       activeProfileId,
       queryClient,
     ]
@@ -309,9 +326,11 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
   // This function just marks onboarding as complete
   const completeOnboarding = useCallback(async () => {
     // If demo profile exists but not active, switch to it
-    const demoProfile = profiles.find((p) => p.id === DEMO_PROFILE_ID);
-    if (demoProfile && activeProfileId !== DEMO_PROFILE_ID) {
-      switchProfile(DEMO_PROFILE_ID);
+    const demoProfile = profiles.find(
+      (p) => p.id === DEMO_PROFILE_ID || p.name === 'Demo'
+    );
+    if (demoProfile && activeProfileId !== demoProfile.id) {
+      switchProfile(demoProfile.id);
       await queryClient.invalidateQueries();
     }
 
@@ -491,7 +510,9 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
   // Separate concerns:
   // 1. needsSecuritySetup: No encryption set up yet (show SecuritySetup component)
   // 2. needsOnboarding: User/demo profile not ready (show onboarding tour on top of dashboard)
-  const hasDemoProfile = profiles.some((p) => p.id === DEMO_PROFILE_ID);
+  const hasDemoProfile = profiles.some(
+    (p) => p.id === DEMO_PROFILE_ID || p.name === 'Demo'
+  );
 
   // Security setup needed when encryption is not enabled
   const needsSecuritySetup =

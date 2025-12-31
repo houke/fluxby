@@ -6,7 +6,7 @@
 /**
  * Schema version for migrations
  */
-export const SCHEMA_VERSION = 6;
+export const SCHEMA_VERSION = 7;
 
 /**
  * SQL schema with sync metadata columns
@@ -155,28 +155,30 @@ CREATE TABLE IF NOT EXISTS imports (
     created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now') * 1000)
 );
 
--- Name cleanup rules (global)
+-- Name cleanup rules (per profile)
 CREATE TABLE IF NOT EXISTS name_cleanup_rules (
   id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
   pattern TEXT NOT NULL,
   is_active INTEGER NOT NULL DEFAULT 1,
+  profile_id TEXT REFERENCES profiles(id) ON DELETE CASCADE,
   updated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now') * 1000),
   is_deleted INTEGER NOT NULL DEFAULT 0,
   device_id TEXT,
   created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now') * 1000),
-  UNIQUE(pattern)
+  UNIQUE(pattern, profile_id)
 );
 
--- Payment provider rules (global)
+-- Payment provider rules (per profile)
 CREATE TABLE IF NOT EXISTS payment_provider_rules (
   id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
   name TEXT NOT NULL,
   patterns TEXT NOT NULL,
+  profile_id TEXT REFERENCES profiles(id) ON DELETE CASCADE,
   updated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now') * 1000),
   is_deleted INTEGER NOT NULL DEFAULT 0,
   device_id TEXT,
   created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now') * 1000),
-  UNIQUE(name)
+  UNIQUE(name, profile_id)
 );
 
 -- Address book for tracking recurring counterparties

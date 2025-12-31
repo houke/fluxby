@@ -537,6 +537,10 @@ export interface TranslationKeys {
       profileCreated: string;
       addedAccounts: string;
       createError: string;
+      hideProfile: string;
+      showProfile: string;
+      profileHidden: string;
+      profileShown: string;
     };
     profile: {
       title: string;
@@ -1565,6 +1569,10 @@ export const nl: TranslationKeys = {
       profileCreated: 'Profiel "{name}" is aangemaakt!',
       addedAccounts: 'Toegevoegde rekeningen:',
       createError: 'Er ging iets mis bij het aanmaken van het profiel.',
+      hideProfile: 'Verberg profiel',
+      showProfile: 'Toon profiel',
+      profileHidden: 'Profiel verborgen',
+      profileShown: 'Profiel zichtbaar',
     },
     server: {
       title: 'Server',
