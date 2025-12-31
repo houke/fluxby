@@ -120,7 +120,12 @@ const PrivacyPolicyContent = () => {
       <p>
         {legal?.contactText ||
           'Als je vragen hebt over hoe de App lokaal werkt op jouw apparaat, kun je contact opnemen met de ontwikkelaar via:'}{' '}
-        <a href='#' className='text-fluxby-purple hover:underline'>
+        <a
+          href='https://github.com/houke'
+          target='_blank'
+          rel='noopener noreferrer'
+          className='text-fluxby-purple hover:underline'
+        >
           {legal?.contactGithub || 'contact me on GitHub'}
         </a>
       </p>

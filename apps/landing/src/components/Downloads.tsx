@@ -82,6 +82,8 @@ const Downloads = () => {
 
                 <a
                   href={platform.link}
+                  target='_blank'
+                  rel='noopener noreferrer'
                   className='flex w-full items-center justify-center gap-2 rounded-xl bg-fluxby-purple py-3 font-bold text-white transition-colors hover:bg-fluxby-dark'
                 >
                   <Download className='h-5 w-5' />

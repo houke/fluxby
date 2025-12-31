@@ -263,7 +263,7 @@ const FeaturesContent = () => {
             'Download Fluxby en neem vandaag nog controle over je financiën.'}
         </p>
         <a
-          href='/'
+          href='/app'
           className='inline-flex items-center gap-2 rounded-full bg-white px-8 py-3 font-semibold text-purple-600 no-underline transition-all duration-300 hover:scale-105 hover:shadow-xl'
         >
           <Zap className='h-5 w-5' />

@@ -97,7 +97,9 @@ const PricingContent = () => {
       {/* Support Section */}
       <div className='not-prose grid grid-cols-1 gap-4 sm:grid-cols-2'>
         <a
-          href='#'
+          href='https://github.com/houke'
+          target='_blank'
+          rel='noopener noreferrer'
           className='group flex flex-col items-center gap-4 rounded-2xl border border-gray-200 bg-white p-6 text-center no-underline transition-all duration-300 hover:-translate-y-1 hover:shadow-xl dark:border-gray-700 dark:bg-gray-800/50'
         >
           <div className='flex h-12 w-12 shrink-0 items-center justify-center rounded-md bg-amber-100 transition-transform duration-300 group-hover:scale-110 dark:bg-amber-900/30'>
@@ -115,7 +117,9 @@ const PricingContent = () => {
         </a>
 
         <a
-          href='#'
+          href='https://github.com/houke/fluxby'
+          target='_blank'
+          rel='noopener noreferrer'
           className='group flex flex-col items-center gap-4 rounded-2xl border border-gray-200 bg-white p-6 text-center no-underline transition-all duration-300 hover:-translate-y-1 hover:shadow-xl dark:border-gray-700 dark:bg-gray-800/50'
         >
           <div className='flex h-12 w-12 shrink-0 items-center justify-center rounded-md bg-gray-100 transition-transform duration-300 group-hover:scale-110 dark:bg-gray-700'>

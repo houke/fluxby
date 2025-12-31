@@ -314,7 +314,9 @@ const AboutContent = () => {
           </Link>
 
           <a
-            href='#'
+            href='https://github.com/houke/fluxby'
+            target='_blank'
+            rel='noopener noreferrer'
             className='group flex items-start gap-4 rounded-2xl border border-gray-200 bg-white p-6 no-underline transition-all duration-300 hover:-translate-y-1 hover:shadow-xl dark:border-gray-700 dark:bg-gray-800/50'
           >
             <div className='flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gray-800 transition-transform duration-300 group-hover:scale-110 dark:bg-gray-600'>
