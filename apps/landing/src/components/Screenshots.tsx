@@ -67,8 +67,8 @@ const Screenshots = () => {
       className='section-padding bg-gradient-to-br from-purple-50 to-pink-50 dark:from-gray-900 dark:to-gray-800'
     >
       <div className='container mx-auto px-4'>
-        <div className='mb-16 text-center'>
-          <h2 className='mb-6 text-5xl font-black text-gray-900 dark:text-white lg:text-6xl'>
+        <div className='mb-12 text-center md:mb-16'>
+          <h2 className='mb-6 text-3xl font-black text-gray-900 dark:text-white sm:text-5xl lg:text-6xl'>
             {t.screenshots.title}{' '}
             <span className='text-fluxby-purple'>
               {t.screenshots.titleHighlight}
@@ -96,10 +96,10 @@ const Screenshots = () => {
               >
                 {/* Text content */}
                 <div className='flex-1'>
-                  <h3 className='mb-4 text-4xl font-bold text-gray-900 dark:text-white'>
+                  <h3 className='mb-4 text-2xl font-bold text-gray-900 dark:text-white sm:text-4xl'>
                     {screenshot.title}
                   </h3>
-                  <p className='mb-6 text-xl leading-relaxed text-gray-600 dark:text-gray-300'>
+                  <p className='mb-6 text-lg leading-relaxed text-gray-600 dark:text-gray-300 sm:text-xl'>
                     {screenshot.description}
                   </p>
                   <ul className='space-y-3'>
@@ -118,11 +118,11 @@ const Screenshots = () => {
                 </div>
 
                 {/* Animation Container */}
-                <div className='flex-1'>
-                  <div className='relative'>
-                    <div className='from-fluxby-purple to-fluxby-pink absolute inset-0 scale-105 transform rounded-3xl bg-gradient-to-r opacity-20 blur-2xl'></div>
+                <div className='flex-1 w-full'>
+                  <div className='relative md:px-0'>
+                    <div className='from-fluxby-purple to-fluxby-pink absolute inset-0 hidden scale-105 transform rounded-3xl bg-gradient-to-r opacity-20 blur-2xl md:block'></div>
                     <div
-                      className='relative aspect-[4/3] w-full select-none overflow-hidden rounded-2xl border border-white/20 bg-gradient-to-br from-purple-600 to-purple-700 shadow-2xl'
+                      className='relative aspect-[4/3] w-[calc(100%+4rem)] -ml-8 select-none overflow-hidden border-0 border-white/20 bg-gradient-to-br from-purple-600 to-purple-700 shadow-none md:w-full md:ml-0 md:rounded-2xl md:border md:shadow-2xl'
                       style={{ pointerEvents: 'none' }}
                     >
                       {AnimationComponent && (

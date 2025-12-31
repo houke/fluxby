@@ -46,7 +46,7 @@ const Downloads = () => {
       className='section-padding bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800'
     >
       <div className='container mx-auto px-4'>
-        <div className='mx-auto mb-16 max-w-3xl text-center'>
+        <div className='mx-auto mb-12 max-w-3xl text-center md:mb-16'>
           <h2 className='mb-6 text-4xl font-black text-gray-900 dark:text-white md:text-5xl'>
             Download <span className='text-fluxby-purple'>Fluxby</span>
           </h2>

@@ -32,21 +32,21 @@ export default function HelpCenter() {
   return (
     <section
       id='help-center'
-      className='relative overflow-hidden bg-gradient-to-b from-purple-50 to-pink-50 py-24 dark:from-gray-800 dark:to-gray-900'
+      className='section-padding relative overflow-hidden bg-gradient-to-b from-purple-50 to-pink-50 dark:from-gray-800 dark:to-gray-900'
     >
       {/* Background decoration */}
       <div className='absolute left-0 top-0 h-64 w-64 rounded-full bg-purple-200/30 blur-3xl dark:bg-purple-900/20' />
       <div className='absolute bottom-0 right-0 h-64 w-64 rounded-full bg-pink-200/30 blur-3xl dark:bg-pink-900/20' />
 
       <div className='container relative mx-auto px-4'>
-        <div className='mb-12 text-center'>
+        <div className='mb-8 text-center md:mb-12'>
           <div className='mb-4 inline-flex items-center gap-2 rounded-full bg-purple-100 px-4 py-2 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300'>
             <span className='text-lg'>❓</span>
             <span className='text-sm font-medium'>
               {t.helpSection?.badge || 'Help Center'}
             </span>
           </div>
-          <h2 className='mb-4 text-4xl font-bold text-gray-900 dark:text-gray-100 md:text-5xl'>
+          <h2 className='mb-4 text-3xl font-bold text-gray-900 dark:text-gray-100 md:text-5xl'>
             {t.helpSection?.title || 'Need help?'}{' '}
             <span className='bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent'>
               {t.helpSection?.titleHighlight || "We've got you covered"}

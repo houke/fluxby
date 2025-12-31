@@ -63,17 +63,17 @@ const CTA = () => {
 
       <div className='container relative z-10 mx-auto px-4 text-center'>
         <div className='mx-auto max-w-4xl'>
-          <h2 className='mb-8 text-5xl font-black leading-tight text-white lg:text-7xl'>
+          <h2 className='mb-6 text-3xl font-black leading-tight text-white md:mb-8 sm:text-5xl lg:text-7xl'>
             {t.cta.title.part1}{' '}
             <span className='text-fluxby-light'>{t.cta.title.highlight}</span>{' '}
             {t.cta.title.part2}
           </h2>
-          <p className='mx-auto mb-12 max-w-2xl text-xl leading-relaxed text-white lg:text-2xl'>
+          <p className='mx-auto mb-8 max-w-2xl text-xl leading-relaxed text-white md:mb-12 lg:text-2xl'>
             {t.cta.description}
           </p>
 
           {/* CTA Buttons */}
-          <div className='mb-16 flex flex-col justify-center sm:flex-row'>
+          <div className='mb-12 flex flex-col justify-center sm:flex-row md:mb-16'>
             <a
               href={appHref}
               target='_blank'

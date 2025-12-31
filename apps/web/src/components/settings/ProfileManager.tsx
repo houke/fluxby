@@ -68,6 +68,14 @@ const PROFILE_TYPES: {
   { value: 'investing', labelKey: 'investing', icon: TrendingUp },
 ];
 
+const PROFILE_TYPE_COLORS: Record<string, string> = {
+  personal: 'from-blue-500 to-purple-500',
+  business: 'from-green-500 to-teal-500',
+  shared: 'from-orange-500 to-yellow-500',
+  savings: 'from-emerald-500 to-cyan-500',
+  investing: 'from-indigo-500 to-blue-600',
+};
+
 // Account types for the account form
 const ACCOUNT_TYPES = [
   { value: 'checking', icon: Wallet },
@@ -150,7 +158,10 @@ export function ProfileManager() {
   }, []);
 
   React.useEffect(() => {
-    setAvatarOptions(buildPatternOptions());
+    const patterns = buildPatternOptions();
+    setAvatarOptions(patterns);
+    // Default to first gradient on profile creation
+    setFormData((prev) => ({ ...prev, avatarUrl: patterns[0] }));
   }, [buildPatternOptions]);
 
   const refreshAvatars = () => {
@@ -161,11 +172,10 @@ export function ProfileManager() {
     }, 300);
   };
 
-  // Get avatar options for display, with selected avatar first when editing
+  // Get avatar options for display, with selected gradient first if it's a gradient
   const getDisplayAvatars = () => {
     const selectedAvatar = formData.avatarUrl;
-    if (editingProfile && selectedAvatar) {
-      // Filter out the selected avatar from options (if present) and prepend it
+    if (selectedAvatar && avatarOptions.includes(selectedAvatar)) {
       const filtered = avatarOptions.filter((a) => a !== selectedAvatar);
       return [selectedAvatar, ...filtered];
     }
@@ -422,7 +432,7 @@ export function ProfileManager() {
                       </Button>
                     </div>
                     <div className='flex flex-wrap gap-2'>
-                      {avatarOptions.map((pattern) => (
+                      {getDisplayAvatars().map((pattern) => (
                         <button
                           key={pattern}
                           type='button'
@@ -608,19 +618,25 @@ export function ProfileManager() {
               <CardHeader className='pb-3'>
                 <div className='flex items-start justify-between'>
                   <div className='flex items-center gap-3'>
-                    {profile.avatarUrl ? (
-                      <div
-                        className='h-10 w-10 rounded-full border shadow-sm'
-                        style={{
-                          backgroundImage: profile.avatarUrl,
-                          backgroundSize: 'cover',
-                        }}
-                      />
-                    ) : (
-                      <div className='flex h-10 w-10 items-center justify-center rounded-full bg-muted'>
-                        <Icon className='h-5 w-5 text-foreground' />
+                    <div
+                      className={cn(
+                        'relative h-10 w-10 rounded-full border shadow-sm',
+                        !profile.avatarUrl &&
+                          `bg-gradient-to-br ${PROFILE_TYPE_COLORS[profile.type] || 'from-gray-500 to-gray-600'}`
+                      )}
+                      style={
+                        profile.avatarUrl
+                          ? {
+                              backgroundImage: profile.avatarUrl,
+                              backgroundSize: 'cover',
+                            }
+                          : {}
+                      }
+                    >
+                      <div className='absolute inset-0 flex items-center justify-center'>
+                        <Icon className='h-5 w-5 text-white drop-shadow' />
                       </div>
-                    )}
+                    </div>
                     <div>
                       <CardTitle className='text-base'>
                         {profile.name}

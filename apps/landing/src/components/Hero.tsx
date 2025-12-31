@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { FluxbyWebGL } from '@fluxby/shared';
-import { useState, useMemo, CSSProperties } from 'react';
+import { useState, useMemo, CSSProperties, useEffect } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 
 // Extended CSSProperties to support CSS custom properties
@@ -140,6 +140,21 @@ const Hero = () => {
   // Random rotation offset for the emoji cloud so it looks different each time
   const [rotationOffset] = useState(() => Math.random() * Math.PI * 2);
 
+  // Responsive dimensions state
+  const [windowWidth, setWindowWidth] = useState(
+    typeof window !== 'undefined' ? window.innerWidth : 1200
+  );
+
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const isMobile = windowWidth < 768;
+  const baseRadius = isMobile ? 140 : 220;
+  const avatarSize = isMobile ? 280 : 400;
+
   // We no longer use mouse-driven parallax; instead compute per-emoji
   // randomized animation parameters (kept stable while categories are stable)
   // Improve randomness and de-synchronization: expand ranges and add easing/rotation
@@ -190,7 +205,6 @@ const Hero = () => {
   // Compute a 'cloud' of positions around the avatar to avoid collisions.
   // Use polar coordinates so emojis are distributed evenly with small jitter.
   const CategoryEmojis = () => {
-    const baseRadius = 220; // px - much larger offset from avatar
     return (
       <>
         {categoryEmojis.map((emoji, i) => {
@@ -251,7 +265,7 @@ const Hero = () => {
   };
 
   return (
-    <section className='gradient-bg relative flex min-h-screen items-center justify-center overflow-hidden'>
+    <section className='gradient-bg relative flex min-h-screen items-center justify-center overflow-hidden pt-24 pb-12 lg:py-0'>
       {/* Header with language selector */}
       <header className='absolute left-0 right-0 top-0 z-30 px-6 py-4'>
         <div className='container mx-auto flex items-center justify-between'>
@@ -475,11 +489,11 @@ const Hero = () => {
         <div className='flex flex-col items-center justify-between gap-12 lg:flex-row'>
           {/* Left side - Text content */}
           <div className='flex-1 text-left lg:text-left'>
-            <h1 className='mb-6 text-4xl font-black leading-tight text-white lg:text-6xl'>
+            <h1 className='mb-6 text-2xl font-black leading-tight text-white sm:text-4xl lg:text-6xl'>
               {t.hero.title} <span className='text-fluxby-light'>Fluxby</span>,{' '}
               <span className='text-white'>{t.hero.subtitle}</span>
             </h1>
-            <p className='mb-8 max-w-2xl text-xl leading-relaxed text-white/90 lg:text-2xl'>
+            <p className='mb-8 max-w-2xl text-lg leading-relaxed text-white/90 sm:text-xl lg:text-2xl'>
               {t.hero.description}
             </p>
             <div className='flex flex-col gap-4 sm:flex-row'>
@@ -487,7 +501,7 @@ const Hero = () => {
                 href={appHref}
                 target='_blank'
                 rel='noopener noreferrer'
-                className='btn-primary fluffy-shadow transform px-12 py-6 text-xl transition-all duration-300 hover:scale-110'
+                className='btn-primary fluffy-shadow w-full transform px-12 py-6 text-center text-xl transition-all duration-300 hover:scale-110 sm:w-auto'
               >
                 {t.hero.getStarted}
               </a>
@@ -495,13 +509,13 @@ const Hero = () => {
           </div>
 
           {/* Right side - Big Fluxby Avatar */}
-          <div className='flex flex-1 justify-center lg:justify-end'>
-            <div className='avatar-breathe relative'>
+          <div className='flex flex-1 justify-center px-4 lg:justify-end lg:px-0'>
+            <div className='avatar-breathe relative flex aspect-square w-full max-w-[280px] items-center justify-center sm:max-w-[400px]'>
               {/* Glow effect behind avatar */}
               <div className='bg-fluxby-purple/30 animate-pulse-slow absolute inset-0 scale-150 rounded-full blur-3xl'></div>
               <FluxbyWebGL
-                width={400}
-                height={400}
+                width={avatarSize}
+                height={avatarSize}
                 className='relative z-10 drop-shadow-2xl'
                 interactive={true}
               />

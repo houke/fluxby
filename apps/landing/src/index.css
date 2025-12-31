@@ -14,7 +14,7 @@
   }
 
   .section-padding {
-    @apply px-4 py-20;
+    @apply px-4 py-12 md:py-24;
   }
 
   .gradient-bg {

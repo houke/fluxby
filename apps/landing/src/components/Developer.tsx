@@ -45,7 +45,7 @@ export default function Developer() {
   return (
     <section
       id='developer'
-      className='relative overflow-hidden bg-gradient-to-b from-gray-900 to-gray-800 py-24 text-white'
+      className='section-padding relative overflow-hidden bg-gradient-to-b from-gray-900 to-gray-800 text-white'
     >
       {/* Background pattern */}
       <div className='absolute inset-0 opacity-10'>
@@ -58,7 +58,7 @@ export default function Developer() {
       </div>
 
       <div className='container relative mx-auto px-4'>
-        <div className='mb-16 text-center'>
+        <div className='mb-12 text-center md:mb-16'>
           <div className='mb-4 inline-flex items-center gap-2 rounded-full bg-purple-500/20 px-4 py-2 text-purple-300'>
             <span className='text-lg'>🛠️</span>
             <span className='text-sm font-medium'>

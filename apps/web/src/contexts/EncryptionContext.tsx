@@ -119,7 +119,10 @@ export function EncryptionProvider({ children }: EncryptionProviderProps) {
     return localStorage.getItem(PASSWORD_HASH_KEY) !== null;
   });
 
-  const [isUnlocked, setIsUnlocked] = useState(false);
+  // Auto-unlock in development mode for easier debugging
+  const [isUnlocked, setIsUnlocked] = useState(() => {
+    return import.meta.env.DEV;
+  });
 
   // Set up password protection
   const setupEncryption = useCallback(async (password: string) => {

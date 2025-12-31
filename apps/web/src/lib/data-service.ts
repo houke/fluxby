@@ -9,7 +9,7 @@
  * The API server is an optional layer for external integrations.
  */
 
-import { DEFAULT_CATEGORIES, type Database } from '@fluxby/database';
+import { type Database } from '@fluxby/database';
 import type {
   Profile,
   Transaction,
@@ -17,6 +17,10 @@ import type {
   Account,
   Budget,
   ProfileType,
+} from '@fluxby/shared';
+import {
+  flattenCategoriesForDB,
+  SEED_CATEGORIES,
 } from '@fluxby/shared';
 
 /**
@@ -140,14 +144,44 @@ export function createDataService(db: Database) {
         ]
       );
 
-      // Seed default categories for the new profile
-      for (const cat of DEFAULT_CATEGORIES) {
+      // Seed default categories with subcategories and rules for the new profile
+      const { parentCategories, subcategories } = flattenCategoriesForDB(
+        SEED_CATEGORIES,
+        'nl'
+      );
+      const categoryIdMap: Record<string, string> = {};
+
+      // Insert parent categories
+      for (const cat of parentCategories) {
         const categoryId = crypto.randomUUID();
         await db.runAsync(
-          `INSERT INTO categories (id, name, icon, color, profile_id, updated_at, created_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?)`,
-          [categoryId, cat.name, cat.icon, cat.color, id, now, now]
+          `INSERT INTO categories (id, name, icon, color, description, profile_id, updated_at, created_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+          [categoryId, cat.name, cat.icon, cat.color, cat.description, id, now, now]
         );
+        categoryIdMap[cat.name] = categoryId;
+      }
+
+      // Insert subcategories with their rules
+      for (const sub of subcategories) {
+        const parentId = categoryIdMap[sub.parentName];
+        const subId = crypto.randomUUID();
+        await db.runAsync(
+          `INSERT INTO categories (id, name, parent_id, icon, color, description, profile_id, updated_at, created_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [subId, sub.name, parentId, sub.icon, sub.color, sub.description, id, now, now]
+        );
+        categoryIdMap[sub.name] = subId;
+
+        // Add category rules for subcategory
+        for (const rule of sub.rules) {
+          const ruleId = crypto.randomUUID();
+          await db.runAsync(
+            `INSERT INTO category_rules (id, pattern, category_id, priority, profile_id, created_at, updated_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            [ruleId, rule, subId, 0, id, now, now]
+          );
+        }
       }
 
       const profile = await this.getProfile(id);

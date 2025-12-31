@@ -2,12 +2,13 @@ import { Link, Outlet, useLocation } from 'react-router-dom';
 import HelpSidebar from './HelpSidebar';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useTheme } from '../../contexts/ThemeContext';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 export default function HelpLayout() {
   const { language, setLanguage, t } = useLanguage();
   const { theme, toggleTheme } = useTheme();
   const location = useLocation();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -15,16 +16,41 @@ export default function HelpLayout() {
 
   return (
     <div className='flex min-h-screen bg-gray-50 dark:bg-gray-900'>
-      <HelpSidebar />
+      <HelpSidebar
+        isOpen={isMobileMenuOpen}
+        onClose={() => setIsMobileMenuOpen(false)}
+      />
       <div className='flex flex-1 flex-col bg-gray-50 dark:bg-gray-900'>
         {/* Top bar */}
-        <header className='sticky top-0 z-10 flex items-center justify-between border-b border-gray-200 bg-white px-8 py-4 dark:border-gray-700 dark:bg-gray-800'>
+        <header className='sticky top-0 z-10 flex items-center justify-between border-b border-gray-200 bg-white px-4 py-4 dark:border-gray-700 dark:bg-gray-800 lg:px-8'>
           <div className='flex items-center gap-4'>
+            {/* Mobile menu button */}
+            <button
+              onClick={() => setIsMobileMenuOpen(true)}
+              className='mr-2 rounded-lg p-2 text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700 lg:hidden'
+              aria-label='Open menu'
+            >
+              <svg
+                className='h-6 w-6'
+                fill='none'
+                viewBox='0 0 24 24'
+                stroke='currentColor'
+              >
+                <path
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  strokeWidth={2}
+                  d='M4 6h16M4 12h16M4 18h16'
+                />
+              </svg>
+            </button>
+
             <Link
               to='/'
               className='text-sm text-gray-500 transition-colors hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100'
             >
-              ← {t.docs?.backToHome || 'Back to Home'}
+              ← <span className='hidden sm:inline'>{t.docs?.backToHome || 'Back to Home'}</span>
+              <span className='sm:hidden'>Home</span>
             </Link>
           </div>
           <div className='flex items-center gap-4'>
@@ -96,7 +122,7 @@ export default function HelpLayout() {
         </header>
 
         {/* Main content */}
-        <main className='flex-1 px-8 py-12'>
+        <main className='flex-1 px-4 py-8 lg:px-8 lg:py-12'>
           <div className='mx-auto max-w-4xl'>
             <Outlet />
           </div>

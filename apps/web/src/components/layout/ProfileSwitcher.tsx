@@ -62,24 +62,24 @@ export function ProfileSwitcher() {
           )}
         >
           {/* Profile Avatar */}
-          {activeProfile.avatarUrl ? (
-            <div
-              className='h-8 w-8 rounded-full border shadow-sm'
-              style={{
-                backgroundImage: activeProfile.avatarUrl,
-                backgroundSize: 'cover',
-              }}
-            />
-          ) : (
-            <div
-              className={cn(
-                'flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br text-sm font-medium text-white',
-                typeColor
-              )}
-            >
-              <Icon className='h-4 w-4' />
+          <div
+            className={cn(
+              'relative h-8 w-8 rounded-full border shadow-sm',
+              !activeProfile.avatarUrl && `bg-gradient-to-br ${typeColor}`
+            )}
+            style={
+              activeProfile.avatarUrl
+                ? {
+                    backgroundImage: activeProfile.avatarUrl,
+                    backgroundSize: 'cover',
+                  }
+                : {}
+            }
+          >
+            <div className='absolute inset-0 flex items-center justify-center'>
+              <Icon className='h-4 w-4 text-white drop-shadow' />
             </div>
-          )}
+          </div>
 
           {/* Profile Name */}
           <div className='flex flex-col items-start'>
@@ -101,24 +101,24 @@ export function ProfileSwitcher() {
           Huidig profiel
         </div>
         <div className='flex items-center gap-2 px-2 py-1.5'>
-          {activeProfile.avatarUrl ? (
-            <div
-              className='h-8 w-8 rounded-full border shadow-sm'
-              style={{
-                backgroundImage: activeProfile.avatarUrl,
-                backgroundSize: 'cover',
-              }}
-            />
-          ) : (
-            <div
-              className={cn(
-                'flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br text-sm text-white',
-                typeColor
-              )}
-            >
-              <Icon className='h-4 w-4' />
+          <div
+            className={cn(
+              'relative h-8 w-8 rounded-full border shadow-sm',
+              !activeProfile.avatarUrl && `bg-gradient-to-br ${typeColor}`
+            )}
+            style={
+              activeProfile.avatarUrl
+                ? {
+                    backgroundImage: activeProfile.avatarUrl,
+                    backgroundSize: 'cover',
+                  }
+                : {}
+            }
+          >
+            <div className='absolute inset-0 flex items-center justify-center'>
+              <Icon className='h-4 w-4 text-white drop-shadow' />
             </div>
-          )}
+          </div>
           <div className='flex flex-col'>
             <span className='font-medium'>{activeProfile.name}</span>
             <span className='text-xs capitalize text-muted-foreground'>
@@ -146,24 +146,24 @@ export function ProfileSwitcher() {
                   className='cursor-pointer'
                 >
                   <div className='flex items-center gap-2'>
-                    {profile.avatarUrl ? (
-                      <div
-                        className='shadow-xs h-6 w-6 rounded-full border'
-                        style={{
-                          backgroundImage: profile.avatarUrl,
-                          backgroundSize: 'cover',
-                        }}
-                      />
-                    ) : (
-                      <div
-                        className={cn(
-                          'flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br text-xs text-white',
-                          color
-                        )}
-                      >
-                        <OtherIcon className='h-3 w-3' />
+                    <div
+                      className={cn(
+                        'relative h-6 w-6 rounded-full border shadow-sm',
+                        !profile.avatarUrl && `bg-gradient-to-br ${color}`
+                      )}
+                      style={
+                        profile.avatarUrl
+                          ? {
+                              backgroundImage: profile.avatarUrl,
+                              backgroundSize: 'cover',
+                            }
+                          : {}
+                      }
+                    >
+                      <div className='absolute inset-0 flex items-center justify-center'>
+                        <OtherIcon className='h-3 w-3 text-white drop-shadow' />
                       </div>
-                    )}
+                    </div>
                     <span>{profile.name}</span>
                   </div>
                 </DropdownMenuItem>

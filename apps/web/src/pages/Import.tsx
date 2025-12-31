@@ -11,6 +11,7 @@ import {
   ChevronDown,
   ChevronUp,
   ArrowRight,
+  Landmark,
 } from 'lucide-react';
 import {
   Card,
@@ -137,8 +138,11 @@ const MAPPING_FIELDS = [
 
 // Bank presets for column mapping
 const DUTCH_BANKS = [
-  { id: 'ing', name: 'Standaard (CSV)', enabled: true },
-  { id: 'generic', name: 'Anders / Handmatig', enabled: true },
+  { id: 'ing', name: 'ING', enabled: true, icon: '🦁' },
+  { id: 'rabobank', name: 'Rabobank', enabled: false, icon: null },
+  { id: 'asn', name: 'ASN Bank', enabled: false, icon: null },
+  { id: 'knab', name: 'Knab', enabled: false, icon: null },
+  { id: 'generic', name: 'Anders / Handmatig', enabled: true, icon: null },
 ] as const;
 
 // Helper to get display name for bank code
@@ -154,7 +158,7 @@ const BANK_PRESETS: Record<
   { name: string; mapping: Record<string, string[]> }
 > = {
   ing: {
-    name: 'Standaard (CSV)',
+    name: 'ING',
     mapping: {
       date: ['Datum'],
       amount: ['Bedrag (EUR)', 'Bedrag'],
@@ -750,7 +754,7 @@ export default function Import() {
             {/* Bank Selector - Show First */}
             <div className='space-y-3'>
               <label className='text-sm font-medium'>Selecteer je bank</label>
-              <div className='grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4'>
+              <div className='grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-5'>
                 {DUTCH_BANKS.map((bank) => (
                   <button
                     key={bank.id}
@@ -766,7 +770,7 @@ export default function Import() {
                         setColumnMapping(newMapping);
                       }
                     }}
-                    className={`rounded-lg border p-3 text-sm font-medium transition-colors ${
+                    className={`flex flex-col items-center justify-center gap-1 rounded-lg border p-3 text-sm font-medium transition-colors ${
                       selectedBank === bank.id
                         ? 'border-primary bg-primary/10 text-primary'
                         : bank.enabled
@@ -774,11 +778,14 @@ export default function Import() {
                           : 'cursor-not-allowed border-border/50 bg-muted/30 text-muted-foreground/50'
                     }`}
                   >
-                    {bank.name}
+                    {bank.icon ? (
+                      <span className='text-xl'>{bank.icon}</span>
+                    ) : (
+                      <Landmark className='h-5 w-5' />
+                    )}
+                    <span>{bank.name}</span>
                     {!bank.enabled && (
-                      <span className='mt-1 block text-xs opacity-60'>
-                        Binnenkort
-                      </span>
+                      <span className='text-xs opacity-60'>Binnenkort</span>
                     )}
                   </button>
                 ))}
