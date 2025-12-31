@@ -1,0 +1,24 @@
+meta {
+  name: Get seed categories with subcategories and rules
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/api/categories/seed-data
+  body: none
+  auth: none
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+docs {
+  # Get seed categories with subcategories and rules
+  
+  No description provided.
+  
+  ## Endpoint
+  `GET /api/categories/seed-data`
+}

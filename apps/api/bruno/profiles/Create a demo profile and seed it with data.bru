@@ -1,0 +1,28 @@
+meta {
+  name: Create a demo profile and seed it with data
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{baseUrl}}/api/profiles/create-demo
+  body: json
+  auth: none
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+body:json {
+  {}
+}
+
+docs {
+  # Create a demo profile and seed it with data
+  
+  No description provided.
+  
+  ## Endpoint
+  `POST /api/profiles/create-demo`
+}

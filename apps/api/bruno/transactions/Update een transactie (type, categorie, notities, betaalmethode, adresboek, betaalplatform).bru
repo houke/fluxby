@@ -1,0 +1,28 @@
+meta {
+  name: Update een transactie (type, categorie, notities, betaalmethode, adresboek, betaalplatform)
+  type: http
+  seq: 5
+}
+
+patch {
+  url: {{baseUrl}}/api/transactions/:id
+  body: json
+  auth: none
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+body:json {
+  {}
+}
+
+docs {
+  # Update een transactie (type, categorie, notities, betaalmethode, adresboek, betaalplatform)
+  
+  No description provided.
+  
+  ## Endpoint
+  `PATCH /api/transactions/{id}`
+}

@@ -1,0 +1,28 @@
+meta {
+  name: Voeg een nieuwe opschoon regel toe
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/api/addressbook/cleanup-rules
+  body: json
+  auth: none
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+body:json {
+  {}
+}
+
+docs {
+  # Voeg een nieuwe opschoon regel toe
+  
+  No description provided.
+  
+  ## Endpoint
+  `POST /api/addressbook/cleanup-rules`
+}

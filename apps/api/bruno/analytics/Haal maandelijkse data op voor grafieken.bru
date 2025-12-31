@@ -1,0 +1,24 @@
+meta {
+  name: Haal maandelijkse data op voor grafieken
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/analytics/monthly
+  body: none
+  auth: none
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+docs {
+  # Haal maandelijkse data op voor grafieken
+  
+  No description provided.
+  
+  ## Endpoint
+  `GET /api/analytics/monthly`
+}

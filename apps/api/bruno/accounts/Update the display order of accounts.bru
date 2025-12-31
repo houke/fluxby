@@ -1,0 +1,28 @@
+meta {
+  name: Update the display order of accounts
+  type: http
+  seq: 7
+}
+
+patch {
+  url: {{baseUrl}}/api/accounts/order
+  body: json
+  auth: none
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+body:json {
+  {}
+}
+
+docs {
+  # Update the display order of accounts
+  
+  No description provided.
+  
+  ## Endpoint
+  `PATCH /api/accounts/order`
+}

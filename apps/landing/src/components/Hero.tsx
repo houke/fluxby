@@ -265,11 +265,16 @@ const Hero = () => {
   };
 
   return (
-    <section className='gradient-bg relative flex min-h-screen items-center justify-center overflow-hidden pt-24 pb-12 lg:py-0'>
+    <section className='gradient-bg relative flex min-h-screen items-center justify-center overflow-hidden pb-12 pt-24 lg:py-0'>
       {/* Header with language selector */}
       <header className='absolute left-0 right-0 top-0 z-30 px-6 py-4'>
         <div className='container mx-auto flex items-center justify-between'>
-          <Link to="/" className='text-2xl font-black text-white hover:text-fluxby-light transition-colors'>Fluxby</Link>
+          <Link
+            to='/'
+            className='hover:text-fluxby-light text-2xl font-black text-white transition-colors'
+          >
+            Fluxby
+          </Link>
           {/* Language Selector */}
           <div className='flex items-center gap-2'>
             {(Object.keys(languages) as Array<keyof typeof languages>).map(

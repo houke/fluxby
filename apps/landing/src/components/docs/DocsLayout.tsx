@@ -44,7 +44,10 @@ export default function DocsLayout() {
               to='/'
               className='text-sm text-gray-500 transition-colors hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100'
             >
-              ← <span className='hidden sm:inline'>{t.docs?.backToHome || 'Back to Home'}</span>
+              ←{' '}
+              <span className='hidden sm:inline'>
+                {t.docs?.backToHome || 'Back to Home'}
+              </span>
               <span className='sm:hidden'>Home</span>
             </Link>
           </div>

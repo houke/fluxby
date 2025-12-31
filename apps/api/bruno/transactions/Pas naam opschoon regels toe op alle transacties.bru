@@ -1,0 +1,28 @@
+meta {
+  name: Pas naam opschoon regels toe op alle transacties
+  type: http
+  seq: 11
+}
+
+post {
+  url: {{baseUrl}}/api/transactions/apply-cleanup-rules
+  body: json
+  auth: none
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+body:json {
+  {}
+}
+
+docs {
+  # Pas naam opschoon regels toe op alle transacties
+  
+  Update opposing_account_name en merchant_name met opgeschoonde namen
+  
+  ## Endpoint
+  `POST /api/transactions/apply-cleanup-rules`
+}

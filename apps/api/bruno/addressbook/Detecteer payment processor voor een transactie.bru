@@ -1,0 +1,28 @@
+meta {
+  name: Detecteer payment processor voor een transactie
+  type: http
+  seq: 23
+}
+
+post {
+  url: {{baseUrl}}/api/addressbook/detect-payment-provider
+  body: json
+  auth: none
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+body:json {
+  {}
+}
+
+docs {
+  # Detecteer payment processor voor een transactie
+  
+  No description provided.
+  
+  ## Endpoint
+  `POST /api/addressbook/detect-payment-provider`
+}

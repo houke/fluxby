@@ -1,0 +1,28 @@
+meta {
+  name: Hernoem merchant/tegenpartij voor gerelateerde transacties
+  type: http
+  seq: 8
+}
+
+post {
+  url: {{baseUrl}}/api/transactions/rename-by-counterparty
+  body: json
+  auth: none
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+body:json {
+  {}
+}
+
+docs {
+  # Hernoem merchant/tegenpartij voor gerelateerde transacties
+  
+  Hernoem alle transacties met dezelfde tegenpartij (opposing IBAN of opposing name) naar een nieuwe merchant naam
+  
+  ## Endpoint
+  `POST /api/transactions/rename-by-counterparty`
+}

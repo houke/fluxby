@@ -1,0 +1,24 @@
+meta {
+  name: Delete all accounts for current profile
+  type: http
+  seq: 3
+}
+
+delete {
+  url: {{baseUrl}}/api/accounts
+  body: none
+  auth: none
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+docs {
+  # Delete all accounts for current profile
+  
+  Deletes all accounts for the current profile. Transactions will be unlinked (account_id set to null) but not deleted.
+  
+  ## Endpoint
+  `DELETE /api/accounts`
+}

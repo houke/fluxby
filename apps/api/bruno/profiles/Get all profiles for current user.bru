@@ -1,0 +1,24 @@
+meta {
+  name: Get all profiles for current user
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/profiles
+  body: none
+  auth: none
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+docs {
+  # Get all profiles for current user
+  
+  No description provided.
+  
+  ## Endpoint
+  `GET /api/profiles`
+}

@@ -1,0 +1,24 @@
+meta {
+  name: Haal alle naam opschoon regels op
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/addressbook/cleanup-rules
+  body: none
+  auth: none
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+docs {
+  # Haal alle naam opschoon regels op
+  
+  No description provided.
+  
+  ## Endpoint
+  `GET /api/addressbook/cleanup-rules`
+}

@@ -1,0 +1,24 @@
+meta {
+  name: Haal alle bekende payment processors op
+  type: http
+  seq: 16
+}
+
+get {
+  url: {{baseUrl}}/api/addressbook/payment-providers
+  body: none
+  auth: none
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+docs {
+  # Haal alle bekende payment processors op
+  
+  No description provided.
+  
+  ## Endpoint
+  `GET /api/addressbook/payment-providers`
+}

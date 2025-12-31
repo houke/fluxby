@@ -1,0 +1,28 @@
+meta {
+  name: Upload en importeer een CSV bestand
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/import/csv
+  body: json
+  auth: none
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+body:json {
+  {}
+}
+
+docs {
+  # Upload en importeer een CSV bestand
+  
+  No description provided.
+  
+  ## Endpoint
+  `POST /api/import/csv`
+}

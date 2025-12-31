@@ -1,0 +1,24 @@
+meta {
+  name: Get the demo profile if it exists
+  type: http
+  seq: 8
+}
+
+get {
+  url: {{baseUrl}}/api/profiles/demo
+  body: none
+  auth: none
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+docs {
+  # Get the demo profile if it exists
+  
+  No description provided.
+  
+  ## Endpoint
+  `GET /api/profiles/demo`
+}

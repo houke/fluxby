@@ -1,0 +1,29 @@
+meta {
+  name: Splits een contact met meerdere IBANs in losse contacten
+  type: http
+  seq: 33
+}
+
+post {
+  url: {{baseUrl}}/api/addressbook/split
+  body: json
+  auth: none
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+body:json {
+  {}
+}
+
+docs {
+  # Splits een contact met meerdere IBANs in losse contacten
+  
+  Splits een contact op basis van opgegeven IBAN->naam mappings. Als een naam al bestaat in het adresboek, wordt er een warning teruggegeven en de split voor dat IBAN wordt niet uitgevoerd.
+
+  
+  ## Endpoint
+  `POST /api/addressbook/split`
+}

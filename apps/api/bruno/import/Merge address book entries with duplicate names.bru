@@ -1,0 +1,29 @@
+meta {
+  name: Merge address book entries with duplicate names
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{baseUrl}}/api/import/merge-duplicate-names
+  body: json
+  auth: none
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+body:json {
+  {}
+}
+
+docs {
+  # Merge address book entries with duplicate names
+  
+  Finds all address book entries with the same name (case-insensitive) and merges them into a single contact with multiple IBANs.
+
+  
+  ## Endpoint
+  `POST /api/import/merge-duplicate-names`
+}

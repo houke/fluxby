@@ -1,0 +1,29 @@
+meta {
+  name: Voeg twee of meer contacten samen tot één
+  type: http
+  seq: 32
+}
+
+post {
+  url: {{baseUrl}}/api/addressbook/merge
+  body: json
+  auth: none
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+body:json {
+  {}
+}
+
+docs {
+  # Voeg twee of meer contacten samen tot één
+  
+  Voegt meerdere contacten samen. De eerste contact ID wordt de primaire en alle IBANs van de andere contacten worden hieraan toegevoegd. De andere contacten worden verwijderd.
+
+  
+  ## Endpoint
+  `POST /api/addressbook/merge`
+}

@@ -1,0 +1,24 @@
+meta {
+  name: Haal adresboek entry op via IBAN
+  type: http
+  seq: 27
+}
+
+get {
+  url: {{baseUrl}}/api/addressbook/by-iban/:iban
+  body: none
+  auth: none
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+docs {
+  # Haal adresboek entry op via IBAN
+  
+  No description provided.
+  
+  ## Endpoint
+  `GET /api/addressbook/by-iban/{iban}`
+}

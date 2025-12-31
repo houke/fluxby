@@ -1,0 +1,24 @@
+meta {
+  name: Haal alle rekeningen op
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/accounts
+  body: none
+  auth: none
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+docs {
+  # Haal alle rekeningen op
+  
+  No description provided.
+  
+  ## Endpoint
+  `GET /api/accounts`
+}

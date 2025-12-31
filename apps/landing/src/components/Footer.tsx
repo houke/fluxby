@@ -11,7 +11,10 @@ const Footer = () => {
         <div className='mb-12 grid gap-8 md:grid-cols-4'>
           {/* Brand */}
           <div className='md:col-span-2'>
-            <Link to="/" className='text-fluxby-light mb-4 text-3xl font-black hover:opacity-80 transition-opacity block'>
+            <Link
+              to='/'
+              className='text-fluxby-light mb-4 block text-3xl font-black transition-opacity hover:opacity-80'
+            >
               Fluxby
             </Link>
             <p className='mb-6 max-w-md text-gray-400'>
@@ -25,7 +28,7 @@ const Footer = () => {
             <ul className='space-y-2 text-gray-400'>
               <li>
                 <Link
-                  to="/features"
+                  to='/features'
                   className='hover:text-fluxby-light transition-colors'
                 >
                   {t.footer.product.features}
@@ -33,7 +36,7 @@ const Footer = () => {
               </li>
               <li>
                 <Link
-                  to="/pricing"
+                  to='/pricing'
                   className='hover:text-fluxby-light transition-colors'
                 >
                   {t.footer.product.pricing}
@@ -41,7 +44,7 @@ const Footer = () => {
               </li>
               <li>
                 <Link
-                  to="/updates"
+                  to='/updates'
                   className='hover:text-fluxby-light transition-colors'
                 >
                   {t.footer.product.updates}
@@ -49,7 +52,7 @@ const Footer = () => {
               </li>
               <li>
                 <Link
-                  to="/about"
+                  to='/about'
                   className='hover:text-fluxby-light transition-colors'
                 >
                   {t.footer.product.about}
@@ -82,7 +85,7 @@ const Footer = () => {
               </li>
               <li>
                 <Link
-                  to="/privacy"
+                  to='/privacy'
                   className='hover:text-fluxby-light transition-colors'
                 >
                   {t.footer.support.privacyPolicy}
@@ -90,7 +93,7 @@ const Footer = () => {
               </li>
               <li>
                 <Link
-                  to="/terms"
+                  to='/terms'
                   className='hover:text-fluxby-light transition-colors'
                 >
                   {t.footer.support.termsOfService}

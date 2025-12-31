@@ -1,0 +1,24 @@
+meta {
+  name: Verwijder alle transacties
+  type: http
+  seq: 3
+}
+
+delete {
+  url: {{baseUrl}}/api/transactions
+  body: none
+  auth: none
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+docs {
+  # Verwijder alle transacties
+  
+  No description provided.
+  
+  ## Endpoint
+  `DELETE /api/transactions`
+}

@@ -1,0 +1,24 @@
+meta {
+  name: Verwijder een payment processor
+  type: http
+  seq: 18
+}
+
+delete {
+  url: {{baseUrl}}/api/addressbook/payment-providers/:id
+  body: none
+  auth: none
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+docs {
+  # Verwijder een payment processor
+  
+  No description provided.
+  
+  ## Endpoint
+  `DELETE /api/addressbook/payment-providers/{id}`
+}

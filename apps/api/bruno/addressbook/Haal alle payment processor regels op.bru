@@ -1,0 +1,24 @@
+meta {
+  name: Haal alle payment processor regels op
+  type: http
+  seq: 19
+}
+
+get {
+  url: {{baseUrl}}/api/addressbook/payment-provider-rules
+  body: none
+  auth: none
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+docs {
+  # Haal alle payment processor regels op
+  
+  No description provided.
+  
+  ## Endpoint
+  `GET /api/addressbook/payment-provider-rules`
+}

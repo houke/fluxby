@@ -1,0 +1,28 @@
+meta {
+  name: Voeg een IBAN toe aan een bestaand contact
+  type: http
+  seq: 29
+}
+
+post {
+  url: {{baseUrl}}/api/addressbook/:id/ibans
+  body: json
+  auth: none
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+body:json {
+  {}
+}
+
+docs {
+  # Voeg een IBAN toe aan een bestaand contact
+  
+  No description provided.
+  
+  ## Endpoint
+  `POST /api/addressbook/{id}/ibans`
+}

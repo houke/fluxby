@@ -1,0 +1,24 @@
+meta {
+  name: Haal alle adresboek entries op
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/addressbook
+  body: none
+  auth: none
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+docs {
+  # Haal alle adresboek entries op
+  
+  No description provided.
+  
+  ## Endpoint
+  `GET /api/addressbook`
+}

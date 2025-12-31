@@ -1,0 +1,29 @@
+meta {
+  name: Detecteer en verwerk gedeelde IBANs
+  type: http
+  seq: 11
+}
+
+post {
+  url: {{baseUrl}}/api/addressbook/detect-shared
+  body: json
+  auth: none
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+body:json {
+  {}
+}
+
+docs {
+  # Detecteer en verwerk gedeelde IBANs
+  
+  Vindt IBANs met meerdere namen, verwijdert ze uit het adresboek, en voegt ze toe aan de shared_ibans tabel
+
+  
+  ## Endpoint
+  `POST /api/addressbook/detect-shared`
+}

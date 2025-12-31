@@ -1,0 +1,24 @@
+meta {
+  name: Haal gedeelde IBANs op (payment processors met meerdere merchants)
+  type: http
+  seq: 8
+}
+
+get {
+  url: {{baseUrl}}/api/addressbook/shared-ibans
+  body: none
+  auth: none
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+docs {
+  # Haal gedeelde IBANs op (payment processors met meerdere merchants)
+  
+  No description provided.
+  
+  ## Endpoint
+  `GET /api/addressbook/shared-ibans`
+}

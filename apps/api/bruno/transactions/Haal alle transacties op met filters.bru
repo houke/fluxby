@@ -1,0 +1,24 @@
+meta {
+  name: Haal alle transacties op met filters
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/transactions
+  body: none
+  auth: none
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+docs {
+  # Haal alle transacties op met filters
+  
+  No description provided.
+  
+  ## Endpoint
+  `GET /api/transactions`
+}

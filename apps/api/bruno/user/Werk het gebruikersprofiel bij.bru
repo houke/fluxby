@@ -1,0 +1,28 @@
+meta {
+  name: Werk het gebruikersprofiel bij
+  type: http
+  seq: 2
+}
+
+patch {
+  url: {{baseUrl}}/api/user
+  body: json
+  auth: none
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+body:json {
+  {}
+}
+
+docs {
+  # Werk het gebruikersprofiel bij
+  
+  No description provided.
+  
+  ## Endpoint
+  `PATCH /api/user`
+}

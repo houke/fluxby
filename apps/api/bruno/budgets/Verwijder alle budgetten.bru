@@ -1,0 +1,24 @@
+meta {
+  name: Verwijder alle budgetten
+  type: http
+  seq: 3
+}
+
+delete {
+  url: {{baseUrl}}/api/budgets
+  body: none
+  auth: none
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+docs {
+  # Verwijder alle budgetten
+  
+  No description provided.
+  
+  ## Endpoint
+  `DELETE /api/budgets`
+}

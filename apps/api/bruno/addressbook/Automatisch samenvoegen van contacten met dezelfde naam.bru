@@ -1,0 +1,29 @@
+meta {
+  name: Automatisch samenvoegen van contacten met dezelfde naam
+  type: http
+  seq: 31
+}
+
+post {
+  url: {{baseUrl}}/api/addressbook/merge-duplicates
+  body: json
+  auth: none
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+body:json {
+  {}
+}
+
+docs {
+  # Automatisch samenvoegen van contacten met dezelfde naam
+  
+  Vindt alle contacten met dezelfde naam (case-insensitive) en voegt ze samen. De eerste entry wordt de primaire, alle IBANs worden samengevoegd.
+
+  
+  ## Endpoint
+  `POST /api/addressbook/merge-duplicates`
+}

@@ -1,0 +1,28 @@
+meta {
+  name: Voeg een payment processor toe
+  type: http
+  seq: 17
+}
+
+post {
+  url: {{baseUrl}}/api/addressbook/payment-providers
+  body: json
+  auth: none
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+body:json {
+  {}
+}
+
+docs {
+  # Voeg een payment processor toe
+  
+  No description provided.
+  
+  ## Endpoint
+  `POST /api/addressbook/payment-providers`
+}

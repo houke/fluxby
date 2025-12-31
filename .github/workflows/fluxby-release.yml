@@ -135,6 +135,11 @@ jobs:
             echo 'EOF'
           } >> $GITHUB_OUTPUT
 
+      - name: Generate API Assets
+        run: |
+          npm ci
+          npm run generate:api
+
       - name: Commit, Tag and Push (Manual Trigger only)
         if: github.event_name == 'workflow_dispatch' && github.event.inputs.dry_run != 'true'
         run: |

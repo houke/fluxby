@@ -1,0 +1,24 @@
+meta {
+  name: Haal een specifieke categorie op
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/categories/:id
+  body: none
+  auth: none
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+docs {
+  # Haal een specifieke categorie op
+  
+  No description provided.
+  
+  ## Endpoint
+  `GET /api/categories/{id}`
+}

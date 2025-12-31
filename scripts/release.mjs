@@ -395,6 +395,11 @@ async function main() {
     log('✓ Updated UpdatesContent.tsx', 'green');
   }
 
+  // Generate API assets (OpenAPI & Bruno)
+  log('Generating API assets...', 'cyan');
+  exec('npm run generate:api');
+  log('✓ Generated API assets', 'green');
+
   // Write CHANGELOG.md
   const changelogPath = join(ROOT_DIR, 'CHANGELOG.md');
   let existingChangelog = '';

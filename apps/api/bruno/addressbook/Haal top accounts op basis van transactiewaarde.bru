@@ -1,0 +1,24 @@
+meta {
+  name: Haal top accounts op basis van transactiewaarde
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/addressbook/top-accounts
+  body: none
+  auth: none
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+docs {
+  # Haal top accounts op basis van transactiewaarde
+  
+  No description provided.
+  
+  ## Endpoint
+  `GET /api/addressbook/top-accounts`
+}

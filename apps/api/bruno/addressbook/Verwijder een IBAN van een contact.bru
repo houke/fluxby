@@ -1,0 +1,24 @@
+meta {
+  name: Verwijder een IBAN van een contact
+  type: http
+  seq: 30
+}
+
+delete {
+  url: {{baseUrl}}/api/addressbook/:id/ibans/:ibanId
+  body: none
+  auth: none
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+docs {
+  # Verwijder een IBAN van een contact
+  
+  No description provided.
+  
+  ## Endpoint
+  `DELETE /api/addressbook/{id}/ibans/{ibanId}`
+}

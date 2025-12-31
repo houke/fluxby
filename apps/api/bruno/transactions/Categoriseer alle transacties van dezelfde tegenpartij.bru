@@ -1,0 +1,28 @@
+meta {
+  name: Categoriseer alle transacties van dezelfde tegenpartij
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{baseUrl}}/api/transactions/categorize-by-counterparty
+  body: json
+  auth: none
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+body:json {
+  {}
+}
+
+docs {
+  # Categoriseer alle transacties van dezelfde tegenpartij
+  
+  Past de categorie toe op alle transacties met dezelfde tegenrekening naam
+  
+  ## Endpoint
+  `POST /api/transactions/categorize-by-counterparty`
+}

@@ -1,0 +1,24 @@
+meta {
+  name: Haal alle budgetten op met uitgaven
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/budgets
+  body: none
+  auth: none
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+docs {
+  # Haal alle budgetten op met uitgaven
+  
+  No description provided.
+  
+  ## Endpoint
+  `GET /api/budgets`
+}

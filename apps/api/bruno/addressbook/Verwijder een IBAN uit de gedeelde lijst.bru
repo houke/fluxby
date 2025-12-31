@@ -1,0 +1,24 @@
+meta {
+  name: Verwijder een IBAN uit de gedeelde lijst
+  type: http
+  seq: 10
+}
+
+delete {
+  url: {{baseUrl}}/api/addressbook/shared-ibans/:iban
+  body: none
+  auth: none
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+docs {
+  # Verwijder een IBAN uit de gedeelde lijst
+  
+  No description provided.
+  
+  ## Endpoint
+  `DELETE /api/addressbook/shared-ibans/{iban}`
+}

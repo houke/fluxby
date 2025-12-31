@@ -1,0 +1,24 @@
+meta {
+  name: Verwijder een opschoon regel
+  type: http
+  seq: 6
+}
+
+delete {
+  url: {{baseUrl}}/api/addressbook/cleanup-rules/:id
+  body: none
+  auth: none
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+docs {
+  # Verwijder een opschoon regel
+  
+  No description provided.
+  
+  ## Endpoint
+  `DELETE /api/addressbook/cleanup-rules/{id}`
+}

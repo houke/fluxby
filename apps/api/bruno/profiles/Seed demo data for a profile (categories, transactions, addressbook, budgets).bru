@@ -1,0 +1,28 @@
+meta {
+  name: Seed demo data for a profile (categories, transactions, addressbook, budgets)
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{baseUrl}}/api/profiles/:id/seed-demo
+  body: json
+  auth: none
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+body:json {
+  {}
+}
+
+docs {
+  # Seed demo data for a profile (categories, transactions, addressbook, budgets)
+  
+  No description provided.
+  
+  ## Endpoint
+  `POST /api/profiles/{id}/seed-demo`
+}

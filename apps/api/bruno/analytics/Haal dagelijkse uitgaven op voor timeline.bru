@@ -1,0 +1,24 @@
+meta {
+  name: Haal dagelijkse uitgaven op voor timeline
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/api/analytics/daily-expenses
+  body: none
+  auth: none
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+docs {
+  # Haal dagelijkse uitgaven op voor timeline
+  
+  No description provided.
+  
+  ## Endpoint
+  `GET /api/analytics/daily-expenses`
+}

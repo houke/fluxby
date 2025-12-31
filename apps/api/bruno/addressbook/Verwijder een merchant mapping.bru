@@ -1,0 +1,24 @@
+meta {
+  name: Verwijder een merchant mapping
+  type: http
+  seq: 14
+}
+
+delete {
+  url: {{baseUrl}}/api/addressbook/shared-iban-merchants/:id
+  body: none
+  auth: none
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+docs {
+  # Verwijder een merchant mapping
+  
+  No description provided.
+  
+  ## Endpoint
+  `DELETE /api/addressbook/shared-iban-merchants/{id}`
+}

@@ -1,0 +1,24 @@
+meta {
+  name: Krijg voorgestelde budgetten voor categorieën zonder budget
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/budgets/propose
+  body: none
+  auth: none
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+docs {
+  # Krijg voorgestelde budgetten voor categorieën zonder budget
+  
+  No description provided.
+  
+  ## Endpoint
+  `GET /api/budgets/propose`
+}

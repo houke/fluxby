@@ -1,0 +1,28 @@
+meta {
+  name: Create a new transaction
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/transactions
+  body: json
+  auth: none
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+body:json {
+  {}
+}
+
+docs {
+  # Create a new transaction
+  
+  No description provided.
+  
+  ## Endpoint
+  `POST /api/transactions`
+}

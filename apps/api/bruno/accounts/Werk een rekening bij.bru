@@ -1,0 +1,28 @@
+meta {
+  name: Werk een rekening bij
+  type: http
+  seq: 5
+}
+
+patch {
+  url: {{baseUrl}}/api/accounts/:id
+  body: json
+  auth: none
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+body:json {
+  {}
+}
+
+docs {
+  # Werk een rekening bij
+  
+  No description provided.
+  
+  ## Endpoint
+  `PATCH /api/accounts/{id}`
+}

@@ -1,0 +1,24 @@
+meta {
+  name: Verwijder alle categorieën
+  type: http
+  seq: 3
+}
+
+delete {
+  url: {{baseUrl}}/api/categories
+  body: none
+  auth: none
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+docs {
+  # Verwijder alle categorieën
+  
+  No description provided.
+  
+  ## Endpoint
+  `DELETE /api/categories`
+}

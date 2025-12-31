@@ -1,0 +1,24 @@
+meta {
+  name: Haal alle auto-categorisatie regels op
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/categories/rules/all
+  body: none
+  auth: none
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+docs {
+  # Haal alle auto-categorisatie regels op
+  
+  No description provided.
+  
+  ## Endpoint
+  `GET /api/categories/rules/all`
+}

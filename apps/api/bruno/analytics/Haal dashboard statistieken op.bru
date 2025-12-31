@@ -1,0 +1,24 @@
+meta {
+  name: Haal dashboard statistieken op
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/analytics/dashboard
+  body: none
+  auth: none
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+docs {
+  # Haal dashboard statistieken op
+  
+  No description provided.
+  
+  ## Endpoint
+  `GET /api/analytics/dashboard`
+}

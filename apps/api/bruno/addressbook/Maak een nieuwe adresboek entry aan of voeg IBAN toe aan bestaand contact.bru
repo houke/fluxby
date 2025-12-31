@@ -1,0 +1,29 @@
+meta {
+  name: Maak een nieuwe adresboek entry aan of voeg IBAN toe aan bestaand contact
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/addressbook
+  body: json
+  auth: none
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+body:json {
+  {}
+}
+
+docs {
+  # Maak een nieuwe adresboek entry aan of voeg IBAN toe aan bestaand contact
+  
+  Als een contact met dezelfde naam al bestaat, wordt de nieuwe IBAN toegevoegd aan het bestaande contact. Dit voorkomt duplicaten. Als de IBAN een gedeelde IBAN is (payment processor), wordt de entry toegevoegd aan shared_iban_merchants in plaats van address_book.
+
+  
+  ## Endpoint
+  `POST /api/addressbook`
+}

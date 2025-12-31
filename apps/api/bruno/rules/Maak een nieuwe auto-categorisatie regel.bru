@@ -1,0 +1,28 @@
+meta {
+  name: Maak een nieuwe auto-categorisatie regel
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/categories/rules
+  body: json
+  auth: none
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+body:json {
+  {}
+}
+
+docs {
+  # Maak een nieuwe auto-categorisatie regel
+  
+  No description provided.
+  
+  ## Endpoint
+  `POST /api/categories/rules`
+}

@@ -1,0 +1,28 @@
+meta {
+  name: Maak een nieuw budget aan
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/budgets
+  body: json
+  auth: none
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+body:json {
+  {}
+}
+
+docs {
+  # Maak een nieuw budget aan
+  
+  No description provided.
+  
+  ## Endpoint
+  `POST /api/budgets`
+}

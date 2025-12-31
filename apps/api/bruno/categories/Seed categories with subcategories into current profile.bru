@@ -1,0 +1,28 @@
+meta {
+  name: Seed categories with subcategories into current profile
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{baseUrl}}/api/categories/seed
+  body: json
+  auth: none
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+body:json {
+  {}
+}
+
+docs {
+  # Seed categories with subcategories into current profile
+  
+  No description provided.
+  
+  ## Endpoint
+  `POST /api/categories/seed`
+}

@@ -1,0 +1,24 @@
+meta {
+  name: Haal saldo prognose op voor einde periode
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{baseUrl}}/api/analytics/balance-forecast
+  body: none
+  auth: none
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+docs {
+  # Haal saldo prognose op voor einde periode
+  
+  No description provided.
+  
+  ## Endpoint
+  `GET /api/analytics/balance-forecast`
+}

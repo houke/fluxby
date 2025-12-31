@@ -1,0 +1,28 @@
+meta {
+  name: Pas opschoon regels toe op alle address book entries
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{baseUrl}}/api/addressbook/apply-cleanup-rules
+  body: json
+  auth: none
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+body:json {
+  {}
+}
+
+docs {
+  # Pas opschoon regels toe op alle address book entries
+  
+  No description provided.
+  
+  ## Endpoint
+  `POST /api/addressbook/apply-cleanup-rules`
+}

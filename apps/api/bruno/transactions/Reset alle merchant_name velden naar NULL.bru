@@ -1,0 +1,29 @@
+meta {
+  name: Reset alle merchant_name velden naar NULL
+  type: http
+  seq: 10
+}
+
+post {
+  url: {{baseUrl}}/api/transactions/reset-merchant-names
+  body: json
+  auth: none
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+body:json {
+  {}
+}
+
+docs {
+  # Reset alle merchant_name velden naar NULL
+  
+  Zet alle merchant_name velden terug naar NULL zodat transacties weer hun originele beschrijving (opposing_account_name) tonen. Dit is een bulk operatie die niet ongedaan kan worden gemaakt.
+
+  
+  ## Endpoint
+  `POST /api/transactions/reset-merchant-names`
+}

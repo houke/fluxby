@@ -1,0 +1,29 @@
+meta {
+  name: Backfill address book with all unique IBANs from transactions
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/api/import/backfill-addressbook
+  body: json
+  auth: none
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+body:json {
+  {}
+}
+
+docs {
+  # Backfill address book with all unique IBANs from transactions
+  
+  Goes through all existing transactions and adds any IBAN that's not yet in the address book. Applies cleanup rules to names (via Mollie, etc.). Excludes IBANs that belong to the user's own accounts.
+
+  
+  ## Endpoint
+  `POST /api/import/backfill-addressbook`
+}

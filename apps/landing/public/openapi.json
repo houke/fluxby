@@ -11,10 +11,19 @@
   },
   "servers": [
     {
-      "url": "http://localhost:3001",
+      "url": "http://localhost:3001/api",
       "description": "Local development server"
     }
   ],
+  "components": {
+    "securitySchemes": {
+      "ProfileId": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Profile-Id"
+      }
+    }
+  },
   "tags": [
     {
       "name": "Profiles",
@@ -3138,6 +3147,5 @@
         }
       }
     }
-  },
-  "components": {}
+  }
 }

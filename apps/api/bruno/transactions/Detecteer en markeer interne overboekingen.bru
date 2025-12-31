@@ -1,0 +1,29 @@
+meta {
+  name: Detecteer en markeer interne overboekingen
+  type: http
+  seq: 12
+}
+
+post {
+  url: {{baseUrl}}/api/transactions/detect-internal-transfers
+  body: json
+  auth: none
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+body:json {
+  {}
+}
+
+docs {
+  # Detecteer en markeer interne overboekingen
+  
+  Scan alle transacties en markeer transacties als interne overboeking wanneer de tegenrekening (IBAN) overeenkomt met een eigen rekening, of wanneer de naam overeenkomt met een spaarrekening.
+
+  
+  ## Endpoint
+  `POST /api/transactions/detect-internal-transfers`
+}

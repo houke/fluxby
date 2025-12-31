@@ -1,0 +1,24 @@
+meta {
+  name: Verwijder een auto-categorisatie regel
+  type: http
+  seq: 3
+}
+
+delete {
+  url: {{baseUrl}}/api/categories/rules/:id
+  body: none
+  auth: none
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+docs {
+  # Verwijder een auto-categorisatie regel
+  
+  No description provided.
+  
+  ## Endpoint
+  `DELETE /api/categories/rules/{id}`
+}

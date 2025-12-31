@@ -1,0 +1,24 @@
+meta {
+  name: Haal beschikbare jaren op uit transacties
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/analytics/years
+  body: none
+  auth: none
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+docs {
+  # Haal beschikbare jaren op uit transacties
+  
+  No description provided.
+  
+  ## Endpoint
+  `GET /api/analytics/years`
+}

@@ -56,7 +56,10 @@ describe('wa-sqlite API', () => {
     it('should use statements() instead of prepare_v2()', async () => {
       // Import the actual source to check the type definition
       const sourceCode = fs.readFileSync(
-        path.join(import.meta.dirname, '../../packages/database/src/wa-sqlite.ts'),
+        path.join(
+          import.meta.dirname,
+          '../../packages/database/src/wa-sqlite.ts'
+        ),
         'utf-8'
       );
 
@@ -71,7 +74,10 @@ describe('wa-sqlite API', () => {
 
     it('should use last_insert_id() instead of last_insert_rowid()', async () => {
       const sourceCode = fs.readFileSync(
-        path.join(import.meta.dirname, '../../packages/database/src/wa-sqlite.ts'),
+        path.join(
+          import.meta.dirname,
+          '../../packages/database/src/wa-sqlite.ts'
+        ),
         'utf-8'
       );
 
@@ -85,7 +91,10 @@ describe('wa-sqlite API', () => {
   describe('compiled output verification', () => {
     it('should not contain prepare_v2 in compiled JS', async () => {
       const compiledCode = fs.readFileSync(
-        path.join(import.meta.dirname, '../../packages/database/dist/wa-sqlite.js'),
+        path.join(
+          import.meta.dirname,
+          '../../packages/database/dist/wa-sqlite.js'
+        ),
         'utf-8'
       );
 
@@ -94,7 +103,10 @@ describe('wa-sqlite API', () => {
 
     it('should contain statements method calls in compiled JS', async () => {
       const compiledCode = fs.readFileSync(
-        path.join(import.meta.dirname, '../../packages/database/dist/wa-sqlite.js'),
+        path.join(
+          import.meta.dirname,
+          '../../packages/database/dist/wa-sqlite.js'
+        ),
         'utf-8'
       );
 
@@ -107,7 +119,10 @@ describe('wa-sqlite method availability', () => {
   it('should verify wa-sqlite exports the expected methods', async () => {
     // Read the actual wa-sqlite source to verify available methods
     const waSqliteApi = fs.readFileSync(
-      path.join(import.meta.dirname, '../../node_modules/@journeyapps/wa-sqlite/src/sqlite-api.js'),
+      path.join(
+        import.meta.dirname,
+        '../../node_modules/@journeyapps/wa-sqlite/src/sqlite-api.js'
+      ),
       'utf-8'
     );
 

@@ -1,0 +1,25 @@
+meta {
+  name: Get import history for the current profile
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/import/history
+  body: none
+  auth: none
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+docs {
+  # Get import history for the current profile
+  
+  Returns the 10 most recent imports that have transactions belonging to the current profile. Includes details about skipped rows, duplicates, and parse errors.
+
+  
+  ## Endpoint
+  `GET /api/import/history`
+}

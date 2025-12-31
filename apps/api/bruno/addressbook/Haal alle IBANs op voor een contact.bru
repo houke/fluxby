@@ -1,0 +1,24 @@
+meta {
+  name: Haal alle IBANs op voor een contact
+  type: http
+  seq: 28
+}
+
+get {
+  url: {{baseUrl}}/api/addressbook/:id/ibans
+  body: none
+  auth: none
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+docs {
+  # Haal alle IBANs op voor een contact
+  
+  No description provided.
+  
+  ## Endpoint
+  `GET /api/addressbook/{id}/ibans`
+}

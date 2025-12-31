@@ -10,15 +10,13 @@
  */
 
 import { type Database } from '@fluxby/database';
-import type {
-  Profile,
-  Transaction,
-  Category,
-  Account,
-  Budget,
-  ProfileType,
-} from '@fluxby/shared';
 import {
+  type Profile,
+  type Transaction,
+  type Category,
+  type Account,
+  type Budget,
+  type ProfileType,
   flattenCategoriesForDB,
   SEED_CATEGORIES,
 } from '@fluxby/shared';
@@ -157,7 +155,16 @@ export function createDataService(db: Database) {
         await db.runAsync(
           `INSERT INTO categories (id, name, icon, color, description, profile_id, updated_at, created_at)
            VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-          [categoryId, cat.name, cat.icon, cat.color, cat.description, id, now, now]
+          [
+            categoryId,
+            cat.name,
+            cat.icon,
+            cat.color,
+            cat.description,
+            id,
+            now,
+            now,
+          ]
         );
         categoryIdMap[cat.name] = categoryId;
       }
@@ -169,7 +176,17 @@ export function createDataService(db: Database) {
         await db.runAsync(
           `INSERT INTO categories (id, name, parent_id, icon, color, description, profile_id, updated_at, created_at)
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-          [subId, sub.name, parentId, sub.icon, sub.color, sub.description, id, now, now]
+          [
+            subId,
+            sub.name,
+            parentId,
+            sub.icon,
+            sub.color,
+            sub.description,
+            id,
+            now,
+            now,
+          ]
         );
         categoryIdMap[sub.name] = subId;
 
@@ -2274,7 +2291,7 @@ export function createDataService(db: Database) {
       }
 
       let dateCondition = '';
-      const queryParams: (string | number)[] = [pid, pid];
+      const queryParams: (string | number)[] = [pid, pid, pid];
       if (startDate && endDate) {
         dateCondition = 'AND t.date >= ? AND t.date <= ?';
         queryParams.push(startDate, endDate);
@@ -2309,6 +2326,9 @@ export function createDataService(db: Database) {
           AND t.opposing_account_iban IS NOT NULL
           AND t.opposing_account_iban != ''
           AND t.is_deleted = 0
+          AND t.opposing_account_iban NOT IN (
+            SELECT iban FROM accounts WHERE profile_id = ? AND is_deleted = 0
+          )
           ${amountCondition}
           ${dateCondition}
         GROUP BY t.opposing_account_iban
@@ -2319,7 +2339,7 @@ export function createDataService(db: Database) {
       );
 
       // Get total count
-      const countParams: (string | number)[] = [pid];
+      const countParams: (string | number)[] = [pid, pid];
       if (startDate && endDate) {
         countParams.push(startDate, endDate);
       }
@@ -2336,6 +2356,9 @@ export function createDataService(db: Database) {
             AND t.opposing_account_iban IS NOT NULL
             AND t.opposing_account_iban != ''
             AND t.is_deleted = 0
+            AND t.opposing_account_iban NOT IN (
+              SELECT iban FROM accounts WHERE profile_id = ? AND is_deleted = 0
+            )
             ${amountCondition}
             ${dateCondition}
           GROUP BY t.opposing_account_iban
@@ -2632,9 +2655,28 @@ export function createDataService(db: Database) {
         [options.accountId]
       );
 
+      // Load cleanup rules for name processing
+      const cleanupRules = await this.getCleanupRules();
+
+      // Load category rules for auto-categorization
+      const categoryRules = await this.getCategoryRules();
+
+      // Get user's own account IBANs (to exclude from address book)
+      const ownAccountsResult = await db.queryAsync<{ iban: string }>(
+        'SELECT iban FROM accounts WHERE profile_id = ? AND is_deleted = 0',
+        [pid]
+      );
+      const ownAccountIbans = new Set(
+        ownAccountsResult.map((a) => a.iban?.replace(/\s/g, '').toUpperCase())
+      );
+
       let imported = 0;
       const errors: string[] = [];
       const now = Date.now();
+
+      // Track imported transaction IDs and unique IBANs for post-processing
+      const importedTxIds: string[] = [];
+      const uniqueIbanMap = new Map<string, string>(); // iban -> name
 
       for (let i = 0; i < preview.rows.length; i++) {
         const row = preview.rows[i];
@@ -2673,10 +2715,20 @@ export function createDataService(db: Database) {
           }
 
           const description = row[mapping.description] || '';
-          const iban = mapping.iban ? row[mapping.iban] : null;
-          const counterparty = mapping.counterparty
+          const opposingIban = mapping.iban
+            ? row[mapping.iban]?.replace(/\s/g, '').toUpperCase()
+            : null;
+          let counterparty = mapping.counterparty
             ? row[mapping.counterparty]
             : null;
+
+          // Apply cleanup rules to counterparty name
+          if (counterparty && cleanupRules.length > 0) {
+            counterparty = this._applyCleanupRulesToName(
+              counterparty,
+              cleanupRules
+            );
+          }
 
           // Generate hash to detect duplicates
           const hash = this._generateHash(
@@ -2695,12 +2747,31 @@ export function createDataService(db: Database) {
           if (existing) continue;
 
           const id = crypto.randomUUID();
-          const type = amount > 0 ? 'income' : 'expense';
+          let type: 'income' | 'expense' | 'transfer' =
+            amount > 0 ? 'income' : 'expense';
+          let categoryId: string | null = null;
+
+          // Check if opposing IBAN is one of our own accounts (internal transfer)
+          if (opposingIban && ownAccountIbans.has(opposingIban)) {
+            type = 'transfer';
+          }
+
+          // Apply category rules for auto-categorization
+          if (categoryRules.length > 0) {
+            const matchedRule = this._findMatchingCategoryRule(
+              description,
+              counterparty,
+              categoryRules
+            );
+            if (matchedRule) {
+              categoryId = matchedRule.category_id;
+            }
+          }
 
           await db.runAsync(
             `INSERT INTO transactions (id, date, amount, type, description, merchant_name, account_id, 
-             opposing_account_iban, opposing_account_name, import_hash, profile_id, created_at, updated_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+             opposing_account_iban, opposing_account_name, category_id, import_hash, profile_id, created_at, updated_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
               id,
               date,
@@ -2709,8 +2780,9 @@ export function createDataService(db: Database) {
               description,
               counterparty,
               options.accountId,
-              iban,
+              opposingIban,
               counterparty,
+              categoryId,
               hash,
               pid,
               now,
@@ -2718,12 +2790,38 @@ export function createDataService(db: Database) {
             ]
           );
 
+          importedTxIds.push(id);
           imported++;
+
+          // Track unique IBANs for address book (exclude own accounts and empty IBANs)
+          if (
+            opposingIban &&
+            counterparty &&
+            !ownAccountIbans.has(opposingIban)
+          ) {
+            if (!uniqueIbanMap.has(opposingIban)) {
+              uniqueIbanMap.set(opposingIban, counterparty);
+            }
+          }
         } catch (err) {
           errors.push(
             `Row ${i + 1}: ${err instanceof Error ? err.message : 'Unknown error'}`
           );
         }
+      }
+
+      // Post-import: Add unique IBANs to address book and link transactions
+      for (const [iban, name] of uniqueIbanMap) {
+        try {
+          await this._addToAddressBookIfNew(iban, name, pid, now);
+        } catch {
+          // Ignore errors - contact may already exist
+        }
+      }
+
+      // Link imported transactions to address book entries
+      if (importedTxIds.length > 0) {
+        await this._linkTransactionsToAddressBook(importedTxIds, pid, now);
       }
 
       return {
@@ -2808,6 +2906,173 @@ export function createDataService(db: Database) {
         hash = hash & hash;
       }
       return Math.abs(hash).toString(16);
+    },
+
+    // Helper to apply cleanup rules to a name
+    _applyCleanupRulesToName(
+      name: string,
+      rules: { pattern: string; is_active: number }[]
+    ): string {
+      let cleaned = name;
+      for (const rule of rules) {
+        if (!rule.is_active) continue;
+
+        if (rule.pattern.startsWith('/') && rule.pattern.lastIndexOf('/') > 0) {
+          try {
+            const lastSlash = rule.pattern.lastIndexOf('/');
+            const pattern = rule.pattern.slice(1, lastSlash);
+            const flags = rule.pattern.slice(lastSlash + 1) || 'gi';
+            const regex = new RegExp(pattern, flags);
+            cleaned = cleaned.replace(regex, '').trim();
+          } catch {
+            // Skip invalid regex
+          }
+        } else {
+          const escapedPattern = rule.pattern.replace(
+            /[.*+?^${}()|[\]\\]/g,
+            '\\$&'
+          );
+          cleaned = cleaned
+            .replace(new RegExp(escapedPattern, 'gi'), '')
+            .trim();
+        }
+      }
+      return cleaned.replace(/\s+/g, ' ').trim() || name;
+    },
+
+    // Helper to find matching category rule
+    _findMatchingCategoryRule(
+      description: string,
+      counterparty: string | null,
+      rules: { pattern: string; category_id: string; priority: number }[]
+    ): { category_id: string } | null {
+      const textToMatch = `${description} ${counterparty || ''}`.toLowerCase();
+
+      // Sort rules by priority (highest first)
+      const sortedRules = [...rules].sort((a, b) => b.priority - a.priority);
+
+      for (const rule of sortedRules) {
+        const pattern = rule.pattern.toLowerCase();
+        if (textToMatch.includes(pattern)) {
+          return { category_id: rule.category_id };
+        }
+        // Also try regex matching
+        try {
+          const regex = new RegExp(pattern, 'i');
+          if (regex.test(textToMatch)) {
+            return { category_id: rule.category_id };
+          }
+        } catch {
+          // Skip invalid regex patterns
+        }
+      }
+      return null;
+    },
+
+    // Helper to add IBAN to address book if not already present
+    async _addToAddressBookIfNew(
+      iban: string,
+      name: string,
+      pid: string,
+      now: number
+    ): Promise<boolean> {
+      const normalizedIban = iban.toUpperCase().trim();
+      if (!normalizedIban) return false;
+
+      // Check if IBAN already exists in address_book
+      const existing = await db.queryOneAsync<{ id: string }>(
+        'SELECT id FROM address_book WHERE iban = ? AND profile_id = ? AND is_deleted = 0',
+        [normalizedIban, pid]
+      );
+      if (existing) return false;
+
+      // Check if IBAN already exists in contact_ibans
+      const existingLink = await db.queryOneAsync<{ contact_id: string }>(
+        `SELECT ci.contact_id FROM contact_ibans ci
+         JOIN address_book ab ON ab.id = ci.contact_id
+         WHERE ci.iban = ? AND ab.profile_id = ? AND ab.is_deleted = 0`,
+        [normalizedIban, pid]
+      );
+      if (existingLink) return false;
+
+      // Check if a contact with this name already exists
+      const existingByName = await db.queryOneAsync<{
+        id: string;
+        iban: string;
+      }>(
+        `SELECT id, iban FROM address_book 
+         WHERE profile_id = ? AND is_deleted = 0 AND LOWER(TRIM(name)) = LOWER(TRIM(?))`,
+        [pid, name]
+      );
+
+      if (existingByName) {
+        // Merge IBAN into existing contact
+        await db.runAsync(
+          'INSERT OR IGNORE INTO contact_ibans (contact_id, iban, is_primary) VALUES (?, ?, 0)',
+          [existingByName.id, normalizedIban]
+        );
+        return true;
+      }
+
+      // Create new address book entry
+      const id = crypto.randomUUID();
+      await db.runAsync(
+        `INSERT INTO address_book (id, iban, name, profile_id, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        [id, normalizedIban, name, pid, now, now]
+      );
+
+      // Add to contact_ibans junction table
+      await db.runAsync(
+        'INSERT OR IGNORE INTO contact_ibans (contact_id, iban, is_primary) VALUES (?, ?, 1)',
+        [id, normalizedIban]
+      );
+
+      return true;
+    },
+
+    // Helper to link transactions to address book entries
+    async _linkTransactionsToAddressBook(
+      txIds: string[],
+      pid: string,
+      now: number
+    ): Promise<void> {
+      if (txIds.length === 0) return;
+
+      const placeholders = txIds.map(() => '?').join(',');
+
+      // Link via direct address_book IBAN match
+      await db.runAsync(
+        `UPDATE transactions
+         SET address_book_id = (
+           SELECT ab.id FROM address_book ab 
+           WHERE ab.iban = transactions.opposing_account_iban
+           AND ab.profile_id = ?
+           AND ab.is_deleted = 0
+         ),
+         updated_at = ?
+         WHERE id IN (${placeholders})
+           AND address_book_id IS NULL
+           AND opposing_account_iban IS NOT NULL`,
+        [pid, now, ...txIds]
+      );
+
+      // Link via contact_ibans junction table
+      await db.runAsync(
+        `UPDATE transactions
+         SET address_book_id = (
+           SELECT ci.contact_id FROM contact_ibans ci
+           JOIN address_book ab ON ab.id = ci.contact_id
+           WHERE ci.iban = transactions.opposing_account_iban
+           AND ab.profile_id = ?
+           AND ab.is_deleted = 0
+         ),
+         updated_at = ?
+         WHERE id IN (${placeholders})
+           AND address_book_id IS NULL
+           AND opposing_account_iban IS NOT NULL`,
+        [pid, now, ...txIds]
+      );
     },
 
     // ============= Profile/Deletion Methods =============
@@ -3812,9 +4077,7 @@ export function createDataService(db: Database) {
               pick<string>(a, 'name') ?? '',
               pick<string>(a, 'type') ?? 'checking',
               pick<string>(a, 'bank') ?? 'ing',
-              Number(
-                pick<number>(a, 'current_balance', 'currentBalance') ?? 0
-              ),
+              Number(pick<number>(a, 'current_balance', 'currentBalance') ?? 0),
               Number(pick<number>(a, 'order_index', 'orderIndex') ?? 0),
               pick<string>(a, 'profile_id', 'profileId') ??
                 getActiveProfileId() ??
@@ -3907,10 +4170,14 @@ export function createDataService(db: Database) {
               pick<string>(im, 'id') ?? crypto.randomUUID(),
               pick<string>(im, 'filename') ?? '',
               pick<string>(im, 'bank') ?? 'ing',
-              Number(pick<number>(im, 'transaction_count', 'transactionCount') ?? 0),
+              Number(
+                pick<number>(im, 'transaction_count', 'transactionCount') ?? 0
+              ),
               pick<string>(im, 'status') ?? 'completed',
               pick<string | null>(im, 'skipped_rows', 'skippedRows') ?? null,
-              Number(pick<number>(im, 'duplicates_skipped', 'duplicatesSkipped') ?? 0),
+              Number(
+                pick<number>(im, 'duplicates_skipped', 'duplicatesSkipped') ?? 0
+              ),
               Number(pick<number>(im, 'parse_errors', 'parseErrors') ?? 0),
               pick<string>(im, 'profile_id', 'profileId') ??
                 getActiveProfileId() ??
@@ -4072,16 +4339,24 @@ export function createDataService(db: Database) {
               pick<string | null>(t, 'description') ?? null,
               pick<string | null>(t, 'merchant_name', 'merchantName') ?? null,
               pick<string | null>(t, 'account_id', 'accountId') ?? null,
-              pick<string | null>(t, 'opposing_account_iban', 'opposingAccountIban') ??
-                null,
-              pick<string | null>(t, 'opposing_account_name', 'opposingAccountName') ??
-                null,
+              pick<string | null>(
+                t,
+                'opposing_account_iban',
+                'opposingAccountIban'
+              ) ?? null,
+              pick<string | null>(
+                t,
+                'opposing_account_name',
+                'opposingAccountName'
+              ) ?? null,
               pick<string | null>(t, 'category_id', 'categoryId') ?? null,
               pick<string | null>(t, 'notes') ?? null,
               pick<number | null>(t, 'balance_after', 'balanceAfter') ?? null,
               pick<string | null>(t, 'payment_method', 'paymentMethod') ?? null,
-              pick<string | null>(t, 'payment_provider', 'paymentProvider') ?? null,
-              pick<string | null>(t, 'address_book_id', 'addressBookId') ?? null,
+              pick<string | null>(t, 'payment_provider', 'paymentProvider') ??
+                null,
+              pick<string | null>(t, 'address_book_id', 'addressBookId') ??
+                null,
               pick<string | null>(t, 'raw_data', 'rawData') ?? null,
               pick<string | null>(t, 'import_hash', 'importHash') ?? null,
               pick<string>(t, 'profile_id', 'profileId') ??

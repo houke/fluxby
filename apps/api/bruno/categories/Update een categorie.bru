@@ -1,0 +1,28 @@
+meta {
+  name: Update een categorie
+  type: http
+  seq: 5
+}
+
+patch {
+  url: {{baseUrl}}/api/categories/:id
+  body: json
+  auth: none
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+body:json {
+  {}
+}
+
+docs {
+  # Update een categorie
+  
+  No description provided.
+  
+  ## Endpoint
+  `PATCH /api/categories/{id}`
+}

@@ -1,0 +1,28 @@
+meta {
+  name: Pas regels toe op ALLE transacties (inclusief gecategoriseerde)
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/api/categories/rules/apply-all
+  body: json
+  auth: none
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+body:json {
+  {}
+}
+
+docs {
+  # Pas regels toe op ALLE transacties (inclusief gecategoriseerde)
+  
+  No description provided.
+  
+  ## Endpoint
+  `POST /api/categories/rules/apply-all`
+}

@@ -1,0 +1,29 @@
+meta {
+  name: Voeg een entry toe aan adresboek vanuit gedeelde IBAN en update transacties
+  type: http
+  seq: 15
+}
+
+post {
+  url: {{baseUrl}}/api/addressbook/resolve-shared
+  body: json
+  auth: none
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+body:json {
+  {}
+}
+
+docs {
+  # Voeg een entry toe aan adresboek vanuit gedeelde IBAN en update transacties
+  
+  Voegt een entry toe aan het adresboek, update merchant_name in transacties voor de opgegeven originele namen, en verwijdert de IBAN uit shared_ibans als alle namen zijn verwerkt.
+
+  
+  ## Endpoint
+  `POST /api/addressbook/resolve-shared`
+}

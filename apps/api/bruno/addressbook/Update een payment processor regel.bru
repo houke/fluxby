@@ -1,0 +1,28 @@
+meta {
+  name: Update een payment processor regel
+  type: http
+  seq: 21
+}
+
+patch {
+  url: {{baseUrl}}/api/addressbook/payment-provider-rules/:id
+  body: json
+  auth: none
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+body:json {
+  {}
+}
+
+docs {
+  # Update een payment processor regel
+  
+  No description provided.
+  
+  ## Endpoint
+  `PATCH /api/addressbook/payment-provider-rules/{id}`
+}
