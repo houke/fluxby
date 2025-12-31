@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 
 const featureIcons = ['🔌', '📚', '⚡'];
@@ -130,13 +131,13 @@ export default function Developer() {
 
         {/* CTA */}
         <div className='mt-12 flex flex-col items-center justify-center gap-4 sm:flex-row'>
-          <a
-            href='/docs'
+          <Link
+            to='/docs'
             className='inline-flex items-center gap-2 rounded-full bg-purple-600 px-8 py-3 font-medium text-white transition-all hover:bg-purple-500 hover:shadow-lg hover:shadow-purple-500/25'
           >
             <span>📖</span>
             {t.developer?.viewDocs || 'View API Docs'}
-          </a>
+          </Link>
           <a
             href={appHref}
             target='_blank'

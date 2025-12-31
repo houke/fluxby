@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { FluxbyWebGL } from '@fluxby/shared';
 import { useState, useMemo, CSSProperties } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -254,7 +255,7 @@ const Hero = () => {
       {/* Header with language selector */}
       <header className='absolute left-0 right-0 top-0 z-30 px-6 py-4'>
         <div className='container mx-auto flex items-center justify-between'>
-          <div className='text-2xl font-black text-white'>Fluxby</div>
+          <Link to="/" className='text-2xl font-black text-white hover:text-fluxby-light transition-colors'>Fluxby</Link>
           {/* Language Selector */}
           <div className='flex items-center gap-2'>
             {(Object.keys(languages) as Array<keyof typeof languages>).map(

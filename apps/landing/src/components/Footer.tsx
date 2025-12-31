@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useLegal } from '../contexts/LegalContext';
 import { ExternalLink } from 'lucide-react';
@@ -5,12 +6,6 @@ import { ExternalLink } from 'lucide-react';
 const Footer = () => {
   const { t } = useLanguage();
   const {
-    openPrivacy,
-    openTerms,
-    openFeatures,
-    openPricing,
-    openUpdates,
-    openAbout,
   } = useLegal();
 
   return (
@@ -19,9 +14,9 @@ const Footer = () => {
         <div className='mb-12 grid gap-8 md:grid-cols-4'>
           {/* Brand */}
           <div className='md:col-span-2'>
-            <h3 className='text-fluxby-light mb-4 text-3xl font-black'>
+            <Link to="/" className='text-fluxby-light mb-4 text-3xl font-black hover:opacity-80 transition-opacity block'>
               Fluxby
-            </h3>
+            </Link>
             <p className='mb-6 max-w-md text-gray-400'>
               {t.footer.description}
             </p>
@@ -32,36 +27,36 @@ const Footer = () => {
             <h4 className='mb-4 text-lg font-bold'>{t.footer.product.title}</h4>
             <ul className='space-y-2 text-gray-400'>
               <li>
-                <button
-                  onClick={openFeatures}
+                <Link
+                  to="/features"
                   className='hover:text-fluxby-light transition-colors'
                 >
                   {t.footer.product.features}
-                </button>
+                </Link>
               </li>
               <li>
-                <button
-                  onClick={openPricing}
+                <Link
+                  to="/pricing"
                   className='hover:text-fluxby-light transition-colors'
                 >
                   {t.footer.product.pricing}
-                </button>
+                </Link>
               </li>
               <li>
-                <button
-                  onClick={openUpdates}
+                <Link
+                  to="/updates"
                   className='hover:text-fluxby-light transition-colors'
                 >
                   {t.footer.product.updates}
-                </button>
+                </Link>
               </li>
               <li>
-                <button
-                  onClick={openAbout}
+                <Link
+                  to="/about"
                   className='hover:text-fluxby-light transition-colors'
                 >
                   {t.footer.product.about}
-                </button>
+                </Link>
               </li>
             </ul>
           </div>
@@ -71,42 +66,38 @@ const Footer = () => {
             <h4 className='mb-4 text-lg font-bold'>{t.footer.support.title}</h4>
             <ul className='space-y-2 text-gray-400'>
               <li>
-                <a
-                  href='/help'
-                  target='_blank'
-                  rel='noopener noreferrer'
+                <Link
+                  to='/help'
                   className='hover:text-fluxby-light inline-flex items-center gap-1.5 transition-colors'
                 >
                   {t.footer.support.helpCenter}
                   <ExternalLink className='h-3.5 w-3.5' />
-                </a>
+                </Link>
               </li>
               <li>
-                <a
-                  href='/docs'
-                  target='_blank'
-                  rel='noopener noreferrer'
+                <Link
+                  to='/docs'
                   className='hover:text-fluxby-light inline-flex items-center gap-1.5 transition-colors'
                 >
                   {t.footer.support.developerDocs}
                   <ExternalLink className='h-3.5 w-3.5' />
-                </a>
+                </Link>
               </li>
               <li>
-                <button
-                  onClick={openPrivacy}
+                <Link
+                  to="/privacy"
                   className='hover:text-fluxby-light transition-colors'
                 >
                   {t.footer.support.privacyPolicy}
-                </button>
+                </Link>
               </li>
               <li>
-                <button
-                  onClick={openTerms}
+                <Link
+                  to="/terms"
                   className='hover:text-fluxby-light transition-colors'
                 >
                   {t.footer.support.termsOfService}
-                </button>
+                </Link>
               </li>
             </ul>
           </div>
@@ -117,7 +108,9 @@ const Footer = () => {
           <p className='text-sm text-gray-400'>{t.footer.copyright}</p>
 
           <a
-            href='#'
+            href='https://github.com/houke/fluxby'
+            target='_blank'
+            rel='noopener noreferrer'
             className='hover:text-fluxby-light flex items-center gap-2 text-gray-400 transition-colors'
             aria-label='Contribute on GitHub'
           >
