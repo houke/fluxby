@@ -1,11 +1,12 @@
 // Onboarding data configuration for Fluxby
 // Contains all chapters and steps for the onboarding flow
+// Note: Language, name, and password setup are handled by SecuritySetup component before onboarding
 
 import type { OnboardingChapter } from './types';
 
 export const onboardingChapters: OnboardingChapter[] = [
   // ==========================================================================
-  // CHAPTER 0: Welcome & Language Selection
+  // CHAPTER 0: Welcome Introduction
   // ==========================================================================
   {
     id: 'welcome',
@@ -17,30 +18,6 @@ export const onboardingChapters: OnboardingChapter[] = [
       en: 'Welcome',
     },
     steps: [
-      {
-        id: 'language-select',
-        title: {
-          nl: 'Kies je taal',
-          en: 'Choose your language',
-        },
-        content: {
-          nl: 'Selecteer de taal waarin je Fluxby wilt gebruiken.',
-          en: 'Select the language you want to use Fluxby in.',
-        },
-        placement: 'center',
-      },
-      {
-        id: 'user-name',
-        title: {
-          nl: 'Hoe heet je?',
-          en: "What's your name?",
-        },
-        content: {
-          nl: 'We gebruiken je naam om Fluxby persoonlijker te maken.',
-          en: "We'll use your name to personalize your Fluxby experience.",
-        },
-        placement: 'center',
-      },
       {
         id: 'welcome-intro',
         title: {
@@ -859,8 +836,8 @@ export const onboardingChapters: OnboardingChapter[] = [
           en: 'Cleanup rules',
         },
         content: {
-          nl: 'Hier kun je regels instellen om automatisch lelijke tekst uit namen te verwijderen (bijv. "NL12INGB****").',
-          en: 'Here you can set rules to automatically remove ugly text from names (e.g., "NL12INGB****").',
+          nl: 'Hier kun je regels instellen om automatisch lelijke tekst uit namen te verwijderen (bijv. "NL12BANK****").',
+          en: 'Here you can set rules to automatically remove ugly text from names (e.g., "NL12BANK****").',
         },
         selector: '[data-onboarding="cleanup-rules-card"]',
         placement: 'left',
@@ -876,6 +853,19 @@ export const onboardingChapters: OnboardingChapter[] = [
           en: 'Some IBANs are shared by multiple companies (payment providers). Here you can split them.',
         },
         selector: '[data-onboarding="shared-ibans-card"]',
+        placement: 'left',
+      },
+      {
+        id: 'addressbook-suggested-contacts',
+        title: {
+          nl: 'Voorgestelde contacten',
+          en: 'Suggested contacts',
+        },
+        content: {
+          nl: 'Hier vind je tegenrekeningen uit je transacties die nog niet in je adresboek staan. Voeg ze toe om uitgaven per contact bij te houden.',
+          en: 'Here you find counterparties from your transactions that are not yet in your address book. Add them to track spending per contact.',
+        },
+        selector: '[data-onboarding="suggested-contacts-card"]',
         placement: 'left',
       },
       {
@@ -1113,8 +1103,8 @@ export const onboardingChapters: OnboardingChapter[] = [
           en: 'Upload zone',
         },
         content: {
-          nl: 'Sleep een CSV-bestand hierheen of klik om te bladeren. ING-formaat wordt automatisch herkend.',
-          en: 'Drag a CSV file here or click to browse. ING format is automatically recognized.',
+          nl: 'Sleep een CSV-bestand hierheen of klik om te bladeren. Standaard formaten worden automatisch herkend.',
+          en: 'Drag a CSV file here or click to browse. Standard formats are automatically recognized.',
         },
         selector: '[data-onboarding="import-dropzone"]',
         placement: 'bottom',
@@ -1126,8 +1116,8 @@ export const onboardingChapters: OnboardingChapter[] = [
           en: 'Map columns',
         },
         content: {
-          nl: 'Voor niet-ING bestanden kun je handmatig de kolommen koppelen aan de juiste velden.',
-          en: 'For non-ING files you can manually map columns to the correct fields.',
+          nl: 'Voor afwijkende bestanden kun je handmatig de kolommen koppelen aan de juiste velden.',
+          en: 'For non-standard files you can manually map columns to the correct fields.',
         },
         selector: '[data-onboarding="import-mapping"]',
         placement: 'center',

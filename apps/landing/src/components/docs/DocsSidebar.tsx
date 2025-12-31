@@ -37,6 +37,11 @@ export default function DocsSidebar() {
           icon: '🔐',
         },
         {
+          title: t.docs?.nav?.architecture || 'Architecture',
+          path: '/docs/architecture',
+          icon: '🏗️',
+        },
+        {
           title: t.docs?.nav?.profiles || 'Profiles & Multi-Tenancy',
           path: '/docs/profiles',
           icon: '👥',
@@ -97,14 +102,14 @@ export default function DocsSidebar() {
       title: t.docs?.nav?.tools || 'Tools',
       items: [
         {
+          title: t.docs?.nav?.openapi || 'OpenAPI Spec',
+          path: '/docs/openapi',
+          icon: '📄',
+        },
+        {
           title: t.docs?.nav?.helpCenter || 'Helpcentrum',
           path: '/help',
           icon: '❓',
-        },
-        {
-          title: t.docs?.nav?.apiReference || 'Swagger Docs',
-          path: 'http://localhost:3001/api/docs',
-          icon: '🔧',
         },
       ],
     },

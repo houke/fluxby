@@ -11,13 +11,13 @@ import { findSimilarNameGroups } from '@/lib/utils';
 // ============================================================================
 
 export interface Transaction {
-  id: number;
+  id: string;
   date: string;
   amount: number;
   type: 'income' | 'expense' | 'transfer';
   description: string;
   merchantName: string | null;
-  categoryId: number | null;
+  categoryId: string | null;
   categoryName?: string | null;
   categoryIcon?: string | null;
   paymentMethod: string | null;
@@ -25,26 +25,26 @@ export interface Transaction {
   opposingAccountIban: string | null;
   opposingAccountName: string | null;
   paymentProvider: string | null;
-  addressBookId: number | null;
+  addressBookId: string | null;
 }
 
 export interface Category {
-  id: number;
+  id: string;
   name: string;
   icon: string | null;
   color: string | null;
-  parentId: number | null;
+  parentId: string | null;
 }
 
 export interface CategorySuggestion {
-  categoryId: number;
+  categoryId: string;
   categoryName: string;
   categoryIcon: string;
   source: 'rule' | 'history';
 }
 
 export interface AddressBookEntry {
-  id: number;
+  id: string;
   iban: string;
   name: string;
   description: string | null;
@@ -54,7 +54,7 @@ export interface AddressBookEntry {
 }
 
 export interface Account {
-  id: number;
+  id: string;
   iban: string;
   name: string;
   type: 'checking' | 'savings' | 'credit';
@@ -76,16 +76,16 @@ export interface SharedIban {
 }
 
 export interface CategoryRule {
-  id: number;
+  id: string;
   pattern: string;
-  categoryId: number;
+  categoryId: string;
   priority: number;
 }
 
 export type TransactionTypeFilter = 'all' | 'income' | 'expense' | 'transfer';
 
 export interface SharedIbanGroup {
-  id: number;
+  id: string;
   entries: Array<{ name: string; transactionCount: number }>;
   editedName: string;
   isSplit: boolean;
@@ -134,7 +134,7 @@ export function useFilterState() {
   );
 
   // Category filter
-  const [selectedCategoryIds, setSelectedCategoryIds] = useState<number[]>(
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>(
     filters.categories || []
   );
 
@@ -146,7 +146,7 @@ export function useFilterState() {
     filters.opposingAccountName || null
   );
   const [selectedAddressBookId, setSelectedAddressBookId] = useState<
-    number | null
+    string | null
   >(filters.addressBookId || null);
 
   // Payment filters
@@ -514,7 +514,7 @@ export function useModalState() {
       similarGroupIndices.forEach((indexGroup, groupIndex) => {
         indexGroup.forEach((i) => groupedIndices.add(i));
         groups.push({
-          id: groupIndex,
+          id: String(groupIndex),
           entries: indexGroup.map((i) => ({
             name: merchantNames[i],
             transactionCount: sharedIban.merchants[i]?.transactionCount || 0,
@@ -528,7 +528,7 @@ export function useModalState() {
       merchantNames.forEach((name, i) => {
         if (!groupedIndices.has(i)) {
           groups.push({
-            id: groups.length,
+            id: String(groups.length),
             entries: [
               {
                 name,
@@ -808,17 +808,17 @@ export function useTransactionData(
 
   // Address book lookup maps
   const addressBookLookup = useMemo((): {
-    byId: Map<number, AddressBookEntry>;
+    byId: Map<string, AddressBookEntry>;
     byIban: Map<string, AddressBookEntry[]>;
   } => {
     if (!addressBook) {
       return {
-        byId: new Map<number, AddressBookEntry>(),
+        byId: new Map<string, AddressBookEntry>(),
         byIban: new Map<string, AddressBookEntry[]>(),
       };
     }
 
-    const byId = new Map<number, AddressBookEntry>();
+    const byId = new Map<string, AddressBookEntry>();
     const byIban = new Map<string, AddressBookEntry[]>();
 
     for (const entry of addressBook) {
@@ -878,12 +878,12 @@ export function useTransactionData(
 
   // Payment provider rules query
   const { data: paymentProviderRules = [] } = useQuery<
-    Array<{ id: number; name: string; patterns: string }>
+    Array<{ id: string; name: string; patterns: string }>
   >({
     queryKey: ['paymentProviderRules', activeProfileId],
     queryFn: () =>
       api.getPaymentProviderRules() as Promise<
-        Array<{ id: number; name: string; patterns: string }>
+        Array<{ id: string; name: string; patterns: string }>
       >,
     staleTime: 5 * 60 * 1000,
   });
@@ -893,7 +893,7 @@ export function useTransactionData(
     if (!categories) return [];
 
     const parents: Category[] = [];
-    const childrenByParent = new Map<number, Category[]>();
+    const childrenByParent = new Map<string, Category[]>();
 
     for (const cat of categories) {
       if (cat.parentId === null) {

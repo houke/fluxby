@@ -4,7 +4,7 @@
 
 @layer base {
   :root {
-    --background: 224 71% 95%;
+    --background: 0 0% 100% / 0; /* Fully transparent so gradient shows through */
     --foreground: 222 47% 11%;
     --card: 0 0% 100%;
     --card-foreground: 222 47% 11%;
@@ -29,7 +29,7 @@
   }
 
   .dark {
-    --background: 222 47% 11%;
+    --background: 222 47% 11% / 0; /* Fully transparent */
     --foreground: 210 40% 98%;
     --card: 223 47% 17%;
     --card-foreground: 210 40% 98%;
@@ -53,12 +53,20 @@
   }
 }
 
+.bg-app-gradient {
+  background: linear-gradient(135deg, #f5f3ff 0%, #fdf2f8 50%, #eef2ff 100%);
+}
+
+.dark .bg-app-gradient {
+  background: linear-gradient(135deg, #020617 0%, #0f172a 50%, #020617 100%);
+}
+
 @layer base {
   * {
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-app-gradient min-h-screen text-foreground antialiased;
     font-feature-settings:
       'rlig' 1,
       'calt' 1;

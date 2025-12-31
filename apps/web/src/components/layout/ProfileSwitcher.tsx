@@ -19,7 +19,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { NavLink } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 const PROFILE_TYPE_ICONS: Record<string, LucideIcon> = {
   personal: User,
@@ -40,6 +40,7 @@ const PROFILE_TYPE_COLORS: Record<string, string> = {
 export function ProfileSwitcher() {
   const { t: _t } = useLanguage();
   const { activeProfile, profiles, isSwitching, switchProfile } = useProfile();
+  const navigate = useNavigate();
 
   if (!activeProfile) {
     return null;
@@ -174,14 +175,12 @@ export function ProfileSwitcher() {
         <DropdownMenuSeparator />
 
         {/* Manage Profiles Link */}
-        <DropdownMenuItem asChild>
-          <NavLink
-            to='/settings?tab=manage-profiles'
-            className='flex cursor-pointer items-center gap-2'
-          >
-            <Settings className='h-4 w-4' />
-            <span>Profielen beheren</span>
-          </NavLink>
+        <DropdownMenuItem
+          onSelect={() => navigate('/settings?tab=manage-profiles')}
+          className='cursor-pointer'
+        >
+          <Settings className='h-4 w-4' />
+          <span>Profielen beheren</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

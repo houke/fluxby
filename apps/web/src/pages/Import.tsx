@@ -70,11 +70,11 @@ interface NewAccountInfo {
 interface PreviewResult {
   totalTransactions: number;
   existingAccounts: Array<{
-    id: number;
+    id: string;
     iban: string;
     name: string;
     type: string;
-    profile_id?: number;
+    profile_id?: string;
     profile_name?: string;
   }>;
   newAccounts: NewAccountInfo[];
@@ -137,18 +137,8 @@ const MAPPING_FIELDS = [
 
 // Bank presets for column mapping
 const DUTCH_BANKS = [
-  { id: 'ing', name: 'ING', enabled: true },
-  { id: 'rabobank', name: 'Rabobank', enabled: false },
-  { id: 'abn', name: 'ABN AMRO', enabled: false },
-  { id: 'sns', name: 'SNS Bank', enabled: false },
-  { id: 'asn', name: 'ASN Bank', enabled: false },
-  { id: 'regiobank', name: 'RegioBank', enabled: false },
-  { id: 'triodos', name: 'Triodos Bank', enabled: false },
-  { id: 'bunq', name: 'bunq', enabled: false },
-  { id: 'knab', name: 'Knab', enabled: false },
-  { id: 'revolut', name: 'Revolut', enabled: false },
-  { id: 'n26', name: 'N26', enabled: false },
-  { id: 'generic', name: 'Anders', enabled: true },
+  { id: 'ing', name: 'Standaard (CSV)', enabled: true },
+  { id: 'generic', name: 'Anders / Handmatig', enabled: true },
 ] as const;
 
 // Helper to get display name for bank code
@@ -164,7 +154,7 @@ const BANK_PRESETS: Record<
   { name: string; mapping: Record<string, string[]> }
 > = {
   ing: {
-    name: 'ING',
+    name: 'Standaard (CSV)',
     mapping: {
       date: ['Datum'],
       amount: ['Bedrag (EUR)', 'Bedrag'],

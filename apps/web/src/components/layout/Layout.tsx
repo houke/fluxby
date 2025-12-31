@@ -24,14 +24,14 @@ import {
 } from '@/components/ui/tooltip';
 import { HeaderFilters } from './HeaderFilters';
 import { ProfileSwitcher } from './ProfileSwitcher';
-import { api } from '@/lib/api';
+import { useDataService } from '@/contexts/DatabaseContext';
 import { FluxbyWebGL } from '@fluxby/shared';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useProfile } from '@/contexts/ProfileContext';
 import { useOnboarding } from '@/components/onboarding';
 
 interface UserProfile {
-  id: number;
+  id: string;
   name: string;
   avatar: string | null;
   createdAt: string;
@@ -41,6 +41,7 @@ export default function Layout() {
   const { t } = useLanguage();
   const { isSwitching } = useProfile();
   const { startOnboarding, state: onboardingState } = useOnboarding();
+  const dataService = useDataService();
 
   const navItems = [
     {
@@ -113,7 +114,7 @@ export default function Layout() {
 
   useQuery<UserProfile>({
     queryKey: ['user'],
-    queryFn: () => api.getUser() as Promise<UserProfile>,
+    queryFn: () => dataService.getUser() as Promise<UserProfile>,
   });
 
   const [showOverlay, setShowOverlay] = React.useState<boolean>(() => {
@@ -190,7 +191,7 @@ export default function Layout() {
                     disabled={onboardingState.isActive}
                   >
                     <div className='pointer-events-none'>
-                      <FluxbyWebGL width={72} height={72} interactive={false} />
+                      <FluxbyWebGL width={72} height={72} />
                     </div>
                   </button>
                 </TooltipTrigger>
@@ -262,7 +263,10 @@ export default function Layout() {
                 </NavLink>
               );
             })}
-            <button className='flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground'>
+            <button
+              onClick={() => window.location.reload()}
+              className='flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground'
+            >
               <LogOut className='h-5 w-5' />
               {t.common.logout}
             </button>

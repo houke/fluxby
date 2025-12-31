@@ -13,6 +13,7 @@ export default tseslint.config(
       '**/node_modules/**',
       '**/dist/**',
       '**/build/**',
+      '**/dist/**',
       '**/.git/**',
       '**/coverage/**',
       '**/*.d.ts',

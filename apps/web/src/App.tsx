@@ -12,9 +12,16 @@ import Help from './pages/Help';
 import NotFound from './pages/NotFound';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { FilterProvider } from './contexts/FilterContext';
-import { LanguageProvider } from './contexts/LanguageContext';
-import { ApiHealthProvider } from './contexts/ApiHealthContext';
+import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
+import { DatabaseProvider } from './contexts/DatabaseContext';
 import { ProfileProvider } from './contexts/ProfileContext';
+import { SyncProvider } from './contexts/SyncContext';
+import {
+  EncryptionProvider,
+  useEncryption,
+} from './contexts/EncryptionContext';
+import { LockScreen } from './components/LockScreen';
+import { SecuritySetup } from './components/SecuritySetup';
 import {
   OnboardingProvider,
   Onboarding,
@@ -34,6 +41,8 @@ function AppContent() {
 
   return (
     <ErrorBoundary onError={handleError}>
+      {/* Onboarding overlay - shown on top of the app content */}
+      <Onboarding />
       <Routes>
         <Route path='/' element={<Layout />}>
           <Route index element={<Dashboard />} />
@@ -48,25 +57,87 @@ function AppContent() {
           <Route path='*' element={<NotFound />} />
         </Route>
       </Routes>
-      <Onboarding />
     </ErrorBoundary>
   );
+}
+
+// Security gate - shows lock screen if locked, security setup if new user
+function SecurityGate({ children }: { children: React.ReactNode }) {
+  const { isEncryptionEnabled, isUnlocked } = useEncryption();
+  const { needsSecuritySetup, isLoadingUser, triggerDemoSetup } =
+    useOnboarding();
+  const { t } = useLanguage();
+
+  // 1. PRIORITY: If encryption is set up but locked, show lock screen immediately
+  // We do this BEFORE loading user data to prevent querying encrypted DB
+  if (isEncryptionEnabled && !isUnlocked) {
+    return <LockScreen />;
+  }
+
+  // 2. If we are still checking the user status, show loading
+  // Do NOT render children yet to prevent flashing empty dashboard
+  if (isLoadingUser) {
+    return (
+      <div className='flex min-h-screen items-center justify-center bg-gradient-to-br from-purple-50 via-pink-50 to-indigo-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900'>
+        <div className='mx-4 w-full max-w-md rounded-lg border bg-card p-8 shadow-lg'>
+          <div className='flex flex-col items-center text-center'>
+            {/* Loading spinner */}
+            <div className='mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-purple-100 dark:bg-purple-900/30'>
+              <div className='h-8 w-8 animate-spin rounded-full border-2 border-purple-600/20 border-t-purple-600' />
+            </div>
+
+            {/* Title */}
+            <h2 className='mb-2 text-xl font-semibold'>
+              {t.common?.loadingUserData || 'Loading your data...'}
+            </h2>
+
+            {/* Description */}
+            <p className='text-sm text-muted-foreground'>
+              {t.common?.prepareDashboard ||
+                'Please wait while we prepare your dashboard'}
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 3. New user needs security setup (no encryption set up yet)
+  // This shows the language/name/password setup on the gradient background
+  if (needsSecuritySetup) {
+    return <SecuritySetup onSetupComplete={triggerDemoSetup} />;
+  }
+
+  // 4. Fallback: If no encryption and NOT in security setup (should be rare/impossible)
+  if (!isEncryptionEnabled) {
+    return <LockScreen showSetup />;
+  }
+
+  // 5. App is unlocked, user exists, and ready to use
+  // Onboarding will show as overlay on top of the dashboard
+  return <>{children}</>;
 }
 
 function App() {
   return (
     <LanguageProvider>
-      <ApiHealthProvider>
-        <ProfileProvider>
-          <FilterProvider>
-            <BrowserRouter>
-              <OnboardingProvider>
-                <AppContent />
-              </OnboardingProvider>
-            </BrowserRouter>
-          </FilterProvider>
-        </ProfileProvider>
-      </ApiHealthProvider>
+      <EncryptionProvider>
+        <DatabaseProvider>
+          <ProfileProvider>
+            <SyncProvider>
+              <FilterProvider>
+                <BrowserRouter basename={import.meta.env.BASE_URL || '/app/'}>
+                  <OnboardingProvider>
+                    <SecurityGate>
+                      <AppContent />
+                    </SecurityGate>
+                  </OnboardingProvider>
+                </BrowserRouter>
+              </FilterProvider>
+            </SyncProvider>
+          </ProfileProvider>
+        </DatabaseProvider>
+      </EncryptionProvider>
     </LanguageProvider>
   );
 }

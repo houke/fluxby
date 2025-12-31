@@ -1,0 +1,33 @@
+meta {
+  name: Apply Rules to Uncategorized
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/categories/rules/apply-all
+  body: none
+  auth: none
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+docs {
+  # Apply Rules to Uncategorized
+  
+  Applies all categorization rules to uncategorized transactions.
+  
+  ## Response
+  
+  ```json
+  {
+    "success": true,
+    "data": {
+      "updated": 15,
+      "processed": 50
+    }
+  }
+  ```
+}

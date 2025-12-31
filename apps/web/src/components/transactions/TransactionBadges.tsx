@@ -433,12 +433,14 @@ interface AddressBookBadgeProps {
   addressBook: AddressBookEntry[] | undefined;
   sharedIbanData: { count: number; names: string[] } | null;
   onAddToAddressBook: () => void;
+  onLinkToExisting?: (entryId: number) => void;
   onOpenSheet: () => void;
   translations: {
     addToAddressBook: string;
     inAddressBook: string;
     sharedAccount: string;
     search: string;
+    linkToExisting?: string;
   };
   'data-onboarding'?: string;
 }
@@ -451,6 +453,7 @@ export const AddressBookBadge = memo(function AddressBookBadge({
   addressBook,
   sharedIbanData,
   onAddToAddressBook,
+  onLinkToExisting,
   onOpenSheet,
   translations: t,
   'data-onboarding': dataOnboarding,
@@ -566,7 +569,10 @@ export const AddressBookBadge = memo(function AddressBookBadge({
                     key={entry.id}
                     className='flex w-full items-start rounded px-2 py-1.5 text-left text-sm transition-colors hover:bg-muted'
                     onClick={() => {
-                      // TODO: Link IBAN to existing entry
+                      // Link this IBAN to an existing address book entry
+                      if (onLinkToExisting) {
+                        onLinkToExisting(entry.id);
+                      }
                       setOpen(false);
                     }}
                   >

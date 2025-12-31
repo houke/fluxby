@@ -1,5 +1,6 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { AlertTriangle, Home, RefreshCw } from 'lucide-react';
+import { resetAppAndRestartOnboarding } from '@/lib/database-reset';
 
 interface Props {
   children: ReactNode;
@@ -38,6 +39,22 @@ export class ErrorBoundary extends Component<Props, State> {
   private handleReload = () => {
     window.location.reload();
   };
+
+  private handleResetLocalData = async () => {
+    await resetAppAndRestartOnboarding();
+  };
+
+  private shouldShowReset(): boolean {
+    const message = this.state.error?.message || '';
+    if (message.includes('Fatal database error (WASM)')) return true;
+    if (message.includes('memory access out of bounds')) return true;
+
+    try {
+      return window.localStorage.getItem('fluxby-db-fatal') === 'true';
+    } catch {
+      return false;
+    }
+  }
 
   public render() {
     if (this.state.hasError) {
@@ -84,6 +101,14 @@ export class ErrorBoundary extends Component<Props, State> {
                   <Home className='h-4 w-4' />
                   Naar dashboard
                 </button>
+                {this.shouldShowReset() && (
+                  <button
+                    onClick={this.handleResetLocalData}
+                    className='flex w-full items-center justify-center gap-2 rounded-lg border border-red-300 bg-white px-4 py-3 font-medium text-red-700 transition-colors hover:bg-red-50 dark:border-red-800 dark:bg-gray-700 dark:text-red-200 dark:hover:bg-gray-600'
+                  >
+                    Reset lokale data
+                  </button>
+                )}
                 <button
                   onClick={this.handleReload}
                   className='flex w-full items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-3 font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600'

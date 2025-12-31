@@ -1,5 +1,5 @@
 import { FluxbyWebGL } from '@fluxby/shared';
-import { useEffect, useState, useMemo, CSSProperties } from 'react';
+import { useState, useMemo, CSSProperties } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 
 // Extended CSSProperties to support CSS custom properties
@@ -117,94 +117,27 @@ const bokehStyles = `
 
 const Hero = () => {
   const { t, language, setLanguage, languages } = useLanguage();
+  const appHref = `${import.meta.env.BASE_URL}app/`;
 
-  // Category emojis state — try to fetch categories from API and map to emojis,
-  // otherwise fall back to sensible defaults (including decorative emojis).
-  const [categoryEmojis, setCategoryEmojis] = useState<string[]>([
-    '🛒', // groceries
-    '☕', // coffee
-    '🚗', // transport
-    '🧾', // bills
-    '🎬', // entertainment
-    '🏠', // home
-    '💡', // utilities
-    '💖', // heart
-    '💰', // money
-    '⭐', // star
-  ]);
+  // Category emojis - static list of common financial category icons
+  const categoryEmojis = useMemo(
+    () => [
+      '🛒', // groceries
+      '☕', // coffee
+      '🚗', // transport
+      '🧾', // bills
+      '🎬', // entertainment
+      '🏠', // home
+      '💡', // utilities
+      '💖', // heart
+      '💰', // money
+      '⭐', // star
+    ],
+    []
+  );
 
   // Random rotation offset for the emoji cloud so it looks different each time
   const [rotationOffset] = useState(() => Math.random() * Math.PI * 2);
-
-  useEffect(() => {
-    let mounted = true;
-    (async () => {
-      try {
-        const res = await fetch('/api/categories');
-        if (!res.ok) return;
-        const data = await res.json();
-        if (!Array.isArray(data)) return;
-        const mapNameToEmoji = (name = '') => {
-          const n = name.toLowerCase();
-          if (
-            n.includes('grocery') ||
-            n.includes('food') ||
-            n.includes('super')
-          )
-            return '🛒';
-          if (n.includes('coffee') || n.includes('cafe')) return '☕';
-          if (
-            n.includes('transport') ||
-            n.includes('taxi') ||
-            n.includes('travel')
-          )
-            return '🚗';
-          if (
-            n.includes('bill') ||
-            n.includes('utility') ||
-            n.includes('energy')
-          )
-            return '🧾';
-          if (
-            n.includes('entertain') ||
-            n.includes('movie') ||
-            n.includes('cinema')
-          )
-            return '🎬';
-          if (
-            n.includes('rent') ||
-            n.includes('mortgage') ||
-            n.includes('home')
-          )
-            return '🏠';
-          if (n.includes('shopping') || n.includes('clothes')) return '🛍️';
-          if (n.includes('health') || n.includes('pharm')) return '💊';
-          if (n.includes('salary') || n.includes('income')) return '💼';
-          return '⭐';
-        };
-        const emojis: string[] = data
-          .slice(0, 8)
-          .map((c: { name?: string; title?: string }) =>
-            mapNameToEmoji(c.name || c.title || '⭐')
-          );
-
-        // Shuffle emojis for randomness
-        for (let i = emojis.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          const temp = emojis[i];
-          emojis[i] = emojis[j];
-          emojis[j] = temp;
-        }
-
-        if (mounted && emojis.length) setCategoryEmojis(emojis);
-      } catch {
-        // ignore — keep defaults
-      }
-    })();
-    return () => {
-      mounted = false;
-    };
-  }, []);
 
   // We no longer use mouse-driven parallax; instead compute per-emoji
   // randomized animation parameters (kept stable while categories are stable)
@@ -549,9 +482,14 @@ const Hero = () => {
               {t.hero.description}
             </p>
             <div className='flex flex-col gap-4 sm:flex-row'>
-              <button className='btn-primary fluffy-shadow transform px-12 py-6 text-xl transition-all duration-300 hover:scale-110'>
+              <a
+                href={appHref}
+                target='_blank'
+                rel='noopener noreferrer'
+                className='btn-primary fluffy-shadow transform px-12 py-6 text-xl transition-all duration-300 hover:scale-110'
+              >
                 {t.hero.getStarted}
-              </button>
+              </a>
             </div>
           </div>
 
@@ -565,7 +503,6 @@ const Hero = () => {
                 height={400}
                 className='relative z-10 drop-shadow-2xl'
                 interactive={true}
-                animated={false}
               />
               {/* Category-inspired emojis (fetched from API, fallback to defaults) */}
               <CategoryEmojis />

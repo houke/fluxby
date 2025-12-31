@@ -1,0 +1,27 @@
+{
+  "name": "Fluxby",
+  "short_name": "Fluxby",
+  "description": "Local-first financial dashboard for bank transactions",
+  "start_url": "/app/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#8B5CF6",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/app/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "categories": ["finance", "productivity"],
+  "lang": "nl",
+  "dir": "ltr",
+  "scope": "/app/",
+  "prefer_related_applications": false,
+  "handle_links": "preferred",
+  "launch_handler": {
+    "client_mode": "navigate-existing"
+  }
+}

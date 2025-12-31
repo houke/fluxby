@@ -8,28 +8,29 @@ import React, {
   useMemo,
 } from 'react';
 import type { Profile, ProfileType } from '@fluxby/shared';
-import { api } from '@/lib/api';
+import { useDatabase } from '@/contexts/DatabaseContext';
+import { createDataService } from '@/lib/data-service';
 import { useQueryClient } from '@tanstack/react-query';
 
 const ACTIVE_PROFILE_KEY = 'fluxby.activeProfileId';
 
 interface ProfileContextValue {
   activeProfile: Profile | null;
-  activeProfileId: number | null;
+  activeProfileId: string | null;
   profiles: Profile[];
   isLoading: boolean;
   isSwitching: boolean;
-  switchProfile: (id: number) => void;
+  switchProfile: (id: string) => void;
   createProfile: (data: {
     name: string;
     type: ProfileType;
     avatarUrl?: string | null;
   }) => Promise<Profile>;
   updateProfile: (
-    id: number,
+    id: string,
     data: { name?: string; type?: ProfileType; avatarUrl?: string | null }
   ) => Promise<void>;
-  deleteProfile: (id: number) => Promise<void>;
+  deleteProfile: (id: string) => Promise<void>;
   refreshProfiles: () => Promise<void>;
 }
 
@@ -39,20 +40,28 @@ const ProfileContext = createContext<ProfileContextValue | undefined>(
 
 export function ProfileProvider({ children }: { children: React.ReactNode }) {
   const queryClient = useQueryClient();
+  const { db, isReady } = useDatabase();
   const [profiles, setProfiles] = useState<Profile[]>([]);
-  const [activeProfileId, setActiveProfileId] = useState<number | null>(() => {
+  const [activeProfileId, setActiveProfileId] = useState<string | null>(() => {
     // Load from localStorage on init
     if (typeof window === 'undefined') return null;
     const stored = localStorage.getItem(ACTIVE_PROFILE_KEY);
-    return stored ? parseInt(stored, 10) : null;
+    return stored || null;
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isSwitching, setIsSwitching] = useState(false);
 
+  // Create data service when db is ready
+  const dataService = useMemo(() => {
+    if (!db) return null;
+    return createDataService(db);
+  }, [db]);
+
   const fetchProfiles = useCallback(async () => {
+    if (!dataService) return;
     try {
       setIsLoading(true);
-      const data = await api.getProfiles();
+      const data = await dataService.getProfiles();
       setProfiles(data);
 
       // If no active profile or stored profile not found, use first available
@@ -60,35 +69,41 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
         setActiveProfileId((currentId) => {
           const found = data.find((p) => p.id === currentId);
           if (!found) {
-            localStorage.setItem(ACTIVE_PROFILE_KEY, String(data[0].id));
+            localStorage.setItem(ACTIVE_PROFILE_KEY, data[0].id);
             return data[0].id;
           }
           return currentId;
         });
+      } else {
+        // No profiles exist - clear any stale activeProfileId
+        localStorage.removeItem(ACTIVE_PROFILE_KEY);
+        setActiveProfileId(null);
       }
     } catch (error) {
       console.error('Failed to fetch profiles:', error);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [dataService]);
 
-  // Fetch profiles on mount
+  // Fetch profiles when database is ready
   useEffect(() => {
-    fetchProfiles();
-  }, [fetchProfiles]);
+    if (isReady && dataService) {
+      fetchProfiles();
+    }
+  }, [isReady, dataService, fetchProfiles]);
 
   const refreshProfiles = useCallback(async () => {
     await fetchProfiles();
   }, [fetchProfiles]);
 
   const switchProfile = useCallback(
-    (id: number) => {
+    (id: string) => {
       if (id === activeProfileId) return;
 
       setIsSwitching(true);
       setActiveProfileId(id);
-      localStorage.setItem(ACTIVE_PROFILE_KEY, String(id));
+      localStorage.setItem(ACTIVE_PROFILE_KEY, id);
 
       // Invalidate all profile-scoped queries to refetch with new profile
       queryClient.invalidateQueries({ queryKey: ['accounts'] });
@@ -110,27 +125,38 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
       type: ProfileType;
       avatarUrl?: string | null;
     }) => {
-      const newProfile = await api.createProfile(data);
+      if (!dataService) throw new Error('Database not ready');
+      const newProfile = await dataService.createProfile({
+        name: data.name,
+        type: data.type,
+        avatarUrl: data.avatarUrl ?? undefined,
+      });
       setProfiles((prev) => [...prev, newProfile]);
       return newProfile;
     },
-    []
+    [dataService]
   );
 
   const updateProfile = useCallback(
     async (
-      id: number,
+      id: string,
       data: { name?: string; type?: ProfileType; avatarUrl?: string | null }
     ) => {
-      await api.updateProfile(id, data);
+      if (!dataService) throw new Error('Database not ready');
+      await dataService.updateProfile(id, {
+        name: data.name,
+        type: data.type,
+        avatarUrl: data.avatarUrl ?? undefined,
+      });
       await fetchProfiles();
     },
-    [fetchProfiles]
+    [dataService, fetchProfiles]
   );
 
   const deleteProfile = useCallback(
-    async (id: number) => {
-      await api.deleteProfile(id);
+    async (id: string) => {
+      if (!dataService) throw new Error('Database not ready');
+      await dataService.deleteProfile(id);
       const remaining = profiles.filter((p) => p.id !== id);
       setProfiles(remaining);
 
@@ -139,7 +165,7 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
         switchProfile(remaining[0].id);
       }
     },
-    [activeProfileId, profiles, switchProfile]
+    [activeProfileId, dataService, profiles, switchProfile]
   );
 
   const activeProfile = useMemo(() => {

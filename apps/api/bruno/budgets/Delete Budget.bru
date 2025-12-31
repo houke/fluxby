@@ -1,0 +1,29 @@
+meta {
+  name: Delete Budget
+  type: http
+  seq: 4
+}
+
+delete {
+  url: {{baseUrl}}/budgets/:id
+  body: none
+  auth: none
+}
+
+params:path {
+  id: 1
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+docs {
+  # Delete Budget
+  
+  Deletes a budget.
+  
+  ## Path Parameters
+  
+  - `id` (required): Budget ID to delete
+}

@@ -39,7 +39,7 @@ const corsOriginEnv = process.env.CORS_ORIGIN;
 const corsOptions = (() => {
   if (!corsOriginEnv) {
     return {
-      origin: ['http://localhost:5173', 'http://localhost:3000'],
+      origin: ['http://localhost:5177', 'http://localhost:3000'],
       credentials: true,
     };
   }

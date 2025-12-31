@@ -2,13 +2,18 @@
 
 ## Project Overview
 
-Financieel Dashboard - Een lokale React applicatie voor het visualiseren van ING bank transacties. Monorepo structuur met TypeScript, React 19, Vite 6, Express backend en SQLite database.
+Fluxby - A local-first financial dashboard for visualizing bank transactions. Monorepo structure with TypeScript, React 19, Vite 6, Tauri 2.0, and SQLite.
+
+**Architecture**: Local-First, Password-Protected UI, Peer-to-Peer sync capable.
 
 ## Setup Commands
 
-- Install deps: `npm install`
-- Start dev server: `npm run dev` (start zowel API, frontend als landing page)
+- Install dependencies: `npm install`
+- Start UI dev: `npm run dev` (starts web app + landing concurrently)
+- Start full local dev: `npm run dev:all` (starts API + web app + landing concurrently)
+- Start Tauri dev: `npm run dev:tauri`
 - Build: `npm run build`
+- Build Tauri: `npm run build:tauri`
 - Lint: `npm run lint`
 - Lint with auto-fix: `npm run lint:fix`
 - Format: `npm run format`
@@ -16,6 +21,8 @@ Financieel Dashboard - Een lokale React applicatie voor het visualiseren van ING
 - Run tests: `npm test`
 - Run tests once: `npm run test:run`
 - Test coverage: `npm run test:coverage`
+- Release (interactive): `npm run release`
+- Release dry-run: `npm run release:dry`
 
 ## Workflow Requirements
 
@@ -49,23 +56,60 @@ Only commit when all checks pass. Fix any issues before proceeding.
 
 ```
 apps/
-  api/          # Express.js backend (port 3001)
-  web/          # React frontend (port 5173)
-  landing/      # Fluxby landing page (port 5177)
+  api/          # Express.js backend (port 3001) - for developers building custom interfaces
+  web/          # React PWA frontend - uses OPFS for local-first storage
+  landing/      # Fluxby landing page (port 5177) - marketing & docs
+  tauri/        # Tauri desktop app wrapper - uses local SQLite
 packages/
-  shared/       # Shared TypeScript types
-data/
-  fluxby.db     # SQLite database
+  shared/       # Shared TypeScript types & utilities
+  database/     # Universal SQLite layer (OPFS/Tauri/Node adapters)
+  core/         # Business logic (CSV parsing, categorization, analytics)
 ```
+
+## Architecture Overview
+
+### Local-First Design (OPFS)
+
+The Fluxby web app is **100% local-first** and designed to run on **GitHub Pages** without any backend:
+
+- **Web**: SQLite runs in browser via WASM, data stored in OPFS (Origin Private File System)
+- **Desktop (Tauri)**: SQLite via WASM, data stored in AppLocalData
+- **No server required**: The app works entirely offline in the browser
+
+### API Server (For Developers Only)
+
+The API server (`apps/api`) is **optional** and intended only for developers who want to build their own interfaces:
+
+- Uses `better-sqlite3` (native Node.js SQLite)
+- Data stored in `data/` folder at project root
+- Provides REST API with Swagger documentation
+- **NOT used by the main Fluxby web app** - the web app uses OPFS directly
+
+**Note**: The web app does NOT require the API server. It uses the OPFS database directly via
+`packages/database`. The API is a separate tool for developers building custom integrations.
+
+### Security Model (Password Protection)
+
+1. User sets a password during onboarding
+2. Password hash stored via PBKDF2 (100k iterations)
+3. App locks on idle/close - password required to unlock UI
+4. Database is NOT encrypted - data stays local in OPFS
+
+### Sync (Peer-to-Peer)
+
+- All tables have: `id` (UUID), `updated_at`, `is_deleted`, `device_id`
+- Conflict resolution: Last-Write-Wins (LWW)
+- Device pairing via PeerJS (WebRTC)
+- No central server - devices sync directly
 
 ## Code Style
 
 - TypeScript strict mode
 - Single quotes, 2 space indent
-- React functional components met hooks
-- TanStack Query voor data fetching
-- Tailwind CSS met shadcn/ui componenten
-- Nederlandse UI teksten
+- React functional components with hooks
+- TanStack Query for data fetching
+- Tailwind CSS with shadcn/ui components
+- Bilingual UI (Dutch and English)
 
 ## Testing Instructions
 
@@ -128,85 +172,94 @@ If any tests fail, fix them before proceeding.
 
 ## Development Tips
 
-- Backend API draait op `http://localhost:3001/api`
-- Frontend draait op `http://localhost:5173`
-- Landing page draait op `http://localhost:5177`
+- Landing page runs at `http://localhost:5177`
+- Web app (OPFS mode) is proxied via landing page at `/app/`
+- Web app dev server runs on port 5178 (proxied through landing page)
+- **For web app dev only**: `npm run dev:web` (runs on port 5178)
+- **For API dev only**: `npm run dev:api` (runs on port 3001)
+- **API (for developers building custom interfaces)**: `http://localhost:3001/api`
 - **Swagger API Docs**: `http://localhost:3001/api/docs`
-- Database wordt automatisch aangemaakt bij eerste start
-- CSV imports: sleep bestand naar Import pagina
+- Database is created automatically in OPFS on first load
+- CSV imports: drag file to Import page
 
-## Before running dev (ports)
+## Before Running Dev (Ports)
 
-When starting the development servers you may sometimes hit EADDRINUSE errors because previous dev processes left ports open. Add these steps so both humans and LLM-based agents reliably free known dev ports before starting.
+When starting the development servers you may sometimes hit EADDRINUSE errors because previous dev processes left ports open. Add these steps to reliably free known dev ports before starting.
 
 - macOS (zsh):
 
   ```bash
-  # kill gracefully (SIGTERM) any processes using our known dev ports
-  lsof -ti:3001,5173,5177 | xargs kill -15 2>/dev/null || true && sleep 0.5
+  # Kill gracefully (SIGTERM) any processes using our known dev ports
+  lsof -ti:3001,5177,5178 | xargs kill -15 2>/dev/null || true && sleep 0.5
   ```
 
 - Cross-platform (npm script):
 
   ```bash
-  npx kill-port 3001 5173 5177 || true
+  npx kill-port 3001 5177 5178 || true
   ```
-
-```bash
-#!/usr/bin/env bash
-# Kill known dev ports (attempt graceful first)
-lsof -ti:3001,5173,5177 | xargs kill -15 2>/dev/null || true
-sleep 0.5
-```
 
 This makes the behavior explicit for new contributors and LLMs that inspect the repository.
 
 ## API Documentation (Swagger)
 
-API documentatie is beschikbaar via Swagger UI op `/api/docs`.
+API documentation is available via Swagger UI at `/api/docs`.
 
-**BELANGRIJK**: Bij het toevoegen van nieuwe endpoints, voeg altijd Swagger JSDoc comments toe:
+**IMPORTANT**: When adding new endpoints, always add Swagger JSDoc comments:
 
 ```typescript
 /**
  * @swagger
  * /api/example:
  *   get:
- *     summary: Korte beschrijving
- *     tags: [TagNaam]
+ *     summary: Short description
+ *     tags: [TagName]
  *     parameters:
  *       - in: query
- *         name: paramNaam
+ *         name: paramName
  *         schema:
  *           type: string
  *     responses:
  *       200:
- *         description: Succes response
+ *         description: Success response
  */
 router.get('/example', (req, res) => { ... });
 ```
 
+## Bruno API Collection
+
+A [Bruno](https://www.usebruno.com/) collection is available in the `apps/api/bruno/` folder for testing API endpoints.
+
+**IMPORTANT**: When adding new API endpoints, always create a Bruno request file:
+
+1. Create a `.bru` file in the appropriate folder (`apps/api/bruno/accounts/`, `apps/api/bruno/transactions/`, etc.)
+2. Follow the naming convention: `Verb Noun.bru` (e.g., `Get All Accounts.bru`)
+3. Add documentation in the `docs` section
+4. Test the endpoint with Bruno before committing
+
+See `apps/api/bruno/README.md` for more details and a template.
+
 ## Developer Documentation (Landing Page)
 
-De developer documentatie is beschikbaar op de landing page (`apps/landing`) onder `/docs/*`.
+Developer documentation is available on the landing page (`apps/landing`) at `/docs/*`.
 
-**BELANGRIJK**: Bij het toevoegen of wijzigen van API functionaliteit, update ook de developer docs:
+**IMPORTANT**: When adding or modifying API functionality, also update the developer docs:
 
-### Wanneer te updaten
+### When to Update
 
-1. **Nieuwe API Endpoints**: Voeg documentatie toe in `apps/landing/src/pages/docs/`
-2. **Nieuwe API Resources**: Maak een nieuwe `Docs*.tsx` pagina en voeg toe aan:
+1. **New API Endpoints**: Add documentation in `apps/landing/src/pages/docs/`
+2. **New API Resources**: Create a new `Docs*.tsx` page and add to:
    - `apps/landing/src/App.tsx` (route)
-   - `apps/landing/src/components/docs/DocsSidebar.tsx` (navigatie)
-   - `apps/landing/src/lib/i18n/nl.ts` en `en.ts` (vertalingen)
-3. **Gewijzigde Response Formats**: Update de code voorbeelden en response types
-4. **Nieuwe Query Parameters**: Documenteer in de parameter tabellen
+   - `apps/landing/src/components/docs/DocsSidebar.tsx` (navigation)
+   - `apps/landing/src/lib/i18n/nl.ts` and `en.ts` (translations)
+3. **Changed Response Formats**: Update the code examples and response types
+4. **New Query Parameters**: Document in the parameter tables
 
-### Docs Structuur
+### Docs Structure
 
 ```
 apps/landing/src/
-├── pages/docs/           # Developer documentatie pagina's
+├── pages/docs/           # Developer documentation pages
 │   ├── DocsIntroduction.tsx
 │   ├── DocsAuthentication.tsx
 │   ├── DocsProfiles.tsx
@@ -217,58 +270,59 @@ apps/landing/src/
 │   ├── DocsBudgets.tsx
 │   ├── DocsAnalytics.tsx
 │   └── DocsAddressBook.tsx
-├── pages/help/           # Help Center pagina's (eindgebruikers)
+├── pages/help/           # Help Center pages (end users)
 │   ├── HelpHome.tsx
 │   ├── HelpBankConnection.tsx
 │   ├── HelpBudgeting.tsx
 │   ├── HelpPrivacy.tsx
 │   └── HelpDevIntro.tsx
-├── components/docs/      # Shared docs componenten
+├── components/docs/      # Shared docs components
 │   ├── DocsLayout.tsx
 │   ├── DocsSidebar.tsx
 │   └── CodeBlock.tsx
-├── components/help/      # Help Center componenten
+├── components/help/      # Help Center components
 │   ├── HelpLayout.tsx
 │   ├── HelpSidebar.tsx
 │   └── ScreenshotPlaceholder.tsx
-└── lib/i18n/            # Vertalingen (NL + EN)
+└── lib/i18n/            # Translations (NL + EN)
     ├── nl.ts
     └── en.ts
 ```
 
 ## Help Center Documentation
 
-Het Help Center is beschikbaar op `/help` en bevat documentatie voor eindgebruikers.
+The Help Center is available at `/help` and contains documentation for end users.
 
-**BELANGRIJK**: Bij het toevoegen of wijzigen van belangrijke features, update ook de Help Center docs:
+**IMPORTANT**: When adding or modifying important features, also update the Help Center docs:
 
-### Wanneer te updaten
+### When to Update
 
-1. **Nieuwe UI Features**: Voeg help artikelen toe voor eindgebruikers
-2. **Gewijzigde Workflows**: Update bestaande help artikelen
-3. **Nieuwe Screenshots**: Vervang `<ScreenshotPlaceholder>` componenten met echte screenshots
+1. **New UI Features**: Add help articles for end users
+2. **Changed Workflows**: Update existing help articles
+3. **New Screenshots**: Replace `<ScreenshotPlaceholder>` components with actual screenshots
 
 ### Help Center Routes
 
 - `/help` - Help Center home (split design: User Guide vs Developer Hub)
-- `/help/*` - Gebruikersgids artikelen
+- `/help/*` - User guide articles
 
-### Checklist voor feature wijzigingen
+### Checklist for Feature Changes
 
-- [ ] Developer docs bijgewerkt (`/docs/*`) - voor API/technische wijzigingen
-- [ ] Help Center bijgewerkt (`/help/*`) - voor eindgebruiker-relevante wijzigingen
-- [ ] NL en EN vertalingen toegevoegd voor nieuwe help content
-- [ ] Screenshots/placeholders toegevoegd waar nodig
+- [ ] Developer docs updated (`/docs/*`) - for API/technical changes
+- [ ] Help Center updated (`/help/*`) - for end-user relevant changes
+- [ ] NL and EN translations added for new help content
+- [ ] Screenshots/placeholders added where needed
 
-### Checklist voor API wijzigingen
+### Checklist for API Changes
 
-- [ ] Swagger JSDoc comments toegevoegd/bijgewerkt
-- [ ] Developer docs pagina bijgewerkt (indien van toepassing)
-- [ ] Help Center bijgewerkt indien API wijziging eindgebruikers raakt
-- [ ] Code voorbeelden getest en werkend
-- [ ] NL en EN vertalingen toegevoegd
-- [ ] Sidebar navigatie bijgewerkt (indien nieuwe pagina)
-- [ ] Route toegevoegd in App.tsx (indien nieuwe pagina)
+- [ ] Swagger JSDoc comments added/updated
+- [ ] Bruno request file added in `apps/api/bruno/` folder
+- [ ] Developer docs page updated (if applicable)
+- [ ] Help Center updated if API change affects end users
+- [ ] Code examples tested and working
+- [ ] NL and EN translations added
+- [ ] Sidebar navigation updated (if new page)
+- [ ] Route added in App.tsx (if new page)
 
 ## Database Schema
 
@@ -292,7 +346,7 @@ Example:
 
 ```typescript
 // ❌ Wrong - hardcoded string
-setToastMessage('Contact toegevoegd');
+setToastMessage('Contact added');
 
 // ✅ Correct - using translation
 setToastMessage(t.addressBook?.contactAdded || 'Contact added');
@@ -330,7 +384,7 @@ Always show a toast notification for:
 
 - Creating items (contacts, rules, budgets, etc.)
 - Deleting items
-- Applying batch operations (e.g., "Toepassen op adresboek")
+- Applying batch operations
 - Updating items
 - Any action that changes data state
 
@@ -340,3 +394,28 @@ Always show a toast notification for:
 - Test changes in browser before PR
 - Keep UI text translated in both Dutch and English
 - **Update Swagger docs when adding/modifying API endpoints**
+- **Add Bruno request files for new API endpoints**
+
+## Commit Messages
+
+**IMPORTANT**: At the end of each task, provide a conventional commit message command that the user can run.
+
+Format: `git commit -m "<type>(<scope>): <description>" -m "<body>"`
+
+Types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `chore`, `ci`, `build`
+
+Example output at the end of changes:
+
+```bash
+git commit -m "feat(web): add transaction filtering by date range" -m "- Add DateRangePicker component
+- Update useTransactionState hook with date filter
+- Add translations for filter labels (NL/EN)
+- Update Swagger docs for date query params"
+```
+
+The commit message should:
+
+- Use conventional commit format
+- Be comprehensive (include all changes in the body)
+- List specific files/components changed when helpful
+- Mention translations, tests, and docs updates if applicable

@@ -226,28 +226,52 @@ router.get('/export', (_req, res) => {
  *             properties:
  *               categories:
  *                 type: array
+ *                 items:
+ *                   type: object
  *               accounts:
  *                 type: array
+ *                 items:
+ *                   type: object
  *               transactions:
  *                 type: array
+ *                 items:
+ *                   type: object
  *               budgets:
  *                 type: array
+ *                 items:
+ *                   type: object
  *               categoryRules:
  *                 type: array
+ *                 items:
+ *                   type: object
  *               imports:
  *                 type: array
+ *                 items:
+ *                   type: object
  *               addressBook:
  *                 type: array
+ *                 items:
+ *                   type: object
  *               sharedIbans:
  *                 type: array
+ *                 items:
+ *                   type: object
  *               sharedIbanMerchants:
  *                 type: array
+ *                 items:
+ *                   type: object
  *               nameCleanupRules:
  *                 type: array
+ *                 items:
+ *                   type: object
  *               paymentProviderRules:
  *                 type: array
+ *                 items:
+ *                   type: object
  *               users:
  *                 type: array
+ *                 items:
+ *                   type: object
  *     responses:
  *       200:
  *         description: Data geïmporteerd

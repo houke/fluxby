@@ -350,13 +350,13 @@ router.get('/', (req, res) => {
  *         name: limit
  *         schema:
  *           type: integer
- *         default: 10
+ *           default: 10
  *       - in: query
  *         name: type
  *         schema:
  *           type: string
  *           enum: [expense, income, all]
- *         default: expense
+ *           default: expense
  *       - in: query
  *         name: startDate
  *         schema:
@@ -885,11 +885,23 @@ router.get('/shared-ibans', (req, res) => {
     ): string | null => {
       const searchText = [iban, ...merchantNames].join(' ').toUpperCase();
 
+      const normalizePattern = (pattern: string) => {
+        // Rules are substring-based (not full regex). Historically we stored some
+        // regex-ish patterns (e.g. "pay\\.nl" or "paypal \\*.*"). Normalize those
+        // so existing seeded data still matches.
+        return pattern
+          .replace(/\\\./g, '.')
+          .replace(/\\\*\.\*/g, '*')
+          .replace(/\\/g, '')
+          .trim();
+      };
+
       // Check rules first
       for (const rule of providerRules) {
         const patterns = rule.patterns
-          .split(',')
-          .map((p) => p.trim().toUpperCase());
+          .split(/[|,]/)
+          .map((p) => normalizePattern(p).toUpperCase())
+          .filter(Boolean);
         for (const pattern of patterns) {
           if (pattern && searchText.includes(pattern)) {
             return rule.name;

@@ -67,7 +67,7 @@ const CHAPTER_ICONS: Record<
 export function OnboardingSettings() {
   const { language } = useLanguage();
   const { state, startOnboarding } = useOnboarding();
-  const { profiles, switchProfile, refreshProfiles } = useProfile();
+  const { switchProfile, refreshProfiles } = useProfile();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [showRestartDialog, setShowRestartDialog] = useState(false);
@@ -106,8 +106,12 @@ export function OnboardingSettings() {
   const handleRestart = async () => {
     setIsRestarting(true);
     try {
+      // Refresh profiles first to get latest list
+      await refreshProfiles();
+
       // Check if demo profile exists
-      let demoProfile = profiles.find((p) => p.name === 'Demo');
+      const currentProfiles = await api.getProfiles();
+      let demoProfile = currentProfiles.find((p) => p.name === 'Demo');
 
       if (!demoProfile) {
         // Create demo profile
@@ -327,18 +331,18 @@ export function OnboardingSettings() {
               {getText('Rondleiding herstarten', 'Restart Tour')}
             </DialogTitle>
             <DialogDescription className='space-y-2 pt-2'>
-              <p>
+              <div>
                 {getText(
                   'Door de rondleiding te herstarten wordt je automatisch overgeschakeld naar het Demo profiel.',
                   'By restarting the tour, you will be automatically switched to the Demo profile.'
                 )}
-              </p>
-              <p>
+              </div>
+              <div>
                 {getText(
                   'Als er geen Demo profiel bestaat, wordt deze aangemaakt en gevuld met voorbeelddata.',
                   'If no Demo profile exists, one will be created and filled with sample data.'
                 )}
-              </p>
+              </div>
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

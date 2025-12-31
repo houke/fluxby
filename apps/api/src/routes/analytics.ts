@@ -178,7 +178,7 @@ router.get('/monthly', (req, res) => {
  *         schema:
  *           type: string
  *           enum: [income, expense]
- *         default: expense
+ *           default: expense
  *     responses:
  *       200:
  *         description: Categorie verdeling met percentages

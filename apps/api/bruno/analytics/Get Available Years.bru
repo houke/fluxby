@@ -1,0 +1,30 @@
+meta {
+  name: Get Available Years
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/analytics/years
+  body: none
+  auth: none
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+docs {
+  # Get Available Years
+  
+  Returns years that have transaction data.
+  
+  ## Response
+  
+  ```json
+  {
+    "success": true,
+    "data": [2023, 2024]
+  }
+  ```
+}

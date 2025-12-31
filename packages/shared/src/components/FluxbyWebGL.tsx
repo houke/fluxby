@@ -63,7 +63,7 @@ export function FluxbyWebGL({
         y: y ?? Math.random() * height,
         vx: Math.cos(angle) * speed,
         vy: Math.sin(angle) * speed,
-        radius: 2 + Math.random() * 6,
+        radius: width * 0.015 + Math.random() * (width * 0.04), // Scaled radius
         color: FLUXBY_COLORS[Math.floor(Math.random() * FLUXBY_COLORS.length)],
         alpha: 0.3 + Math.random() * 0.5,
         decay: 0.001 + Math.random() * 0.002,
@@ -93,6 +93,72 @@ export function FluxbyWebGL({
 
     initParticles();
 
+    // Seeded random for consistent patterns
+    const seededRandom = (seed: number) => {
+      const x = Math.sin(seed * 12.9898 + seed * 78.233) * 43758.5453;
+      return x - Math.floor(x);
+    };
+
+    // Simplex-like noise function for fur texture
+    const noise2D = (x: number, y: number, seed: number = 0): number => {
+      const n = Math.sin(x * 12.9898 + y * 78.233 + seed) * 43758.5453;
+      return (n - Math.floor(n)) * 2 - 1;
+    };
+
+    // Fractal noise for more organic texture
+    const fractalNoise = (
+      x: number,
+      y: number,
+      octaves: number = 3
+    ): number => {
+      let value = 0;
+      let amplitude = 1;
+      let frequency = 1;
+      let maxValue = 0;
+
+      for (let i = 0; i < octaves; i++) {
+        value += noise2D(x * frequency, y * frequency, i * 100) * amplitude;
+        maxValue += amplitude;
+        amplitude *= 0.5;
+        frequency *= 2;
+      }
+
+      return value / maxValue;
+    };
+
+    // Instance-specific seed for variation between multiple avatars
+    const instanceSeed = Math.random() * 10000;
+
+    // Pre-generate surface fur marks data with instance variation
+    interface FurMark {
+      angle: number;
+      length: number;
+      thickness: number;
+      colorShift: number;
+      offsetX: number;
+      offsetY: number;
+    }
+
+    const generateFurMarks = (count: number, seed: number): FurMark[] => {
+      const marks: FurMark[] = [];
+      for (let i = 0; i < count; i++) {
+        const s = seed + i * 0.17;
+        marks.push({
+          angle: seededRandom(s) * Math.PI * 2,
+          length: 0.8 + seededRandom(s + 1) * 2.5,
+          thickness: 0.3 + seededRandom(s + 2) * 0.8,
+          colorShift: seededRandom(s + 3),
+          offsetX: (seededRandom(s + 4) - 0.5) * 2,
+          offsetY: (seededRandom(s + 5) - 0.5) * 2,
+        });
+      }
+      return marks;
+    };
+
+    // Use instance seed to ensure each avatar looks unique
+    const bodyFurMarks = generateFurMarks(1600, 42 + instanceSeed);
+    const earFurMarks = generateFurMarks(100, 99 + instanceSeed);
+
     // Function to draw the Fluxby avatar
     const drawFluxbyAvatar = (
       ctx: CanvasRenderingContext2D,
@@ -104,150 +170,386 @@ export function FluxbyWebGL({
       time = 0,
       avatarPosXNormalized = 0
     ) => {
-      const scale = size / 100; // Base size is 100
+      // Scale to 110% - reduced slightly to avoid shadow cutoff
+      const avatarScale = 1.1;
+      const scale = (size / 100) * avatarScale;
 
-      // Add subtle 3D movement based on mouse position (normalized, no scaling)
+      // Add subtle 3D movement based on mouse position
       const half = Math.max(1, size / 2);
       const nx = Math.max(-1, Math.min(1, eyeTarget.x / half));
       const ny = Math.max(-1, Math.min(1, eyeTarget.y / half));
-      const tiltX = nx * 0.04; // Small rotation based on horizontal mouse
-      const tiltY = ny * 0.02; // Small vertical tilt
+      const tiltX = nx * 0.025;
+      const tiltY = ny * 0.012;
 
       ctx.save();
       ctx.translate(centerX, centerY);
       ctx.scale(scale, scale);
       ctx.rotate(tiltX);
 
-      // Add 3D shadow
-      ctx.shadowColor = 'rgba(0, 0, 0, 0.15)';
-      ctx.shadowBlur = 6;
-      ctx.shadowOffsetX = 1 + tiltX * 8;
-      ctx.shadowOffsetY = 3 + tiltY * 8;
+      // Color palette - rich purple tones
+      const darkPurple = '#7C3AED';
+      const basePurple = '#8B5CF6';
+      const midPurple = '#A78BFA';
+      const lightPurple = '#C4B5FD';
+      const palePurple = '#DDD6FE';
+      const creamHighlight = '#F5F3FF';
 
-      // Main body - soft purple gradient with 3D lighting
+      // ========== 3D SHADING LAYER ==========
+      // Soft drop shadow
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.15)';
+      ctx.shadowBlur = 12;
+      ctx.shadowOffsetX = 3 + tiltX * 5;
+      ctx.shadowOffsetY = 5 + tiltY * 5;
+
+      // Main body shape - larger, centered
+      const bodyRadiusX = 36;
+      const bodyRadiusY = 33;
+      const bodyCenterY = 6;
+
+      // Base body gradient with 3D lighting
       const bodyGradient = ctx.createRadialGradient(
-        -15 + tiltX * 20,
-        -20 + tiltY * 20,
-        0, // Light source position (top-left)
+        -12 + tiltX * 20,
+        -10 + tiltY * 15,
         0,
-        10,
-        35
+        5,
+        bodyCenterY,
+        bodyRadiusX
       );
-      bodyGradient.addColorStop(0, '#D1BFFF'); // Softer highlight
-      bodyGradient.addColorStop(0.4, '#C4B5FD');
-      bodyGradient.addColorStop(0.8, '#A78BFA');
-      bodyGradient.addColorStop(1, '#8B5CF6'); // Softer shadow side
+      bodyGradient.addColorStop(0, palePurple);
+      bodyGradient.addColorStop(0.25, lightPurple);
+      bodyGradient.addColorStop(0.5, midPurple);
+      bodyGradient.addColorStop(0.8, basePurple);
+      bodyGradient.addColorStop(1, darkPurple);
 
       ctx.fillStyle = bodyGradient;
       ctx.beginPath();
-      ctx.ellipse(0, 10, 35, 32, 0, 0, Math.PI * 2);
+      ctx.ellipse(0, bodyCenterY, bodyRadiusX, bodyRadiusY, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Add fluffy texture with small circles around the body edge
-      // Slight texture breathing — base value scaled up when canvas is large
-      // Subtle edge/texture breathing scaled for larger avatars (size is min(width,height))
-      const breathPhase =
-        Math.sin(time * 2) * Math.max(0.25, Math.min(4, size / 80));
-      for (let i = 0; i < 16; i++) {
-        const angle = (i / 16) * Math.PI * 2;
-        const radius = 3 + (Math.sin(i * 0.5) + 1) * 1.5 + breathPhase;
-        const x = Math.cos(angle) * 34;
-        const y = Math.sin(angle) * 31 + 10;
-
-        ctx.fillStyle = bodyGradient;
-        ctx.globalAlpha = 0.6;
-        ctx.beginPath();
-        ctx.arc(x, y, radius, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      ctx.globalAlpha = 1.0;
-
-      // 3D highlight on body
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
-      ctx.beginPath();
-      ctx.ellipse(-15, -5, 12, 8, -Math.PI / 4, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Belly with 3D lighting
-      const bellyGradient = ctx.createRadialGradient(
-        -5 + tiltX * 10,
-        5 + tiltY * 10,
-        0,
-        0,
-        15,
-        20
-      );
-      bellyGradient.addColorStop(0, '#F8F7FF'); // Softer highlight
-      bellyGradient.addColorStop(0.6, '#F5F3FF');
-      bellyGradient.addColorStop(1, '#E9D5FF'); // Softer shadow side
-      ctx.fillStyle = bellyGradient;
-      ctx.beginPath();
-      ctx.ellipse(0, 15, 20, 18, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // 3D highlight on belly
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
-      ctx.beginPath();
-      ctx.ellipse(-8, 10, 6, 4, -Math.PI / 6, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Reddish blush cheeks - soften core and favor blurred halo
-      // Smaller, less opaque core
-      ctx.fillStyle = 'rgba(255, 90, 110, 0.25)';
-      ctx.beginPath();
-      ctx.ellipse(-20, 14, 2.5, 2, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.ellipse(20, 14, 2.5, 2, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Soft halo (blurred) for smooth blending into body
-      // Reduced width and blur for a subtler look
-      const blushGradient = ctx.createRadialGradient(-20, 14, 0, -20, 14, 10);
-      blushGradient.addColorStop(0, 'rgba(255, 100, 120, 0.55)');
-      blushGradient.addColorStop(0.6, 'rgba(255, 100, 120, 0.22)');
-      blushGradient.addColorStop(1, 'rgba(255, 100, 120, 0)');
-      ctx.save();
-      ctx.fillStyle = blushGradient;
-      ctx.beginPath();
-      ctx.ellipse(-20, 14, 9, 6, 0, 0, Math.PI * 2);
-      ctx.fill();
-      // Right cheek gradient (narrower)
-      const blushGradientR = ctx.createRadialGradient(20, 14, 0, 20, 14, 10);
-      blushGradientR.addColorStop(0, 'rgba(255, 100, 120, 0.55)');
-      blushGradientR.addColorStop(0.6, 'rgba(255, 100, 120, 0.22)');
-      blushGradientR.addColorStop(1, 'rgba(255, 100, 120, 0)');
-      ctx.fillStyle = blushGradientR;
-      ctx.beginPath();
-      ctx.ellipse(20, 14, 9, 6, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
-
-      // Clear shadow for facial features
+      // Clear shadow for texture layers
       ctx.shadowColor = 'transparent';
       ctx.shadowBlur = 0;
-      ctx.shadowOffsetX = 0;
-      ctx.shadowOffsetY = 0;
 
-      // Ears (drawn LAST to be on top of everything)
-      // Use a single solid fill color to avoid the body radial gradient
-      // bleeding into the ear shapes and creating a circular artifact.
-      ctx.fillStyle = '#A78BFA'; // uniform ear color
+      // ========== WIND WAVE ANIMATION ==========
+      const windSpeed = 1.5;
+      const windWave = (x: number, y: number, t: number) => {
+        // Add instance-specific phase shift so they don't wave in sync
+        const uniqueT = t + (instanceSeed % 100);
+
+        const wave1 = Math.sin(x * 0.12 + uniqueT * windSpeed) * 0.5;
+        const wave2 =
+          Math.sin(y * 0.1 + uniqueT * windSpeed * 0.8 + 1.5) * 0.35;
+        const wave3 =
+          Math.sin(x * 0.05 + y * 0.05 + uniqueT * windSpeed * 1.2) * 0.25;
+        return wave1 + wave2 + wave3;
+      };
+
+      // ========== PROCEDURAL FUR TEXTURE ==========
+      // Layer 1: Noise-based fur grain texture - increased
+      ctx.globalCompositeOperation = 'overlay';
+      for (let i = 0; i < 800; i++) {
+        // Use instance seed for texture variation too
+        const seed = i * 0.31 + instanceSeed;
+        const angle = seededRandom(seed) * Math.PI * 2;
+        const dist = seededRandom(seed + 1) * 0.95;
+
+        const x = Math.cos(angle) * dist * bodyRadiusX;
+        const y = Math.sin(angle) * dist * bodyRadiusY + bodyCenterY;
+
+        const noiseVal = fractalNoise(x * 0.15, y * 0.15);
+        const brightness = 0.5 + noiseVal * 0.3;
+
+        const dotSize = 0.25 + seededRandom(seed + 2) * 0.5;
+        const alpha = 0.1 + Math.abs(noiseVal) * 0.15;
+
+        ctx.fillStyle = brightness > 0.5 ? creamHighlight : lightPurple;
+        ctx.globalAlpha = alpha;
+        ctx.beginPath();
+        ctx.arc(x, y, dotSize, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.globalAlpha = 1.0;
+
+      // ========== FUR MARKS WITH GRADIENT (body color to tip) ==========
+      ctx.lineCap = 'round';
+      const breathPhase = Math.sin(time * 1.5 + (instanceSeed % 10)) * 0.08;
+
+      // Helper to draw gradient fur mark
+      const drawGradientFur = (
+        x: number,
+        y: number,
+        angle: number,
+        length: number,
+        thickness: number,
+        alpha: number,
+        baseColor: string,
+        tipColor: string
+      ) => {
+        const endX = x + Math.cos(angle) * length;
+        const endY = y + Math.sin(angle) * length;
+
+        // Create gradient from base to tip
+        const grad = ctx.createLinearGradient(x, y, endX, endY);
+        grad.addColorStop(0, baseColor);
+        grad.addColorStop(1, tipColor);
+
+        ctx.strokeStyle = grad;
+        ctx.lineWidth = thickness;
+        ctx.globalAlpha = alpha;
+
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(endX, endY);
+        ctx.stroke();
+      };
+
+      // Layer 2: Surface fur marks with gradient - HIGH DENSITY
+      for (let i = 0; i < 1600; i++) {
+        const mark = bodyFurMarks[i % bodyFurMarks.length];
+        const seed = i * 0.23;
+
+        const t = seededRandom(seed);
+        const baseAngle = seededRandom(seed + 0.5) * Math.PI * 2;
+        const dist = 0.15 + t * 0.8;
+
+        const baseX = Math.cos(baseAngle) * dist * bodyRadiusX + mark.offsetX;
+        const baseY =
+          Math.sin(baseAngle) * dist * bodyRadiusY + bodyCenterY + mark.offsetY;
+
+        // Stronger wind wave
+        const windOffset = windWave(baseX, baseY, time);
+
+        const furAngle = baseAngle + (mark.angle - Math.PI) * 0.2 + windOffset;
+        // TRIPLED fur length (1.2 multiplier version)
+        const furLength = mark.length * 1.2 * (1 + breathPhase);
+
+        // Gradient from body purple to lighter tip
+        const positionBrightness =
+          0.5 - (baseX / bodyRadiusX) * 0.15 - (baseY / bodyRadiusY) * 0.1;
+        let tipColor: string;
+        if (mark.colorShift + positionBrightness > 0.65) {
+          tipColor = creamHighlight;
+        } else if (mark.colorShift + positionBrightness > 0.35) {
+          tipColor = lightPurple;
+        } else {
+          tipColor = palePurple;
+        }
+
+        // Base color is always body purple
+        const baseColor = midPurple;
+        const alpha = 0.25 + mark.colorShift * 0.2;
+
+        drawGradientFur(
+          baseX,
+          baseY,
+          furAngle,
+          furLength,
+          mark.thickness * 0.7,
+          alpha,
+          baseColor,
+          tipColor
+        );
+      }
+
+      ctx.globalAlpha = 1.0;
+
+      // Layer 3: Edge fur with gradient - high count
+      for (let i = 0; i < 200; i++) {
+        const mark = bodyFurMarks[(i * 3) % bodyFurMarks.length];
+        const angle = (i / 200) * Math.PI * 2;
+
+        const edgeX = Math.cos(angle) * bodyRadiusX * 0.96;
+        const edgeY = Math.sin(angle) * bodyRadiusY * 0.96 + bodyCenterY;
+
+        const windOffset = windWave(edgeX, edgeY, time) * 0.7;
+
+        const furAngle = angle + (mark.angle - Math.PI) * 0.08 + windOffset;
+        // TRIPLED edge fur length
+        const furLength = 2.25 + mark.length * 0.9 + breathPhase;
+
+        const tipColor = mark.colorShift > 0.5 ? lightPurple : palePurple;
+
+        drawGradientFur(
+          edgeX,
+          edgeY,
+          furAngle,
+          furLength,
+          mark.thickness * 0.6,
+          0.3 + mark.colorShift * 0.15,
+          basePurple,
+          tipColor
+        );
+      }
+
+      ctx.globalAlpha = 1.0;
+
+      // ========== 3D HIGHLIGHTS ==========
+      const highlightGrad = ctx.createRadialGradient(-15, -8, 0, -10, -5, 20);
+      highlightGrad.addColorStop(0, 'rgba(255, 255, 255, 0.22)');
+      highlightGrad.addColorStop(0.5, 'rgba(255, 255, 255, 0.06)');
+      highlightGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+      ctx.fillStyle = highlightGrad;
       ctx.beginPath();
-      ctx.ellipse(-18, -15, 8, 12, -Math.PI / 6, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.ellipse(18, -15, 8, 12, Math.PI / 6, 0, Math.PI * 2);
+      ctx.ellipse(-12, -5, 14, 10, -Math.PI / 5, 0, Math.PI * 2);
       ctx.fill();
 
-      // Inner ears
-      ctx.fillStyle = '#DDD6FE';
+      // ========== BELLY WITH BLUR ==========
+      ctx.save();
+      ctx.filter = 'blur(1px)';
+
+      const bellyGradient = ctx.createRadialGradient(-2, 12, 0, 0, 14, 16);
+      bellyGradient.addColorStop(0, '#FEFCFF');
+      bellyGradient.addColorStop(0.35, '#F5F3FF');
+      bellyGradient.addColorStop(0.7, '#E9D5FF');
+      bellyGradient.addColorStop(1, palePurple);
+
+      ctx.fillStyle = bellyGradient;
       ctx.beginPath();
-      ctx.ellipse(-18, -15, 4, 7, -Math.PI / 6, 0, Math.PI * 2);
+      ctx.ellipse(0, 14, 16, 14, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.filter = 'none';
+      ctx.restore();
+
+      // Belly fur texture - increased
+      for (let i = 0; i < 120; i++) {
+        const seed = i * 0.67 + 500;
+        const angle = seededRandom(seed) * Math.PI * 2;
+        const dist = seededRandom(seed + 1) * 0.8;
+
+        const x = Math.cos(angle) * dist * 14;
+        const y = Math.sin(angle) * dist * 12 + 14;
+
+        const noiseVal = fractalNoise(x * 0.2, y * 0.2, 50);
+        const dotSize = 0.2 + seededRandom(seed + 2) * 0.4;
+
+        ctx.fillStyle = noiseVal > 0 ? '#FEF3C7' : '#F5F3FF';
+        ctx.globalAlpha = 0.15 + Math.abs(noiseVal) * 0.1;
+        ctx.beginPath();
+        ctx.arc(x, y, dotSize, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      ctx.globalAlpha = 1.0;
+
+      // Belly highlight
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.18)';
+      ctx.beginPath();
+      ctx.ellipse(-5, 10, 5, 4, -Math.PI / 6, 0, Math.PI * 2);
+      ctx.fill();
+
+      // ========== BLUSH CHEEKS ==========
+      const blushGradL = ctx.createRadialGradient(-18, 8, 0, -18, 8, 10);
+      blushGradL.addColorStop(0, 'rgba(255, 100, 130, 0.35)');
+      blushGradL.addColorStop(0.5, 'rgba(255, 100, 130, 0.18)');
+      blushGradL.addColorStop(1, 'rgba(255, 100, 130, 0)');
+      ctx.fillStyle = blushGradL;
+      ctx.beginPath();
+      ctx.ellipse(-18, 8, 10, 7, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      const blushGradR = ctx.createRadialGradient(18, 8, 0, 18, 8, 10);
+      blushGradR.addColorStop(0, 'rgba(255, 100, 130, 0.35)');
+      blushGradR.addColorStop(0.5, 'rgba(255, 100, 130, 0.18)');
+      blushGradR.addColorStop(1, 'rgba(255, 100, 130, 0)');
+      ctx.fillStyle = blushGradR;
+      ctx.beginPath();
+      ctx.ellipse(18, 8, 10, 7, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // ========== EARS WITH FULL FUR ==========
+      // Ear bases with soft blur edge
+      ctx.save();
+      ctx.filter = 'blur(1px)';
+
+      const earGrad = ctx.createLinearGradient(-25, -25, -10, -5);
+      earGrad.addColorStop(0, midPurple);
+      earGrad.addColorStop(1, basePurple);
+      ctx.fillStyle = earGrad;
+      ctx.beginPath();
+      ctx.ellipse(-19, -16, 8, 13, -Math.PI / 6, 0, Math.PI * 2);
+      ctx.fill();
+
+      const earGradR = ctx.createLinearGradient(25, -25, 10, -5);
+      earGradR.addColorStop(0, midPurple);
+      earGradR.addColorStop(1, basePurple);
+      ctx.fillStyle = earGradR;
+      ctx.beginPath();
+      ctx.ellipse(19, -16, 8, 13, Math.PI / 6, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.filter = 'none';
+      ctx.restore();
+
+      // Ear fur - noise texture
+      for (let ear = 0; ear < 2; ear++) {
+        const earX = ear === 0 ? -19 : 19;
+        const earAngleBase = ear === 0 ? -Math.PI / 6 : Math.PI / 6;
+
+        // Noise dots - high density
+        for (let i = 0; i < 100; i++) {
+          const seed = i * 0.41 + ear * 100;
+          const angle = seededRandom(seed) * Math.PI * 2;
+          const dist = seededRandom(seed + 1) * 0.8;
+
+          const x = earX + Math.cos(angle + earAngleBase) * dist * 6;
+          const y = -16 + Math.sin(angle) * dist * 10;
+
+          const noiseVal = fractalNoise(x * 0.3, y * 0.3, 70 + ear * 30);
+          const dotSize = 0.15 + seededRandom(seed + 2) * 0.35;
+
+          ctx.fillStyle = noiseVal > 0 ? lightPurple : midPurple;
+          ctx.globalAlpha = 0.18 + Math.abs(noiseVal) * 0.12;
+          ctx.beginPath();
+          ctx.arc(x, y, dotSize, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Gradient fur marks on ears - QUADRUPLED
+        for (let i = 0; i < 640; i++) {
+          const mark = earFurMarks[i % earFurMarks.length];
+          const seed = i * 0.37 + ear * 200;
+          const angle = seededRandom(seed) * Math.PI * 2;
+          const dist = 0.15 + seededRandom(seed + 1) * 0.75;
+
+          const baseX = earX + Math.cos(angle + earAngleBase) * dist * 6;
+          const baseY = -16 + Math.sin(angle) * dist * 10;
+
+          const windOffset = windWave(baseX, baseY, time) * 0.5;
+
+          const furAngle = angle + earAngleBase + windOffset;
+          // Tripled ear fur length
+          const furLength = 1.2 + mark.length * 0.75;
+
+          const tipColor = mark.colorShift > 0.5 ? lightPurple : palePurple;
+
+          drawGradientFur(
+            baseX,
+            baseY,
+            furAngle,
+            furLength,
+            mark.thickness * 0.5,
+            0.2 + mark.colorShift * 0.15,
+            midPurple,
+            tipColor
+          );
+        }
+      }
+
+      ctx.globalAlpha = 1.0;
+
+      // Inner ears - soft
+      ctx.save();
+      ctx.filter = 'blur(0.5px)';
+      ctx.fillStyle = palePurple;
+      ctx.beginPath();
+      ctx.ellipse(-19, -16, 4, 7, -Math.PI / 6, 0, Math.PI * 2);
       ctx.fill();
       ctx.beginPath();
-      ctx.ellipse(18, -15, 4, 7, Math.PI / 6, 0, Math.PI * 2);
+      ctx.ellipse(19, -16, 4, 7, Math.PI / 6, 0, Math.PI * 2);
       ctx.fill();
+      ctx.filter = 'none';
+      ctx.restore();
 
       // Eyes (drawn LAST to be on top of everything)
       if (isBlinking) {
@@ -486,11 +788,65 @@ export function FluxbyWebGL({
         Math.min(1, avatarPosXNormalizedRaw)
       );
 
+      // Draw background particles if any
+      particlesRef.current.forEach((p) => {
+        // Edge fading logic to prevent hard cutoffs
+        // Increased margin and added a quadratic falloff for a MUCH sharper fadeout
+        const marginX = Math.min(width * 0.25, 60);
+        const marginY = Math.min(height * 0.25, 60);
+        let edgeAlpha = 1.0;
+
+        if (p.x < marginX) edgeAlpha *= Math.pow(p.x / marginX, 2);
+        else if (p.x > width - marginX)
+          edgeAlpha *= Math.pow((width - p.x) / marginX, 2);
+
+        if (p.y < marginY) edgeAlpha *= Math.pow(p.y / marginY, 2);
+        else if (p.y > height - marginY)
+          edgeAlpha *= Math.pow((height - p.y) / marginY, 2);
+
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, p.alpha * edgeAlpha);
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+
+        // Update particle position for next frame
+        if (animated) {
+          p.x += p.vx;
+          p.y += p.vy;
+          p.alpha -= p.decay;
+
+          // Bounce logic instead of wrap-around
+          if (p.x < 0) {
+            p.x = 0;
+            p.vx *= -1;
+          } else if (p.x > width) {
+            p.x = width;
+            p.vx *= -1;
+          }
+
+          if (p.y < 0) {
+            p.y = 0;
+            p.vy *= -1;
+          } else if (p.y > height) {
+            p.y = height;
+            p.vy *= -1;
+          }
+
+          if (p.alpha <= 0) {
+            Object.assign(p, createParticle());
+          }
+        }
+      });
+
       // Draw Fluxby avatar filling the canvas with animations
+      // Centered more precisely and moved UP slightly to prevent shadow cutoff
       drawFluxbyAvatar(
         ctx,
         width / 2,
-        height / 2 - 5 + breath,
+        height / 2 - 2 + breath,
         Math.min(width, height),
         isBlinking,
         eyeTargetRef.current,

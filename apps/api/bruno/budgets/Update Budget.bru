@@ -1,0 +1,40 @@
+meta {
+  name: Update Budget
+  type: http
+  seq: 3
+}
+
+patch {
+  url: {{baseUrl}}/budgets/:id
+  body: json
+  auth: none
+}
+
+params:path {
+  id: 1
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+body:json {
+  {
+    "amount": 600
+  }
+}
+
+docs {
+  # Update Budget
+  
+  Updates an existing budget.
+  
+  ## Path Parameters
+  
+  - `id` (required): Budget ID
+  
+  ## Request Body (all optional)
+  
+  - `amount`: New budget amount
+  - `period`: Budget period (monthly, yearly)
+}

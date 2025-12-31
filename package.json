@@ -2,27 +2,36 @@
   "name": "fluxby",
   "version": "1.0.0",
   "private": true,
-  "description": "Lokale financiële visualisatie app voor bank CSV exports",
+  "description": "Local-first financial dashboard for bank transaction visualization",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/houke/fluxby.git"
+  },
   "scripts": {
-    "dev": "concurrently \"npm run dev:api\" \"npm run dev:web\" \"npm run dev:landing\"",
+    "dev": "concurrently \"npm run dev -w apps/web\" \"npm run dev -w apps/landing\"",
     "dev:api": "npm run dev -w apps/api",
     "dev:web": "npm run dev -w apps/web",
-    "dev:landing": "npm run dev -w apps/landing",
-    "build": "npm run build -w packages/shared && npm run build -w apps/api && npm run build -w apps/web && npm run build -w apps/landing",
-    "build:dist": "node scripts/build-dist.mjs",
-    "build:api": "npm run build -w apps/api",
-    "build:web": "npm run build -w apps/web",
+    "dev:tauri": "npm run dev -w apps/tauri",
+    "dev:all": "concurrently \"npm run dev -w apps/api\" \"npm run dev -w apps/web\" \"npm run dev -w apps/landing\"",
+    "build": "npm run build -w packages/shared && npm run build -w packages/database && npm run build -w packages/core && npm run build -w apps/api && npm run build -w apps/web && npm run generate:openapi && npm run build -w apps/landing",
+    "build:packages": "npm run build -w packages/shared && npm run build -w packages/database && npm run build -w packages/core",
+    "build:web": "npm run build -w packages/shared && npm run build -w packages/database && npm run build -w packages/core && npm run build -w apps/web",
+    "build:tauri": "npm run build -w packages/shared && npm run build -w packages/database && npm run build -w packages/core && npm run build -w apps/tauri",
+    "prebuild:tauri": "node scripts/check-rust.mjs",
+    "build:pages": "node scripts/build-pages.mjs",
+    "serve:pages": "npm run build:pages && node scripts/serve-pages.mjs",
+    "generate:openapi": "npx tsx scripts/generate-openapi.ts",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
-    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
-    "typecheck": "npm run typecheck -w apps/web && npm run typecheck -w apps/api",
+    "typecheck": "npm run build:packages && npm run typecheck -w apps/web && npm run typecheck -w apps/api",
     "test": "vitest",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
     "start": "npm run start -w apps/api",
-    "start:dist": "node dist/apps/api/dist/index.js"
+    "release": "node scripts/release.mjs",
+    "release:dry": "node scripts/release.mjs --dry-run"
   },
   "workspaces": [
     "apps/*",
@@ -47,6 +56,7 @@
     "vitest": "^2.1.8"
   },
   "engines": {
-    "node": ">=22.0.0"
+    "node": ">=22.0.0",
+    "npm": ">=10.0.0"
   }
 }

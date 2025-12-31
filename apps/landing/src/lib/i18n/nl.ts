@@ -6,6 +6,9 @@ export interface LandingTranslationKeys {
     screenshots: string;
     getStarted: string;
   };
+  common: {
+    copied: string;
+  };
   hero: {
     title: string;
     subtitle: string;
@@ -160,6 +163,9 @@ export const nl: LandingTranslationKeys = {
     features: 'Functies',
     screenshots: 'Screenshots',
     getStarted: 'Aan de slag',
+  },
+  common: {
+    copied: 'Gekopieerd!',
   },
 
   // Hero
@@ -430,6 +436,7 @@ export const nl: LandingTranslationKeys = {
       gettingStarted: 'Aan de slag',
       introduction: 'Introductie',
       authentication: 'Authenticatie',
+      architecture: 'Architectuur',
       profiles: 'Profielen & Multi-Tenancy',
       errors: 'Foutafhandeling',
       coreResources: 'Core Resources',
@@ -442,6 +449,7 @@ export const nl: LandingTranslationKeys = {
       import: 'Import',
       data: 'Data beheer',
       tools: 'Tools',
+      openapi: 'OpenAPI Spec',
       apiReference: 'Swagger Docs',
       helpCenter: 'Helpcentrum',
     },
@@ -452,7 +460,7 @@ export const nl: LandingTranslationKeys = {
         'Bouw krachtige integraties met je financiële data. Krijg toegang tot transacties, categorieën, budgetten en analytics via onze RESTful API.',
       quickStartTitle: 'Snel aan de slag',
       quickStartText:
-        'Start binnen enkele minuten. De API draait lokaal op http://localhost:3001/api zonder authenticatie vereist voor lokale ontwikkeling.',
+        'Start binnen enkele minuten. Voor ontwikkeling, draai de API server lokaal op http://localhost:3001/api. De web app draait volledig in de browser zonder backend.',
       whatCanYouBuildTitle: 'Wat kun je bouwen?',
       useCases: [
         {
@@ -510,6 +518,67 @@ export const nl: LandingTranslationKeys = {
       errorHandlingText:
         'Als je de X-Profile-ID header niet opneemt, ontvang je een 401 foutmelding:',
       errorResponse: 'Foutmelding Response',
+    },
+
+    // Architecture page
+    architecture: {
+      title: 'Local-First Architectuur',
+      subtitle:
+        'Fluxby gebruikt een local-first architectuur waarbij al je data lokaal wordt opgeslagen en versleuteld. Geen cloud, geen servers die je data kunnen lezen.',
+      zeroKnowledgeTitle: 'Zero-Knowledge Design',
+      zeroKnowledgeText:
+        'Alleen jij hebt toegang tot je data. De master key bestaat alleen in het geheugen en wordt nooit opgeslagen.',
+      platformsTitle: 'Ondersteunde Platformen',
+      webDesc:
+        'Draait in de browser met SQLite WASM. Data opgeslagen in OPFS (Origin Private File System).',
+      desktopDesc: 'Native app voor Windows, macOS en Linux met Tauri 2.0.',
+      headlessDesc:
+        'Lokale API server voor scripts, automations en externe tools.',
+      securityTitle: 'Encryptie & Beveiliging',
+      securityText:
+        'Alle data wordt versleuteld met AES-256-GCM voordat het naar disk wordt geschreven. De sleutel wordt afgeleid van je PIN/wachtwoord via PBKDF2.',
+      autoLockTitle: 'Auto-Lock',
+      autoLockWeb: 'Master key wordt gewist bij page refresh of tab sluiten',
+      autoLockDesktop: 'Master key wordt gewist bij app sluiten',
+      autoLockIdle: 'Na 15 minuten inactiviteit wordt automatisch vergrendeld',
+      syncTitle: 'Synchronisatie',
+      syncText:
+        'Fluxby gebruikt peer-to-peer synchronisatie via WebRTC. Data gaat direct tussen je apparaten zonder tussenkomst van een server.',
+      syncSchemaTitle: 'Sync Schema',
+      conflictTitle: 'Conflict Resolutie (LWW)',
+      conflictText:
+        'Bij conflicten wint de meest recente wijziging (Last-Write-Wins). Bij gelijke timestamps beslist de device_id.',
+      storageTitle: 'Storage Adapters',
+      backupTitle: 'Backup & Herstel',
+      backupText:
+        'Je kunt op elk moment een backup maken van je data. Backups zijn versleuteld en kunnen worden hersteld op elk apparaat.',
+      backupDesktop:
+        'Bestand → Backup opslaan... exporteert naar je Documents map',
+      backupWeb: 'Instellingen → Backup download een .fluxby bestand',
+      backupFormat:
+        '.fluxby bestanden bevatten metadata + versleutelde database',
+      tipTitle: 'Tip',
+      tipText:
+        'Maak regelmatig backups! Bij verlies van je PIN/wachtwoord kun je alleen herstellen vanaf een backup.',
+
+      apiVsWebTitle: 'API Server vs Web App: aparte databases',
+      apiVsWebIntro:
+        'Het is belangrijk om te begrijpen dat de API server en de web app volledig gescheiden databases gebruiken. Dit is een bewuste architectuurbeslissing voor maximale privacy.',
+      importantTitle: 'Belangrijk',
+      apiSeparateDbText:
+        'De API server kan NIET verbinden met je versleutelde web app database. Je master password wordt nooit gedeeld met de API server. Als je data wilt gebruiken via de API, moet je eerst een JSON export maken vanuit de web app en deze importeren in de API server.',
+      dataFlowTitle: 'Data migratie workflow',
+      dataFlowText:
+        'Om je data te gebruiken met de API server voor automations of custom integraties:',
+      whySeparateTitle: 'Waarom gescheiden databases?',
+      whySeparate1:
+        'Zero-Knowledge: je master password verlaat nooit de browser. De API server kan je versleutelde data niet ontcijferen.',
+      whySeparate2:
+        'Privacy: je financiële data in de web app is volledig geïsoleerd en versleuteld.',
+      whySeparate3:
+        'Flexibiliteit: ontwikkelaars kunnen werken met een aparte, onversleutelde database zonder risico voor echte data.',
+      whySeparate4:
+        'Serverless: de web app werkt volledig offline (bijv. GitHub Pages) - geen server nodig.',
     },
     // Profiles page
     profiles: {
@@ -1038,6 +1107,33 @@ export const nl: LandingTranslationKeys = {
       article3: 'API documentatie',
       article3Desc: 'Volledige API referentie voor developers',
     },
+    firstSteps: {
+      title: 'Eerste stappen met Fluxby',
+      subtitle:
+        'Begin met Fluxby in slechts enkele minuten. Deze gids legt de nieuwe onboarding uit.',
+      step1Title: 'Stap 1: Inloggen & onboarding',
+      step1Text:
+        'Wanneer je Fluxby voor het eerst opent, word je begeleid door een korte onboarding wizard. Je kunt inloggen, een wachtwoord instellen en je eerste profiel aanmaken (bijv. "Persoonlijk" of "Gezin").',
+      step2Title: 'Stap 2: Exporteren vanuit je bank',
+      step2Text:
+        'Log in op de website of app van je bank en exporteer je transacties als CSV-bestand. De meeste banken bieden deze optie in de "Export" of "Download" sectie.',
+      step3Title: 'Stap 3: Importeer je transacties',
+      step3Text:
+        'Ga naar de Import pagina in Fluxby en sleep je CSV-bestand, of klik om te bladeren. Fluxby detecteert automatisch het formaat en importeert je transacties.',
+      step4Title: 'Stap 4: Categoriseer transacties',
+      step4Text:
+        'Na het importeren ga je naar de Transacties pagina om je transacties te categoriseren. Klik op een transactie om een categorie toe te wijzen. Fluxby leert van je keuzes en zal vergelijkbare transacties in de toekomst automatisch categoriseren.',
+      step5Title: 'Stap 5: Verken je dashboard',
+      step5Text:
+        'Ga nu naar het Dashboard om je financiële overzicht te zien! Je ziet je saldo, uitgaven per categorie en recente transacties.',
+      nextStepsTitle: 'Wat nu?',
+      next1: 'Stel budgetten in om je uitgavendoelen te volgen',
+      next2: 'Maak aangepaste categorieën voor betere organisatie',
+      next3:
+        'Voeg contacten toe in het Adresboek om bij te houden met wie je transacties doet',
+      next4:
+        'Importeer regelmatig transacties om je gegevens up-to-date te houden',
+    },
     bankConnection: {
       title: 'Je bankrekening verbinden',
       subtitle: 'Importeer transacties van je bank om je financiën te volgen.',
@@ -1102,16 +1198,16 @@ export const nl: LandingTranslationKeys = {
       fullControlDesc: 'Verwijder alle data op elk moment',
       howWorksTitle: 'Hoe het werkt',
       howWorksText:
-        'Fluxby gebruikt een lokale SQLite database opgeslagen in je project map. De API server draait op je machine op localhost:3001, en de web interface op localhost:5173. Er worden geen externe verbindingen gemaakt.',
+        'Fluxby draait volledig in je browser met SQLite en WebAssembly. Je data wordt lokaal opgeslagen in je browser (OPFS) of op je apparaat wanneer je de desktop app gebruikt. Geen servers nodig, geen externe verbindingen.',
       dataLocationTitle: 'Waar wordt mijn data opgeslagen?',
       dataLocationText:
-        'Je data wordt opgeslagen in een bestand genaamd fluxby.db in de data/ map van je Fluxby installatie. Je kunt dit bestand back-uppen om je data te bewaren, of verwijderen om opnieuw te beginnen.',
+        'Je data wordt opgeslagen in je browser via OPFS (Origin Private File System) voor de web app, of in je lokale app data map voor de desktop app. Je data verlaat nooit je apparaat.',
       deleteDataTitle: 'Je data verwijderen',
       deleteDataText:
-        'Om al je financiële data volledig te verwijderen, kun je de Data Management sectie in Instellingen gebruiken, of simpelweg het fluxby.db bestand verwijderen. Er is geen account om te sluiten of data om aan te vragen - het is allemaal lokaal.',
+        'Om al je financiële data volledig te verwijderen, kun je de Data Management sectie in Instellingen gebruiken, of je browser data wissen. Er is geen account om te sluiten of data om aan te vragen - het is allemaal lokaal.',
       warningTitle: 'Belangrijk',
       warningText:
-        'Aangezien alle data lokaal wordt opgeslagen, zorg ervoor dat je je fluxby.db bestand back-upt als je je data wilt bewaren. Er is geen cloud backup!',
+        'Aangezien alle data lokaal wordt opgeslagen, overweeg om je data regelmatig te exporteren als je deze wilt bewaren. Je kunt synchroniseren tussen apparaten met de peer-to-peer sync functie.',
     },
     devIntro: {
       title: 'Developer Hub',
@@ -1119,7 +1215,7 @@ export const nl: LandingTranslationKeys = {
         'Bouw integraties met de Fluxby API. Krijg programmatisch toegang tot je financiële data.',
       quickStartTitle: 'Snel aan de slag',
       quickStartText:
-        'De Fluxby API draait lokaal op http://localhost:3001/api. Geen API keys of authenticatie vereist voor lokale ontwikkeling.',
+        'Voor ontwikkeling en headless mode, draai de Fluxby API server lokaal op http://localhost:3001/api. De hoofd web app draait volledig in je browser - geen backend nodig.',
       whatCanBuildTitle: 'Wat kun je bouwen?',
       customDashboards: 'Aangepaste Dashboards',
       customDashboardsDesc:

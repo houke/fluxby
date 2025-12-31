@@ -21,13 +21,14 @@ import {
 import { cn } from '@/lib/utils';
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { api } from '@/lib/api';
+import { useDataService } from '@/contexts/DatabaseContext';
 import type { DateRange } from 'react-day-picker';
 
 export function HeaderFilters() {
   const { t, language } = useLanguage();
   const { filters, setDateRange } = useFilters();
   const { activeProfileId } = useProfile();
+  const dataService = useDataService();
   const [datePickerOpen, setDatePickerOpen] = useState(false);
   const [selectedYear, setSelectedYear] = useState<string | undefined>(
     undefined
@@ -35,7 +36,7 @@ export function HeaderFilters() {
 
   const { data: availableYears } = useQuery<number[]>({
     queryKey: ['available-years', activeProfileId],
-    queryFn: () => api.getAvailableYears(),
+    queryFn: () => dataService.getAvailableYears(),
   });
 
   const { data: minMaxDates } = useQuery<{
@@ -43,7 +44,7 @@ export function HeaderFilters() {
     maxDate: string;
   } | null>({
     queryKey: ['min-max-dates', activeProfileId],
-    queryFn: () => api.getMinMaxDates(),
+    queryFn: () => dataService.getMinMaxDates(),
   });
 
   // Quick date range presets

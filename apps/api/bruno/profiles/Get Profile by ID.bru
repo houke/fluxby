@@ -1,0 +1,41 @@
+meta {
+  name: Get Profile by ID
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/profiles/:id
+  body: none
+  auth: none
+}
+
+params:path {
+  id: 1
+}
+
+docs {
+  # Get Profile by ID
+  
+  Retrieves a single profile by its ID.
+  
+  ## Path Parameters
+  
+  - `id` (required): Profile ID
+  
+  ## Response
+  
+  ```json
+  {
+    "success": true,
+    "data": {
+      "id": 1,
+      "userId": 1,
+      "name": "Personal",
+      "type": "personal",
+      "avatarUrl": null,
+      "createdAt": "2024-01-01T00:00:00.000Z"
+    }
+  }
+  ```
+}

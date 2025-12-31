@@ -8,6 +8,9 @@ export const en: LandingTranslationKeys = {
     screenshots: 'Screenshots',
     getStarted: 'Get Started',
   },
+  common: {
+    copied: 'Copied!',
+  },
 
   // Hero
   hero: {
@@ -277,6 +280,7 @@ export const en: LandingTranslationKeys = {
       gettingStarted: 'Getting Started',
       introduction: 'Introduction',
       authentication: 'Authentication',
+      architecture: 'Architecture',
       profiles: 'Profiles & Multi-Tenancy',
       errors: 'Error Handling',
       coreResources: 'Core Resources',
@@ -289,6 +293,7 @@ export const en: LandingTranslationKeys = {
       import: 'Import',
       data: 'Data Management',
       tools: 'Tools',
+      openapi: 'OpenAPI Spec',
       apiReference: 'Swagger Docs',
       helpCenter: 'Help Center',
     },
@@ -299,7 +304,7 @@ export const en: LandingTranslationKeys = {
         'Build powerful integrations with your financial data. Access transactions, categories, budgets, and analytics through our RESTful API.',
       quickStartTitle: 'Quick Start',
       quickStartText:
-        'Get started in minutes. The API runs locally at http://localhost:3001/api with no authentication required for local development.',
+        'Get started in minutes. For development, run the API server locally at http://localhost:3001/api. The web app runs entirely in the browser with no backend required.',
       whatCanYouBuildTitle: 'What can you build?',
       useCases: [
         {
@@ -356,6 +361,65 @@ export const en: LandingTranslationKeys = {
       bestPracticeText:
         'Always include the X-Profile-ID header to ensure consistent behavior, especially when working with multiple profiles.',
       responseTitle: 'Response with missing Header',
+    },
+
+    // Architecture page
+    architecture: {
+      title: 'Local-First Architecture',
+      subtitle:
+        'Fluxby uses a local-first architecture where your data is stored and encrypted locally. No cloud, no servers that can read your data.',
+      zeroKnowledgeTitle: 'Zero-Knowledge Design',
+      zeroKnowledgeText:
+        'Only you can access your data. The master key exists only in memory and is never stored.',
+      platformsTitle: 'Supported Platforms',
+      webDesc:
+        'Runs in the browser with SQLite WASM. Data is stored in OPFS (Origin Private File System).',
+      desktopDesc: 'Native app for Windows, macOS and Linux using Tauri 2.0.',
+      headlessDesc:
+        'Local API server for scripts, automations and external tools.',
+      securityTitle: 'Encryption & Security',
+      securityText:
+        'All data is encrypted with AES-256-GCM before it is written to disk. The key encryption key is derived from your password/PIN using PBKDF2.',
+      autoLockTitle: 'Auto-Lock',
+      autoLockWeb: 'Master key is wiped on refresh or tab close',
+      autoLockDesktop: 'Master key is wiped when the app closes',
+      autoLockIdle: 'Automatically locks after 15 minutes of inactivity',
+      syncTitle: 'Sync',
+      syncText:
+        'Fluxby uses peer-to-peer sync via WebRTC. Data moves directly between devices without a central server.',
+      syncSchemaTitle: 'Sync Schema',
+      conflictTitle: 'Conflict Resolution (LWW)',
+      conflictText:
+        'When conflicts occur, the latest update wins (Last-Write-Wins). If timestamps are equal, device_id is used as tie-breaker.',
+      storageTitle: 'Storage Adapters',
+      backupTitle: 'Backup & Restore',
+      backupText:
+        'You can create backups at any time. Backups are encrypted and can be restored on any device.',
+      backupDesktop: 'File → Save backup... exports to your Documents folder',
+      backupWeb: 'Settings → Backup downloads a .fluxby file',
+      backupFormat: '.fluxby files contain metadata + encrypted database',
+      tipTitle: 'Tip',
+      tipText:
+        'Create backups regularly! If you lose your PIN/password you can only restore from a backup.',
+
+      apiVsWebTitle: 'API Server vs Web App: separate databases',
+      apiVsWebIntro:
+        'It’s important to understand that the API server and the web app use completely separate databases. This is an intentional design choice for maximum privacy.',
+      importantTitle: 'Important',
+      apiSeparateDbText:
+        'The API server cannot connect to your encrypted web app database. Your master password is never shared with the API server. If you want to use your data via the API, first export JSON from the web app and import it into the API server.',
+      dataFlowTitle: 'Data migration workflow',
+      dataFlowText:
+        'To use your data with the API server for automations or custom integrations:',
+      whySeparateTitle: 'Why separate databases?',
+      whySeparate1:
+        'Zero-knowledge: your master password never leaves the browser, so the API server cannot decrypt your encrypted data.',
+      whySeparate2:
+        'Privacy: your financial data in the web app is isolated and encrypted.',
+      whySeparate3:
+        'Flexibility: developers can work with a separate, unencrypted database without risking real data.',
+      whySeparate4:
+        'Serverless: the web app runs fully offline (e.g. GitHub Pages) with no backend required.',
     },
     // Profiles page
     profiles: {
@@ -843,6 +907,31 @@ export const en: LandingTranslationKeys = {
       article3: 'API documentation',
       article3Desc: 'Full API reference for developers',
     },
+    firstSteps: {
+      title: 'First steps with Fluxby',
+      subtitle:
+        'Get started with Fluxby in just a few minutes. This guide walks you through the new onboarding flow.',
+      step1Title: 'Step 1: Log in & onboarding',
+      step1Text:
+        'When you open Fluxby for the first time, you will be guided through a short onboarding wizard. You can log in, set a password, and create your first profile (e.g., "Personal" or "Family").',
+      step2Title: 'Step 2: Export from your bank',
+      step2Text:
+        'Log in to your online banking and export your transactions as a CSV file. Most banks offer this in the "Export" or "Download" section.',
+      step3Title: 'Step 3: Import your transactions',
+      step3Text:
+        'Go to the Import page in Fluxby and drag your CSV file, or click to browse. Fluxby will automatically detect the format and import your transactions.',
+      step4Title: 'Step 4: Categorize transactions',
+      step4Text:
+        'After importing, go to the Transactions page to categorize your transactions. Click a transaction to assign a category. Fluxby learns from your choices and will auto-categorize similar transactions in the future.',
+      step5Title: 'Step 5: Explore your dashboard',
+      step5Text:
+        'Now go to the Dashboard to see your financial overview! You will see your balance, spending per category, and recent transactions.',
+      nextStepsTitle: 'What next?',
+      next1: 'Set budgets to track your spending goals',
+      next2: 'Create custom categories for better organization',
+      next3: 'Add contacts in the Address Book to track who you transact with',
+      next4: 'Import transactions regularly to keep your data up to date',
+    },
     bankConnection: {
       title: 'Connecting your bank account',
       subtitle:
@@ -908,16 +997,16 @@ export const en: LandingTranslationKeys = {
       fullControlDesc: 'Delete all data anytime',
       howWorksTitle: 'How it works',
       howWorksText:
-        'Fluxby uses a local SQLite database stored in your project folder. The API server runs on your machine at localhost:3001, and the web interface at localhost:5173. No external connections are made.',
+        'Fluxby runs entirely in your browser using SQLite with WebAssembly. Your data is stored locally in your browser (OPFS) or on your device when using the desktop app. No servers required, no external connections made.',
       dataLocationTitle: 'Where is my data stored?',
       dataLocationText:
-        'Your data is stored in a file called fluxby.db in the data/ folder of your Fluxby installation. You can back up this file to save your data, or delete it to start fresh.',
+        'Your data is stored in your browser using OPFS (Origin Private File System) for the web app, or in your local app data folder for the desktop app. Your data never leaves your device.',
       deleteDataTitle: 'Deleting your data',
       deleteDataText:
-        "To completely remove all your financial data, you can use the Data Management section in Settings, or simply delete the fluxby.db file. There's no account to close or data to request - it's all local.",
+        "To completely remove all your financial data, you can use the Data Management section in Settings, or clear your browser data. There's no account to close or data to request - it's all local.",
       warningTitle: 'Important',
       warningText:
-        "Since all data is stored locally, make sure to back up your fluxby.db file if you want to preserve your data. There's no cloud backup!",
+        'Since all data is stored locally, consider exporting your data regularly if you want to preserve it. You can sync between devices using the peer-to-peer sync feature.',
     },
     devIntro: {
       title: 'Developer Hub',
@@ -925,7 +1014,7 @@ export const en: LandingTranslationKeys = {
         'Build integrations with the Fluxby API. Access your financial data programmatically.',
       quickStartTitle: 'Quick Start',
       quickStartText:
-        'The Fluxby API runs locally at http://localhost:3001/api. No API keys or authentication required for local development.',
+        'For development and headless mode, run the Fluxby API server locally at http://localhost:3001/api. The main web app runs entirely in your browser - no backend required.',
       whatCanBuildTitle: 'What can you build?',
       customDashboards: 'Custom Dashboards',
       customDashboardsDesc:

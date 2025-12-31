@@ -1,0 +1,67 @@
+name: 'Build Tauri (PR Check)'
+
+on:
+  pull_request:
+    paths:
+      - 'apps/tauri/**'
+      - 'apps/web/**'
+      - 'packages/**'
+      - '.github/workflows/tauri-*.yml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-check:
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [macos-latest, ubuntu-22.04, windows-latest]
+
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-action@stable
+
+      - name: Install Linux dependencies
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libappindicator3-dev \
+            librsvg2-dev \
+            patchelf \
+            libssl-dev
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build shared package
+        run: npm run build -w packages/shared
+
+      - name: Build database package
+        run: npm run build -w packages/database
+
+      - name: Build web app
+        run: npm run build:web
+
+      - name: Check Rust compilation
+        working-directory: apps/tauri
+        run: cargo check
+
+      - name: Build Tauri app (debug)
+        working-directory: apps/tauri
+        run: npx tauri build --debug
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ''

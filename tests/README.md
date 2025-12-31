@@ -11,6 +11,13 @@ tests/
 ├── api/                  # API/Backend tests
 │   ├── routes/           # Route handler tests
 │   └── services/         # Service layer tests
+├── database/             # Database package tests
+│   ├── encryption.test.ts
+│   ├── offline.test.ts
+│   ├── session.test.ts
+│   ├── sync.test.ts
+│   ├── errors.test.ts
+│   └── backup.test.ts
 ├── web/                  # Frontend tests
 │   ├── components/       # Component tests
 │   ├── hooks/            # Custom hook tests
@@ -29,25 +36,33 @@ npm run test:run
 
 # Run tests with coverage report
 npm run test:coverage
+
+# Run specific test folder
+npm run test:run -- tests/database/
 ```
 
 ## Test Coverage Overview
 
-| Module | Category | File                      | Tests                                           | Status     |
-| ------ | -------- | ------------------------- | ----------------------------------------------- | ---------- |
-| shared | utils    | `utils.ts`                | `formatCurrency`, `cn`, `findSimilarNameGroups` | ✅ Covered |
-| api    | utils    | `addressbook-utils.ts`    | Regex safety, cleanup rules                     | ✅ Covered |
-| api    | services | `csv-parser.ts`           | CSV parsing logic                               | 🔲 Pending |
-| api    | services | `categorization.ts`       | Auto-categorization                             | 🔲 Pending |
-| api    | services | `analytics.ts`            | Analytics calculations                          | 🔲 Pending |
-| api    | routes   | `transactions.ts`         | Transaction CRUD                                | 🔲 Pending |
-| api    | routes   | `addressbook.ts`          | Address book endpoints                          | 🔲 Pending |
-| api    | routes   | `categories.ts`           | Category management                             | 🔲 Pending |
-| api    | routes   | `budgets.ts`              | Budget calculations                             | 🔲 Pending |
-| web    | utils    | `api.ts`                  | API client functions                            | 🔲 Pending |
-| web    | utils    | `contact-filter.ts`       | Contact search/filter/sort logic                | ✅ Covered |
-| web    | hooks    | `useDocumentTitle.ts`     | Document title hook                             | 🔲 Pending |
-| web    | hooks    | `useTransactionTotals.ts` | Transaction totals calculation                  | 🔲 Pending |
+| Module   | Category   | File                   | Tests                                            | Status     |
+| -------- | ---------- | ---------------------- | ------------------------------------------------ | ---------- |
+| database | encryption | `encryption.ts`        | Key generation, wrap/unwrap, encrypt/decrypt     | ✅ Covered |
+| database | offline    | `offline.ts`           | SyncQueue, ConnectivityMonitor                   | ✅ Covered |
+| database | session    | `session.ts`           | SessionManager, auto-lock, master key management | ✅ Covered |
+| database | sync       | `sync.ts`              | LWW merge, clock drift, syncable row helpers     | ✅ Covered |
+| database | errors     | `errors.ts`            | Error types, formatting, recoverability          | ✅ Covered |
+| database | backup     | `backup.ts`            | Serialize/deserialize, filename, size estimation | ✅ Covered |
+| shared   | utils      | `utils.ts`             | `formatCurrency`, `cn`, `findSimilarNameGroups`  | ✅ Covered |
+| api      | utils      | `addressbook-utils.ts` | Regex safety, cleanup rules                      | ✅ Covered |
+| api      | services   | `csv-parser.ts`        | CSV parsing logic                                | 🔲 Pending |
+| api      | services   | `categorization.ts`    | Auto-categorization                              | 🔲 Pending |
+| api      | services   | `analytics.ts`         | Analytics calculations                           | 🔲 Pending |
+| api      | routes     | `transactions.ts`      | Transaction CRUD                                 | 🔲 Pending |
+| api      | routes     | `addressbook.ts`       | Address book endpoints                           | 🔲 Pending |
+| api      | routes     | `categories.ts`        | Category management                              | 🔲 Pending |
+| api      | routes     | `budgets.ts`           | Budget calculations                              | 🔲 Pending |
+| web      | utils      | `api.ts`               | API client functions                             | 🔲 Pending |
+| web      | utils      | `contact-filter.ts`    | Contact search/filter/sort logic                 | ✅ Covered |
+| web      | hooks      | `useDocumentTitle.ts`  | Document title hook                              | 🔲 Pending |
 
 ### Legend
 

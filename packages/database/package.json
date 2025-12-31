@@ -1,0 +1,50 @@
+{
+  "name": "@fluxby/database",
+  "version": "1.0.0",
+  "description": "Universal database layer for Fluxby - SQLite WASM with storage adapters",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./web": {
+      "types": "./dist/adapters/web.d.ts",
+      "import": "./dist/adapters/web.js"
+    },
+    "./tauri": {
+      "types": "./dist/adapters/tauri.d.ts",
+      "import": "./dist/adapters/tauri.js"
+    },
+    "./node": {
+      "types": "./dist/adapters/node.d.ts",
+      "import": "./dist/adapters/node.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@journeyapps/wa-sqlite": "^1.4.1",
+    "peerjs": "^1.5.4"
+  },
+  "peerDependencies": {
+    "@tauri-apps/api": "^2.0.0",
+    "@tauri-apps/plugin-fs": "^2.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@tauri-apps/api": {
+      "optional": true
+    },
+    "@tauri-apps/plugin-fs": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2"
+  }
+}

@@ -1,0 +1,33 @@
+meta {
+  name: Get Cleanup Rules
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/addressbook/cleanup-rules
+  body: none
+  auth: none
+}
+
+docs {
+  # Get Cleanup Rules
+  
+  Retrieves name cleanup rules used for normalizing merchant names.
+  
+  ## Response
+  
+  ```json
+  {
+    "success": true,
+    "data": [
+      {
+        "id": 1,
+        "pattern": "/\\d{6,}/gi",
+        "replacement": "",
+        "isActive": true
+      }
+    ]
+  }
+  ```
+}

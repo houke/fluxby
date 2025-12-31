@@ -7,6 +7,10 @@ import process from 'node:process';
 const root = process.cwd();
 const distRoot = path.join(root, 'dist');
 
+function log(message) {
+  console.log(`\x1b[32m[build-dist]\x1b[0m ${message}`);
+}
+
 function run(cmd, args) {
   const result = spawnSync(cmd, args, {
     stdio: 'inherit',
@@ -72,7 +76,44 @@ async function main() {
     path.join(distRoot, 'packages', 'shared', 'dist')
   );
 
-  // 4) Create dist/data and copy an existing DB if present
+  // 4) Copy Tauri installers if they exist
+  const tauriBundleDir = path.join(
+    root,
+    'apps',
+    'tauri',
+    'target',
+    'release',
+    'bundle'
+  );
+  if (existsSync(tauriBundleDir)) {
+    const installersDist = path.join(distRoot, 'installers');
+    await ensureDir(installersDist);
+
+    // Use find to locate .dmg and .app files in the bundle directory
+    const findResult = spawnSync(
+      'find',
+      [tauriBundleDir, '-name', '*.dmg', '-o', '-name', '*.app', '-maxdepth', '2'],
+      { encoding: 'utf-8' }
+    );
+
+    if (findResult.status === 0) {
+      const files = findResult.stdout.split('\n').filter(Boolean);
+      for (const file of files) {
+        const fileName = path.basename(file);
+        // Skip hidden/temporary files
+        if (fileName.startsWith('.')) continue;
+
+        log(`Copying installer: ${fileName}`);
+        if (fileName.endsWith('.app')) {
+          await copyDir(file, path.join(installersDist, fileName));
+        } else {
+          await copyFileIfExists(file, path.join(installersDist, fileName));
+        }
+      }
+    }
+  }
+
+  // 5) Create dist/data and copy an existing DB if present
   await ensureDir(path.join(distRoot, 'data'));
   await copyFileIfExists(
     path.join(root, 'data', 'fluxby.db'),

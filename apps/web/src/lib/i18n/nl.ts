@@ -58,6 +58,53 @@ export interface TranslationKeys {
     monthsShort: string[];
     noResults: string;
     or: string;
+    initializingDatabase: string;
+    user: string;
+    backToHomepage: string;
+    loadingUserData: string;
+    prepareDashboard: string;
+  };
+  errors: {
+    databaseError: string;
+    databaseErrorDescription: string;
+    resetDatabase: string;
+  };
+  security: {
+    setupTitle: string;
+    setupDescription: string;
+    unlockTitle: string;
+    unlockDescription: string;
+    recoveryWarning: string;
+    newPassword: string;
+    enterPassword: string;
+    confirmPassword: string;
+    createPassword: string;
+    unlock: string;
+    useBiometric: string;
+    wrongPassword: string;
+    passwordTooShort: string;
+    passwordsNoMatch: string;
+    setupError: string;
+    unlockError: string;
+    biometricFailed: string;
+    biometricError: string;
+    changePassword: string;
+    currentPassword: string;
+    enableBiometric: string;
+    disableBiometric: string;
+    autoLockTimeout: string;
+    passwordChanged: string;
+    biometricEnabled: string;
+    biometricDisabled: string;
+    lockNow: string;
+    securitySettings: string;
+    minutes: string;
+    forgotPassword: string;
+    forgotPasswordDialogTitle: string;
+    forgotPasswordDialogDescription: string;
+    forgotPasswordDialogWarning: string;
+    resetDatabase: string;
+    passwordChangedSuccess: string;
   };
   nav: {
     dashboard: string;
@@ -169,6 +216,7 @@ export interface TranslationKeys {
     amount: string;
     addToAddressBook: string;
     savedToAddressBook: string;
+    createContactError: string;
     inAddressBook: string;
     recurringHistory: string;
     totalThisPeriod: string;
@@ -396,7 +444,7 @@ export interface TranslationKeys {
     bank: string;
     account: string;
     howToExport: string;
-    ingInstructions: string[];
+    bankInstructions: string[];
     note: string;
     noteDescription: string;
     completed: string;
@@ -628,6 +676,30 @@ export interface TranslationKeys {
       deleteBudgetsSuccess: string;
       deleteBudgetsError: string;
     };
+    sync: {
+      title: string;
+      description: string;
+      thisDevice: string;
+      pairingCode: string;
+      pairingCodeDescription: string;
+      generateCode: string;
+      connectToDevice: string;
+      enterCode: string;
+      enterCodeDescription: string;
+      connect: string;
+      connectionFailed: string;
+      pairedDevices: string;
+      lastSync: string;
+      neverSynced: string;
+      removeDevice: string;
+      pairingRequest: string;
+      pairingRequestDescription: string;
+      accept: string;
+      ready: string;
+      initializing: string;
+      cannotConnectToSelf: string;
+      peerUnavailable: string;
+    };
   };
   help: {
     title: string;
@@ -676,6 +748,7 @@ export interface TranslationKeys {
     loadMore: string;
     remaining: string;
     contactAdded: string;
+    contactUpdated: string;
     contactDeleted: string;
     // Cleanup rules
     cleanupRules: string;
@@ -729,6 +802,7 @@ export interface TranslationKeys {
     errorAddingContact: string;
     errorAddingIban: string;
     errorMergingContacts: string;
+    createError: string;
     ruleAdded: string;
     ruleAppliedAuto: string;
     ruleExists: string;
@@ -958,6 +1032,58 @@ export const nl: TranslationKeys = {
     optional: 'optioneel',
     noResults: 'Geen resultaten',
     or: 'of',
+    initializingDatabase: 'Database initialiseren...',
+    user: 'Gebruiker',
+    backToHomepage: 'Terug naar homepage',
+    loadingUserData: 'Gebruikersgegevens laden...',
+    prepareDashboard: 'Even geduld terwijl we je dashboard voorbereiden',
+  },
+  errors: {
+    databaseError: 'Database fout',
+    databaseErrorDescription:
+      'Er is een fout opgetreden bij het initialiseren van de database. Probeer de pagina te vernieuwen.',
+    resetDatabase: 'Reset database',
+  },
+  security: {
+    setupTitle: 'Hoofdwachtwoord instellen',
+    setupDescription:
+      'Maak een hoofdwachtwoord om je gegevens te beschermen. Dit wachtwoord kan niet worden hersteld als je het vergeet.',
+    unlockTitle: 'Ontgrendel Fluxby',
+    unlockDescription:
+      'Voer je hoofdwachtwoord in om toegang te krijgen tot je gegevens.',
+    recoveryWarning:
+      'Let op: Je wachtwoord kan niet worden hersteld. Als je het vergeet, zijn al je gegevens permanent ontoegankelijk.',
+    newPassword: 'Wachtwoord aanmaken',
+    enterPassword: 'Wachtwoord invoeren',
+    confirmPassword: 'Wachtwoord bevestigen',
+    createPassword: 'Wachtwoord aanmaken',
+    unlock: 'Ontgrendelen',
+    useBiometric: 'Gebruik biometrisch',
+    wrongPassword: 'Onjuist wachtwoord',
+    passwordTooShort: 'Wachtwoord moet minimaal 8 tekens bevatten',
+    passwordsNoMatch: 'Wachtwoorden komen niet overeen',
+    setupError: 'Fout bij instellen hoofdwachtwoord',
+    unlockError: 'Fout bij ontgrendelen',
+    biometricFailed: 'Biometrische authenticatie mislukt',
+    biometricError: 'Biometrische fout',
+    changePassword: 'Wachtwoord wijzigen',
+    currentPassword: 'Huidig wachtwoord',
+    enableBiometric: 'Biometrisch inschakelen',
+    disableBiometric: 'Biometrisch uitschakelen',
+    autoLockTimeout: 'Automatisch vergrendelen na',
+    passwordChanged: 'Wachtwoord gewijzigd',
+    biometricEnabled: 'Biometrisch ingeschakeld',
+    biometricDisabled: 'Biometrisch uitgeschakeld',
+    lockNow: 'Nu vergrendelen',
+    securitySettings: 'Beveiligingsinstellingen',
+    minutes: 'minuten',
+    forgotPassword: 'Wachtwoord vergeten?',
+    forgotPasswordDialogTitle: 'Lokale gegevens resetten?',
+    forgotPasswordDialogDescription:
+      'Fluxby kan je hoofdwachtwoord niet herstellen. Reset zorgt ervoor dat je lokale database wordt verwijderd en je opnieuw door de onboarding gaat.',
+    forgotPasswordDialogWarning: 'Deze actie kan niet ongedaan worden gemaakt.',
+    resetDatabase: 'Reset database',
+    passwordChangedSuccess: 'Je master wachtwoord is succesvol gewijzigd.',
   },
   nav: {
     dashboard: 'Dashboard',
@@ -1018,7 +1144,7 @@ export const nl: TranslationKeys = {
     netResult: 'Netto resultaat',
     toSavings: 'Sparen',
     noIncome: 'Geen inkomsten deze maand',
-    noComparison: 'Geen data beschikbaar voor vergelijijng',
+    noComparison: 'Geen data beschikbaar voor vergelijking',
     monthlyIncome: 'Maandelijkse inkomsten',
     incomeVsExpenses: 'Inkomsten vs uitgaven',
     dailyExpenses: 'Dagelijkse uitgaven',
@@ -1070,6 +1196,7 @@ export const nl: TranslationKeys = {
     amount: 'Bedrag',
     addToAddressBook: 'Toevoegen aan adresboek',
     savedToAddressBook: 'Toegevoegd aan adresboek',
+    createContactError: 'Fout bij aanmaken contact',
     inAddressBook: 'In adresboek',
     recurringHistory: 'Terugkerende historie',
     totalThisPeriod: 'Totaal deze periode',
@@ -1316,9 +1443,9 @@ export const nl: TranslationKeys = {
     bank: 'Bank',
     account: 'Rekening',
     howToExport: 'Hoe exporteer ik mijn transacties?',
-    ingInstructions: [
-      'Log in op Mijn ING',
-      'Ga naar Betalen > Af- en bijschrijvingen',
+    bankInstructions: [
+      'Log in op de portal van je bank',
+      'Ga naar Betalen > Transacties',
       'Klik op Downloaden',
       'Selecteer periode en download als CSV',
     ],
@@ -1461,7 +1588,7 @@ export const nl: TranslationKeys = {
       deleteConfirm:
         'Weet je zeker dat je deze rekening wilt verwijderen? Alle gekoppelde transacties worden ook verwijderd.',
       addTitle: 'Nieuwe rekening toevoegen',
-      ibanPlaceholder: 'IBAN (bijv. NL00INGB0123456789)',
+      ibanPlaceholder: 'IBAN (bijv. NL00BANK0123456789)',
       namePlaceholder: 'Naam',
       add: 'Toevoegen',
       orderSaved: 'Volgorde rekeningen opgeslagen',
@@ -1588,6 +1715,34 @@ export const nl: TranslationKeys = {
         'Weet je zeker dat je alle budgetten van dit profiel wilt verwijderen?',
       deleteBudgetsSuccess: 'Alle budgetten zijn verwijderd',
       deleteBudgetsError: 'Er is een fout opgetreden bij het verwijderen',
+    },
+    sync: {
+      title: 'Apparaten synchroniseren',
+      description:
+        'Synchroniseer je gegevens tussen apparaten via peer-to-peer verbindingen. Geen server nodig.',
+      thisDevice: 'Dit apparaat',
+      pairingCode: 'Koppelingscode',
+      pairingCodeDescription:
+        'Deel deze code met een ander apparaat om te verbinden.',
+      generateCode: 'Koppelingscode genereren',
+      connectToDevice: 'Verbinden met apparaat',
+      enterCode: 'Voer code in',
+      enterCodeDescription:
+        'Voer de koppelingscode in die wordt weergegeven op het andere apparaat.',
+      connect: 'Verbinden',
+      connectionFailed: 'Verbinding mislukt',
+      cannotConnectToSelf: 'Je kunt niet met jezelf verbinden',
+      peerUnavailable:
+        'Peer onbereikbaar (controleer code en of de ander online is)',
+      pairedDevices: 'Gekoppelde apparaten',
+      lastSync: 'Laatste sync',
+      neverSynced: 'Nog niet gesynchroniseerd',
+      removeDevice: 'Apparaat verwijderen',
+      pairingRequest: 'Koppelingsverzoek',
+      pairingRequestDescription: '{device} wil verbinden',
+      accept: 'Accepteren',
+      ready: 'Gereed',
+      initializing: 'Initialiseren...',
     },
   },
   help: {
@@ -1724,6 +1879,7 @@ export const nl: TranslationKeys = {
     loadMore: 'Meer laden',
     remaining: 'resterend',
     contactAdded: 'Contact toegevoegd',
+    contactUpdated: 'Contact bijgewerkt',
     contactDeleted: 'Contact verwijderd',
     // Cleanup rules
     cleanupRules: 'Bewerk opschoon regels',
@@ -1778,6 +1934,7 @@ export const nl: TranslationKeys = {
     errorAddingContact: 'Fout bij toevoegen contact',
     errorAddingIban: 'Fout bij toevoegen IBAN',
     errorMergingContacts: 'Fout bij samenvoegen contacten',
+    createError: 'Fout bij aanmaken contact',
     ruleAdded: 'Opschoonregel toegevoegd',
     ruleAppliedAuto:
       'Regel toegevoegd en toegepast: {addressBook} contacten, {transactions} transacties bijgewerkt',

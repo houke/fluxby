@@ -21,14 +21,6 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from '@/components/ui/command';
-import {
   Card,
   CardContent,
   CardHeader,
@@ -59,8 +51,8 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useProfile } from '@/contexts/ProfileContext';
 
 interface Budget {
-  id: number;
-  categoryId: number | null;
+  id: string;
+  categoryId: string | null;
   amount: number;
   period: 'monthly' | 'yearly';
   spent: number;
@@ -72,11 +64,11 @@ interface Budget {
 }
 
 interface Category {
-  id: number;
+  id: string;
   name: string;
   icon: string | null;
   color: string | null;
-  parent_id?: number | null;
+  parentId?: string | null;
 }
 
 type SortOption = 'name' | 'spent' | 'percentage' | 'amount';
@@ -123,6 +115,7 @@ export default function Budgets() {
 
   // Search and sort state
   const [search, setSearch] = useState('');
+  const [categorySearch, setCategorySearch] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>('name');
 
   // Sort switch refs
@@ -135,12 +128,12 @@ export default function Budgets() {
   const [openCategorySelect, setOpenCategorySelect] = useState(false);
 
   // Edit state
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [editAmount, setEditAmount] = useState('');
 
   // Proposed budgets state
   const [proposedModalOpen, setProposedModalOpen] = useState(false);
-  const [selectedProposals, setSelectedProposals] = useState<Set<number>>(
+  const [selectedProposals, setSelectedProposals] = useState<Set<string>>(
     new Set()
   );
 
@@ -151,11 +144,13 @@ export default function Budgets() {
   const { data: budgets, isLoading } = useQuery<Budget[]>({
     queryKey: ['budgets', activeProfileId, startDate, endDate],
     queryFn: () =>
-      api.getBudgets(undefined, startDate, endDate) as Promise<Budget[]>,
+      api.getBudgets(undefined, startDate, endDate) as unknown as Promise<
+        Budget[]
+      >,
   });
 
   const { data: categories } = useQuery<Category[]>({
-    queryKey: ['categories', activeProfileId],
+    queryKey: ['categories', activeProfileId, false],
     queryFn: () => api.getCategories() as Promise<Category[]>,
   });
 
@@ -164,7 +159,7 @@ export default function Budgets() {
     queryFn: () =>
       api.getProposedBudgets() as Promise<
         {
-          categoryId: number;
+          categoryId: string;
           categoryName: string;
           categoryIcon: string | null;
           categoryColor: string | null;
@@ -194,7 +189,7 @@ export default function Budgets() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, amount }: { id: number; amount: number }) =>
+    mutationFn: ({ id, amount }: { id: string; amount: number }) =>
       api.updateBudget(id, { amount }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['budgets', activeProfileId] });
@@ -204,7 +199,7 @@ export default function Budgets() {
   });
 
   const createMultipleMutation = useMutation({
-    mutationFn: async (budgets: { categoryId: number; amount: number }[]) => {
+    mutationFn: async (budgets: { categoryId: string; amount: number }[]) => {
       for (const budget of budgets) {
         await api.createBudget(budget);
       }
@@ -231,7 +226,7 @@ export default function Budgets() {
     if (isNaN(amount) || amount <= 0) return;
 
     createMutation.mutate({
-      categoryId: newBudgetCategory ? parseInt(newBudgetCategory) : undefined,
+      categoryId: newBudgetCategory || undefined,
       amount,
       period: 'monthly',
     });
@@ -255,7 +250,7 @@ export default function Budgets() {
   };
 
   // Get category info by ID
-  const getCategoryInfo = (categoryId: number | null) => {
+  const getCategoryInfo = (categoryId: string | null) => {
     if (!categoryId || !categories) return null;
     return categories.find((c) => c.id === categoryId);
   };
@@ -343,28 +338,44 @@ export default function Budgets() {
     totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
 
   const usedCategoryIds = new Set(
-    budgets?.map((b) => b.categoryId).filter((id): id is number => id !== null)
+    budgets?.map((b) => b.categoryId).filter((id): id is string => id !== null)
   );
   const availableCategories = categories?.filter(
     (cat) => !usedCategoryIds.has(cat.id)
   );
 
-  // Group categories by parent
+  // Group categories by parent for the dropdown - mimic TransactionRowBadges logic
   const groupedCategories = useMemo(() => {
-    if (!availableCategories) return {};
-    const groups: Record<string, Category[]> = {};
-    const parentMap = new Map(categories?.map((c) => [c.id, c]));
+    if (!availableCategories || !categories) return [];
 
-    availableCategories.forEach((cat) => {
-      const parentName = cat.parent_id
-        ? parentMap.get(cat.parent_id)?.name || 'Other'
-        : 'Main Categories';
-      if (!groups[parentName]) groups[parentName] = [];
-      groups[parentName].push(cat);
-    });
+    const parents = categories
+      .filter((c) => !c.parentId)
+      .sort((a, b) => a.name.localeCompare(b.name));
 
-    return groups;
+    return parents
+      .map((parent) => {
+        const children = availableCategories
+          .filter((c) => c.parentId === parent.id)
+          .sort((a, b) => a.name.localeCompare(b.name));
+        return { parent, children };
+      })
+      .filter((group) => group.children.length > 0);
   }, [availableCategories, categories]);
+
+  // Filter grouped categories based on search
+  const filteredGroupedCategories = useMemo(() => {
+    const searchLower = categorySearch.toLowerCase();
+    if (!searchLower) return groupedCategories;
+
+    return groupedCategories
+      .map((group) => ({
+        ...group,
+        children: group.children.filter((c) =>
+          c.name.toLowerCase().includes(searchLower)
+        ),
+      }))
+      .filter((group) => group.children.length > 0);
+  }, [groupedCategories, categorySearch]);
 
   const selectedCategory = categories?.find(
     (c) => c.id.toString() === newBudgetCategory
@@ -428,7 +439,10 @@ export default function Budgets() {
             <div className='flex flex-wrap gap-4'>
               <Popover
                 open={openCategorySelect}
-                onOpenChange={setOpenCategorySelect}
+                onOpenChange={(open) => {
+                  setOpenCategorySelect(open);
+                  if (!open) setCategorySearch('');
+                }}
               >
                 <PopoverTrigger asChild>
                   <Button
@@ -452,75 +466,72 @@ export default function Budgets() {
                         {selectedCategory?.name}
                       </div>
                     ) : (
-                      t.budgets.totalBudget
+                      'Select Category'
                     )}
                     <ChevronUp className='ml-2 h-4 w-4 shrink-0 opacity-50' />
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className='w-[250px] p-0'>
-                  <Command>
-                    <CommandInput placeholder={t.common.search} />
-                    <CommandList>
-                      <CommandEmpty>{t.common.noResults}</CommandEmpty>
-                      <CommandGroup>
-                        <CommandItem
-                          value='total_budget_option'
-                          onSelect={() => {
-                            setNewBudgetCategory('');
-                            setOpenCategorySelect(false);
-                          }}
-                        >
-                          <Check
-                            className={cn(
-                              'mr-2 h-4 w-4',
-                              newBudgetCategory === ''
-                                ? 'opacity-100'
-                                : 'opacity-0'
-                            )}
-                          />
-                          {t.budgets.totalBudget}
-                        </CommandItem>
-                      </CommandGroup>
-                      {Object.entries(groupedCategories).map(
-                        ([group, items]) => (
-                          <CommandGroup key={group} heading={group}>
-                            {items.map((category) => (
-                              <CommandItem
+                <PopoverContent className='w-[250px] p-2' align='start'>
+                  <div className='space-y-2'>
+                    <Input
+                      placeholder={t.common.search}
+                      value={categorySearch}
+                      onChange={(e) => setCategorySearch(e.target.value)}
+                      className='h-8 text-sm'
+                      autoFocus
+                    />
+                    <div className='max-h-60 space-y-1 overflow-y-auto'>
+                      {filteredGroupedCategories.length > 0 ? (
+                        filteredGroupedCategories.map((group) => (
+                          <div key={group.parent.id}>
+                            <div className='flex items-center gap-2 py-1.5'>
+                              <div className='h-px flex-1 border-t border-dotted border-muted-foreground/30' />
+                              <span className='whitespace-nowrap text-xs text-muted-foreground'>
+                                {group.parent.name}
+                              </span>
+                              <div className='h-px flex-1 border-t border-dotted border-muted-foreground/30' />
+                            </div>
+                            {group.children.map((category) => (
+                              <button
                                 key={category.id}
-                                value={category.name}
-                                onSelect={() => {
-                                  setNewBudgetCategory(category.id.toString());
+                                className={cn(
+                                  'flex w-full items-center gap-2 rounded px-2 py-1.5 text-sm transition-colors hover:bg-muted',
+                                  newBudgetCategory === category.id &&
+                                    'bg-muted'
+                                )}
+                                onClick={() => {
+                                  setNewBudgetCategory(category.id);
                                   setOpenCategorySelect(false);
+                                  setCategorySearch('');
                                 }}
                               >
-                                <Check
-                                  className={cn(
-                                    'mr-2 h-4 w-4',
-                                    newBudgetCategory === category.id.toString()
-                                      ? 'opacity-100'
-                                      : 'opacity-0'
-                                  )}
-                                />
-                                <div className='flex items-center gap-2'>
-                                  <span
-                                    className='flex h-5 w-5 items-center justify-center rounded text-xs'
-                                    style={{
-                                      backgroundColor: `${
-                                        category.color || '#9CA3AF'
-                                      }5C`,
-                                    }}
-                                  >
-                                    {category.icon}
-                                  </span>
+                                <span
+                                  className='flex h-5 w-5 items-center justify-center rounded text-xs'
+                                  style={{
+                                    backgroundColor: `${
+                                      category.color || '#9CA3AF'
+                                    }5C`,
+                                  }}
+                                >
+                                  {category.icon}
+                                </span>
+                                <span className='truncate'>
                                   {category.name}
-                                </div>
-                              </CommandItem>
+                                </span>
+                                {newBudgetCategory === category.id && (
+                                  <Check className='ml-auto h-3 w-3 text-primary' />
+                                )}
+                              </button>
                             ))}
-                          </CommandGroup>
-                        )
+                          </div>
+                        ))
+                      ) : (
+                        <div className='py-6 text-center text-sm text-muted-foreground'>
+                          {t.common.noResults}
+                        </div>
                       )}
-                    </CommandList>
-                  </Command>
+                    </div>
+                  </div>
                 </PopoverContent>
               </Popover>
 
@@ -533,7 +544,7 @@ export default function Budgets() {
               />
               <Button
                 onClick={handleCreateBudget}
-                disabled={createMutation.isPending}
+                disabled={createMutation.isPending || !newBudgetCategory}
               >
                 <Plus className='mr-2 h-4 w-4' />
                 {t.budgets.add}
@@ -701,21 +712,21 @@ export default function Budgets() {
               </span>
               <div
                 ref={sortSwitchOuterRef}
-                className='relative inline-flex items-center rounded-lg bg-muted p-1'
+                className='relative inline-flex items-center rounded-lg border border-border bg-muted/50 p-0.5'
               >
                 {/* Sliding indicator */}
                 <div
                   ref={sortIndicatorRef}
-                  className='absolute top-1 h-[calc(100%-8px)] rounded-md bg-background shadow-sm transition-all duration-200 ease-out'
+                  className='absolute top-0.5 h-[calc(100%-4px)] rounded-md bg-purple-600 shadow-sm transition-all duration-200 ease-out'
                 />
                 {sortOptions.map((option) => (
                   <button
                     key={option.key}
                     onClick={() => setSortBy(option.key)}
                     className={cn(
-                      'relative z-10 whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
+                      'relative z-10 whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-medium transition-colors',
                       sortBy === option.key
-                        ? 'text-foreground'
+                        ? 'text-white'
                         : 'text-muted-foreground hover:text-foreground'
                     )}
                   >
@@ -761,7 +772,7 @@ export default function Budgets() {
                         setTransactionType('all');
                         clearOpposingAccountFilters();
                         setCategories([budget.categoryId]);
-                        navigate('/transactions');
+                        navigate('/transactions/');
                       }
                     }}
                     {...(isFirstBudget
@@ -860,7 +871,7 @@ export default function Budgets() {
                         ) : (
                           <>
                             <span className='text-sm text-muted-foreground'>
-                              {budget.percentage.toFixed(0)}%
+                              {(budget.percentage ?? 0).toFixed(0)}%
                             </span>
                             <Button
                               variant='ghost'

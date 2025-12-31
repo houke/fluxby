@@ -95,7 +95,7 @@ router.get('/', (req, res) => {
     const profileId = getEffectiveProfileId(req);
 
     const filters: TransactionFilters = {
-      profileId, // Filter transactions by profile for data isolation
+      profileId: String(profileId), // Filter transactions by profile for data isolation
       startDate: req.query.startDate as string | undefined,
       endDate: req.query.endDate as string | undefined,
       minAmount: req.query.minAmount
@@ -106,13 +106,13 @@ router.get('/', (req, res) => {
         : undefined,
       type: req.query.type as 'income' | 'expense' | 'transfer' | undefined,
       categoryId: req.query.categoryId
-        ? parseInt(req.query.categoryId as string)
+        ? (req.query.categoryId as string)
         : undefined,
       categoryIds: req.query.categoryIds
-        ? (req.query.categoryIds as string).split(',').map(Number)
+        ? (req.query.categoryIds as string).split(',')
         : undefined,
       accountId: req.query.accountId
-        ? parseInt(req.query.accountId as string)
+        ? (req.query.accountId as string)
         : undefined,
       search: req.query.search as string | undefined,
       opposingAccountIban: req.query.opposingAccountIban as string | undefined,
@@ -127,7 +127,7 @@ router.get('/', (req, res) => {
         ? (req.query.paymentProviders as string).split(',')
         : undefined,
       addressBookId: req.query.addressBookId
-        ? parseInt(req.query.addressBookId as string)
+        ? (req.query.addressBookId as string)
         : undefined,
     };
 
@@ -177,23 +177,24 @@ router.get('/:id', (req, res) => {
     }
 
     const transaction: Transaction = {
-      id: row.id,
+      id: String(row.id),
       date: row.date,
       amount: row.amount,
       type: row.type as 'income' | 'expense' | 'transfer',
       description: row.description,
       merchantName: row.merchant_name,
-      accountId: row.account_id,
+      accountId: String(row.account_id),
       opposingAccountIban: row.opposing_account_iban,
       opposingAccountName: row.opposing_account_name,
-      categoryId: row.category_id,
+      categoryId: row.category_id != null ? String(row.category_id) : null,
       notes: row.notes,
       paymentMethod: row.payment_method,
       rawData: row.raw_data,
       importHash: row.import_hash,
       createdAt: row.created_at,
       paymentProvider: row.payment_provider, // Use stored value
-      addressBookId: row.address_book_id,
+      addressBookId:
+        row.address_book_id != null ? String(row.address_book_id) : null,
     };
 
     res.json({ success: true, data: transaction });

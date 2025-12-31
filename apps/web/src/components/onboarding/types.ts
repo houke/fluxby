@@ -31,6 +31,11 @@ export interface OnboardingState {
 export interface OnboardingContextType {
   state: OnboardingState;
   isCreatingDemo: boolean;
+  // Security setup needed - true when encryption is not yet configured
+  needsSecuritySetup: boolean;
+  // Onboarding tour - true when demo profile/user not set up (after security setup)
+  needsOnboarding: boolean;
+  isLoadingUser: boolean;
   // Navigation
   startOnboarding: (restart?: boolean, startAtCurrentPage?: boolean) => void;
   completeOnboarding: () => void;
@@ -42,6 +47,8 @@ export interface OnboardingContextType {
   setLanguage: (language: 'nl' | 'en') => void;
   // User name
   setUserName: (name: string) => void;
+  // Trigger demo profile setup after security setup
+  triggerDemoSetup: () => Promise<void>;
   // Computed values
   currentChapter: OnboardingChapter | null;
   currentStep: OnboardingStep | null;

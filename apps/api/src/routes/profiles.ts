@@ -21,8 +21,8 @@ interface ProfileRow {
 // Convert database row to API response
 function toProfile(row: ProfileRow): Profile {
   return {
-    id: row.id,
-    userId: row.user_id,
+    id: String(row.id),
+    userId: String(row.user_id),
     name: row.name,
     type: row.type,
     avatarUrl: row.avatar_url,
@@ -470,6 +470,11 @@ const PAYMENT_PROCESSORS = [
 // This simulates people who receive payments to different accounts
 const MULTI_IBAN_CONTACTS = [
   {
+    name: 'Albert Heijn',
+    ibans: ['NL00DEMO0001000001', 'NL00DEMO0001000011', 'NL00DEMO0001000021'],
+    descriptions: ['Boodschappen (winkel)', 'Boodschappen (online)', 'Bonus'],
+  },
+  {
     name: 'Jan de Vries',
     ibans: ['NL00DEMO0060000001', 'NL00DEMO0060000002', 'NL00DEMO0060000003'],
     descriptions: ['Freelance werk', 'Terugbetaling', 'Gezamenlijke kosten'],
@@ -607,6 +612,11 @@ router.post('/:id/seed-demo', (req, res) => {
 
     // 4. Generate transactions for 18 months back
     const now = new Date();
+
+    // Rotate IBANs for merchants that also exist as multi-IBAN contacts (e.g. Albert Heijn)
+    const multiIbansByName = new Map(
+      MULTI_IBAN_CONTACTS.map((c) => [c.name, c.ibans] as const)
+    );
     let transactions: Array<{
       date: string;
       amount: number;
@@ -634,6 +644,8 @@ router.post('/:id/seed-demo', (req, res) => {
     // Generate 18 months of data
     for (let monthOffset = 0; monthOffset < 18; monthOffset++) {
       const monthDate = new Date(now);
+      // Anchor to the 1st to avoid month overflow issues (e.g. 31st -> shorter months)
+      monthDate.setDate(1);
       monthDate.setMonth(monthDate.getMonth() - monthOffset);
       const year = monthDate.getFullYear();
       const month = monthDate.getMonth();
@@ -696,62 +708,38 @@ router.post('/:id/seed-demo', (req, res) => {
 
       // Utilities (around 15th)
       for (const utility of DEMO_MERCHANTS.utilities) {
+        const isInternet = utility.name === 'Ziggo';
         transactions.push({
           date: new Date(Date.UTC(year, month, 15)).toISOString().split('T')[0],
-          amount: -randomAmount(80, 150),
+          amount: isInternet ? -55 : -randomAmount(45, 180),
           type: 'expense',
-          description: 'Maandelijkse kosten',
+          description: isInternet ? 'Internet & TV' : 'Energie / water',
           merchant_name: utility.name,
           account_id: mainAccountId,
           opposing_iban: utility.iban,
           opposing_name: utility.name,
-          category_id:
-            utility.name === 'Ziggo'
-              ? categoryIdMap['Mobiel & Internet'] || null
-              : categoryIdMap['Energie & Water'] || null,
+          category_id: isInternet
+            ? categoryIdMap['Mobiel & Internet'] || null
+            : categoryIdMap['Energie & Water'] || null,
           payment_method: 'Incasso',
         });
       }
 
-      // Insurance (around 27th)
-      for (const ins of DEMO_MERCHANTS.insurance) {
-        transactions.push({
-          date: new Date(Date.UTC(year, month, 27)).toISOString().split('T')[0],
-          amount: -randomAmount(100, 180),
-          type: 'expense',
-          description: ins.name.includes('Zilveren')
-            ? 'Zorgverzekering'
-            : 'Autoverzekering',
-          merchant_name: ins.name,
-          account_id: mainAccountId,
-          opposing_iban: ins.iban,
-          opposing_name: ins.name,
-          category_id: ins.name.includes('Zilveren')
-            ? categoryIdMap['Zorgverzekering'] || null
-            : categoryIdMap['Auto Kosten'] || null,
-          payment_method: 'Incasso',
-        });
-      }
-
-      // Monthly subscriptions
+      // Monthly subscriptions (around 3rd)
       for (const sub of DEMO_MERCHANTS.subscriptions) {
+        const isMobileInternet = sub.name === 'KPN';
         transactions.push({
-          date: new Date(
-            Date.UTC(year, month, 10 + Math.floor(Math.random() * 5))
-          )
-            .toISOString()
-            .split('T')[0],
-          amount: -randomAmount(10, 20),
+          date: new Date(Date.UTC(year, month, 3)).toISOString().split('T')[0],
+          amount: isMobileInternet ? -52 : -randomAmount(8, 18),
           type: 'expense',
           description: 'Maandabonnement',
           merchant_name: sub.name,
           account_id: mainAccountId,
           opposing_iban: sub.iban,
           opposing_name: sub.name,
-          category_id:
-            sub.name === 'KPN'
-              ? categoryIdMap['Mobiel & Internet'] || null
-              : categoryIdMap['Streaming & Media'] || null,
+          category_id: isMobileInternet
+            ? categoryIdMap['Mobiel & Internet'] || null
+            : categoryIdMap['Streaming & Media'] || null,
           payment_method: 'Incasso',
         });
       }
@@ -866,7 +854,14 @@ router.post('/:id/seed-demo', (req, res) => {
             ? `${merchant.name} via ${processor.name}`
             : merchant.name,
           account_id: mainAccountId,
-          opposing_iban: processor ? processor.iban : merchant.iban,
+          opposing_iban: processor
+            ? processor.iban
+            : multiIbansByName.get(merchant.name)?.length
+              ? multiIbansByName.get(merchant.name)![
+                  (monthOffset + day) %
+                    multiIbansByName.get(merchant.name)!.length
+                ]
+              : merchant.iban,
           // For processors: use merchant name as opposing_name to create shared IBAN scenario
           // This simulates real payment processors where the same IBAN has different merchant names
           opposing_name: processor ? merchant.name : merchant.name,
@@ -875,53 +870,29 @@ router.post('/:id/seed-demo', (req, res) => {
         });
       }
 
-      // Add transactions for multi-IBAN contacts - MORE transactions to demonstrate the feature
-      // Jan de Vries has 3 different IBANs - add transactions every month with different IBANs
-      const janContact = MULTI_IBAN_CONTACTS[0];
-      // Add 1-2 transactions per month for Jan, rotating through his IBANs
-      const janTxCount = 1 + (monthOffset % 2);
-      for (let i = 0; i < janTxCount; i++) {
-        const ibanIndex = (monthOffset + i) % janContact.ibans.length;
-        transactions.push({
-          date: new Date(
-            Date.UTC(year, month, 5 + i * 10 + Math.floor(Math.random() * 5))
-          )
-            .toISOString()
-            .split('T')[0],
-          amount: -randomAmount(40, 180),
-          type: 'expense',
-          description: janContact.descriptions[ibanIndex],
-          merchant_name: janContact.name,
-          account_id: mainAccountId,
-          opposing_iban: janContact.ibans[ibanIndex],
-          opposing_name: janContact.name,
-          category_id: null,
-          payment_method: 'Overboeking',
-        });
-      }
-
-      // Familie Jansen has 2 IBANs - add transactions every month
-      const familieContact = MULTI_IBAN_CONTACTS[1];
-      // Add 1-2 transactions per month for Familie Jansen
-      const familieTxCount = 1 + (monthOffset % 2);
-      for (let i = 0; i < familieTxCount; i++) {
-        const ibanIndex = (monthOffset + i) % familieContact.ibans.length;
-        transactions.push({
-          date: new Date(
-            Date.UTC(year, month, 12 + i * 8 + Math.floor(Math.random() * 5))
-          )
-            .toISOString()
-            .split('T')[0],
-          amount: -randomAmount(20, 100),
-          type: 'expense',
-          description: familieContact.descriptions[ibanIndex],
-          merchant_name: familieContact.name,
-          account_id: mainAccountId,
-          opposing_iban: familieContact.ibans[ibanIndex],
-          opposing_name: familieContact.name,
-          category_id: null,
-          payment_method: 'Overboeking',
-        });
+      // Multi-IBAN contact transactions (merged contacts demo)
+      for (const contact of MULTI_IBAN_CONTACTS) {
+        const txPerMonth = 1 + (monthOffset % 2);
+        for (let i = 0; i < txPerMonth; i++) {
+          const ibanIndex = (monthOffset + i) % contact.ibans.length;
+          transactions.push({
+            date: new Date(
+              Date.UTC(year, month, 7 + i * 10 + Math.floor(Math.random() * 5))
+            )
+              .toISOString()
+              .split('T')[0],
+            amount: -randomAmount(25, 180),
+            type: 'expense',
+            description:
+              contact.descriptions[ibanIndex] || contact.descriptions[0] || '',
+            merchant_name: contact.name,
+            account_id: mainAccountId,
+            opposing_iban: contact.ibans[ibanIndex],
+            opposing_name: contact.name,
+            category_id: null,
+            payment_method: 'Overboeking',
+          });
+        }
       }
 
       // Add explicit transactions for each payment processor to ensure all have many transactions

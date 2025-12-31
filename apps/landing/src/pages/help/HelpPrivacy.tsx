@@ -55,42 +55,41 @@ export default function HelpPrivacy() {
       </div>
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.helpCenter?.privacy?.howWorksTitle || 'Hoe het werkt'}
+        {t.helpCenter?.privacy?.howWorksTitle || 'How it works'}
       </h2>
       <p className='text-gray-600 dark:text-gray-400'>
         {t.helpCenter?.privacy?.howWorksText ||
-          'Fluxby gebruikt een lokale SQLite database opgeslagen in je project folder. De API server draait op je computer op localhost:3001, en de webinterface op localhost:5173. Er worden geen externe verbindingen gemaakt.'}
+          'Fluxby runs entirely in your browser using SQLite with WebAssembly. Your data is stored locally in your browser (OPFS) or on your device when using the desktop app. No servers required, no external connections made.'}
       </p>
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.helpCenter?.privacy?.dataLocationTitle ||
-          'Waar worden mijn gegevens opgeslagen?'}
+        {t.helpCenter?.privacy?.dataLocationTitle || 'Where is my data stored?'}
       </h2>
       <p className='text-gray-600 dark:text-gray-400'>
         {t.helpCenter?.privacy?.dataLocationText ||
-          'Je gegevens worden opgeslagen in een bestand genaamd fluxby.db in de data/ folder van je Fluxby installatie. Je kunt dit bestand back-uppen om je gegevens te bewaren, of verwijderen om opnieuw te beginnen.'}
+          'Your data is stored in your browser using OPFS (Origin Private File System) for the web app, or in your local app data folder for the desktop app. Your data never leaves your device.'}
       </p>
 
       <div className='not-prose mt-4 rounded-lg bg-gray-100 p-4 font-mono text-sm text-gray-800 dark:bg-gray-800 dark:text-gray-200'>
-        <code>data/fluxby.db</code>
+        <code>Browser OPFS / Desktop App Data</code>
       </div>
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.helpCenter?.privacy?.deleteDataTitle || 'Je gegevens verwijderen'}
+        {t.helpCenter?.privacy?.deleteDataTitle || 'Deleting your data'}
       </h2>
       <p className='text-gray-600 dark:text-gray-400'>
         {t.helpCenter?.privacy?.deleteDataText ||
-          'Om al je financiële gegevens volledig te verwijderen, kun je de Gegevensbeheer sectie in Instellingen gebruiken, of simpelweg het fluxby.db bestand verwijderen. Er is geen account om te sluiten of gegevens om op te vragen - alles is lokaal.'}
+          "To completely remove all your financial data, you can use the Data Management section in Settings, or clear your browser data. There's no account to close or data to request - it's all local."}
       </p>
 
       <div className='not-prose mt-6 rounded-lg border border-yellow-200 bg-yellow-50 p-4 dark:border-yellow-800 dark:bg-yellow-900/20'>
         <h4 className='mb-2 flex items-center gap-2 font-medium text-yellow-800 dark:text-yellow-200'>
           <span>⚠️</span>
-          {t.helpCenter?.privacy?.warningTitle || 'Belangrijk'}
+          {t.helpCenter?.privacy?.warningTitle || 'Important'}
         </h4>
         <p className='m-0 text-sm text-yellow-700 dark:text-yellow-300'>
           {t.helpCenter?.privacy?.warningText ||
-            'Omdat alle gegevens lokaal worden opgeslagen, zorg ervoor dat je je fluxby.db bestand back-upt als je je gegevens wilt bewaren. Er is geen cloud backup!'}
+            'Since all data is stored locally, consider exporting your data regularly if you want to preserve it. You can sync between devices using the peer-to-peer sync feature.'}
         </p>
       </div>
     </article>

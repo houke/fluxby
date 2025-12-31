@@ -261,8 +261,8 @@ const upload = multer({
  *                 description: CSV bestand (max 10MB)
  *               bank:
  *                 type: string
- *                 default: ing
  *                 description: Bank type (momenteel alleen 'ing' ondersteund)
+ *                 default: ing
  *     responses:
  *       200:
  *         description: Import succesvol
@@ -376,7 +376,7 @@ router.post('/csv', upload.single('file'), async (req, res) => {
       for (const tx of categorizedTransactions) {
         if (tx.opposingAccountIban && knownIbans.has(tx.opposingAccountIban)) {
           tx.type = 'transfer';
-          tx.categoryId = 10;
+          tx.categoryId = '10';
         }
       }
     }
@@ -413,7 +413,7 @@ router.post('/csv', upload.single('file'), async (req, res) => {
             ))
         ) {
           tx.type = 'transfer';
-          tx.categoryId = 10;
+          tx.categoryId = '10';
         }
       }
     }
@@ -1081,7 +1081,7 @@ router.post('/generic/import', upload.single('file'), async (req, res) => {
       for (const tx of categorizedTransactions) {
         if (tx.opposingAccountIban && knownIbans.has(tx.opposingAccountIban)) {
           tx.type = 'transfer';
-          tx.categoryId = 10;
+          tx.categoryId = '10';
         }
       }
     }
@@ -1112,7 +1112,7 @@ router.post('/generic/import', upload.single('file'), async (req, res) => {
             ))
         ) {
           tx.type = 'transfer';
-          tx.categoryId = 10;
+          tx.categoryId = '10';
         }
       }
     }
@@ -1179,7 +1179,7 @@ router.post('/generic/import', upload.single('file'), async (req, res) => {
     );
 
     // Update account balances for all affected accounts
-    const affectedAccountIds = new Set<number>();
+    const affectedAccountIds = new Set<string>();
     for (const tx of categorizedTransactions) {
       affectedAccountIds.add(tx.accountId);
     }
@@ -1188,13 +1188,13 @@ router.post('/generic/import', upload.single('file'), async (req, res) => {
       // Calculate total balance from all transactions for this account
       const balanceResult = queryOne<{ total: number }>(
         `SELECT COALESCE(SUM(amount), 0) as total FROM transactions WHERE account_id = ?`,
-        [accId]
+        [parseInt(accId, 10)]
       );
 
       if (balanceResult) {
         run(`UPDATE accounts SET current_balance = ? WHERE id = ?`, [
           balanceResult.total,
-          accId,
+          parseInt(accId, 10),
         ]);
       }
     }

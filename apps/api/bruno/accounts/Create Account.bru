@@ -1,0 +1,39 @@
+meta {
+  name: Create Account
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/accounts
+  body: json
+  auth: none
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+body:json {
+  {
+    "iban": "NL12BANK0123456789",
+    "name": "Main Checking",
+    "type": "checking",
+    "bank": "ING",
+    "initialBalance": 0
+  }
+}
+
+docs {
+  # Create Account
+  
+  Creates a new bank account.
+  
+  ## Request Body
+  
+  - `iban` (required): IBAN of the account
+  - `name` (required): Display name
+  - `type` (required): Account type (checking, savings, credit)
+  - `bank` (optional): Bank name
+  - `initialBalance` (optional): Starting balance (default 0)
+}

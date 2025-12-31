@@ -61,7 +61,7 @@ import type { TranslationKeys } from '@/lib/i18n';
 
 // Types
 interface Account {
-  id: number;
+  id: string;
   iban: string;
   name: string;
   type: 'checking' | 'savings' | 'credit';
@@ -74,16 +74,16 @@ interface Account {
 // Sortable Account Item Component
 interface SortableAccountItemProps {
   account: Account;
-  editingId: number | null;
+  editingId: string | null;
   editName: string;
   editType: 'checking' | 'savings' | 'credit';
   editBalance: string;
   setEditName: (value: string) => void;
   setEditType: (value: 'checking' | 'savings' | 'credit') => void;
   setEditBalance: (value: string) => void;
-  setEditingId: (value: number | null) => void;
+  setEditingId: (value: string | null) => void;
   handleUpdate: () => void;
-  deleteMutation: { mutate: (id: number) => void; isPending: boolean };
+  deleteMutation: { mutate: (id: string) => void; isPending: boolean };
   getAccountIcon: (type: string, balance?: number) => React.ReactElement;
   getAccountTypeLabel: (type: string) => string;
   formatCurrency: (value: number) => string;
@@ -326,13 +326,13 @@ export function AccountSettings() {
   const [newType, setNewType] = useState<'checking' | 'savings' | 'credit'>(
     'checking'
   );
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
   const [editType, setEditType] = useState<'checking' | 'savings' | 'credit'>(
     'checking'
   );
   const [editBalance, setEditBalance] = useState('');
-  const [accountOrder, setAccountOrder] = useState<number[]>([]);
+  const [accountOrder, setAccountOrder] = useState<string[]>([]);
   const [orderNotice, setOrderNotice] = useState<{
     type: 'success' | 'error';
     text: string;
@@ -406,10 +406,12 @@ export function AccountSettings() {
   }, [accounts]);
 
   const updateOrderMutation = useMutation({
-    mutationFn: async (accountIds: number[]) => {
-      return await api.updateAccountOrder(accountIds);
+    mutationFn: async (accountIds: string[]) => {
+      return await api.updateAccountOrder(
+        accountIds.map((id, idx) => ({ id, order: idx }))
+      );
     },
-    onMutate: async (newOrder: number[]) => {
+    onMutate: async (newOrder: string[]) => {
       await queryClient.cancelQueries({
         queryKey: ['accounts', activeProfileId],
       });
@@ -458,8 +460,8 @@ export function AccountSettings() {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
-    const activeId = Number(active.id);
-    const overId = Number(over.id);
+    const activeId = String(active.id);
+    const overId = String(over.id);
     const fromIndex = accountOrder.indexOf(activeId);
     const toIndex = accountOrder.indexOf(overId);
 
@@ -487,7 +489,7 @@ export function AccountSettings() {
       id,
       data,
     }: {
-      id: number;
+      id: string;
       data: { name?: string; type?: string; currentBalance?: number };
     }) => api.updateAccount(id, data),
     onSuccess: () => {

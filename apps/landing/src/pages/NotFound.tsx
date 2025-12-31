@@ -6,6 +6,17 @@ export default function NotFound() {
   const navigate = useNavigate();
   const { t } = useLanguage();
 
+  // Check if there's history to go back to
+  const canGoBack = window.history.length > 1;
+
+  const handleGoBack = () => {
+    if (canGoBack) {
+      window.history.back();
+    } else {
+      navigate('/');
+    }
+  };
+
   return (
     <div className='flex min-h-screen items-center justify-center bg-gradient-to-br from-purple-50 via-pink-50 to-indigo-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900'>
       <div className='mx-4 w-full max-w-md rounded-lg border border-gray-200 bg-white p-8 shadow-lg dark:border-gray-700 dark:bg-gray-800'>
@@ -36,7 +47,7 @@ export default function NotFound() {
               {t.errors?.goHome || 'Naar homepage'}
             </button>
             <button
-              onClick={() => navigate(-1)}
+              onClick={handleGoBack}
               className='flex w-full items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-3 font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600'
             >
               <ArrowLeft className='h-4 w-4' />

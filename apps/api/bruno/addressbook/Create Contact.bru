@@ -1,0 +1,37 @@
+meta {
+  name: Create Contact
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/addressbook
+  body: json
+  auth: none
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+body:json {
+  {
+    "displayName": "John Doe",
+    "ibans": ["NL12BANK0123456789"],
+    "categoryId": null,
+    "notes": "Friend from work"
+  }
+}
+
+docs {
+  # Create Contact
+  
+  Creates a new contact in the address book.
+  
+  ## Request Body
+  
+  - `displayName` (required): Display name for the contact
+  - `ibans` (optional): Array of IBAN numbers
+  - `categoryId` (optional): Default category for transactions
+  - `notes` (optional): Personal notes
+}

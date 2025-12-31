@@ -2,12 +2,16 @@
 // Provides global state management for the onboarding flow
 
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { onboardingChapters } from './onboarding-data';
 import { OnboardingContext } from './onboarding-context';
 import { api } from '@/lib/api';
 import { useProfile } from '@/contexts/ProfileContext';
+import { useDatabase } from '@/contexts/DatabaseContext';
+import { useEncryption } from '@/contexts/EncryptionContext';
+import { DEMO_PROFILE_ID } from '@fluxby/shared';
+import { isDatabaseReady as isGlobalDbReady } from '@/lib/db-singleton';
 import type { OnboardingContextType, OnboardingState } from './types';
 
 const STORAGE_KEY = 'fluxby_onboarding';
@@ -72,22 +76,30 @@ const saveState = (state: OnboardingState) => {
 export function OnboardingProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { switchProfile, refreshProfiles, profiles } = useProfile();
+  const { isReady: isDatabaseReady } = useDatabase();
+  const { switchProfile, profiles, activeProfileId } = useProfile();
+  const { isEncryptionEnabled } = useEncryption();
   const [state, setState] = useState<OnboardingState>(loadState);
-  const [isCreatingDemo, setIsCreatingDemo] = useState(false);
+  // isCreatingDemo is kept for the context value but we don't set it anymore
+  // since demo creation now happens in SecuritySetup
+  const [isCreatingDemo] = useState(false);
 
   // Sync with user data from API
-  const { data: userData } = useQuery<{ id: number; name: string } | null>({
-    queryKey: ['user'],
-    queryFn: () => api.getUser() as Promise<{ id: number; name: string }>,
-  });
+  // Important: we need to distinguish between "loading" and "no user"
+  // Only query when database is ready - use BOTH React state AND global singleton check
+  const isDbTrulyReady = isDatabaseReady && isGlobalDbReady();
 
-  // Update user name mutation
-  const updateUserMutation = useMutation({
-    mutationFn: (name: string) => api.updateUser({ name }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['user'] });
+  const {
+    data: userData,
+    isLoading: isLoadingUser,
+    isFetched: isUserFetched,
+  } = useQuery<{ id: string; name: string } | null>({
+    queryKey: ['user'],
+    queryFn: async () => {
+      const result = await api.getUser();
+      return result as { id: string; name: string } | null;
     },
+    enabled: isDbTrulyReady,
   });
 
   // Persist state changes
@@ -95,28 +107,42 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
     saveState(state);
   }, [state]);
 
-  // Check if onboarding should start (new user)
+  // Check if onboarding should start (new user - no user record exists)
   useEffect(() => {
-    if (userData && !state.hasCompletedOnboarding && !state.isActive) {
-      // Check if user has any transactions (indicator of existing data)
-      // For now, if no name is set, assume new user
-      if (!userData.name && !state.userName) {
-        setState((prev) => ({
-          ...prev,
-          isActive: true,
-          currentChapterIndex: 0,
-          currentStepIndex: 0,
-        }));
-        // Defer navigation to avoid "Cannot update component while rendering" warning
-        // This ensures React completes its current render cycle first
-        setTimeout(() => navigate('/'), 0);
-      }
+    // Wait until user query has finished loading
+    if (isLoadingUser || !isUserFetched) return;
+
+    // If already active, don't re-trigger
+    if (state.isActive) return;
+
+    // If user has completed onboarding before, don't restart
+    if (state.hasCompletedOnboarding) return;
+
+    // If we've already progressed past the first step, don't reset to start
+    // This prevents restarting onboarding after query invalidation
+    if (state.currentChapterIndex > 0 || state.currentStepIndex > 0) return;
+
+    // CRITICAL: Start onboarding if NO user exists in database
+    // This is mandatory - app cannot function without a user and profile
+    if (userData === null) {
+      setState((prev) => ({
+        ...prev,
+        isActive: true,
+        currentChapterIndex: 0,
+        currentStepIndex: 0,
+      }));
+      // Defer navigation to avoid "Cannot update component while rendering" warning
+      // This ensures React completes its current render cycle first
+      setTimeout(() => navigate('/dashboard/'), 0);
     }
   }, [
     userData,
-    state.hasCompletedOnboarding,
+    isLoadingUser,
+    isUserFetched,
     state.isActive,
-    state.userName,
+    state.hasCompletedOnboarding,
+    state.currentChapterIndex,
+    state.currentStepIndex,
     navigate,
   ]);
 
@@ -146,8 +172,30 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
 
   // Start onboarding (resume from saved position if available)
   // If startAtCurrentPage is true, find the chapter matching the current route and start there
+  // NOTE: Demo profile creation is handled by SecuritySetup, not here
   const startOnboarding = useCallback(
-    (restart = false, startAtCurrentPage = false) => {
+    async (restart = false, startAtCurrentPage = false) => {
+      // Capture the current route before any async work (profile switching can
+      // trigger navigation). This ensures the mascot click starts onboarding
+      // at the active tab.
+      const normalizePath = (p: string) => {
+        const trimmed = p.replace(/\/+$/, '');
+        return trimmed === '' ? '/' : trimmed;
+      };
+      const requestedPath = normalizePath(window.location.pathname);
+
+      // If demo profile exists but not active, switch to it
+      try {
+        const demoProfile = profiles.find((p) => p.id === DEMO_PROFILE_ID);
+        if (demoProfile && activeProfileId !== DEMO_PROFILE_ID) {
+          switchProfile(DEMO_PROFILE_ID);
+          await queryClient.invalidateQueries();
+          await new Promise((resolve) => setTimeout(resolve, 100));
+        }
+      } catch (error) {
+        console.error('Error switching to demo profile:', error);
+      }
+
       // Find chapter matching current route
       let startChapterIndex = 0;
 
@@ -157,14 +205,16 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
       }
 
       if (startAtCurrentPage) {
-        const currentPath = window.location.pathname;
+        const currentPath = requestedPath;
         // Find all chapters matching this route (excluding welcome at index 0 and completion at last index)
         const lastIndex = onboardingChapters.length - 1;
         const matchingChapters = onboardingChapters
           .map((chapter, index) => ({ chapter, index }))
           .filter(
             ({ chapter, index }) =>
-              chapter.route === currentPath && index > 0 && index < lastIndex
+              normalizePath(chapter.route) === currentPath &&
+              index > 0 &&
+              index < lastIndex
           );
 
         // If we found matching chapters, use the first content chapter (after navigation chapters)
@@ -240,59 +290,29 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
         const targetChapter = restart
           ? onboardingChapters[0]
           : onboardingChapters[state.currentChapterIndex];
-        navigate(targetChapter?.route || '/');
+        navigate(targetChapter?.route || '/dashboard/');
       }
     },
-    [navigate, state.currentChapterIndex, hasCompletedInitialSetup]
+    [
+      navigate,
+      state.currentChapterIndex,
+      hasCompletedInitialSetup,
+      profiles,
+      switchProfile,
+      activeProfileId,
+      queryClient,
+    ]
   );
 
   // Complete onboarding
+  // NOTE: Demo profile and data seeding is handled by SecuritySetup
+  // This function just marks onboarding as complete
   const completeOnboarding = useCallback(async () => {
-    // Save user name to API if set
-    if (state.userName) {
-      updateUserMutation.mutate(state.userName);
-    }
-
-    // Check if we need to create demo profile and seed data
-    // This happens when completing the initial setup (welcome chapter)
-    const isInitialSetup = state.currentChapterIndex === 0;
-
-    if (isInitialSetup && !isCreatingDemo) {
-      setIsCreatingDemo(true);
-      try {
-        // Check if demo profile exists
-        const existingDemo = profiles.find((p) => p.name === 'Demo');
-
-        if (!existingDemo) {
-          // Create demo profile
-          const demoProfile = await api.createDemoProfile();
-
-          // Seed demo data
-          await api.seedDemoData(demoProfile.id);
-
-          // Refresh profiles to include the new demo profile
-          await refreshProfiles();
-
-          // Switch to demo profile
-          switchProfile(demoProfile.id);
-
-          // Invalidate all queries to get fresh data
-          await queryClient.invalidateQueries();
-
-          // Small delay to ensure queries start fetching before we close the modal
-          // This prevents the blank screen flash
-          await new Promise((resolve) => setTimeout(resolve, 500));
-        } else {
-          // Demo profile exists, just switch to it
-          switchProfile(existingDemo.id);
-          await queryClient.invalidateQueries();
-          await new Promise((resolve) => setTimeout(resolve, 500));
-        }
-      } catch (error) {
-        console.error('Failed to create/seed demo account:', error);
-      } finally {
-        setIsCreatingDemo(false);
-      }
+    // If demo profile exists but not active, switch to it
+    const demoProfile = profiles.find((p) => p.id === DEMO_PROFILE_ID);
+    if (demoProfile && activeProfileId !== DEMO_PROFILE_ID) {
+      switchProfile(DEMO_PROFILE_ID);
+      await queryClient.invalidateQueries();
     }
 
     setState((prev) => ({
@@ -300,29 +320,25 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
       isActive: false,
       hasCompletedOnboarding: true,
     }));
-  }, [
-    state.userName,
-    state.currentChapterIndex,
-    updateUserMutation,
-    isCreatingDemo,
-    profiles,
-    refreshProfiles,
-    switchProfile,
-    queryClient,
-  ]);
+  }, [profiles, activeProfileId, switchProfile, queryClient]);
 
   // Skip onboarding
-  const skipOnboarding = useCallback(() => {
-    // Save user name to API if set
+  const skipOnboarding = useCallback(async () => {
+    // Create user if name is set (using async/await instead of mutation)
     if (state.userName) {
-      updateUserMutation.mutate(state.userName);
+      try {
+        await api.updateUser({ name: state.userName });
+        queryClient.invalidateQueries({ queryKey: ['user'] });
+      } catch (error) {
+        console.error('Failed to create user during skip:', error);
+      }
     }
     setState((prev) => ({
       ...prev,
       isActive: false,
       hasCompletedOnboarding: true,
     }));
-  }, [state.userName, updateUserMutation]);
+  }, [state.userName, queryClient]);
 
   // Navigate to next step
   const nextStep = useCallback(() => {
@@ -428,9 +444,16 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
   // Persist user name changes to API (debounced) so the dashboard greeting updates live
   useEffect(() => {
     // Debounce saves to avoid excessive API calls while typing
-    const timeout = setTimeout(() => {
-      // Call mutation even for empty string to keep server in sync
-      updateUserMutation.mutate(state.userName);
+    const timeout = setTimeout(async () => {
+      // Only save if we have a name - don't create empty user
+      if (state.userName) {
+        try {
+          await api.updateUser({ name: state.userName });
+          queryClient.invalidateQueries({ queryKey: ['user'] });
+        } catch {
+          // Ignore errors during typing - user might not exist yet
+        }
+      }
     }, 500);
 
     return () => clearTimeout(timeout);
@@ -442,9 +465,52 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
     // Trigger re-render to update spotlight position
   }, []);
 
+  // Trigger demo profile setup - called after SecuritySetup completes
+  // Note: SecuritySetup already creates the demo profile and seeds data
+  // This function just needs to start the onboarding tour
+  const triggerDemoSetup = useCallback(async () => {
+    try {
+      // Invalidate all queries to get fresh data (user was just created)
+      await queryClient.invalidateQueries();
+
+      // Small delay to ensure data loads
+      await new Promise((resolve) => setTimeout(resolve, 200));
+
+      // Start the onboarding tour
+      setState((prev) => ({
+        ...prev,
+        isActive: true,
+        currentChapterIndex: 0,
+        currentStepIndex: 0,
+      }));
+    } catch {
+      console.error('Failed to start onboarding');
+    }
+  }, [queryClient]);
+
+  // Separate concerns:
+  // 1. needsSecuritySetup: No encryption set up yet (show SecuritySetup component)
+  // 2. needsOnboarding: User/demo profile not ready (show onboarding tour on top of dashboard)
+  const hasDemoProfile = profiles.some((p) => p.id === DEMO_PROFILE_ID);
+
+  // Security setup needed when encryption is not enabled
+  const needsSecuritySetup =
+    isDbTrulyReady && isUserFetched && !isEncryptionEnabled;
+
+  // Onboarding tour needed when user or demo profile doesn't exist
+  // (but encryption is already set up)
+  const needsOnboarding =
+    isDbTrulyReady &&
+    isUserFetched &&
+    isEncryptionEnabled &&
+    (userData === null || !hasDemoProfile);
+
   const value: OnboardingContextType = {
     state,
     isCreatingDemo,
+    needsSecuritySetup,
+    needsOnboarding,
+    isLoadingUser: isLoadingUser || !isDbTrulyReady,
     startOnboarding,
     completeOnboarding,
     skipOnboarding,
@@ -453,6 +519,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
     goToChapter,
     setLanguage,
     setUserName,
+    triggerDemoSetup,
     currentChapter,
     currentStep,
     isFirstStep,

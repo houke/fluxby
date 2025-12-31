@@ -4,10 +4,10 @@ const options: swaggerJsdoc.Options = {
   definition: {
     openapi: '3.0.0',
     info: {
-      title: 'Finance Dashboard API',
+      title: 'Fluxby API',
       version: '1.0.0',
       description:
-        'API voor het beheren van financiële transacties, categorieën en analytics',
+        'API for managing financial transactions, categories, budgets, and analytics. Used for development and headless mode.',
     },
     servers: [
       {
@@ -16,15 +16,15 @@ const options: swaggerJsdoc.Options = {
       },
     ],
     tags: [
-      { name: 'Transactions', description: 'Transactie beheer' },
-      { name: 'Categories', description: 'Categorie beheer' },
-      { name: 'Accounts', description: 'Rekening beheer' },
-      { name: 'Budgets', description: 'Budget beheer' },
+      { name: 'Transactions', description: 'Transaction management' },
+      { name: 'Categories', description: 'Category management' },
+      { name: 'Accounts', description: 'Account management' },
+      { name: 'Budgets', description: 'Budget management' },
       { name: 'Import', description: 'CSV import' },
-      { name: 'Analytics', description: 'Dashboard en statistieken' },
-      { name: 'User', description: 'Gebruikersprofiel' },
-      { name: 'Rules', description: 'Auto-categorisatie regels' },
-      { name: 'Data', description: 'Export en import van alle gegevens' },
+      { name: 'Analytics', description: 'Dashboard and statistics' },
+      { name: 'User', description: 'User profile' },
+      { name: 'Rules', description: 'Auto-categorization rules' },
+      { name: 'Data', description: 'Export and import of all data' },
     ],
   },
   apis: ['./src/routes/*.ts', './src/routes/*.js'],

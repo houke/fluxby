@@ -17,7 +17,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { api } from '@/lib/api';
+import { useDataService } from '@/contexts/DatabaseContext';
 import { formatCurrency } from '@/lib/utils';
 import { useFilters } from '@/contexts/FilterContext';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -50,7 +50,7 @@ interface MonthlyData {
 }
 
 interface CategoryBreakdown {
-  categoryId: number;
+  categoryId: string;
   categoryName: string;
   color: string;
   icon: string;
@@ -63,6 +63,7 @@ interface CategoryBreakdown {
 export default function Analytics() {
   const { t, language: _language } = useLanguage();
   const { activeProfileId } = useProfile();
+  const dataService = useDataService();
   useDocumentTitle(t.analytics.title);
   const navigate = useNavigate();
   const {
@@ -85,7 +86,9 @@ export default function Analytics() {
   >({
     queryKey: ['monthly-data', activeProfileId, yearStartDate, yearEndDate],
     queryFn: () =>
-      api.getMonthlyData(yearStartDate, yearEndDate) as Promise<MonthlyData[]>,
+      dataService.getMonthlyStats(yearStartDate, yearEndDate) as Promise<
+        MonthlyData[]
+      >,
   });
 
   const { data: expenseCategories, isLoading: expensesLoading } = useQuery<
@@ -99,7 +102,7 @@ export default function Analytics() {
       yearEndDate,
     ],
     queryFn: () =>
-      api.getCategoryBreakdown(
+      dataService.getCategoryStats(
         yearStartDate,
         yearEndDate,
         'expense'
@@ -117,9 +120,11 @@ export default function Analytics() {
       yearEndDate,
     ],
     queryFn: () =>
-      api.getCategoryBreakdown(yearStartDate, yearEndDate, 'income') as Promise<
-        CategoryBreakdown[]
-      >,
+      dataService.getCategoryStats(
+        yearStartDate,
+        yearEndDate,
+        'income'
+      ) as Promise<CategoryBreakdown[]>,
   });
 
   const [activeExpenseIndex, setActiveExpenseIndex] = useState<number | null>(
@@ -600,7 +605,7 @@ export default function Analytics() {
                                   if (event.detail === 2) {
                                     clearOpposingAccountFilters();
                                     setCategories([entry.categoryId]);
-                                    navigate('/transactions');
+                                    navigate('/transactions/');
                                   } else {
                                     // Toggle selection on single click - grows the segment
                                     if (pinnedExpenseIndex === index) {
@@ -778,7 +783,7 @@ export default function Analytics() {
                                   if (event.detail === 2) {
                                     clearOpposingAccountFilters();
                                     setCategories([entry.categoryId]);
-                                    navigate('/transactions');
+                                    navigate('/transactions/');
                                   } else {
                                     // Toggle selection on single click - grows the segment
                                     if (pinnedIncomeIndex === index) {
@@ -843,7 +848,7 @@ export default function Analytics() {
                       clearOpposingAccountFilters();
                       setTransactionType('expense');
                       setCategories([cat.categoryId]);
-                      navigate('/transactions');
+                      navigate('/transactions/');
                     }}
                   >
                     {/* Category icon with background */}
@@ -918,7 +923,7 @@ export default function Analytics() {
                       clearOpposingAccountFilters();
                       setTransactionType('income');
                       setCategories([cat.categoryId]);
-                      navigate('/transactions');
+                      navigate('/transactions/');
                     }}
                   >
                     {/* Category icon with background */}

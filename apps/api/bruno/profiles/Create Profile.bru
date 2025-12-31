@@ -1,0 +1,45 @@
+meta {
+  name: Create Profile
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/profiles
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "name": "Business",
+    "type": "business"
+  }
+}
+
+docs {
+  # Create Profile
+  
+  Creates a new profile for the current user.
+  
+  ## Request Body
+  
+  - `name` (required): Profile name
+  - `type` (required): Profile type (personal, business, shared)
+  
+  ## Response
+  
+  ```json
+  {
+    "success": true,
+    "data": {
+      "id": 2,
+      "userId": 1,
+      "name": "Business",
+      "type": "business",
+      "avatarUrl": null,
+      "createdAt": "2024-01-01T00:00:00.000Z"
+    }
+  }
+  ```
+}

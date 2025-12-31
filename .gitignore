@@ -1,6 +1,7 @@
 # Build outputs
 dist/
 **/dist/
+_site/
 
 # Dependencies
 node_modules/
@@ -45,3 +46,7 @@ coverage/
 # Vite
 .vite/
 
+
+# Rust
+target/
+apps/tauri/target/

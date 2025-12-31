@@ -1,22 +1,22 @@
 // Transaction types
 export interface Transaction {
-  id: number;
+  id: string;
   date: string;
   amount: number;
   type: 'income' | 'expense' | 'transfer';
   description: string;
   merchantName: string | null;
-  accountId: number;
+  accountId: string;
   opposingAccountIban: string | null;
   opposingAccountName: string | null;
-  categoryId: number | null;
+  categoryId: string | null;
   notes: string | null;
   paymentMethod: string | null;
   rawData: string | null;
   importHash: string;
   createdAt: string;
   paymentProvider: string | null;
-  addressBookId: number | null;
+  addressBookId: string | null;
 }
 
 export interface TransactionCreate {
@@ -25,10 +25,10 @@ export interface TransactionCreate {
   type: 'income' | 'expense' | 'transfer';
   description: string;
   merchantName?: string | null;
-  accountId: number;
+  accountId: string;
   opposingAccountIban?: string | null;
   opposingAccountName?: string | null;
-  categoryId?: number | null;
+  categoryId?: string | null;
   notes?: string | null;
   balanceAfter?: number | null;
   paymentMethod?: string | null;
@@ -38,7 +38,7 @@ export interface TransactionCreate {
 
 // Account types
 export interface Account {
-  id: number;
+  id: string;
   iban: string;
   name: string;
   type: 'checking' | 'savings' | 'credit';
@@ -57,7 +57,7 @@ export interface AccountCreate {
 
 // User profile
 export interface UserProfile {
-  id: number;
+  id: string;
   name: string;
   avatar: string | null;
   createdAt: string;
@@ -71,9 +71,12 @@ export type ProfileType =
   | 'savings'
   | 'investing';
 
+// Reserved ID for demo profile (must use this exact UUID)
+export const DEMO_PROFILE_ID = '00000000-0000-0000-0000-000000000001';
+
 export interface Profile {
-  id: number;
-  userId: number;
+  id: string;
+  userId: string;
   name: string;
   type: ProfileType;
   avatarUrl: string | null;
@@ -88,26 +91,29 @@ export interface ProfileCreate {
 
 // Category types
 export interface Category {
-  id: number;
+  id: string;
   name: string;
-  parentId: number | null;
+  parentId: string | null;
   icon: string | null;
   color: string | null;
   description: string | null;
   createdAt: string;
+  // Optional fields populated when withCounts=true
+  transactionCount?: number;
+  totalExpenses?: number;
 }
 
 export interface CategoryCreate {
   name: string;
-  parentId?: number | null;
+  parentId?: string | null;
   icon?: string | null;
   color?: string | null;
 }
 
 // Budget types
 export interface Budget {
-  id: number;
-  categoryId: number | null;
+  id: string;
+  categoryId: string | null;
   amount: number;
   period: 'monthly' | 'yearly';
   startDate: string | null;
@@ -116,7 +122,7 @@ export interface Budget {
 }
 
 export interface BudgetCreate {
-  categoryId?: number | null;
+  categoryId?: string | null;
   amount: number;
   period: 'monthly' | 'yearly';
   startDate?: string | null;
@@ -125,22 +131,24 @@ export interface BudgetCreate {
 
 // Category rule types (for auto-categorization)
 export interface CategoryRule {
-  id: number;
+  id: string;
   pattern: string;
-  categoryId: number;
+  categoryId: string;
+  categoryName: string | null;
+  categoryIcon: string | null;
   priority: number;
   createdAt: string;
 }
 
 export interface CategoryRuleCreate {
   pattern: string;
-  categoryId: number;
+  categoryId: string;
   priority?: number;
 }
 
 // Import types
 export interface Import {
-  id: number;
+  id: string;
   filename: string;
   importedAt: string;
   transactionCount: number;
@@ -201,7 +209,7 @@ export interface MonthlyData {
 }
 
 export interface CategoryBreakdown {
-  categoryId: number;
+  categoryId: string;
   categoryName: string;
   color: string;
   icon: string;
@@ -217,15 +225,50 @@ export interface TransactionFilters {
   minAmount?: number;
   maxAmount?: number;
   type?: 'income' | 'expense' | 'transfer';
-  categoryId?: number;
-  categoryIds?: number[];
-  accountId?: number;
-  profileId?: number; // Filter transactions by profile (via account's profile_id)
+  categoryId?: string;
+  categoryIds?: string[];
+  accountId?: string;
+  profileId?: string; // Filter transactions by profile (via account's profile_id)
   search?: string;
   opposingAccountIban?: string;
   opposingAccountIbans?: string[];
   opposingAccountName?: string;
   paymentMethods?: string[];
   paymentProviders?: string[];
-  addressBookId?: number;
+  addressBookId?: string;
+}
+
+// Address Book types
+export interface AddressBookEntry {
+  id: string;
+  iban: string;
+  name: string;
+  description: string | null;
+  notes: string | null;
+  originalName?: string | null;
+  createdAt: string;
+}
+
+// Cleanup Rule types
+export interface CleanupRule {
+  id: string;
+  pattern: string;
+  isActive: boolean;
+  createdAt: string;
+}
+
+// Category Suggestion types
+export interface CategorySuggestion {
+  categoryId: string | null;
+  categoryName: string | null;
+  categoryIcon: string | null;
+  confidence: number;
+  source: 'rule' | 'history' | 'ai' | null;
+}
+
+// Payment Provider Rule types
+export interface PaymentProviderRule {
+  id: string;
+  name: string;
+  patterns: string;
 }

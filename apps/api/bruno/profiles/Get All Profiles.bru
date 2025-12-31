@@ -1,0 +1,35 @@
+meta {
+  name: Get All Profiles
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/profiles
+  body: none
+  auth: none
+}
+
+docs {
+  # Get All Profiles
+  
+  Retrieves all profiles for the current user.
+  
+  ## Response
+  
+  ```json
+  {
+    "success": true,
+    "data": [
+      {
+        "id": 1,
+        "userId": 1,
+        "name": "Personal",
+        "type": "personal",
+        "avatarUrl": null,
+        "createdAt": "2024-01-01T00:00:00.000Z"
+      }
+    ]
+  }
+  ```
+}

@@ -95,7 +95,7 @@ function Toast({ message, onClose, type = 'info' }: ToastProps) {
 }
 
 interface AddressBookEntry {
-  id: number;
+  id: string;
   iban: string;
   ibans?: string[];
   name: string;
@@ -116,7 +116,7 @@ interface SharedIban {
   merchantCount: number;
   merchants: { name: string; transactionCount: number }[];
   inAddressBook: boolean;
-  addressBookId: number | null;
+  addressBookId: string | null;
   isMarkedShared: boolean;
   isPartiallyResolved: boolean;
   providerName: string | null;
@@ -125,7 +125,7 @@ interface SharedIban {
 }
 
 interface CleanupRule {
-  id: number;
+  id: string;
   pattern: string;
   isActive: boolean;
   createdAt: string;
@@ -168,7 +168,7 @@ export default function AddressBook() {
   const [newContactDescription, setNewContactDescription] = useState('');
 
   // Edit state
-  const [editingContactId, setEditingContactId] = useState<number | null>(null);
+  const [editingContactId, setEditingContactId] = useState<string | null>(null);
   const [editContactName, setEditContactName] = useState('');
   const [editContactDescription, setEditContactDescription] = useState('');
 
@@ -194,7 +194,7 @@ export default function AddressBook() {
   // Edit modal state - groups that can be merged or split
   const [editModalGroups, setEditModalGroups] = useState<
     Array<{
-      id: number;
+      id: string;
       entries: Array<{
         name: string;
         transactionCount: number;
@@ -249,7 +249,7 @@ export default function AddressBook() {
     name: string;
     description: string | null;
     isInAddressBook: boolean;
-    addressBookId: number | null;
+    addressBookId: string | null;
     transactionCount: number;
     totalAmount: number;
     netAmount: number;
@@ -280,7 +280,8 @@ export default function AddressBook() {
       setNewContactIban('');
       setNewContactName('');
       setNewContactDescription('');
-      if (result && result.merged) {
+      const mergedResult = result as { merged?: boolean } | undefined;
+      if (mergedResult?.merged) {
         setToastType('info');
         setToastMessage(
           t.addressBook?.ibanAddedToExisting || 'IBAN added to existing contact'
@@ -290,6 +291,14 @@ export default function AddressBook() {
         setToastMessage(t.addressBook?.contactAdded || 'Contact added');
       }
     },
+    onError: (error: Error) => {
+      setToastType('error');
+      setToastMessage(
+        error.message ||
+          t.addressBook?.createError ||
+          'Failed to create contact'
+      );
+    },
   });
 
   const updateContactMutation = useMutation({
@@ -297,10 +306,10 @@ export default function AddressBook() {
       id,
       data,
     }: {
-      id: number;
+      id: string;
       data: { name?: string; description?: string };
     }) => api.updateAddressBookEntry(id, data),
-    onSuccess: (result) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ['addressbook', activeProfileId],
       });
@@ -311,15 +320,7 @@ export default function AddressBook() {
         queryKey: ['transactions', activeProfileId],
       });
       setEditingContactId(null);
-      // Show toast if contacts were merged
-      if (result && (result as { merged?: boolean }).merged) {
-        setToastMessage(t.addressBook?.contactsMerged || 'Contacts merged');
-      } else if (result && (result as { promoted?: boolean }).promoted) {
-        setToastMessage(
-          t.addressBook?.contactMovedToAddressBook ||
-            'Contact moved to address book'
-        );
-      }
+      setToastMessage(t.addressBook?.contactUpdated || 'Contact updated');
     },
   });
 
@@ -548,7 +549,7 @@ export default function AddressBook() {
       iban: string;
       name: string;
       originalNames: string[];
-      contactId?: number;
+      contactId?: string;
     }) =>
       api.resolveSharedIban(
         data.iban,
@@ -597,7 +598,7 @@ export default function AddressBook() {
 
   // Mutation for adding IBAN to existing contact
   const addIbanToContactMutation = useMutation({
-    mutationFn: ({ contactId, iban }: { contactId: number; iban: string }) =>
+    mutationFn: ({ contactId, iban }: { contactId: string; iban: string }) =>
       api.addContactIban(contactId, iban),
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -628,7 +629,7 @@ export default function AddressBook() {
       contactIds,
       name,
     }: {
-      contactIds: number[];
+      contactIds: string[];
       name?: string;
     }) => api.mergeContacts(contactIds, name),
     onSuccess: () => {
@@ -1239,7 +1240,6 @@ export default function AddressBook() {
                                 );
 
                                 // Create groups: similar items grouped, others as single-entry groups
-                                let groupId = 0;
                                 const assignedIndices = new Set<number>();
                                 const groups: typeof editModalGroups = [];
 
@@ -1260,7 +1260,7 @@ export default function AddressBook() {
                                       : b
                                   );
                                   groups.push({
-                                    id: groupId++,
+                                    id: crypto.randomUUID(),
                                     entries,
                                     editedName: mostCommon.name,
                                     isSplit: false,
@@ -1271,7 +1271,7 @@ export default function AddressBook() {
                                 shared.merchants.forEach((m, idx) => {
                                   if (!assignedIndices.has(idx)) {
                                     groups.push({
-                                      id: groupId++,
+                                      id: crypto.randomUUID(),
                                       entries: [
                                         {
                                           name: m.name,
@@ -2233,17 +2233,20 @@ export default function AddressBook() {
                 className='bg-purple-600 hover:bg-purple-700'
                 onClick={async () => {
                   if (!splitContact) return;
-                  const mappings = Object.entries(splitIbanNames).map(
-                    ([iban, name]) => ({
-                      iban,
-                      name: name || splitContact.name,
-                    })
-                  );
 
                   try {
+                    const mappings = Object.entries(splitIbanNames).map(
+                      ([iban, name]) => ({
+                        iban,
+                        name: name || splitContact.name,
+                      })
+                    );
+                    const ibans = mappings.map((m) => m.iban);
+                    const names = mappings.map((m) => m.name);
                     const result = await api.splitContact(
                       splitContact.id,
-                      mappings
+                      ibans,
+                      names
                     );
                     queryClient.invalidateQueries({
                       queryKey: ['addressbook', activeProfileId],
@@ -2256,30 +2259,13 @@ export default function AddressBook() {
                     });
                     setSplitModalOpen(false);
 
-                    if (
-                      result &&
-                      result.data?.warnings &&
-                      result.data.warnings.length > 0
-                    ) {
-                      setToastType('warning');
-                      setToastMessage(
-                        `${
-                          t.addressBook?.splitWarnings ||
-                          'Split completed with warnings'
-                        }: ${result.data.warnings.join('; ')}`
-                      );
-                    } else {
-                      setToastType('success');
-                      setToastMessage(
-                        (
-                          t.addressBook?.contactSplit ||
-                          'Contact split ({count} created)'
-                        ).replace(
-                          '{count}',
-                          String((result.data?.created || []).length)
-                        )
-                      );
-                    }
+                    setToastType('success');
+                    setToastMessage(
+                      (
+                        t.addressBook?.contactSplit ||
+                        'Contact split ({count} created)'
+                      ).replace('{count}', String(result.newContacts.length))
+                    );
                   } catch (err: unknown) {
                     const errMessage =
                       err instanceof Error ? err.message : String(err);
@@ -2299,7 +2285,10 @@ export default function AddressBook() {
 
         {/* Suggested Contacts Card */}
         {suggestedContacts.length > 0 && (
-          <Card className='border-blue-500/50 bg-blue-50/50 dark:bg-blue-950/10'>
+          <Card
+            data-onboarding='suggested-contacts-card'
+            className='border-blue-500/50 bg-blue-50/50 dark:bg-blue-950/10'
+          >
             <CardHeader
               className='cursor-pointer'
               onClick={() => setShowSuggestedContacts(!showSuggestedContacts)}
@@ -2569,21 +2558,21 @@ export default function AddressBook() {
                 </span>
                 <div
                   ref={switchOuterRef}
-                  className='relative inline-flex items-center rounded-lg bg-muted p-1'
+                  className='relative inline-flex items-center rounded-lg border border-border bg-muted/50 p-0.5'
                 >
                   {/* Sliding indicator */}
                   <div
                     ref={indicatorRef}
-                    className='absolute top-1 h-[calc(100%-8px)] rounded-md bg-background shadow-sm transition-all duration-200 ease-out'
+                    className='absolute top-0.5 h-[calc(100%-4px)] rounded-md bg-purple-600 shadow-sm transition-all duration-200 ease-out'
                   />
                   {sortOptions.map((option) => (
                     <button
                       key={option.key}
                       onClick={() => setSortBy(option.key)}
                       className={cn(
-                        'relative z-10 whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
+                        'relative z-10 whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-medium transition-colors',
                         sortBy === option.key
-                          ? 'text-foreground'
+                          ? 'text-white'
                           : 'text-muted-foreground hover:text-foreground'
                       )}
                     >
@@ -2665,7 +2654,7 @@ export default function AddressBook() {
                             setOpposingAccountIbans([]);
                             setOpposingAccountName(null);
                             setAddressBookId(contact.id);
-                            navigate('/transactions');
+                            navigate('/transactions/');
                           }
                         }}
                       >

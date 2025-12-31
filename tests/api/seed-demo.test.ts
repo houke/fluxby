@@ -120,6 +120,8 @@ function seedDemoData(profileId: number) {
 
   for (let monthOffset = 0; monthOffset < 18; monthOffset++) {
     const monthDate = new Date(now);
+    // Anchor to the 1st to avoid month overflow issues (e.g. 31st -> shorter months)
+    monthDate.setDate(1);
     monthDate.setMonth(monthDate.getMonth() - monthOffset);
     const year = monthDate.getFullYear();
     const month = monthDate.getMonth();

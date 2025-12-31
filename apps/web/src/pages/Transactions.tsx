@@ -95,38 +95,37 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useProfile } from '@/contexts/ProfileContext';
 
 interface Transaction {
-  id: number;
+  id: string;
   date: string;
   amount: number;
   type: 'income' | 'expense' | 'transfer';
   description: string;
   merchantName: string | null;
-  categoryId: number | null;
+  categoryId: string | null;
   paymentMethod: string | null;
   notes: string | null;
   opposingAccountIban: string | null;
   opposingAccountName: string | null;
   paymentProvider: string | null;
-  addressBookId: number | null;
+  addressBookId: string | null;
 }
 
 interface Category {
-  id: number;
+  id: string;
   name: string;
   icon: string | null;
   color: string | null;
-  parentId: number | null;
+  parentId: string | null;
 }
 
 interface CategorySuggestion {
-  categoryId: number;
-  categoryName: string;
-  categoryIcon: string;
-  source: 'rule' | 'history';
+  categoryId: string | null;
+  categoryName: string | null;
+  confidence: number;
 }
 
 interface AddressBookEntry {
-  id: number;
+  id: string;
   iban: string;
   name: string;
   description: string | null;
@@ -136,7 +135,7 @@ interface AddressBookEntry {
 }
 
 interface Account {
-  id: number;
+  id: string;
   iban: string;
   name: string;
   type: 'checking' | 'savings' | 'credit';
@@ -203,7 +202,7 @@ export default function Transactions() {
   }, [searchParams, setSearchParams, setDateRange, setContextTransactionType]);
 
   // Get category filter from global context if set, otherwise empty
-  const [selectedCategoryIds, setSelectedCategoryIds] = useState<number[]>(
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>(
     filters.categories || []
   );
 
@@ -215,18 +214,18 @@ export default function Transactions() {
     filters.opposingAccountName || null
   );
   const [selectedAddressBookId, setSelectedAddressBookId] = useState<
-    number | null
+    string | null
   >(filters.addressBookId || null);
   // AddressBookFilter component manages its own open state internally
 
   // Global date range comes from the header (shared across all views)
   const { startDate, endDate } = useFilterParams();
-  const [editingLabelId, setEditingLabelId] = useState<number | null>(null);
+  const [editingLabelId, setEditingLabelId] = useState<string | null>(null);
   const [labelDraft, setLabelDraft] = useState('');
   const [originalLabelValue, setOriginalLabelValue] = useState('');
   const [expandedMerchant, setExpandedMerchant] = useState<string | null>(null);
   const [suggestions, setSuggestions] = useState<
-    Record<number, CategorySuggestion>
+    Record<string, CategorySuggestion>
   >({});
   // Badge popover states are now managed internally by TransactionRowBadges component
   // CategoryFilter, AddressBookFilter manage their own open state internally
@@ -298,13 +297,13 @@ export default function Transactions() {
   const [rulePattern, setRulePattern] = useState('');
   const [pendingRuleTransaction, setPendingRuleTransaction] = useState<{
     tx: Transaction;
-    categoryId: number;
+    categoryId: string;
   } | null>(null);
   const [applyToRelated, setApplyToRelated] = useState(true);
   const [relatedTransactions, setRelatedTransactions] = useState<Transaction[]>(
     []
   );
-  const [selectedRelatedIds, setSelectedRelatedIds] = useState<Set<number>>(
+  const [selectedRelatedIds, setSelectedRelatedIds] = useState<Set<string>>(
     new Set()
   );
 
@@ -315,7 +314,7 @@ export default function Transactions() {
   const [transferRelatedTransactions, setTransferRelatedTransactions] =
     useState<Transaction[]>([]);
   const [selectedTransferRelatedIds, setSelectedTransferRelatedIds] = useState<
-    Set<number>
+    Set<string>
   >(new Set());
   const [isMarkingAsTransfer, setIsMarkingAsTransfer] = useState(true);
 
@@ -412,14 +411,14 @@ export default function Transactions() {
   const [isPending, startTransition] = useTransition();
 
   const { data: categories } = useQuery<Category[]>({
-    queryKey: ['categories', activeProfileId],
+    queryKey: ['categories', activeProfileId, false],
     queryFn: () => api.getCategories() as Promise<Category[]>,
     staleTime: 5 * 60 * 1000, // 5 minutes - categories rarely change
   });
 
   // Memoized category lookup Map for O(1) access instead of O(n) find()
   const categoryLookup = useMemo(() => {
-    if (!categories) return new Map<number, Category>();
+    if (!categories) return new Map<string, Category>();
     return new Map(categories.map((c) => [c.id, c]));
   }, [categories]);
 
@@ -441,16 +440,16 @@ export default function Transactions() {
 
   // Memoized addressBook lookup maps for O(1) access instead of O(n) filtering
   const addressBookLookup = useMemo((): {
-    byId: Map<number, AddressBookEntry>;
+    byId: Map<string, AddressBookEntry>;
     byIban: Map<string, AddressBookEntry[]>;
   } => {
     if (!addressBook)
       return {
-        byId: new Map<number, AddressBookEntry>(),
+        byId: new Map<string, AddressBookEntry>(),
         byIban: new Map<string, AddressBookEntry[]>(),
       };
 
-    const byId = new Map<number, AddressBookEntry>();
+    const byId = new Map<string, AddressBookEntry>();
     const byIban = new Map<string, AddressBookEntry[]>();
 
     for (const entry of addressBook) {
@@ -515,9 +514,9 @@ export default function Transactions() {
 
   // Query category rules for checking if a rule already exists
   interface CategoryRule {
-    id: number;
+    id: string;
     pattern: string;
-    categoryId: number;
+    categoryId: string;
     priority: number;
   }
   const { data: categoryRules = [] } = useQuery<CategoryRule[]>({
@@ -528,12 +527,12 @@ export default function Transactions() {
 
   // Query payment provider rules for the filter dropdown
   const { data: paymentProviderRules = [] } = useQuery<
-    Array<{ id: number; name: string; patterns: string }>
+    Array<{ id: string; name: string; patterns: string }>
   >({
     queryKey: ['paymentProviderRules', activeProfileId],
     queryFn: () =>
       api.getPaymentProviderRules() as Promise<
-        Array<{ id: number; name: string; patterns: string }>
+        Array<{ id: string; name: string; patterns: string }>
       >,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
@@ -544,7 +543,7 @@ export default function Transactions() {
 
     // Single pass: separate parents and build children map simultaneously
     const parents: Category[] = [];
-    const childrenByParent = new Map<number, Category[]>();
+    const childrenByParent = new Map<string, Category[]>();
 
     for (const c of categories) {
       if (c.parentId) {
@@ -597,14 +596,14 @@ export default function Transactions() {
   }, [categories]);
 
   // Helper to get child category IDs for a parent (uses categoryLookup for parent check, categories for children)
-  const getChildCategoryIds = (parentId: number): number[] => {
+  const getChildCategoryIds = (parentId: string): string[] => {
     if (!categories) return [];
     return categories.filter((c) => c.parentId === parentId).map((c) => c.id);
   };
 
   // Toggle category with subcategory auto-selection
   // Now handled internally by CategoryFilter component
-  const _toggleCategoryWithChildren = (categoryId: number) => {
+  const _toggleCategoryWithChildren = (categoryId: string) => {
     const category = categoryLookup.get(categoryId);
     if (!category) return;
 
@@ -738,8 +737,8 @@ export default function Transactions() {
     );
 
     // Build initial suggestions from cache
-    const newSuggestions: Record<number, CategorySuggestion> = {};
-    const merchantsToFetch: Array<{ txId: number; merchantName: string }> = [];
+    const newSuggestions: Record<string, CategorySuggestion> = {};
+    const merchantsToFetch: Array<{ txId: string; merchantName: string }> = [];
 
     // Only process first 10 uncategorized transactions to reduce API calls
     for (const tx of uncategorized.slice(0, 10)) {
@@ -766,7 +765,7 @@ export default function Transactions() {
 
     const timeoutId = setTimeout(async () => {
       lastFetchRef.current = Date.now();
-      const fetched: Record<number, CategorySuggestion> = {};
+      const fetched: Record<string, CategorySuggestion> = {};
 
       // Fetch in parallel but limit concurrency
       await Promise.all(
@@ -803,17 +802,19 @@ export default function Transactions() {
       ([entry]) => {
         // Only trigger if intersecting AND not already loading AND there's more to load
         if (entry.isIntersecting && !isLoadingMoreRef.current) {
-          isLoadingMoreRef.current = true;
-          setVisibleCount((prev) => {
-            // Reset the loading flag after a short delay to prevent rapid firing
-            setTimeout(() => {
+          const hasMore = visibleCount < (deferredTransactions?.length || 0);
+          if (hasMore) {
+            isLoadingMoreRef.current = true;
+            setVisibleCount((prev) => prev + 50);
+
+            // Allow next trigger after current render cycle
+            requestAnimationFrame(() => {
               isLoadingMoreRef.current = false;
-            }, 100);
-            return prev + 50;
-          });
+            });
+          }
         }
       },
-      { threshold: 0.1, rootMargin: '100px 0px 100px 0px' }
+      { threshold: 0.1, rootMargin: '200px 0px 800px 0px' }
     );
 
     const el = loadMoreSentinelRef.current || loadMoreRef.current;
@@ -823,26 +824,58 @@ export default function Transactions() {
       if (el) observer.unobserve(el as Element);
       isLoadingMoreRef.current = false;
     };
-    // Note: visibleCount removed from deps to prevent observer recreation on scroll
-    // The observer only needs to be set up once per transaction list
-  }, [transactions?.length]);
+  }, [deferredTransactions?.length, visibleCount]);
 
   const updateMutation = useMutation({
     mutationFn: ({
       id,
       data,
     }: {
-      id: number;
+      id: string;
       data: {
         type?: 'income' | 'expense' | 'transfer';
-        categoryId?: number;
+        categoryId?: string | null;
         notes?: string;
         merchantName?: string | null;
         paymentMethod?: string | null;
-        addressBookId?: number | null;
+        addressBookId?: string | null;
         paymentProvider?: string | null;
       };
     }) => api.updateTransaction(id, data),
+    // Optimistic update for immediate UI feedback
+    onMutate: async (variables) => {
+      // Cancel any outgoing refetches to prevent overwriting optimistic update
+      await queryClient.cancelQueries({
+        queryKey: ['transactions', activeProfileId],
+      });
+
+      // Snapshot current transactions
+      const previousTransactions = queryClient.getQueryData<Transaction[]>([
+        'transactions',
+        activeProfileId,
+      ]);
+
+      // Optimistically update the cache
+      if (previousTransactions) {
+        queryClient.setQueryData<Transaction[]>(
+          ['transactions', activeProfileId],
+          previousTransactions.map((tx) =>
+            tx.id === variables.id ? { ...tx, ...variables.data } : tx
+          )
+        );
+      }
+
+      return { previousTransactions };
+    },
+    onError: (_err, _variables, context) => {
+      // Rollback on error
+      if (context?.previousTransactions) {
+        queryClient.setQueryData(
+          ['transactions', activeProfileId],
+          context.previousTransactions
+        );
+      }
+    },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({
         queryKey: ['transactions', activeProfileId],
@@ -890,8 +923,8 @@ export default function Transactions() {
       transactionId,
       categoryId,
     }: {
-      transactionId: number;
-      categoryId: number;
+      transactionId: string;
+      categoryId: string;
     }) => api.categorizeByCounterparty(transactionId, categoryId),
     onSuccess: (result) => {
       queryClient.invalidateQueries({
@@ -917,7 +950,7 @@ export default function Transactions() {
       transactionId,
       merchantName,
     }: {
-      transactionId: number;
+      transactionId: string;
       merchantName: string | null;
     }) => api.renameByCounterparty(transactionId, merchantName),
     onSuccess: (result) => {
@@ -950,14 +983,16 @@ export default function Transactions() {
       name: string;
       description?: string;
       notes?: string;
-      transactionId?: number;
+      transactionId?: string;
     }) => {
       // First create the address book entry
       const result = await api.createAddressBookEntry(data);
       // Then link the transaction to the new address book entry if a transactionId was provided
-      if (data.transactionId && result.data?.id) {
+      // Support both direct return format and potentially wrapped format
+      const contactId = (result as any).id || (result as any).data?.id;
+      if (data.transactionId && contactId) {
         await api.updateTransaction(data.transactionId, {
-          addressBookId: result.data.id,
+          addressBookId: contactId,
         });
       }
       return result;
@@ -975,6 +1010,10 @@ export default function Transactions() {
       setToastType('success');
       setToastMessage(t.transactions.savedToAddressBook);
     },
+    onError: (error: Error) => {
+      setToastType('error');
+      setToastMessage(error.message || 'Failed to create contact');
+    },
   });
 
   const resolveSharedMutation = useMutation({
@@ -987,7 +1026,7 @@ export default function Transactions() {
       iban: string;
       name: string;
       originalNames: string[];
-      contactId?: number;
+      contactId?: string;
     }) => api.resolveSharedIban(iban, name, originalNames, contactId),
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -1006,7 +1045,7 @@ export default function Transactions() {
 
   // Mutation for adding IBAN to existing contact
   const addIbanToContactMutation = useMutation({
-    mutationFn: ({ contactId, iban }: { contactId: number; iban: string }) =>
+    mutationFn: ({ contactId, iban }: { contactId: string; iban: string }) =>
       api.addContactIban(contactId, iban),
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -1191,7 +1230,7 @@ export default function Transactions() {
   };
 
   // Helper function to categorize transaction and all related transactions (same counterparty)
-  const handleCategorySelect = (tx: Transaction, categoryId: number) => {
+  const handleCategorySelect = (tx: Transaction, categoryId: string) => {
     // Note: popover is managed by TransactionRowBadges component internally
 
     // Find related transactions (same counterparty/merchant or same IBAN)
@@ -1253,7 +1292,7 @@ export default function Transactions() {
     setOriginalLabelValue('');
   };
 
-  const saveLabel = (txId: number) => {
+  const saveLabel = (txId: string) => {
     const value = labelDraft.trim();
     // Rename related transactions as well
     renameCounterpartyMutation.mutate({
@@ -1269,15 +1308,15 @@ export default function Transactions() {
       currentTransactionId,
     }: {
       pattern: string;
-      categoryId: number;
-      currentTransactionId?: number;
+      categoryId: string;
+      currentTransactionId?: string;
     }) => {
       // 1. Create the rule
       const response = (await api.createCategoryRule({
         pattern,
         categoryId,
         priority: 10,
-      })) as { id: number };
+      })) as { id: string };
 
       // 2. Apply the rule to ALL transactions (including this one and others)
       const applyResult = (await api.applyCategoryRule(response.id)) as {
@@ -1386,7 +1425,7 @@ export default function Transactions() {
       // Include category assignment when marking as transfer
       const updateData: {
         type: 'income' | 'expense' | 'transfer';
-        categoryId?: number;
+        categoryId?: string;
       } = { type: newType };
       if (newType === 'transfer' && transferCategoryId) {
         updateData.categoryId = transferCategoryId;
@@ -1420,7 +1459,7 @@ export default function Transactions() {
     // Build update data with optional category assignment
     const mainUpdateData: {
       type: 'income' | 'expense' | 'transfer';
-      categoryId?: number;
+      categoryId?: string;
     } = { type: newType };
     if (isMarkingAsTransfer && transferCategoryId) {
       mainUpdateData.categoryId = transferCategoryId;
@@ -1442,7 +1481,7 @@ export default function Transactions() {
           : 'expense';
       const relUpdateData: {
         type: 'income' | 'expense' | 'transfer';
-        categoryId?: number;
+        categoryId?: string;
       } = { type: relNewType };
       if (isMarkingAsTransfer && transferCategoryId) {
         relUpdateData.categoryId = transferCategoryId;
@@ -1474,7 +1513,7 @@ export default function Transactions() {
   };
 
   const getCategoryName = useCallback(
-    (categoryId: number | null) => {
+    (categoryId: string | null) => {
       if (!categoryId) return t.transactions.noCategory;
       const category = categoryLookup.get(categoryId);
       return category
@@ -1485,7 +1524,7 @@ export default function Transactions() {
   );
 
   const getCategoryColor = useCallback(
-    (categoryId: number | null) => {
+    (categoryId: string | null) => {
       if (!categoryId) return '#9CA3AF';
       const category = categoryLookup.get(categoryId);
       return category?.color || '#9CA3AF';
@@ -1681,7 +1720,7 @@ export default function Transactions() {
       data: { categoryId: suggestion.categoryId },
     });
 
-    if (tx.merchantName) {
+    if (tx.merchantName && suggestion.categoryId) {
       const pattern = tx.merchantName.split(' ')[0].toLowerCase();
       createRuleMutation.mutate({
         pattern,
@@ -2177,7 +2216,8 @@ export default function Transactions() {
                   <Skeleton key={i} className='h-16' />
                 ))}
               </div>
-            ) : deferredTransactions && deferredTransactions.length > 0 ? (
+            ) : (deferredTransactions?.length || 0) > 0 ||
+              transactions === undefined ? (
               <>
                 <div
                   className={cn(
@@ -2185,7 +2225,7 @@ export default function Transactions() {
                     isStale && 'opacity-70'
                   )}
                 >
-                  {deferredTransactions.slice(0, visibleCount).map((tx) => {
+                  {deferredTransactions?.slice(0, visibleCount).map((tx) => {
                     const paymentInfo = getPaymentMethodInfo(tx.paymentMethod);
                     const recurring = isRecurring(tx);
                     const merchantKey =
@@ -2679,12 +2719,9 @@ export default function Transactions() {
                 </div>
 
                 {visibleCount < (deferredTransactions?.length || 0) && (
-                  <div className='mt-6 flex justify-center'>
+                  <div className='mt-6 flex flex-col items-center gap-2'>
                     {/* Sentinel observed by IntersectionObserver for auto-loading */}
-                    <div
-                      ref={loadMoreSentinelRef}
-                      className='h-1 w-full max-w-[1px]'
-                    />
+                    <div ref={loadMoreSentinelRef} className='h-4 w-full' />
                     <Button
                       ref={loadMoreRef}
                       variant='outline'
@@ -2740,7 +2777,7 @@ export default function Transactions() {
                     'Importeer je eerste transacties om te beginnen.'}
                 </p>
                 <Button
-                  onClick={() => navigate('/import')}
+                  onClick={() => navigate('/import/')}
                   variant='link'
                   className='mt-2 text-primary hover:underline'
                 >

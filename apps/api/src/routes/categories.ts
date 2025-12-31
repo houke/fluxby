@@ -112,7 +112,7 @@ function applyRulesToUncategorized(profileId: number): {
       }
 
       if (pattern.test(textToMatch)) {
-        updates.push([rule.categoryId, tx.id]);
+        updates.push([parseInt(rule.categoryId, 10), tx.id]);
         break;
       }
     }
@@ -163,7 +163,7 @@ function applyAllRulesToAllTransactions(profileId: number): {
       }
 
       if (pattern.test(textToMatch)) {
-        updates.push([rule.categoryId, tx.id]);
+        updates.push([parseInt(rule.categoryId, 10), tx.id]);
         break; // Stop at first matching rule
       }
     }
@@ -178,9 +178,9 @@ function applyAllRulesToAllTransactions(profileId: number): {
 
 function mapDBCategory(row: DBCategory): Category {
   return {
-    id: row.id,
+    id: String(row.id),
     name: row.name,
-    parentId: row.parent_id,
+    parentId: row.parent_id != null ? String(row.parent_id) : null,
     icon: row.icon,
     color: row.color,
     description: row.description,
@@ -393,6 +393,8 @@ router.get('/seed-data', (req, res) => {
  *               categories:
  *                 type: array
  *                 description: Array of parent categories with subcategories
+ *                 items:
+ *                   type: object
  *     responses:
  *       200:
  *         description: Categories created

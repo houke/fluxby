@@ -5,6 +5,8 @@ interface DBCategoryRule {
   id: number;
   pattern: string;
   category_id: number;
+  category_name: string | null;
+  category_icon: string | null;
   priority: number;
   created_at: string;
 }
@@ -22,14 +24,20 @@ function normalizeForMatching(text: string): string {
 
 export function getCategoryRules(profileId: number = 1): CategoryRule[] {
   const rows = query<DBCategoryRule>(
-    'SELECT * FROM category_rules WHERE profile_id = ? ORDER BY priority DESC',
+    `SELECT cr.*, c.name as category_name, c.icon as category_icon 
+     FROM category_rules cr
+     LEFT JOIN categories c ON cr.category_id = c.id
+     WHERE cr.profile_id = ? 
+     ORDER BY cr.priority DESC`,
     [profileId]
   );
 
   return rows.map((row) => ({
-    id: row.id,
+    id: String(row.id),
     pattern: row.pattern,
-    categoryId: row.category_id,
+    categoryId: String(row.category_id),
+    categoryName: row.category_name,
+    categoryIcon: row.category_icon,
     priority: row.priority,
     createdAt: row.created_at,
   }));

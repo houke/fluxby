@@ -30,7 +30,7 @@ interface DBAccount {
 
 function mapDBAccount(row: DBAccount): Account {
   return {
-    id: row.id,
+    id: String(row.id),
     iban: row.iban,
     name: row.name,
     type: row.type as 'checking' | 'savings' | 'credit',

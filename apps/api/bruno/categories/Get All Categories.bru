@@ -1,0 +1,39 @@
+meta {
+  name: Get All Categories
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/categories
+  body: none
+  auth: none
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+docs {
+  # Get All Categories
+  
+  Retrieves all categories for the current profile.
+  
+  ## Response
+  
+  ```json
+  {
+    "success": true,
+    "data": [
+      {
+        "id": 1,
+        "name": "Groceries",
+        "parentId": null,
+        "icon": "shopping-cart",
+        "color": "#10b981",
+        "description": "Food and groceries"
+      }
+    ]
+  }
+  ```
+}

@@ -9,8 +9,8 @@ import { api } from '@/lib/api';
 import * as lang from '@/contexts/LanguageContext';
 import * as filters from '@/contexts/FilterContext';
 import { ProfileProvider } from '@/contexts/ProfileContext';
-import { ApiHealthProvider } from '@/contexts/ApiHealthContext';
 import * as profile from '@/contexts/ProfileContext';
+import * as db from '@/contexts/DatabaseContext';
 
 describe('Dashboard auto-scroll behavior', () => {
   const queryClient = new QueryClient({
@@ -20,15 +20,21 @@ describe('Dashboard auto-scroll behavior', () => {
   // Test wrapper with all required providers
   const TestWrapper = ({ children }: { children: React.ReactNode }) => (
     <QueryClientProvider client={queryClient}>
-      <ApiHealthProvider>
-        <ProfileProvider>
-          <MemoryRouter>{children}</MemoryRouter>
-        </ProfileProvider>
-      </ApiHealthProvider>
+      <ProfileProvider>
+        <MemoryRouter>{children}</MemoryRouter>
+      </ProfileProvider>
     </QueryClientProvider>
   );
 
   beforeEach(() => {
+    // Mock database context
+    vi.spyOn(db, 'useDatabase').mockReturnValue({
+      db: null,
+      isInitialized: true,
+      isInitializing: false,
+      error: null,
+    } as any);
+
     vi.spyOn(lang, 'useLanguage').mockReturnValue({
       t: {
         nav: { dashboard: 'Dashboard' },

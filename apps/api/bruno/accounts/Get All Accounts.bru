@@ -1,0 +1,44 @@
+meta {
+  name: Get All Accounts
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/accounts
+  body: none
+  auth: none
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+docs {
+  # Get All Accounts
+  
+  Retrieves all bank accounts for the current profile.
+  
+  ## Headers
+  
+  - `X-Profile-Id`: Profile ID (optional, defaults to first profile)
+  
+  ## Response
+  
+  ```json
+  {
+    "success": true,
+    "data": [
+      {
+        "id": 1,
+        "iban": "NL12BANK0123456789",
+        "name": "Checking Account",
+        "type": "checking",
+        "bank": "ING",
+        "currentBalance": 1500.50,
+        "createdAt": "2024-01-01T00:00:00.000Z"
+      }
+    ]
+  }
+  ```
+}

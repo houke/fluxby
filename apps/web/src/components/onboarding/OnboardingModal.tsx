@@ -23,7 +23,6 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import {
   Tooltip,
   TooltipContent,
@@ -71,7 +70,7 @@ interface OnboardingModalProps {
   userName: string;
   onNext: () => void;
   onPrevious: () => void;
-  onSkip: () => void;
+  onSkip?: () => void;
   onComplete: () => void;
   onLanguageSelect: (language: 'nl' | 'en') => void;
   onUserNameChange: (name: string) => void;
@@ -84,19 +83,21 @@ export function OnboardingModal({
   currentChapterIndex,
   currentStepIndex,
   language,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   userName,
   onNext,
   onPrevious,
   onSkip,
   onComplete,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   onLanguageSelect,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   onUserNameChange,
   onChapterSelect,
   isCreatingDemo = false,
 }: OnboardingModalProps) {
   const navigate = useNavigate();
   const { profiles } = useProfile();
-  const [inputName, setInputName] = useState(userName);
   const [isNavigating, setIsNavigating] = useState(false);
   const [spotlightRect, setSpotlightRect] = useState<SpotlightRect | null>(
     null
@@ -256,11 +257,6 @@ export function OnboardingModal({
     }
   }, [currentChapterIndex, currentChapter, navigate, isActive]);
 
-  // Update input when userName prop changes
-  useEffect(() => {
-    setInputName(userName);
-  }, [userName]);
-
   // Calculate modal position based on spotlight
   const modalPosition = useMemo(() => {
     // Closing animation - shrink towards the fluxby mascot
@@ -388,8 +384,9 @@ export function OnboardingModal({
     mascotRect,
   ]);
 
-  // Handle close with animation
+  // Handle close with animation (only if skip is allowed)
   const handleClose = useCallback(() => {
+    if (!onSkip) return;
     setModalState('closing');
     // After shrink animation (700ms), show the "See you later" message
     setTimeout(() => {
@@ -403,12 +400,12 @@ export function OnboardingModal({
 
   // Handle early close of the see you later message
   const handleCloseSeeYouLater = useCallback(() => {
-    onSkip();
+    if (onSkip) onSkip();
   }, [onSkip]);
 
   // Close message on any click outside when in 'closed' state
   useEffect(() => {
-    if (modalState === 'closed') {
+    if (modalState === 'closed' && onSkip) {
       const handleClick = () => {
         onSkip();
       };
@@ -420,9 +417,6 @@ export function OnboardingModal({
   if (!isActive || !currentChapter || !currentStep) return null;
 
   // Check if this is a special step
-  const isLanguageStep = currentStep.id === 'language-select';
-  const isNameStep = currentStep.id === 'user-name';
-  const isWelcomeIntro = currentStep.id === 'welcome-intro';
   const isWelcomeChapter = currentChapterIndex === 0;
   const isFirstGlobalStep = currentChapterIndex === 0 && currentStepIndex === 0;
   const isLastGlobalStep =
@@ -474,11 +468,7 @@ export function OnboardingModal({
     );
   }
 
-  const handleNext = () => {
-    if (isNameStep && inputName.trim()) {
-      onUserNameChange(inputName.trim());
-    }
-
+  const handleNext = async () => {
     if (isLastGlobalStep) {
       onComplete();
     } else {
@@ -486,27 +476,12 @@ export function OnboardingModal({
     }
   };
 
-  const handleNameSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (inputName.trim()) {
-      handleNext();
-    }
-  };
-
-  // Handle real-time name update
-  const handleNameInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newName = e.target.value;
-    setInputName(newName);
-    // Update in real-time so the dashboard greeting updates (allow empty string)
-    onUserNameChange(newName);
-  };
-
   return (
     <>
       {/* Spotlight Overlay */}
       <SpotlightOverlay
         targetSelector={currentStep.selector}
-        isActive={isActive && !isNavigating && modalState === 'normal'}
+        isActive={isActive && modalState === 'normal'}
         padding={12}
         borderRadius={12}
         transitionDuration={500}
@@ -523,8 +498,8 @@ export function OnboardingModal({
       >
         {/* Header */}
         <div className='relative flex flex-col items-center px-4 pb-1 pt-3'>
-          {/* Skip button - hidden during welcome chapter (non-dismissable) */}
-          {!isLastGlobalStep && !isWelcomeChapter && (
+          {/* Skip button - always show if onSkip is available (onboarding is always dismissable now) */}
+          {!isLastGlobalStep && onSkip && (
             <button
               onClick={handleClose}
               className='absolute right-2 top-2 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground'
@@ -546,7 +521,7 @@ export function OnboardingModal({
                       ? 'w-6 bg-purple-600'
                       : idx < currentStepIndex
                         ? 'bg-purple-400'
-                        : 'bg-muted'
+                        : 'bg-purple-200 dark:bg-purple-900/30'
                   )}
                 />
               ))}
@@ -581,87 +556,17 @@ export function OnboardingModal({
                   : getText(currentStep.content)}
               </p>
 
-              {/* Language Selection */}
-              {isLanguageStep && (
-                <div className='mt-8 flex flex-col gap-4'>
-                  <Button
-                    size='lg'
-                    variant={language === 'nl' ? 'default' : 'outline'}
-                    className={cn(
-                      'w-64',
-                      language === 'nl' && 'bg-purple-600 hover:bg-purple-700'
-                    )}
-                    onClick={() => onLanguageSelect('nl')}
-                  >
-                    🇳🇱 Nederlands
-                  </Button>
-                  <Button
-                    size='lg'
-                    variant={language === 'en' ? 'default' : 'outline'}
-                    className={cn(
-                      'w-64',
-                      language === 'en' && 'bg-purple-600 hover:bg-purple-700'
-                    )}
-                    onClick={() => onLanguageSelect('en')}
-                  >
-                    🇬🇧 English
-                  </Button>
-                </div>
-              )}
-
-              {/* Name Input */}
-              {isNameStep && (
-                <form
-                  onSubmit={handleNameSubmit}
-                  className='mt-8 w-full max-w-sm'
-                >
-                  <Input
-                    type='text'
-                    value={inputName}
-                    onChange={handleNameInputChange}
-                    placeholder={
-                      language === 'nl' ? 'Je naam...' : 'Your name...'
-                    }
-                    className='text-center'
-                    autoFocus
-                  />
-                </form>
-              )}
-
               {/* Inline Navigation for Welcome Chapter */}
               {isWelcomeChapter && (
-                <div className='mt-8 flex w-full max-w-sm items-center justify-between'>
-                  <Button
-                    variant='ghost'
-                    size='sm'
-                    onClick={onPrevious}
-                    disabled={isFirstGlobalStep || isNavigating}
-                    className={cn('gap-1', isFirstGlobalStep && 'invisible')}
-                  >
-                    <ChevronLeft className='h-3.5 w-3.5' />
-                    {language === 'nl' ? 'Vorige' : 'Back'}
-                  </Button>
-
+                <div className='mt-8 flex w-full max-w-sm items-center justify-center'>
                   <Button
                     size='sm'
                     onClick={handleNext}
-                    disabled={
-                      isNavigating ||
-                      (isLanguageStep && !language) ||
-                      (isNameStep && !inputName.trim())
-                    }
+                    disabled={isNavigating}
                     className='gap-1 bg-purple-600 hover:bg-purple-700'
                   >
-                    {isWelcomeIntro
-                      ? language === 'nl'
-                        ? 'Aan de slag!'
-                        : "Let's get started!"
-                      : language === 'nl'
-                        ? 'Volgende'
-                        : 'Next'}
-                    {!isWelcomeIntro && (
-                      <ChevronRight className='h-3.5 w-3.5' />
-                    )}
+                    {language === 'nl' ? 'Aan de slag!' : "Let's get started!"}
+                    <ChevronRight className='h-3.5 w-3.5' />
                   </Button>
                 </div>
               )}
@@ -752,11 +657,7 @@ export function OnboardingModal({
               <Button
                 size='sm'
                 onClick={handleNext}
-                disabled={
-                  isNavigating ||
-                  isCreatingDemo ||
-                  (isNameStep && !inputName.trim())
-                }
+                disabled={isNavigating || isCreatingDemo}
                 className='gap-1 bg-purple-600 hover:bg-purple-700'
               >
                 {isCreatingDemo ? (

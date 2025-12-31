@@ -1,11 +1,11 @@
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { api } from '@/lib/api';
+import { useDataService } from '@/contexts/DatabaseContext';
 import { useFilterParams } from '@/contexts/FilterContext';
 
 // Minimal transaction type for totals calculation
 interface TransactionForTotals {
-  id: number;
+  id: string;
   amount: number;
   type: 'income' | 'expense' | 'transfer';
 }
@@ -87,17 +87,26 @@ interface DashboardStats {
  * This ensures consistency with the Dashboard page.
  */
 export function useDashboardTotals() {
-  const { startDate, endDate, type, categoryIds } = useFilterParams();
+  const dataService = useDataService();
+  const { startDate, endDate } = useFilterParams();
 
   const { data, isLoading } = useQuery<DashboardStats>({
-    queryKey: ['dashboard', startDate, endDate, type, categoryIds],
-    queryFn: () =>
-      api.getDashboardStats(
-        startDate,
-        endDate,
-        type,
-        categoryIds
-      ) as Promise<DashboardStats>,
+    queryKey: ['dashboard', startDate, endDate],
+    queryFn: async () => {
+      const stats = await dataService.getDashboardStats(startDate, endDate);
+      return {
+        totalBalance: stats.totalIncome - stats.totalExpenses,
+        totalIncome: stats.totalIncome,
+        totalExpenses: stats.totalExpenses,
+        totalTransfers: 0,
+        savingsRate:
+          stats.totalIncome > 0
+            ? ((stats.totalIncome - stats.totalExpenses) / stats.totalIncome) *
+              100
+            : 0,
+        transactionCount: stats.transactionCount,
+      };
+    },
   });
 
   return {

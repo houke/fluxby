@@ -28,8 +28,8 @@ interface BudgetWithSpending extends Budget {
 
 function mapDBBudget(row: DBBudget): Budget {
   return {
-    id: row.id,
-    categoryId: row.category_id,
+    id: String(row.id),
+    categoryId: row.category_id != null ? String(row.category_id) : null,
     amount: row.amount,
     period: row.period as 'monthly' | 'yearly',
     startDate: row.start_date,

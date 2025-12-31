@@ -93,7 +93,7 @@ export function ProfileManager() {
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editingProfile, setEditingProfile] = useState<Profile | null>(null);
-  const [copiedProfileId, setCopiedProfileId] = useState<number | null>(null);
+  const [copiedProfileId, setCopiedProfileId] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Step state for create dialog: 'profile' | 'accounts'
@@ -101,7 +101,7 @@ export function ProfileManager() {
     'profile'
   );
   const [newlyCreatedProfileId, setNewlyCreatedProfileId] = useState<
-    number | null
+    string | null
   >(null);
 
   // Account creation state
@@ -193,7 +193,7 @@ export function ProfileManager() {
       });
       // Store the newly created profile ID and move to accounts step
       if (newProfile && typeof newProfile === 'object' && 'id' in newProfile) {
-        setNewlyCreatedProfileId(newProfile.id as number);
+        setNewlyCreatedProfileId(newProfile.id as string);
       }
       setCreateStep('accounts');
       setCreatedAccounts([]);
@@ -206,7 +206,12 @@ export function ProfileManager() {
   const createAccountMutation = useMutation({
     mutationFn: (data: { iban: string; name: string; type: string }) => {
       if (!newlyCreatedProfileId) throw new Error('No profile ID');
-      return api.createAccountForProfile(newlyCreatedProfileId, data);
+      return api.createAccountForProfile({
+        profileId: newlyCreatedProfileId,
+        name: data.name,
+        iban: data.iban,
+        type: data.type,
+      });
     },
     onSuccess: (_, variables) => {
       setCreatedAccounts((prev) => [...prev, variables]);
@@ -256,7 +261,7 @@ export function ProfileManager() {
     }
   };
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: string) => {
     // Check if this is the demo profile
     const profileToDelete = profiles.find((p) => p.id === id);
     const isDemoProfile = profileToDelete?.name === 'Demo';
@@ -291,9 +296,9 @@ export function ProfileManager() {
     setEditingProfile(profile);
   };
 
-  const handleCopyProfileId = async (profileId: number) => {
+  const handleCopyProfileId = async (profileId: string) => {
     try {
-      await navigator.clipboard.writeText(String(profileId));
+      await navigator.clipboard.writeText(profileId);
       setCopiedProfileId(profileId);
       setToastMessage(
         t.settings?.profileManager?.idCopied ||
@@ -417,9 +422,9 @@ export function ProfileManager() {
                       </Button>
                     </div>
                     <div className='flex flex-wrap gap-2'>
-                      {avatarOptions.map((pattern, idx) => (
+                      {avatarOptions.map((pattern) => (
                         <button
-                          key={idx}
+                          key={pattern}
                           type='button'
                           onClick={() =>
                             setFormData({ ...formData, avatarUrl: pattern })
@@ -488,13 +493,13 @@ export function ProfileManager() {
                           'Toegevoegde rekeningen:'}
                       </p>
                       <div className='space-y-2'>
-                        {createdAccounts.map((acc, idx) => {
+                        {createdAccounts.map((acc) => {
                           const AccountIcon =
                             ACCOUNT_TYPES.find((at) => at.value === acc.type)
                               ?.icon || Wallet;
                           return (
                             <div
-                              key={idx}
+                              key={`${acc.iban}-${acc.type}`}
                               className='flex items-center gap-2 rounded-lg border bg-muted/50 p-2 text-sm'
                             >
                               <AccountIcon className='h-4 w-4 text-muted-foreground' />

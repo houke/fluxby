@@ -1,0 +1,42 @@
+meta {
+  name: Update Transaction
+  type: http
+  seq: 3
+}
+
+patch {
+  url: {{baseUrl}}/transactions/:id
+  body: json
+  auth: none
+}
+
+params:path {
+  id: 1
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+body:json {
+  {
+    "categoryId": 5,
+    "notes": "Weekly groceries"
+  }
+}
+
+docs {
+  # Update Transaction
+  
+  Updates an existing transaction (usually to set category or notes).
+  
+  ## Path Parameters
+  
+  - `id` (required): Transaction ID
+  
+  ## Request Body (all optional)
+  
+  - `categoryId`: Category ID to assign
+  - `notes`: Personal notes
+  - `merchantName`: Override merchant name
+}

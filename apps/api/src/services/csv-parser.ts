@@ -285,7 +285,7 @@ export function convertGenericToTransactions(
       description,
       // Use description as merchant name (often contains the counterparty name)
       merchantName: description,
-      accountId,
+      accountId: String(accountId),
       // opposingAccountIban should be the OPPOSING account (Tegenrekening), not own account
       opposingAccountIban: opposingIban,
       // Extract name from description if available
@@ -401,10 +401,10 @@ export function convertINGToTransactions(
       type,
       description: ing.naamOmschrijving || '',
       merchantName: ing.naamOmschrijving,
-      accountId,
+      accountId: String(accountId),
       opposingAccountIban: ing.tegenrekening?.toUpperCase().trim() || null,
       opposingAccountName: ing.naamOmschrijving,
-      categoryId: type === 'transfer' ? 10 : null, // Auto-assign Overboekingen (id=10) for transfers
+      categoryId: type === 'transfer' ? '10' : null, // Auto-assign Overboekingen (id=10) for transfers
       notes: ing.mededelingen || null,
       balanceAfter,
       paymentMethod,

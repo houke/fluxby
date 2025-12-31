@@ -54,23 +54,24 @@ interface _DBCategory {
 
 function mapDBTransaction(row: DBTransaction): Transaction {
   return {
-    id: row.id,
+    id: String(row.id),
     date: row.date,
     amount: row.amount,
     type: row.type as 'income' | 'expense' | 'transfer',
     description: row.description,
     merchantName: row.merchant_name,
-    accountId: row.account_id,
+    accountId: String(row.account_id),
     opposingAccountIban: row.opposing_account_iban,
     opposingAccountName: row.opposing_account_name,
-    categoryId: row.category_id,
+    categoryId: row.category_id != null ? String(row.category_id) : null,
     notes: row.notes,
     paymentMethod: row.payment_method,
     rawData: row.raw_data,
     importHash: row.import_hash,
     createdAt: row.created_at,
     paymentProvider: row.payment_provider, // Use stored value, will be overwritten by detection if null
-    addressBookId: row.address_book_id,
+    addressBookId:
+      row.address_book_id != null ? String(row.address_book_id) : null,
   };
 }
 
@@ -299,7 +300,7 @@ export function getCategoryBreakdown(
   const total = rows.reduce((sum, row) => sum + row.total_amount, 0);
 
   return rows.map((row) => ({
-    categoryId: row.category_id || 0,
+    categoryId: String(row.category_id || 0),
     categoryName: row.category_name,
     color: row.color,
     icon: row.icon || '📦',
@@ -356,9 +357,11 @@ export function getTransactions(
   }
 
   if (filters.categoryIds && filters.categoryIds.length > 0) {
-    // Check if 0 is included (meaning "uncategorized")
-    const includesUncategorized = filters.categoryIds.includes(0);
-    const categoryIdsWithoutZero = filters.categoryIds.filter((id) => id !== 0);
+    // Check if '0' is included (meaning "uncategorized")
+    const includesUncategorized = filters.categoryIds.includes('0');
+    const categoryIdsWithoutZero = filters.categoryIds.filter(
+      (id) => id !== '0'
+    );
 
     if (includesUncategorized && categoryIdsWithoutZero.length > 0) {
       // Both uncategorized and specific categories

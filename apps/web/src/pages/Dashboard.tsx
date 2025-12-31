@@ -58,26 +58,26 @@ interface DashboardStats {
     balance: number;
   }>;
   categoryBreakdown: Array<{
-    categoryId: number;
+    categoryId: string;
     categoryName: string;
     color: string;
     amount: number;
     percentage: number;
   }>;
   recentTransactions: Array<{
-    id: number;
+    id: string;
     date: string;
     merchantName: string | null;
     description: string;
     opposingAccountName: string | null;
     amount: number;
-    categoryId: number;
+    categoryId: string;
     type: 'income' | 'expense' | 'transfer';
   }>;
 }
 
 interface Account {
-  id: number;
+  id: string;
   iban: string;
   name: string;
   type: 'checking' | 'savings' | 'credit';
@@ -95,9 +95,14 @@ export default function Dashboard() {
   const { t, language } = useLanguage();
   const { activeProfileId } = useProfile();
   useDocumentTitle(t.nav.dashboard);
-  const { data: user } = useQuery<{ id: number; name: string }>({
+  const { data: user, isLoading: _isLoadingUser } = useQuery<{
+    id: string;
+    name: string;
+  }>({
     queryKey: ['user'],
-    queryFn: () => api.getUser() as Promise<{ id: number; name: string }>,
+    queryFn: () => {
+      return api.getUser() as Promise<{ id: string; name: string }>;
+    },
   });
   const [activeCategoryIndex, setActiveCategoryIndex] = useState<number | null>(
     null
@@ -113,13 +118,14 @@ export default function Dashboard() {
 
   const { data: stats, isLoading } = useQuery<DashboardStats>({
     queryKey: ['dashboard', activeProfileId, startDate, endDate],
-    queryFn: () =>
-      api.getDashboardStats(
+    queryFn: () => {
+      return api.getDashboardStats(
         startDate,
         endDate,
         undefined,
         []
-      ) as Promise<DashboardStats>,
+      ) as Promise<DashboardStats>;
+    },
   });
 
   const { data: accounts } = useQuery<Account[]>({
@@ -136,8 +142,8 @@ export default function Dashboard() {
 
   const { data: budgets } = useQuery<
     Array<{
-      id: number;
-      categoryId: number | null;
+      id: string;
+      categoryId: string | null;
       amount: number;
       period: 'monthly' | 'yearly';
       startDate: string | null;
@@ -155,8 +161,8 @@ export default function Dashboard() {
       // Pass full date range so budget is scaled by months
       return api.getBudgets(undefined, startDate, endDate) as Promise<
         Array<{
-          id: number;
-          categoryId: number | null;
+          id: string;
+          categoryId: string | null;
           amount: number;
           period: 'monthly' | 'yearly';
           startDate: string | null;
@@ -630,7 +636,7 @@ export default function Dashboard() {
                   {t.dashboard.importTransactions}
                 </p>
                 <Button
-                  onClick={() => navigate('/import')}
+                  onClick={() => navigate('/import/')}
                   variant='link'
                   className='mt-2'
                 >
@@ -812,7 +818,7 @@ export default function Dashboard() {
                     {t.dashboard.importTransactions}
                   </p>
                   <button
-                    onClick={() => navigate('/import')}
+                    onClick={() => navigate('/import/')}
                     className='mt-3 text-sm text-primary hover:underline'
                   >
                     {t.dashboard.goToImport}
@@ -1114,7 +1120,7 @@ export default function Dashboard() {
                       {t.dashboard.importTransactions}
                     </p>
                     <button
-                      onClick={() => navigate('/import')}
+                      onClick={() => navigate('/import/')}
                       className='mt-3 text-sm text-primary hover:underline'
                     >
                       {t.dashboard.goToImport}
@@ -1282,7 +1288,7 @@ export default function Dashboard() {
                   {t.dashboard.setBudgets}
                 </p>
                 <button
-                  onClick={() => navigate('/budgets')}
+                  onClick={() => navigate('/budgets/')}
                   className='mt-3 text-sm text-primary hover:underline'
                 >
                   {t.dashboard.goToBudgets}
@@ -1408,7 +1414,7 @@ export default function Dashboard() {
                   {t.dashboard.importTransactions}
                 </p>
                 <button
-                  onClick={() => navigate('/import')}
+                  onClick={() => navigate('/import/')}
                   className='mt-3 text-sm text-primary hover:underline'
                 >
                   {t.dashboard.goToImport}
@@ -1483,7 +1489,7 @@ export default function Dashboard() {
                     variant='outline'
                     onClick={() => {
                       resetFilters();
-                      navigate('/transactions');
+                      navigate('/transactions/');
                     }}
                   >
                     Alle transacties
@@ -1500,7 +1506,7 @@ export default function Dashboard() {
                   {t.dashboard.importTransactions}
                 </p>
                 <Button
-                  onClick={() => navigate('/import')}
+                  onClick={() => navigate('/import/')}
                   variant='link'
                   className='mt-2'
                 >
@@ -1564,7 +1570,7 @@ export default function Dashboard() {
                     variant='outline'
                     onClick={() => {
                       resetFilters();
-                      navigate('/addressbook');
+                      navigate('/addressbook/');
                     }}
                   >
                     {t.dashboard?.viewAddressBook || 'Bekijk adresboek'}
@@ -1583,7 +1589,7 @@ export default function Dashboard() {
                     'Voeg contacten toe aan je adresboek'}
                 </p>
                 <Button
-                  onClick={() => navigate('/addressbook')}
+                  onClick={() => navigate('/addressbook/')}
                   variant='link'
                   className='mt-2'
                 >

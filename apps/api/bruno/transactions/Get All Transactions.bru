@@ -1,0 +1,64 @@
+meta {
+  name: Get All Transactions
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/transactions
+  body: none
+  auth: none
+}
+
+params:query {
+  ~startDate: 2024-01-01
+  ~endDate: 2024-12-31
+  ~type: expense
+  ~categoryId: 1
+  ~accountId: 1
+  ~search: groceries
+  ~minAmount: 0
+  ~maxAmount: 1000
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+docs {
+  # Get All Transactions
+  
+  Retrieves transactions with optional filters.
+  
+  ## Query Parameters (all optional)
+  
+  - `startDate`: Filter from date (YYYY-MM-DD)
+  - `endDate`: Filter to date (YYYY-MM-DD)
+  - `type`: Transaction type (income, expense, transfer)
+  - `categoryId`: Filter by category ID
+  - `accountId`: Filter by account ID
+  - `search`: Search in description/merchant
+  - `minAmount`: Minimum amount
+  - `maxAmount`: Maximum amount
+  
+  ## Response
+  
+  ```json
+  {
+    "success": true,
+    "data": [
+      {
+        "id": 1,
+        "date": "2024-01-15",
+        "amount": -45.50,
+        "type": "expense",
+        "description": "Grocery shopping",
+        "merchantName": "Albert Heijn",
+        "accountId": 1,
+        "categoryId": 5,
+        "createdAt": "2024-01-15T10:30:00.000Z"
+      }
+    ]
+  }
+  ```
+}

@@ -19,6 +19,7 @@ import { useLanguage } from '../../contexts/LanguageContext';
 
 const AboutContent = () => {
   const { t } = useLanguage();
+  const appHref = `${import.meta.env.BASE_URL}app/`;
   const aboutPage = t.legal?.aboutPage;
 
   if (!aboutPage) {
@@ -256,8 +257,10 @@ const AboutContent = () => {
           {aboutPage.exploreMore?.title || 'Explore More'}
         </h2>
         <div className='grid gap-4 sm:grid-cols-2'>
-          <Link
-            to='/app'
+          <a
+            href={appHref}
+            target='_blank'
+            rel='noopener noreferrer'
             className='group flex items-start gap-4 rounded-2xl border border-purple-200 bg-gradient-to-br from-purple-50 to-pink-50 p-6 no-underline transition-all duration-300 hover:-translate-y-1 hover:shadow-xl dark:border-purple-800 dark:from-purple-900/20 dark:to-pink-900/20'
           >
             <div className='flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-purple-600 transition-transform duration-300 group-hover:scale-110'>
@@ -272,7 +275,7 @@ const AboutContent = () => {
                   'See the magic for yourself! Dive into the app and experience what AI-powered finance management feels like.'}
               </p>
             </div>
-          </Link>
+          </a>
 
           <Link
             to='/docs'

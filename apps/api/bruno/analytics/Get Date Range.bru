@@ -1,0 +1,33 @@
+meta {
+  name: Get Date Range
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/analytics/dates
+  body: none
+  auth: none
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+docs {
+  # Get Date Range
+  
+  Returns the minimum and maximum transaction dates.
+  
+  ## Response
+  
+  ```json
+  {
+    "success": true,
+    "data": {
+      "minDate": "2023-01-15",
+      "maxDate": "2024-12-28"
+    }
+  }
+  ```
+}

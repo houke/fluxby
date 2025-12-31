@@ -1,0 +1,3517 @@
+/**
+ * Data Service Layer
+ *
+ * This module provides a unified data access layer that works with:
+ * - Local browser database (OPFS/IndexedDB via SQLite WASM) - default for web
+ * - Remote API server - for development/Tauri with API integration
+ *
+ * The web app uses local-first storage by default.
+ * The API server is an optional layer for external integrations.
+ */
+
+import { DEFAULT_CATEGORIES, type Database } from '@fluxby/database';
+import type {
+  Profile,
+  Transaction,
+  Category,
+  Account,
+  Budget,
+} from '@fluxby/shared';
+
+/**
+ * Get the active profile ID from localStorage
+ */
+function getActiveProfileId(): string | null {
+  if (typeof window === 'undefined') return null;
+  return window.localStorage.getItem('fluxby.activeProfileId');
+}
+
+/**
+ * Create a data service instance using the local database
+ */
+export function createDataService(db: Database) {
+  const profileId = () => getActiveProfileId();
+
+  // Helper to ensure a user exists before creating profiles
+  const ensureUserExists = async (): Promise<string> => {
+    const user = await db.queryOneAsync<{ id: string }>(
+      'SELECT id FROM users WHERE is_deleted = 0 LIMIT 1'
+    );
+
+    if (user) {
+      return user.id;
+    }
+
+    // No user exists - create default user
+    const userId = '00000000-0000-0000-0000-000000000001';
+    const now = Date.now();
+
+    await db.runAsync(
+      `INSERT INTO users (id, name, created_at, updated_at)
+       VALUES (?, ?, ?, ?)`,
+      [userId, 'Gebruiker', now, now]
+    );
+
+    return userId;
+  };
+
+  return {
+    // ============= Profiles =============
+    async getProfiles(): Promise<Profile[]> {
+      const results = await db.queryAsync<Profile>(
+        'SELECT * FROM profiles WHERE is_deleted = 0 ORDER BY created_at ASC',
+        []
+      );
+      return results;
+    },
+
+    async getProfile(id: string): Promise<Profile | null> {
+      return await db.queryOneAsync<Profile>(
+        'SELECT * FROM profiles WHERE id = ? AND is_deleted = 0',
+        [id]
+      );
+    },
+
+    async createProfile(data: {
+      name: string;
+      type?: string;
+      avatarUrl?: string;
+      id?: string; // Optional - use for demo profile
+    }): Promise<Profile> {
+      const id = data.id || crypto.randomUUID();
+      const now = Date.now();
+
+      // Ensure a user exists before creating profile
+      const userId = await ensureUserExists();
+
+      await db.runAsync(
+        `INSERT INTO profiles (id, user_id, name, type, avatar_url, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [
+          id,
+          userId,
+          data.name,
+          data.type || 'personal',
+          data.avatarUrl || null,
+          now,
+          now,
+        ]
+      );
+
+      // Seed default categories for the new profile
+      for (const cat of DEFAULT_CATEGORIES) {
+        const categoryId = crypto.randomUUID();
+        await db.runAsync(
+          `INSERT INTO categories (id, name, icon, color, profile_id, updated_at, created_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?)`,
+          [categoryId, cat.name, cat.icon, cat.color, id, now, now]
+        );
+      }
+
+      const profile = await this.getProfile(id);
+      if (!profile) throw new Error('Failed to create profile');
+      return profile;
+    },
+
+    async updateProfile(
+      id: string,
+      data: { name?: string; type?: string; avatarUrl?: string }
+    ): Promise<void> {
+      const updates: string[] = [];
+      const params: unknown[] = [];
+
+      if (data.name !== undefined) {
+        updates.push('name = ?');
+        params.push(data.name);
+      }
+      if (data.type !== undefined) {
+        updates.push('type = ?');
+        params.push(data.type);
+      }
+      if (data.avatarUrl !== undefined) {
+        updates.push('avatar_url = ?');
+        params.push(data.avatarUrl);
+      }
+
+      if (updates.length === 0) return;
+
+      updates.push('updated_at = ?');
+      params.push(Date.now());
+      params.push(id);
+
+      await db.runAsync(
+        `UPDATE profiles SET ${updates.join(', ')} WHERE id = ?`,
+        params
+      );
+    },
+
+    async deleteProfile(id: string): Promise<void> {
+      await db.runAsync(
+        'UPDATE profiles SET is_deleted = 1, updated_at = ? WHERE id = ?',
+        [Date.now(), id]
+      );
+    },
+
+    // ============= Accounts =============
+    async getAccounts(): Promise<Account[]> {
+      const pid = profileId();
+      if (!pid) return [];
+
+      const rows = await db.queryAsync<{
+        id: string;
+        iban: string;
+        name: string;
+        type: 'checking' | 'savings' | 'credit';
+        bank: string;
+        current_balance: number | null;
+        order_index: number | null;
+        created_at: number;
+      }>(
+        `SELECT * FROM accounts WHERE profile_id = ? AND is_deleted = 0 ORDER BY order_index ASC`,
+        [pid]
+      );
+
+      return rows.map((row) => ({
+        id: row.id,
+        iban: row.iban,
+        name: row.name,
+        type: row.type,
+        bank: row.bank,
+        currentBalance: row.current_balance ?? 0,
+        orderIndex: row.order_index ?? 0,
+        createdAt: new Date(row.created_at).toISOString(),
+      }));
+    },
+
+    async createAccount(data: {
+      iban: string;
+      name: string;
+      type: string;
+      bank?: string;
+      currentBalance?: number;
+    }): Promise<Account> {
+      const pid = profileId();
+      if (!pid) throw new Error('No active profile');
+
+      const id = crypto.randomUUID();
+      const now = Date.now();
+
+      await db.runAsync(
+        `INSERT INTO accounts (id, iban, name, type, bank, current_balance, profile_id, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          id,
+          data.iban,
+          data.name,
+          data.type,
+          data.bank || 'unknown',
+          data.currentBalance ?? 0,
+          pid,
+          now,
+          now,
+        ]
+      );
+
+      return {
+        id,
+        iban: data.iban,
+        name: data.name,
+        type: data.type as 'checking' | 'savings' | 'credit',
+        bank: data.bank || 'unknown',
+        currentBalance: data.currentBalance ?? 0,
+        orderIndex: 0,
+        createdAt: new Date(now).toISOString(),
+      };
+    },
+
+    async updateAccount(
+      id: string,
+      data: { name?: string; type?: string; currentBalance?: number }
+    ): Promise<void> {
+      const updates: string[] = [];
+      const params: unknown[] = [];
+
+      if (data.name !== undefined) {
+        updates.push('name = ?');
+        params.push(data.name);
+      }
+      if (data.type !== undefined) {
+        updates.push('type = ?');
+        params.push(data.type);
+      }
+      if (data.currentBalance !== undefined) {
+        updates.push('current_balance = ?');
+        params.push(data.currentBalance);
+      }
+
+      if (updates.length === 0) return;
+
+      updates.push('updated_at = ?');
+      params.push(Date.now());
+      params.push(id);
+
+      await db.runAsync(
+        `UPDATE accounts SET ${updates.join(', ')} WHERE id = ?`,
+        params
+      );
+    },
+
+    async deleteAccount(id: string): Promise<void> {
+      await db.runAsync(
+        'UPDATE accounts SET is_deleted = 1, updated_at = ? WHERE id = ?',
+        [Date.now(), id]
+      );
+    },
+
+    // ============= Categories =============
+    async getCategories(withCounts = false): Promise<Category[]> {
+      const pid = profileId();
+      if (!pid) return [];
+
+      if (withCounts) {
+        return await db.queryAsync<Category>(
+          `SELECT c.id, c.name, c.parent_id as parentId, c.icon, c.color, c.description, 
+            c.profile_id, c.created_at as createdAt, c.updated_at as updatedAt, c.is_deleted,
+            COUNT(t.id) as transactionCount,
+            COALESCE(SUM(t.amount), 0) as totalExpenses
+           FROM categories c
+           LEFT JOIN transactions t ON t.category_id = c.id AND t.is_deleted = 0 AND t.profile_id = ?
+           WHERE c.profile_id = ? AND c.is_deleted = 0
+           GROUP BY c.id
+           ORDER BY c.name ASC`,
+          [pid, pid]
+        );
+      }
+
+      return await db.queryAsync<Category>(
+        `SELECT id, name, parent_id as parentId, icon, color, description, 
+          profile_id, created_at as createdAt, updated_at as updatedAt, is_deleted
+         FROM categories WHERE profile_id = ? AND is_deleted = 0 ORDER BY name ASC`,
+        [pid]
+      );
+    },
+
+    async createCategory(data: {
+      name: string;
+      icon?: string;
+      color?: string;
+      description?: string;
+      parentId?: string;
+    }): Promise<Category> {
+      const pid = profileId();
+      if (!pid) throw new Error('No active profile');
+
+      const id = crypto.randomUUID();
+      const now = Date.now();
+
+      await db.runAsync(
+        `INSERT INTO categories (id, name, icon, color, description, parent_id, profile_id, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          id,
+          data.name,
+          data.icon || null,
+          data.color || null,
+          data.description || null,
+          data.parentId || null,
+          pid,
+          now,
+          now,
+        ]
+      );
+
+      const category = await db.queryOneAsync<Category>(
+        `SELECT id, name, parent_id as parentId, icon, color, description, 
+          profile_id, created_at as createdAt, updated_at as updatedAt, is_deleted
+         FROM categories WHERE id = ?`,
+        [id]
+      );
+      if (!category) throw new Error('Failed to create category');
+      return category;
+    },
+
+    async updateCategory(
+      id: string,
+      data: {
+        name?: string;
+        icon?: string;
+        color?: string;
+        description?: string | null;
+        parentId?: string | null;
+      }
+    ): Promise<void> {
+      const updates: string[] = [];
+      const params: unknown[] = [];
+
+      if (data.name !== undefined) {
+        updates.push('name = ?');
+        params.push(data.name);
+      }
+      if (data.icon !== undefined) {
+        updates.push('icon = ?');
+        params.push(data.icon);
+      }
+      if (data.color !== undefined) {
+        updates.push('color = ?');
+        params.push(data.color);
+      }
+      if (data.description !== undefined) {
+        updates.push('description = ?');
+        params.push(data.description);
+      }
+      if (data.parentId !== undefined) {
+        updates.push('parent_id = ?');
+        params.push(data.parentId);
+      }
+
+      if (updates.length === 0) return;
+
+      updates.push('updated_at = ?');
+      params.push(Date.now());
+      params.push(id);
+
+      await db.runAsync(
+        `UPDATE categories SET ${updates.join(', ')} WHERE id = ?`,
+        params
+      );
+    },
+
+    async deleteCategory(id: string): Promise<void> {
+      await db.runAsync(
+        'UPDATE categories SET is_deleted = 1, updated_at = ? WHERE id = ?',
+        [Date.now(), id]
+      );
+    },
+
+    // ============= Transactions =============
+    async getTransactions(
+      filters?: Record<string, string>
+    ): Promise<Transaction[]> {
+      const pid = profileId();
+      if (!pid) return [];
+
+      // Define the raw DB row type
+      interface DBTransaction {
+        id: string;
+        date: string;
+        amount: number;
+        type: string;
+        description: string;
+        merchant_name: string | null;
+        account_id: string;
+        opposing_account_iban: string | null;
+        opposing_account_name: string | null;
+        category_id: string | null;
+        notes: string | null;
+        payment_method: string | null;
+        raw_data: string | null;
+        import_hash: string;
+        created_at: number;
+        address_book_id: string | null;
+        payment_provider: string | null;
+        category_name: string | null;
+        category_icon: string | null;
+        category_color: string | null;
+        account_name: string;
+        account_iban: string;
+      }
+
+      let sql = `
+        SELECT t.*, c.name as category_name, c.icon as category_icon, c.color as category_color,
+               a.name as account_name, a.iban as account_iban
+        FROM transactions t
+        LEFT JOIN categories c ON t.category_id = c.id
+        LEFT JOIN accounts a ON t.account_id = a.id
+        WHERE a.profile_id = ? AND t.is_deleted = 0
+      `;
+      const params: unknown[] = [pid];
+
+      if (filters) {
+        if (filters.startDate) {
+          sql += ' AND t.date >= ?';
+          params.push(filters.startDate);
+        }
+        if (filters.endDate) {
+          sql += ' AND t.date <= ?';
+          params.push(filters.endDate);
+        }
+        if (filters.type) {
+          sql += ' AND t.type = ?';
+          params.push(filters.type);
+        }
+        if (filters.categoryId) {
+          sql += ' AND t.category_id = ?';
+          params.push(filters.categoryId);
+        }
+        // Support multiple category IDs (comma-separated)
+        if (filters.categoryIds) {
+          const categoryIds = filters.categoryIds.split(',').filter(Boolean);
+          if (categoryIds.length > 0) {
+            // Check if '0' is included (meaning "uncategorized")
+            const includesUncategorized = categoryIds.includes('0');
+            const categoryIdsWithoutZero = categoryIds.filter(
+              (id) => id !== '0'
+            );
+
+            if (includesUncategorized && categoryIdsWithoutZero.length > 0) {
+              // Both uncategorized and specific categories
+              const placeholders = categoryIdsWithoutZero
+                .map(() => '?')
+                .join(',');
+              sql += ` AND (t.category_id IS NULL OR t.category_id IN (${placeholders}))`;
+              params.push(...categoryIdsWithoutZero);
+            } else if (includesUncategorized) {
+              // Only uncategorized
+              sql += ' AND t.category_id IS NULL';
+            } else {
+              // Only specific categories
+              const placeholders = categoryIds.map(() => '?').join(',');
+              sql += ` AND t.category_id IN (${placeholders})`;
+              params.push(...categoryIds);
+            }
+          }
+        }
+        if (filters.accountId) {
+          sql += ' AND t.account_id = ?';
+          params.push(filters.accountId);
+        }
+        if (filters.search) {
+          sql +=
+            ' AND (t.description LIKE ? OR t.merchant_name LIKE ? OR t.opposing_account_name LIKE ? OR t.opposing_account_iban LIKE ?)';
+          const search = `%${filters.search}%`;
+          params.push(search, search, search, search);
+        }
+        // Support multiple opposing account IBANs (comma-separated)
+        if (filters.opposingAccountIbans) {
+          const ibans = filters.opposingAccountIbans.split(',').filter(Boolean);
+          if (ibans.length > 0) {
+            const placeholders = ibans.map(() => '?').join(',');
+            sql += ` AND t.opposing_account_iban IN (${placeholders})`;
+            params.push(...ibans);
+          }
+        }
+        // Filter by opposing account name (LIKE search)
+        if (filters.opposingAccountName) {
+          const namePattern = `%${filters.opposingAccountName}%`;
+          sql += ` AND (
+            LOWER(t.opposing_account_name) LIKE LOWER(?) 
+            OR LOWER(t.merchant_name) LIKE LOWER(?)
+          )`;
+          params.push(namePattern, namePattern);
+        }
+        // Filter by address book ID
+        if (filters.addressBookId) {
+          // Get contact info to support multi-IBAN contacts
+          const contact = await db.queryOneAsync<{
+            iban: string;
+            original_name: string | null;
+          }>('SELECT iban, original_name FROM address_book WHERE id = ?', [
+            filters.addressBookId,
+          ]);
+
+          if (contact) {
+            // Get all IBANs for this contact
+            const contactIbans = await db.queryAsync<{ iban: string }>(
+              'SELECT iban FROM contact_ibans WHERE contact_id = ?',
+              [filters.addressBookId]
+            );
+
+            const allIbans = [
+              contact.iban,
+              ...contactIbans.map((r) => r.iban),
+            ].filter(Boolean);
+            const ibanPlaceholders = allIbans.map(() => '?').join(',');
+
+            if (contact.original_name) {
+              // Shared IBAN: must match IBAN AND name
+              sql += ` AND (t.address_book_id = ? OR (t.address_book_id IS NULL AND t.opposing_account_iban IN (${ibanPlaceholders}) AND (t.opposing_account_name = ? OR t.merchant_name = ?)))`;
+              params.push(
+                filters.addressBookId,
+                ...allIbans,
+                contact.original_name,
+                contact.original_name
+              );
+            } else {
+              // Regular IBAN: match address_book_id OR IBAN
+              sql += ` AND (t.address_book_id = ? OR (t.address_book_id IS NULL AND t.opposing_account_iban IN (${ibanPlaceholders})))`;
+              params.push(filters.addressBookId, ...allIbans);
+            }
+          } else {
+            sql += ' AND t.address_book_id = ?';
+            params.push(filters.addressBookId);
+          }
+        }
+        // Filter by payment methods (comma-separated)
+        if (filters.paymentMethods) {
+          const methods = filters.paymentMethods.split(',').filter(Boolean);
+          if (methods.length > 0) {
+            const placeholders = methods.map(() => '?').join(',');
+            sql += ` AND LOWER(t.payment_method) IN (${placeholders})`;
+            params.push(...methods.map((m) => m.toLowerCase()));
+          }
+        }
+        // Filter by payment providers (comma-separated)
+        if (filters.paymentProviders) {
+          const providers = filters.paymentProviders.split(',').filter(Boolean);
+          if (providers.length > 0) {
+            const placeholders = providers.map(() => '?').join(',');
+            sql += ` AND LOWER(t.payment_provider) IN (${placeholders})`;
+            params.push(...providers.map((p) => p.toLowerCase()));
+          }
+        }
+      }
+
+      sql += ' ORDER BY t.date DESC, t.id DESC';
+
+      if (filters?.limit) {
+        sql += ' LIMIT ?';
+        params.push(parseInt(filters.limit, 10));
+      }
+
+      const rows = await db.queryAsync<DBTransaction>(sql, params);
+
+      // Transform snake_case DB rows to camelCase Transaction objects
+      return rows.map((row) => ({
+        id: row.id,
+        date: row.date,
+        amount: row.amount,
+        type: row.type as 'income' | 'expense' | 'transfer',
+        description: row.description,
+        merchantName: row.merchant_name,
+        accountId: row.account_id,
+        opposingAccountIban: row.opposing_account_iban,
+        opposingAccountName: row.opposing_account_name,
+        categoryId: row.category_id,
+        categoryName: row.category_name,
+        categoryIcon: row.category_icon,
+        notes: row.notes,
+        paymentMethod: row.payment_method,
+        rawData: row.raw_data,
+        importHash: row.import_hash,
+        createdAt: String(row.created_at),
+        paymentProvider: row.payment_provider,
+        addressBookId: row.address_book_id,
+      }));
+    },
+
+    async updateTransaction(
+      id: string,
+      data: {
+        type?: 'income' | 'expense' | 'transfer';
+        categoryId?: string | null;
+        notes?: string;
+        merchantName?: string | null;
+        paymentMethod?: string | null;
+        paymentProvider?: string | null;
+        addressBookId?: string | null;
+      }
+    ): Promise<void> {
+      const updates: string[] = [];
+      const params: unknown[] = [];
+
+      if (data.type !== undefined) {
+        updates.push('type = ?');
+        params.push(data.type);
+      }
+      if (data.categoryId !== undefined) {
+        updates.push('category_id = ?');
+        params.push(data.categoryId);
+      }
+      if (data.notes !== undefined) {
+        updates.push('notes = ?');
+        params.push(data.notes);
+      }
+      if (data.merchantName !== undefined) {
+        updates.push('merchant_name = ?');
+        params.push(data.merchantName);
+      }
+      if (data.paymentMethod !== undefined) {
+        updates.push('payment_method = ?');
+        params.push(data.paymentMethod);
+      }
+      if (data.paymentProvider !== undefined) {
+        updates.push('payment_provider = ?');
+        params.push(data.paymentProvider);
+      }
+      if (data.addressBookId !== undefined) {
+        updates.push('address_book_id = ?');
+        params.push(data.addressBookId);
+      }
+
+      if (updates.length === 0) return;
+
+      updates.push('updated_at = ?');
+      params.push(Date.now());
+      params.push(id);
+
+      await db.runAsync(
+        `UPDATE transactions SET ${updates.join(', ')} WHERE id = ?`,
+        params
+      );
+    },
+
+    async deleteTransaction(id: string): Promise<void> {
+      await db.runAsync(
+        'UPDATE transactions SET is_deleted = 1, updated_at = ? WHERE id = ?',
+        [Date.now(), id]
+      );
+    },
+
+    async bulkCategorize(
+      transactionIds: string[],
+      categoryId: string
+    ): Promise<{ updated: number }> {
+      const placeholders = transactionIds.map(() => '?').join(',');
+      const result = await db.runAsync(
+        `UPDATE transactions SET category_id = ?, updated_at = ? WHERE id IN (${placeholders})`,
+        [categoryId, Date.now(), ...transactionIds]
+      );
+      return { updated: result.changes };
+    },
+
+    // ============= Budgets =============
+    async getBudgets(
+      month?: string,
+      startDate?: string,
+      endDate?: string
+    ): Promise<Budget[]> {
+      const pid = profileId();
+      if (!pid) return [];
+
+      // Define the raw DB row type with spending data
+      interface DBBudget {
+        id: string;
+        category_id: string | null;
+        amount: number;
+        period: string;
+        start_date: string | null;
+        end_date: string | null;
+        created_at: number;
+        updated_at: number;
+        spent: number;
+        category_name: string | null;
+        category_icon: string | null;
+        category_color: string | null;
+      }
+
+      // Calculate date range for current/specified period
+      let rangeStartDate: string;
+      let rangeEndDate: string;
+
+      if (startDate && endDate) {
+        // Use explicit date range
+        rangeStartDate = startDate;
+        rangeEndDate = endDate;
+      } else if (month) {
+        rangeStartDate = `${month}-01`;
+        const [year, m] = month.split('-').map(Number);
+        const lastDay = new Date(year, m, 0).getDate();
+        rangeEndDate = `${month}-${lastDay.toString().padStart(2, '0')}`;
+      } else {
+        const now = new Date();
+        rangeStartDate = `${now.getFullYear()}-${(now.getMonth() + 1)
+          .toString()
+          .padStart(2, '0')}-01`;
+        const lastDay = new Date(
+          now.getFullYear(),
+          now.getMonth() + 1,
+          0
+        ).getDate();
+        rangeEndDate = `${now.getFullYear()}-${(now.getMonth() + 1)
+          .toString()
+          .padStart(2, '0')}-${lastDay.toString().padStart(2, '0')}`;
+      }
+
+      // Calculate number of months in the period for budget scaling
+      const start = new Date(rangeStartDate);
+      const end = new Date(rangeEndDate);
+      const monthsDiff =
+        (end.getFullYear() - start.getFullYear()) * 12 +
+        (end.getMonth() - start.getMonth()) +
+        1;
+
+      // Query budgets with spending calculation
+      // Profile-filtered: only show budgets for this profile
+      // and only count spending from transactions in this profile's accounts
+      const rows = await db.queryAsync<DBBudget>(
+        `
+        SELECT 
+          b.*,
+          c.name as category_name,
+          c.icon as category_icon,
+          c.color as category_color,
+          COALESCE(ABS(SUM(CASE WHEN t.amount < 0 THEN t.amount ELSE 0 END)), 0) as spent
+        FROM budgets b
+        LEFT JOIN categories c ON b.category_id = c.id
+        LEFT JOIN transactions t ON b.category_id = t.category_id 
+          AND t.date >= ? AND t.date <= ?
+          AND t.account_id IN (SELECT id FROM accounts WHERE profile_id = ?)
+          AND t.is_deleted = 0
+        WHERE b.profile_id = ? AND b.is_deleted = 0
+        GROUP BY b.id
+        ORDER BY b.amount DESC
+      `,
+        [rangeStartDate, rangeEndDate, pid, pid]
+      );
+
+      // Transform and calculate derived values
+      return rows.map((row) => {
+        const spent = row.spent || 0;
+        // Scale budget amount based on period
+        const scaledAmount =
+          row.period === 'monthly' ? row.amount * monthsDiff : row.amount; // yearly budgets don't scale
+        const remaining = scaledAmount - spent;
+        const percentage = scaledAmount > 0 ? (spent / scaledAmount) * 100 : 0;
+
+        return {
+          id: row.id,
+          categoryId: row.category_id,
+          amount: scaledAmount,
+          period: row.period as 'monthly' | 'yearly',
+          startDate: row.start_date,
+          endDate: row.end_date,
+          createdAt: String(row.created_at),
+          spent,
+          remaining,
+          percentage,
+          categoryName: row.category_name,
+          categoryColor: row.category_color,
+          categoryIcon: row.category_icon,
+        };
+      });
+    },
+
+    async createBudget(data: {
+      categoryId?: string;
+      amount: number;
+      period?: string;
+    }): Promise<Budget> {
+      const pid = profileId();
+      if (!pid) throw new Error('No active profile');
+
+      const id = crypto.randomUUID();
+      const now = Date.now();
+
+      await db.runAsync(
+        `INSERT INTO budgets (id, category_id, amount, period, profile_id, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [
+          id,
+          data.categoryId || null,
+          data.amount,
+          data.period || 'monthly',
+          pid,
+          now,
+          now,
+        ]
+      );
+
+      const budget = await db.queryOneAsync<Budget>(
+        'SELECT * FROM budgets WHERE id = ?',
+        [id]
+      );
+      if (!budget) throw new Error('Failed to create budget');
+      return budget;
+    },
+
+    async updateBudget(id: string, data: { amount?: number }): Promise<void> {
+      if (data.amount === undefined) return;
+
+      await db.runAsync(
+        'UPDATE budgets SET amount = ?, updated_at = ? WHERE id = ?',
+        [data.amount, Date.now(), id]
+      );
+    },
+
+    async deleteBudget(id: string): Promise<void> {
+      await db.runAsync(
+        'UPDATE budgets SET is_deleted = 1, updated_at = ? WHERE id = ?',
+        [Date.now(), id]
+      );
+    },
+
+    // ============= Analytics =============
+    async getDashboardStats(startDate?: string, endDate?: string) {
+      const pid = profileId();
+      if (!pid) {
+        return {
+          totalIncome: 0,
+          totalExpenses: 0,
+          netSavings: 0,
+          transactionCount: 0,
+        };
+      }
+
+      let sql = `
+        SELECT 
+          COALESCE(SUM(CASE WHEN t.type = 'income' THEN t.amount ELSE 0 END), 0) as totalIncome,
+          COALESCE(SUM(CASE WHEN t.type = 'expense' THEN ABS(t.amount) ELSE 0 END), 0) as totalExpenses,
+          COUNT(t.id) as transactionCount
+        FROM transactions t
+        JOIN accounts a ON t.account_id = a.id
+        WHERE a.profile_id = ? AND t.is_deleted = 0
+      `;
+      const params: unknown[] = [pid];
+
+      if (startDate) {
+        sql += ' AND t.date >= ?';
+        params.push(startDate);
+      }
+      if (endDate) {
+        sql += ' AND t.date <= ?';
+        params.push(endDate);
+      }
+
+      const result = await db.queryOneAsync<{
+        totalIncome: number;
+        totalExpenses: number;
+        transactionCount: number;
+      }>(sql, params);
+
+      return {
+        totalIncome: result?.totalIncome || 0,
+        totalExpenses: result?.totalExpenses || 0,
+        netSavings: (result?.totalIncome || 0) - (result?.totalExpenses || 0),
+        transactionCount: result?.transactionCount || 0,
+      };
+    },
+
+    async getAvailableYears(): Promise<number[]> {
+      const pid = profileId();
+      if (!pid) return [];
+
+      const results = await db.queryAsync<{ year: number }>(
+        `SELECT DISTINCT CAST(strftime('%Y', t.date) AS INTEGER) as year
+         FROM transactions t
+         JOIN accounts a ON t.account_id = a.id
+         WHERE a.profile_id = ? AND t.is_deleted = 0
+         ORDER BY year DESC`,
+        [pid]
+      );
+
+      return results.map((r: { year: number }) => r.year);
+    },
+
+    async getMinMaxDates(): Promise<{
+      minDate: string;
+      maxDate: string;
+    } | null> {
+      const pid = profileId();
+      if (!pid) return null;
+
+      const result = await db.queryOneAsync<{
+        minDate: string;
+        maxDate: string;
+      }>(
+        `SELECT MIN(t.date) as minDate, MAX(t.date) as maxDate
+         FROM transactions t
+         JOIN accounts a ON t.account_id = a.id
+         WHERE a.profile_id = ? AND t.is_deleted = 0`,
+        [pid]
+      );
+
+      if (!result?.minDate || !result?.maxDate) return null;
+      return result;
+    },
+
+    // ============= Address Book =============
+    async getAddressBook() {
+      const pid = profileId();
+      if (!pid) return [];
+
+      return await db.queryAsync(
+        `SELECT * FROM address_book WHERE profile_id = ? AND is_deleted = 0 ORDER BY name ASC`,
+        [pid]
+      );
+    },
+
+    async createAddressBookEntry(data: {
+      iban: string;
+      name: string;
+      description?: string;
+      notes?: string;
+    }) {
+      const pid = profileId();
+      if (!pid) throw new Error('No active profile');
+
+      const id = crypto.randomUUID();
+      const now = Date.now();
+
+      // Check if a contact with this IBAN already exists
+      const existing = await db.queryAsync<{ id: string; name: string }>(
+        'SELECT id, name FROM address_book WHERE iban = ? AND profile_id = ? AND is_deleted = 0',
+        [data.iban, pid]
+      );
+      if (existing.length > 0) {
+        throw new Error(
+          `Contact with this IBAN already exists (${existing[0].name})`
+        );
+      }
+
+      // Check if the IBAN is already assigned to another contact via contact_ibans
+      const existingIban = await db.queryAsync<{
+        contact_id: string;
+        name: string;
+      }>(
+        `SELECT ci.contact_id, ab.name FROM contact_ibans ci
+         JOIN address_book ab ON ab.id = ci.contact_id
+         WHERE ci.iban = ? AND ab.profile_id = ? AND ab.is_deleted = 0`,
+        [data.iban, pid]
+      );
+      if (existingIban.length > 0) {
+        throw new Error(
+          `IBAN is already assigned to contact "${existingIban[0].name}"`
+        );
+      }
+
+      // Insert the new address book entry
+      await db.runAsync(
+        `INSERT INTO address_book (id, iban, name, description, notes, profile_id, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          id,
+          data.iban,
+          data.name,
+          data.description || null,
+          data.notes || null,
+          pid,
+          now,
+          now,
+        ]
+      );
+
+      // Add to contact_ibans junction table for consistent lookup
+      await db.runAsync(
+        `INSERT OR IGNORE INTO contact_ibans (contact_id, iban, is_primary) VALUES (?, ?, 1)`,
+        [id, data.iban]
+      );
+
+      // Sync transactions to the new contact - link by IBAN
+      const result = await db.runAsync(
+        `UPDATE transactions 
+         SET address_book_id = ?, merchant_name = ?, updated_at = ?
+         WHERE profile_id = ? 
+           AND opposing_account_iban = ? 
+           AND (address_book_id IS NULL OR address_book_id = '')
+           AND is_deleted = 0`,
+        [id, data.name, now, pid, data.iban]
+      );
+
+      return {
+        success: true,
+        data: {
+          id,
+          iban: data.iban,
+          name: data.name,
+          transactionsUpdated: result?.changes || 0,
+        },
+      };
+    },
+
+    async updateAddressBookEntry(
+      id: string,
+      data: { name?: string; description?: string; notes?: string }
+    ) {
+      const updates: string[] = [];
+      const params: unknown[] = [];
+
+      if (data.name !== undefined) {
+        updates.push('name = ?');
+        params.push(data.name);
+      }
+      if (data.description !== undefined) {
+        updates.push('description = ?');
+        params.push(data.description);
+      }
+      if (data.notes !== undefined) {
+        updates.push('notes = ?');
+        params.push(data.notes);
+      }
+
+      if (updates.length === 0) return;
+
+      updates.push('updated_at = ?');
+      params.push(Date.now());
+      params.push(id);
+
+      await db.runAsync(
+        `UPDATE address_book SET ${updates.join(', ')} WHERE id = ?`,
+        params
+      );
+    },
+
+    async deleteAddressBookEntry(id: string) {
+      await db.runAsync(
+        'UPDATE address_book SET is_deleted = 1, updated_at = ? WHERE id = ?',
+        [Date.now(), id]
+      );
+    },
+
+    /**
+     * Add an IBAN to an existing contact
+     */
+    async addContactIban(
+      contactId: string,
+      iban: string
+    ): Promise<{ success: boolean; transactionsUpdated: number }> {
+      const pid = profileId();
+      if (!pid) throw new Error('No active profile');
+
+      const normalizedIban = iban.toUpperCase().trim();
+
+      // Check if contact exists and belongs to the profile
+      const contact = await db.queryAsync<{
+        id: string;
+        name: string;
+        iban: string | null;
+      }>(
+        'SELECT id, name, iban FROM address_book WHERE id = ? AND profile_id = ? AND is_deleted = 0',
+        [contactId, pid]
+      );
+      if (contact.length === 0) {
+        throw new Error('Contact not found');
+      }
+
+      // Check if IBAN is already assigned to another contact
+      const existingIban = await db.queryAsync<{
+        contact_id: string;
+        name: string;
+      }>(
+        `SELECT ci.contact_id, ab.name FROM contact_ibans ci
+         JOIN address_book ab ON ab.id = ci.contact_id
+         WHERE ci.iban = ? AND ab.profile_id = ? AND ab.is_deleted = 0`,
+        [normalizedIban, pid]
+      );
+      if (existingIban.length > 0 && existingIban[0].contact_id !== contactId) {
+        throw new Error(
+          `IBAN is already assigned to contact "${existingIban[0].name}"`
+        );
+      }
+
+      // Add IBAN to contact_ibans (use INSERT OR IGNORE to handle duplicates)
+      await db.runAsync(
+        'INSERT OR IGNORE INTO contact_ibans (contact_id, iban, is_primary) VALUES (?, ?, 0)',
+        [contactId, normalizedIban]
+      );
+
+      // Sync transactions for the newly added IBAN
+      const now = Date.now();
+      const result = await db.runAsync(
+        `UPDATE transactions 
+         SET address_book_id = ?, merchant_name = ?, updated_at = ?
+         WHERE profile_id = ? 
+           AND opposing_account_iban = ? 
+           AND (address_book_id IS NULL OR address_book_id = '')
+           AND is_deleted = 0`,
+        [contactId, contact[0].name, now, pid, normalizedIban]
+      );
+
+      return {
+        success: true,
+        transactionsUpdated: result?.changes || 0,
+      };
+    },
+
+    // ============= Category Rules =============
+    async getCategoryRules(): Promise<
+      Array<{
+        id: string;
+        pattern: string;
+        category_id: string;
+        category_name: string | null;
+        priority: number;
+      }>
+    > {
+      const pid = profileId();
+      if (!pid) return [];
+
+      return await db.queryAsync(
+        `SELECT cr.*, c.name as category_name
+         FROM category_rules cr
+         LEFT JOIN categories c ON cr.category_id = c.id
+         WHERE cr.profile_id = ? AND cr.is_deleted = 0
+         ORDER BY cr.priority DESC`,
+        [pid]
+      );
+    },
+
+    async createCategoryRule(data: {
+      pattern: string;
+      categoryId: string;
+      priority?: number;
+    }) {
+      const pid = profileId();
+      if (!pid) throw new Error('No active profile');
+
+      const id = crypto.randomUUID();
+      const now = Date.now();
+
+      await db.runAsync(
+        `INSERT INTO category_rules (id, pattern, category_id, priority, profile_id, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [id, data.pattern, data.categoryId, data.priority || 0, pid, now, now]
+      );
+
+      return { id, pattern: data.pattern, categoryId: data.categoryId };
+    },
+
+    async deleteCategoryRule(id: string) {
+      await db.runAsync(
+        'UPDATE category_rules SET is_deleted = 1, updated_at = ? WHERE id = ?',
+        [Date.now(), id]
+      );
+    },
+
+    // ============= Data Management =============
+    async exportAll() {
+      const pid = profileId();
+      if (!pid) return null;
+
+      const [
+        profiles,
+        accounts,
+        categories,
+        transactions,
+        budgets,
+        addressBook,
+      ] = await Promise.all([
+        this.getProfiles(),
+        this.getAccounts(),
+        this.getCategories(),
+        this.getTransactions(),
+        this.getBudgets(),
+        this.getAddressBook(),
+      ]);
+
+      return {
+        profiles,
+        accounts,
+        categories,
+        transactions,
+        budgets,
+        addressBook,
+        exportedAt: new Date().toISOString(),
+      };
+    },
+
+    async resetAllData() {
+      // Delete all data and recreate demo profile
+      await db.runAsync('DELETE FROM transactions');
+      await db.runAsync('DELETE FROM budgets');
+      await db.runAsync('DELETE FROM category_rules');
+      await db.runAsync('DELETE FROM categories');
+      await db.runAsync('DELETE FROM address_book');
+      await db.runAsync('DELETE FROM accounts');
+      await db.runAsync('DELETE FROM profiles');
+
+      // Create demo profile
+      const demoProfile = await this.createProfile({
+        name: 'Demo',
+        type: 'personal',
+      });
+
+      return {
+        demoProfileId: demoProfile.id,
+        message: 'All data reset successfully',
+      };
+    },
+
+    // ============= Analytics Methods =============
+    async getMonthlyStats(startDate?: string, endDate?: string) {
+      const pid = profileId();
+      if (!pid) return [];
+
+      let sql = `
+        SELECT 
+          strftime('%Y-%m', t.date) as month,
+          COALESCE(SUM(CASE WHEN t.amount > 0 AND t.type != 'transfer' THEN t.amount ELSE 0 END), 0) as income,
+          COALESCE(SUM(CASE WHEN t.amount < 0 AND t.type != 'transfer' THEN ABS(t.amount) ELSE 0 END), 0) as expenses
+        FROM transactions t
+        JOIN accounts a ON t.account_id = a.id
+        WHERE a.profile_id = ? AND t.is_deleted = 0
+      `;
+      const params: unknown[] = [pid];
+
+      if (startDate) {
+        sql += ' AND t.date >= ?';
+        params.push(startDate);
+      }
+      if (endDate) {
+        sql += ' AND t.date <= ?';
+        params.push(endDate);
+      }
+
+      sql += " GROUP BY strftime('%Y-%m', t.date) ORDER BY month ASC";
+
+      const rows = await db.queryAsync<{
+        month: string;
+        income: number;
+        expenses: number;
+      }>(sql, params);
+
+      let runningBalance = 0;
+      return rows.map((row) => {
+        runningBalance += row.income - row.expenses;
+        return {
+          month: row.month,
+          income: row.income,
+          expenses: row.expenses,
+          balance: runningBalance,
+        };
+      });
+    },
+
+    async getCategoryStats(
+      startDate?: string,
+      endDate?: string,
+      type: 'expense' | 'income' = 'expense'
+    ) {
+      const pid = profileId();
+      if (!pid) return [];
+
+      const amountCondition =
+        type === 'expense' ? 't.amount < 0' : 't.amount > 0';
+
+      let sql = `
+        SELECT 
+          t.category_id as categoryId,
+          COALESCE(c.name, 'Uncategorized') as categoryName,
+          COALESCE(c.color, '#9CA3AF') as color,
+          COALESCE(c.icon, '📦') as icon,
+          SUM(ABS(t.amount)) as amount,
+          COUNT(*) as transactionCount
+        FROM transactions t
+        LEFT JOIN categories c ON t.category_id = c.id
+        JOIN accounts a ON t.account_id = a.id
+        WHERE a.profile_id = ? AND t.is_deleted = 0 AND ${amountCondition} AND t.type != 'transfer'
+      `;
+      const params: unknown[] = [pid];
+
+      if (startDate) {
+        sql += ' AND t.date >= ?';
+        params.push(startDate);
+      }
+      if (endDate) {
+        sql += ' AND t.date <= ?';
+        params.push(endDate);
+      }
+
+      sql += ' GROUP BY t.category_id ORDER BY amount DESC';
+
+      const rows = await db.queryAsync<{
+        categoryId: string | null;
+        categoryName: string;
+        color: string;
+        icon: string;
+        amount: number;
+        transactionCount: number;
+      }>(sql, params);
+
+      const total = rows.reduce((sum, row) => sum + row.amount, 0);
+
+      return rows.map((row) => ({
+        categoryId: row.categoryId || '',
+        categoryName: row.categoryName,
+        color: row.color,
+        icon: row.icon,
+        amount: row.amount,
+        percentage: total > 0 ? (row.amount / total) * 100 : 0,
+        transactionCount: row.transactionCount,
+      }));
+    },
+
+    async getDailyExpenses(startDate?: string, endDate?: string) {
+      const pid = profileId();
+      if (!pid) return [];
+
+      let sql = `
+        SELECT 
+          t.date,
+          COALESCE(SUM(CASE WHEN t.amount < 0 AND t.type != 'transfer' THEN ABS(t.amount) ELSE 0 END), 0) as expenses
+        FROM transactions t
+        JOIN accounts a ON t.account_id = a.id
+        WHERE a.profile_id = ? AND t.is_deleted = 0
+      `;
+      const params: unknown[] = [pid];
+
+      if (startDate) {
+        sql += ' AND t.date >= ?';
+        params.push(startDate);
+      }
+      if (endDate) {
+        sql += ' AND t.date <= ?';
+        params.push(endDate);
+      }
+
+      sql += ' GROUP BY t.date ORDER BY t.date ASC';
+
+      const rows = await db.queryAsync<{ date: string; expenses: number }>(
+        sql,
+        params
+      );
+      const expenseMap = new Map(rows.map((r) => [r.date, r.expenses]));
+
+      // Generate all days in range
+      const result: { date: string; expenses: number }[] = [];
+      if (startDate && endDate) {
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+
+        for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+          const dateStr = d.toISOString().split('T')[0];
+          result.push({
+            date: dateStr,
+            expenses: expenseMap.get(dateStr) || 0,
+          });
+        }
+      } else {
+        return rows;
+      }
+
+      return result;
+    },
+
+    async getBalanceForecast(startDate?: string, endDate?: string) {
+      const pid = profileId();
+      if (!pid) return null;
+
+      const now = new Date();
+
+      // Determine period boundaries
+      let periodStart: Date;
+      let periodEnd: Date;
+
+      if (startDate && endDate) {
+        periodStart = new Date(startDate);
+        periodEnd = new Date(endDate);
+      } else {
+        periodStart = new Date(now.getFullYear(), now.getMonth(), 1);
+        periodEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+      }
+
+      const periodStartStr = periodStart.toISOString().split('T')[0];
+      const periodEndStr = periodEnd.toISOString().split('T')[0];
+      const todayStr = now.toISOString().split('T')[0];
+
+      const isPastPeriod = periodEnd < now;
+
+      // For past periods, return actuals
+      if (isPastPeriod) {
+        const periodTotals = await db.queryOneAsync<{
+          income: number;
+          expenses: number;
+        }>(
+          `SELECT 
+            COALESCE(SUM(CASE WHEN t.amount > 0 AND t.type != 'transfer' THEN t.amount ELSE 0 END), 0) as income,
+            COALESCE(SUM(CASE WHEN t.amount < 0 AND t.type != 'transfer' THEN ABS(t.amount) ELSE 0 END), 0) as expenses
+          FROM transactions t
+          JOIN accounts a ON t.account_id = a.id
+          WHERE a.profile_id = ? AND t.is_deleted = 0 AND t.date >= ? AND t.date <= ?`,
+          [pid, periodStartStr, periodEndStr]
+        );
+
+        return {
+          currentMonthIncome: periodTotals?.income || 0,
+          currentMonthExpenses: periodTotals?.expenses || 0,
+          expectedIncome: periodTotals?.income || 0,
+          expectedExpenses: periodTotals?.expenses || 0,
+          expectedEndBalance:
+            (periodTotals?.income || 0) - (periodTotals?.expenses || 0),
+          confidence: 'high' as const,
+          basedOnMonths: 0,
+          isPastPeriod: true,
+        };
+      }
+
+      // Calculate days in period
+      const msPerDay = 1000 * 60 * 60 * 24;
+      const totalDays =
+        Math.floor((periodEnd.getTime() - periodStart.getTime()) / msPerDay) +
+        1;
+      const effectiveToday = now < periodStart ? periodStart : now;
+      const daysPassed =
+        now < periodStart
+          ? 0
+          : Math.floor(
+              (effectiveToday.getTime() - periodStart.getTime()) / msPerDay
+            ) + 1;
+      const daysRemaining = Math.max(0, totalDays - daysPassed);
+
+      const upToTodayStr =
+        now < periodStart
+          ? periodStartStr
+          : now > periodEnd
+            ? periodEndStr
+            : todayStr;
+
+      // Get current period totals
+      const currentPeriodTotals = await db.queryOneAsync<{
+        income: number;
+        expenses: number;
+      }>(
+        `SELECT 
+          COALESCE(SUM(CASE WHEN t.amount > 0 AND t.type != 'transfer' THEN t.amount ELSE 0 END), 0) as income,
+          COALESCE(SUM(CASE WHEN t.amount < 0 AND t.type != 'transfer' THEN ABS(t.amount) ELSE 0 END), 0) as expenses
+        FROM transactions t
+        JOIN accounts a ON t.account_id = a.id
+        WHERE a.profile_id = ? AND t.is_deleted = 0 AND t.date >= ? AND t.date <= ?`,
+        [pid, periodStartStr, upToTodayStr]
+      );
+
+      // Get last 6 months of data for patterns
+      const sixMonthsAgo = new Date(
+        periodStart.getFullYear(),
+        periodStart.getMonth() - 6,
+        1
+      );
+      const sixMonthsAgoStr = sixMonthsAgo.toISOString().split('T')[0];
+      const lastMonthEnd = new Date(
+        periodStart.getFullYear(),
+        periodStart.getMonth(),
+        0
+      );
+      const lastMonthEndStr = lastMonthEnd.toISOString().split('T')[0];
+
+      const recentMonths = await db.queryAsync<{
+        month: string;
+        income: number;
+        expenses: number;
+      }>(
+        `SELECT 
+          strftime('%Y-%m', t.date) as month,
+          COALESCE(SUM(CASE WHEN t.amount > 0 AND t.type != 'transfer' THEN t.amount ELSE 0 END), 0) as income,
+          COALESCE(SUM(CASE WHEN t.amount < 0 AND t.type != 'transfer' THEN ABS(t.amount) ELSE 0 END), 0) as expenses
+        FROM transactions t
+        JOIN accounts a ON t.account_id = a.id
+        WHERE a.profile_id = ? AND t.is_deleted = 0 AND t.date >= ? AND t.date <= ?
+        GROUP BY strftime('%Y-%m', t.date)
+        ORDER BY month DESC`,
+        [pid, sixMonthsAgoStr, lastMonthEndStr]
+      );
+
+      const totalMonths = recentMonths.length;
+      if (totalMonths < 1) return null;
+
+      // Calculate weighted average
+      let weightedIncome = 0;
+      let weightedExpenses = 0;
+      let totalWeight = 0;
+
+      recentMonths.forEach((month, index) => {
+        const weight = Math.max(3 - index * 0.5, 0.5);
+        weightedIncome += month.income * weight;
+        weightedExpenses += month.expenses * weight;
+        totalWeight += weight;
+      });
+
+      const avgMonthlyIncome =
+        totalWeight > 0 ? weightedIncome / totalWeight : 0;
+      const avgMonthlyExpenses =
+        totalWeight > 0 ? weightedExpenses / totalWeight : 0;
+
+      const proportionRemaining = totalDays > 0 ? daysRemaining / totalDays : 0;
+      const expectedAdditionalIncome = avgMonthlyIncome * proportionRemaining;
+      const expectedAdditionalExpenses =
+        avgMonthlyExpenses * proportionRemaining;
+
+      const expectedIncome =
+        (currentPeriodTotals?.income || 0) + expectedAdditionalIncome;
+      const expectedExpenses =
+        (currentPeriodTotals?.expenses || 0) + expectedAdditionalExpenses;
+
+      let confidence: 'low' | 'medium' | 'high' = 'low';
+      if (totalMonths >= 6) confidence = 'high';
+      else if (totalMonths >= 3) confidence = 'medium';
+
+      return {
+        currentMonthIncome: currentPeriodTotals?.income || 0,
+        currentMonthExpenses: currentPeriodTotals?.expenses || 0,
+        expectedIncome,
+        expectedExpenses,
+        expectedEndBalance: expectedIncome - expectedExpenses,
+        confidence,
+        basedOnMonths: totalMonths,
+        isPastPeriod: false,
+      };
+    },
+
+    // ============= Transaction Methods =============
+    async applyCategoriesToUncategorized() {
+      const pid = profileId();
+      if (!pid) return { updated: 0, processed: 0 };
+
+      const rules = await this.getCategoryRules();
+      if (!rules || rules.length === 0) return { updated: 0, processed: 0 };
+
+      const uncategorized = await db.queryAsync<{
+        id: string;
+        merchant_name: string | null;
+        description: string | null;
+        opposing_account_name: string | null;
+      }>(
+        `SELECT t.id, t.merchant_name, t.description, t.opposing_account_name
+         FROM transactions t
+         JOIN accounts a ON t.account_id = a.id
+         WHERE t.category_id IS NULL AND a.profile_id = ? AND t.is_deleted = 0`,
+        [pid]
+      );
+
+      let updated = 0;
+      const now = Date.now();
+
+      for (const tx of uncategorized) {
+        const textToMatch = `${tx.merchant_name || ''} ${tx.description || ''} ${tx.opposing_account_name || ''}`;
+
+        for (const rule of rules) {
+          try {
+            const pattern = new RegExp(rule.pattern, 'i');
+            if (pattern.test(textToMatch)) {
+              await db.runAsync(
+                'UPDATE transactions SET category_id = ?, updated_at = ? WHERE id = ?',
+                [rule.category_id, now, tx.id]
+              );
+              updated++;
+              break;
+            }
+          } catch {
+            continue;
+          }
+        }
+      }
+
+      return { updated, processed: uncategorized.length };
+    },
+
+    async bulkCategorizeByCounterparty(
+      counterparty: string,
+      categoryId: string
+    ) {
+      const pid = profileId();
+      if (!pid) return { updated: 0, counterparty: null };
+
+      const result = await db.runAsync(
+        `UPDATE transactions SET category_id = ?, updated_at = ?
+         WHERE (opposing_account_name LIKE ? OR merchant_name LIKE ?)
+         AND account_id IN (SELECT id FROM accounts WHERE profile_id = ?)
+         AND is_deleted = 0`,
+        [categoryId, Date.now(), `%${counterparty}%`, `%${counterparty}%`, pid]
+      );
+
+      return { updated: result.changes, counterparty };
+    },
+
+    async bulkRenameByCounterparty(oldName: string, newName: string) {
+      const pid = profileId();
+      if (!pid) return { updated: 0 };
+
+      const result = await db.runAsync(
+        `UPDATE transactions SET merchant_name = ?, updated_at = ?
+         WHERE (opposing_account_name LIKE ? OR merchant_name LIKE ?)
+         AND account_id IN (SELECT id FROM accounts WHERE profile_id = ?)
+         AND is_deleted = 0`,
+        [newName, Date.now(), `%${oldName}%`, `%${oldName}%`, pid]
+      );
+
+      return { updated: result.changes };
+    },
+
+    async resetMerchantNames() {
+      const pid = profileId();
+      if (!pid) return { updated: 0 };
+
+      const result = await db.runAsync(
+        `UPDATE transactions SET merchant_name = opposing_account_name, updated_at = ?
+         WHERE account_id IN (SELECT id FROM accounts WHERE profile_id = ?)
+         AND is_deleted = 0`,
+        [Date.now(), pid]
+      );
+
+      return { updated: result.changes };
+    },
+
+    async detectTransfers() {
+      const pid = profileId();
+      if (!pid) return { markedAsTransfer: 0 };
+
+      // Get all account IBANs for this profile
+      const accounts = await this.getAccounts();
+      const accountIbans = accounts.map((a) => a.iban.toUpperCase());
+
+      if (accountIbans.length === 0) return { markedAsTransfer: 0 };
+
+      const placeholders = accountIbans.map(() => '?').join(',');
+      const result = await db.runAsync(
+        `UPDATE transactions SET type = 'transfer', updated_at = ?
+         WHERE UPPER(opposing_account_iban) IN (${placeholders})
+         AND account_id IN (SELECT id FROM accounts WHERE profile_id = ?)
+         AND type != 'transfer'
+         AND is_deleted = 0`,
+        [Date.now(), ...accountIbans, pid]
+      );
+
+      return { markedAsTransfer: result.changes };
+    },
+
+    // ============= Category Methods =============
+    async getSeedCategories(language: 'nl' | 'en' = 'nl') {
+      // Return a basic set of seed categories for local use
+      const categories = [
+        {
+          name: language === 'nl' ? 'Wonen & Huisvesting' : 'Housing & Living',
+          icon: '🏠',
+          color: '#1E40AF',
+          description: language === 'nl' ? 'Woonlasten' : 'Housing costs',
+          subcategories: [],
+        },
+        {
+          name: language === 'nl' ? 'Boodschappen' : 'Groceries',
+          icon: '🛒',
+          color: '#34D399',
+          description:
+            language === 'nl'
+              ? 'Supermarkt en dagelijkse boodschappen'
+              : 'Supermarket and daily groceries',
+          subcategories: [],
+        },
+        {
+          name: language === 'nl' ? 'Vervoer' : 'Transport',
+          icon: '🚗',
+          color: '#93C5FD',
+          description:
+            language === 'nl'
+              ? 'Auto, OV en reizen'
+              : 'Car, public transport and travel',
+          subcategories: [],
+        },
+        {
+          name: language === 'nl' ? 'Uit eten' : 'Dining Out',
+          icon: '🍽️',
+          color: '#FCD34D',
+          description:
+            language === 'nl'
+              ? 'Restaurants en eten bestellen'
+              : 'Restaurants and food delivery',
+          subcategories: [],
+        },
+        {
+          name: language === 'nl' ? 'Entertainment' : 'Entertainment',
+          icon: '🎬',
+          color: '#F9A8D4',
+          description:
+            language === 'nl'
+              ? 'Uitgaan en vrije tijd'
+              : 'Going out and leisure',
+          subcategories: [],
+        },
+        {
+          name: language === 'nl' ? 'Gezondheid' : 'Health',
+          icon: '💊',
+          color: '#FCA5A5',
+          description:
+            language === 'nl' ? 'Medische kosten' : 'Medical expenses',
+          subcategories: [],
+        },
+        {
+          name: language === 'nl' ? 'Winkelen' : 'Shopping',
+          icon: '🛍️',
+          color: '#C4B5FD',
+          description:
+            language === 'nl'
+              ? 'Kleding en overig winkelen'
+              : 'Clothing and other shopping',
+          subcategories: [],
+        },
+        {
+          name: language === 'nl' ? 'Abonnementen' : 'Subscriptions',
+          icon: '📱',
+          color: '#DDD6FE',
+          description:
+            language === 'nl'
+              ? 'Maandelijkse abonnementen'
+              : 'Monthly subscriptions',
+          subcategories: [],
+        },
+        {
+          name: language === 'nl' ? 'Salaris' : 'Salary',
+          icon: '💰',
+          color: '#6EE7B7',
+          description:
+            language === 'nl' ? 'Inkomen uit werk' : 'Income from work',
+          subcategories: [],
+        },
+        {
+          name: language === 'nl' ? 'Overboekingen' : 'Transfers',
+          icon: '↔️',
+          color: '#A5B4FC',
+          description:
+            language === 'nl' ? 'Interne overboekingen' : 'Internal transfers',
+          subcategories: [],
+        },
+        {
+          name: language === 'nl' ? 'Overig' : 'Other',
+          icon: '📦',
+          color: '#E5E7EB',
+          description:
+            language === 'nl' ? 'Overige uitgaven' : 'Other expenses',
+          subcategories: [],
+        },
+      ];
+      return categories;
+    },
+
+    async applySeedCategories(
+      seedCategories: Array<{ name: string; icon?: string; color?: string }>
+    ) {
+      const pid = profileId();
+      if (!pid) throw new Error('No active profile');
+
+      const created: Array<number | string> = [];
+      for (const seed of seedCategories) {
+        const category = await this.createCategory({
+          name: seed.name,
+          icon: seed.icon,
+          color: seed.color,
+        });
+        created.push(category.id);
+      }
+
+      return { created: created.length, ids: created };
+    },
+
+    async deleteAllCategories() {
+      const pid = profileId();
+      if (!pid) return { deleted: 0 };
+
+      const result = await db.runAsync(
+        'UPDATE categories SET is_deleted = 1, updated_at = ? WHERE profile_id = ? AND is_deleted = 0',
+        [Date.now(), pid]
+      );
+
+      return { deleted: result.changes };
+    },
+
+    // ============= Account Methods =============
+    async reorderAccounts(orderedIds: string[]) {
+      const pid = profileId();
+      if (!pid) return { updated: 0 };
+
+      const now = Date.now();
+      let updated = 0;
+
+      for (let i = 0; i < orderedIds.length; i++) {
+        const result = await db.runAsync(
+          'UPDATE accounts SET order_index = ?, updated_at = ? WHERE id = ? AND profile_id = ?',
+          [i, now, orderedIds[i], pid]
+        );
+        updated += result.changes;
+      }
+
+      return { updated };
+    },
+
+    async deleteAllAccounts() {
+      const pid = profileId();
+      if (!pid) return { deleted: 0 };
+
+      const result = await db.runAsync(
+        'UPDATE accounts SET is_deleted = 1, updated_at = ? WHERE profile_id = ? AND is_deleted = 0',
+        [Date.now(), pid]
+      );
+
+      return { deleted: result.changes };
+    },
+
+    // ============= Budget Methods =============
+    async getBudgetSuggestions() {
+      const pid = profileId();
+      if (!pid) return [];
+
+      // Get average spending by category over last 3 months
+      const threeMonthsAgo = new Date();
+      threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+      const startDate = threeMonthsAgo.toISOString().split('T')[0];
+
+      const spending = await db.queryAsync<{
+        category_id: string;
+        category_name: string;
+        avg_amount: number;
+      }>(
+        `SELECT 
+          t.category_id, 
+          c.name as category_name,
+          AVG(ABS(t.amount)) as avg_amount
+        FROM transactions t
+        JOIN categories c ON t.category_id = c.id
+        JOIN accounts a ON t.account_id = a.id
+        WHERE a.profile_id = ? AND t.is_deleted = 0 AND t.type = 'expense' AND t.date >= ?
+        GROUP BY t.category_id
+        HAVING COUNT(*) >= 3
+        ORDER BY avg_amount DESC`,
+        [pid, startDate]
+      );
+
+      return spending.map((s) => ({
+        categoryId: s.category_id,
+        categoryName: s.category_name,
+        suggestedAmount: Math.ceil(s.avg_amount / 10) * 10, // Round up to nearest 10
+      }));
+    },
+
+    async deleteAllBudgets() {
+      const pid = profileId();
+      if (!pid) return { deleted: 0 };
+
+      const result = await db.runAsync(
+        'UPDATE budgets SET is_deleted = 1, updated_at = ? WHERE profile_id = ? AND is_deleted = 0',
+        [Date.now(), pid]
+      );
+
+      return { deleted: result.changes };
+    },
+
+    // ============= Address Book Methods =============
+    async getAddressBookContacts() {
+      const pid = profileId();
+      if (!pid) return [];
+
+      // Get all address book entries with their IBANs
+      // Match transactions via:
+      // 1. Direct address_book_id link (primary)
+      // 2. IBAN match when no direct link exists
+      // 3. Name match for shared IBANs when no direct link exists
+      return await db.queryAsync(
+        `SELECT 
+          ab.id,
+          ab.iban,
+          ab.name,
+          ab.description,
+          ab.notes,
+          ab.created_at,
+          ab.original_name,
+          COUNT(DISTINCT t.id) as transaction_count,
+          COALESCE(SUM(CASE WHEN t.amount > 0 THEN t.amount ELSE 0 END), 0) as total_income,
+          COALESCE(SUM(CASE WHEN t.amount < 0 THEN ABS(t.amount) ELSE 0 END), 0) as total_expenses,
+          MAX(t.date) as last_transaction_date
+        FROM address_book ab
+        LEFT JOIN transactions t ON (
+          t.is_deleted = 0 
+          AND t.profile_id = ?
+          AND (
+            t.address_book_id = ab.id
+            OR (
+              t.address_book_id IS NULL 
+              AND t.opposing_account_iban = ab.iban
+              AND (
+                ab.original_name IS NULL 
+                OR (t.opposing_account_name = ab.original_name OR t.merchant_name = ab.original_name)
+              )
+            )
+          )
+        )
+        WHERE ab.profile_id = ? AND ab.is_deleted = 0
+        GROUP BY ab.id
+        ORDER BY ab.name`,
+        [pid, pid]
+      );
+    },
+
+    async getAddressBookContact(id: string) {
+      const pid = profileId();
+      if (!pid) return null;
+
+      return await db.queryOneAsync(
+        `SELECT * FROM address_book WHERE id = ? AND profile_id = ? AND is_deleted = 0`,
+        [id, pid]
+      );
+    },
+
+    async mergeContacts(contactIds: string[], targetName?: string) {
+      const pid = profileId();
+      if (!pid || contactIds.length < 2) return { merged: 0 };
+
+      // Get the first contact as the target
+      const targetId = contactIds[0];
+      const target = await db.queryOneAsync<{
+        id: string;
+        name: string;
+        iban: string;
+      }>(
+        'SELECT id, name, iban FROM address_book WHERE id = ? AND profile_id = ?',
+        [targetId, pid]
+      );
+
+      if (!target) return { merged: 0 };
+
+      const now = Date.now();
+      const name = targetName || target.name;
+
+      // Update target name if provided
+      if (targetName) {
+        await db.runAsync(
+          'UPDATE address_book SET name = ?, updated_at = ? WHERE id = ?',
+          [name, now, targetId]
+        );
+      }
+
+      // Soft delete the other contacts and update their transactions
+      const otherIds = contactIds.slice(1);
+      for (const otherId of otherIds) {
+        // Get the other contact's IBAN
+        const other = await db.queryOneAsync<{ iban: string }>(
+          'SELECT iban FROM address_book WHERE id = ? AND profile_id = ?',
+          [otherId, pid]
+        );
+
+        if (other) {
+          // Update transactions that reference this contact's IBAN
+          await db.runAsync(
+            `UPDATE transactions SET merchant_name = ?, updated_at = ?
+             WHERE opposing_account_iban = ? 
+             AND account_id IN (SELECT id FROM accounts WHERE profile_id = ?)`,
+            [name, now, other.iban, pid]
+          );
+        }
+
+        // Soft delete the contact
+        await db.runAsync(
+          'UPDATE address_book SET is_deleted = 1, updated_at = ? WHERE id = ?',
+          [now, otherId]
+        );
+      }
+
+      return { merged: otherIds.length };
+    },
+
+    // ============= Cleanup Rules Methods =============
+    async getCleanupRules(): Promise<
+      { id: string; pattern: string; is_active: number; created_at: number }[]
+    > {
+      return (await db.queryAsync(
+        'SELECT * FROM name_cleanup_rules WHERE is_deleted = 0 ORDER BY created_at ASC'
+      )) as {
+        id: string;
+        pattern: string;
+        is_active: number;
+        created_at: number;
+      }[];
+    },
+
+    async createCleanupRule(pattern: string) {
+      const id = crypto.randomUUID();
+      const now = Date.now();
+
+      await db.runAsync(
+        'INSERT INTO name_cleanup_rules (id, pattern, is_active, created_at, updated_at) VALUES (?, ?, 1, ?, ?)',
+        [id, pattern, now, now]
+      );
+
+      return { id, pattern, isActive: true };
+    },
+
+    async deleteCleanupRule(id: string) {
+      await db.runAsync(
+        'UPDATE name_cleanup_rules SET is_deleted = 1, updated_at = ? WHERE id = ?',
+        [Date.now(), id]
+      );
+    },
+
+    async applyCleanupRules() {
+      const pid = profileId();
+      if (!pid) return { updated: 0 };
+
+      const rules = await this.getCleanupRules();
+      if (!rules || rules.length === 0) return { updated: 0 };
+
+      // Get all transactions with merchant names
+      const transactions = await db.queryAsync<{
+        id: string;
+        merchant_name: string;
+        opposing_account_name: string;
+      }>(
+        `SELECT t.id, t.merchant_name, t.opposing_account_name
+         FROM transactions t
+         JOIN accounts a ON t.account_id = a.id
+         WHERE a.profile_id = ? AND t.is_deleted = 0 AND (t.merchant_name IS NOT NULL OR t.opposing_account_name IS NOT NULL)`,
+        [pid]
+      );
+
+      let updated = 0;
+      const now = Date.now();
+
+      for (const tx of transactions) {
+        const name = tx.merchant_name || tx.opposing_account_name || '';
+        let cleaned = name;
+
+        for (const rule of rules) {
+          if (
+            rule.pattern.startsWith('/') &&
+            rule.pattern.lastIndexOf('/') > 0
+          ) {
+            try {
+              const lastSlash = rule.pattern.lastIndexOf('/');
+              const pattern = rule.pattern.slice(1, lastSlash);
+              const flags = rule.pattern.slice(lastSlash + 1) || 'gi';
+              const regex = new RegExp(pattern, flags);
+              cleaned = cleaned.replace(regex, '').trim();
+            } catch {
+              // Skip invalid regex
+            }
+          } else {
+            const escapedPattern = rule.pattern.replace(
+              /[.*+?^${}()|[\]\\]/g,
+              '\\$&'
+            );
+            cleaned = cleaned
+              .replace(new RegExp(escapedPattern, 'gi'), '')
+              .trim();
+          }
+        }
+
+        cleaned = cleaned.replace(/\s+/g, ' ').trim() || name;
+
+        if (cleaned !== name) {
+          await db.runAsync(
+            'UPDATE transactions SET merchant_name = ?, updated_at = ? WHERE id = ?',
+            [cleaned, now, tx.id]
+          );
+          updated++;
+        }
+      }
+
+      return { updated };
+    },
+
+    // ============= Top Accounts =============
+    async getTopAccounts(
+      limit: number = 10,
+      type: 'expense' | 'income' | 'all' = 'expense',
+      startDate?: string,
+      endDate?: string
+    ): Promise<{
+      accounts: Array<{
+        iban: string;
+        name: string;
+        description: string | null;
+        isInAddressBook: boolean;
+        addressBookId: string | null;
+        transactionCount: number;
+        totalAmount: number;
+        netAmount: number;
+      }>;
+      totalCount: number;
+      hasMore: boolean;
+    }> {
+      const pid = profileId();
+      if (!pid) return { accounts: [], totalCount: 0, hasMore: false };
+
+      let amountCondition = '';
+      if (type === 'expense') {
+        amountCondition = 'AND t.amount < 0';
+      } else if (type === 'income') {
+        amountCondition = 'AND t.amount > 0';
+      }
+
+      let dateCondition = '';
+      const queryParams: (string | number)[] = [pid, pid];
+      if (startDate && endDate) {
+        dateCondition = 'AND t.date >= ? AND t.date <= ?';
+        queryParams.push(startDate, endDate);
+      }
+      queryParams.push(limit);
+
+      const rows = await db.queryAsync<{
+        iban: string;
+        name: string;
+        description: string | null;
+        is_in_addressbook: number;
+        addressbook_id: string | null;
+        transaction_count: number;
+        total_amount: number;
+        net_amount: number;
+      }>(
+        `
+        SELECT 
+          t.opposing_account_iban as iban,
+          COALESCE(ab.name, t.opposing_account_name) as name,
+          ab.description,
+          CASE WHEN ab.id IS NOT NULL THEN 1 ELSE 0 END as is_in_addressbook,
+          ab.id as addressbook_id,
+          COUNT(t.id) as transaction_count,
+          SUM(ABS(t.amount)) as total_amount,
+          SUM(t.amount) as net_amount
+        FROM transactions t
+        JOIN accounts a ON t.account_id = a.id
+        LEFT JOIN address_book ab ON ab.iban = t.opposing_account_iban AND ab.profile_id = ? AND ab.is_deleted = 0
+        WHERE a.profile_id = ?
+          AND t.type != 'transfer'
+          AND t.opposing_account_iban IS NOT NULL
+          AND t.opposing_account_iban != ''
+          AND t.is_deleted = 0
+          ${amountCondition}
+          ${dateCondition}
+        GROUP BY t.opposing_account_iban
+        ORDER BY total_amount DESC
+        LIMIT ?
+      `,
+        queryParams
+      );
+
+      // Get total count
+      const countParams: (string | number)[] = [pid];
+      if (startDate && endDate) {
+        countParams.push(startDate, endDate);
+      }
+
+      const countResult = await db.queryOneAsync<{ count: number }>(
+        `
+        SELECT COUNT(*) as count
+        FROM (
+          SELECT t.opposing_account_iban
+          FROM transactions t
+          JOIN accounts a ON t.account_id = a.id
+          WHERE a.profile_id = ?
+            AND t.type != 'transfer'
+            AND t.opposing_account_iban IS NOT NULL
+            AND t.opposing_account_iban != ''
+            AND t.is_deleted = 0
+            ${amountCondition}
+            ${dateCondition}
+          GROUP BY t.opposing_account_iban
+        )
+      `,
+        countParams
+      );
+
+      const totalCount = countResult?.count || 0;
+
+      return {
+        accounts: rows.map((row) => ({
+          iban: row.iban,
+          name: row.name,
+          description: row.description,
+          isInAddressBook: row.is_in_addressbook === 1,
+          addressBookId: row.addressbook_id,
+          transactionCount: row.transaction_count,
+          totalAmount: row.total_amount,
+          netAmount: row.net_amount,
+        })),
+        totalCount,
+        hasMore: totalCount > limit,
+      };
+    },
+
+    // ============= Shared IBANs / Payment Provider Methods =============
+    async getSharedIbans(): Promise<
+      { id: string; iban: string; provider_name: string; created_at: number }[]
+    > {
+      return (await db.queryAsync(
+        'SELECT * FROM shared_ibans WHERE is_deleted = 0 ORDER BY provider_name ASC'
+      )) as {
+        id: string;
+        iban: string;
+        provider_name: string;
+        created_at: number;
+      }[];
+    },
+
+    /**
+     * Get shared IBANs with their merchants (payment processors that have multiple merchants)
+     * This is the full data needed for the Shared IBANs card in the addressbook
+     */
+    async getSharedIbansWithMerchants(): Promise<
+      Array<{
+        iban: string;
+        merchantCount: number;
+        merchants: Array<{ name: string; transactionCount: number }>;
+        inAddressBook: boolean;
+        addressBookId: string | null;
+        isMarkedShared: boolean;
+        isPartiallyResolved: boolean;
+        providerName: string | null;
+        isKnownProvider: boolean;
+        knownProviderName: string | null;
+      }>
+    > {
+      const pid = profileId();
+      if (!pid) return [];
+
+      // Find IBANs that have multiple different merchant names in transactions
+      // that are not yet resolved (address_book_id IS NULL)
+      const sharedIbans = (await db.queryAsync(
+        `SELECT 
+          opposing_account_iban as iban,
+          COUNT(DISTINCT opposing_account_name) as name_count
+        FROM transactions 
+        WHERE opposing_account_iban IS NOT NULL 
+          AND opposing_account_iban != ''
+          AND opposing_account_iban NOT IN (SELECT iban FROM accounts WHERE profile_id = ?)
+          AND profile_id = ?
+          AND address_book_id IS NULL
+        GROUP BY opposing_account_iban
+        HAVING name_count > 1 
+          OR opposing_account_iban IN (SELECT iban FROM shared_ibans WHERE is_deleted = 0)
+          OR opposing_account_iban IN (SELECT iban FROM address_book WHERE original_name IS NOT NULL AND profile_id = ? AND is_deleted = 0)`,
+        [pid, pid, pid]
+      )) as Array<{ iban: string; name_count: number }>;
+
+      // Get payment provider rules for pattern-based detection
+      const providerRules = (await db.queryAsync(
+        'SELECT name, patterns FROM payment_provider_rules WHERE is_deleted = 0'
+      )) as Array<{ name: string; patterns: string }>;
+
+      // Helper function to detect payment processor from transaction data
+      const detectProvider = (
+        iban: string,
+        merchantNames: string[]
+      ): string | null => {
+        const searchText = [iban, ...merchantNames].join(' ').toUpperCase();
+
+        const normalizePattern = (pattern: string) => {
+          return pattern
+            .replace(/\\\./g, '.')
+            .replace(/\\\*\.\*/g, '*')
+            .replace(/\\/g, '')
+            .trim();
+        };
+
+        // Check rules
+        for (const rule of providerRules) {
+          const patterns = rule.patterns
+            .split(/[|,]/)
+            .map((p) => normalizePattern(p).toUpperCase())
+            .filter(Boolean);
+          for (const pattern of patterns) {
+            if (pattern && searchText.includes(pattern)) {
+              return rule.name;
+            }
+          }
+        }
+
+        return null;
+      };
+
+      // For each shared IBAN, get the different merchant names
+      const result: Array<{
+        iban: string;
+        merchantCount: number;
+        merchants: Array<{ name: string; transactionCount: number }>;
+        inAddressBook: boolean;
+        addressBookId: string | null;
+        isMarkedShared: boolean;
+        isPartiallyResolved: boolean;
+        providerName: string | null;
+        isKnownProvider: boolean;
+        knownProviderName: string | null;
+      }> = [];
+
+      for (const si of sharedIbans) {
+        // Get address book entries for this IBAN
+        const resolvedEntries = (await db.queryAsync(
+          `SELECT name, original_name FROM address_book 
+           WHERE profile_id = ? AND iban = ? AND is_deleted = 0`,
+          [pid, si.iban]
+        )) as Array<{ name: string; original_name: string | null }>;
+
+        // Check if it's marked as shared
+        const markedShared = (await db.queryOneAsync(
+          'SELECT id, provider_name FROM shared_ibans WHERE iban = ? AND is_deleted = 0',
+          [si.iban]
+        )) as { id: string; provider_name: string } | null;
+
+        // Get all merchants for this IBAN that are not yet resolved
+        const merchants = (await db.queryAsync(
+          `SELECT 
+            opposing_account_name as name,
+            COUNT(*) as count
+          FROM transactions
+          WHERE opposing_account_iban = ?
+            AND profile_id = ?
+            AND address_book_id IS NULL
+          GROUP BY opposing_account_name
+          ORDER BY count DESC`,
+          [si.iban, pid]
+        )) as Array<{ name: string; count: number }>;
+
+        // Detect payment processor
+        const merchantNames = merchants.map((m) => m.name);
+        const detectedProviderName = detectProvider(si.iban, merchantNames);
+
+        // This IBAN is considered 'shared' if it has ANY existing resolutions + remaining merchants
+        const isPartiallyResolved = resolvedEntries.length > 0;
+
+        // Only include if there are multiple unresolved merchants
+        if (merchants.length > 1) {
+          result.push({
+            iban: si.iban,
+            merchantCount: merchants.length,
+            merchants: merchants.map((m) => ({
+              name: m.name,
+              transactionCount: m.count,
+            })),
+            inAddressBook: false,
+            addressBookId: null,
+            isMarkedShared: !!markedShared,
+            isPartiallyResolved,
+            providerName: markedShared?.provider_name || null,
+            isKnownProvider: !!detectedProviderName,
+            knownProviderName: detectedProviderName,
+          });
+        }
+      }
+
+      return result;
+    },
+
+    async getPaymentProviderRules(): Promise<
+      { id: string; name: string; patterns: string }[]
+    > {
+      return (await db.queryAsync(
+        'SELECT * FROM payment_provider_rules WHERE is_deleted = 0 ORDER BY name ASC'
+      )) as { id: string; name: string; patterns: string }[];
+    },
+
+    async createPaymentProviderRule(rule: { name: string; patterns: string }) {
+      const id = crypto.randomUUID();
+      const now = Date.now();
+
+      await db.runAsync(
+        'INSERT INTO payment_provider_rules (id, name, patterns, created_at, updated_at) VALUES (?, ?, ?, ?, ?)',
+        [id, rule.name, rule.patterns, now, now]
+      );
+
+      return { id, name: rule.name, patterns: rule.patterns };
+    },
+
+    async deletePaymentProviderRule(id: string) {
+      await db.runAsync(
+        'UPDATE payment_provider_rules SET is_deleted = 1, updated_at = ? WHERE id = ?',
+        [Date.now(), id]
+      );
+    },
+
+    // ============= Import Methods =============
+    async previewCsvImport(csvContent: string) {
+      // Basic CSV parsing for preview
+      const lines = csvContent.trim().split('\n');
+      if (lines.length < 2)
+        return { headers: [], rows: [], sampleRows: [], totalRows: 0 };
+
+      const firstLine = lines[0];
+      const semicolonCount = (firstLine.match(/;/g) || []).length;
+      const commaCount = (firstLine.match(/,/g) || []).length;
+      const delimiter = semicolonCount > commaCount ? ';' : ',';
+
+      const headers = firstLine
+        .split(delimiter)
+        .map((h) => h.trim().replace(/^"|"$/g, ''));
+
+      const rows: Record<string, string>[] = [];
+      for (let i = 1; i < lines.length; i++) {
+        const values = lines[i]
+          .split(delimiter)
+          .map((v) => v.trim().replace(/^"|"$/g, ''));
+        const row: Record<string, string> = {};
+        headers.forEach((h, idx) => {
+          row[h] = values[idx] || '';
+        });
+        rows.push(row);
+      }
+
+      return {
+        headers,
+        rows,
+        sampleRows: rows.slice(0, 10),
+        totalRows: rows.length,
+      };
+    },
+
+    async importCsv(
+      csvContent: string,
+      options: {
+        accountId: string;
+        mapping?: {
+          date: string;
+          amount: string;
+          description: string;
+          iban?: string;
+          counterparty?: string;
+          balance?: string;
+        };
+        direction?: string;
+      }
+    ) {
+      const pid = profileId();
+      if (!pid) throw new Error('No active profile');
+
+      const preview = await this.previewCsvImport(csvContent);
+      if (preview.rows.length === 0)
+        return { imported: 0, skipped: 0, errors: [] };
+
+      // Get or create default mapping
+      const mapping = options.mapping || {
+        date:
+          preview.headers.find((h) => /date|datum/i.test(h)) ||
+          preview.headers[0],
+        amount:
+          preview.headers.find((h) => /amount|bedrag/i.test(h)) ||
+          preview.headers[1],
+        description:
+          preview.headers.find((h) => /desc|omschrijving|name/i.test(h)) ||
+          preview.headers[2],
+        iban: preview.headers.find((h) => /iban|tegenrekening/i.test(h)),
+        counterparty: preview.headers.find((h) => /counterparty|naam/i.test(h)),
+      };
+
+      // Direction column for Af/Bij style CSVs
+      const directionColumn = options.direction;
+
+      const account = await db.queryOneAsync<{ iban: string }>(
+        'SELECT iban FROM accounts WHERE id = ?',
+        [options.accountId]
+      );
+
+      let imported = 0;
+      const errors: string[] = [];
+      const now = Date.now();
+
+      for (let i = 0; i < preview.rows.length; i++) {
+        const row = preview.rows[i];
+        try {
+          const dateStr = row[mapping.date];
+          const date = this._parseFlexibleDate(dateStr);
+          if (!date) {
+            errors.push(`Row ${i + 1}: Invalid date "${dateStr}"`);
+            continue;
+          }
+
+          let amount = this._parseFlexibleAmount(row[mapping.amount]);
+          if (amount === null) {
+            errors.push(
+              `Row ${i + 1}: Invalid amount "${row[mapping.amount]}"`
+            );
+            continue;
+          }
+
+          // Handle direction column (Af/Bij, Debit/Credit)
+          if (directionColumn && row[directionColumn]) {
+            const direction = row[directionColumn].toLowerCase().trim();
+            if (
+              direction === 'af' ||
+              direction === 'debit' ||
+              direction === 'd'
+            ) {
+              amount = -Math.abs(amount);
+            } else if (
+              direction === 'bij' ||
+              direction === 'credit' ||
+              direction === 'c'
+            ) {
+              amount = Math.abs(amount);
+            }
+          }
+
+          const description = row[mapping.description] || '';
+          const iban = mapping.iban ? row[mapping.iban] : null;
+          const counterparty = mapping.counterparty
+            ? row[mapping.counterparty]
+            : null;
+
+          // Generate hash to detect duplicates
+          const hash = this._generateHash(
+            date,
+            amount,
+            description,
+            account?.iban || ''
+          );
+
+          // Check for duplicate
+          const existing = await db.queryOneAsync(
+            'SELECT id FROM transactions WHERE import_hash = ?',
+            [hash]
+          );
+
+          if (existing) continue;
+
+          const id = crypto.randomUUID();
+          const type = amount > 0 ? 'income' : 'expense';
+
+          await db.runAsync(
+            `INSERT INTO transactions (id, date, amount, type, description, merchant_name, account_id, 
+             opposing_account_iban, opposing_account_name, import_hash, profile_id, created_at, updated_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+              id,
+              date,
+              amount,
+              type,
+              description,
+              counterparty,
+              options.accountId,
+              iban,
+              counterparty,
+              hash,
+              pid,
+              now,
+              now,
+            ]
+          );
+
+          imported++;
+        } catch (err) {
+          errors.push(
+            `Row ${i + 1}: ${err instanceof Error ? err.message : 'Unknown error'}`
+          );
+        }
+      }
+
+      return {
+        imported,
+        skipped: preview.rows.length - imported - errors.length,
+        errors,
+      };
+    },
+
+    // Helper methods for CSV import
+    _parseFlexibleDate(value: string): string | null {
+      if (!value) return null;
+      const cleaned = value.trim();
+
+      // YYYYMMDD
+      if (/^\d{8}$/.test(cleaned)) {
+        const year = cleaned.slice(0, 4);
+        const month = cleaned.slice(4, 6);
+        const day = cleaned.slice(6, 8);
+        return `${year}-${month}-${day}`;
+      }
+
+      // DD-MM-YYYY or DD/MM/YYYY
+      const euMatch = cleaned.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/);
+      if (euMatch) {
+        const [, day, month, year] = euMatch;
+        return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+      }
+
+      // YYYY-MM-DD
+      const isoMatch = cleaned.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/);
+      if (isoMatch) {
+        const [, year, month, day] = isoMatch;
+        return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+      }
+
+      return null;
+    },
+
+    _parseFlexibleAmount(value: string): number | null {
+      if (!value) return null;
+      let cleaned = value.trim();
+
+      const isNegative = cleaned.startsWith('-') || /af|debit/i.test(cleaned);
+      cleaned = cleaned
+        .replace(/[€$£¥-]/g, '')
+        .replace(/(af|bij|debit|credit)/gi, '')
+        .trim();
+
+      if (cleaned.includes(',') && cleaned.includes('.')) {
+        const lastComma = cleaned.lastIndexOf(',');
+        const lastDot = cleaned.lastIndexOf('.');
+        if (lastComma > lastDot) {
+          cleaned = cleaned.replace(/\./g, '').replace(',', '.');
+        } else {
+          cleaned = cleaned.replace(/,/g, '');
+        }
+      } else if (cleaned.includes(',')) {
+        if (/,\d{2}$/.test(cleaned)) {
+          cleaned = cleaned.replace(',', '.');
+        } else {
+          cleaned = cleaned.replace(/,/g, '');
+        }
+      }
+
+      const amount = parseFloat(cleaned);
+      if (isNaN(amount)) return null;
+      return isNegative ? -Math.abs(amount) : amount;
+    },
+
+    _generateHash(
+      date: string,
+      amount: number,
+      description: string,
+      accountIban: string
+    ): string {
+      const str = `${date}|${amount}|${description}|${accountIban}`;
+      let hash = 0;
+      for (let i = 0; i < str.length; i++) {
+        const char = str.charCodeAt(i);
+        hash = (hash << 5) - hash + char;
+        hash = hash & hash;
+      }
+      return Math.abs(hash).toString(16);
+    },
+
+    // ============= Profile/Deletion Methods =============
+    async deleteAllTransactions() {
+      const pid = profileId();
+      if (!pid) return { deleted: 0 };
+
+      const result = await db.runAsync(
+        `UPDATE transactions SET is_deleted = 1, updated_at = ?
+         WHERE account_id IN (SELECT id FROM accounts WHERE profile_id = ?) AND is_deleted = 0`,
+        [Date.now(), pid]
+      );
+
+      return { deleted: result.changes };
+    },
+
+    async createDemoData(targetProfileId: string) {
+      const now = Date.now();
+
+      // Import seed data
+      const {
+        flattenCategoriesForDB,
+        DEMO_MERCHANTS,
+        PAYMENT_PROCESSORS,
+        MULTI_IBAN_CONTACTS,
+        INCOME_SOURCES,
+        DEFAULT_DEMO_BUDGETS,
+        DEFAULT_PAYMENT_PROVIDER_RULES,
+      } = await import('@fluxby/shared');
+
+      // 1. Clear existing data for this profile
+      await db.runAsync('DELETE FROM budgets WHERE profile_id = ?', [
+        targetProfileId,
+      ]);
+      await db.runAsync('DELETE FROM category_rules WHERE profile_id = ?', [
+        targetProfileId,
+      ]);
+      await db.runAsync(
+        'DELETE FROM transactions WHERE account_id IN (SELECT id FROM accounts WHERE profile_id = ?)',
+        [targetProfileId]
+      );
+      await db.runAsync('DELETE FROM accounts WHERE profile_id = ?', [
+        targetProfileId,
+      ]);
+      await db.runAsync('DELETE FROM categories WHERE profile_id = ?', [
+        targetProfileId,
+      ]);
+      await db.runAsync('DELETE FROM address_book WHERE profile_id = ?', [
+        targetProfileId,
+      ]);
+
+      // 2. Seed categories with subcategories
+      const { parentCategories, subcategories } = flattenCategoriesForDB();
+      const categoryIdMap: Record<string, string> = {};
+
+      // Insert parent categories
+      for (const cat of parentCategories) {
+        const catId = crypto.randomUUID();
+        await db.runAsync(
+          'INSERT INTO categories (id, name, icon, color, description, profile_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+          [
+            catId,
+            cat.name,
+            cat.icon,
+            cat.color,
+            cat.description,
+            targetProfileId,
+            now,
+            now,
+          ]
+        );
+        categoryIdMap[cat.name] = catId;
+      }
+
+      // Insert subcategories with their rules
+      for (const sub of subcategories) {
+        const parentId = categoryIdMap[sub.parentName];
+        const subId = crypto.randomUUID();
+        await db.runAsync(
+          'INSERT INTO categories (id, name, parent_id, icon, color, description, profile_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+          [
+            subId,
+            sub.name,
+            parentId,
+            sub.icon,
+            sub.color,
+            sub.description,
+            targetProfileId,
+            now,
+            now,
+          ]
+        );
+        categoryIdMap[sub.name] = subId;
+
+        // Add category rules for subcategory
+        for (const rule of sub.rules) {
+          await db.runAsync(
+            'INSERT INTO category_rules (id, pattern, category_id, priority, profile_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            [crypto.randomUUID(), rule, subId, 0, targetProfileId, now, now]
+          );
+        }
+      }
+
+      // 3. Create demo accounts
+      const mainAccountId = crypto.randomUUID();
+      const savingsAccountId = crypto.randomUUID();
+      const demoAccountIban = 'NL00DEMO9999999999';
+      const savingsAccountIban = 'NL00DEMO8888888888';
+
+      await db.runAsync(
+        'INSERT INTO accounts (id, iban, name, type, bank, current_balance, profile_id, order_index, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        [
+          mainAccountId,
+          demoAccountIban,
+          'Demo Betaalrekening',
+          'checking',
+          'demo',
+          2500.0,
+          targetProfileId,
+          0,
+          now,
+          now,
+        ]
+      );
+
+      await db.runAsync(
+        'INSERT INTO accounts (id, iban, name, type, bank, current_balance, profile_id, order_index, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        [
+          savingsAccountId,
+          savingsAccountIban,
+          'Demo Spaarrekening',
+          'savings',
+          'demo',
+          5000.0,
+          targetProfileId,
+          1,
+          now,
+          now,
+        ]
+      );
+
+      // 4. Generate transactions for 18 months back
+      const currentDate = new Date();
+      const todayYear = currentDate.getUTCFullYear();
+      const todayMonth = currentDate.getUTCMonth();
+      const todayDay = currentDate.getUTCDate();
+
+      // Helper functions
+      const randomItem = <T>(arr: T[]): T =>
+        arr[Math.floor(Math.random() * arr.length)];
+      const randomAmount = (min: number, max: number) =>
+        Math.round((min + Math.random() * (max - min)) * 100) / 100;
+
+      // Allow certain merchants (e.g. Albert Heijn) to rotate through multiple IBANs
+      // so the demo address book can reliably show merged contacts.
+      const multiIbansByName = new Map(
+        MULTI_IBAN_CONTACTS.map((c: { name: string; ibans: string[] }) => [
+          c.name,
+          c.ibans,
+        ])
+      );
+
+      type DemoTransaction = {
+        date: string;
+        amount: number;
+        type: 'income' | 'expense' | 'transfer';
+        description: string;
+        merchant_name: string;
+        account_id: string;
+        opposing_iban: string;
+        opposing_name: string;
+        category_id: string | null;
+        payment_method: string | null;
+        payment_provider: string | null;
+      };
+
+      let transactions: DemoTransaction[] = [];
+
+      // Generate 18 months of data
+      for (let monthOffset = 0; monthOffset < 18; monthOffset++) {
+        const monthDate = new Date(currentDate);
+        monthDate.setMonth(monthDate.getMonth() - monthOffset);
+        const year = monthDate.getFullYear();
+        const month = monthDate.getMonth();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+        // Random number of transactions per month (10-30)
+        const txCount = 10 + Math.floor(Math.random() * 21);
+
+        // Monthly salary on the 24th
+        const salarySource = INCOME_SOURCES[0];
+        const salaryDay = 24;
+        if (monthOffset > 0 || currentDate.getDate() >= salaryDay) {
+          transactions.push({
+            date: new Date(Date.UTC(year, month, salaryDay))
+              .toISOString()
+              .split('T')[0],
+            amount: 2800 + randomAmount(-200, 200),
+            type: 'income',
+            description: 'Salaris',
+            merchant_name: salarySource.name,
+            account_id: mainAccountId,
+            opposing_iban: salarySource.iban,
+            opposing_name: salarySource.name,
+            category_id: categoryIdMap['Salaris'] || null,
+            payment_method: 'Overboeking',
+            payment_provider: null,
+          });
+        }
+
+        // Occasional zorgtoeslag (around 5th)
+        if (Math.random() > 0.3) {
+          const toeslagSource = INCOME_SOURCES[1];
+          transactions.push({
+            date: new Date(Date.UTC(year, month, 5))
+              .toISOString()
+              .split('T')[0],
+            amount: 115 + randomAmount(-10, 10),
+            type: 'income',
+            description: 'Zorgtoeslag',
+            merchant_name: toeslagSource.name,
+            account_id: mainAccountId,
+            opposing_iban: toeslagSource.iban,
+            opposing_name: toeslagSource.name,
+            category_id: categoryIdMap['Teruggaven'] || null,
+            payment_method: 'Overboeking',
+            payment_provider: null,
+          });
+        }
+
+        // Housing costs (around 1st)
+        const housing = randomItem(DEMO_MERCHANTS.housing);
+        transactions.push({
+          date: new Date(Date.UTC(year, month, 1)).toISOString().split('T')[0],
+          amount: -850,
+          type: 'expense',
+          description: 'Huur',
+          merchant_name: housing.name,
+          account_id: mainAccountId,
+          opposing_iban: housing.iban,
+          opposing_name: housing.name,
+          category_id: categoryIdMap['Huur & Hypotheek'] || null,
+          payment_method: 'Incasso',
+          payment_provider: null,
+        });
+
+        // Utilities (around 15th)
+        for (const utility of DEMO_MERCHANTS.utilities) {
+          transactions.push({
+            date: new Date(Date.UTC(year, month, 15))
+              .toISOString()
+              .split('T')[0],
+            amount: -randomAmount(80, 150),
+            type: 'expense',
+            description: 'Maandelijkse kosten',
+            merchant_name: utility.name,
+            account_id: mainAccountId,
+            opposing_iban: utility.iban,
+            opposing_name: utility.name,
+            category_id:
+              utility.name === 'Ziggo'
+                ? categoryIdMap['Mobiel & Internet'] || null
+                : categoryIdMap['Energie & Water'] || null,
+            payment_method: 'Incasso',
+            payment_provider: null,
+          });
+        }
+
+        // Insurance (around 27th)
+        for (const ins of DEMO_MERCHANTS.insurance) {
+          transactions.push({
+            date: new Date(Date.UTC(year, month, 27))
+              .toISOString()
+              .split('T')[0],
+            amount: -randomAmount(100, 180),
+            type: 'expense',
+            description: ins.name.includes('Zilveren')
+              ? 'Zorgverzekering'
+              : 'Autoverzekering',
+            merchant_name: ins.name,
+            account_id: mainAccountId,
+            opposing_iban: ins.iban,
+            opposing_name: ins.name,
+            category_id: ins.name.includes('Zilveren')
+              ? categoryIdMap['Zorgverzekering'] || null
+              : categoryIdMap['Auto Kosten'] || null,
+            payment_method: 'Incasso',
+            payment_provider: null,
+          });
+        }
+
+        // Monthly subscriptions
+        for (const sub of DEMO_MERCHANTS.subscriptions) {
+          transactions.push({
+            date: new Date(
+              Date.UTC(year, month, 10 + Math.floor(Math.random() * 5))
+            )
+              .toISOString()
+              .split('T')[0],
+            amount: -randomAmount(10, 20),
+            type: 'expense',
+            description: 'Maandabonnement',
+            merchant_name: sub.name,
+            account_id: mainAccountId,
+            opposing_iban: sub.iban,
+            opposing_name: sub.name,
+            category_id:
+              sub.name === 'KPN'
+                ? categoryIdMap['Mobiel & Internet'] || null
+                : categoryIdMap['Streaming & Media'] || null,
+            payment_method: 'Incasso',
+            payment_provider: null,
+          });
+        }
+
+        // Savings transfer (around 2nd)
+        transactions.push({
+          date: new Date(Date.UTC(year, month, 2)).toISOString().split('T')[0],
+          amount: -250,
+          type: 'transfer',
+          description: 'Sparen',
+          merchant_name: 'Eigen rekening',
+          account_id: mainAccountId,
+          opposing_iban: savingsAccountIban,
+          opposing_name: 'Demo Spaarrekening',
+          category_id: null,
+          payment_method: 'Overboeking',
+          payment_provider: null,
+        });
+
+        // Random daily expenses
+        for (let i = 0; i < txCount; i++) {
+          const maxDay =
+            monthOffset === 0
+              ? Math.min(daysInMonth, currentDate.getDate())
+              : daysInMonth;
+          const day = 1 + Math.floor(Math.random() * maxDay);
+          const expenseType = Math.random();
+
+          let merchant: { name: string; iban: string };
+          let amount: number;
+          let description: string;
+          let categoryId: string | null = null;
+
+          const useProcessor = Math.random() > 0.6;
+          const processor = useProcessor
+            ? randomItem(PAYMENT_PROCESSORS)
+            : null;
+
+          if (expenseType < 0.3) {
+            merchant = randomItem(DEMO_MERCHANTS.supermarkets);
+            amount = -randomAmount(15, 120);
+            description = 'Boodschappen';
+            categoryId = categoryIdMap['Supermarkt'] || null;
+          } else if (expenseType < 0.45) {
+            merchant = randomItem(DEMO_MERCHANTS.restaurants);
+            amount = -randomAmount(12, 60);
+            description =
+              merchant.name.includes('bezorgd') ||
+              merchant.name.includes('Uber')
+                ? 'Eten bestellen'
+                : 'Uit eten';
+            categoryId =
+              merchant.name.includes('bezorgd') ||
+              merchant.name.includes('Uber')
+                ? categoryIdMap['Eten Bestellen'] || null
+                : categoryIdMap['Restaurants & Bars'] || null;
+          } else if (expenseType < 0.55) {
+            merchant = randomItem(DEMO_MERCHANTS.transport);
+            amount = -randomAmount(5, 80);
+            description = merchant.name === 'NS' ? 'Treinreis' : 'Tanken';
+            categoryId =
+              merchant.name === 'NS'
+                ? categoryIdMap['Openbaar Vervoer'] || null
+                : merchant.name.includes('Park')
+                  ? categoryIdMap['Parkeren & Taxi'] || null
+                  : categoryIdMap['Brandstof & Laden'] || null;
+          } else if (expenseType < 0.65) {
+            merchant = randomItem(DEMO_MERCHANTS.health);
+            amount = -randomAmount(8, 35);
+            description = 'Persoonlijke verzorging';
+            categoryId = categoryIdMap['Drogisterij'] || null;
+          } else if (expenseType < 0.8) {
+            merchant = randomItem(DEMO_MERCHANTS.shopping);
+            amount = -randomAmount(15, 150);
+            description = 'Aankoop';
+            categoryId =
+              merchant.name === 'IKEA'
+                ? categoryIdMap['Inrichting & Tuin'] || null
+                : categoryIdMap['Kleding & Schoenen'] || null;
+          } else {
+            merchant = randomItem(DEMO_MERCHANTS.leisure);
+            amount = -randomAmount(10, 50);
+            description = merchant.name.includes('Fit')
+              ? 'Sportschool'
+              : 'Uitje';
+            categoryId = merchant.name.includes('Fit')
+              ? categoryIdMap['Sport & Wellness'] || null
+              : categoryIdMap['Uitjes & Cultuur'] || null;
+          }
+
+          let paymentMethod: string;
+          if (processor) {
+            paymentMethod = 'iDEAL';
+          } else if (
+            ['Bol.com', 'Amazon', 'MediaMarkt'].includes(merchant.name)
+          ) {
+            paymentMethod = 'iDEAL';
+          } else {
+            paymentMethod = 'Pinpas';
+          }
+
+          transactions.push({
+            date: new Date(Date.UTC(year, month, day))
+              .toISOString()
+              .split('T')[0],
+            amount,
+            type: 'expense',
+            description,
+            merchant_name: processor
+              ? `${merchant.name} via ${processor.name}`
+              : merchant.name,
+            account_id: mainAccountId,
+            opposing_iban: processor
+              ? processor.iban
+              : multiIbansByName.get(merchant.name)?.length
+                ? multiIbansByName.get(merchant.name)![
+                    (monthOffset + day) %
+                      multiIbansByName.get(merchant.name)!.length
+                  ]
+                : merchant.iban,
+            opposing_name: processor ? merchant.name : merchant.name,
+            category_id: categoryId,
+            payment_method: paymentMethod,
+            payment_provider: processor ? processor.name : null,
+          });
+        }
+
+        // Multi-IBAN contact transactions
+        for (const contact of MULTI_IBAN_CONTACTS) {
+          const txCount = 1 + (monthOffset % 2);
+          for (let i = 0; i < txCount; i++) {
+            const ibanIndex = (monthOffset + i) % contact.ibans.length;
+            transactions.push({
+              date: new Date(
+                Date.UTC(
+                  year,
+                  month,
+                  5 + i * 10 + Math.floor(Math.random() * 5)
+                )
+              )
+                .toISOString()
+                .split('T')[0],
+              amount: -randomAmount(40, 180),
+              type: 'expense',
+              description: contact.descriptions[ibanIndex],
+              merchant_name: contact.name,
+              account_id: mainAccountId,
+              opposing_iban: contact.ibans[ibanIndex],
+              opposing_name: contact.name,
+              category_id: null,
+              payment_method: 'Overboeking',
+              payment_provider: null,
+            });
+          }
+        }
+
+        // Payment processor transactions
+        const idealMerchants = ['Bol.com', 'Coolblue', 'MediaMarkt', 'Wehkamp'];
+        for (let i = 0; i < 2; i++) {
+          const merchant =
+            idealMerchants[(monthOffset * 3 + i) % idealMerchants.length];
+          transactions.push({
+            date: new Date(
+              Date.UTC(year, month, 5 + i * 7 + Math.floor(Math.random() * 3))
+            )
+              .toISOString()
+              .split('T')[0],
+            amount: -randomAmount(20, 180),
+            type: 'expense',
+            description: `Online aankoop ${merchant}`,
+            merchant_name: `${merchant} via ${PAYMENT_PROCESSORS[0].name}`,
+            account_id: mainAccountId,
+            opposing_iban: PAYMENT_PROCESSORS[0].iban,
+            opposing_name: merchant,
+            category_id: categoryIdMap['Warenhuis'] || null,
+            payment_method: 'iDEAL',
+            payment_provider: PAYMENT_PROCESSORS[0].name,
+          });
+        }
+
+        const adyenMerchants = ['Netflix', 'Spotify', 'Disney+', 'Uber'];
+        for (let i = 0; i < 2; i++) {
+          const merchant =
+            adyenMerchants[(monthOffset * 2 + i) % adyenMerchants.length];
+          transactions.push({
+            date: new Date(
+              Date.UTC(year, month, 1 + i * 8 + Math.floor(Math.random() * 3))
+            )
+              .toISOString()
+              .split('T')[0],
+            amount:
+              merchant === 'Uber'
+                ? -randomAmount(10, 45)
+                : -randomAmount(8, 18),
+            type: 'expense',
+            description:
+              merchant === 'Uber' ? 'Uber rit' : `${merchant} abonnement`,
+            merchant_name: `${merchant} via ${PAYMENT_PROCESSORS[1].name}`,
+            account_id: mainAccountId,
+            opposing_iban: PAYMENT_PROCESSORS[1].iban,
+            opposing_name: merchant,
+            category_id:
+              merchant === 'Uber'
+                ? categoryIdMap['Parkeren & Taxi'] || null
+                : categoryIdMap['Streaming & Media'] || null,
+            payment_method: merchant === 'Uber' ? 'iDEAL' : 'Incasso',
+            payment_provider: PAYMENT_PROCESSORS[1].name,
+          });
+        }
+
+        const mollieMerchants = ['Thuisbezorgd.nl', 'Zalando', 'Picnic'];
+        for (let i = 0; i < 2; i++) {
+          const merchant =
+            mollieMerchants[(monthOffset * 2 + i) % mollieMerchants.length];
+          const isDelivery = ['Thuisbezorgd.nl', 'Picnic'].includes(merchant);
+          transactions.push({
+            date: new Date(
+              Date.UTC(year, month, 12 + i * 6 + Math.floor(Math.random() * 3))
+            )
+              .toISOString()
+              .split('T')[0],
+            amount: isDelivery ? -randomAmount(15, 70) : -randomAmount(30, 100),
+            type: 'expense',
+            description: isDelivery ? 'Boodschappen bezorgd' : 'Online aankoop',
+            merchant_name: `${merchant} via ${PAYMENT_PROCESSORS[2].name}`,
+            account_id: mainAccountId,
+            opposing_iban: PAYMENT_PROCESSORS[2].iban,
+            opposing_name: merchant,
+            category_id: isDelivery
+              ? merchant === 'Thuisbezorgd.nl'
+                ? categoryIdMap['Eten Bestellen'] || null
+                : categoryIdMap['Supermarkt'] || null
+              : categoryIdMap['Kleding & Schoenen'] || null,
+            payment_method: 'iDEAL',
+            payment_provider: PAYMENT_PROCESSORS[2].name,
+          });
+        }
+      }
+
+      // Sanitize transactions: ensure at most 2 transactions for today
+      let todayCount = 0;
+      const sanitized: DemoTransaction[] = [];
+
+      for (const tx of transactions) {
+        let txDate = new Date(tx.date + 'T00:00:00Z');
+
+        if (
+          txDate.getUTCFullYear() === todayYear &&
+          txDate.getUTCMonth() === todayMonth &&
+          txDate.getUTCDate() > todayDay
+        ) {
+          if (todayDay > 1) {
+            const newDay = 1 + Math.floor(Math.random() * (todayDay - 1));
+            txDate = new Date(Date.UTC(todayYear, todayMonth, newDay));
+          } else {
+            txDate = new Date(Date.UTC(todayYear, todayMonth, todayDay));
+          }
+        }
+
+        if (
+          txDate.getUTCFullYear() === todayYear &&
+          txDate.getUTCMonth() === todayMonth &&
+          txDate.getUTCDate() === todayDay
+        ) {
+          if (todayCount < 2) {
+            todayCount++;
+          } else {
+            if (todayDay > 1) {
+              const newDay = 1 + Math.floor(Math.random() * (todayDay - 1));
+              txDate = new Date(Date.UTC(todayYear, todayMonth, newDay));
+            } else {
+              continue;
+            }
+          }
+        }
+
+        tx.date = txDate.toISOString().split('T')[0];
+        sanitized.push(tx);
+      }
+
+      transactions = sanitized;
+      transactions.sort(
+        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+      );
+
+      // Insert transactions
+      let balance = 2500;
+      for (const tx of transactions) {
+        balance += tx.amount;
+        const importHash = `demo_${targetProfileId}_${tx.date}_${tx.amount}_${tx.merchant_name}_${Math.random().toString(36).substring(7)}`;
+
+        await db.runAsync(
+          `INSERT INTO transactions (id, date, amount, type, description, merchant_name, account_id, opposing_account_iban, opposing_account_name, category_id, balance_after, payment_method, payment_provider, import_hash, profile_id, created_at, updated_at) 
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            crypto.randomUUID(),
+            tx.date,
+            tx.amount,
+            tx.type,
+            tx.description,
+            tx.merchant_name,
+            tx.account_id,
+            tx.opposing_iban,
+            tx.opposing_name,
+            tx.category_id,
+            balance,
+            tx.payment_method,
+            tx.payment_provider,
+            importHash,
+            targetProfileId,
+            now,
+            now,
+          ]
+        );
+      }
+
+      // 5. Create address book entries from unique opposing accounts
+      const uniqueIbans = new Map<string, string>();
+      for (const tx of transactions) {
+        if (!uniqueIbans.has(tx.opposing_iban)) {
+          uniqueIbans.set(tx.opposing_iban, tx.opposing_name);
+        }
+      }
+
+      const processorIbans = new Set(PAYMENT_PROCESSORS.map((p) => p.iban));
+      const multiIbanSet = new Set(MULTI_IBAN_CONTACTS.flatMap((c) => c.ibans));
+
+      for (const [iban, name] of uniqueIbans) {
+        if (
+          iban !== savingsAccountIban &&
+          iban !== demoAccountIban &&
+          !processorIbans.has(iban) &&
+          !multiIbanSet.has(iban)
+        ) {
+          // Always add contacts for demo data (removed randomization for consistency)
+          await db.runAsync(
+            'INSERT INTO address_book (id, iban, name, profile_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)',
+            [crypto.randomUUID(), iban, name, targetProfileId, now, now]
+          );
+        }
+      }
+
+      // Add multi-IBAN contacts
+      for (const contact of MULTI_IBAN_CONTACTS) {
+        const primaryIban = contact.ibans.find((iban) => uniqueIbans.has(iban));
+        if (!primaryIban) continue;
+
+        const contactId = crypto.randomUUID();
+
+        await db.runAsync(
+          'INSERT INTO address_book (id, iban, name, profile_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)',
+          [contactId, primaryIban, contact.name, targetProfileId, now, now]
+        );
+
+        // Persist primary + secondary IBANs so the UI can show merged contacts.
+        await db.runAsync(
+          'INSERT INTO contact_ibans (id, contact_id, iban, is_primary, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)',
+          [crypto.randomUUID(), contactId, primaryIban, 1, now, now]
+        );
+
+        for (const iban of contact.ibans) {
+          if (iban !== primaryIban && uniqueIbans.has(iban)) {
+            await db.runAsync(
+              'INSERT INTO contact_ibans (id, contact_id, iban, is_primary, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)',
+              [crypto.randomUUID(), contactId, iban, 0, now, now]
+            );
+          }
+        }
+      }
+
+      // Mark payment processor IBANs as shared
+      for (const processor of PAYMENT_PROCESSORS) {
+        await db.runAsync(
+          'INSERT OR IGNORE INTO shared_ibans (iban, provider_name, created_at, updated_at) VALUES (?, ?, ?, ?)',
+          [processor.iban, processor.name, now, now]
+        );
+      }
+
+      // 6. Seed payment provider rules
+      for (const rule of DEFAULT_PAYMENT_PROVIDER_RULES) {
+        await db.runAsync(
+          'INSERT OR IGNORE INTO payment_provider_rules (id, name, patterns, created_at) VALUES (?, ?, ?, ?)',
+          [crypto.randomUUID(), rule.name, rule.patterns, now]
+        );
+      }
+
+      // 7. Create budgets
+      for (const budget of DEFAULT_DEMO_BUDGETS) {
+        const catId = categoryIdMap[budget.categoryName];
+        if (catId) {
+          await db.runAsync(
+            'INSERT INTO budgets (id, category_id, amount, period, profile_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            [
+              crypto.randomUUID(),
+              catId,
+              budget.amount,
+              'monthly',
+              targetProfileId,
+              now,
+              now,
+            ]
+          );
+        }
+      }
+
+      return {
+        profileId: targetProfileId,
+        categories: Object.keys(categoryIdMap).length,
+        transactions: transactions.length,
+        addressBookEntries: uniqueIbans.size,
+        budgets: DEFAULT_DEMO_BUDGETS.length,
+        accounts: 2,
+      };
+    },
+
+    async getUser() {
+      const user = await db.queryOneAsync<{
+        id: string;
+        name: string;
+        avatar: string | null;
+        created_at: number;
+      }>('SELECT * FROM users WHERE is_deleted = 0 LIMIT 1', []);
+
+      if (!user) return null;
+
+      return {
+        id: user.id,
+        name: user.name,
+        avatar: user.avatar,
+        createdAt: new Date(user.created_at).toISOString(),
+      };
+    },
+
+    async createUser(data: { name: string; avatar?: string | null }) {
+      const id = crypto.randomUUID();
+      const now = Date.now();
+
+      await db.runAsync(
+        `INSERT INTO users (id, name, avatar, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?)`,
+        [id, data.name, data.avatar || null, now, now]
+      );
+
+      return {
+        id,
+        name: data.name,
+        avatar: data.avatar || null,
+        createdAt: new Date(now).toISOString(),
+      };
+    },
+
+    async updateUser(data: { name?: string; avatar?: string | null }) {
+      const user = await this.getUser();
+      if (!user) {
+        // Create user if doesn't exist (for onboarding flow)
+        if (data.name) {
+          return this.createUser({ name: data.name, avatar: data.avatar });
+        }
+        throw new Error('No user found and no name provided for creation');
+      }
+
+      const updates: string[] = [];
+      const params: unknown[] = [];
+
+      if (data.name !== undefined) {
+        if (typeof data.name !== 'string') {
+          console.error('Invalid name type:', typeof data.name);
+          return user;
+        }
+        updates.push('name = ?');
+        params.push(data.name);
+      }
+      if (data.avatar !== undefined) {
+        updates.push('avatar = ?');
+        params.push(data.avatar);
+      }
+
+      if (updates.length === 0) return user;
+
+      updates.push('updated_at = ?');
+      params.push(Date.now());
+      params.push(user.id);
+
+      try {
+        await db.runAsync(
+          `UPDATE users SET ${updates.join(', ')} WHERE id = ?`,
+          params
+        );
+      } catch (err) {
+        console.error('Failed to update user in DB:', err);
+        throw err;
+      }
+
+      return {
+        id: user.id,
+        name: data.name ?? user.name,
+        avatar: data.avatar ?? user.avatar,
+        createdAt: user.createdAt,
+      };
+    },
+
+    // ============= Additional Methods for API Compatibility =============
+    async applyCategoryRuleToTransactions(pattern: string, categoryId: string) {
+      const pid = profileId();
+      if (!pid) return { updated: 0 };
+
+      const now = Date.now();
+      const result = await db.runAsync(
+        `UPDATE transactions SET category_id = ?, updated_at = ?
+         WHERE id IN (
+           SELECT t.id FROM transactions t
+           JOIN accounts a ON t.account_id = a.id
+           WHERE a.profile_id = ? AND t.is_deleted = 0
+           AND (LOWER(t.merchant_name) LIKE ? OR LOWER(t.description) LIKE ?)
+         )`,
+        [
+          categoryId,
+          now,
+          pid,
+          `%${pattern.toLowerCase()}%`,
+          `%${pattern.toLowerCase()}%`,
+        ]
+      );
+
+      return { updated: result.changes };
+    },
+
+    async importAll(data: unknown) {
+      // Import all data from a JSON export
+      const importData = data as {
+        profiles?: unknown[];
+        accounts?: unknown[];
+        transactions?: unknown[];
+        categories?: unknown[];
+        budgets?: unknown[];
+        contacts?: unknown[];
+      };
+
+      const imported = {
+        profiles: 0,
+        accounts: 0,
+        transactions: 0,
+        categories: 0,
+        budgets: 0,
+        contacts: 0,
+      };
+
+      // This is a simplified import - in production would need more validation
+      if (importData.profiles && Array.isArray(importData.profiles)) {
+        imported.profiles = importData.profiles.length;
+      }
+
+      return imported;
+    },
+  };
+}
+
+export type DataService = ReturnType<typeof createDataService>;

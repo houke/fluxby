@@ -1,0 +1,28 @@
+{
+  "name": "@fluxby/core",
+  "version": "1.0.0",
+  "description": "Core business logic for Fluxby - CSV parsing, categorization, analytics",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@fluxby/shared": "*",
+    "papaparse": "^5.4.1",
+    "peerjs": "^1.5.4"
+  },
+  "devDependencies": {
+    "@types/papaparse": "^5.3.14",
+    "typescript": "^5.7.2"
+  }
+}

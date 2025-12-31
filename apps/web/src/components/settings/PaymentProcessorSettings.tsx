@@ -24,15 +24,21 @@ export function PaymentProcessorSettings() {
   const { t } = useLanguage();
   const queryClient = useQueryClient();
 
+  const splitPatterns = (patterns: string) =>
+    patterns
+      .split(/[|,]/)
+      .map((pattern) => pattern.trim())
+      .filter(Boolean);
+
   const [newRuleName, setNewRuleName] = useState('');
   const [newRulePatterns, setNewRulePatterns] = useState('');
-  const [editingRuleId, setEditingRuleId] = useState<number | null>(null);
+  const [editingRuleId, setEditingRuleId] = useState<string | null>(null);
   const [editRuleName, setEditRuleName] = useState('');
   const [editRulePatterns, setEditRulePatterns] = useState('');
 
   // Payment processor rules query (pattern-based)
   const { data: providerRules = [], isLoading: rulesLoading } = useQuery<
-    Array<{ id: number; name: string; patterns: string }>
+    Array<{ id: string; name: string; patterns: string }>
   >({
     queryKey: ['paymentProcessorRules'],
     queryFn: () => api.getPaymentProviderRules(),
@@ -41,7 +47,10 @@ export function PaymentProcessorSettings() {
   // Payment processor rules mutations
   const addRuleMutation = useMutation({
     mutationFn: ({ name, patterns }: { name: string; patterns: string }) =>
-      api.addPaymentProviderRule(name, patterns),
+      api.addPaymentProviderRule({
+        name,
+        patterns: splitPatterns(patterns),
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['paymentProcessorRules'] });
       setNewRuleName('');
@@ -55,10 +64,14 @@ export function PaymentProcessorSettings() {
       name,
       patterns,
     }: {
-      id: number;
+      id: string;
       name?: string;
       patterns?: string;
-    }) => api.updatePaymentProviderRule(id, { name, patterns }),
+    }) =>
+      api.updatePaymentProviderRule(id, {
+        name,
+        patterns: patterns ? splitPatterns(patterns) : undefined,
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['paymentProcessorRules'] });
       setEditingRuleId(null);
@@ -66,7 +79,7 @@ export function PaymentProcessorSettings() {
   });
 
   const deleteRuleMutation = useMutation({
-    mutationFn: (id: number) => api.deletePaymentProviderRule(id),
+    mutationFn: (id: string) => api.deletePaymentProviderRule(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['paymentProcessorRules'] });
     },

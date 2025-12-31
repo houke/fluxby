@@ -3,6 +3,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 
 const CTA = () => {
   const { t } = useLanguage();
+  const appHref = `${import.meta.env.BASE_URL}app/`;
 
   return (
     <section className='section-padding gradient-bg relative overflow-hidden'>
@@ -73,9 +74,14 @@ const CTA = () => {
 
           {/* CTA Buttons */}
           <div className='mb-16 flex flex-col justify-center sm:flex-row'>
-            <button className='text-fluxby-purple hover:bg-fluxby-light fluffy-shadow transform rounded-full bg-white px-12 py-6 text-xl font-black shadow-2xl transition-all duration-300 hover:scale-105 hover:text-white'>
+            <a
+              href={appHref}
+              target='_blank'
+              rel='noopener noreferrer'
+              className='text-fluxby-purple hover:bg-fluxby-light fluffy-shadow transform rounded-full bg-white px-12 py-6 text-xl font-black shadow-2xl transition-all duration-300 hover:scale-105 hover:text-white'
+            >
               {t.cta.getStarted}
-            </button>
+            </a>
           </div>
 
           {/* Small Fluxby Avatar */}
@@ -101,7 +107,6 @@ const CTA = () => {
                 height={240}
                 className='relative z-10 drop-shadow-2xl'
                 interactive={true}
-                animated={false}
               />
             </div>
           </div>

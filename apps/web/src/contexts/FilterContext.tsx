@@ -15,21 +15,21 @@ interface FilterState {
     start: Date;
     end: Date;
   };
-  categories: number[];
+  categories: string[];
   transactionType: 'all' | 'income' | 'expense' | 'transfer';
   opposingAccountIbans: string[];
   opposingAccountName: string | null;
-  addressBookId: number | null;
+  addressBookId: string | null;
 }
 
 interface FilterContextType {
   filters: FilterState;
   setDateRange: (start: Date, end: Date) => void;
-  setCategories: (categories: number[]) => void;
+  setCategories: (categories: string[]) => void;
   setTransactionType: (type: 'all' | 'income' | 'expense' | 'transfer') => void;
   setOpposingAccountIbans: (ibans: string[]) => void;
   setOpposingAccountName: (name: string | null) => void;
-  setAddressBookId: (id: number | null) => void;
+  setAddressBookId: (id: string | null) => void;
   clearOpposingAccountFilters: () => void;
   resetFilters: () => void;
 }
@@ -95,7 +95,7 @@ export function FilterProvider({ children }: { children: ReactNode }) {
     setFilters((prev) => ({ ...prev, dateRange: { start, end } }));
   }, []);
 
-  const setCategories = useCallback((categories: number[]) => {
+  const setCategories = useCallback((categories: string[]) => {
     setFilters((prev) => ({ ...prev, categories }));
   }, []);
 
@@ -114,7 +114,7 @@ export function FilterProvider({ children }: { children: ReactNode }) {
     setFilters((prev) => ({ ...prev, opposingAccountName: name }));
   }, []);
 
-  const setAddressBookId = useCallback((id: number | null) => {
+  const setAddressBookId = useCallback((id: string | null) => {
     setFilters((prev) => ({ ...prev, addressBookId: id }));
   }, []);
 

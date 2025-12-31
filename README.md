@@ -1,145 +1,138 @@
-# 💰 Fluxby - Financieel Dashboard
+# 💰 Fluxby - Financial Dashboard
 
-Een moderne, lokale applicatie voor het visualiseren en analyseren van je bankgegevens. Upload CSV-exports van je bank en krijg direct inzicht in je financiën.
+A modern, local-first application for visualizing and analyzing your bank data. Upload CSV exports from your bank and instantly gain insights into your finances.
 
 ![Dashboard Preview](docs/dashboard-preview.png)
 
-## ✨ Functies
+## ✨ Features
 
-- **📊 Overzichtelijk Dashboard** - Bekijk je inkomsten, uitgaven en saldo in één oogopslag
-- **📈 Grafieken & Analyses** - Interactieve grafieken voor trends en categorieën
-- **📁 CSV Import** - Upload eenvoudig CSV-exports van ING (meer banken volgen)
-- **🏷️ Automatische Categorisatie** - Transacties worden automatisch gecategoriseerd
-- **💬 Chat Assistent** - Stel vragen over je financiële data
-- **📱 Moderne Interface** - Strak design met een prettige gebruikerservaring
-- **🔒 100% Lokaal** - Alle data blijft op je eigen computer
+- **📊 Clear Dashboard** - View your income, expenses, and balance at a glance
+- **📈 Charts & Analytics** - Interactive charts for trends and categories
+- **📁 CSV Import** - Easily upload CSV exports from ING (more banks coming)
+- **🏷️ Automatic Categorization** - Transactions are automatically categorized
+- **📱 Modern Interface** - Clean design with a pleasant user experience
+- **🔒 100% Local** - All data stays on your own device
+- **🖥️ Desktop App** - Native apps for Windows, macOS, and Linux via Tauri
 
-## 🚀 Snel Starten
+## 🚀 Quick Start
 
-### Vereisten
+### Requirements
 
-- Node.js 22 of hoger
-- npm 10 of hoger
+- Node.js 22 or higher
+- npm 10 or higher
 
-### Installatie
+### Installation
 
 ```bash
-# Clone de repository
+# Clone the repository
 git clone <repository-url>
-cd finance
+cd fluxby
 
-# Installeer dependencies
+# Install dependencies
 npm install
 
-# Bouw het shared package
-npm run build -w packages/shared
-
-# Start de applicatie
+# Start the application
 npm run dev
 ```
 
-De applicatie is nu beschikbaar op:
+The application is now available at:
 
-- **Frontend:** http://localhost:5173
-- **API:** http://localhost:3001
+- **Web App:** http://localhost:5177/app/ (local-first, uses browser OPFS storage)
+- **Landing Page:** http://localhost:5177
+- **API (for developers only):** http://localhost:3001
 
-## 📂 Project Structuur
+> **Note:** The web app uses **OPFS (Origin Private File System)** for local-first storage. No backend server is required - the API is only for developers who want to build custom interfaces.
+
+## 📂 Project Structure
 
 ```
-finance/
+fluxby/
 ├── apps/
-│   ├── api/           # Express.js backend
-│   │   ├── src/
-│   │   │   ├── db/        # SQLite database schema
-│   │   │   ├── routes/    # API endpoints
-│   │   │   ├── services/  # Business logic
-│   │   │   └── index.ts   # Server entry point
-│   │   └── data/          # SQLite database bestanden
-│   │
-│   └── web/           # React frontend
-│       ├── src/
-│       │   ├── components/  # UI componenten
-│       │   ├── pages/       # Pagina componenten
-│       │   ├── lib/         # Utilities & API client
-│       │   └── main.tsx     # App entry point
-│       └── public/          # Statische bestanden
+│   ├── api/           # Express.js backend (optional, for developers building custom interfaces)
+│   ├── web/           # React PWA frontend (uses OPFS for local-first storage)
+│   ├── landing/       # Marketing & docs landing page
+│   └── tauri/         # Tauri desktop app wrapper
 │
 └── packages/
-    └── shared/        # Gedeelde types & utilities
+    ├── shared/        # Shared types & utilities
+    ├── database/      # Universal SQLite layer (OPFS/Tauri/Node)
+    └── core/          # Business logic (CSV parsing, analytics)
 ```
 
-## 📖 Gebruik
+## 🏠 Architecture
 
-### CSV Importeren
+### Local-First Design
 
-1. Ga naar de **Importeren** pagina
-2. Selecteer je bank (momenteel alleen ING)
-3. Sleep je CSV-bestand naar het upload veld of klik om te selecteren
-4. De transacties worden automatisch verwerkt en gecategoriseerd
+Fluxby is designed to work entirely in your browser without any server:
 
-**Let op:**
+- **Web App**: Uses SQLite WASM with OPFS storage - your data stays in your browser
+- **Desktop App (Tauri)**: Uses local SQLite storage
+- **No Backend Required**: The app works offline and can be hosted on GitHub Pages
+- **API Server**: Optional, only for developers building custom integrations
 
-- Transacties vóór de huidige maand worden slechts één keer geïmporteerd
-- Bij het importeren van data voor de huidige maand worden bestaande entries voor die maand eerst gewist
+## 📖 Usage
+
+### CSV Import
+
+1. Go to the **Import** page
+2. Select your bank (currently only ING)
+3. Drag your CSV file to the upload field or click to select
+4. Transactions are automatically processed and categorized
+
+**Note:**
+
+- Transactions before the current month are only imported once
+- When importing data for the current month, existing entries for that month are first deleted
 
 ### Dashboard
 
-Het dashboard toont:
+The dashboard shows:
 
-- Totaal saldo over alle rekeningen
-- Inkomsten en uitgaven van de huidige maand
-- Grafiek met maandelijkse trends
-- Verdeling per categorie
-- Recente transacties
+- Total balance across all accounts
+- Income and expenses for the current month
+- Chart with monthly trends
+- Distribution by category
+- Recent transactions
 
-### Transacties
+### Transactions
 
-- Bekijk alle transacties in een overzichtelijke tabel
-- Filter op periode, categorie of zoekterm
-- Sorteer op datum, bedrag of omschrijving
-- Pas categorieën handmatig aan
+- View all transactions in a clear table
+- Filter by period, category, or search term
+- Sort by date, amount, or description
+- Manually adjust categories
 
-### Analyses
+### Analytics
 
-- Uitgebreide grafieken en statistieken
-- Vergelijk periodes
-- Bekijk uitgavenpatronen per categorie
-- Identificeer trends
+- Detailed charts and statistics
+- Compare periods
+- View spending patterns by category
+- Identify trends
 
-### Budgetten
+### Budgets
 
-- Stel budgetten in per categorie
-- Volg je voortgang gedurende de maand
-- Ontvang visuele feedback bij overschrijding
+- Set budgets per category
+- Track your progress throughout the month
+- Receive visual feedback when exceeded
 
-### Chat
+## 🏦 Supported Banks
 
-- Stel vragen in natuurlijke taal over je financiën
-- Toegankelijk via de zwevende chat knop of de Chat pagina
-- Voorbeeldvragen:
-  - "Hoeveel heb ik uitgegeven aan boodschappen deze maand?"
-  - "Wat zijn mijn grootste uitgaven?"
-  - "Vergelijk mijn uitgaven van vorige maand met deze maand"
+| Bank     | Status       |
+| -------- | ------------ |
+| ING      | ✅ Supported |
+| Rabobank | 🔜 Planned   |
+| Knab     | 🔜 Planned   |
+| ASN      | 🔜 Planned   |
 
-## 🏦 Ondersteunde Banken
-
-| Bank     | Status         |
-| -------- | -------------- |
-| ING      | ✅ Ondersteund |
-| Rabobank | 🔜 Gepland     |
-| ABN AMRO | 🔜 Gepland     |
-| SNS      | 🔜 Gepland     |
-
-## 🛠️ Technische Stack
+## 🛠️ Technical Stack
 
 ### Frontend
 
-- React 18
+- React 19
 - TypeScript
-- Vite
+- Vite 6
 - Tailwind CSS
-- shadcn/ui componenten
-- Recharts voor grafieken
+- shadcn/ui components
+- Recharts for charts
 - TanStack Query & Table
 
 ### Backend
@@ -147,57 +140,140 @@ Het dashboard toont:
 - Express.js
 - TypeScript
 - SQLite (better-sqlite3)
-- Multer voor file uploads
-- PapaParse voor CSV parsing
+- Multer for file uploads
+- PapaParse for CSV parsing
 
-## 🔧 Configuratie
+### Desktop (Tauri)
 
-### Database
+- Tauri 2.0
+- Rust backend
+- Native file dialogs
+- Cross-platform (Windows, macOS, Linux)
 
-De SQLite database wordt automatisch aangemaakt in `data/fluxby.db`. Deze map wordt niet meegenomen in git.
+### Local-First Architecture
 
-### Categorisatie Regels
+- **SQLite WASM** - Database runs in browser/Tauri
+- **OPFS Storage** - Persistent storage in browser sandbox
+- **Password Protection** - App locks on idle, password required to unlock
+- **Peer-to-Peer Sync** - Device pairing via WebRTC
 
-Pas automatische categorisatie aan via de **Categorieën** pagina. Voeg regels toe gebaseerd op:
+## 🔒 Security Model
 
-- Tegenrekening
-- Omschrijving (bevat tekst)
-- Bedrag range
+Fluxby uses a **Local-First** security model:
+
+1. **Password Protection** - App locks on idle or browser close
+2. **PBKDF2 Hashing** - Password verified via secure hash (100k iterations)
+3. **Local Storage** - All data stays in your browser's OPFS sandbox
+4. **Auto-Lock** - Session cleared on tab close or idle timeout
+
+Your data never leaves your device.
 
 ## 📝 Scripts
 
 ```bash
-# Start development servers
+# Start UI development (Landing + Web app)
 npm run dev
 
-# Alleen API server
+# Start full local dev (API + Landing + Web app)
+npm run dev:all
+
+# Start only the local API server (developer tool)
 npm run dev:api
 
-# Alleen web app
+# Start only the Web app (port 5178)
+# Use this for Tauri (it needs the Web dev server)
 npm run dev:web
 
-# Build alles
+# Start Tauri desktop development
+npm run dev:tauri
+
+# Build everything
 npm run build
+
+# Build a GitHub Pages-ready static folder (dist/)
+# Includes landing at / and the app at /app/
+npm run build:pages
+
+# Build and serve the static dist/ folder locally
+npm run serve:pages
+
+# Build desktop app
+npm run build:tauri
 
 # Type checking
 npm run typecheck
+
+# Run tests
+npm run test:run
+
+# Create a release (interactive)
+npm run release
+
+# Preview release (dry run)
+npm run release:dry
 ```
 
-## 🤝 Bijdragen
+### Dev script differences
 
-Bijdragen zijn welkom! Open een issue of pull request voor:
+- `dev:web` starts only the React PWA in [apps/web](apps/web) on port `5178`.
+  - Use it when developing the app UI itself (and for Tauri dev).
+  - In normal browser dev, the landing dev server proxies this app under `http://localhost:5177/app/`.
+- `dev` starts the landing server in [apps/landing](apps/landing) (port `5177`) and the web app server in [apps/web](apps/web) (port `5178`) concurrently.
+  - Use it for “full UI” development: landing, docs, help center, and the app under `/app/`.
+- `dev:api` starts the optional Express API in [apps/api](apps/api) on port `3001`.
+  - Use it only if you’re building integrations/scripts that need the REST API.
+- `dev:all` starts `dev:api` + `dev` together.
+
+### What each folder provides
+
+- [apps/landing](apps/landing): marketing site + developer docs (`/docs/*`) + help center (`/help/*`). In dev it proxies `/app` → the web app and `/api` → the API server.
+- [apps/web](apps/web): the actual Fluxby app (local-first). Stores its database in browser OPFS and does not require any backend.
+- [apps/api](apps/api): optional local REST API (developer tool). Uses its own Node/SQLite database in `data/` and does not connect to the web app's OPFS database.
+- [apps/tauri](apps/tauri): desktop wrapper; uses the web app dev server during development.
+
+## 🖥️ Desktop App (Tauri)
+
+Build native desktop apps for Windows, macOS, and Linux:
+
+```bash
+# Install Rust (if not already installed)
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+
+# Install Tauri CLI
+npm install
+
+# Development
+npm run dev:tauri
+
+# Build for production
+npm run build:tauri
+```
+
+## 🌐 Web Deployment (GitHub Pages)
+
+The web app can be deployed as a PWA to GitHub Pages:
+
+1. Fork this repository
+2. Enable GitHub Pages in repository settings
+3. Push to main branch - automatic deployment via GitHub Actions
+
+The PWA works fully offline after first load.
+
+## 🤝 Contributing
+
+Contributions are welcome! Open an issue or pull request for:
 
 - Bug fixes
-- Nieuwe bank formaten
-- Feature suggesties
-- Documentatie verbeteringen
+- New bank formats
+- Feature suggestions
+- Documentation improvements
 
-## 📄 Licentie
+## 📄 License
 
-MIT License - Zie [LICENSE](LICENSE) voor details.
+MIT License - See [LICENSE](LICENSE) for details.
 
 ---
 
 <p align="center">
-  Gemaakt met ❤️ voor beter financieel inzicht
+  Made with ❤️ for better financial insights
 </p>

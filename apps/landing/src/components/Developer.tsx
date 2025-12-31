@@ -4,6 +4,7 @@ const featureIcons = ['🔌', '📚', '⚡'];
 
 export default function Developer() {
   const { t } = useLanguage();
+  const appHref = `${import.meta.env.BASE_URL}app/`;
 
   const features = [
     {
@@ -137,7 +138,7 @@ export default function Developer() {
             {t.developer?.viewDocs || 'View API Docs'}
           </a>
           <a
-            href='http://localhost:5173'
+            href={appHref}
             target='_blank'
             rel='noopener noreferrer'
             className='inline-flex items-center gap-2 rounded-full border border-gray-600 bg-gray-800 px-8 py-3 font-medium text-white transition-all hover:border-gray-500 hover:bg-gray-700'

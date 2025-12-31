@@ -138,17 +138,17 @@ export const TypeFilter = memo(function TypeFilter({
 // ============================================================================
 
 interface Category {
-  id: number;
+  id: string;
   name: string;
   icon: string | null;
   color: string | null;
-  parentId: number | null;
+  parentId: string | null;
 }
 
 interface CategoryFilterProps {
   categories: Category[] | undefined;
-  selectedIds: number[];
-  onChange: (ids: number[]) => void;
+  selectedIds: string[];
+  onChange: (ids: string[]) => void;
   translations: {
     categories: string;
     noCategory: string;
@@ -188,7 +188,7 @@ export const CategoryFilter = memo(function CategoryFilter({
 
   // Get child category IDs for a parent
   const getChildCategoryIds = useCallback(
-    (parentId: number): number[] => {
+    (parentId: string): string[] => {
       if (!categories) return [];
       return categories.filter((c) => c.parentId === parentId).map((c) => c.id);
     },
@@ -197,7 +197,7 @@ export const CategoryFilter = memo(function CategoryFilter({
 
   // Toggle category with subcategory auto-selection
   const toggleCategory = useCallback(
-    (categoryId: number) => {
+    (categoryId: string) => {
       const category = categories?.find((c) => c.id === categoryId);
       if (!category) return;
 
@@ -237,33 +237,68 @@ export const CategoryFilter = memo(function CategoryFilter({
     [categories, selectedIds, onChange, getChildCategoryIds]
   );
 
-  // Toggle uncategorized (id=0)
+  // Toggle uncategorized (empty string for uncategorized)
   const toggleUncategorized = useCallback(() => {
-    if (selectedIds.includes(0)) {
-      onChange(selectedIds.filter((id) => id !== 0));
+    const uncategorizedId = '';
+    if (selectedIds.includes(uncategorizedId)) {
+      onChange(selectedIds.filter((id) => id !== uncategorizedId));
     } else {
-      onChange([...selectedIds, 0]);
+      onChange([...selectedIds, uncategorizedId]);
     }
   }, [selectedIds, onChange]);
 
-  // Filtered categories based on search
-  const filteredCategories = useMemo(() => {
-    if (!categories || !search) return categories;
+  // Grouped categories by parent (filtered to include matches in parent or children)
+  const groupedCategories = useMemo(() => {
+    if (!categories) return [];
+
+    const allParents = categories.filter((c) => !c.parentId);
+
+    if (!search) {
+      // No search - show all
+      return allParents.map((parent) => ({
+        parent,
+        children: categories.filter((c) => c.parentId === parent.id),
+      }));
+    }
+
     const searchLower = search.toLowerCase();
-    return categories.filter((c) => c.name.toLowerCase().includes(searchLower));
+
+    // Filter: include parent if parent name matches OR any child matches
+    return allParents
+      .map((parent) => {
+        const children = categories.filter((c) => c.parentId === parent.id);
+        const parentMatches = parent.name.toLowerCase().includes(searchLower);
+        const matchingChildren = children.filter((c) =>
+          c.name.toLowerCase().includes(searchLower)
+        );
+
+        // Include parent if it matches OR has matching children
+        if (parentMatches || matchingChildren.length > 0) {
+          return {
+            parent,
+            // If parent matches, show all children; otherwise only matching children
+            children: parentMatches ? children : matchingChildren,
+          };
+        }
+        return null;
+      })
+      .filter(Boolean) as { parent: Category; children: Category[] }[];
   }, [categories, search]);
 
-  // Grouped categories by parent
-  const groupedCategories = useMemo(() => {
-    if (!filteredCategories) return [];
-    const parents = filteredCategories.filter((c) => c.parentId === null);
-    return parents.map((parent) => ({
-      parent,
-      children: filteredCategories.filter((c) => c.parentId === parent.id),
-    }));
-  }, [filteredCategories]);
-
   if (!categories || categories.length === 0) return null;
+
+  // Get display label for selected categories
+  const getSelectedLabel = () => {
+    if (selectedIds.length === 0) return null;
+    if (selectedIds.length === 1) {
+      const catId = selectedIds[0];
+      if (catId === '') return t.noCategory;
+      const cat = categories?.find((c) => c.id === catId);
+      return cat?.name || t.categories;
+    }
+    // Multiple selected - show count
+    return `${selectedIds.length} ${t.categories.toLowerCase()}`;
+  };
 
   return (
     <Popover open={open} onOpenChange={handleOpenChange}>
@@ -278,37 +313,7 @@ export const CategoryFilter = memo(function CategoryFilter({
           )}
         >
           {selectedIds.length > 0 ? (
-            <div className='flex items-center gap-1'>
-              {selectedIds.slice(0, 2).map((catId) => {
-                if (catId === 0) {
-                  return (
-                    <span
-                      key={catId}
-                      className='flex h-5 w-5 items-center justify-center rounded-lg bg-gray-200 text-xs dark:bg-gray-700'
-                    >
-                      ❓
-                    </span>
-                  );
-                }
-                const cat = categories?.find((c) => c.id === catId);
-                return cat ? (
-                  <span
-                    key={catId}
-                    className='flex h-5 w-5 items-center justify-center rounded-lg text-xs'
-                    style={{
-                      backgroundColor: colorWithOpacity(cat.color),
-                    }}
-                  >
-                    {cat.icon}
-                  </span>
-                ) : null;
-              })}
-              {selectedIds.length > 2 && (
-                <span className='text-xs text-muted-foreground'>
-                  +{selectedIds.length - 2}
-                </span>
-              )}
-            </div>
+            <span className='truncate text-sm'>{getSelectedLabel()}</span>
           ) : (
             <>
               <Tags className='mr-1 h-4 w-4' />
@@ -338,14 +343,14 @@ export const CategoryFilter = memo(function CategoryFilter({
               onClick={toggleUncategorized}
               className={cn(
                 'flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm transition-colors hover:bg-muted',
-                selectedIds.includes(0) && 'bg-primary/10'
+                selectedIds.includes('') && 'bg-primary/10'
               )}
             >
               <span className='flex h-5 w-5 items-center justify-center rounded-lg bg-gray-200 text-xs dark:bg-gray-700'>
                 ❓
               </span>
               <span className='flex-1'>{t.noCategory}</span>
-              {selectedIds.includes(0) && (
+              {selectedIds.includes('') && (
                 <Check className='h-4 w-4 text-primary' />
               )}
             </button>
@@ -419,7 +424,7 @@ export const CategoryFilter = memo(function CategoryFilter({
 // ============================================================================
 
 interface AddressBookEntry {
-  id: number;
+  id: string;
   iban: string;
   name: string;
   description: string | null;
@@ -429,10 +434,10 @@ interface AddressBookFilterProps {
   addressBook: AddressBookEntry[] | undefined;
   isLoading: boolean;
   selectedIbans: string[];
-  selectedAddressBookId: number | null;
+  selectedAddressBookId: string | null;
   selectedAccountName: string | null;
   onIbansChange: (ibans: string[]) => void;
-  onAddressBookIdChange: (id: number | null) => void;
+  onAddressBookIdChange: (id: string | null) => void;
   onAccountNameChange: (name: string | null) => void;
   onOpen: () => void;
   translations: {
@@ -774,7 +779,7 @@ export const PaymentMethodFilter = memo(function PaymentMethodFilter({
 // ============================================================================
 
 interface PaymentProcessorFilterProps {
-  processors: Array<{ id: number; name: string; patterns: string }>;
+  processors: Array<{ id: string; name: string; patterns: string }>;
   selectedProcessors: string[];
   onChange: (processors: string[]) => void;
   translations: {

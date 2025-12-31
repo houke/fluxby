@@ -123,23 +123,14 @@ describe('Onboarding Data', () => {
   describe('Welcome Chapter', () => {
     const welcomeChapter = onboardingChapters[0];
 
-    it('should have language selection step', () => {
-      const langStep = welcomeChapter.steps.find(
-        (s) => s.id === 'language-select'
-      );
-      expect(langStep).toBeDefined();
-    });
-
-    it('should have user name step', () => {
-      const nameStep = welcomeChapter.steps.find((s) => s.id === 'user-name');
-      expect(nameStep).toBeDefined();
-    });
-
-    it('should have welcome intro step', () => {
+    it('should have welcome intro step (language and user-name are now in SecuritySetup)', () => {
       const introStep = welcomeChapter.steps.find(
         (s) => s.id === 'welcome-intro'
       );
       expect(introStep).toBeDefined();
+      // language-select and user-name steps have been moved to SecuritySetup component
+      // and are no longer part of the onboarding flow
+      expect(welcomeChapter.steps.length).toBe(1);
     });
   });
 

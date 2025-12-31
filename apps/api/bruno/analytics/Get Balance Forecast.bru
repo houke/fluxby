@@ -1,0 +1,33 @@
+meta {
+  name: Get Balance Forecast
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/analytics/forecast
+  body: none
+  auth: none
+}
+
+params:query {
+  ~months: 6
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+docs {
+  # Get Balance Forecast
+  
+  Predicts future balance based on historical spending patterns.
+  
+  ## Query Parameters
+  
+  - `months` (optional): Number of months to forecast (default: 6)
+  
+  ## Response
+  
+  Array of monthly predictions with expected balance.
+}

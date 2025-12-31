@@ -105,11 +105,6 @@ export default function HelpSidebar() {
           path: '/docs',
           icon: '💻',
         },
-        {
-          title: t.helpCenter?.devNav?.swagger || 'Swagger Docs',
-          path: 'http://localhost:3001/api/docs',
-          icon: '🔧',
-        },
       ],
     },
   ];

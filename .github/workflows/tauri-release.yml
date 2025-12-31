@@ -1,0 +1,279 @@
+name: 'Build Tauri Release'
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version number (e.g., 1.0.1)'
+        required: true
+      dry_run:
+        description: 'Dry run (skip building and publishing)'
+        type: boolean
+        default: false
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Step 1: Initialize and generate changelog
+  initialize-release:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    outputs:
+      changelog: ${{ steps.changelog.outputs.changelog }}
+      version: ${{ steps.get-version.outputs.version }}
+      dry_run: ${{ github.event.inputs.dry_run || 'false' }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get current and target version
+        id: get-version
+        run: |
+          if [ -n "${{ github.event.inputs.version }}" ]; then
+            echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+          else
+            echo "Error: No version provided and not triggered by tag."
+            exit 1
+          fi
+
+      - name: Update versions and metadata (Manual Trigger only)
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          VERSION="${{ steps.get-version.outputs.version }}"
+          
+          # Update package.json files
+          sed -i "s/\"version\": \"[^\"]*\"/\"version\": \"$VERSION\"/" package.json
+          sed -i "s/\"version\": \"[^\"]*\"/\"version\": \"$VERSION\"/" apps/tauri/package.json
+          
+          # Update tauri.conf.json
+          sed -i "s/\"version\": \"[^\"]*\"/\"version\": \"$VERSION\"/" apps/tauri/tauri.conf.json
+          
+          echo "Updated versions to $VERSION"
+
+      - name: Update UpdatesContent.tsx
+        id: update-updates
+        run: |
+          VERSION="${{ steps.get-version.outputs.version }}"
+          VERSION_KEY=$(echo "$VERSION" | tr -d '.')
+          DATE=$(date +"%d %B %Y" | sed 's/January/januari/;s/February/februari/;s/March/maart/;s/April/april/;s/May/mei/;s/June/juni/;s/July/juli/;s/August/augustus/;s/September/september/;s/October/oktober/;s/November/november/;s/December/december/')
+
+          FILE="apps/landing/src/pages/legal/UpdatesContent.tsx"
+
+          if grep -q "version: '${VERSION}'" "$FILE"; then
+            echo "Version $VERSION already exists in UpdatesContent.tsx"
+          else
+            # Create new release entry
+            NEW_ENTRY="    {
+                  version: '${VERSION}',
+                  date: updatesPage?.v${VERSION_KEY}Date || '${DATE}',
+                  title: updatesPage?.v${VERSION_KEY}Title || 'Release ${VERSION}',
+                  description:
+                    updatesPage?.v${VERSION_KEY}Description ||
+                    'Zie de release notes voor alle wijzigingen.',
+                  features: [],
+                },"
+
+            # Insert after "const releases = ["
+            sed -i "s/const releases = \[/const releases = [\n${NEW_ENTRY}/" "$FILE"
+            echo "Updated UpdatesContent.tsx"
+          fi
+
+      - name: Generate changelog from commits
+        id: changelog
+        run: |
+          # Get previous tag
+          PREV_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          
+          if [ -n "$PREV_TAG" ]; then
+            REVISION_RANGE="${PREV_TAG}..HEAD"
+          else
+            REVISION_RANGE="HEAD"
+          fi
+
+          echo "Generating changelog for range: $REVISION_RANGE"
+
+          {
+            echo "## What's Changed"
+            echo ""
+            
+            # Features
+            FEATURES=$(git log $REVISION_RANGE --oneline --no-merges --grep="^feat" --format="- %s" 2>/dev/null | sed 's/^- feat(\([^)]*\)): /- **\1:** /' | sed 's/^- feat: /- /')
+            if [ -n "$FEATURES" ]; then
+              echo "### ✨ Features"
+              echo ""
+              echo "$FEATURES"
+              echo ""
+            fi
+            
+            # Bug fixes
+            FIXES=$(git log $REVISION_RANGE --oneline --no-merges --grep="^fix" --format="- %s" 2>/dev/null | sed 's/^- fix(\([^)]*\)): /- **\1:** /' | sed 's/^- fix: /- /')
+            if [ -n "$FIXES" ]; then
+              echo "### 🐛 Bug Fixes"
+              echo ""
+              echo "$FIXES"
+              echo ""
+            fi
+            
+            # Performance
+            PERF=$(git log $REVISION_RANGE --oneline --no-merges --grep="^perf" --format="- %s" 2>/dev/null | sed 's/^- perf(\([^)]*\)): /- **\1:** /' | sed 's/^- perf: /- /')
+            if [ -n "$PERF" ]; then
+              echo "### ⚡ Performance"
+              echo ""
+              echo "$PERF"
+              echo ""
+            fi
+          } > changelog_body.md
+
+          # Store changelog as output
+          {
+            echo 'changelog<<EOF'
+            cat changelog_body.md
+            echo 'EOF'
+          } >> $GITHUB_OUTPUT
+
+      - name: Commit, Tag and Push (Manual Trigger only)
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.dry_run != 'true'
+        run: |
+          VERSION="${{ steps.get-version.outputs.version }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add -A
+          git commit -m "chore(release): v${VERSION} [skip ci]"
+          git tag -a "v${VERSION}" -m "Release v${VERSION}"
+          
+          git push origin main
+          git push origin "v${VERSION}"
+          echo "Committed, tagged and pushed version $VERSION"
+
+  # Step 2: Create release with changelog
+  create-release:
+    needs: initialize-release
+    if: needs.initialize-release.outputs.dry_run != 'true'
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    outputs:
+      release_id: ${{ steps.create-release.outputs.id }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Create release
+        id: create-release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ needs.initialize-release.outputs.version }}
+          name: Fluxby v${{ needs.initialize-release.outputs.version }}
+          draft: true
+          prerelease: false
+          body: |
+            ${{ needs.initialize-release.outputs.changelog }}
+
+            ---
+
+            ## Downloads
+
+            | Platform | Download |
+            |----------|----------|
+            | Windows | [fluxby_${{ needs.initialize-release.outputs.version }}_x64-setup.exe](https://github.com/${{ github.repository }}/releases/download/v${{ needs.initialize-release.outputs.version }}/fluxby_${{ needs.initialize-release.outputs.version }}_x64-setup.exe) |
+            | macOS (Intel) | [fluxby_${{ needs.initialize-release.outputs.version }}_x64.dmg](https://github.com/${{ github.repository }}/releases/download/v${{ needs.initialize-release.outputs.version }}/fluxby_${{ needs.initialize-release.outputs.version }}_x64.dmg) |
+            | macOS (Apple Silicon) | [fluxby_${{ needs.initialize-release.outputs.version }}_aarch64.dmg](https://github.com/${{ github.repository }}/releases/download/v${{ needs.initialize-release.outputs.version }}/fluxby_${{ needs.initialize-release.outputs.version }}_aarch64.dmg) |
+            | Linux (AppImage) | [fluxby_${{ needs.initialize-release.outputs.version }}_amd64.AppImage](https://github.com/${{ github.repository }}/releases/download/v${{ needs.initialize-release.outputs.version }}/fluxby_${{ needs.initialize-release.outputs.version }}_amd64.AppImage) |
+            | Linux (Debian) | [fluxby_${{ needs.initialize-release.outputs.version }}_amd64.deb](https://github.com/${{ github.repository }}/releases/download/v${{ needs.initialize-release.outputs.version }}/fluxby_${{ needs.initialize-release.outputs.version }}_amd64.deb) |
+
+  # Step 3: Build for all platforms
+  build-tauri:
+    needs: [initialize-release, create-release]
+    if: needs.initialize-release.outputs.dry_run != 'true'
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: 'macos-latest'
+            args: '--target aarch64-apple-darwin'
+            rust-target: 'aarch64-apple-darwin'
+          - platform: 'macos-latest'
+            args: '--target x86_64-apple-darwin'
+            rust-target: 'x86_64-apple-darwin'
+          - platform: 'ubuntu-22.04'
+            args: ''
+            rust-target: ''
+          - platform: 'windows-latest'
+            args: ''
+            rust-target: ''
+
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: v${{ needs.initialize-release.outputs.version }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-action@stable
+        with:
+          targets: ${{ matrix.rust-target }}
+
+      - name: Install Linux dependencies
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libappindicator3-dev \
+            librsvg2-dev \
+            patchelf \
+            libssl-dev
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build dependencies
+        run: |
+          npm run build -w packages/shared
+          npm run build -w packages/database
+          npm run build -w packages/core
+          npm run build -w apps/web
+
+      - name: Build Tauri app
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          releaseId: ${{ needs.create-release.outputs.release_id }}
+          projectPath: apps/tauri
+          args: ${{ matrix.args }}
+
+  # Step 4: Publish the release
+  publish-release:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    needs: [initialize-release, create-release, build-tauri]
+    if: needs.initialize-release.outputs.dry_run != 'true'
+    steps:
+      - name: Publish release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ needs.initialize-release.outputs.version }}
+          draft: false

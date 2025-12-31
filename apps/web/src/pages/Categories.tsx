@@ -35,7 +35,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { api } from '@/lib/api';
+import { useDataService } from '@/contexts/DatabaseContext';
 import { formatCurrency, cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useProfile } from '@/contexts/ProfileContext';
@@ -50,23 +50,23 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Toast, ToastType } from '@/components/ui/toast';
 
 interface Category {
-  id: number;
+  id: string;
   name: string;
-  parentId: number | null;
+  parentId: string | null;
   icon: string | null;
   color: string | null;
   description?: string | null;
-  budgetId?: number | null;
+  budgetId?: string | null;
   transactionCount?: number;
   totalExpenses?: number;
 }
 
 interface CategoryRule {
-  id: number;
+  id: string;
   pattern: string;
-  categoryId: number;
-  categoryName: string;
-  categoryIcon: string;
+  category_id: string;
+  category_name: string | null;
+  priority: number;
 }
 
 interface SeedSubcategory {
@@ -181,6 +181,7 @@ const colorWithOpacity = (hex: string | null | undefined, alpha = 0.2) => {
 export default function Categories() {
   const { t, language } = useLanguage();
   const { activeProfileId } = useProfile();
+  const dataService = useDataService();
   useDocumentTitle(t.categories.title);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -192,7 +193,7 @@ export default function Categories() {
   const [sortBy, setSortBy] = useState<'name' | 'transactions' | 'amount'>(
     'name'
   );
-  const [expandedCategories, setExpandedCategories] = useState<Set<number>>(
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
     new Set()
   );
 
@@ -205,19 +206,19 @@ export default function Categories() {
   const [newDescription, setNewDescription] = useState('');
   const [newIcon, setNewIcon] = useState('📁');
   const [newColor, setNewColor] = useState(PRESET_COLORS[0]);
-  const [newParentId, setNewParentId] = useState<number | null>(null);
+  const [newParentId, setNewParentId] = useState<string | null>(null);
 
   // Edit state
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
   const [editDescription, setEditDescription] = useState('');
   const [editIcon, setEditIcon] = useState('📁');
   const [editColor, setEditColor] = useState(PRESET_COLORS[0]);
-  const [editParentId, setEditParentId] = useState<number | null>(null);
+  const [editParentId, setEditParentId] = useState<string | null>(null);
 
   // Rules state
-  const [ruleDrafts, setRuleDrafts] = useState<Record<number, string>>({});
-  const [editingRulesFor, setEditingRulesFor] = useState<number | null>(null);
+  const [ruleDrafts, setRuleDrafts] = useState<Record<string, string>>({});
+  const [editingRulesFor, setEditingRulesFor] = useState<string | null>(null);
 
   // Toast and modals
   const [toast, setToast] = useState<{
@@ -241,8 +242,8 @@ export default function Categories() {
     const loadSeed = async () => {
       try {
         setIsLoadingSeed(true);
-        const result = await api.getSeedCategories(language);
-        const data = Array.isArray(result) ? result : result?.data || [];
+        const result = await dataService.getSeedCategories(language);
+        const data = Array.isArray(result) ? result : [];
         if (!mounted) return;
         setSeedCategories(data);
         setSelectedSeedCategories(
@@ -268,18 +269,18 @@ export default function Categories() {
 
   // Queries
   const { data: categories, isLoading: categoriesLoading } = useQuery({
-    queryKey: ['categories', activeProfileId],
-    queryFn: () => api.getCategories(true) as Promise<Category[]>,
+    queryKey: ['categories', activeProfileId, true],
+    queryFn: () => dataService.getCategories(true) as Promise<Category[]>,
   });
 
   const { data: rules } = useQuery({
     queryKey: ['categoryRules', activeProfileId],
-    queryFn: () => api.getCategoryRules() as Promise<CategoryRule[]>,
+    queryFn: () => dataService.getCategoryRules() as Promise<CategoryRule[]>,
   });
 
   // Mutations
   const createMutation = useMutation({
-    mutationFn: api.createCategory,
+    mutationFn: dataService.createCategory,
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ['categories', activeProfileId],
@@ -298,15 +299,15 @@ export default function Categories() {
       id,
       data,
     }: {
-      id: number;
+      id: string;
       data: {
         name?: string;
         icon?: string;
         color?: string;
         description?: string | null;
-        parentId?: number | null;
+        parentId?: string | null;
       };
-    }) => api.updateCategory(id, data),
+    }) => dataService.updateCategory(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ['categories', activeProfileId],
@@ -317,7 +318,7 @@ export default function Categories() {
   });
 
   const deleteCategoryMutation = useMutation({
-    mutationFn: api.deleteCategory,
+    mutationFn: dataService.deleteCategory,
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ['categories', activeProfileId],
@@ -327,7 +328,7 @@ export default function Categories() {
   });
 
   const createRuleMutation = useMutation({
-    mutationFn: api.createCategoryRule,
+    mutationFn: dataService.createCategoryRule,
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ['categoryRules', activeProfileId],
@@ -340,7 +341,7 @@ export default function Categories() {
   });
 
   const deleteRuleMutation = useMutation({
-    mutationFn: api.deleteCategoryRule,
+    mutationFn: dataService.deleteCategoryRule,
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ['categoryRules', activeProfileId],
@@ -350,7 +351,7 @@ export default function Categories() {
   });
 
   const applyRulesMutation = useMutation({
-    mutationFn: api.applyAllCategoryRules,
+    mutationFn: dataService.applyCategoriesToUncategorized,
     onSuccess: (data) => {
       const result = data as { updated: number; processed: number };
       queryClient.invalidateQueries({
@@ -369,7 +370,13 @@ export default function Categories() {
   });
 
   const applyRuleMutation = useMutation({
-    mutationFn: api.applyCategoryRule,
+    mutationFn: ({
+      pattern,
+      categoryId,
+    }: {
+      pattern: string;
+      categoryId: string;
+    }) => dataService.applyCategoryRuleToTransactions(pattern, categoryId),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ['transactions', activeProfileId],
@@ -388,7 +395,7 @@ export default function Categories() {
         };
 
       const parents: Category[] = [];
-      const childMap = new Map<number, Category[]>();
+      const childMap = new Map<string, Category[]>();
       const orphans: Category[] = [];
 
       for (const cat of categories) {
@@ -417,11 +424,11 @@ export default function Categories() {
 
   // Rules grouped by category (sorted alphabetically)
   const rulesByCategory = useMemo(() => {
-    const map = new Map<number, CategoryRule[]>();
+    const map = new Map<string, CategoryRule[]>();
     (rules || []).forEach((rule) => {
-      const list = map.get(rule.categoryId) || [];
+      const list = map.get(rule.category_id) || [];
       list.push(rule);
-      map.set(rule.categoryId, list);
+      map.set(rule.category_id, list);
     });
     // Sort rules alphabetically by pattern within each category
     map.forEach((ruleList, categoryId) => {
@@ -437,7 +444,7 @@ export default function Categories() {
 
   // Calculate parent totals (sum of subcategories)
   const parentTotals = useMemo(() => {
-    const totals = new Map<number, { count: number; amount: number }>();
+    const totals = new Map<string, { count: number; amount: number }>();
     for (const parent of parentCategories) {
       const subs = subcategoriesByParent.get(parent.id) || [];
       let count = parent.transactionCount || 0;
@@ -530,7 +537,7 @@ export default function Categories() {
   ];
 
   // Toggle category expansion
-  const toggleExpanded = (categoryId: number) => {
+  const toggleExpanded = (categoryId: string) => {
     setExpandedCategories((prev) => {
       const next = new Set(prev);
       if (next.has(categoryId)) {
@@ -596,11 +603,11 @@ export default function Categories() {
   };
 
   // Rules handlers
-  const handleDraftChange = (categoryId: number, value: string) => {
+  const handleDraftChange = (categoryId: string, value: string) => {
     setRuleDrafts((prev) => ({ ...prev, [categoryId]: value }));
   };
 
-  const addKeywords = async (categoryId: number, value: string) => {
+  const addKeywords = async (categoryId: string, value: string) => {
     const keywords = value
       .split(',')
       .map((k) => k.trim())
@@ -608,33 +615,34 @@ export default function Categories() {
     if (keywords.length === 0) return;
 
     try {
-      const createdRuleIds: number[] = [];
+      const createdPatterns: string[] = [];
       for (const kw of keywords) {
-        const result = await createRuleMutation.mutateAsync({
+        await createRuleMutation.mutateAsync({
           pattern: kw,
           categoryId,
         });
-        // @ts-expect-error - result type might not be fully inferred
-        if (result?.data?.id) createdRuleIds.push(result.data.id);
+        createdPatterns.push(kw);
       }
       setRuleDrafts((prev) => ({ ...prev, [categoryId]: '' }));
 
+      // Only apply to existing transactions if user confirms
       if (
-        createdRuleIds.length > 0 &&
+        createdPatterns.length > 0 &&
         confirm(t.categories.applyToExistingConfirm)
       ) {
-        for (const id of createdRuleIds) {
-          await applyRuleMutation.mutateAsync(id);
+        for (const pattern of createdPatterns) {
+          await applyRuleMutation.mutateAsync({ pattern, categoryId });
         }
-      } else {
-        applyRulesMutation.mutate();
       }
+      // Note: Removed the else block that was incorrectly calling applyRulesMutation
+      // when the confirm dialog was cancelled. The keywords/rules are already saved
+      // and will be applied to future transactions automatically.
     } catch {
       // Errors handled elsewhere
     }
   };
 
-  const handleDeleteRule = (ruleId: number) => {
+  const handleDeleteRule = (ruleId: string) => {
     if (!confirm(t.categories.deleteRuleConfirm)) return;
     deleteRuleMutation.mutate(ruleId);
   };
@@ -643,8 +651,8 @@ export default function Categories() {
   const handleSeedClick = async () => {
     setIsLoadingSeed(true);
     try {
-      const result = await api.getSeedCategories(language);
-      const data = Array.isArray(result) ? result : result?.data || [];
+      const result = await dataService.getSeedCategories(language);
+      const data = Array.isArray(result) ? result : [];
       setSeedCategories(data);
       setSelectedSeedCategories(
         new Set(data.map((c: { name: string }) => c.name))
@@ -667,7 +675,7 @@ export default function Categories() {
       const categoriesToSeed = seedCategories.filter((c) =>
         selectedSeedCategories.has(c.name)
       );
-      await api.seedCategories(categoriesToSeed);
+      await dataService.applySeedCategories(categoriesToSeed);
       setIsSeedModalOpen(false);
       queryClient.invalidateQueries({ queryKey: ['categories'] });
       queryClient.invalidateQueries({
@@ -711,10 +719,10 @@ export default function Categories() {
   };
 
   // Navigate to transactions filtered by category
-  const navigateToTransactions = (categoryId: number) => {
+  const navigateToTransactions = (categoryId: string) => {
     clearOpposingAccountFilters();
     setCategories([categoryId]);
-    navigate('/transactions');
+    navigate('/transactions/');
   };
 
   // Render subcategory row - always shows rules inline
@@ -742,7 +750,7 @@ export default function Categories() {
                 <Select
                   value={editParentId?.toString() || 'none'}
                   onValueChange={(v) =>
-                    setEditParentId(v === 'none' ? null : parseInt(v))
+                    setEditParentId(v === 'none' ? null : v)
                   }
                 >
                   <SelectTrigger>
@@ -849,9 +857,9 @@ export default function Categories() {
                 </Tooltip>
               </TooltipProvider>
               <span className='ml-auto text-xs text-muted-foreground'>
-                {formatCurrency(Math.abs(sub.totalExpenses || 0))}
+                {formatCurrency(sub.totalExpenses || 0)}
                 {' · '}
-                {sub.transactionCount || 0} tx
+                {sub.transactionCount || 0} {t.categories.transactions}
               </span>
             </div>
             {sub.description && (
@@ -1096,15 +1104,11 @@ export default function Categories() {
                     {category.description}
                   </p>
                 )}
-                <div className='mt-1 flex gap-4 text-xs text-muted-foreground'>
+                <div className='mt-1 flex items-center gap-2 text-xs text-muted-foreground'>
+                  <span>{formatCurrency(totals.amount)}</span>
+                  <span aria-hidden='true'>•</span>
                   <span>
-                    {totals.amount >= 0
-                      ? t.dashboard.income
-                      : t.dashboard.expenses}
-                    : {formatCurrency(Math.abs(totals.amount))}
-                  </span>
-                  <span>
-                    {t.categories.transactions}: {totals.count}
+                    {totals.count} {t.categories.transactions}
                   </span>
                 </div>
               </div>
@@ -1288,9 +1292,7 @@ export default function Categories() {
                 />
                 <Select
                   value={newParentId?.toString() || 'none'}
-                  onValueChange={(v) =>
-                    setNewParentId(v === 'none' ? null : parseInt(v))
-                  }
+                  onValueChange={(v) => setNewParentId(v === 'none' ? null : v)}
                 >
                   <SelectTrigger>
                     <SelectValue
@@ -1398,20 +1400,20 @@ export default function Categories() {
               </span>
               <div
                 ref={sortSwitchOuterRef}
-                className='relative inline-flex items-center rounded-lg bg-muted p-1'
+                className='relative inline-flex items-center rounded-lg border border-border bg-muted/50 p-0.5'
               >
                 <div
                   ref={sortIndicatorRef}
-                  className='absolute top-1 h-[calc(100%-8px)] rounded-md bg-background shadow-sm transition-all duration-200 ease-out'
+                  className='absolute top-0.5 h-[calc(100%-4px)] rounded-md bg-purple-600 shadow-sm transition-all duration-200 ease-out'
                 />
                 {sortOptions.map((option) => (
                   <button
                     key={option.key}
                     onClick={() => setSortBy(option.key)}
                     className={cn(
-                      'relative z-10 whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
+                      'relative z-10 whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-medium transition-colors',
                       sortBy === option.key
-                        ? 'text-foreground'
+                        ? 'text-white'
                         : 'text-muted-foreground hover:text-foreground'
                     )}
                   >
@@ -1632,9 +1634,7 @@ export default function Categories() {
                 </label>
                 <Select
                   value={newParentId?.toString() || 'none'}
-                  onValueChange={(v) =>
-                    setNewParentId(v === 'none' ? null : parseInt(v))
-                  }
+                  onValueChange={(v) => setNewParentId(v === 'none' ? null : v)}
                 >
                   <SelectTrigger>
                     <SelectValue

@@ -15,50 +15,51 @@ export default function HelpFirstSteps() {
       </p>
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.helpCenter?.firstSteps?.step1Title || 'Stap 1: Maak een profiel'}
+        {t.helpCenter?.firstSteps?.step1Title || 'Step 1: Log in & onboarding'}
       </h2>
       <p className='text-gray-600 dark:text-gray-400'>
         {t.helpCenter?.firstSteps?.step1Text ||
-          'Wanneer je Fluxby voor het eerst opent, wordt je gevraagd een profiel te maken. Geef het een naam (bijv. "Persoonlijk" of "Gezin") en je bent klaar om te beginnen.'}
+          'When you open Fluxby for the first time, you will be guided through a short onboarding wizard. You can log in, set a password, and create your first profile (e.g., "Personal" or "Family").'}
       </p>
 
       <HelpAnimation type='profile' />
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
         {t.helpCenter?.firstSteps?.step2Title ||
-          'Stap 2: Exporteer vanuit je bank'}
+          'Step 2: Export from your bank'}
       </h2>
       <p className='text-gray-600 dark:text-gray-400'>
         {t.helpCenter?.firstSteps?.step2Text ||
-          'Log in op de website of app van je bank en exporteer je transacties als CSV-bestand. De meeste banken bieden deze optie in hun "Export" of "Download" sectie.'}
+          'Log in to your online banking and export your transactions as a CSV file. Most banks offer this in the "Export" or "Download" section.'}
       </p>
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
         {t.helpCenter?.firstSteps?.step3Title ||
-          'Stap 3: Importeer je transacties'}
+          'Step 3: Import your transactions'}
       </h2>
       <p className='text-gray-600 dark:text-gray-400'>
         {t.helpCenter?.firstSteps?.step3Text ||
-          'Ga naar de Import pagina in Fluxby en sleep je CSV-bestand, of klik om te bladeren. Fluxby detecteert automatisch het formaat en importeert je transacties.'}
+          'Go to the Import page in Fluxby and drag your CSV file, or click to browse. Fluxby will automatically detect the format and import your transactions.'}
       </p>
 
       <HelpAnimation type='import' />
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
         {t.helpCenter?.firstSteps?.step4Title ||
-          'Stap 4: Categoriseer transacties'}
+          'Step 4: Categorize transactions'}
       </h2>
       <p className='text-gray-600 dark:text-gray-400'>
         {t.helpCenter?.firstSteps?.step4Text ||
-          'Na het importeren, ga naar de Transacties pagina om je transacties te categoriseren. Klik op een transactie om een categorie toe te wijzen. Fluxby leert van je keuzes en categoriseert vergelijkbare transacties automatisch in de toekomst.'}
+          'After importing, go to the Transactions page to categorize your transactions. Click a transaction to assign a category. Fluxby learns from your choices and will auto-categorize similar transactions in the future.'}
       </p>
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.helpCenter?.firstSteps?.step5Title || 'Stap 5: Verken je dashboard'}
+        {t.helpCenter?.firstSteps?.step5Title ||
+          'Step 5: Explore your dashboard'}
       </h2>
       <p className='text-gray-600 dark:text-gray-400'>
         {t.helpCenter?.firstSteps?.step5Text ||
-          'Ga nu naar het Dashboard om je financiële overzicht te zien! Je ziet je saldo, uitgaven per categorie en recente transacties.'}
+          'Now go to the Dashboard to see your financial overview! You will see your balance, spending per category, and recent transactions.'}
       </p>
 
       <div className='not-prose mt-8 rounded-lg border border-purple-200 bg-purple-50 p-6 dark:border-purple-800 dark:bg-purple-900/20'>

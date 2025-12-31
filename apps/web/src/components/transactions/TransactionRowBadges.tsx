@@ -38,9 +38,9 @@ import { cn } from '@/lib/utils';
 // These match the API response structures but avoid importing from shared
 // to prevent type conflicts with different field requirements
 interface TransactionBadgesTransaction {
-  id: number;
+  id: string;
   type: 'income' | 'expense' | 'transfer';
-  categoryId: number | null;
+  categoryId: string | null;
   paymentMethod: string | null;
   paymentProvider: string | null;
   merchantName: string | null;
@@ -49,22 +49,22 @@ interface TransactionBadgesTransaction {
 }
 
 interface Category {
-  id: number;
+  id: string;
   name: string;
   icon: string | null;
   color: string | null;
-  parentId: number | null;
+  parentId: string | null;
 }
 
 interface AddressBookEntry {
-  id: number;
+  id: string;
   iban: string;
   name: string;
   description: string | null;
 }
 
 interface PaymentProviderRule {
-  id: number;
+  id: string;
   name: string;
   patterns: string;
 }
@@ -90,7 +90,7 @@ interface TransactionRowBadgesProps {
   addressBookEntry: AddressBookEntry | null | undefined;
   isInAddressBook: boolean;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  onCategorySelect: (tx: any, categoryId: number) => void;
+  onCategorySelect: (tx: any, categoryId: string) => void;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onPaymentMethodSelect: (tx: any, method: string | null) => void;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -152,7 +152,7 @@ export const TransactionRowBadges = memo(function TransactionRowBadges({
   const groupedCategories = useMemo(() => {
     if (!categories) return [];
     const searchLower = categorySearch.toLowerCase();
-    const parents = categories.filter((c) => c.parentId === null);
+    const parents = categories.filter((c) => !c.parentId);
 
     return parents
       .map((parent) => {
@@ -187,7 +187,7 @@ export const TransactionRowBadges = memo(function TransactionRowBadges({
 
   // Handlers
   const handleCategorySelect = useCallback(
-    (categoryId: number) => {
+    (categoryId: string) => {
       onCategorySelect(tx, categoryId);
       setCategoryOpen(false);
       setCategorySearch('');

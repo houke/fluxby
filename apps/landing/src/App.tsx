@@ -4,6 +4,7 @@ import Features from './components/Features';
 import Screenshots from './components/Screenshots';
 import Developer from './components/Developer';
 import HelpCenter from './components/HelpCenter';
+import Downloads from './components/Downloads';
 import CTA from './components/CTA';
 import Footer from './components/Footer';
 import LegalModal from './components/LegalModal';
@@ -30,6 +31,8 @@ import DocsAnalytics from './pages/docs/DocsAnalytics';
 import DocsAddressBook from './pages/docs/DocsAddressBook';
 import DocsImport from './pages/docs/DocsImport';
 import DocsData from './pages/docs/DocsData';
+import DocsArchitecture from './pages/docs/DocsArchitecture';
+import DocsOpenAPI from './pages/docs/DocsOpenAPI';
 import HelpLayout from './components/help/HelpLayout';
 import HelpHome from './pages/help/HelpHome';
 import HelpBankConnection from './pages/help/HelpBankConnection';
@@ -112,6 +115,7 @@ function LandingPage() {
         <Screenshots />
         <Developer />
         <HelpCenter />
+        <Downloads />
         <CTA />
         <Footer />
       </div>
@@ -124,7 +128,7 @@ function App() {
   return (
     <ThemeProvider>
       <LanguageProvider>
-        <Router>
+        <Router basename={import.meta.env.BASE_URL}>
           <HeadManager />
           <LegalProvider>
             <Routes>
@@ -148,6 +152,8 @@ function App() {
                 <Route path='addressbook' element={<DocsAddressBook />} />
                 <Route path='import' element={<DocsImport />} />
                 <Route path='data' element={<DocsData />} />
+                <Route path='architecture' element={<DocsArchitecture />} />
+                <Route path='openapi' element={<DocsOpenAPI />} />
               </Route>
               <Route path='/help' element={<HelpLayout />}>
                 <Route index element={<HelpHome />} />
