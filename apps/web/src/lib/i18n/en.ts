@@ -614,6 +614,7 @@ export const en: TranslationKeys = {
         'Add bank accounts to your new profile. You can also do this later via Settings.',
       profileCreated: 'Profile "{name}" has been created!',
       addedAccounts: 'Added accounts:',
+      createError: 'Something went wrong creating the profile.',
     },
     server: {
       title: 'Server',

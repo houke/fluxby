@@ -6,7 +6,7 @@
 /**
  * Schema version for migrations
  */
-export const SCHEMA_VERSION = 5;
+export const SCHEMA_VERSION = 6;
 
 /**
  * SQL schema with sync metadata columns
@@ -45,6 +45,7 @@ CREATE TABLE IF NOT EXISTS profiles (
     name TEXT NOT NULL,
     type TEXT CHECK(type IN ('personal', 'business', 'shared', 'savings', 'investing')) DEFAULT 'personal',
     avatar_url TEXT,
+    is_hidden INTEGER NOT NULL DEFAULT 0,
     updated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now') * 1000),
     is_deleted INTEGER NOT NULL DEFAULT 0,
     device_id TEXT,

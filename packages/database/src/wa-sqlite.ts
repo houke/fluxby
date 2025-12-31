@@ -552,6 +552,24 @@ export class Database implements DatabaseConnection {
       wasmLog('Transactions table check completed for v5');
     }
 
+    // Migration to v6: Add is_hidden column to profiles
+    if (currentVersion > 0 && currentVersion < 6) {
+      wasmLog('Ensuring profiles table has is_hidden column (v6)...');
+      try {
+        await this.execAsync(
+          'ALTER TABLE profiles ADD COLUMN is_hidden INTEGER NOT NULL DEFAULT 0;'
+        );
+      } catch (err) {
+        if (
+          err instanceof Error &&
+          (err.message.includes('duplicate column') ||
+            err.message.includes('already exists'))
+        ) {
+          wasmLog('is_hidden already exists');
+        }
+      }
+    }
+
     // --- SEEDING ---
     // Seed default data (only categories with NULL profile_id)
     const deviceId = getDeviceId();

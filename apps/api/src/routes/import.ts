@@ -218,9 +218,10 @@ function addToAddressBookIfNew(
   return result.changes > 0;
 }
 
-function getExistingImportHashes(): Set<string> {
+function getExistingImportHashes(profileId: number | string): Set<string> {
   const rows = query<{ import_hash: string }>(
-    "SELECT import_hash FROM transactions WHERE import_hash IS NOT NULL AND TRIM(import_hash) != ''"
+    "SELECT import_hash FROM transactions WHERE profile_id = ? AND import_hash IS NOT NULL AND TRIM(import_hash) != ''",
+    [profileId]
   );
   return new Set(rows.map((row) => row.import_hash));
 }
@@ -300,11 +301,11 @@ router.post('/csv', upload.single('file'), async (req, res) => {
       });
     }
 
-    // Get or create account based on IBAN
+    // Get or create account based on IBAN (scoped to profile)
     const iban = ingTransactions[0].rekening;
     let account = queryOne<{ id: number; profile_id: number }>(
-      'SELECT id, profile_id FROM accounts WHERE iban = ?',
-      [iban]
+      'SELECT id, profile_id FROM accounts WHERE iban = ? AND profile_id = ?',
+      [iban, profileId]
     );
 
     if (!account) {
@@ -319,8 +320,8 @@ router.post('/csv', upload.single('file'), async (req, res) => {
     // Convert to our transaction format
     const transactions = convertINGToTransactions(ingTransactions, account.id);
 
-    // Skip any entries that already exist (all months, including current month)
-    const existingHashes = getExistingImportHashes();
+    // Skip any entries that already exist (scoped to profile)
+    const existingHashes = getExistingImportHashes(profileId);
     const seenInThisFile = new Set<string>();
     const newTransactions = [] as typeof transactions;
     const skippedExisting = [] as typeof transactions;
@@ -444,7 +445,7 @@ router.post('/csv', upload.single('file'), async (req, res) => {
 
     // Create import record with skipped rows
     const importResult = run(
-      'INSERT INTO imports (filename, bank, transaction_count, status, duplicates_skipped, skipped_rows) VALUES (?, ?, ?, ?, ?, ?)',
+      'INSERT INTO imports (filename, bank, transaction_count, status, duplicates_skipped, skipped_rows, profile_id) VALUES (?, ?, ?, ?, ?, ?, ?)',
       [
         filename,
         bank,
@@ -452,6 +453,7 @@ router.post('/csv', upload.single('file'), async (req, res) => {
         'pending',
         skippedExisting.length + skippedInFile.length,
         JSON.stringify(skippedRowsData),
+        profileId,
       ]
     );
     const importId = Number(importResult.lastInsertRowid);
@@ -734,32 +736,26 @@ router.get('/history', (req, res) => {
       parse_errors: number | null;
     }>(
       `
-      SELECT DISTINCT i.id, i.filename, i.bank, i.imported_at, i.transaction_count, i.status,
-             i.skipped_rows, i.duplicates_skipped, i.parse_errors
-      FROM imports i
-      INNER JOIN transactions t ON t.profile_id = ?
-      WHERE i.imported_at >= (
-        SELECT MIN(t2.created_at) FROM transactions t2 WHERE t2.profile_id = ?
-      )
-      ORDER BY i.imported_at DESC
+      SELECT id, filename, bank, imported_at, transaction_count, status,
+             skipped_rows, duplicates_skipped, parse_errors
+      FROM imports
+      WHERE profile_id = ?
+      ORDER BY imported_at DESC
       LIMIT 10
     `,
-      [profileId, profileId]
+      [profileId]
     );
 
     // Clean up old imports (keep only 10 most recent per profile)
     run(
       `
       DELETE FROM imports
-      WHERE id NOT IN (
+      WHERE profile_id = ? 
+      AND id NOT IN (
         SELECT id FROM (
-          SELECT DISTINCT i.id
-          FROM imports i
-          INNER JOIN transactions t ON t.profile_id = ?
-          WHERE i.imported_at >= (
-            SELECT MIN(t2.created_at) FROM transactions t2 WHERE t2.profile_id = ?
-          )
-          ORDER BY i.imported_at DESC
+          SELECT id FROM imports 
+          WHERE profile_id = ?
+          ORDER BY imported_at DESC
           LIMIT 10
         )
       )
@@ -1002,12 +998,8 @@ router.post('/generic/import', upload.single('file'), async (req, res) => {
       transactions.push(...rowTx);
     }
 
-    // Get ALL existing hashes to check for duplicates (global check due to UNIQUE constraint)
-    const existingHashes = new Set(
-      query<{ import_hash: string }>(
-        'SELECT import_hash FROM transactions WHERE import_hash IS NOT NULL'
-      ).map((row) => row.import_hash)
-    );
+    // Get ALL existing hashes to check for duplicates (scoped to profile)
+    const existingHashes = getExistingImportHashes(profileId);
 
     // Also track hashes within this import to avoid duplicates in the CSV itself
     const seenInThisImport = new Set<string>();
@@ -1042,8 +1034,8 @@ router.post('/generic/import', upload.single('file'), async (req, res) => {
 
     // Create import record
     const importResult = run(
-      `INSERT INTO imports (filename, bank, transaction_count, status, skipped_rows, duplicates_skipped, parse_errors)
-       VALUES (?, ?, ?, 'pending', ?, ?, ?)`,
+      `INSERT INTO imports (filename, bank, transaction_count, status, skipped_rows, duplicates_skipped, parse_errors, profile_id)
+       VALUES (?, ?, ?, 'pending', ?, ?, ?, ?)`,
       [
         filename,
         req.body.bank || 'generic',
@@ -1051,6 +1043,7 @@ router.post('/generic/import', upload.single('file'), async (req, res) => {
         JSON.stringify([...errors, ...duplicateErrors]),
         duplicateCount,
         errors.length,
+        profileId,
       ]
     );
     const importId = importResult.lastInsertRowid as number;

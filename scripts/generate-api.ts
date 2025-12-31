@@ -104,12 +104,12 @@ Object.entries(paths).forEach(([path, methods]: [string, any]) => {
 Object.entries(requestsByTag).forEach(([tag, requests]) => {
   const tagSlug = slugify(tag);
   const folderPath = join(brunoDir, tagSlug);
-  
+
   if (!existsSync(folderPath)) {
     mkdirSync(folderPath, { recursive: true });
   } else {
     // Clean up existing .bru files in this folder to avoid duplicates/stale files
-    readdirSync(folderPath).forEach(file => {
+    readdirSync(folderPath).forEach((file) => {
       if (file.endsWith('.bru')) {
         unlinkSync(join(folderPath, file));
       }
@@ -117,7 +117,8 @@ Object.entries(requestsByTag).forEach(([tag, requests]) => {
   }
 
   requests.forEach(({ path, method, detail }, index) => {
-    const name = detail.summary || detail.operationId || `${method.toUpperCase()} ${path}`;
+    const name =
+      detail.summary || detail.operationId || `${method.toUpperCase()} ${path}`;
     const filename = `${getSafeFilename(name)}.bru`;
     const filePath = join(folderPath, filename);
 

@@ -1051,14 +1051,20 @@ export function createDataService(db: Database) {
 
         // Ensure the contact's primary IBAN is represented in contact_ibans
         await db.runAsync(
-          'INSERT OR IGNORE INTO contact_ibans (contact_id, iban, is_primary) VALUES (?, ?, 1)',
-          [existingContactId, existingByName[0].iban]
+          'INSERT OR IGNORE INTO contact_ibans (id, contact_id, iban, is_primary, created_at, updated_at) VALUES (?, ?, ?, 1, ?, ?)',
+          [
+            crypto.randomUUID(),
+            existingContactId,
+            existingByName[0].iban,
+            now,
+            now,
+          ]
         );
 
         // Link IBAN to the existing contact
         await db.runAsync(
-          'INSERT OR IGNORE INTO contact_ibans (contact_id, iban, is_primary) VALUES (?, ?, 0)',
-          [existingContactId, normalizedIban]
+          'INSERT OR IGNORE INTO contact_ibans (id, contact_id, iban, is_primary, created_at, updated_at) VALUES (?, ?, ?, 0, ?, ?)',
+          [crypto.randomUUID(), existingContactId, normalizedIban, now, now]
         );
 
         // Sync transactions by IBAN (regular contacts) to the existing contact
@@ -1074,6 +1080,7 @@ export function createDataService(db: Database) {
 
         return {
           success: true,
+          merged: true,
           data: {
             id: existingContactId,
             iban: normalizedIban,
@@ -1083,18 +1090,45 @@ export function createDataService(db: Database) {
         };
       }
 
-      // Check if a contact with this IBAN already exists
+      // Check if a contact with this IBAN already exists - if so, merge into it
       const existing = await db.queryAsync<{ id: string; name: string }>(
         'SELECT id, name FROM address_book WHERE iban = ? AND profile_id = ? AND is_deleted = 0',
         [normalizedIban, pid]
       );
       if (existing.length > 0) {
-        throw new Error(
-          `Contact with this IBAN already exists (${existing[0].name})`
+        // IBAN exists as primary - merge the new contact into the existing one
+        const existingContactId = existing[0].id;
+
+        // Ensure the contact's primary IBAN is in contact_ibans
+        await db.runAsync(
+          'INSERT OR IGNORE INTO contact_ibans (id, contact_id, iban, is_primary, created_at, updated_at) VALUES (?, ?, ?, 1, ?, ?)',
+          [crypto.randomUUID(), existingContactId, normalizedIban, now, now]
         );
+
+        // Update transactions to use this contact
+        const syncResult = await db.runAsync(
+          `UPDATE transactions
+           SET address_book_id = ?, merchant_name = ?, updated_at = ?
+           WHERE profile_id = ?
+             AND opposing_account_iban = ?
+             AND (address_book_id IS NULL OR address_book_id = '')
+             AND is_deleted = 0`,
+          [existingContactId, existing[0].name, now, pid, normalizedIban]
+        );
+
+        return {
+          success: true,
+          merged: true,
+          data: {
+            id: existingContactId,
+            iban: normalizedIban,
+            name: existing[0].name,
+            transactionsUpdated: syncResult?.changes || 0,
+          },
+        };
       }
 
-      // Check if the IBAN is already assigned to another contact via contact_ibans
+      // Check if the IBAN is already assigned to another contact via contact_ibans - if so, merge
       const existingIban = await db.queryAsync<{
         contact_id: string;
         name: string;
@@ -1105,9 +1139,30 @@ export function createDataService(db: Database) {
         [normalizedIban, pid]
       );
       if (existingIban.length > 0) {
-        throw new Error(
-          `IBAN is already assigned to contact "${existingIban[0].name}"`
+        // IBAN is assigned via contact_ibans - merge into that contact
+        const existingContactId = existingIban[0].contact_id;
+
+        // Update transactions to use this contact
+        const syncResult = await db.runAsync(
+          `UPDATE transactions
+           SET address_book_id = ?, merchant_name = ?, updated_at = ?
+           WHERE profile_id = ?
+             AND opposing_account_iban = ?
+             AND (address_book_id IS NULL OR address_book_id = '')
+             AND is_deleted = 0`,
+          [existingContactId, existingIban[0].name, now, pid, normalizedIban]
         );
+
+        return {
+          success: true,
+          merged: true,
+          data: {
+            id: existingContactId,
+            iban: normalizedIban,
+            name: existingIban[0].name,
+            transactionsUpdated: syncResult?.changes || 0,
+          },
+        };
       }
 
       // Insert the new address book entry
@@ -1128,8 +1183,8 @@ export function createDataService(db: Database) {
 
       // Add to contact_ibans junction table for consistent lookup
       await db.runAsync(
-        `INSERT OR IGNORE INTO contact_ibans (contact_id, iban, is_primary) VALUES (?, ?, 1)`,
-        [id, normalizedIban]
+        `INSERT OR IGNORE INTO contact_ibans (id, contact_id, iban, is_primary, created_at, updated_at) VALUES (?, ?, ?, 1, ?, ?)`,
+        [crypto.randomUUID(), id, normalizedIban, now, now]
       );
 
       // Sync transactions to the new contact - link by IBAN
@@ -1244,13 +1299,13 @@ export function createDataService(db: Database) {
       }
 
       // Add IBAN to contact_ibans (use INSERT OR IGNORE to handle duplicates)
+      const now = Date.now();
       await db.runAsync(
-        'INSERT OR IGNORE INTO contact_ibans (contact_id, iban, is_primary) VALUES (?, ?, 0)',
-        [contactId, normalizedIban]
+        'INSERT OR IGNORE INTO contact_ibans (id, contact_id, iban, is_primary, created_at, updated_at) VALUES (?, ?, ?, 0, ?, ?)',
+        [crypto.randomUUID(), contactId, normalizedIban, now, now]
       );
 
       // Sync transactions for the newly added IBAN
-      const now = Date.now();
       const result = await db.runAsync(
         `UPDATE transactions 
          SET address_book_id = ?, merchant_name = ?, updated_at = ?
@@ -2053,12 +2108,24 @@ export function createDataService(db: Database) {
       const pid = profileId();
       if (!pid) return [];
 
-      // Get all address book entries with their IBANs
+      // Get all address book entries with their IBANs from contact_ibans
       // Match transactions via:
       // 1. Direct address_book_id link (primary)
       // 2. IBAN match when no direct link exists
       // 3. Name match for shared IBANs when no direct link exists
-      return await db.queryAsync(
+      const contacts = await db.queryAsync<{
+        id: string;
+        iban: string;
+        name: string;
+        description: string | null;
+        notes: string | null;
+        created_at: number;
+        original_name: string | null;
+        transaction_count: number;
+        total_income: number;
+        total_expenses: number;
+        last_transaction_date: string | null;
+      }>(
         `SELECT 
           ab.id,
           ab.iban,
@@ -2092,6 +2159,44 @@ export function createDataService(db: Database) {
         ORDER BY ab.name`,
         [pid, pid]
       );
+
+      // Fetch all contact_ibans for the current profile's contacts
+      const contactIds = contacts.map((c) => c.id);
+      if (contactIds.length === 0) return [];
+
+      const placeholders = contactIds.map(() => '?').join(',');
+      const contactIbans = await db.queryAsync<{
+        contact_id: string;
+        iban: string;
+      }>(
+        `SELECT contact_id, iban FROM contact_ibans WHERE contact_id IN (${placeholders})`,
+        contactIds
+      );
+
+      // Build a map of contact_id -> ibans[]
+      const ibansByContact = new Map<string, string[]>();
+      for (const ci of contactIbans) {
+        if (!ibansByContact.has(ci.contact_id)) {
+          ibansByContact.set(ci.contact_id, []);
+        }
+        ibansByContact.get(ci.contact_id)!.push(ci.iban);
+      }
+
+      // Return contacts with ibans array and isMerged flag
+      return contacts.map((c) => {
+        const ibans = ibansByContact.get(c.id) || [];
+        // Add primary IBAN if not already in the list
+        if (c.iban && !ibans.includes(c.iban)) {
+          ibans.unshift(c.iban);
+        }
+        // Filter out duplicates
+        const uniqueIbans = [...new Set(ibans)];
+        return {
+          ...c,
+          ibans: uniqueIbans,
+          is_merged: uniqueIbans.length > 1 ? 1 : 0,
+        };
+      });
     },
 
     async getAddressBookContact(id: string) {
@@ -2715,17 +2820,19 @@ export function createDataService(db: Database) {
           }
 
           const description = row[mapping.description] || '';
-          const opposingIban = mapping.iban
-            ? row[mapping.iban]?.replace(/\s/g, '').toUpperCase()
+          // Use counterparty field for opposing IBAN (e.g., 'Tegenrekening' for ING)
+          // mapping.iban is the user's own account (e.g., 'Rekening' for ING)
+          const opposingIban = mapping.counterparty
+            ? row[mapping.counterparty]?.replace(/\s/g, '').toUpperCase()
             : null;
-          let counterparty = mapping.counterparty
-            ? row[mapping.counterparty]
-            : null;
+          // The merchant name comes from description (e.g., 'Naam / Omschrijving' for ING)
+          // which contains the counterparty name, not from the counterparty column which is the IBAN
+          let merchantName = description;
 
-          // Apply cleanup rules to counterparty name
-          if (counterparty && cleanupRules.length > 0) {
-            counterparty = this._applyCleanupRulesToName(
-              counterparty,
+          // Apply cleanup rules to merchant name
+          if (merchantName && cleanupRules.length > 0) {
+            merchantName = this._applyCleanupRulesToName(
+              merchantName,
               cleanupRules
             );
           }
@@ -2756,11 +2863,47 @@ export function createDataService(db: Database) {
             type = 'transfer';
           }
 
+          // ING specific: Detect "Oranje spaarrekening" in description
+          // Auto-create savings account and mark as internal transfer
+          const isOranjeSpaar =
+            description && /oranje\s*spaarrekening/i.test(description);
+          if (isOranjeSpaar && opposingIban) {
+            // Check if this savings account already exists
+            const existingSavings = await db.queryOneAsync<{ id: string }>(
+              'SELECT id FROM accounts WHERE profile_id = ? AND iban = ? AND is_deleted = 0',
+              [pid, opposingIban]
+            );
+
+            if (!existingSavings) {
+              // Create the Oranje spaarrekening as a savings account
+              const savingsAccountId = crypto.randomUUID();
+              await db.runAsync(
+                `INSERT INTO accounts (id, iban, name, type, bank, profile_id, order_index, created_at, updated_at)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                [
+                  savingsAccountId,
+                  opposingIban,
+                  'ING Oranje Spaarrekening',
+                  'savings',
+                  'ING',
+                  pid,
+                  99, // Put at end
+                  now,
+                  now,
+                ]
+              );
+              // Add to ownAccountIbans so future transactions are also marked as transfers
+              ownAccountIbans.add(opposingIban);
+            }
+            // Mark as internal transfer
+            type = 'transfer';
+          }
+
           // Apply category rules for auto-categorization
           if (categoryRules.length > 0) {
             const matchedRule = this._findMatchingCategoryRule(
               description,
-              counterparty,
+              merchantName,
               categoryRules
             );
             if (matchedRule) {
@@ -2778,10 +2921,10 @@ export function createDataService(db: Database) {
               amount,
               type,
               description,
-              counterparty,
+              merchantName,
               options.accountId,
               opposingIban,
-              counterparty,
+              merchantName,
               categoryId,
               hash,
               pid,
@@ -2796,11 +2939,11 @@ export function createDataService(db: Database) {
           // Track unique IBANs for address book (exclude own accounts and empty IBANs)
           if (
             opposingIban &&
-            counterparty &&
+            merchantName &&
             !ownAccountIbans.has(opposingIban)
           ) {
             if (!uniqueIbanMap.has(opposingIban)) {
-              uniqueIbanMap.set(opposingIban, counterparty);
+              uniqueIbanMap.set(opposingIban, merchantName);
             }
           }
         } catch (err) {
@@ -3008,8 +3151,8 @@ export function createDataService(db: Database) {
       if (existingByName) {
         // Merge IBAN into existing contact
         await db.runAsync(
-          'INSERT OR IGNORE INTO contact_ibans (contact_id, iban, is_primary) VALUES (?, ?, 0)',
-          [existingByName.id, normalizedIban]
+          'INSERT OR IGNORE INTO contact_ibans (id, contact_id, iban, is_primary, created_at, updated_at) VALUES (?, ?, ?, 0, ?, ?)',
+          [crypto.randomUUID(), existingByName.id, normalizedIban, now, now]
         );
         return true;
       }
@@ -3024,8 +3167,8 @@ export function createDataService(db: Database) {
 
       // Add to contact_ibans junction table
       await db.runAsync(
-        'INSERT OR IGNORE INTO contact_ibans (contact_id, iban, is_primary) VALUES (?, ?, 1)',
-        [id, normalizedIban]
+        'INSERT OR IGNORE INTO contact_ibans (id, contact_id, iban, is_primary, created_at, updated_at) VALUES (?, ?, ?, 1, ?, ?)',
+        [crypto.randomUUID(), id, normalizedIban, now, now]
       );
 
       return true;
@@ -3254,6 +3397,8 @@ export function createDataService(db: Database) {
       // Generate 18 months of data
       for (let monthOffset = 0; monthOffset < 18; monthOffset++) {
         const monthDate = new Date(currentDate);
+        // Anchor to the 1st to avoid month overflow issues (e.g. 31st -> shorter months)
+        monthDate.setDate(1);
         monthDate.setMonth(monthDate.getMonth() - monthOffset);
         const year = monthDate.getFullYear();
         const month = monthDate.getMonth();

@@ -80,6 +80,7 @@ export interface Profile {
   name: string;
   type: ProfileType;
   avatarUrl: string | null;
+  isHidden?: boolean;
   createdAt: string;
 }
 

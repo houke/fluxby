@@ -172,12 +172,16 @@ export function ProfileManager() {
     }, 300);
   };
 
-  // Get avatar options for display, with selected gradient first if it's a gradient
+  // Get avatar options for display, making sure the current one is included if it's a gradient
   const getDisplayAvatars = () => {
     const selectedAvatar = formData.avatarUrl;
-    if (selectedAvatar && avatarOptions.includes(selectedAvatar)) {
-      const filtered = avatarOptions.filter((a) => a !== selectedAvatar);
-      return [selectedAvatar, ...filtered];
+    if (
+      selectedAvatar &&
+      typeof selectedAvatar === 'string' &&
+      selectedAvatar.startsWith('linear-gradient') &&
+      !avatarOptions.includes(selectedAvatar)
+    ) {
+      return [selectedAvatar, ...avatarOptions];
     }
     return avatarOptions;
   };
@@ -204,11 +208,20 @@ export function ProfileManager() {
       // Store the newly created profile ID and move to accounts step
       if (newProfile && typeof newProfile === 'object' && 'id' in newProfile) {
         setNewlyCreatedProfileId(newProfile.id as string);
+        setCreateStep('accounts');
+        setCreatedAccounts([]);
+      } else {
+        setToastMessage(
+          t.settings?.profileManager?.createError ||
+            'Er ging iets mis bij het aanmaken van het profiel.'
+        );
       }
-      setCreateStep('accounts');
-      setCreatedAccounts([]);
     } catch (error) {
       console.error('Failed to create profile', error);
+      setToastMessage(
+        t.settings?.profileManager?.createError ||
+          'Er ging iets mis bij het aanmaken van het profiel.'
+      );
     }
   };
 
@@ -340,7 +353,12 @@ export function ProfileManager() {
           <DialogTrigger asChild>
             <Button
               onClick={() => {
-                setFormData({ name: '', type: 'personal' });
+                // Default to first gradient if available
+                setFormData({
+                  name: '',
+                  type: 'personal',
+                  avatarUrl: avatarOptions[0] || null,
+                });
                 setCreateStep('profile');
               }}
             >

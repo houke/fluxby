@@ -1559,12 +1559,34 @@ export default function Transactions() {
   };
 
   // Handle address book selection for a transaction
-  // This links the transaction to the address book entry WITHOUT changing the title
-  const handleAddressBookSelect = (
+  // This links the transaction to the address book entry
+  // If the transaction has a different IBAN, add it to the contact's IBANs
+  const handleAddressBookSelect = async (
     tx: Transaction,
     contact: AddressBookEntry
   ) => {
     // Note: popover is managed by TransactionRowBadges component internally
+    const txIban = tx.opposingAccountIban;
+    const contactIbans = contact.ibans || [contact.iban];
+
+    // Check if the transaction's IBAN is already in the contact's IBANs
+    const ibanAlreadyInContact =
+      txIban && contactIbans.some((iban) => iban === txIban);
+
+    // If the IBAN is different, first add it to the contact
+    if (txIban && !ibanAlreadyInContact) {
+      try {
+        await api.addContactIban(contact.id, txIban);
+        queryClient.invalidateQueries({
+          queryKey: ['addressbook', activeProfileId],
+        });
+      } catch {
+        // If adding IBAN fails (e.g., already exists on another contact), just continue
+        // The transaction will still be linked
+      }
+    }
+
+    // Then link the transaction to the contact
     updateMutation.mutate({ id: tx.id, data: { addressBookId: contact.id } });
   };
 

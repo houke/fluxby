@@ -17,7 +17,9 @@ CREATE TABLE IF NOT EXISTS profiles (
     name TEXT NOT NULL,
     type TEXT CHECK(type IN ('personal', 'business', 'shared', 'savings')) DEFAULT 'personal',
     avatar_url TEXT,
+    is_hidden INTEGER DEFAULT 0,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
@@ -34,7 +36,8 @@ CREATE TABLE IF NOT EXISTS accounts (
     current_balance DECIMAL(10,2),
     order_index INTEGER DEFAULT 0,
     profile_id INTEGER DEFAULT 1 REFERENCES profiles(id) ON DELETE CASCADE,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Categories table
@@ -46,7 +49,8 @@ CREATE TABLE IF NOT EXISTS categories (
     color TEXT,
     description TEXT,
     profile_id INTEGER REFERENCES profiles(id) ON DELETE CASCADE,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Transactions table
@@ -65,9 +69,11 @@ CREATE TABLE IF NOT EXISTS transactions (
     balance_after DECIMAL(10,2),
     payment_method TEXT,
     raw_data JSON,
-    import_hash TEXT UNIQUE,
+    import_hash TEXT,
     profile_id INTEGER REFERENCES profiles(id) ON DELETE CASCADE,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(import_hash, profile_id)
 );
 
 -- Budgets table
@@ -79,7 +85,8 @@ CREATE TABLE IF NOT EXISTS budgets (
     start_date DATE,
     end_date DATE,
     profile_id INTEGER DEFAULT 1 REFERENCES profiles(id) ON DELETE CASCADE,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Category rules for auto-categorization
@@ -89,7 +96,8 @@ CREATE TABLE IF NOT EXISTS category_rules (
     category_id INTEGER REFERENCES categories(id) ON DELETE CASCADE,
     priority INTEGER DEFAULT 0,
     profile_id INTEGER DEFAULT 1 REFERENCES profiles(id) ON DELETE CASCADE,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Imports tracking table
@@ -102,7 +110,10 @@ CREATE TABLE IF NOT EXISTS imports (
     status TEXT CHECK(status IN ('pending', 'completed', 'failed')) DEFAULT 'pending',
     skipped_rows JSON,
     duplicates_skipped INTEGER DEFAULT 0,
-    parse_errors INTEGER DEFAULT 0
+    parse_errors INTEGER DEFAULT 0,
+    profile_id INTEGER DEFAULT 1 REFERENCES profiles(id) ON DELETE CASCADE,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 

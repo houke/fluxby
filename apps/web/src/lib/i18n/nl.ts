@@ -536,6 +536,7 @@ export interface TranslationKeys {
       addAccountsDescription: string;
       profileCreated: string;
       addedAccounts: string;
+      createError: string;
     };
     profile: {
       title: string;
@@ -1563,6 +1564,7 @@ export const nl: TranslationKeys = {
         'Voeg bankrekeningen toe aan je nieuwe profiel. Je kunt dit ook later doen via Instellingen.',
       profileCreated: 'Profiel "{name}" is aangemaakt!',
       addedAccounts: 'Toegevoegde rekeningen:',
+      createError: 'Er ging iets mis bij het aanmaken van het profiel.',
     },
     server: {
       title: 'Server',

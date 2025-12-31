@@ -18,6 +18,9 @@ export const db: DatabaseType = new Database(DB_PATH);
 // Enable WAL mode for better performance
 db.pragma('journal_mode = WAL');
 
+// Enable foreign keys for cascading deletes
+db.pragma('foreign_keys = ON');
+
 // Initialize database schema
 export function initializeDatabase(): void {
   const schemaPath = join(__dirname, 'schema.sql');
@@ -25,9 +28,6 @@ export function initializeDatabase(): void {
 
   // Execute schema
   db.exec(schema);
-
-  // Update categories to Dutch if they're still in English
-  updateCategoriesToDutch();
 
   // Update categories to Dutch if they're still in English
   updateCategoriesToDutch();
@@ -104,6 +104,13 @@ export function initializeDatabase(): void {
   } catch {
     // Column already exists
   }
+  try {
+    db.exec(
+      'ALTER TABLE imports ADD COLUMN profile_id INTEGER DEFAULT 1 REFERENCES profiles(id) ON DELETE CASCADE'
+    );
+  } catch {
+    // Column already exists
+  }
 
   // Add payment_method column to transactions if it doesn't exist
   try {
@@ -128,11 +135,14 @@ export function initializeDatabase(): void {
 
   // Ensure we have a usable unique constraint for import_hash (skip duplicates on import)
   try {
+    // Drop old global index if it exists
+    db.exec('DROP INDEX IF EXISTS idx_transactions_import_hash');
+    // Create new profile-scoped unique index
     db.exec(
-      "CREATE UNIQUE INDEX IF NOT EXISTS idx_transactions_import_hash ON transactions(import_hash) WHERE import_hash IS NOT NULL AND TRIM(import_hash) != ''"
+      "CREATE UNIQUE INDEX IF NOT EXISTS idx_transactions_import_hash_scoped ON transactions(import_hash, profile_id) WHERE import_hash IS NOT NULL AND TRIM(import_hash) != ''"
     );
-  } catch {
-    // Ignore index creation failures (e.g. on corrupted/unsupported schema)
+  } catch (error) {
+    console.warn('Failed to update import_hash index (might be expected):', error);
   }
 
   // Backfill missing import_hash values so older data also dedupes correctly
@@ -312,10 +322,69 @@ export function initializeDatabase(): void {
   // MAJOR MIGRATION: Consolidate shared_iban_merchants into address_book
   consolidateSharedIbanMerchantsIntoAddressBook();
 
-  // MIGRATION: Multi-tenant profile support
-  // migrateToMultiTenant(); // Commented out since schema.sql already defines the columns
+  // Ensure all data has a profile_id
+  backfillMissingProfileIds();
+
+  // Ensure all transactions have the correct profile_id from their account
+  syncTransactionProfileIds();
 
   console.warn('Database initialized successfully');
+}
+
+/**
+ * Ensures all existing records have a profile_id
+ */
+function backfillMissingProfileIds(): void {
+  try {
+    // Get default profile ID (usually 1, but check DB to be sure)
+    const result = db
+      .prepare('SELECT id FROM profiles ORDER BY created_at ASC LIMIT 1')
+      .get() as { id: number } | undefined;
+    const defaultProfileId = result?.id ?? 1;
+
+    const tables = [
+      'accounts',
+      'transactions',
+      'categories',
+      'budgets',
+      'category_rules',
+      'address_book',
+      'imports',
+    ];
+
+    for (const table of tables) {
+      const result = db
+        .prepare(`UPDATE ${table} SET profile_id = ? WHERE profile_id IS NULL`)
+        .run(defaultProfileId);
+      if (result.changes > 0) {
+        console.warn(`Backfilled profile_id for ${result.changes} rows in ${table}`);
+      }
+    }
+  } catch (error) {
+    console.error('Failed to backfill profile IDs:', error);
+  }
+}
+
+/**
+ * Ensures all transactions have the correct profile_id based on their account
+ */
+function syncTransactionProfileIds(): void {
+  try {
+    const result = db
+      .prepare(
+        `
+      UPDATE transactions 
+      SET profile_id = (SELECT profile_id FROM accounts WHERE accounts.id = transactions.account_id)
+      WHERE profile_id IS NULL OR profile_id != (SELECT profile_id FROM accounts WHERE accounts.id = transactions.account_id)
+    `
+      )
+      .run();
+    if (result.changes > 0) {
+      console.warn(`Synced profile_id for ${result.changes} transactions`);
+    }
+  } catch (error) {
+    console.error('Failed to sync transaction profile IDs:', error);
+  }
 }
 
 /**

@@ -391,6 +391,8 @@ export const api = {
     const contacts = (await ds.getAddressBookContacts()) as Array<{
       id: string;
       iban: string;
+      ibans?: string[];
+      is_merged?: number;
       name: string;
       description: string | null;
       notes: string | null;
@@ -405,6 +407,8 @@ export const api = {
     return contacts.map((c) => ({
       id: c.id,
       iban: c.iban,
+      ibans: c.ibans || [c.iban].filter(Boolean),
+      isMerged: (c.is_merged ?? 0) === 1,
       name: c.name,
       description: c.description,
       notes: c.notes,
@@ -422,6 +426,8 @@ export const api = {
     const contacts = (await ds.getAddressBookContacts()) as Array<{
       id: string;
       iban: string;
+      ibans?: string[];
+      is_merged?: number;
       name: string;
       description: string | null;
       notes: string | null;
@@ -435,6 +441,8 @@ export const api = {
     return contacts.map((c) => ({
       id: c.id,
       iban: c.iban,
+      ibans: c.ibans || [c.iban].filter(Boolean),
+      isMerged: (c.is_merged ?? 0) === 1,
       name: c.name,
       description: c.description,
       notes: c.notes,
