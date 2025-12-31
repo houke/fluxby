@@ -432,7 +432,7 @@ export function ProfileManager() {
                           className={cn(
                             'relative h-11 w-11 shrink-0 rounded-full border shadow-sm transition-all hover:scale-105',
                             formData.avatarUrl === pattern &&
-                              'ring-2 ring-primary ring-offset-2'
+                              'ring-2 ring-purple-600 ring-offset-2 ring-offset-background dark:ring-purple-400'
                           )}
                           style={{
                             backgroundImage: pattern,
@@ -811,7 +811,7 @@ export function ProfileManager() {
                                   className={cn(
                                     'relative h-11 w-11 shrink-0 rounded-full border shadow-sm transition-all hover:scale-105',
                                     formData.avatarUrl === pattern &&
-                                      'ring-2 ring-primary ring-offset-2'
+                                      'ring-2 ring-purple-600 ring-offset-2 ring-offset-background dark:ring-purple-400'
                                   )}
                                   style={{
                                     backgroundImage: pattern,

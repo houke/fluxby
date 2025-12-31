@@ -16,6 +16,7 @@ import type {
   Category,
   Account,
   Budget,
+  ProfileType,
 } from '@fluxby/shared';
 
 /**
@@ -58,18 +59,59 @@ export function createDataService(db: Database) {
   return {
     // ============= Profiles =============
     async getProfiles(): Promise<Profile[]> {
-      const results = await db.queryAsync<Profile>(
-        'SELECT * FROM profiles WHERE is_deleted = 0 ORDER BY created_at ASC',
+      const rows = await db.queryAsync<{
+        id: string;
+        userId: string;
+        name: string;
+        type: ProfileType;
+        avatarUrl: string | null;
+        createdAt: number;
+      }>(
+        `SELECT
+           id,
+           user_id as userId,
+           name,
+           type,
+           avatar_url as avatarUrl,
+           created_at as createdAt
+         FROM profiles
+         WHERE is_deleted = 0
+         ORDER BY created_at ASC`,
         []
       );
-      return results;
+
+      return rows.map((row) => ({
+        ...row,
+        createdAt: new Date(Number(row.createdAt)).toISOString(),
+      }));
     },
 
     async getProfile(id: string): Promise<Profile | null> {
-      return await db.queryOneAsync<Profile>(
-        'SELECT * FROM profiles WHERE id = ? AND is_deleted = 0',
+      const row = await db.queryOneAsync<{
+        id: string;
+        userId: string;
+        name: string;
+        type: ProfileType;
+        avatarUrl: string | null;
+        createdAt: number;
+      }>(
+        `SELECT
+           id,
+           user_id as userId,
+           name,
+           type,
+           avatar_url as avatarUrl,
+           created_at as createdAt
+         FROM profiles
+         WHERE id = ? AND is_deleted = 0`,
         [id]
       );
+
+      if (!row) return null;
+      return {
+        ...row,
+        createdAt: new Date(Number(row.createdAt)).toISOString(),
+      };
     },
 
     async createProfile(data: {
@@ -1226,33 +1268,57 @@ export function createDataService(db: Database) {
 
     // ============= Data Management =============
     async exportAll() {
-      const pid = profileId();
-      if (!pid) return null;
-
+      // Export the complete dataset (similar to apps/api /api/data/export)
+      // Keep key names stable for settings UI: camelCase keys with raw DB rows.
       const [
-        profiles,
-        accounts,
         categories,
+        accounts,
         transactions,
         budgets,
+        categoryRules,
+        imports,
         addressBook,
+        contactIbans,
+        sharedIbans,
+        sharedIbanMerchants,
+        nameCleanupRules,
+        paymentProviderRules,
+        users,
+        profiles,
       ] = await Promise.all([
-        this.getProfiles(),
-        this.getAccounts(),
-        this.getCategories(),
-        this.getTransactions(),
-        this.getBudgets(),
-        this.getAddressBook(),
+        db.queryAsync('SELECT * FROM categories ORDER BY id'),
+        db.queryAsync('SELECT * FROM accounts ORDER BY id'),
+        db.queryAsync('SELECT * FROM transactions ORDER BY id'),
+        db.queryAsync('SELECT * FROM budgets ORDER BY id'),
+        db.queryAsync('SELECT * FROM category_rules ORDER BY id'),
+        db.queryAsync('SELECT * FROM imports ORDER BY id'),
+        db.queryAsync('SELECT * FROM address_book ORDER BY id'),
+        db.queryAsync('SELECT * FROM contact_ibans ORDER BY id'),
+        db.queryAsync('SELECT * FROM shared_ibans ORDER BY id'),
+        db.queryAsync('SELECT * FROM shared_iban_merchants ORDER BY id'),
+        db.queryAsync('SELECT * FROM name_cleanup_rules ORDER BY id'),
+        db.queryAsync('SELECT * FROM payment_provider_rules ORDER BY id'),
+        db.queryAsync('SELECT * FROM users ORDER BY id'),
+        db.queryAsync('SELECT * FROM profiles ORDER BY id'),
       ]);
 
       return {
-        profiles,
-        accounts,
         categories,
+        accounts,
         transactions,
         budgets,
+        categoryRules,
+        imports,
         addressBook,
+        contactIbans,
+        sharedIbans,
+        sharedIbanMerchants,
+        nameCleanupRules,
+        paymentProviderRules,
+        users,
+        profiles,
         exportedAt: new Date().toISOString(),
+        version: 2,
       };
     },
 
@@ -3574,31 +3640,438 @@ export function createDataService(db: Database) {
     },
 
     async importAll(data: unknown) {
-      // Import all data from a JSON export
-      const importData = data as {
-        profiles?: unknown[];
-        accounts?: unknown[];
-        transactions?: unknown[];
-        categories?: unknown[];
-        budgets?: unknown[];
-        contacts?: unknown[];
-      };
+      const now = Date.now();
 
-      const imported = {
-        profiles: 0,
-        accounts: 0,
-        transactions: 0,
-        categories: 0,
-        budgets: 0,
-        contacts: 0,
-      };
+      // Support both formats:
+      // - Local exportAll(): { categories, ... }
+      // - API export route: { success: true, data: { categories, ... } }
+      const payload =
+        typeof data === 'object' && data !== null && 'data' in data
+          ? (data as { data: unknown }).data
+          : data;
 
-      // This is a simplified import - in production would need more validation
-      if (importData.profiles && Array.isArray(importData.profiles)) {
-        imported.profiles = importData.profiles.length;
+      if (typeof payload !== 'object' || payload === null) {
+        throw new Error('Invalid import payload');
       }
 
-      return imported;
+      const p = payload as Record<string, unknown>;
+
+      const asArray = (value: unknown): Array<Record<string, unknown>> =>
+        Array.isArray(value)
+          ? (value.filter(
+              (v): v is Record<string, unknown> =>
+                typeof v === 'object' && v !== null
+            ) as Array<Record<string, unknown>>)
+          : [];
+
+      const toMs = (value: unknown, fallback = now): number => {
+        if (typeof value === 'number' && Number.isFinite(value)) return value;
+        if (typeof value === 'string') {
+          const asNum = Number(value);
+          if (Number.isFinite(asNum)) return asNum;
+          const parsed = Date.parse(value);
+          if (!Number.isNaN(parsed)) return parsed;
+        }
+        return fallback;
+      };
+
+      const pick = <T>(
+        row: Record<string, unknown>,
+        snake: string,
+        camel?: string
+      ): T | undefined => {
+        const v = row[snake];
+        if (v !== undefined) return v as T;
+        if (camel) {
+          const vc = row[camel];
+          if (vc !== undefined) return vc as T;
+        }
+        return undefined;
+      };
+
+      const users = asArray(p.users);
+      const profiles = asArray(p.profiles);
+      const accounts = asArray(p.accounts);
+      const categories = asArray(p.categories);
+      const transactions = asArray(p.transactions);
+      const budgets = asArray(p.budgets);
+      const categoryRules = asArray(p.categoryRules ?? p.category_rules);
+      const imports = asArray(p.imports);
+      const addressBook = asArray(p.addressBook ?? p.address_book);
+      const contactIbans = asArray(p.contactIbans ?? p.contact_ibans);
+      const sharedIbans = asArray(p.sharedIbans ?? p.shared_ibans);
+      const sharedIbanMerchants = asArray(
+        p.sharedIbanMerchants ?? p.shared_iban_merchants
+      );
+      const nameCleanupRules = asArray(
+        p.nameCleanupRules ?? p.name_cleanup_rules
+      );
+      const paymentProviderRules = asArray(
+        p.paymentProviderRules ?? p.payment_provider_rules
+      );
+
+      await db.runAsync('BEGIN');
+      try {
+        // Clear existing data (respect FK order)
+        await db.runAsync('DELETE FROM transactions');
+        await db.runAsync('DELETE FROM budgets');
+        await db.runAsync('DELETE FROM category_rules');
+        await db.runAsync('DELETE FROM imports');
+        await db.runAsync('DELETE FROM categories');
+        await db.runAsync('DELETE FROM accounts');
+        await db.runAsync('DELETE FROM contact_ibans');
+        await db.runAsync('DELETE FROM address_book');
+        await db.runAsync('DELETE FROM shared_iban_merchants');
+        await db.runAsync('DELETE FROM shared_ibans');
+        await db.runAsync('DELETE FROM name_cleanup_rules');
+        await db.runAsync('DELETE FROM payment_provider_rules');
+        await db.runAsync('DELETE FROM profiles');
+        await db.runAsync('DELETE FROM users');
+
+        // Users
+        for (const u of users) {
+          await db.runAsync(
+            `INSERT INTO users (id, name, avatar, updated_at, is_deleted, device_id, created_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            [
+              pick<string>(u, 'id') ?? crypto.randomUUID(),
+              pick<string>(u, 'name') ?? 'Gebruiker',
+              pick<string | null>(u, 'avatar') ?? null,
+              toMs(pick(u, 'updated_at', 'updatedAt'), now),
+              Number(pick<number>(u, 'is_deleted', 'isDeleted') ?? 0),
+              pick<string | null>(u, 'device_id', 'deviceId') ?? null,
+              toMs(pick(u, 'created_at', 'createdAt'), now),
+            ]
+          );
+        }
+
+        // Ensure at least one user exists for profiles
+        const ensuredUserId = await ensureUserExists();
+
+        // Profiles
+        for (const pr of profiles) {
+          await db.runAsync(
+            `INSERT INTO profiles (id, user_id, name, type, avatar_url, updated_at, is_deleted, device_id, created_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+              pick<string>(pr, 'id') ?? crypto.randomUUID(),
+              pick<string>(pr, 'user_id', 'userId') ?? ensuredUserId,
+              pick<string>(pr, 'name') ?? 'Profiel',
+              pick<string>(pr, 'type') ?? 'personal',
+              pick<string | null>(pr, 'avatar_url', 'avatarUrl') ?? null,
+              toMs(pick(pr, 'updated_at', 'updatedAt'), now),
+              Number(pick<number>(pr, 'is_deleted', 'isDeleted') ?? 0),
+              pick<string | null>(pr, 'device_id', 'deviceId') ?? null,
+              toMs(pick(pr, 'created_at', 'createdAt'), now),
+            ]
+          );
+        }
+
+        // Accounts
+        for (const a of accounts) {
+          await db.runAsync(
+            `INSERT INTO accounts (id, iban, name, type, bank, current_balance, order_index, profile_id, updated_at, is_deleted, device_id, created_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+              pick<string>(a, 'id') ?? crypto.randomUUID(),
+              pick<string>(a, 'iban') ?? '',
+              pick<string>(a, 'name') ?? '',
+              pick<string>(a, 'type') ?? 'checking',
+              pick<string>(a, 'bank') ?? 'ing',
+              Number(
+                pick<number>(a, 'current_balance', 'currentBalance') ?? 0
+              ),
+              Number(pick<number>(a, 'order_index', 'orderIndex') ?? 0),
+              pick<string>(a, 'profile_id', 'profileId') ??
+                getActiveProfileId() ??
+                pick<string>(profiles[0] ?? {}, 'id') ??
+                null,
+              toMs(pick(a, 'updated_at', 'updatedAt'), now),
+              Number(pick<number>(a, 'is_deleted', 'isDeleted') ?? 0),
+              pick<string | null>(a, 'device_id', 'deviceId') ?? null,
+              toMs(pick(a, 'created_at', 'createdAt'), now),
+            ]
+          );
+        }
+
+        // Categories
+        for (const c of categories) {
+          await db.runAsync(
+            `INSERT INTO categories (id, name, parent_id, icon, color, description, profile_id, updated_at, is_deleted, device_id, created_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+              pick<string>(c, 'id') ?? crypto.randomUUID(),
+              pick<string>(c, 'name') ?? '',
+              pick<string | null>(c, 'parent_id', 'parentId') ?? null,
+              pick<string | null>(c, 'icon') ?? null,
+              pick<string | null>(c, 'color') ?? null,
+              pick<string | null>(c, 'description') ?? null,
+              pick<string>(c, 'profile_id', 'profileId') ??
+                getActiveProfileId() ??
+                pick<string>(profiles[0] ?? {}, 'id') ??
+                null,
+              toMs(pick(c, 'updated_at', 'updatedAt'), now),
+              Number(pick<number>(c, 'is_deleted', 'isDeleted') ?? 0),
+              pick<string | null>(c, 'device_id', 'deviceId') ?? null,
+              toMs(pick(c, 'created_at', 'createdAt'), now),
+            ]
+          );
+        }
+
+        // Budgets
+        for (const b of budgets) {
+          await db.runAsync(
+            `INSERT INTO budgets (id, category_id, amount, period, start_date, end_date, profile_id, updated_at, is_deleted, device_id, created_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+              pick<string>(b, 'id') ?? crypto.randomUUID(),
+              pick<string | null>(b, 'category_id', 'categoryId') ?? null,
+              Number(pick<number>(b, 'amount') ?? 0),
+              pick<string>(b, 'period') ?? 'monthly',
+              pick<string | null>(b, 'start_date', 'startDate') ?? null,
+              pick<string | null>(b, 'end_date', 'endDate') ?? null,
+              pick<string>(b, 'profile_id', 'profileId') ??
+                getActiveProfileId() ??
+                pick<string>(profiles[0] ?? {}, 'id') ??
+                null,
+              toMs(pick(b, 'updated_at', 'updatedAt'), now),
+              Number(pick<number>(b, 'is_deleted', 'isDeleted') ?? 0),
+              pick<string | null>(b, 'device_id', 'deviceId') ?? null,
+              toMs(pick(b, 'created_at', 'createdAt'), now),
+            ]
+          );
+        }
+
+        // Category rules
+        for (const r of categoryRules) {
+          await db.runAsync(
+            `INSERT INTO category_rules (id, pattern, category_id, priority, profile_id, updated_at, is_deleted, device_id, created_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+              pick<string>(r, 'id') ?? crypto.randomUUID(),
+              pick<string>(r, 'pattern') ?? '',
+              pick<string | null>(r, 'category_id', 'categoryId') ?? null,
+              Number(pick<number>(r, 'priority') ?? 0),
+              pick<string>(r, 'profile_id', 'profileId') ??
+                getActiveProfileId() ??
+                pick<string>(profiles[0] ?? {}, 'id') ??
+                null,
+              toMs(pick(r, 'updated_at', 'updatedAt'), now),
+              Number(pick<number>(r, 'is_deleted', 'isDeleted') ?? 0),
+              pick<string | null>(r, 'device_id', 'deviceId') ?? null,
+              toMs(pick(r, 'created_at', 'createdAt'), now),
+            ]
+          );
+        }
+
+        // Imports
+        for (const im of imports) {
+          await db.runAsync(
+            `INSERT INTO imports (id, filename, bank, transaction_count, status, skipped_rows, duplicates_skipped, parse_errors, profile_id, updated_at, is_deleted, device_id, created_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+              pick<string>(im, 'id') ?? crypto.randomUUID(),
+              pick<string>(im, 'filename') ?? '',
+              pick<string>(im, 'bank') ?? 'ing',
+              Number(pick<number>(im, 'transaction_count', 'transactionCount') ?? 0),
+              pick<string>(im, 'status') ?? 'completed',
+              pick<string | null>(im, 'skipped_rows', 'skippedRows') ?? null,
+              Number(pick<number>(im, 'duplicates_skipped', 'duplicatesSkipped') ?? 0),
+              Number(pick<number>(im, 'parse_errors', 'parseErrors') ?? 0),
+              pick<string>(im, 'profile_id', 'profileId') ??
+                getActiveProfileId() ??
+                pick<string>(profiles[0] ?? {}, 'id') ??
+                null,
+              toMs(pick(im, 'updated_at', 'updatedAt'), now),
+              Number(pick<number>(im, 'is_deleted', 'isDeleted') ?? 0),
+              pick<string | null>(im, 'device_id', 'deviceId') ?? null,
+              toMs(pick(im, 'created_at', 'createdAt'), now),
+            ]
+          );
+        }
+
+        // Address book
+        for (const ab of addressBook) {
+          await db.runAsync(
+            `INSERT INTO address_book (id, iban, name, description, notes, original_name, profile_id, updated_at, is_deleted, device_id, created_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+              pick<string>(ab, 'id') ?? crypto.randomUUID(),
+              pick<string>(ab, 'iban') ?? '',
+              pick<string>(ab, 'name') ?? '',
+              pick<string | null>(ab, 'description') ?? null,
+              pick<string | null>(ab, 'notes') ?? null,
+              pick<string | null>(ab, 'original_name', 'originalName') ?? null,
+              pick<string>(ab, 'profile_id', 'profileId') ??
+                getActiveProfileId() ??
+                pick<string>(profiles[0] ?? {}, 'id') ??
+                null,
+              toMs(pick(ab, 'updated_at', 'updatedAt'), now),
+              Number(pick<number>(ab, 'is_deleted', 'isDeleted') ?? 0),
+              pick<string | null>(ab, 'device_id', 'deviceId') ?? null,
+              toMs(pick(ab, 'created_at', 'createdAt'), now),
+            ]
+          );
+        }
+
+        // Contact IBANs
+        for (const ci of contactIbans) {
+          await db.runAsync(
+            `INSERT INTO contact_ibans (id, contact_id, iban, is_primary, updated_at, is_deleted, device_id, created_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+              pick<string>(ci, 'id') ?? crypto.randomUUID(),
+              pick<string | null>(ci, 'contact_id', 'contactId') ?? null,
+              pick<string>(ci, 'iban') ?? '',
+              Number(pick<number>(ci, 'is_primary', 'isPrimary') ?? 0),
+              toMs(pick(ci, 'updated_at', 'updatedAt'), now),
+              Number(pick<number>(ci, 'is_deleted', 'isDeleted') ?? 0),
+              pick<string | null>(ci, 'device_id', 'deviceId') ?? null,
+              toMs(pick(ci, 'created_at', 'createdAt'), now),
+            ]
+          );
+        }
+
+        // Shared IBANs
+        for (const si of sharedIbans) {
+          await db.runAsync(
+            `INSERT INTO shared_ibans (id, iban, provider_name, updated_at, is_deleted, device_id, created_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            [
+              pick<string>(si, 'id') ?? crypto.randomUUID(),
+              pick<string>(si, 'iban') ?? '',
+              pick<string | null>(si, 'provider_name', 'providerName') ?? null,
+              toMs(pick(si, 'updated_at', 'updatedAt'), now),
+              Number(pick<number>(si, 'is_deleted', 'isDeleted') ?? 0),
+              pick<string | null>(si, 'device_id', 'deviceId') ?? null,
+              toMs(pick(si, 'created_at', 'createdAt'), now),
+            ]
+          );
+        }
+
+        // Shared IBAN merchants
+        for (const sm of sharedIbanMerchants) {
+          await db.runAsync(
+            `INSERT INTO shared_iban_merchants (id, iban, original_name, display_name, notes, updated_at, is_deleted, device_id, created_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+              pick<string>(sm, 'id') ?? crypto.randomUUID(),
+              pick<string>(sm, 'iban') ?? '',
+              pick<string>(sm, 'original_name', 'originalName') ?? '',
+              pick<string>(sm, 'display_name', 'displayName') ?? '',
+              pick<string | null>(sm, 'notes') ?? null,
+              toMs(pick(sm, 'updated_at', 'updatedAt'), now),
+              Number(pick<number>(sm, 'is_deleted', 'isDeleted') ?? 0),
+              pick<string | null>(sm, 'device_id', 'deviceId') ?? null,
+              toMs(pick(sm, 'created_at', 'createdAt'), now),
+            ]
+          );
+        }
+
+        // Name cleanup rules
+        for (const nr of nameCleanupRules) {
+          await db.runAsync(
+            `INSERT INTO name_cleanup_rules (id, pattern, is_active, updated_at, is_deleted, device_id, created_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            [
+              pick<string>(nr, 'id') ?? crypto.randomUUID(),
+              pick<string>(nr, 'pattern') ?? '',
+              Number(pick<number>(nr, 'is_active', 'isActive') ?? 1),
+              toMs(pick(nr, 'updated_at', 'updatedAt'), now),
+              Number(pick<number>(nr, 'is_deleted', 'isDeleted') ?? 0),
+              pick<string | null>(nr, 'device_id', 'deviceId') ?? null,
+              toMs(pick(nr, 'created_at', 'createdAt'), now),
+            ]
+          );
+        }
+
+        // Payment provider rules
+        for (const pr of paymentProviderRules) {
+          await db.runAsync(
+            `INSERT INTO payment_provider_rules (id, name, patterns, updated_at, is_deleted, device_id, created_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            [
+              pick<string>(pr, 'id') ?? crypto.randomUUID(),
+              pick<string>(pr, 'name') ?? '',
+              pick<string>(pr, 'patterns') ?? '',
+              toMs(pick(pr, 'updated_at', 'updatedAt'), now),
+              Number(pick<number>(pr, 'is_deleted', 'isDeleted') ?? 0),
+              pick<string | null>(pr, 'device_id', 'deviceId') ?? null,
+              toMs(pick(pr, 'created_at', 'createdAt'), now),
+            ]
+          );
+        }
+
+        // Transactions (must come after accounts/categories)
+        for (const t of transactions) {
+          await db.runAsync(
+            `INSERT INTO transactions (
+              id,
+              date,
+              amount,
+              type,
+              description,
+              merchant_name,
+              account_id,
+              opposing_account_iban,
+              opposing_account_name,
+              category_id,
+              notes,
+              balance_after,
+              payment_method,
+              payment_provider,
+              address_book_id,
+              raw_data,
+              import_hash,
+              profile_id,
+              updated_at,
+              is_deleted,
+              device_id,
+              created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            `,
+            [
+              pick<string>(t, 'id') ?? crypto.randomUUID(),
+              pick<string>(t, 'date') ?? '',
+              Number(pick<number>(t, 'amount') ?? 0),
+              pick<string>(t, 'type') ?? 'expense',
+              pick<string | null>(t, 'description') ?? null,
+              pick<string | null>(t, 'merchant_name', 'merchantName') ?? null,
+              pick<string | null>(t, 'account_id', 'accountId') ?? null,
+              pick<string | null>(t, 'opposing_account_iban', 'opposingAccountIban') ??
+                null,
+              pick<string | null>(t, 'opposing_account_name', 'opposingAccountName') ??
+                null,
+              pick<string | null>(t, 'category_id', 'categoryId') ?? null,
+              pick<string | null>(t, 'notes') ?? null,
+              pick<number | null>(t, 'balance_after', 'balanceAfter') ?? null,
+              pick<string | null>(t, 'payment_method', 'paymentMethod') ?? null,
+              pick<string | null>(t, 'payment_provider', 'paymentProvider') ?? null,
+              pick<string | null>(t, 'address_book_id', 'addressBookId') ?? null,
+              pick<string | null>(t, 'raw_data', 'rawData') ?? null,
+              pick<string | null>(t, 'import_hash', 'importHash') ?? null,
+              pick<string>(t, 'profile_id', 'profileId') ??
+                getActiveProfileId() ??
+                pick<string>(profiles[0] ?? {}, 'id') ??
+                null,
+              toMs(pick(t, 'updated_at', 'updatedAt'), now),
+              Number(pick<number>(t, 'is_deleted', 'isDeleted') ?? 0),
+              pick<string | null>(t, 'device_id', 'deviceId') ?? null,
+              toMs(pick(t, 'created_at', 'createdAt'), now),
+            ]
+          );
+        }
+
+        await db.runAsync('COMMIT');
+
+        return {
+          success: true,
+          categoryRulesSkipped: [],
+        };
+      } catch (err) {
+        await db.runAsync('ROLLBACK');
+        throw err;
+      }
     },
   };
 }

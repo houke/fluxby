@@ -1,12 +1,9 @@
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
-import { useLegal } from '../contexts/LegalContext';
 import { ExternalLink } from 'lucide-react';
 
 const Footer = () => {
   const { t } = useLanguage();
-  const {
-  } = useLegal();
 
   return (
     <footer className='bg-gray-900 py-16 text-white'>

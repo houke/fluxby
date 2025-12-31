@@ -768,6 +768,7 @@ export const en: TranslationKeys = {
     },
     sync: {
       title: 'Device sync',
+      inDevelopment: 'In development',
       description:
         'Sync your data across devices using peer-to-peer connections. No server required.',
       thisDevice: 'This device',

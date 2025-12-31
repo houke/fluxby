@@ -138,6 +138,9 @@ export function SyncSettings() {
       <CardHeader>
         <CardTitle className='flex items-center gap-2'>
           {t.settings?.sync?.title || 'Device sync'}
+          <Badge variant='secondary'>
+            {t.settings?.sync?.inDevelopment || 'In development'}
+          </Badge>
         </CardTitle>
         <CardDescription>
           {t.settings?.sync?.description ||

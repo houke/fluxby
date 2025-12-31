@@ -678,6 +678,7 @@ export interface TranslationKeys {
     };
     sync: {
       title: string;
+      inDevelopment: string;
       description: string;
       thisDevice: string;
       pairingCode: string;
@@ -1718,6 +1719,7 @@ export const nl: TranslationKeys = {
     },
     sync: {
       title: 'Apparaten synchroniseren',
+      inDevelopment: 'In ontwikkeling',
       description:
         'Synchroniseer je gegevens tussen apparaten via peer-to-peer verbindingen. Geen server nodig.',
       thisDevice: 'Dit apparaat',
