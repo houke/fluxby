@@ -97,6 +97,11 @@ export function detectMotionTier(): MotionTier {
   const userAgent = navigatorRef.userAgent ?? '';
   const isMobile = MOBILE_REGEX.test(userAgent);
   const isTablet = TABLET_REGEX.test(userAgent);
+  const dpr = window.devicePixelRatio || 1;
+
+  // High-performance indicators that are harder to manipulate
+  const isHighDPI = dpr >= 2;
+  const hasGoodGPU = hasGoodGPUSupport();
 
   // Data saver mode always gets low quality
   if (saveData || CONNECTION_TYPES_PENALTY.has(effectiveType)) {
@@ -105,11 +110,14 @@ export function detectMotionTier(): MotionTier {
 
   // Very low memory devices get low quality
   if (deviceMemory && deviceMemory <= MIN_LOW_MEMORY) {
+    // Allow high-end devices with restricted memory reporting to stay at medium
+    if (isHighDPI && hasGoodGPU) return 'medium';
     return 'low';
   }
 
   // Very low CPU devices get low quality
   if (hardwareConcurrency && hardwareConcurrency <= MIN_LOW_CPU) {
+    if (isHighDPI && hasGoodGPU) return 'medium';
     return 'low';
   }
 
@@ -117,13 +125,19 @@ export function detectMotionTier(): MotionTier {
   // Capable mobile devices (4+ cores with good GPU) can handle full quality
   if (isMobile || isTablet) {
     if (
-      hardwareConcurrency >= MIN_FULL_QUALITY_CPU &&
+      (hardwareConcurrency >= MIN_FULL_QUALITY_CPU || isHighDPI) &&
       deviceMemory >= 4 &&
-      hasGoodGPUSupport()
+      hasGoodGPU
     ) {
       return 'full';
     }
     return 'medium';
+  }
+
+  // Desktop: If it has a high-end GPU and high DPI, it's likely a high-end machine
+  // even if hardwareConcurrency is restricted by the host (e.g. GitHub Pages)
+  if (isHighDPI && hasGoodGPU) {
+    return 'full';
   }
 
   // Desktop with medium CPU gets medium quality

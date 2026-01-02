@@ -136,6 +136,7 @@ export function FluxbyWebGL({
   const blinkTimeRef = useRef(0);
   const lastFrameTimeRef = useRef(0);
   const lastSecondsRef = useRef(0);
+  const instanceSeedRef = useRef(Math.random() * 10000);
   const [motionTier, setMotionTier] = useState<MotionTier>('full');
   const qualitySettings = useMemo(
     () => getQualitySettings(motionTier),
@@ -150,6 +151,105 @@ export function FluxbyWebGL({
     const scaled = Math.round(base * qualitySettings.particleMultiplier);
     return Math.max(0, scaled);
   }, [particleCount, qualitySettings.particleMultiplier]);
+
+  // Seeded random for consistent patterns
+  const seededRandom = useCallback((seed: number) => {
+    const x = Math.sin(seed * 12.9898 + seed * 78.233) * 43758.5453;
+    return x - Math.floor(x);
+  }, []);
+
+  // Fractal noise for more organic texture
+  const fractalNoise = useCallback(
+    (x: number, y: number, octaves: number = 3): number => {
+      const noise2D = (x2: number, y2: number, seed: number = 0): number => {
+        const n = Math.sin(x2 * 12.9898 + y2 * 78.233 + seed) * 43758.5453;
+        return (n - Math.floor(n)) * 2 - 1;
+      };
+
+      let value = 0;
+      let amplitude = 1;
+      let frequency = 1;
+      let maxValue = 0;
+
+      for (let i = 0; i < octaves; i++) {
+        value += noise2D(x * frequency, y * frequency, i * 100) * amplitude;
+        maxValue += amplitude;
+        amplitude *= 0.5;
+        frequency *= 2;
+      }
+
+      return value / maxValue;
+    },
+    []
+  );
+
+  // Pre-generate surface fur marks data with instance variation
+  interface FurMark {
+    angle: number;
+    length: number;
+    thickness: number;
+    colorShift: number;
+    offsetX: number;
+    offsetY: number;
+  }
+
+  const avatarData = useMemo(() => {
+    const instanceSeed = instanceSeedRef.current;
+    const bodyFurCount = Math.max(
+      180,
+      Math.floor(1600 * qualitySettings.furDensity)
+    );
+    const earFurCount = Math.max(
+      30,
+      Math.floor(100 * qualitySettings.earFurDensity)
+    );
+
+    const generateFurMarks = (count: number, seed: number): FurMark[] => {
+      const marks: FurMark[] = [];
+      for (let i = 0; i < count; i++) {
+        const s = seed + i * 0.17;
+        const sr = (val: number) => {
+          const x = Math.sin(val * 12.9898 + val * 78.233) * 43758.5453;
+          return x - Math.floor(x);
+        };
+        marks.push({
+          angle: sr(s) * Math.PI * 2,
+          length: 0.8 + sr(s + 1) * 2.5,
+          thickness: 0.3 + sr(s + 2) * 0.8,
+          colorShift: sr(s + 3),
+          offsetX: (sr(s + 4) - 0.5) * 2,
+          offsetY: (sr(s + 5) - 0.5) * 2,
+        });
+      }
+      return marks;
+    };
+
+    return {
+      bodyFurMarks: generateFurMarks(bodyFurCount, 42 + instanceSeed),
+      earFurMarks: generateFurMarks(earFurCount, 99 + instanceSeed),
+      textureSampleCount: Math.max(
+        80,
+        Math.floor(800 * qualitySettings.textureDensity)
+      ),
+      edgeFurCount: Math.max(
+        45,
+        Math.floor(200 * qualitySettings.edgeDensity)
+      ),
+      bellyTextureCount: Math.max(
+        30,
+        Math.floor(120 * qualitySettings.textureDensity)
+      ),
+      earTextureCount: Math.max(
+        30,
+        Math.floor(100 * qualitySettings.textureDensity)
+      ),
+      earGradientCount: Math.max(
+        120,
+        Math.floor(640 * qualitySettings.earFurDensity)
+      ),
+      instanceSeed,
+    };
+  }, [qualitySettings]);
 
   const createParticle = useCallback(
     (x?: number, y?: number): Particle => {
@@ -300,101 +400,18 @@ export function FluxbyWebGL({
     }
     hasStaticFrameRef.current = false;
 
-    const bodyFurCount = Math.max(
-      180,
-      Math.floor(1600 * qualitySettings.furDensity)
-    );
-    const earFurCount = Math.max(
-      30,
-      Math.floor(100 * qualitySettings.earFurDensity)
-    );
+    const {
+      bodyFurMarks,
+      earFurMarks,
+      textureSampleCount,
+      edgeFurCount,
+      bellyTextureCount,
+      earTextureCount,
+      earGradientCount,
+      instanceSeed,
+    } = avatarData;
 
-    // Seeded random for consistent patterns
-    const seededRandom = (seed: number) => {
-      const x = Math.sin(seed * 12.9898 + seed * 78.233) * 43758.5453;
-      return x - Math.floor(x);
-    };
-
-    // Simplex-like noise function for fur texture
-    const noise2D = (x: number, y: number, seed: number = 0): number => {
-      const n = Math.sin(x * 12.9898 + y * 78.233 + seed) * 43758.5453;
-      return (n - Math.floor(n)) * 2 - 1;
-    };
-
-    // Fractal noise for more organic texture
-    const fractalNoise = (
-      x: number,
-      y: number,
-      octaves: number = 3
-    ): number => {
-      let value = 0;
-      let amplitude = 1;
-      let frequency = 1;
-      let maxValue = 0;
-
-      for (let i = 0; i < octaves; i++) {
-        value += noise2D(x * frequency, y * frequency, i * 100) * amplitude;
-        maxValue += amplitude;
-        amplitude *= 0.5;
-        frequency *= 2;
-      }
-
-      return value / maxValue;
-    };
-
-    // Instance-specific seed for variation between multiple avatars
-    const instanceSeed = Math.random() * 10000;
-
-    // Pre-generate surface fur marks data with instance variation
-    interface FurMark {
-      angle: number;
-      length: number;
-      thickness: number;
-      colorShift: number;
-      offsetX: number;
-      offsetY: number;
-    }
-
-    const generateFurMarks = (count: number, seed: number): FurMark[] => {
-      const marks: FurMark[] = [];
-      for (let i = 0; i < count; i++) {
-        const s = seed + i * 0.17;
-        marks.push({
-          angle: seededRandom(s) * Math.PI * 2,
-          length: 0.8 + seededRandom(s + 1) * 2.5,
-          thickness: 0.3 + seededRandom(s + 2) * 0.8,
-          colorShift: seededRandom(s + 3),
-          offsetX: (seededRandom(s + 4) - 0.5) * 2,
-          offsetY: (seededRandom(s + 5) - 0.5) * 2,
-        });
-      }
-      return marks;
-    };
-
-    // Use instance seed to ensure each avatar looks unique
-    const bodyFurMarks = generateFurMarks(bodyFurCount, 42 + instanceSeed);
-    const earFurMarks = generateFurMarks(earFurCount, 99 + instanceSeed);
-    const textureSampleCount = Math.max(
-      80,
-      Math.floor(800 * qualitySettings.textureDensity)
-    );
     const surfaceFurIterations = bodyFurMarks.length;
-    const edgeFurCount = Math.max(
-      45,
-      Math.floor(200 * qualitySettings.edgeDensity)
-    );
-    const bellyTextureCount = Math.max(
-      30,
-      Math.floor(120 * qualitySettings.textureDensity)
-    );
-    const earTextureCount = Math.max(
-      30,
-      Math.floor(100 * qualitySettings.textureDensity)
-    );
-    const earGradientCount = Math.max(
-      120,
-      Math.floor(640 * qualitySettings.earFurDensity)
-    );
 
     // Function to draw the Fluxby avatar
     const drawFluxbyAvatar = (
