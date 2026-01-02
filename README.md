@@ -2,7 +2,7 @@
 
 A modern, local-first application for visualizing and analyzing your bank data. Upload CSV exports from your bank and instantly gain insights into your finances.
 
-![Dashboard Preview](docs/dashboard-preview.png)
+![1.png](apps/screenshots/1.png)
 
 ## ✨ Features
 
@@ -305,6 +305,19 @@ The web app can be deployed as a PWA to GitHub Pages:
 3. Push to main branch - automatic deployment via GitHub Actions
 
 The PWA works fully offline after first load.
+
+## 🖼 Screenshots
+
+A set of screenshots showing the app inside the OSX-style browser frame (generated into `apps/screenshots/`). Each image includes a short description.
+
+- ![1.png - Dashboard](apps/screenshots/1.png) — Screenshot 1: Dashboard.
+- ![2.png - Onboarding](apps/screenshots/2.png) — Screenshot 2: Onboarding.
+- ![3.png - Transactions](apps/screenshots/3.png) — Screenshot 3: Transactions.
+- ![4.png - Analytics](apps/screenshots/4.png) — Screenshot 4: Analytics.
+- ![5.png - Budgets](apps/screenshots/5.png) — Screenshot 5: Budgets.
+- ![6.png - Address book](apps/screenshots/6.png) — Screenshot 6: Address book.
+- ![7.png - Categories](apps/screenshots/7.png) — Screenshot 7: Categories.
+- ![8.png - Import](apps/screenshots/8.png) — Screenshot 8: Import.
 
 ## 🤝 Contributing
 

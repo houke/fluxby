@@ -450,7 +450,7 @@ alert(
 ### Icon-only Buttons
 
 - **All icon-only buttons MUST have a tooltip** explaining the action
-- Use `TooltipProvider`, `Tooltip`, `TooltipTrigger`, and `TooltipContent` from shadcn/ui
+- Use `TooltipProvider`, `Tooltip`, `TooltipTrigger`, and `TooltipContent`
 - Tooltip text should use translations (e.g., `{t.common.edit}`, `{t.common.delete}`)
 - Always use `rounded-md` class on icon-only buttons (never round/circular)
 
