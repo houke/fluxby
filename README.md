@@ -75,7 +75,7 @@ Fluxby is designed to work entirely in your browser without any server:
 ### CSV Import
 
 1. Go to the **Import** page
-2. Select your bank (currently only ING)
+2. Select your bank (currently only ING supported)
 3. Drag your CSV file to the upload field or click to select
 4. Transactions are automatically processed and categorized
 
@@ -83,6 +83,10 @@ Fluxby is designed to work entirely in your browser without any server:
 
 - Transactions before the current month are only imported once
 - When importing data for the current month, existing entries for that month are first deleted
+
+**Unsupported Banks:**
+
+If your bank is not in the supported list, use the **Default Import** option. This allows you to manually map CSV columns to the required fields (date, amount, description, etc.) for importing your transactions.
 
 ### Dashboard
 
@@ -114,6 +118,20 @@ The dashboard shows:
 - Track your progress throughout the month
 - Receive visual feedback when exceeded
 
+### Categories
+
+- Create and manage transaction categories
+- Set up automatic categorization rules
+- Organize your expenses and income
+- View spending breakdown by category
+
+### Address Book
+
+- Manage contacts and payees
+- Add notes and details for recurring transactions
+- Filter transactions by contact
+- Keep track of payment recipients
+
 ## 🏦 Supported Banks
 
 | Bank     | Status       |
@@ -131,7 +149,6 @@ The dashboard shows:
 - TypeScript
 - Vite 6
 - Tailwind CSS
-- shadcn/ui components
 - Recharts for charts
 - TanStack Query & Table
 
@@ -187,6 +204,18 @@ npm run dev:web
 # Start Tauri desktop development
 npm run dev:tauri
 
+# Build packages
+npm run build:packages
+
+# Build web app
+npm run build:web
+
+# Generate API documentation
+npm run generate:api
+
+# Pre-build check for Tauri
+npm run prebuild:tauri
+
 # Build everything
 npm run build
 
@@ -200,11 +229,29 @@ npm run serve:pages
 # Build desktop app
 npm run build:tauri
 
+# Lint code
+npm run lint
+
+# Lint and fix code
+npm run lint:fix
+
+# Format code
+npm run format
+
 # Type checking
 npm run typecheck
 
 # Run tests
+npm run test
+
+# Run tests once
 npm run test:run
+
+# Run tests with coverage
+npm run test:coverage
+
+# Start API server
+npm run start
 
 # Create a release (interactive)
 npm run release
