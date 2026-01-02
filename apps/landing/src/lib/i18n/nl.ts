@@ -534,9 +534,11 @@ export const nl: LandingTranslationKeys = {
       desktopDesc: 'Native app voor Windows, macOS en Linux met Tauri 2.0.',
       headlessDesc:
         'Lokale API server voor scripts, automations en externe tools.',
-      securityTitle: 'Encryptie & Beveiliging',
+      securityTitle: 'Privacy Lock & Beveiliging',
       securityText:
-        'Alle data wordt versleuteld met AES-256-GCM voordat het naar disk wordt geschreven. De sleutel wordt afgeleid van je PIN/wachtwoord via PBKDF2.',
+        'Je data wordt beschermd door een PIN/wachtwoord vergrendeling. Het wachtwoord wordt geverifieerd via PBKDF2 (100k iteraties). Alle data blijft lokaal in je browser - het wordt nooit naar externe servers verzonden.',
+      privacyNote:
+        'Let op: Het wachtwoord beschermt toegang tot je data via de UI. De database zelf wordt onversleuteld opgeslagen in OPFS. Voor bescherming tegen meekijkers en ongeautoriseerde toegang.',
       autoLockTitle: 'Auto-Lock',
       autoLockWeb: 'Master key wordt gewist bij page refresh of tab sluiten',
       autoLockDesktop: 'Master key wordt gewist bij app sluiten',
@@ -551,12 +553,11 @@ export const nl: LandingTranslationKeys = {
       storageTitle: 'Storage Adapters',
       backupTitle: 'Backup & Herstel',
       backupText:
-        'Je kunt op elk moment een backup maken van je data. Backups zijn versleuteld en kunnen worden hersteld op elk apparaat.',
+        'Je kunt op elk moment een backup maken van je data. Backups bevatten je complete database en kunnen worden hersteld op elk apparaat.',
       backupDesktop:
         'Bestand → Backup opslaan... exporteert naar je Documents map',
       backupWeb: 'Instellingen → Backup download een .fluxby bestand',
-      backupFormat:
-        '.fluxby bestanden bevatten metadata + versleutelde database',
+      backupFormat: '.fluxby bestanden bevatten metadata + database dump',
       tipTitle: 'Tip',
       tipText:
         'Maak regelmatig backups! Bij verlies van je PIN/wachtwoord kun je alleen herstellen vanaf een backup.',

@@ -86,7 +86,7 @@ Fluxby is designed to work entirely in your browser without any server:
 
 **Unsupported Banks:**
 
-If your bank is not in the supported list, use the **Default Import** option. This allows you to manually map CSV columns to the required fields (date, amount, description, etc.) for importing your transactions.
+If your bank is not in the supported list, use the **Manual Import** option. This allows you to manually map CSV columns to the required fields (date, amount, description, etc.) for importing your transactions.
 
 ### Dashboard
 

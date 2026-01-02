@@ -18,8 +18,50 @@ const DEFAULT_TIER: MotionTier = 'full';
 const MIN_MEDIUM_CPU = 6;
 const MIN_LOW_CPU = 4;
 const MIN_LOW_MEMORY = 3;
+// GPU-capable threshold: devices with good GPU support can handle full quality
+const MIN_FULL_QUALITY_CPU = 4;
 
 const CONNECTION_TYPES_PENALTY = new Set(['slow-2g', '2g']);
+
+/**
+ * Check if the device likely has good GPU/rendering capabilities.
+ * Used to allow high-fidelity mode on capable mobile devices.
+ */
+function hasGoodGPUSupport(): boolean {
+  if (typeof window === 'undefined') return false;
+
+  try {
+    const canvas = document.createElement('canvas');
+    const gl =
+      canvas.getContext('webgl2') ||
+      canvas.getContext('webgl') ||
+      canvas.getContext('experimental-webgl');
+    if (!gl) return false;
+
+    // Check for reasonable GPU capabilities
+    const debugInfo = (gl as WebGLRenderingContext).getExtension(
+      'WEBGL_debug_renderer_info'
+    );
+    if (debugInfo) {
+      const renderer = (gl as WebGLRenderingContext).getParameter(
+        debugInfo.UNMASKED_RENDERER_WEBGL
+      );
+      // Modern mobile GPUs that can handle full quality
+      const goodGPUs = /adreno|mali|apple|powervr|nvidia|intel/i;
+      if (goodGPUs.test(renderer)) {
+        return true;
+      }
+    }
+
+    // Fallback: check max texture size as proxy for GPU capability
+    const maxTextureSize = (gl as WebGLRenderingContext).getParameter(
+      (gl as WebGLRenderingContext).MAX_TEXTURE_SIZE
+    );
+    return maxTextureSize >= 4096;
+  } catch {
+    return false;
+  }
+}
 
 export function detectMotionTier(): MotionTier {
   if (typeof window === 'undefined') {
@@ -56,19 +98,36 @@ export function detectMotionTier(): MotionTier {
   const isMobile = MOBILE_REGEX.test(userAgent);
   const isTablet = TABLET_REGEX.test(userAgent);
 
+  // Data saver mode always gets low quality
   if (saveData || CONNECTION_TYPES_PENALTY.has(effectiveType)) {
     return 'low';
   }
 
+  // Very low memory devices get low quality
   if (deviceMemory && deviceMemory <= MIN_LOW_MEMORY) {
     return 'low';
   }
 
+  // Very low CPU devices get low quality
   if (hardwareConcurrency && hardwareConcurrency <= MIN_LOW_CPU) {
     return 'low';
   }
 
-  if (isMobile || isTablet || hardwareConcurrency <= MIN_MEDIUM_CPU) {
+  // For mobile/tablet: check if device has good GPU support
+  // Capable mobile devices (4+ cores with good GPU) can handle full quality
+  if (isMobile || isTablet) {
+    if (
+      hardwareConcurrency >= MIN_FULL_QUALITY_CPU &&
+      deviceMemory >= 4 &&
+      hasGoodGPUSupport()
+    ) {
+      return 'full';
+    }
+    return 'medium';
+  }
+
+  // Desktop with medium CPU gets medium quality
+  if (hardwareConcurrency <= MIN_MEDIUM_CPU) {
     return 'medium';
   }
 
@@ -97,6 +156,36 @@ export function observeMotionTier(
     callback(detectMotionTier());
   };
 
+  // Debounced resize handler that ignores small height-only changes
+  // (e.g., mobile browser address bar collapse/expand)
+  let resizeTimeout: number | undefined;
+  let lastWidth = window.innerWidth;
+  let lastHeight = window.innerHeight;
+  const MIN_HEIGHT_CHANGE_THRESHOLD = 100; // Ignore height changes < 100px (typical address bar)
+  const RESIZE_DEBOUNCE_MS = 250;
+
+  const debouncedResizeHandler = () => {
+    if (resizeTimeout) {
+      window.clearTimeout(resizeTimeout);
+    }
+
+    resizeTimeout = window.setTimeout(() => {
+      const currentWidth = window.innerWidth;
+      const currentHeight = window.innerHeight;
+      const widthChanged = currentWidth !== lastWidth;
+      const heightChange = Math.abs(currentHeight - lastHeight);
+
+      // Only trigger tier recalculation if:
+      // 1. Width changed (orientation change or window resize), OR
+      // 2. Height changed significantly (not just address bar)
+      if (widthChanged || heightChange >= MIN_HEIGHT_CHANGE_THRESHOLD) {
+        lastWidth = currentWidth;
+        lastHeight = currentHeight;
+        handler();
+      }
+    }, RESIZE_DEBOUNCE_MS);
+  };
+
   try {
     mediaQuery?.addEventListener?.('change', handler);
   } catch {
@@ -109,9 +198,13 @@ export function observeMotionTier(
     connection.addListener(handler);
   }
 
-  window.addEventListener('resize', handler);
+  window.addEventListener('resize', debouncedResizeHandler);
 
   return () => {
+    if (resizeTimeout) {
+      window.clearTimeout(resizeTimeout);
+    }
+
     try {
       mediaQuery?.removeEventListener?.('change', handler);
     } catch {
@@ -124,7 +217,7 @@ export function observeMotionTier(
       connection.removeListener(handler);
     }
 
-    window.removeEventListener('resize', handler);
+    window.removeEventListener('resize', debouncedResizeHandler);
   };
 }
 

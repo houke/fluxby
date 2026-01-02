@@ -377,9 +377,11 @@ export const en: LandingTranslationKeys = {
       desktopDesc: 'Native app for Windows, macOS and Linux using Tauri 2.0.',
       headlessDesc:
         'Local API server for scripts, automations and external tools.',
-      securityTitle: 'Encryption & Security',
+      securityTitle: 'Privacy Lock & Security',
       securityText:
-        'All data is encrypted with AES-256-GCM before it is written to disk. The key encryption key is derived from your password/PIN using PBKDF2.',
+        'Your data is protected by a PIN/password lock. The password is verified via PBKDF2 (100k iterations). All data stays local in your browser - it is never sent to external servers.',
+      privacyNote:
+        'Note: The password protects access to your data through the UI. The database itself is stored unencrypted in OPFS. For shoulder-surfing protection and casual access prevention.',
       autoLockTitle: 'Auto-Lock',
       autoLockWeb: 'Master key is wiped on refresh or tab close',
       autoLockDesktop: 'Master key is wiped when the app closes',
@@ -394,10 +396,10 @@ export const en: LandingTranslationKeys = {
       storageTitle: 'Storage Adapters',
       backupTitle: 'Backup & Restore',
       backupText:
-        'You can create backups at any time. Backups are encrypted and can be restored on any device.',
+        'You can create backups at any time. Backups contain your complete database and can be restored on any device.',
       backupDesktop: 'File → Save backup... exports to your Documents folder',
       backupWeb: 'Settings → Backup downloads a .fluxby file',
-      backupFormat: '.fluxby files contain metadata + encrypted database',
+      backupFormat: '.fluxby files contain metadata + database dump',
       tipTitle: 'Tip',
       tipText:
         'Create backups regularly! If you lose your PIN/password you can only restore from a backup.',

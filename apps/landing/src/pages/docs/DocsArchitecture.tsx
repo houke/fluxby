@@ -109,12 +109,19 @@ function mergeChanges(local, remote) {
       </div>
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.docs?.architecture?.securityTitle || 'Beveiliging & Wachtwoord'}
+        {t.docs?.architecture?.securityTitle || 'Privacy Lock & Beveiliging'}
       </h2>
       <p className='text-gray-600 dark:text-gray-400'>
         {t.docs?.architecture?.securityText ||
           'Je app wordt beveiligd met een wachtwoord dat via PBKDF2 wordt gehashed. De database zelf is niet versleuteld, maar alle data blijft lokaal op je apparaat.'}
       </p>
+      <div className='mt-4 rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-950/30'>
+        <p className='mb-0 text-sm text-amber-800 dark:text-amber-300'>
+          <strong>ℹ️</strong>{' '}
+          {t.docs?.architecture?.privacyNote ||
+            'Let op: Het wachtwoord beschermt toegang tot je data via de UI. De database zelf wordt onversleuteld opgeslagen in OPFS. Voor bescherming tegen meekijkers en ongeautoriseerde toegang.'}
+        </p>
+      </div>
       <CodeBlock code={securityExample} language='text' />
 
       <h3 className='mt-8 text-xl font-bold text-gray-900 dark:text-gray-100'>

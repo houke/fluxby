@@ -163,7 +163,7 @@ With transactions, all operations share a single commit/sync, dramatically impro
 - Single quotes, 2 space indent
 - React functional components with hooks
 - TanStack Query for data fetching
-- Tailwind CSS with shadcn/ui components
+- Tailwind CSS
 - Bilingual UI (Dutch and English)
 
 ## Security Considerations

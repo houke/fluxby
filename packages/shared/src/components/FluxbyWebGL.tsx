@@ -465,19 +465,44 @@ export function FluxbyWebGL({
       ctx.shadowBlur = 0;
 
       // ========== WIND WAVE ANIMATION ==========
+      // Enhanced multi-layer Perlin-like noise field for natural wind simulation
+      // Runs independently based on time - continues smoothly after scroll pause
       const baseWindSpeed = 1.5 * qualitySettings.windIntensity;
       const windWave =
         baseWindSpeed > 0
           ? (x: number, y: number, t: number) => {
               const uniqueT = t + (instanceSeed % 100);
 
-              const wave1 = Math.sin(x * 0.12 + uniqueT * baseWindSpeed) * 0.5;
+              // Primary wind direction (left to right with slight upward drift)
+              const windDirectionX = 0.85;
+              const windDirectionY = -0.15;
+              const windPhase =
+                (x * windDirectionX + y * windDirectionY) * 0.08;
+
+              // Layer 1: Large-scale gusts (slow, sweeping motion)
+              const gust =
+                Math.sin(windPhase + uniqueT * baseWindSpeed * 0.6) * 0.45;
+
+              // Layer 2: Medium turbulence (adds variation)
+              const wave1 = Math.sin(x * 0.12 + uniqueT * baseWindSpeed) * 0.35;
               const wave2 =
-                Math.sin(y * 0.1 + uniqueT * baseWindSpeed * 0.8 + 1.5) * 0.35;
-              const wave3 =
-                Math.sin(x * 0.05 + y * 0.05 + uniqueT * baseWindSpeed * 1.2) *
-                0.25;
-              return (wave1 + wave2 + wave3) * qualitySettings.windIntensity;
+                Math.sin(y * 0.1 + uniqueT * baseWindSpeed * 0.8 + 1.5) * 0.25;
+
+              // Layer 3: Fine detail noise (high frequency flutter)
+              const flutter =
+                Math.sin(x * 0.2 + y * 0.15 + uniqueT * baseWindSpeed * 2.0) *
+                0.15;
+
+              // Layer 4: Randomized micro-movement (per-fur variation)
+              const microNoise =
+                Math.sin(
+                  (x + instanceSeed) * 0.3 + uniqueT * baseWindSpeed * 1.5
+                ) * 0.1;
+
+              return (
+                (gust + wave1 + wave2 + flutter + microNoise) *
+                qualitySettings.windIntensity
+              );
             }
           : () => 0;
 

@@ -2506,13 +2506,28 @@ export default function Transactions() {
                               </div>
                               {/* Date and IBAN on one line */}
                               <div className='flex items-center gap-2 text-sm text-muted-foreground'>
-                                <span>{formatDate(tx.date)}</span>
+                                <span className='flex-shrink-0'>
+                                  {formatDate(tx.date)}
+                                </span>
                                 {tx.opposingAccountIban && (
                                   <>
-                                    <span className='text-muted-foreground/50'>
+                                    <span className='flex-shrink-0 text-muted-foreground/50'>
                                       •
                                     </span>
-                                    <span>{tx.opposingAccountIban}</span>
+                                    <span
+                                      className='min-w-0 truncate'
+                                      title={tx.opposingAccountIban}
+                                    >
+                                      {/* Show truncated IBAN on mobile, full on desktop */}
+                                      <span className='sm:hidden'>
+                                        {tx.opposingAccountIban.length > 18
+                                          ? `${tx.opposingAccountIban.slice(0, 8)}...${tx.opposingAccountIban.slice(-4)}`
+                                          : tx.opposingAccountIban}
+                                      </span>
+                                      <span className='hidden sm:inline'>
+                                        {tx.opposingAccountIban}
+                                      </span>
+                                    </span>
                                   </>
                                 )}
                               </div>

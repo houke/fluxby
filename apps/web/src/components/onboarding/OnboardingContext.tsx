@@ -15,6 +15,8 @@ import { isDatabaseReady as isGlobalDbReady } from '@/lib/db-singleton';
 import type { OnboardingContextType, OnboardingState } from './types';
 
 const STORAGE_KEY = 'fluxby_onboarding';
+// Synchronous flag to prevent onboarding restart on immediate refresh
+const COMPLETED_FLAG_KEY = 'fluxby_onboarding_complete';
 
 // Default state
 const defaultState: OnboardingState = {
@@ -45,8 +47,17 @@ const loadState = (): OnboardingState => {
   const shouldRestart = checkRestartFlag();
 
   if (shouldRestart) {
+    // Clear the completed flag when restarting
+    localStorage.removeItem(COMPLETED_FLAG_KEY);
     // Start fresh onboarding
     return { ...defaultState, isActive: true };
+  }
+
+  // Check synchronous completion flag FIRST
+  // This prevents race condition if page refreshes before useEffect saves full state
+  const completedFlag = localStorage.getItem(COMPLETED_FLAG_KEY);
+  if (completedFlag === 'true') {
+    return { ...defaultState, hasCompletedOnboarding: true, isActive: false };
   }
 
   try {
@@ -332,6 +343,10 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
   // NOTE: Demo profile and data seeding is handled by SecuritySetup
   // This function just marks onboarding as complete
   const completeOnboarding = useCallback(async () => {
+    // Set synchronous flag IMMEDIATELY to prevent restart on refresh
+    // This ensures completion is persisted even if page refreshes before useEffect
+    localStorage.setItem(COMPLETED_FLAG_KEY, 'true');
+
     // If demo profile exists but not active, switch to it
     const demoProfile = profiles.find(
       (p) => p.id === DEMO_PROFILE_ID || p.name === 'Demo'
@@ -350,6 +365,10 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
 
   // Skip onboarding
   const skipOnboarding = useCallback(async () => {
+    // Set synchronous flag IMMEDIATELY to prevent restart on refresh
+    // This ensures completion is persisted even if page refreshes before useEffect
+    localStorage.setItem(COMPLETED_FLAG_KEY, 'true');
+
     // Create user if name is set (using async/await instead of mutation)
     if (state.userName) {
       try {
