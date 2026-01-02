@@ -97,6 +97,7 @@ export function detectMotionTier(): MotionTier {
   const userAgent = navigatorRef.userAgent ?? '';
   const isMobile = MOBILE_REGEX.test(userAgent);
   const isTablet = TABLET_REGEX.test(userAgent);
+  const isMac = /Macintosh/i.test(userAgent);
   const dpr = window.devicePixelRatio || 1;
 
   // High-performance indicators that are harder to manipulate
@@ -136,7 +137,8 @@ export function detectMotionTier(): MotionTier {
 
   // Desktop: If it has a high-end GPU and high DPI, it's likely a high-end machine
   // even if hardwareConcurrency is restricted by the host (e.g. GitHub Pages)
-  if (isHighDPI && hasGoodGPU) {
+  // Special case for M1/M2/M3 Macs which are always high-end
+  if ((isHighDPI && hasGoodGPU) || (isMac && isHighDPI)) {
     return 'full';
   }
 

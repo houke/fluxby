@@ -135,7 +135,7 @@ export function FluxbyWebGL({
   const eyeTargetRef = useRef({ x: 0, y: 0 });
   const blinkTimeRef = useRef(0);
   const lastFrameTimeRef = useRef(0);
-  const lastSecondsRef = useRef(0);
+  const totalActiveTimeRef = useRef(0);
   const instanceSeedRef = useRef(Math.random() * 10000);
   const [motionTier, setMotionTier] = useState<MotionTier>('full');
   const qualitySettings = useMemo(
@@ -231,10 +231,7 @@ export function FluxbyWebGL({
         80,
         Math.floor(800 * qualitySettings.textureDensity)
       ),
-      edgeFurCount: Math.max(
-        45,
-        Math.floor(200 * qualitySettings.edgeDensity)
-      ),
+      edgeFurCount: Math.max(45, Math.floor(200 * qualitySettings.edgeDensity)),
       bellyTextureCount: Math.max(
         30,
         Math.floor(120 * qualitySettings.textureDensity)
@@ -373,7 +370,7 @@ export function FluxbyWebGL({
 
   useEffect(() => {
     lastFrameTimeRef.current = 0;
-    lastSecondsRef.current = 0;
+    totalActiveTimeRef.current = 0;
     initParticles();
   }, [initParticles]);
 
@@ -998,24 +995,34 @@ export function FluxbyWebGL({
       const actualTimestamp = timestamp || performance.now();
       const animationActive =
         shouldAnimate && qualitySettings.animationsEnabled;
+
       if (animationActive) {
+        if (lastFrameTimeRef.current === 0) {
+          lastFrameTimeRef.current = actualTimestamp;
+        }
         const elapsed = actualTimestamp - lastFrameTimeRef.current;
-        if (elapsed < frameInterval) {
+
+        if (elapsed < frameInterval && timestamp !== 0) {
           animationRef.current = requestAnimationFrame(animate);
           return;
         }
-        lastFrameTimeRef.current = actualTimestamp - (elapsed % frameInterval);
-      } else if (hasStaticFrameRef.current) {
+
+        // Update cumulative time spent animating
+        totalActiveTimeRef.current += elapsed * 0.001;
+        lastFrameTimeRef.current = actualTimestamp;
+      } else {
+        // Reset frame time so next start is smooth
+        lastFrameTimeRef.current = 0;
+      }
+
+      if (!animationActive && hasStaticFrameRef.current) {
         return;
       }
 
       ctx.clearRect(0, 0, width, height);
 
-      // Update animation state
-      const time = animationActive
-        ? actualTimestamp * 0.001
-        : lastSecondsRef.current;
-      lastSecondsRef.current = time;
+      // Use cumulative time for all animations
+      const time = totalActiveTimeRef.current;
 
       // Breathing animation (gentle up/down movement)
       // Scale breathing amplitude with canvas size so it's visible on large
