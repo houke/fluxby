@@ -16,7 +16,6 @@ data/
 # IDE & OS
 .DS_Store
 **/.DS_Store
-.vscode/
 *.swp
 *.swo
 *~
