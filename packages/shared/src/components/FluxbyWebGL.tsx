@@ -272,6 +272,12 @@ export function FluxbyWebGL({
   const enableEyeTracking = interactive && qualitySettings.allowEyeTracking;
 
   useEffect(() => {
+    lastFrameTimeRef.current = 0;
+    lastSecondsRef.current = 0;
+    initParticles();
+  }, [initParticles]);
+
+  useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -289,14 +295,11 @@ export function FluxbyWebGL({
     canvas.height = height * dpr;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-    lastFrameTimeRef.current = 0;
-    lastSecondsRef.current = 0;
     if (!qualitySettings.animationsEnabled) {
       blinkTimeRef.current = 0;
     }
     hasStaticFrameRef.current = false;
 
-    initParticles();
     const bodyFurCount = Math.max(
       180,
       Math.floor(1600 * qualitySettings.furDensity)
@@ -975,15 +978,16 @@ export function FluxbyWebGL({
     const frameInterval = 1000 / targetFPS;
 
     const animate = (timestamp: number = 0) => {
+      const actualTimestamp = timestamp || performance.now();
       const animationActive =
         shouldAnimate && qualitySettings.animationsEnabled;
       if (animationActive) {
-        const elapsed = timestamp - lastFrameTimeRef.current;
+        const elapsed = actualTimestamp - lastFrameTimeRef.current;
         if (elapsed < frameInterval) {
           animationRef.current = requestAnimationFrame(animate);
           return;
         }
-        lastFrameTimeRef.current = timestamp - (elapsed % frameInterval);
+        lastFrameTimeRef.current = actualTimestamp - (elapsed % frameInterval);
       } else if (hasStaticFrameRef.current) {
         return;
       }
@@ -991,7 +995,9 @@ export function FluxbyWebGL({
       ctx.clearRect(0, 0, width, height);
 
       // Update animation state
-      const time = animationActive ? timestamp * 0.001 : lastSecondsRef.current;
+      const time = animationActive
+        ? actualTimestamp * 0.001
+        : lastSecondsRef.current;
       lastSecondsRef.current = time;
 
       // Breathing animation (gentle up/down movement)

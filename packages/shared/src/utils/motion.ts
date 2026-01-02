@@ -15,11 +15,11 @@ const TABLET_REGEX = /iPad|Tablet/i;
 
 const DEFAULT_TIER: MotionTier = 'full';
 
-const MIN_MEDIUM_CPU = 6;
-const MIN_LOW_CPU = 4;
+const MIN_MEDIUM_CPU = 3;
+const MIN_LOW_CPU = 2;
 const MIN_LOW_MEMORY = 3;
 // GPU-capable threshold: devices with good GPU support can handle full quality
-const MIN_FULL_QUALITY_CPU = 4;
+const MIN_FULL_QUALITY_CPU = 2;
 
 const CONNECTION_TYPES_PENALTY = new Set(['slow-2g', '2g']);
 
