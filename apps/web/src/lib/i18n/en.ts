@@ -86,6 +86,8 @@ export const en: TranslationKeys = {
     ],
     of: 'of',
     optional: 'optional',
+    dismiss: 'Dismiss',
+    comingSoon: 'Coming soon',
     initializingDatabase: 'Initializing database...',
     user: 'User',
     backToHomepage: 'Back to homepage',
@@ -211,6 +213,10 @@ export const en: TranslationKeys = {
     currentIncome: 'Current income',
     currentExpenses: 'Current expenses',
     expectedResult: 'Expected result',
+    noDataForPeriod: 'No data for this period',
+    noDataDescription:
+      'No transactions found for {period}. Would you like to view a period with data?',
+    jumpToPeriod: 'Jump to {period}',
     greetings: {
       morning: 'Good morning',
       afternoon: 'Good afternoon',
@@ -283,6 +289,16 @@ export const en: TranslationKeys = {
     addToAddressBookDescription:
       'Add names from {iban} to your address book. Similar names are grouped.',
     allNamesProcessed: 'All names have been processed!',
+    possiblySameGroup: 'Possibly the same',
+    variants: 'variants',
+    transaction: 'transaction',
+    transactionsPlural: 'transactions',
+    split: 'Split',
+    merge: 'Merge',
+    nameForAddressBook: 'Name for address book',
+    allVariantsMergedInfo:
+      'All {count} variants will be merged under this name.',
+    close: 'Close',
     // Rule creation modal
     createRuleTitle: 'Create category rule',
     createRuleDescription:
@@ -421,6 +437,7 @@ export const en: TranslationKeys = {
     applyToExistingConfirm:
       'Do you want to apply these rules to existing transactions as well?',
     deleteRuleConfirm: 'Are you sure you want to delete this rule?',
+    deleteRule: 'Delete rule',
     chooseIcon: 'Choose icon',
     chooseColor: 'Choose color',
     inBudget: 'In budget',
@@ -540,7 +557,9 @@ export const en: TranslationKeys = {
     skippedRows: 'Skipped rows',
     skippedRowsDescription: 'These rows could not be imported due to errors',
     skipped: 'skipped',
+    andMoreSkipped: '...and {count} more transactions.',
     row: 'Row',
+    rowNumber: 'Row {number}',
     reason: 'Reason',
     invalidDate: 'Invalid date',
     invalidAmount: 'Invalid amount',
@@ -552,6 +571,11 @@ export const en: TranslationKeys = {
   settings: {
     title: 'Settings',
     subtitle: 'Manage your accounts and app settings',
+    tabs: {
+      activeProfile: 'Active profile',
+      manageProfiles: 'Manage profiles',
+      appSettings: 'App settings',
+    },
     appSettings: 'App Settings',
     appSettingsDescription: 'Manage language, currency and theme',
     language: 'Language',
@@ -562,6 +586,24 @@ export const en: TranslationKeys = {
     themeDescription: 'Choose between light or dark theme',
     themeLight: 'Light',
     themeDark: 'Dark',
+    appNameLabel: 'Your name',
+    appNameDescription: 'Used in the greeting',
+    appNamePlaceholder: 'Your name...',
+    appNameUnset: 'Not set',
+    masterPasswordTitle: 'Master password',
+    masterPasswordDescription: 'Encrypts all your financial data locally',
+    masterPasswordDialogTitle: 'Change master password',
+    masterPasswordDialogDescription:
+      'Enter your current password and choose a new password.',
+    masterPasswordWarning:
+      'Warning: Your password cannot be recovered. If you forget it, your data cannot be decrypted.',
+    masterPasswordCurrent: 'Current password',
+    masterPasswordNew: 'New password',
+    masterPasswordConfirm: 'Confirm new password',
+    masterPasswordMinLength: 'Minimum 8 characters',
+    masterPasswordChange: 'Change password',
+    masterPasswordChanging: 'Changing...',
+    masterPasswordMustDiffer: 'New password must be different from current',
     profile: {
       title: 'Profile',
       description:
@@ -599,6 +641,7 @@ export const en: TranslationKeys = {
       switchTo: 'Switch to',
       deleteConfirm:
         'Are you sure you want to delete this profile? All associated data will be lost.',
+      deleteProfileTitle: 'Delete profile',
       deleteDemoConfirm:
         'Are you sure you want to delete the Demo profile? Note: Restarting the onboarding will create a new Demo account with fresh sample data.',
       demoDeleted:
@@ -677,10 +720,17 @@ export const en: TranslationKeys = {
       noRules: 'No payment processor rules configured',
       deleteConfirm: 'Are you sure you want to delete the rule',
       deleteConfirm2: '?',
+      deleteRuleTitle: 'Delete rule',
       ibansTitle: 'Payment processor IBANs',
       ibansDescription:
         "IBANs that are known as payment processors. This is an overview and is also used as fallback when rules don't match.",
       noIbans: 'No payment processor IBANs configured',
+      ruleAdded: 'Rule added',
+      ruleUpdated: 'Rule updated',
+      ruleDeleted: 'Rule deleted',
+      rulesApplied: '{count} transactions updated',
+      noTransactionsUpdated: 'No transactions updated',
+      applyToTransactions: 'Apply to transactions',
     },
     dataManagement: {
       title: 'Data Management',
@@ -771,6 +821,23 @@ export const en: TranslationKeys = {
         'Are you sure you want to delete all budgets from this profile?',
       deleteBudgetsSuccess: 'All budgets have been deleted',
       deleteBudgetsError: 'An error occurred while deleting',
+      deleteAddressBookTitle: 'Delete address book',
+      deleteAddressBookDescription:
+        'Delete all contacts from this profile (IBANs will be suggested again)',
+      deleteAddressBookButton: 'Delete contacts',
+      deleteAddressBookConfirm:
+        'Are you sure you want to delete all contacts from this profile? IBANs will be suggested again.',
+      deleteAddressBookSuccess: 'All contacts have been deleted',
+      deleteAddressBookError: 'An error occurred while deleting contacts',
+      deleteImportHistoryTitle: 'Delete import history',
+      deleteImportHistoryDescription:
+        'Delete stored import history for this profile',
+      deleteImportHistoryButton: 'Delete import history',
+      deleteImportHistoryConfirm:
+        'Are you sure you want to delete the import history for this profile?',
+      deleteImportHistorySuccess: 'Import history has been deleted',
+      deleteImportHistoryError:
+        'An error occurred while deleting import history',
     },
     sync: {
       title: 'Device sync',
@@ -1012,6 +1079,9 @@ export const en: TranslationKeys = {
     sharedIban: 'Shared IBAN',
     sharedIbanTooltip:
       'This IBAN is used by multiple contacts, likely via a payment provider like Adyen or Mollie',
+    // Delete confirmations
+    deleteRuleTitle: 'Delete rule',
+    deleteContactTitle: 'Delete contact',
     // Suggested contacts
     suggestedContacts: 'Suggested contacts',
     suggestedContactsCollapsed:

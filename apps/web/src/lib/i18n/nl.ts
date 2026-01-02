@@ -58,6 +58,8 @@ export interface TranslationKeys {
     monthsShort: string[];
     noResults: string;
     or: string;
+    dismiss: string;
+    comingSoon: string;
     initializingDatabase: string;
     user: string;
     backToHomepage: string;
@@ -176,6 +178,9 @@ export interface TranslationKeys {
     currentExpenses: string;
     expectedResult: string;
     inAddressBook: string;
+    noDataForPeriod: string;
+    noDataDescription: string;
+    jumpToPeriod: string;
     greetings: {
       morning: string;
       afternoon: string;
@@ -247,6 +252,15 @@ export interface TranslationKeys {
     addToAddressBookTitle: string;
     addToAddressBookDescription: string;
     allNamesProcessed: string;
+    possiblySameGroup: string;
+    variants: string;
+    transaction: string;
+    transactionsPlural: string;
+    split: string;
+    merge: string;
+    nameForAddressBook: string;
+    allVariantsMergedInfo: string;
+    close: string;
     // Rule creation modal
     createRuleTitle: string;
     createRuleDescription: string;
@@ -376,6 +390,7 @@ export interface TranslationKeys {
     toastRulesError: string;
     applyToExistingConfirm: string;
     deleteRuleConfirm: string;
+    deleteRule: string;
     chooseIcon: string;
     chooseColor: string;
     inBudget: string;
@@ -480,7 +495,9 @@ export interface TranslationKeys {
     skippedRows: string;
     skippedRowsDescription: string;
     skipped: string;
+    andMoreSkipped: string;
     row: string;
+    rowNumber: string;
     reason: string;
     invalidDate: string;
     invalidAmount: string;
@@ -492,6 +509,11 @@ export interface TranslationKeys {
   settings: {
     title: string;
     subtitle: string;
+    tabs: {
+      activeProfile: string;
+      manageProfiles: string;
+      appSettings: string;
+    };
     appSettings: string;
     appSettingsDescription: string;
     language: string;
@@ -502,6 +524,22 @@ export interface TranslationKeys {
     themeDescription: string;
     themeLight: string;
     themeDark: string;
+    appNameLabel: string;
+    appNameDescription: string;
+    appNamePlaceholder: string;
+    appNameUnset: string;
+    masterPasswordTitle: string;
+    masterPasswordDescription: string;
+    masterPasswordDialogTitle: string;
+    masterPasswordDialogDescription: string;
+    masterPasswordWarning: string;
+    masterPasswordCurrent: string;
+    masterPasswordNew: string;
+    masterPasswordConfirm: string;
+    masterPasswordMinLength: string;
+    masterPasswordChange: string;
+    masterPasswordChanging: string;
+    masterPasswordMustDiffer: string;
     profileManager: {
       title: string;
       description: string;
@@ -525,6 +563,7 @@ export interface TranslationKeys {
       active: string;
       switchTo: string;
       deleteConfirm: string;
+      deleteProfileTitle: string;
       deleteDemoConfirm: string;
       demoDeleted: string;
       create: string;
@@ -604,9 +643,16 @@ export interface TranslationKeys {
       noRules: string;
       deleteConfirm: string;
       deleteConfirm2: string;
+      deleteRuleTitle: string;
       ibansTitle: string;
       ibansDescription: string;
       noIbans: string;
+      ruleAdded: string;
+      ruleUpdated: string;
+      ruleDeleted: string;
+      rulesApplied: string;
+      noTransactionsUpdated: string;
+      applyToTransactions: string;
     };
     dataManagement: {
       title: string;
@@ -681,6 +727,18 @@ export interface TranslationKeys {
       deleteBudgetsConfirm: string;
       deleteBudgetsSuccess: string;
       deleteBudgetsError: string;
+      deleteAddressBookTitle: string;
+      deleteAddressBookDescription: string;
+      deleteAddressBookButton: string;
+      deleteAddressBookConfirm: string;
+      deleteAddressBookSuccess: string;
+      deleteAddressBookError: string;
+      deleteImportHistoryTitle: string;
+      deleteImportHistoryDescription: string;
+      deleteImportHistoryButton: string;
+      deleteImportHistoryConfirm: string;
+      deleteImportHistorySuccess: string;
+      deleteImportHistoryError: string;
     };
     sync: {
       title: string;
@@ -832,6 +890,9 @@ export interface TranslationKeys {
     // Shared IBAN badge
     sharedIban: string;
     sharedIbanTooltip: string;
+    // Delete confirmations
+    deleteRuleTitle: string;
+    deleteContactTitle: string;
   };
   apiErrors: {
     // Generic errors
@@ -1039,6 +1100,8 @@ export const nl: TranslationKeys = {
     optional: 'optioneel',
     noResults: 'Geen resultaten',
     or: 'of',
+    dismiss: 'Sluiten',
+    comingSoon: 'Binnenkort beschikbaar',
     initializingDatabase: 'Database initialiseren...',
     user: 'Gebruiker',
     backToHomepage: 'Terug naar homepage',
@@ -1163,6 +1226,10 @@ export const nl: TranslationKeys = {
     currentIncome: 'Huidige inkomsten',
     currentExpenses: 'Huidige uitgaven',
     expectedResult: 'Verwacht resultaat',
+    noDataForPeriod: 'Geen gegevens voor deze periode',
+    noDataDescription:
+      'Geen transacties gevonden voor {period}. Wil je een periode met gegevens bekijken?',
+    jumpToPeriod: 'Ga naar {period}',
     greetings: {
       morning: 'Goedemorgen',
       afternoon: 'Goedemiddag',
@@ -1235,6 +1302,16 @@ export const nl: TranslationKeys = {
     addToAddressBookDescription:
       'Voeg namen van {iban} toe aan je adresboek. Vergelijkbare namen zijn gegroepeerd.',
     allNamesProcessed: 'Alle namen zijn verwerkt!',
+    possiblySameGroup: 'Mogelijk dezelfde',
+    variants: 'varianten',
+    transaction: 'transactie',
+    transactionsPlural: 'transacties',
+    split: 'Splitsen',
+    merge: 'Samenvoegen',
+    nameForAddressBook: 'Naam voor adresboek',
+    allVariantsMergedInfo:
+      'Alle {count} varianten worden samengevoegd onder deze naam.',
+    close: 'Sluiten',
     // Rule creation modal
     createRuleTitle: 'Categorie regel aanmaken',
     createRuleDescription:
@@ -1374,6 +1451,7 @@ export const nl: TranslationKeys = {
     applyToExistingConfirm:
       'Wil je deze regels ook toepassen op bestaande transacties?',
     deleteRuleConfirm: 'Weet je zeker dat je deze regel wilt verwijderen?',
+    deleteRule: 'Regel verwijderen',
     chooseIcon: 'Kies icoon',
     chooseColor: 'Kies kleur',
     inBudget: 'In budget',
@@ -1495,7 +1573,9 @@ export const nl: TranslationKeys = {
     skippedRowsDescription:
       'Deze rijen konden niet worden geïmporteerd vanwege fouten',
     skipped: 'overgeslagen',
+    andMoreSkipped: '...en nog {count} transacties.',
     row: 'Rij',
+    rowNumber: 'Rij {number}',
     reason: 'Reden',
     invalidDate: 'Ongeldige datum',
     invalidAmount: 'Ongeldig bedrag',
@@ -1507,6 +1587,11 @@ export const nl: TranslationKeys = {
   settings: {
     title: 'Instellingen',
     subtitle: 'Beheer je rekeningen en app-instellingen',
+    tabs: {
+      activeProfile: 'Actief profiel',
+      manageProfiles: 'Profielen beheren',
+      appSettings: 'App-instellingen',
+    },
     appSettings: 'App Instellingen',
     appSettingsDescription: 'Beheer taal, valuta en thema',
     language: 'Taal',
@@ -1517,6 +1602,25 @@ export const nl: TranslationKeys = {
     themeDescription: 'Kies tussen licht of donker thema',
     themeLight: 'Licht',
     themeDark: 'Donker',
+    appNameLabel: 'Je naam',
+    appNameDescription: 'Wordt gebruikt in de begroeting',
+    appNamePlaceholder: 'Je naam...',
+    appNameUnset: 'Niet ingesteld',
+    masterPasswordTitle: 'Master wachtwoord',
+    masterPasswordDescription: 'Versleutelt al je financiële gegevens lokaal',
+    masterPasswordDialogTitle: 'Master wachtwoord wijzigen',
+    masterPasswordDialogDescription:
+      'Voer je huidige wachtwoord in en kies een nieuw wachtwoord.',
+    masterPasswordWarning:
+      'Let op: Je wachtwoord kan niet worden hersteld. Als je het vergeet, kunnen je gegevens niet meer worden ontsleuteld.',
+    masterPasswordCurrent: 'Huidig wachtwoord',
+    masterPasswordNew: 'Nieuw wachtwoord',
+    masterPasswordConfirm: 'Bevestig nieuw wachtwoord',
+    masterPasswordMinLength: 'Minimaal 8 tekens',
+    masterPasswordChange: 'Wachtwoord wijzigen',
+    masterPasswordChanging: 'Wijzigen...',
+    masterPasswordMustDiffer:
+      'Nieuw wachtwoord moet anders zijn dan het huidige',
     profile: {
       title: 'Profiel',
       description:
@@ -1554,6 +1658,7 @@ export const nl: TranslationKeys = {
       switchTo: 'Wissel naar',
       deleteConfirm:
         'Weet je zeker dat je dit profiel wilt verwijderen? Alle bijbehorende gegevens gaan verloren.',
+      deleteProfileTitle: 'Profiel verwijderen',
       deleteDemoConfirm:
         'Weet je zeker dat je het Demo profiel wilt verwijderen? Let op: Door de rondleiding opnieuw te starten wordt er een nieuw Demo account aangemaakt met verse voorbeelddata.',
       demoDeleted:
@@ -1632,10 +1737,17 @@ export const nl: TranslationKeys = {
       noRules: 'Geen payment processor regels geconfigureerd',
       deleteConfirm: 'Weet je zeker dat je de regel',
       deleteConfirm2: 'wilt verwijderen?',
+      deleteRuleTitle: 'Regel verwijderen',
       ibansTitle: 'Payment processor IBANs',
       ibansDescription:
         'IBANs die bekend zijn als payment processor. Dit is een overzicht en wordt ook gebruikt als fallback wanneer regels niet matchen.',
       noIbans: 'Geen payment processor IBANs geconfigureerd',
+      ruleAdded: 'Regel toegevoegd',
+      ruleUpdated: 'Regel bijgewerkt',
+      ruleDeleted: 'Regel verwijderd',
+      rulesApplied: '{count} transacties bijgewerkt',
+      noTransactionsUpdated: 'Geen transacties bijgewerkt',
+      applyToTransactions: 'Toepassen op transacties',
     },
     dataManagement: {
       title: 'Gegevensbeheer',
@@ -1728,6 +1840,24 @@ export const nl: TranslationKeys = {
         'Weet je zeker dat je alle budgetten van dit profiel wilt verwijderen?',
       deleteBudgetsSuccess: 'Alle budgetten zijn verwijderd',
       deleteBudgetsError: 'Er is een fout opgetreden bij het verwijderen',
+      deleteAddressBookTitle: 'Adresboek verwijderen',
+      deleteAddressBookDescription:
+        'Verwijder alle contacten van dit profiel (IBANs worden weer voorgesteld)',
+      deleteAddressBookButton: 'Contacten verwijderen',
+      deleteAddressBookConfirm:
+        'Weet je zeker dat je alle contacten van dit profiel wilt verwijderen? IBANs worden weer voorgesteld.',
+      deleteAddressBookSuccess: 'Alle contacten zijn verwijderd',
+      deleteAddressBookError:
+        'Er is een fout opgetreden bij het verwijderen van contacten',
+      deleteImportHistoryTitle: 'Importgeschiedenis verwijderen',
+      deleteImportHistoryDescription:
+        'Verwijder opgeslagen importgeschiedenis voor dit profiel',
+      deleteImportHistoryButton: 'Importgeschiedenis verwijderen',
+      deleteImportHistoryConfirm:
+        'Weet je zeker dat je de importgeschiedenis voor dit profiel wilt verwijderen?',
+      deleteImportHistorySuccess: 'Importgeschiedenis is verwijderd',
+      deleteImportHistoryError:
+        'Er is een fout opgetreden bij het verwijderen van de importgeschiedenis',
     },
     sync: {
       title: 'Apparaten synchroniseren',
@@ -1973,6 +2103,9 @@ export const nl: TranslationKeys = {
     sharedIban: 'Gedeelde IBAN',
     sharedIbanTooltip:
       'Deze IBAN wordt door meerdere contacten gebruikt, waarschijnlijk via een payment provider zoals Adyen of Mollie',
+    // Delete confirmations
+    deleteRuleTitle: 'Regel verwijderen',
+    deleteContactTitle: 'Contact verwijderen',
     // Suggested contacts
     suggestedContacts: 'Voorgestelde contacten',
     suggestedContactsCollapsed:

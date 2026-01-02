@@ -1,7 +1,7 @@
 import { useLanguage } from '../../contexts/LanguageContext';
 import HelpAnimation from '../../components/help/HelpAnimation';
 
-// Default categories synced with database seed (apps/api/src/db/seed-categories.ts)
+// Default categories synced with database seed (apps/api/src/db/seed-data.ts)
 const defaultCategories = [
   {
     emoji: '🏠',

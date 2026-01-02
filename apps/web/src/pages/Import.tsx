@@ -21,7 +21,6 @@ import {
   CardDescription,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
 import {
   Dialog,
   DialogContent,
@@ -203,6 +202,9 @@ const BANK_PRESETS: Record<
 };
 
 // History card component with expandable skipped rows
+// Shows max 20 skipped items with reasons for transparency
+const MAX_SKIPPED_DISPLAY = 20;
+
 function HistoryCard({
   item,
   hasSkippedRows,
@@ -218,6 +220,15 @@ function HistoryCard({
   getErrorLabel: (error: string) => string;
 }) {
   const [isExpanded, setIsExpanded] = useState(false);
+
+  // Get reason badge color based on reason type
+  const getReasonBadgeStyle = (reason: string) => {
+    if (reason === 'duplicate') {
+      return 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-200';
+    }
+    // invalidDate, invalidAmount, parseError - all errors
+    return 'bg-destructive/10 text-destructive';
+  };
 
   return (
     <div
@@ -267,35 +278,53 @@ function HistoryCard({
           <p className='mb-2 text-xs font-medium text-muted-foreground'>
             {t.import.skippedRows}
           </p>
-          <div className='max-h-40 space-y-2 overflow-y-auto'>
-            {item.skippedRows.slice(0, 10).map((row, idx) => (
+          <div className='max-h-60 space-y-2 overflow-y-auto'>
+            {item.skippedRows.slice(0, MAX_SKIPPED_DISPLAY).map((row, idx) => (
               <div
                 key={idx}
-                className='flex items-center justify-between rounded bg-background p-2 text-sm'
+                className='flex items-start justify-between gap-4 rounded bg-background p-3 text-sm'
               >
-                <div className='flex items-center gap-3'>
-                  <span className='text-xs text-muted-foreground'>
-                    #{row.rowIndex}
+                {/* Left column: Name + Description */}
+                <div className='flex min-w-0 flex-1 flex-col gap-0.5'>
+                  <span className='font-medium text-foreground'>
+                    {row.description || '-'}
                   </span>
-                  <span className='truncate'>
-                    {row.description || row.reason || '-'}
+                  <span className='text-xs text-muted-foreground'>
+                    {t.import?.rowNumber?.replace(
+                      '{number}',
+                      String(row.rowIndex || row.row || idx + 1)
+                    ) || `Row ${row.rowIndex || row.row || idx + 1}`}
                   </span>
                 </div>
-                <div className='flex items-center gap-2'>
-                  <span>{row.date || '-'}</span>
-                  <span className='font-medium'>
-                    {row.amount ? formatCurrency(row.amount) : '-'}
+                {/* Right column: Date, Amount + Badge */}
+                <div className='flex flex-shrink-0 flex-col items-end gap-1'>
+                  <span className='text-xs text-muted-foreground'>
+                    {row.date || '-'}
                   </span>
-                  <span className='rounded bg-destructive/10 px-1.5 py-0.5 text-xs text-destructive'>
-                    {getErrorLabel(row.error || row.reason || 'Unknown error')}
-                  </span>
+                  <div className='flex items-center gap-2'>
+                    <span className='font-medium'>
+                      {row.amount !== null && row.amount !== undefined
+                        ? formatCurrency(row.amount)
+                        : '-'}
+                    </span>
+                    <span
+                      className={`rounded px-1.5 py-0.5 text-xs ${getReasonBadgeStyle(row.reason || row.error || '')}`}
+                    >
+                      {getErrorLabel(
+                        row.reason || row.error || 'Unknown error'
+                      )}
+                    </span>
+                  </div>
                 </div>
               </div>
             ))}
-            {item.skippedRows.length > 10 && (
-              <div className='pt-1 text-center text-xs text-muted-foreground'>
-                +{item.skippedRows.length - 10}{' '}
-                {t.import?.moreSkipped || 'meer'}
+            {item.skippedRows.length > MAX_SKIPPED_DISPLAY && (
+              <div className='pt-2 text-center text-sm text-muted-foreground'>
+                {t.import?.andMoreSkipped?.replace(
+                  '{count}',
+                  String(item.skippedRows.length - MAX_SKIPPED_DISPLAY)
+                ) ||
+                  `...and ${item.skippedRows.length - MAX_SKIPPED_DISPLAY} more transactions.`}
               </div>
             )}
           </div>
@@ -969,14 +998,13 @@ export default function Import() {
               </div>
             )}
 
-            {/* Progress bar */}
+            {/* Loading state during import */}
             {importProgress !== null && (
-              <div className='space-y-2'>
-                <div className='flex justify-between text-sm'>
-                  <span>{t.import.importing}</span>
-                  <span>{importProgress}%</span>
-                </div>
-                <Progress value={importProgress} />
+              <div className='flex flex-col items-center justify-center gap-3 py-4'>
+                <Loader2 className='h-8 w-8 animate-spin text-purple-600' />
+                <span className='text-sm text-muted-foreground'>
+                  {t.import.importing}...
+                </span>
               </div>
             )}
           </div>

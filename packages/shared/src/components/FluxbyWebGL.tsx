@@ -1,4 +1,9 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  detectMotionTier,
+  observeMotionTier,
+  type MotionTier,
+} from '../utils/motion.js';
 
 interface Particle {
   x: number;
@@ -30,6 +35,83 @@ const FLUXBY_COLORS = [
   '#F5F3FF', // White-ish
 ];
 
+interface QualitySettings {
+  particleMultiplier: number;
+  textureDensity: number;
+  furDensity: number;
+  edgeDensity: number;
+  earFurDensity: number;
+  targetFps: number;
+  windIntensity: number;
+  breathScale: number;
+  animationsEnabled: boolean;
+  pauseDuringScroll: boolean;
+  scrollResumeDelay: number;
+  allowEyeTracking: boolean;
+}
+
+const QUALITY_PRESETS: Record<MotionTier, QualitySettings> = {
+  full: {
+    particleMultiplier: 1,
+    textureDensity: 1,
+    furDensity: 1,
+    edgeDensity: 1,
+    earFurDensity: 1,
+    targetFps: 30,
+    windIntensity: 1,
+    breathScale: 1,
+    animationsEnabled: true,
+    pauseDuringScroll: false,
+    scrollResumeDelay: 0,
+    allowEyeTracking: true,
+  },
+  medium: {
+    particleMultiplier: 0.7,
+    textureDensity: 0.65,
+    furDensity: 0.65,
+    edgeDensity: 0.7,
+    earFurDensity: 0.65,
+    targetFps: 26,
+    windIntensity: 0.7,
+    breathScale: 0.7,
+    animationsEnabled: true,
+    pauseDuringScroll: true,
+    scrollResumeDelay: 160,
+    allowEyeTracking: true,
+  },
+  low: {
+    particleMultiplier: 0.35,
+    textureDensity: 0.35,
+    furDensity: 0.4,
+    edgeDensity: 0.45,
+    earFurDensity: 0.4,
+    targetFps: 20,
+    windIntensity: 0.45,
+    breathScale: 0.45,
+    animationsEnabled: true,
+    pauseDuringScroll: true,
+    scrollResumeDelay: 220,
+    allowEyeTracking: false,
+  },
+  minimal: {
+    particleMultiplier: 0,
+    textureDensity: 0.25,
+    furDensity: 0.25,
+    edgeDensity: 0.3,
+    earFurDensity: 0.25,
+    targetFps: 0,
+    windIntensity: 0,
+    breathScale: 0,
+    animationsEnabled: false,
+    pauseDuringScroll: true,
+    scrollResumeDelay: 280,
+    allowEyeTracking: false,
+  },
+};
+
+const getQualitySettings = (tier: MotionTier): QualitySettings =>
+  QUALITY_PRESETS[tier] ?? QUALITY_PRESETS.full;
+
 /**
  * FluxbyWebGL - A WebGL canvas component that renders fluffy particle effects
  * Creates a cozy, magical atmosphere around the Fluxby mascot
@@ -53,6 +135,21 @@ export function FluxbyWebGL({
   const eyeTargetRef = useRef({ x: 0, y: 0 });
   const blinkTimeRef = useRef(0);
   const lastFrameTimeRef = useRef(0);
+  const lastSecondsRef = useRef(0);
+  const [motionTier, setMotionTier] = useState<MotionTier>('full');
+  const qualitySettings = useMemo(
+    () => getQualitySettings(motionTier),
+    [motionTier]
+  );
+  const [isInView, setIsInView] = useState(true);
+  const [isScrollPaused, setIsScrollPaused] = useState(false);
+  const scrollPausedRef = useRef(false);
+  const hasStaticFrameRef = useRef(false);
+  const effectiveParticleCount = useMemo(() => {
+    const base = particleCount ?? 0;
+    const scaled = Math.round(base * qualitySettings.particleMultiplier);
+    return Math.max(0, scaled);
+  }, [particleCount, qualitySettings.particleMultiplier]);
 
   const createParticle = useCallback(
     (x?: number, y?: number): Particle => {
@@ -73,10 +170,106 @@ export function FluxbyWebGL({
   );
 
   const initParticles = useCallback(() => {
-    particlesRef.current = Array.from({ length: particleCount }, () =>
+    if (effectiveParticleCount <= 0) {
+      particlesRef.current = [];
+      return;
+    }
+    particlesRef.current = Array.from({ length: effectiveParticleCount }, () =>
       createParticle(undefined, undefined)
     );
-  }, [particleCount, createParticle]);
+  }, [effectiveParticleCount, createParticle]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    let mounted = true;
+    const initialTier = detectMotionTier();
+    if (mounted) {
+      setMotionTier(initialTier);
+    }
+    const cleanup = observeMotionTier((tier) => {
+      if (mounted) {
+        setMotionTier(tier);
+      }
+    });
+    return () => {
+      mounted = false;
+      if (cleanup) cleanup();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const canvas = canvasRef.current;
+    if (!canvas || typeof IntersectionObserver === 'undefined') return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        const visible = entry
+          ? entry.isIntersecting || entry.intersectionRatio > 0
+          : true;
+        setIsInView(visible);
+        if (!visible) {
+          hasStaticFrameRef.current = false;
+        }
+      },
+      { threshold: 0.15 }
+    );
+
+    observer.observe(canvas);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (!qualitySettings.pauseDuringScroll) {
+      if (scrollPausedRef.current) {
+        scrollPausedRef.current = false;
+        setIsScrollPaused(false);
+      }
+      return;
+    }
+
+    let timeoutId: number | undefined;
+
+    const handleScroll = () => {
+      if (!scrollPausedRef.current) {
+        scrollPausedRef.current = true;
+        setIsScrollPaused(true);
+      }
+
+      if (timeoutId) {
+        window.clearTimeout(timeoutId);
+      }
+
+      timeoutId = window.setTimeout(() => {
+        scrollPausedRef.current = false;
+        setIsScrollPaused(false);
+      }, qualitySettings.scrollResumeDelay);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (timeoutId) {
+        window.clearTimeout(timeoutId);
+      }
+      scrollPausedRef.current = false;
+      setIsScrollPaused(false);
+    };
+  }, [qualitySettings.pauseDuringScroll, qualitySettings.scrollResumeDelay]);
+
+  const shouldAnimate =
+    animated &&
+    qualitySettings.animationsEnabled &&
+    isInView &&
+    (!qualitySettings.pauseDuringScroll || !isScrollPaused);
+
+  const enableEyeTracking = interactive && qualitySettings.allowEyeTracking;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -85,13 +278,33 @@ export function FluxbyWebGL({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
+    if (animationRef.current) {
+      cancelAnimationFrame(animationRef.current);
+      animationRef.current = undefined;
+    }
+
     // Set up canvas for high DPI displays
-    const dpr = window.devicePixelRatio || 1;
+    const dpr = (typeof window !== 'undefined' && window.devicePixelRatio) || 1;
     canvas.width = width * dpr;
     canvas.height = height * dpr;
-    ctx.scale(dpr, dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    lastFrameTimeRef.current = 0;
+    lastSecondsRef.current = 0;
+    if (!qualitySettings.animationsEnabled) {
+      blinkTimeRef.current = 0;
+    }
+    hasStaticFrameRef.current = false;
 
     initParticles();
+    const bodyFurCount = Math.max(
+      180,
+      Math.floor(1600 * qualitySettings.furDensity)
+    );
+    const earFurCount = Math.max(
+      30,
+      Math.floor(100 * qualitySettings.earFurDensity)
+    );
 
     // Seeded random for consistent patterns
     const seededRandom = (seed: number) => {
@@ -156,8 +369,29 @@ export function FluxbyWebGL({
     };
 
     // Use instance seed to ensure each avatar looks unique
-    const bodyFurMarks = generateFurMarks(1600, 42 + instanceSeed);
-    const earFurMarks = generateFurMarks(100, 99 + instanceSeed);
+    const bodyFurMarks = generateFurMarks(bodyFurCount, 42 + instanceSeed);
+    const earFurMarks = generateFurMarks(earFurCount, 99 + instanceSeed);
+    const textureSampleCount = Math.max(
+      80,
+      Math.floor(800 * qualitySettings.textureDensity)
+    );
+    const surfaceFurIterations = bodyFurMarks.length;
+    const edgeFurCount = Math.max(
+      45,
+      Math.floor(200 * qualitySettings.edgeDensity)
+    );
+    const bellyTextureCount = Math.max(
+      30,
+      Math.floor(120 * qualitySettings.textureDensity)
+    );
+    const earTextureCount = Math.max(
+      30,
+      Math.floor(100 * qualitySettings.textureDensity)
+    );
+    const earGradientCount = Math.max(
+      120,
+      Math.floor(640 * qualitySettings.earFurDensity)
+    );
 
     // Function to draw the Fluxby avatar
     const drawFluxbyAvatar = (
@@ -231,23 +465,26 @@ export function FluxbyWebGL({
       ctx.shadowBlur = 0;
 
       // ========== WIND WAVE ANIMATION ==========
-      const windSpeed = 1.5;
-      const windWave = (x: number, y: number, t: number) => {
-        // Add instance-specific phase shift so they don't wave in sync
-        const uniqueT = t + (instanceSeed % 100);
+      const baseWindSpeed = 1.5 * qualitySettings.windIntensity;
+      const windWave =
+        baseWindSpeed > 0
+          ? (x: number, y: number, t: number) => {
+              const uniqueT = t + (instanceSeed % 100);
 
-        const wave1 = Math.sin(x * 0.12 + uniqueT * windSpeed) * 0.5;
-        const wave2 =
-          Math.sin(y * 0.1 + uniqueT * windSpeed * 0.8 + 1.5) * 0.35;
-        const wave3 =
-          Math.sin(x * 0.05 + y * 0.05 + uniqueT * windSpeed * 1.2) * 0.25;
-        return wave1 + wave2 + wave3;
-      };
+              const wave1 = Math.sin(x * 0.12 + uniqueT * baseWindSpeed) * 0.5;
+              const wave2 =
+                Math.sin(y * 0.1 + uniqueT * baseWindSpeed * 0.8 + 1.5) * 0.35;
+              const wave3 =
+                Math.sin(x * 0.05 + y * 0.05 + uniqueT * baseWindSpeed * 1.2) *
+                0.25;
+              return (wave1 + wave2 + wave3) * qualitySettings.windIntensity;
+            }
+          : () => 0;
 
       // ========== PROCEDURAL FUR TEXTURE ==========
       // Layer 1: Noise-based fur grain texture - increased
       ctx.globalCompositeOperation = 'overlay';
-      for (let i = 0; i < 800; i++) {
+      for (let i = 0; i < textureSampleCount; i++) {
         // Use instance seed for texture variation too
         const seed = i * 0.31 + instanceSeed;
         const angle = seededRandom(seed) * Math.PI * 2;
@@ -273,7 +510,12 @@ export function FluxbyWebGL({
 
       // ========== FUR MARKS WITH GRADIENT (body color to tip) ==========
       ctx.lineCap = 'round';
-      const breathPhase = Math.sin(time * 1.5 + (instanceSeed % 10)) * 0.08;
+      const breathPhase =
+        qualitySettings.breathScale > 0
+          ? Math.sin(time * 1.5 + (instanceSeed % 10)) *
+            0.08 *
+            qualitySettings.breathScale
+          : 0;
 
       // Helper to draw gradient fur mark
       const drawGradientFur = (
@@ -305,7 +547,7 @@ export function FluxbyWebGL({
       };
 
       // Layer 2: Surface fur marks with gradient - HIGH DENSITY
-      for (let i = 0; i < 1600; i++) {
+      for (let i = 0; i < surfaceFurIterations; i++) {
         const mark = bodyFurMarks[i % bodyFurMarks.length];
         const seed = i * 0.23;
 
@@ -355,9 +597,9 @@ export function FluxbyWebGL({
       ctx.globalAlpha = 1.0;
 
       // Layer 3: Edge fur with gradient - high count
-      for (let i = 0; i < 200; i++) {
+      for (let i = 0; i < edgeFurCount; i++) {
         const mark = bodyFurMarks[(i * 3) % bodyFurMarks.length];
-        const angle = (i / 200) * Math.PI * 2;
+        const angle = (i / edgeFurCount) * Math.PI * 2;
 
         const edgeX = Math.cos(angle) * bodyRadiusX * 0.96;
         const edgeY = Math.sin(angle) * bodyRadiusY * 0.96 + bodyCenterY;
@@ -412,7 +654,7 @@ export function FluxbyWebGL({
       ctx.restore();
 
       // Belly fur texture - increased
-      for (let i = 0; i < 120; i++) {
+      for (let i = 0; i < bellyTextureCount; i++) {
         const seed = i * 0.67 + 500;
         const angle = seededRandom(seed) * Math.PI * 2;
         const dist = seededRandom(seed + 1) * 0.8;
@@ -487,7 +729,7 @@ export function FluxbyWebGL({
         const earAngleBase = ear === 0 ? -Math.PI / 6 : Math.PI / 6;
 
         // Noise dots - high density
-        for (let i = 0; i < 100; i++) {
+        for (let i = 0; i < earTextureCount; i++) {
           const seed = i * 0.41 + ear * 100;
           const angle = seededRandom(seed) * Math.PI * 2;
           const dist = seededRandom(seed + 1) * 0.8;
@@ -506,7 +748,7 @@ export function FluxbyWebGL({
         }
 
         // Gradient fur marks on ears - QUADRUPLED
-        for (let i = 0; i < 640; i++) {
+        for (let i = 0; i < earGradientCount; i++) {
           const mark = earFurMarks[i % earFurMarks.length];
           const seed = i * 0.37 + ear * 200;
           const angle = seededRandom(seed) * Math.PI * 2;
@@ -703,28 +945,39 @@ export function FluxbyWebGL({
       ctx.restore();
     };
 
-    const targetFPS = 30;
+    const targetFPS =
+      qualitySettings.targetFps > 0 ? qualitySettings.targetFps : 30;
     const frameInterval = 1000 / targetFPS;
 
     const animate = (timestamp: number = 0) => {
-      // Throttle to 30fps for better performance
-      const elapsed = timestamp - lastFrameTimeRef.current;
-      if (elapsed < frameInterval) {
-        animationRef.current = requestAnimationFrame(animate);
+      const animationActive =
+        shouldAnimate && qualitySettings.animationsEnabled;
+      if (animationActive) {
+        const elapsed = timestamp - lastFrameTimeRef.current;
+        if (elapsed < frameInterval) {
+          animationRef.current = requestAnimationFrame(animate);
+          return;
+        }
+        lastFrameTimeRef.current = timestamp - (elapsed % frameInterval);
+      } else if (hasStaticFrameRef.current) {
         return;
       }
-      lastFrameTimeRef.current = timestamp - (elapsed % frameInterval);
 
       ctx.clearRect(0, 0, width, height);
 
       // Update animation state
-      const time = animated ? timestamp * 0.001 : 0; // Convert to seconds
+      const time = animationActive ? timestamp * 0.001 : lastSecondsRef.current;
+      lastSecondsRef.current = time;
 
       // Breathing animation (gentle up/down movement)
       // Scale breathing amplitude with canvas size so it's visible on large
       // landing instances while staying subtle on small UI avatars.
-      let breathAmplitude = animated ? Math.min(width, height) / 80 : 0; // e.g., 400 -> 5
-      breathAmplitude = Math.max(0, Math.min(8, breathAmplitude));
+      const maxBreathAmplitude = Math.min(width, height) / 80; // e.g., 400 -> 5
+      let breathAmplitude =
+        animationActive && qualitySettings.breathScale > 0
+          ? Math.max(0, Math.min(8, maxBreathAmplitude)) *
+            qualitySettings.breathScale
+          : 0;
       // Respect user-level reduced motion preference
       try {
         if (typeof window !== 'undefined' && window.matchMedia) {
@@ -736,17 +989,21 @@ export function FluxbyWebGL({
         // ignore
       }
 
-      const breath = animated ? Math.sin(time * 2) * breathAmplitude : 0;
+      const breath =
+        animationActive && breathAmplitude > 0
+          ? Math.sin(time * 2) * breathAmplitude
+          : 0;
 
       // Eye blinking (random blinks) — less frequent but longer "fluffy" blinks
-      const shouldBlink = animated && Math.random() < 0.004; // ~0.4% chance per frame
+      const blinkChance = 0.004 * Math.max(0.35, qualitySettings.breathScale);
+      const shouldBlink = animationActive && Math.random() < blinkChance;
       if (shouldBlink) {
         blinkTimeRef.current = time + 0.28; // Blink for 280ms (longer, fluffier)
       }
-      const isBlinking = animated && time < blinkTimeRef.current;
+      const isBlinking = animationActive && time < blinkTimeRef.current;
 
       // Eye tracking (smooth follow) - eyes look towards the mouse relative to avatar position
-      if (interactive) {
+      if (enableEyeTracking) {
         const eyeSpeed = 0.2;
         const rect = canvas.getBoundingClientRect();
         const avatarCenterX = rect.left + rect.width / 2;
@@ -776,6 +1033,11 @@ export function FluxbyWebGL({
             eyeTargetRef.current.y +
             (clampedDY * half - eyeTargetRef.current.y) * eyeSpeed,
         };
+      } else {
+        eyeTargetRef.current = {
+          x: eyeTargetRef.current.x * 0.9,
+          y: eyeTargetRef.current.y * 0.9,
+        };
       }
 
       // Determine normalized avatar X position (-1 left .. 1 right)
@@ -789,7 +1051,11 @@ export function FluxbyWebGL({
       );
 
       // Draw background particles if any
-      particlesRef.current.forEach((p) => {
+      for (let i = 0; i < particlesRef.current.length; i++) {
+        if (i >= effectiveParticleCount) {
+          break;
+        }
+        const p = particlesRef.current[i];
         // Edge fading logic to prevent hard cutoffs
         // Increased margin and added a quadratic falloff for a MUCH sharper fadeout
         const marginX = Math.min(width * 0.25, 60);
@@ -813,7 +1079,7 @@ export function FluxbyWebGL({
         ctx.restore();
 
         // Update particle position for next frame
-        if (animated) {
+        if (animationActive) {
           p.x += p.vx;
           p.y += p.vy;
           p.alpha -= p.decay;
@@ -839,7 +1105,10 @@ export function FluxbyWebGL({
             Object.assign(p, createParticle());
           }
         }
-      });
+      }
+      if (particlesRef.current.length > effectiveParticleCount) {
+        particlesRef.current.length = effectiveParticleCount;
+      }
 
       // Draw Fluxby avatar filling the canvas with animations
       // Centered more precisely and moved UP slightly to prevent shadow cutoff
@@ -854,8 +1123,22 @@ export function FluxbyWebGL({
         avatarPosXNormalized
       );
 
-      animationRef.current = requestAnimationFrame(animate);
+      if (animationActive) {
+        animationRef.current = requestAnimationFrame(animate);
+      } else {
+        hasStaticFrameRef.current = true;
+      }
     };
+
+    if (!isInView) {
+      ctx.clearRect(0, 0, width, height);
+      return;
+    }
+
+    if (!qualitySettings.animationsEnabled || !animated) {
+      animate(0);
+      return;
+    }
 
     animate();
 
@@ -867,36 +1150,39 @@ export function FluxbyWebGL({
   }, [
     width,
     height,
-    particleCount,
     initParticles,
     createParticle,
-    interactive,
     animated,
+    shouldAnimate,
+    enableEyeTracking,
+    effectiveParticleCount,
+    qualitySettings,
+    isInView,
   ]);
 
   const handleMouseMove = useCallback(
     (e: React.MouseEvent<HTMLCanvasElement>) => {
-      if (!interactive) return;
+      if (!enableEyeTracking) return;
       // store absolute client coordinates (used for both local and window-relative signals)
       mouseRef.current = { x: e.clientX, y: e.clientY };
     },
-    [interactive]
+    [enableEyeTracking]
   );
 
   // Global mouse listener so eyes follow even when cursor is outside canvas
   useEffect(() => {
-    if (!interactive) return;
+    if (!enableEyeTracking) return;
     const handler = (e: MouseEvent) => {
       // store absolute client coords
       mouseRef.current = { x: e.clientX, y: e.clientY };
     };
     window.addEventListener('mousemove', handler);
     return () => window.removeEventListener('mousemove', handler);
-  }, [interactive]);
+  }, [enableEyeTracking]);
 
   const handleClick = useCallback(
     (e: React.MouseEvent<HTMLCanvasElement>) => {
-      if (!interactive) return;
+      if (!interactive || effectiveParticleCount <= 0) return;
       const rect = canvasRef.current?.getBoundingClientRect();
       if (rect) {
         const x = e.clientX - rect.left;
@@ -906,12 +1192,13 @@ export function FluxbyWebGL({
           particlesRef.current.push(createParticle(x, y));
         }
         // Keep particle count manageable
-        while (particlesRef.current.length > particleCount * 2) {
+        const maxParticles = Math.max(effectiveParticleCount, 1) * 2;
+        while (particlesRef.current.length > maxParticles) {
           particlesRef.current.shift();
         }
       }
     },
-    [interactive, createParticle, particleCount]
+    [interactive, createParticle, effectiveParticleCount]
   );
 
   return (

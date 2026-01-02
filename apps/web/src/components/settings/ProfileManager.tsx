@@ -11,6 +11,7 @@ import {
   Wallet,
   TrendingUp,
   Check,
+  X,
   RefreshCcw,
   Copy,
   PiggyBank,
@@ -52,7 +53,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { Toast } from '@/components/ui/toast';
+import { useToast } from '@/contexts/ToastContext';
+import { useConfirm } from '@/contexts/ConfirmContext';
 import { useProfile } from '@/contexts/ProfileContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { api } from '@/lib/api';
@@ -61,6 +63,7 @@ import {
   type Profile,
   DEMO_PROFILE_ID,
 } from '@fluxby/shared';
+import { isGradientPattern } from '@/components/settings/profile-pattern-utils';
 
 // Available profile types with icons
 const PROFILE_TYPES: {
@@ -106,12 +109,12 @@ export function ProfileManager() {
   } = useProfile();
   const { t } = useLanguage();
   const queryClient = useQueryClient();
+  const toast = useToast();
+  const confirm = useConfirm();
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editingProfile, setEditingProfile] = useState<Profile | null>(null);
   const [copiedProfileId, setCopiedProfileId] = useState<string | null>(null);
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
-  const [toastType, setToastType] = useState<'success' | 'error'>('success');
 
   // Step state for create dialog: 'profile' | 'accounts'
   const [createStep, setCreateStep] = useState<'profile' | 'accounts'>(
@@ -135,6 +138,11 @@ export function ProfileManager() {
   // Avatar states
   const [avatarOptions, setAvatarOptions] = useState<string[]>([]);
   const [isRefreshingAvatars, setIsRefreshingAvatars] = useState(false);
+  const [originalAvatar, setOriginalAvatar] = useState<string | null>(null);
+
+  const selectAvatar = React.useCallback((pattern: string | null) => {
+    setFormData((prev) => ({ ...prev, avatarUrl: pattern }));
+  }, []);
 
   // Generate random avatar background patterns
   const buildPatternOptions = React.useCallback((): string[] => {
@@ -170,32 +178,30 @@ export function ProfileManager() {
   React.useEffect(() => {
     const patterns = buildPatternOptions();
     setAvatarOptions(patterns);
+    const initial = patterns[0] || null;
+    setOriginalAvatar(isGradientPattern(initial) ? initial : null);
     // Default to first gradient on profile creation
-    setFormData((prev) => ({ ...prev, avatarUrl: patterns[0] }));
-  }, [buildPatternOptions]);
+    selectAvatar(initial);
+  }, [buildPatternOptions, selectAvatar]);
 
   const refreshAvatars = () => {
     setIsRefreshingAvatars(true);
     setTimeout(() => {
-      setAvatarOptions(buildPatternOptions());
+      const nextPatterns = buildPatternOptions();
+      setAvatarOptions(nextPatterns);
+
+      setFormData((prev) => {
+        const nextSelection = isGradientPattern(originalAvatar)
+          ? originalAvatar
+          : nextPatterns[0] || null;
+        return { ...prev, avatarUrl: nextSelection };
+      });
+
       setIsRefreshingAvatars(false);
     }, 300);
   };
 
   // Get avatar options for display, making sure the current one is included if it's a gradient
-  const getDisplayAvatars = () => {
-    const selectedAvatar = formData.avatarUrl;
-    if (
-      selectedAvatar &&
-      typeof selectedAvatar === 'string' &&
-      selectedAvatar.startsWith('linear-gradient') &&
-      !avatarOptions.includes(selectedAvatar)
-    ) {
-      return [selectedAvatar, ...avatarOptions];
-    }
-    return avatarOptions;
-  };
-
   // Form state
   const [formData, setFormData] = useState<{
     name: string;
@@ -206,6 +212,28 @@ export function ProfileManager() {
     type: 'personal',
     avatarUrl: null,
   });
+
+  const displayAvatars = React.useMemo(() => {
+    const maxTotal = 9;
+    const anchorPattern = isGradientPattern(originalAvatar)
+      ? originalAvatar
+      : isGradientPattern(formData.avatarUrl)
+        ? formData.avatarUrl
+        : null;
+
+    const ordered: string[] = [];
+    if (anchorPattern) ordered.push(anchorPattern);
+
+    for (const candidate of avatarOptions) {
+      if (ordered.length >= maxTotal) break;
+      if (!isGradientPattern(candidate)) continue;
+      if (anchorPattern && candidate === anchorPattern) continue;
+      if (ordered.includes(candidate)) continue;
+      ordered.push(candidate);
+    }
+
+    return ordered.slice(0, maxTotal);
+  }, [avatarOptions, formData.avatarUrl, originalAvatar]);
 
   const handleCreate = async () => {
     if (!formData.name.trim() || isCreating) return;
@@ -222,8 +250,7 @@ export function ProfileManager() {
         setCreateStep('accounts');
         setCreatedAccounts([]);
       } else {
-        setToastType('error');
-        setToastMessage(
+        toast.error(
           t.settings?.profileManager?.createError ||
             'Er ging iets mis bij het aanmaken van het profiel.'
         );
@@ -231,8 +258,7 @@ export function ProfileManager() {
       }
     } catch (error) {
       console.error('Failed to create profile', error);
-      setToastType('error');
-      setToastMessage(
+      toast.error(
         t.settings?.profileManager?.createError ||
           'Er ging iets mis bij het aanmaken van het profiel.'
       );
@@ -286,6 +312,7 @@ export function ProfileManager() {
     setNewAccountName('');
     setNewAccountType('checking');
     setIsCreating(false);
+    setOriginalAvatar(null);
   };
 
   const handleUpdate = async () => {
@@ -297,6 +324,7 @@ export function ProfileManager() {
         avatarUrl: formData.avatarUrl,
       });
       setEditingProfile(null);
+      setOriginalAvatar(null);
     } catch (error) {
       console.error('Failed to update profile', error);
     }
@@ -313,12 +341,16 @@ export function ProfileManager() {
         'Are you sure you want to delete the Demo profile? Note: Restarting the onboarding will create a new Demo account with fresh data.'
       : t.settings.profileManager.deleteConfirm;
 
-    if (confirm(confirmMessage)) {
+    const isConfirmed = await confirm({
+      title: t.settings?.profileManager?.deleteProfileTitle || 'Delete profile',
+      message: confirmMessage,
+      variant: 'danger',
+    });
+    if (isConfirmed) {
       try {
         await deleteProfile(id);
         if (isDemoProfile) {
-          setToastType('success');
-          setToastMessage(
+          toast.success(
             t.settings?.profileManager?.demoDeleted ||
               'Demo profile deleted. Restart onboarding to create a new one.'
           );
@@ -330,11 +362,24 @@ export function ProfileManager() {
   };
 
   const openValidEdit = (profile: Profile) => {
+    let basePatterns = avatarOptions;
+    if (basePatterns.length === 0) {
+      basePatterns = buildPatternOptions();
+      setAvatarOptions(basePatterns);
+    }
+    const fallbackPattern = profile.avatarUrl || basePatterns[0] || null;
     setFormData({
       name: profile.name,
       type: profile.type as ProfileType,
-      avatarUrl: profile.avatarUrl || avatarOptions[0] || null,
+      avatarUrl: fallbackPattern,
     });
+    setOriginalAvatar(
+      isGradientPattern(profile.avatarUrl)
+        ? profile.avatarUrl
+        : isGradientPattern(fallbackPattern)
+          ? fallbackPattern
+          : null
+    );
     setEditingProfile(profile);
   };
 
@@ -342,8 +387,7 @@ export function ProfileManager() {
     try {
       await navigator.clipboard.writeText(profileId);
       setCopiedProfileId(profileId);
-      setToastType('success');
-      setToastMessage(
+      toast.success(
         t.settings?.profileManager?.idCopied ||
           'ID successfully copied to clipboard'
       );
@@ -373,12 +417,22 @@ export function ProfileManager() {
           <DialogTrigger asChild>
             <Button
               onClick={() => {
-                // Default to first gradient if available
+                const basePatterns =
+                  avatarOptions.length > 0
+                    ? avatarOptions
+                    : buildPatternOptions();
+                if (avatarOptions.length === 0) {
+                  setAvatarOptions(basePatterns);
+                }
+                const initialPattern = basePatterns[0] || null;
                 setFormData({
                   name: '',
                   type: 'personal',
-                  avatarUrl: avatarOptions[0] || null,
+                  avatarUrl: initialPattern,
                 });
+                setOriginalAvatar(
+                  isGradientPattern(initialPattern) ? initialPattern : null
+                );
                 setCreateStep('profile');
               }}
             >
@@ -471,13 +525,11 @@ export function ProfileManager() {
                       </Button>
                     </div>
                     <div className='flex flex-wrap gap-2'>
-                      {getDisplayAvatars().map((pattern) => (
+                      {displayAvatars.map((pattern) => (
                         <button
                           key={pattern}
                           type='button'
-                          onClick={() =>
-                            setFormData({ ...formData, avatarUrl: pattern })
-                          }
+                          onClick={() => selectAvatar(pattern)}
                           className={cn(
                             'relative h-11 w-11 shrink-0 rounded-full border shadow-sm transition-all hover:scale-105',
                             formData.avatarUrl === pattern &&
@@ -775,9 +827,12 @@ export function ProfileManager() {
                     profile.name !== 'Demo' && (
                       <Dialog
                         open={editingProfile?.id === profile.id}
-                        onOpenChange={(open) =>
-                          !open && setEditingProfile(null)
-                        }
+                        onOpenChange={(open) => {
+                          if (!open) {
+                            setEditingProfile(null);
+                            setOriginalAvatar(null);
+                          }
+                        }}
                       >
                         <DialogTrigger asChild>
                           <Button
@@ -801,15 +856,34 @@ export function ProfileManager() {
                                 <label className='text-sm font-medium'>
                                   {t.settings.profileManager.profileName}
                                 </label>
-                                <Input
-                                  value={formData.name}
-                                  onChange={(e) =>
-                                    setFormData({
-                                      ...formData,
-                                      name: e.target.value,
-                                    })
-                                  }
-                                />
+                                <div className='flex items-center gap-2'>
+                                  <Input
+                                    value={formData.name}
+                                    onChange={(e) =>
+                                      setFormData({
+                                        ...formData,
+                                        name: e.target.value,
+                                      })
+                                    }
+                                    className='flex-1'
+                                  />
+                                  <Button
+                                    size='icon'
+                                    variant='ghost'
+                                    className='h-7 w-7 rounded-full hover:bg-purple-600 hover:text-white'
+                                    onClick={handleUpdate}
+                                  >
+                                    <Check className='h-4 w-4' />
+                                  </Button>
+                                  <Button
+                                    size='icon'
+                                    variant='ghost'
+                                    className='h-7 w-7 rounded-full hover:bg-purple-600 hover:text-white'
+                                    onClick={() => setEditingProfile(null)}
+                                  >
+                                    <X className='h-4 w-4' />
+                                  </Button>
+                                </div>
                               </div>
                               <div className='space-y-2'>
                                 <label className='text-sm font-medium'>
@@ -876,16 +950,11 @@ export function ProfileManager() {
                                 </Button>
                               </div>
                               <div className='flex flex-wrap gap-2'>
-                                {getDisplayAvatars().map((pattern, _idx) => (
+                                {displayAvatars.map((pattern, _idx) => (
                                   <button
                                     key={pattern}
                                     type='button'
-                                    onClick={() =>
-                                      setFormData({
-                                        ...formData,
-                                        avatarUrl: pattern,
-                                      })
-                                    }
+                                    onClick={() => selectAvatar(pattern)}
                                     className={cn(
                                       'relative h-11 w-11 shrink-0 rounded-full border shadow-sm transition-all hover:scale-105',
                                       formData.avatarUrl === pattern &&
@@ -906,17 +975,6 @@ export function ProfileManager() {
                               </div>
                             </div>
                           </div>
-                          <DialogFooter>
-                            <Button
-                              variant='outline'
-                              onClick={() => setEditingProfile(null)}
-                            >
-                              {t.settings.profileManager.cancel}
-                            </Button>
-                            <Button onClick={handleUpdate}>
-                              {t.settings.profileManager.save}
-                            </Button>
-                          </DialogFooter>
                         </DialogContent>
                       </Dialog>
                     )}
@@ -976,15 +1034,6 @@ export function ProfileManager() {
           );
         })}
       </div>
-
-      {/* Toast notification */}
-      {toastMessage && (
-        <Toast
-          message={toastMessage}
-          type={toastType}
-          onClose={() => setToastMessage(null)}
-        />
-      )}
     </div>
   );
 }

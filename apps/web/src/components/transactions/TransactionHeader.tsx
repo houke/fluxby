@@ -112,7 +112,10 @@ export const TransactionHeader = memo(function TransactionHeader({
               </Button>
             )}
 
-            <div className='flex gap-3'>
+            <div
+              className='-mx-2 flex gap-3 overflow-x-auto overscroll-contain px-2 pb-2 sm:overflow-x-visible'
+              style={{ WebkitOverflowScrolling: 'touch' }}
+            >
               {accounts
                 .slice(accountScrollIndex, accountScrollIndex + 3)
                 .map((account) => {
@@ -122,7 +125,7 @@ export const TransactionHeader = memo(function TransactionHeader({
                   return (
                     <div
                       key={account.id}
-                      className='flex min-w-0 items-center gap-3 rounded-lg border bg-card px-4 py-2 shadow-sm'
+                      className='flex min-w-[12rem] flex-shrink-0 items-center gap-3 rounded-lg border bg-card px-4 py-2 shadow-sm'
                     >
                       <div className={`rounded-full p-2 ${colors.bg}`}>
                         {account.type === 'checking' && (
@@ -169,7 +172,7 @@ export const TransactionHeader = memo(function TransactionHeader({
 
       {/* Summary Cards */}
       <div
-        className='grid gap-4 md:grid-cols-2 lg:grid-cols-4'
+        className='grid grid-cols-2 gap-4 lg:grid-cols-4'
         data-onboarding='transaction-summary'
       >
         {/* Income Card */}

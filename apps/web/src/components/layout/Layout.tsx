@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavLink, Outlet } from 'react-router-dom';
+import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
   LayoutDashboard,
@@ -12,10 +12,13 @@ import {
   HelpCircle,
   LogOut,
   BookUser,
+  Menu,
+  X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
+import { Button } from '@/components/ui/button';
 import {
   Tooltip,
   TooltipContent,
@@ -29,6 +32,7 @@ import { FluxbyWebGL } from '@fluxby/shared';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useProfile } from '@/contexts/ProfileContext';
 import { useOnboarding } from '@/components/onboarding';
+import { NoDataModal } from '@/components/NoDataModal';
 
 interface UserProfile {
   id: string;
@@ -42,6 +46,15 @@ export default function Layout() {
   const { isSwitching } = useProfile();
   const { startOnboarding, state: onboardingState } = useOnboarding();
   const dataService = useDataService();
+  const location = useLocation();
+
+  // Mobile sidebar state
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = React.useState(false);
+
+  // Close mobile sidebar on route change
+  React.useEffect(() => {
+    setIsMobileSidebarOpen(false);
+  }, [location.pathname]);
 
   const navItems = [
     {
@@ -169,11 +182,35 @@ export default function Layout() {
             </div>
           </div>
         )}
-        {/* Sidebar */}
+
+        {/* Mobile sidebar overlay backdrop */}
+        {isMobileSidebarOpen && (
+          <div
+            className='fixed inset-0 z-40 bg-black/50 md:hidden'
+            onClick={() => setIsMobileSidebarOpen(false)}
+          />
+        )}
+
+        {/* Sidebar - hidden on mobile, visible on md+ */}
         <aside
-          className='flex w-64 flex-col border-r bg-card'
+          className={cn(
+            'fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r bg-card transition-transform duration-300 md:static md:translate-x-0',
+            isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+          )}
           data-onboarding='sidebar'
         >
+          {/* Mobile close button */}
+          <div className='absolute right-2 top-2 md:hidden'>
+            <Button
+              variant='ghost'
+              size='icon'
+              onClick={() => setIsMobileSidebarOpen(false)}
+              className='h-8 w-8'
+            >
+              <X className='h-5 w-5' />
+            </Button>
+          </div>
+
           {/* Fluxby Branding - Click on avatar to restart onboarding */}
           <div className='w-full px-1 py-2'>
             <div className='flex items-center gap-3'>
@@ -276,9 +313,21 @@ export default function Layout() {
         {/* Main Content */}
         <div className='flex flex-1 flex-col overflow-hidden'>
           {/* Top Bar */}
-          <header className='flex h-16 items-center justify-between border-b bg-card px-6'>
+          <header className='flex h-14 items-center justify-between border-b bg-card px-3 md:h-16 md:px-6'>
+            {/* Mobile hamburger menu */}
+            <div className='flex items-center gap-2 md:hidden'>
+              <Button
+                variant='ghost'
+                size='icon'
+                onClick={() => setIsMobileSidebarOpen(true)}
+                className='h-9 w-9'
+              >
+                <Menu className='h-5 w-5' />
+              </Button>
+            </div>
+
             <div
-              className='flex flex-1 items-center gap-4'
+              className='flex flex-1 items-center gap-2 md:gap-4'
               data-onboarding='header-date-filter'
             >
               <HeaderFilters />
@@ -301,11 +350,33 @@ export default function Layout() {
             </div>
           )}
 
-          {/* Page Content */}
-          <main className='flex-1 overflow-auto p-6'>
+          {/* Page Content - responsive padding */}
+          <main className='flex-1 overflow-auto p-3 pb-20 md:p-6 md:pb-6'>
             <Outlet />
           </main>
         </div>
+
+        {/* Mobile Bottom Navigation Bar */}
+        <nav className='fixed bottom-0 left-0 right-0 z-30 flex h-16 items-center justify-around border-t bg-card md:hidden'>
+          {navItems.slice(0, 5).map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              className={({ isActive }) =>
+                cn(
+                  'flex flex-col items-center justify-center gap-1 px-2 py-1',
+                  isActive ? 'text-primary' : 'text-muted-foreground'
+                )
+              }
+            >
+              <item.icon className='h-5 w-5' />
+              <span className='text-[10px] font-medium'>{item.label}</span>
+            </NavLink>
+          ))}
+        </nav>
+
+        {/* No Data Modal */}
+        <NoDataModal />
       </div>
     </TooltipProvider>
   );

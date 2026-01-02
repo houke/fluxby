@@ -16,6 +16,8 @@ import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
 import { DatabaseProvider } from './contexts/DatabaseContext';
 import { ProfileProvider } from './contexts/ProfileContext';
 import { SyncProvider } from './contexts/SyncContext';
+import { ToastProvider } from './contexts/ToastContext';
+import { ConfirmProvider } from './contexts/ConfirmContext';
 import {
   EncryptionProvider,
   useEncryption,
@@ -126,13 +128,19 @@ function App() {
           <ProfileProvider>
             <SyncProvider>
               <FilterProvider>
-                <BrowserRouter basename={import.meta.env.BASE_URL || '/app/'}>
-                  <OnboardingProvider>
-                    <SecurityGate>
-                      <AppContent />
-                    </SecurityGate>
-                  </OnboardingProvider>
-                </BrowserRouter>
+                <ToastProvider>
+                  <ConfirmProvider>
+                    <BrowserRouter
+                      basename={import.meta.env.BASE_URL || '/app/'}
+                    >
+                      <OnboardingProvider>
+                        <SecurityGate>
+                          <AppContent />
+                        </SecurityGate>
+                      </OnboardingProvider>
+                    </BrowserRouter>
+                  </ConfirmProvider>
+                </ToastProvider>
               </FilterProvider>
             </SyncProvider>
           </ProfileProvider>

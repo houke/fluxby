@@ -1307,13 +1307,13 @@ export const en: LandingTranslationKeys = {
         ],
       },
       ai: {
-        title: 'AI-powered insights',
+        title: 'Smart categorization rules',
         description:
-          'Local AI helps you categorize and understand your spending without sharing your data.',
+          'Create custom rules to automatically categorize your transactions. Set up patterns for merchants, amounts, and descriptions to keep your finances organized effortlessly.',
         highlights: [
-          'Categorization suggestions',
-          'Spending patterns',
-          'Saving tips',
+          'Custom categorization rules',
+          'Pattern matching',
+          'Automatic organization',
         ],
       },
       multiAccount: {

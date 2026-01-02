@@ -11,12 +11,13 @@ import {
 } from '@/components/ui/card';
 import { api } from '@/lib/api';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { useProfile } from '@/contexts/ProfileContext';
+import { useConfirm } from '@/contexts/ConfirmContext';
+import { resetAppAndRestartOnboarding } from '@/lib/database-reset';
 
 export function DataManagementSettings() {
   const { t } = useLanguage();
   const queryClient = useQueryClient();
-  const { switchProfile, refreshProfiles } = useProfile();
+  const confirm = useConfirm();
   const [dataNotice, setDataNotice] = useState<{
     type: 'success' | 'error' | 'warning';
     text: string;
@@ -120,7 +121,12 @@ export function DataManagementSettings() {
               onChange={async (e) => {
                 const file = e.target.files?.[0];
                 if (!file) return;
-                if (!confirm(t.settings.dataManagement.importConfirm)) {
+                const isConfirmed = await confirm({
+                  title: t.settings.dataManagement.importTitle,
+                  message: t.settings.dataManagement.importConfirm,
+                  variant: 'default',
+                });
+                if (!isConfirmed) {
                   e.target.value = '';
                   return;
                 }
@@ -195,34 +201,24 @@ export function DataManagementSettings() {
               variant='destructive'
               disabled={isDataLoading}
               onClick={async () => {
-                if (confirm(t.settings.dataManagement.deleteAllConfirm)) {
-                  setIsDataLoading(true);
-                  try {
-                    // Reset all data and get demo profile ID
-                    const result = await api.resetAllData();
+                const isConfirmed = await confirm({
+                  title: t.settings.dataManagement.deleteAllTitle,
+                  message: t.settings.dataManagement.deleteAllConfirm,
+                  variant: 'danger',
+                });
+                if (!isConfirmed) {
+                  return;
+                }
 
-                    // Refresh profiles list and switch to demo profile
-                    await refreshProfiles();
-                    if (result.demoProfileId) {
-                      switchProfile(result.demoProfileId);
-
-                      // Seed demo data for the profile
-                      await api.seedDemoData(result.demoProfileId);
-                    }
-
-                    queryClient.invalidateQueries();
-                    setDataNotice({
-                      type: 'success',
-                      text: t.settings.dataManagement.deleteAllSuccess,
-                    });
-                  } catch {
-                    setDataNotice({
-                      type: 'error',
-                      text: t.settings.dataManagement.deleteAllError,
-                    });
-                  } finally {
-                    setIsDataLoading(false);
-                  }
+                setIsDataLoading(true);
+                try {
+                  await resetAppAndRestartOnboarding();
+                } catch {
+                  setDataNotice({
+                    type: 'error',
+                    text: t.settings.dataManagement.deleteAllError,
+                  });
+                  setIsDataLoading(false);
                 }
               }}
             >

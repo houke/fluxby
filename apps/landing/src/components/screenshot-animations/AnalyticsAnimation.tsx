@@ -116,13 +116,13 @@ export default function AnalyticsAnimation({
       <div className='mb-3 flex items-center justify-center gap-4'>
         <div className='flex items-center gap-2 p-4'>
           <div className='h-3 w-3 rounded bg-emerald-500' />
-          <span className='text-xs text-white/80'>
+          <span className='text-xs text-gray-600 dark:text-white/80'>
             {anim?.income || 'Income'}
           </span>
         </div>
         <div className='flex items-center gap-2'>
           <div className='h-3 w-3 rounded bg-rose-500' />
-          <span className='text-xs text-white/80'>
+          <span className='text-xs text-gray-600 dark:text-white/80'>
             {anim?.expenses || 'Expenses'}
           </span>
         </div>
@@ -131,7 +131,7 @@ export default function AnalyticsAnimation({
       {/* Chart container */}
       <div className='relative flex-1 overflow-hidden'>
         {/* Left gradient */}
-        <div className='pointer-events-none absolute bottom-0 left-0 top-0 z-10 w-8 bg-gradient-to-r from-purple-600 to-transparent' />
+        <div className='pointer-events-none absolute bottom-0 left-0 top-0 z-10 w-8 bg-gradient-to-r from-transparent to-transparent' />
 
         {/* Scrolling bars */}
         <div
@@ -156,7 +156,7 @@ export default function AnalyticsAnimation({
                   />
                 </div>
                 {/* Label */}
-                <span className='mt-1 text-[10px] text-white/60'>
+                <span className='mt-1 text-[10px] text-gray-500 dark:text-white/60'>
                   {data.month}
                 </span>
               </div>
@@ -165,7 +165,7 @@ export default function AnalyticsAnimation({
         </div>
 
         {/* Right gradient */}
-        <div className='pointer-events-none absolute bottom-0 right-0 top-0 z-10 w-8 bg-gradient-to-l from-purple-600 to-transparent' />
+        <div className='pointer-events-none absolute bottom-0 right-0 top-0 z-10 w-8 bg-gradient-to-l from-transparent to-transparent' />
       </div>
     </div>
   );

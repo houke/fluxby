@@ -68,7 +68,7 @@ export default function ImportAnimation({ isVisible }: { isVisible: boolean }) {
   return (
     <div className='flex h-full w-full flex-col items-center justify-center p-4'>
       {/* Upload zone */}
-      <div className='relative flex h-40 w-full max-w-xs flex-col items-center justify-center rounded-xl border-2 border-dashed border-white/30 bg-white/5'>
+      <div className='relative flex h-40 w-full max-w-xs flex-col items-center justify-center rounded-xl border-2 border-dashed border-purple-300 bg-white/60 dark:border-white/30 dark:bg-white/5'>
         {/* Dropping file animation */}
         {phase === 'drop' && (
           <div
@@ -93,7 +93,7 @@ export default function ImportAnimation({ isVisible }: { isVisible: boolean }) {
                   </div>
                 </div>
               </div>
-              <span className='mt-2 text-xs text-white/80'>
+              <span className='mt-2 text-xs text-gray-600 dark:text-white/80'>
                 transacties.csv
               </span>
             </div>
@@ -103,10 +103,10 @@ export default function ImportAnimation({ isVisible }: { isVisible: boolean }) {
         {/* Upload icon when not dropping */}
         {phase !== 'drop' && (
           <div className='flex flex-col items-center'>
-            <div className='mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-white/10'>
+            <div className='mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-purple-100 dark:bg-white/10'>
               {phase === 'complete' ? (
                 <svg
-                  className='h-6 w-6 text-emerald-400'
+                  className='h-6 w-6 text-emerald-500 dark:text-emerald-400'
                   fill='none'
                   viewBox='0 0 24 24'
                   stroke='currentColor'
@@ -120,7 +120,7 @@ export default function ImportAnimation({ isVisible }: { isVisible: boolean }) {
                 </svg>
               ) : (
                 <svg
-                  className='h-6 w-6 text-white/60'
+                  className='h-6 w-6 text-gray-500 dark:text-white/60'
                   fill='none'
                   viewBox='0 0 24 24'
                   stroke='currentColor'
@@ -134,7 +134,7 @@ export default function ImportAnimation({ isVisible }: { isVisible: boolean }) {
                 </svg>
               )}
             </div>
-            <span className='text-sm text-white/80'>
+            <span className='text-sm text-gray-700 dark:text-white/80'>
               {phase === 'complete'
                 ? `47 ${anim?.transactionsImported || 'transactions imported'}!`
                 : `${anim?.uploading || 'Uploading...'}`}
@@ -145,13 +145,13 @@ export default function ImportAnimation({ isVisible }: { isVisible: boolean }) {
         {/* Progress bar */}
         {phase === 'processing' && (
           <div className='absolute bottom-4 left-4 right-4'>
-            <div className='mb-1 flex justify-between text-xs text-white/60'>
+            <div className='mb-1 flex justify-between text-xs text-gray-500 dark:text-white/60'>
               <span>{anim?.processing || 'Processing...'}</span>
               <span>{Math.round(processProgress)}%</span>
             </div>
-            <div className='h-2 overflow-hidden rounded-full bg-white/20'>
+            <div className='h-2 overflow-hidden rounded-full bg-gray-200 dark:bg-white/20'>
               <div
-                className='h-full rounded-full bg-purple-400 transition-all duration-100'
+                className='h-full rounded-full bg-purple-500 transition-all duration-100 dark:bg-purple-400'
                 style={{ width: `${processProgress}%` }}
               />
             </div>
@@ -162,17 +162,17 @@ export default function ImportAnimation({ isVisible }: { isVisible: boolean }) {
       {/* Status text */}
       <div className='mt-4 text-center'>
         {phase === 'drop' && (
-          <span className='text-xs text-white/60'>
+          <span className='text-xs text-gray-500 dark:text-white/60'>
             {anim?.dragHint || 'Drag your ING CSV file here'}
           </span>
         )}
         {phase === 'processing' && (
-          <span className='text-xs text-white/60'>
+          <span className='text-xs text-gray-500 dark:text-white/60'>
             {anim?.detecting || 'Detecting duplicates...'}
           </span>
         )}
         {phase === 'complete' && (
-          <span className='text-xs text-emerald-400'>
+          <span className='text-xs text-emerald-600 dark:text-emerald-400'>
             ✓ {anim?.done || 'Import complete!'}
           </span>
         )}

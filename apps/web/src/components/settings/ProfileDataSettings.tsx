@@ -12,11 +12,13 @@ import {
 import { api } from '@/lib/api';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useProfile } from '@/contexts/ProfileContext';
+import { useConfirm } from '@/contexts/ConfirmContext';
 
 export function ProfileDataSettings() {
   const { t } = useLanguage();
   const { activeProfile } = useProfile();
   const queryClient = useQueryClient();
+  const confirm = useConfirm();
   const [notice, setNotice] = useState<{
     type: 'success' | 'error';
     text: string;
@@ -56,13 +58,13 @@ export function ProfileDataSettings() {
       errorKey: 'deleteTransactionsError',
       buttonKey: 'deleteTransactionsButton',
       action: api.deleteAllTransactions,
-      fallbackTitle: 'Transacties verwijderen',
-      fallbackDesc: 'Verwijder alle transacties van dit profiel',
+      fallbackTitle: 'Delete transactions',
+      fallbackDesc: 'Delete all transactions from this profile',
       fallbackConfirm:
-        'Weet je zeker dat je alle transacties van dit profiel wilt verwijderen?',
-      fallbackSuccess: 'Alle transacties verwijderd',
-      fallbackError: 'Fout bij verwijderen transacties',
-      fallbackButton: 'Verwijder transacties',
+        'Are you sure you want to delete all transactions from this profile?',
+      fallbackSuccess: 'All transactions deleted',
+      fallbackError: 'Failed to delete transactions',
+      fallbackButton: 'Delete transactions',
     },
     {
       titleKey: 'deleteCategoriesTitle',
@@ -72,13 +74,13 @@ export function ProfileDataSettings() {
       errorKey: 'deleteCategoriesError',
       buttonKey: 'deleteCategoriesButton',
       action: api.deleteAllCategories,
-      fallbackTitle: 'Categorieën verwijderen',
-      fallbackDesc: 'Verwijder alle categorieën, regels en budgetten',
+      fallbackTitle: 'Delete categories',
+      fallbackDesc: 'Delete all categories, rules, and budgets',
       fallbackConfirm:
-        'Weet je zeker dat je alle categorieën wilt verwijderen? Dit verwijdert ook alle regels en budgetten.',
-      fallbackSuccess: 'Alle categorieën verwijderd',
-      fallbackError: 'Fout bij verwijderen categorieën',
-      fallbackButton: 'Verwijder categorieën',
+        'Are you sure you want to delete all categories? This also deletes all rules and budgets.',
+      fallbackSuccess: 'All categories deleted',
+      fallbackError: 'Failed to delete categories',
+      fallbackButton: 'Delete categories',
     },
     {
       titleKey: 'deleteAccountsTitle',
@@ -88,13 +90,13 @@ export function ProfileDataSettings() {
       errorKey: 'deleteAccountsError',
       buttonKey: 'deleteAccountsButton',
       action: api.deleteAllAccounts,
-      fallbackTitle: 'Rekeningen verwijderen',
-      fallbackDesc: 'Verwijder alle rekeningen (en bijbehorende transacties)',
+      fallbackTitle: 'Delete accounts',
+      fallbackDesc: 'Delete all accounts and related transactions',
       fallbackConfirm:
-        'Weet je zeker dat je alle rekeningen wilt verwijderen? Dit verwijdert ook alle transacties.',
-      fallbackSuccess: 'Alle rekeningen verwijderd',
-      fallbackError: 'Fout bij verwijderen rekeningen',
-      fallbackButton: 'Verwijder rekeningen',
+        'Are you sure you want to delete all accounts? This also deletes all transactions.',
+      fallbackSuccess: 'All accounts deleted',
+      fallbackError: 'Failed to delete accounts',
+      fallbackButton: 'Delete accounts',
     },
     {
       titleKey: 'deleteBudgetsTitle',
@@ -104,12 +106,12 @@ export function ProfileDataSettings() {
       errorKey: 'deleteBudgetsError',
       buttonKey: 'deleteBudgetsButton',
       action: api.deleteAllBudgets,
-      fallbackTitle: 'Budgetten verwijderen',
-      fallbackDesc: 'Verwijder alle budgetten',
-      fallbackConfirm: 'Weet je zeker dat je alle budgetten wilt verwijderen?',
-      fallbackSuccess: 'Alle budgetten verwijderd',
-      fallbackError: 'Fout bij verwijderen budgetten',
-      fallbackButton: 'Verwijder budgetten',
+      fallbackTitle: 'Delete budgets',
+      fallbackDesc: 'Delete all budgets',
+      fallbackConfirm: 'Are you sure you want to delete all budgets?',
+      fallbackSuccess: 'All budgets deleted',
+      fallbackError: 'Failed to delete budgets',
+      fallbackButton: 'Delete budgets',
     },
     {
       titleKey: 'deleteAddressBookTitle',
@@ -119,14 +121,29 @@ export function ProfileDataSettings() {
       errorKey: 'deleteAddressBookError',
       buttonKey: 'deleteAddressBookButton',
       action: api.deleteAllAddressBook,
-      fallbackTitle: 'Adresboek verwijderen',
-      fallbackDesc:
-        'Verwijder alle contacten (IBANs verschijnen weer in voorgestelde adressen)',
+      fallbackTitle: 'Delete address book',
+      fallbackDesc: 'Delete all contacts (IBANs will reappear as suggestions)',
       fallbackConfirm:
-        'Weet je zeker dat je alle contacten wilt verwijderen? De IBANs worden weer voorgesteld.',
-      fallbackSuccess: 'Alle contacten verwijderd',
-      fallbackError: 'Fout bij verwijderen contacten',
-      fallbackButton: 'Verwijder contacten',
+        'Are you sure you want to delete all contacts? IBANs will be suggested again.',
+      fallbackSuccess: 'All contacts deleted',
+      fallbackError: 'Failed to delete contacts',
+      fallbackButton: 'Delete contacts',
+    },
+    {
+      titleKey: 'deleteImportHistoryTitle',
+      descKey: 'deleteImportHistoryDescription',
+      confirmKey: 'deleteImportHistoryConfirm',
+      successKey: 'deleteImportHistorySuccess',
+      errorKey: 'deleteImportHistoryError',
+      buttonKey: 'deleteImportHistoryButton',
+      action: api.deleteImportHistory,
+      fallbackTitle: 'Delete import history',
+      fallbackDesc: 'Remove stored import history for this profile',
+      fallbackConfirm:
+        'Are you sure you want to delete the import history for this profile?',
+      fallbackSuccess: 'Import history deleted',
+      fallbackError: 'Failed to delete import history',
+      fallbackButton: 'Delete import history',
     },
   ];
 
@@ -190,12 +207,20 @@ export function ProfileDataSettings() {
                 variant='outline'
                 className='border-orange-500 bg-orange-50 text-orange-700 hover:border-orange-600 hover:bg-orange-100 hover:text-orange-800 dark:border-orange-700 dark:bg-orange-950 dark:text-orange-400 dark:hover:bg-orange-900'
                 disabled={isLoading}
-                onClick={() => {
+                onClick={async () => {
                   const confirmMsg = getText(
                     item.confirmKey as keyof typeof t.settings.profileData,
                     item.fallbackConfirm
                   );
-                  if (confirm(confirmMsg)) {
+                  const isConfirmed = await confirm({
+                    title: getText(
+                      item.titleKey as keyof typeof t.settings.profileData,
+                      item.fallbackTitle
+                    ),
+                    message: confirmMsg,
+                    variant: 'danger',
+                  });
+                  if (isConfirmed) {
                     handleDelete(
                       item.action,
                       getText(

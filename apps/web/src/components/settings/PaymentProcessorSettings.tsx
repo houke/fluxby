@@ -1,6 +1,14 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Check, X, Pencil, Trash2 } from 'lucide-react';
+import {
+  Plus,
+  Check,
+  X,
+  Pencil,
+  Trash2,
+  RefreshCw,
+  Loader2,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -8,6 +16,7 @@ import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
@@ -19,10 +28,16 @@ import {
 } from '@/components/ui/tooltip';
 import { api } from '@/lib/api';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useToast } from '@/contexts/ToastContext';
+import { useProfile } from '@/contexts/ProfileContext';
+import { useConfirm } from '@/contexts/ConfirmContext';
 
 export function PaymentProcessorSettings() {
   const { t } = useLanguage();
   const queryClient = useQueryClient();
+  const toast = useToast();
+  const { activeProfileId } = useProfile();
+  const confirm = useConfirm();
 
   const splitPatterns = (patterns: string) =>
     patterns
@@ -55,6 +70,9 @@ export function PaymentProcessorSettings() {
       queryClient.invalidateQueries({ queryKey: ['paymentProcessorRules'] });
       setNewRuleName('');
       setNewRulePatterns('');
+      toast.success(
+        t.settings.paymentProcessors?.ruleAdded || 'Rule added successfully'
+      );
     },
   });
 
@@ -75,6 +93,9 @@ export function PaymentProcessorSettings() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['paymentProcessorRules'] });
       setEditingRuleId(null);
+      toast.success(
+        t.settings.paymentProcessors?.ruleUpdated || 'Rule updated'
+      );
     },
   });
 
@@ -82,6 +103,37 @@ export function PaymentProcessorSettings() {
     mutationFn: (id: string) => api.deletePaymentProviderRule(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['paymentProcessorRules'] });
+      toast.success(
+        t.settings.paymentProcessors?.ruleDeleted || 'Rule deleted'
+      );
+    },
+  });
+
+  // Apply rules to existing transactions
+  const applyRulesMutation = useMutation({
+    mutationFn: () => api.applyPaymentProviderRulesToTransactions(),
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({
+        queryKey: ['transactions', activeProfileId],
+      });
+      const data = result as { updated?: number } | undefined;
+      const count = data?.updated || 0;
+      if (count > 0) {
+        toast.success(
+          (
+            t.settings.paymentProcessors?.rulesApplied ||
+            '{count} transactions updated with payment processor'
+          ).replace('{count}', String(count))
+        );
+      } else {
+        toast.info(
+          t.settings.paymentProcessors?.noTransactionsUpdated ||
+            'No transactions needed updating'
+        );
+      }
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to apply rules');
     },
   });
 
@@ -231,20 +283,26 @@ export function PaymentProcessorSettings() {
                                 variant='ghost'
                                 size='icon'
                                 className='h-8 w-8 rounded-md transition-colors hover:bg-red-600 hover:text-white'
-                                onClick={() => {
-                                  if (
-                                    confirm(
-                                      `${
-                                        t.settings.paymentProcessors
-                                          ?.deleteConfirm ||
-                                        'Weet je zeker dat je de regel'
-                                      } "${rule.name}" ${
-                                        t.settings.paymentProcessors
-                                          ?.deleteConfirm2 ||
-                                        'wilt verwijderen?'
-                                      }`
-                                    )
-                                  ) {
+                                onClick={async () => {
+                                  const isConfirmed = await confirm({
+                                    title:
+                                      t.settings.paymentProcessors
+                                        ?.deleteRuleTitle || 'Delete rule',
+                                    message: `${
+                                      t.settings.paymentProcessors
+                                        ?.deleteConfirm ||
+                                      'Are you sure you want to delete the rule'
+                                    } "${rule.name}"${
+                                      t.settings.paymentProcessors
+                                        ?.deleteConfirm2
+                                        ? ' ' +
+                                          t.settings.paymentProcessors
+                                            .deleteConfirm2
+                                        : '?'
+                                    }`,
+                                    variant: 'danger',
+                                  });
+                                  if (isConfirmed) {
                                     deleteRuleMutation.mutate(rule.id);
                                   }
                                 }}
@@ -266,6 +324,21 @@ export function PaymentProcessorSettings() {
           )}
         </div>
       </CardContent>
+      <CardFooter className='border-t pt-4'>
+        <Button
+          onClick={() => applyRulesMutation.mutate()}
+          disabled={applyRulesMutation.isPending || providerRules.length === 0}
+          className='w-full'
+        >
+          {applyRulesMutation.isPending ? (
+            <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+          ) : (
+            <RefreshCw className='mr-2 h-4 w-4' />
+          )}
+          {t.settings.paymentProcessors?.applyToTransactions ||
+            'Apply to transactions'}
+        </Button>
+      </CardFooter>
     </Card>
   );
 }

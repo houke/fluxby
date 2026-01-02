@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { X } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface LegalModalProps {
   isOpen: boolean;
@@ -13,6 +14,7 @@ const LegalModal = ({ isOpen, onClose, title, children }: LegalModalProps) => {
   const [isAnimating, setIsAnimating] = useState(false);
   const [shouldRender, setShouldRender] = useState(false);
   const { language, setLanguage } = useLanguage();
+  const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
     if (isOpen) {
@@ -87,27 +89,71 @@ const LegalModal = ({ isOpen, onClose, title, children }: LegalModalProps) => {
                 <div className='text-fluxby-purple text-sm font-semibold uppercase tracking-wider'>
                   Fluxby
                 </div>
-                {/* Language toggle */}
-                <div className='flex items-center gap-1 rounded-lg border border-gray-200 bg-gray-50 p-1 dark:border-gray-600 dark:bg-gray-700'>
+                {/* Toggles container */}
+                <div className='flex items-center gap-2'>
+                  {/* Language toggle */}
+                  <div className='flex items-center gap-1 rounded-lg border border-gray-200 bg-gray-50 p-1 dark:border-gray-600 dark:bg-gray-700'>
+                    <button
+                      onClick={() => setLanguage('nl')}
+                      className={`rounded px-2 py-1 text-xs font-medium transition-colors ${
+                        language === 'nl'
+                          ? 'bg-white text-gray-900 shadow-sm dark:bg-gray-600 dark:text-gray-100'
+                          : 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100'
+                      }`}
+                    >
+                      NL
+                    </button>
+                    <button
+                      onClick={() => setLanguage('en')}
+                      className={`rounded px-2 py-1 text-xs font-medium transition-colors ${
+                        language === 'en'
+                          ? 'bg-white text-gray-900 shadow-sm dark:bg-gray-600 dark:text-gray-100'
+                          : 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100'
+                      }`}
+                    >
+                      EN
+                    </button>
+                  </div>
+
+                  {/* Theme toggle */}
                   <button
-                    onClick={() => setLanguage('nl')}
-                    className={`rounded px-2 py-1 text-xs font-medium transition-colors ${
-                      language === 'nl'
-                        ? 'bg-white text-gray-900 shadow-sm dark:bg-gray-600 dark:text-gray-100'
-                        : 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100'
-                    }`}
+                    onClick={toggleTheme}
+                    className='rounded-lg border border-gray-200 bg-gray-50 p-2 text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-gray-100'
+                    title={
+                      theme === 'dark'
+                        ? 'Switch to light mode'
+                        : 'Switch to dark mode'
+                    }
                   >
-                    NL
-                  </button>
-                  <button
-                    onClick={() => setLanguage('en')}
-                    className={`rounded px-2 py-1 text-xs font-medium transition-colors ${
-                      language === 'en'
-                        ? 'bg-white text-gray-900 shadow-sm dark:bg-gray-600 dark:text-gray-100'
-                        : 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100'
-                    }`}
-                  >
-                    EN
+                    {theme === 'dark' ? (
+                      <svg
+                        className='h-4 w-4'
+                        fill='none'
+                        viewBox='0 0 24 24'
+                        stroke='currentColor'
+                      >
+                        <path
+                          strokeLinecap='round'
+                          strokeLinejoin='round'
+                          strokeWidth={2}
+                          d='M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z'
+                        />
+                      </svg>
+                    ) : (
+                      <svg
+                        className='h-4 w-4'
+                        fill='none'
+                        viewBox='0 0 24 24'
+                        stroke='currentColor'
+                      >
+                        <path
+                          strokeLinecap='round'
+                          strokeLinejoin='round'
+                          strokeWidth={2}
+                          d='M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z'
+                        />
+                      </svg>
+                    )}
                   </button>
                 </div>
               </div>

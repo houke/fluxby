@@ -117,6 +117,22 @@ function seedDemoData(profileId: number) {
 
   // 4. Generate transactions for multiple months
   const now = new Date();
+  const todayYear = now.getUTCFullYear();
+  const todayMonth = now.getUTCMonth();
+  const todayDay = now.getUTCDate();
+
+  // Collect transactions first, then sanitize
+  const transactions: Array<{
+    date: string;
+    amount: number;
+    type: 'income' | 'expense';
+    description: string;
+    merchantName: string;
+    accountId: number;
+    opposingIban: string;
+    opposingName: string;
+    categoryId: number | null;
+  }> = [];
 
   for (let monthOffset = 0; monthOffset < 18; monthOffset++) {
     const monthDate = new Date(now);
@@ -129,25 +145,20 @@ function seedDemoData(profileId: number) {
     // Random number of transactions per month (10-30)
     const txCount = 10 + Math.floor(Math.random() * 21);
 
-    // Monthly salary
-    const salaryDate = new Date(Date.UTC(year, month, 24))
-      .toISOString()
-      .split('T')[0];
-    db.prepare(
-      `INSERT INTO transactions (date, amount, type, description, merchant_name, account_id, opposing_account_iban, opposing_account_name, category_id, profile_id) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-    ).run(
-      salaryDate,
-      2800 + Math.random() * 200,
-      'income',
-      'Salaris',
-      'Werkgever B.V.',
-      mainAccountId,
-      'NL00DEMO0000000001',
-      'Werkgever B.V.',
-      categoryIdMap['Salaris'],
-      profileId
-    );
+    // Monthly salary on the 24th (only add if 24th has passed for current month)
+    if (monthOffset > 0 || todayDay >= 24) {
+      transactions.push({
+        date: new Date(Date.UTC(year, month, 24)).toISOString().split('T')[0],
+        amount: 2800 + Math.random() * 200,
+        type: 'income',
+        description: 'Salaris',
+        merchantName: 'Werkgever B.V.',
+        accountId: mainAccountId,
+        opposingIban: 'NL00DEMO0000000001',
+        opposingName: 'Werkgever B.V.',
+        categoryId: categoryIdMap['Salaris'],
+      });
+    }
 
     // Generate random expenses
     const expenseCategories = [
@@ -164,22 +175,76 @@ function seedDemoData(profileId: number) {
         expenseCategories[Math.floor(Math.random() * expenseCategories.length)];
       const amount = -(10 + Math.random() * 150);
 
-      db.prepare(
-        `INSERT INTO transactions (date, amount, type, description, merchant_name, account_id, opposing_account_iban, opposing_account_name, category_id, profile_id) 
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-      ).run(
+      transactions.push({
         date,
         amount,
-        'expense',
-        `${category} aankoop`,
-        `${category} Store`,
-        mainAccountId,
-        `NL00DEMO000000${1000 + i}`,
-        `${category} Store`,
-        categoryIdMap[category] || categoryIdMap['Boodschappen'],
-        profileId
-      );
+        type: 'expense',
+        description: `${category} aankoop`,
+        merchantName: `${category} Store`,
+        accountId: mainAccountId,
+        opposingIban: `NL00DEMO000000${1000 + i}`,
+        opposingName: `${category} Store`,
+        categoryId: categoryIdMap[category] || categoryIdMap['Boodschappen'],
+      });
     }
+  }
+
+  // Sanitize transactions: clamp future dates to today and limit today to 2 transactions
+  let todayCount = 0;
+  for (const tx of transactions) {
+    // Parse as UTC date at midnight to avoid timezone shifts
+    let txDate = new Date(tx.date + 'T00:00:00Z');
+
+    // If transaction is in the current month and in the future, move it to a past day
+    if (
+      txDate.getUTCFullYear() === todayYear &&
+      txDate.getUTCMonth() === todayMonth &&
+      txDate.getUTCDate() > todayDay
+    ) {
+      if (todayDay > 1) {
+        const newDay = 1 + Math.floor(Math.random() * (todayDay - 1));
+        txDate = new Date(Date.UTC(todayYear, todayMonth, newDay));
+      } else {
+        txDate = new Date(Date.UTC(todayYear, todayMonth, todayDay));
+      }
+    }
+
+    // Enforce at most 2 transactions for today
+    if (
+      txDate.getUTCFullYear() === todayYear &&
+      txDate.getUTCMonth() === todayMonth &&
+      txDate.getUTCDate() === todayDay
+    ) {
+      if (todayCount < 2) {
+        todayCount++;
+      } else {
+        if (todayDay > 1) {
+          const newDay = 1 + Math.floor(Math.random() * (todayDay - 1));
+          txDate = new Date(Date.UTC(todayYear, todayMonth, newDay));
+        } else {
+          // Skip if cannot move (only happens if todayDay === 1 and we already have 2 transactions)
+          continue;
+        }
+      }
+    }
+
+    tx.date = txDate.toISOString().split('T')[0];
+
+    db.prepare(
+      `INSERT INTO transactions (date, amount, type, description, merchant_name, account_id, opposing_account_iban, opposing_account_name, category_id, profile_id) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    ).run(
+      tx.date,
+      tx.amount,
+      tx.type,
+      tx.description,
+      tx.merchantName,
+      tx.accountId,
+      tx.opposingIban,
+      tx.opposingName,
+      tx.categoryId,
+      profileId
+    );
   }
 
   // 5. Add address book entries with DEMO bank codes

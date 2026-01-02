@@ -61,7 +61,7 @@ export default function BudgetsAnimation({
 
   return (
     <div className='flex h-full w-full items-center justify-center p-6'>
-      <div className='w-full max-w-xs rounded-xl bg-white/10 p-4'>
+      <div className='w-full max-w-xs rounded-xl bg-white/80 p-4 shadow-lg dark:bg-white/10 dark:shadow-none'>
         {/* Header */}
         <div className='mb-4 flex items-center gap-3'>
           <div
@@ -71,17 +71,17 @@ export default function BudgetsAnimation({
             <span className='text-xl'>🛒</span>
           </div>
           <div>
-            <div className='text-sm font-semibold text-white'>
+            <div className='text-sm font-semibold text-gray-900 dark:text-white'>
               {anim?.categories?.boodschappen || 'Groceries'}
             </div>
-            <div className='text-xs text-white/60'>
+            <div className='text-xs text-gray-500 dark:text-white/60'>
               {anim?.leftThisMonth || 'left this month'}
             </div>
           </div>
         </div>
 
         {/* Progress bar */}
-        <div className='mb-3 h-3 overflow-hidden rounded-full bg-white/20'>
+        <div className='mb-3 h-3 overflow-hidden rounded-full bg-gray-200 dark:bg-white/20'>
           <div
             className='h-full rounded-full transition-all duration-100'
             style={{
@@ -94,28 +94,34 @@ export default function BudgetsAnimation({
         {/* Stats */}
         <div className='flex items-center justify-between text-sm'>
           <div>
-            <span className='text-white/60'>{anim?.spent || 'Spent'}: </span>
+            <span className='text-gray-500 dark:text-white/60'>
+              {anim?.spent || 'Spent'}:{' '}
+            </span>
             <span
-              className={`font-semibold ${isExceeded ? 'text-red-400' : 'text-white'}`}
+              className={`font-semibold ${isExceeded ? 'text-red-500 dark:text-red-400' : 'text-gray-900 dark:text-white'}`}
             >
               €{spentAmount.toFixed(0)}
             </span>
           </div>
           <div>
-            <span className='text-white/60'>{anim?.budget || 'Budget'}: </span>
-            <span className='font-semibold text-white'>€{budgetAmount}</span>
+            <span className='text-gray-500 dark:text-white/60'>
+              {anim?.budget || 'Budget'}:{' '}
+            </span>
+            <span className='font-semibold text-gray-900 dark:text-white'>
+              €{budgetAmount}
+            </span>
           </div>
         </div>
 
         {/* Remaining */}
         <div className='mt-2 text-center'>
           {isExceeded ? (
-            <span className='text-sm font-medium text-red-400'>
+            <span className='text-sm font-medium text-red-500 dark:text-red-400'>
               €{Math.abs(remaining).toFixed(0)}{' '}
               {anim?.overBudget || 'over budget!'} ⚠️
             </span>
           ) : (
-            <span className='text-sm text-white/60'>
+            <span className='text-sm text-gray-500 dark:text-white/60'>
               €{remaining.toFixed(0)} {anim?.remaining || 'remaining'}
             </span>
           )}

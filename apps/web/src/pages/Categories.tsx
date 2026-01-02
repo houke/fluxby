@@ -40,6 +40,7 @@ import { formatCurrency, cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useProfile } from '@/contexts/ProfileContext';
 import { useFilters } from '@/contexts/FilterContext';
+import { useConfirm } from '@/contexts/ConfirmContext';
 import {
   Tooltip,
   TooltipContent,
@@ -182,6 +183,7 @@ export default function Categories() {
   const { t, language } = useLanguage();
   const { activeProfileId } = useProfile();
   const dataService = useDataService();
+  const confirm = useConfirm();
   useDocumentTitle(t.categories.title);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -626,12 +628,16 @@ export default function Categories() {
       setRuleDrafts((prev) => ({ ...prev, [categoryId]: '' }));
 
       // Only apply to existing transactions if user confirms
-      if (
-        createdPatterns.length > 0 &&
-        confirm(t.categories.applyToExistingConfirm)
-      ) {
-        for (const pattern of createdPatterns) {
-          await applyRuleMutation.mutateAsync({ pattern, categoryId });
+      if (createdPatterns.length > 0) {
+        const isConfirmed = await confirm({
+          title: t.categories.applyRules || 'Apply rules',
+          message: t.categories.applyToExistingConfirm,
+          variant: 'default',
+        });
+        if (isConfirmed) {
+          for (const pattern of createdPatterns) {
+            await applyRuleMutation.mutateAsync({ pattern, categoryId });
+          }
         }
       }
       // Note: Removed the else block that was incorrectly calling applyRulesMutation
@@ -642,8 +648,13 @@ export default function Categories() {
     }
   };
 
-  const handleDeleteRule = (ruleId: string) => {
-    if (!confirm(t.categories.deleteRuleConfirm)) return;
+  const handleDeleteRule = async (ruleId: string) => {
+    const isConfirmed = await confirm({
+      title: t.categories.deleteRule || 'Delete rule',
+      message: t.categories.deleteRuleConfirm,
+      variant: 'danger',
+    });
+    if (!isConfirmed) return;
     deleteRuleMutation.mutate(ruleId);
   };
 
@@ -964,8 +975,13 @@ export default function Categories() {
                     variant='ghost'
                     size='icon'
                     className='h-7 w-7 opacity-0 transition-opacity hover:bg-red-600 hover:text-white group-hover:opacity-100'
-                    onClick={() => {
-                      if (confirm(t.categories.deleteConfirm)) {
+                    onClick={async () => {
+                      const isConfirmed = await confirm({
+                        title: t.categories.deleteCategory || 'Delete category',
+                        message: t.categories.deleteConfirm,
+                        variant: 'danger',
+                      });
+                      if (isConfirmed) {
                         deleteCategoryMutation.mutate(sub.id);
                       }
                     }}
@@ -1140,9 +1156,15 @@ export default function Categories() {
                         variant='ghost'
                         size='icon'
                         className='h-8 w-8 hover:bg-red-600 hover:text-white'
-                        onClick={(e) => {
+                        onClick={async (e) => {
                           e.stopPropagation();
-                          if (confirm(t.categories.deleteConfirm)) {
+                          const isConfirmed = await confirm({
+                            title:
+                              t.categories.deleteCategory || 'Delete category',
+                            message: t.categories.deleteConfirm,
+                            variant: 'danger',
+                          });
+                          if (isConfirmed) {
                             deleteCategoryMutation.mutate(category.id);
                           }
                         }}

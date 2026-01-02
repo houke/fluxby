@@ -48,16 +48,16 @@ export default function Settings() {
             value='active-profile'
             data-onboarding='settings-profile-tab'
           >
-            Active Profile
+            {t.settings.tabs?.activeProfile || 'Active Profile'}
           </TabsTrigger>
           <TabsTrigger
             value='manage-profiles'
             data-onboarding='settings-manage-tab'
           >
-            Manage Profiles
+            {t.settings.tabs?.manageProfiles || 'Manage Profiles'}
           </TabsTrigger>
           <TabsTrigger value='app-settings' data-onboarding='settings-app-tab'>
-            App Settings
+            {t.settings.tabs?.appSettings || 'App Settings'}
           </TabsTrigger>
         </TabsList>
 
@@ -68,7 +68,6 @@ export default function Settings() {
           data-onboarding='settings-profile-content'
         >
           <AccountSettings />
-          <PaymentProcessorSettings />
           <ProfileDataSettings />
         </TabsContent>
 
@@ -89,6 +88,7 @@ export default function Settings() {
         >
           <OnboardingSettings />
           <AppSettings />
+          <PaymentProcessorSettings />
           <SyncSettings />
           <DataManagementSettings />
         </TabsContent>

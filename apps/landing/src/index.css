@@ -8,6 +8,92 @@
   }
 }
 
+:root {
+  --motion-scale: 1;
+}
+
+:root[data-motion-tier='medium'] {
+  --motion-scale: 0.7;
+}
+
+:root[data-motion-tier='low'] {
+  --motion-scale: 0.4;
+}
+
+:root[data-motion-tier='minimal'] {
+  --motion-scale: 0;
+}
+
+:root[data-motion-tier='medium'] .animate-pulse,
+:root[data-motion-tier='medium'] .animate-pulse-slow,
+:root[data-motion-tier='medium'] .animate-ping {
+  animation-duration: 5s !important;
+}
+
+:root[data-motion-tier='medium'] .animate-float,
+:root[data-motion-tier='medium'] .avatar-breathe {
+  animation-duration: 9s !important;
+}
+
+:root[data-motion-tier='medium'] .bokeh-float,
+:root[data-motion-tier='medium'] .bokeh-float-delayed,
+:root[data-motion-tier='medium'] .bokeh-drift {
+  animation-duration: 28s !important;
+}
+
+:root[data-motion-tier='medium'] .bokeh-pulse,
+:root[data-motion-tier='medium'] .bokeh-pulse-delayed,
+:root[data-motion-tier='medium'] .bokeh-breathe,
+:root[data-motion-tier='medium'] .bokeh-blur-pulse {
+  animation-duration: 14s !important;
+}
+
+:root[data-motion-tier='medium'] .emoji-float {
+  animation-duration: 30s !important;
+}
+
+:root[data-motion-tier='low'] .animate-pulse,
+:root[data-motion-tier='low'] .animate-pulse-slow,
+:root[data-motion-tier='low'] .animate-ping,
+:root[data-motion-tier='low'] .animate-float,
+:root[data-motion-tier='low'] .avatar-breathe,
+:root[data-motion-tier='low'] .bokeh-orb,
+:root[data-motion-tier='low'] .bokeh-float,
+:root[data-motion-tier='low'] .bokeh-float-delayed,
+:root[data-motion-tier='low'] .bokeh-pulse,
+:root[data-motion-tier='low'] .bokeh-pulse-delayed,
+:root[data-motion-tier='low'] .bokeh-drift,
+:root[data-motion-tier='low'] .bokeh-breathe,
+:root[data-motion-tier='low'] .bokeh-blur-pulse,
+:root[data-motion-tier='low'] .emoji-float,
+:root[data-motion-tier='low'] .scroll-mouse,
+:root[data-motion-tier='low'] .scroll-mouse::before {
+  animation-play-state: paused !important;
+}
+
+:root[data-motion-tier='minimal'] .animate-pulse,
+:root[data-motion-tier='minimal'] .animate-pulse-slow,
+:root[data-motion-tier='minimal'] .animate-ping,
+:root[data-motion-tier='minimal'] .animate-float,
+:root[data-motion-tier='minimal'] .avatar-breathe,
+:root[data-motion-tier='minimal'] .bokeh-orb,
+:root[data-motion-tier='minimal'] .bokeh-float,
+:root[data-motion-tier='minimal'] .bokeh-float-delayed,
+:root[data-motion-tier='minimal'] .bokeh-pulse,
+:root[data-motion-tier='minimal'] .bokeh-pulse-delayed,
+:root[data-motion-tier='minimal'] .bokeh-drift,
+:root[data-motion-tier='minimal'] .bokeh-breathe,
+:root[data-motion-tier='minimal'] .bokeh-blur-pulse,
+:root[data-motion-tier='minimal'] .emoji-float,
+:root[data-motion-tier='minimal'] .scroll-mouse,
+:root[data-motion-tier='minimal'] .scroll-mouse::before {
+  animation: none !important;
+}
+
+:root[data-motion-tier='minimal'] .emoji-float {
+  opacity: 0.8;
+}
+
 @layer components {
   .btn-primary {
     @apply bg-fluxby-purple hover:bg-fluxby-dark transform rounded-full px-8 py-4 text-lg font-bold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl;
@@ -19,6 +105,10 @@
 
   .gradient-bg {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  }
+
+  .dark .gradient-bg {
+    background: linear-gradient(135deg, #4c1d95 0%, #581c87 100%);
   }
 
   .fluffy-shadow {

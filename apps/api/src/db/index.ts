@@ -276,6 +276,9 @@ export function initializeDatabase(): void {
       { name: 'Tikkie', patterns: 'tikkie|tikkie \\*.*' },
       { name: 'Bunq', patterns: 'bunq|bunq \\*.*' },
       { name: 'Adyen', patterns: 'adyen|adyen \\*.*' },
+      // Mobile wallet payment providers
+      { name: 'Google Pay', patterns: 'google pay|g\\.co/helppay|g\\.co/pay' },
+      { name: 'Apple Pay', patterns: 'apple pay|\\*apple pay' },
     ];
 
     for (const rule of defaultRules) {

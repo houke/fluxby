@@ -69,7 +69,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { Toast } from '@/components/ui/toast';
+import { useToast } from '@/contexts/ToastContext';
 import { SearchInput } from '@/components/ui/search-input';
 import {
   TypeFilter,
@@ -286,11 +286,7 @@ export default function Transactions() {
   );
   const [assignSearchTerm, setAssignSearchTerm] = useState('');
 
-  // Toast state
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
-  const [toastType, setToastType] = useState<
-    'info' | 'success' | 'warning' | 'error'
-  >('info');
+  // Toast: use shared ToastContext
 
   // Rule creation modal state
   const [ruleModalOpen, setRuleModalOpen] = useState(false);
@@ -336,6 +332,8 @@ export default function Transactions() {
 
   const queryClient = useQueryClient();
 
+  const toast = useToast();
+
   const typeParam = debouncedType === 'all' ? undefined : debouncedType;
   const categoryIdsParam =
     selectedCategoryIds.length > 0 ? selectedCategoryIds : undefined;
@@ -368,7 +366,11 @@ export default function Transactions() {
     // Only depend on context changes, not local state
   }, [filters.transactionType]);
 
-  const { data: transactions, isLoading } = useQuery<Transaction[]>({
+  const {
+    data: transactions,
+    isLoading,
+    isFetching,
+  } = useQuery<Transaction[]>({
     queryKey: [
       'transactions',
       activeProfileId,
@@ -391,7 +393,9 @@ export default function Transactions() {
         type: typeParam || '',
         startDate,
         endDate,
-        categoryIds: categoryIdsParam?.join(',') || '',
+        ...(categoryIdsParam
+          ? { categoryIds: categoryIdsParam.join(',') }
+          : {}),
         opposingAccountIbans: ibansParam?.join(',') || '',
         opposingAccountName: nameParam || '',
         addressBookId: addressBookIdParam?.toString() || '',
@@ -908,8 +912,7 @@ export default function Transactions() {
       setPendingTransferTransaction(null);
       setTransferRelatedTransactions([]);
       setSelectedTransferRelatedIds(new Set());
-      setToastType('success');
-      setToastMessage(
+      toast.success(
         (
           t.transactions?.internalTransfersDetected ||
           '{count} transacties gemarkeerd als interne overboeking'
@@ -934,8 +937,7 @@ export default function Transactions() {
         queryKey: ['dashboard', activeProfileId],
       });
       if (result.updated > 0) {
-        setToastType('success');
-        setToastMessage(
+        toast.success(
           t.transactions.updatedCount.replace(
             '{count}',
             result.updated.toString()
@@ -966,8 +968,7 @@ export default function Transactions() {
       setEditingLabelId(null);
       setLabelDraft('');
       if (result.updated > 0) {
-        setToastType('success');
-        setToastMessage(
+        toast.success(
           t.transactions.updatedCount.replace(
             '{count}',
             result.updated.toString()
@@ -1007,12 +1008,10 @@ export default function Transactions() {
       setAccountModalOpen(false);
       setAccountModalIban('');
       setAccountModalName('');
-      setToastType('success');
-      setToastMessage(t.transactions.savedToAddressBook);
+      toast.success(t.transactions.savedToAddressBook);
     },
     onError: (error: Error) => {
-      setToastType('error');
-      setToastMessage(error.message || 'Failed to create contact');
+      toast.error(error.message || 'Failed to create contact');
     },
   });
 
@@ -1038,8 +1037,7 @@ export default function Transactions() {
       queryClient.invalidateQueries({
         queryKey: ['addressbook', activeProfileId],
       });
-      setToastType('success');
-      setToastMessage('Toegevoegd aan adresboek');
+      toast.success('Toegevoegd aan adresboek');
     },
   });
 
@@ -1059,8 +1057,7 @@ export default function Transactions() {
       });
       setAssignPopoverOpen(null);
       setAssignSearchTerm('');
-      setToastType('success');
-      setToastMessage(t.apiErrors?.ibanAddedToContact || 'Added to contact');
+      toast.success(t.apiErrors?.ibanAddedToContact || 'Added to contact');
     },
   });
 
@@ -1202,22 +1199,32 @@ export default function Transactions() {
         });
       }
 
-      // Add remaining items as single-entry groups
-      sharedData.merchants.forEach((merchant, idx) => {
-        if (!processedIndices.has(idx)) {
-          groups.push({
-            id: groupId++,
-            entries: [
-              {
-                name: merchant.name,
-                transactionCount: merchant.transactionCount,
-              },
-            ],
-            editedName: merchant.name,
-            isSplit: false,
-          });
-        }
-      });
+      // Add remaining items: if multiple remain, group them together
+      // This ensures shared IBAN merchants are shown as a single group
+      const ungroupedEntries = sharedData.merchants
+        .filter((_, idx) => !processedIndices.has(idx))
+        .map((merchant) => ({
+          name: merchant.name,
+          transactionCount: merchant.transactionCount,
+        }));
+
+      if (ungroupedEntries.length > 1) {
+        // Multiple ungrouped items: present as one group (can be split)
+        groups.push({
+          id: groupId++,
+          entries: ungroupedEntries,
+          editedName: ungroupedEntries[0].name,
+          isSplit: false,
+        });
+      } else if (ungroupedEntries.length === 1) {
+        // Single ungrouped item: add as individual group
+        groups.push({
+          id: groupId++,
+          entries: ungroupedEntries,
+          editedName: ungroupedEntries[0].name,
+          isSplit: false,
+        });
+      }
 
       setSharedIbanGroups(groups);
       setSharedIbanModalOpen(true);
@@ -1337,8 +1344,7 @@ export default function Transactions() {
       setRuleModalOpen(false);
       setPendingRuleTransaction(null);
       if (result.updated > 0) {
-        setToastType('success');
-        setToastMessage(
+        toast.success(
           t.transactions.updatedCount.replace(
             '{count}',
             result.updated.toString()
@@ -1434,7 +1440,7 @@ export default function Transactions() {
         { id: tx.id, data: updateData },
         {
           onSuccess: () => {
-            setToastMessage(
+            toast.success(
               newType === 'transfer'
                 ? t.transactions?.markedAsTransfer ||
                     'Marked as internal transfer'
@@ -1493,7 +1499,7 @@ export default function Transactions() {
     }
 
     const totalUpdated = 1 + selectedTransferRelatedIds.size;
-    setToastMessage(
+    toast.success(
       isMarkingAsTransfer
         ? (
             t.transactions?.markedMultipleAsTransfer ||
@@ -1817,14 +1823,7 @@ export default function Transactions() {
 
   return (
     <>
-      {/* Toast - rendered outside main layout to avoid affecting layout */}
-      {toastMessage && (
-        <Toast
-          message={toastMessage}
-          onClose={() => setToastMessage(null)}
-          type={toastType}
-        />
-      )}
+      {/* Toasts are handled via ToastContext */}
       <div className='space-y-6'>
         <div className='flex flex-wrap items-start justify-between gap-4'>
           <div>
@@ -1943,8 +1942,8 @@ export default function Transactions() {
           className='grid gap-4 md:grid-cols-2 lg:grid-cols-4'
           data-onboarding='transaction-summary'
         >
-          <Card className='card-hover'>
-            <CardContent className='p-6'>
+          <Card className='card-hover h-full'>
+            <CardContent className='flex h-full flex-col justify-between p-6'>
               <div className='flex items-center justify-between'>
                 <div className='mr-4 min-w-0 flex-1'>
                   <p className='text-sm text-muted-foreground'>
@@ -1960,8 +1959,8 @@ export default function Transactions() {
               </div>
             </CardContent>
           </Card>
-          <Card className='card-hover'>
-            <CardContent className='p-6'>
+          <Card className='card-hover h-full'>
+            <CardContent className='flex h-full flex-col justify-between p-6'>
               <div className='flex items-center justify-between'>
                 <div className='mr-4 min-w-0 flex-1'>
                   <p className='text-sm text-muted-foreground'>
@@ -1977,8 +1976,8 @@ export default function Transactions() {
               </div>
             </CardContent>
           </Card>
-          <Card className='card-hover'>
-            <CardContent className='p-6'>
+          <Card className='card-hover h-full'>
+            <CardContent className='flex h-full flex-col justify-between p-6'>
               <div className='flex items-center justify-between'>
                 <div className='mr-4 min-w-0 flex-1'>
                   <p className='text-sm text-muted-foreground'>
@@ -1998,8 +1997,8 @@ export default function Transactions() {
               </div>
             </CardContent>
           </Card>
-          <Card className='card-hover'>
-            <CardContent className='p-6'>
+          <Card className='card-hover h-full'>
+            <CardContent className='flex h-full flex-col justify-between p-6'>
               <div className='flex items-center justify-between'>
                 <div className='mr-4 min-w-0 flex-1'>
                   <p className='text-sm text-muted-foreground'>
@@ -2232,14 +2231,19 @@ export default function Transactions() {
             </div>
           </CardHeader>
           <CardContent>
-            {isLoading ? (
+            {/* Show skeleton during:
+                1. Initial load (isLoading)
+                2. Fetching with no data yet
+                3. Actively fetching after filter changes (prevents "flash of empty state")
+                Note: We check isPending (from useTransition) OR isFetching to catch filter changes */}
+            {isLoading ||
+            (isFetching && (!transactions?.length || isPending)) ? (
               <div className='space-y-4'>
                 {[...Array(5)].map((_, i) => (
                   <Skeleton key={i} className='h-16' />
                 ))}
               </div>
-            ) : (deferredTransactions?.length || 0) > 0 ||
-              transactions === undefined ? (
+            ) : (deferredTransactions?.length || 0) > 0 ? (
               <>
                 <div
                   className={cn(

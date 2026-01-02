@@ -15,6 +15,7 @@ import {
 import { useState, useRef, useLayoutEffect, useMemo } from 'react';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { useFilters } from '@/contexts/FilterContext';
+import { useConfirm } from '@/contexts/ConfirmContext';
 import {
   Popover,
   PopoverContent,
@@ -101,6 +102,7 @@ export default function Budgets() {
   const { t } = useLanguage();
   const { activeProfileId } = useProfile();
   const navigate = useNavigate();
+  const confirm = useConfirm();
   const {
     setCategories,
     setTransactionType,
@@ -891,9 +893,15 @@ export default function Budgets() {
                               variant='ghost'
                               size='icon'
                               className='rounded-md text-destructive transition-colors hover:bg-red-600 hover:text-white dark:hover:bg-red-700'
-                              onClick={(e) => {
+                              onClick={async (e) => {
                                 e.stopPropagation();
-                                if (confirm(t.budgets.confirmDelete)) {
+                                const isConfirmed = await confirm({
+                                  title:
+                                    t.budgets.deleteBudget || 'Delete budget',
+                                  message: t.budgets.confirmDelete,
+                                  variant: 'danger',
+                                });
+                                if (isConfirmed) {
                                   deleteMutation.mutate(budget.id);
                                 }
                               }}

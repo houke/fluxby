@@ -352,12 +352,10 @@ export default function Dashboard() {
     <div className='space-y-6'>
       <div className='flex flex-wrap items-start justify-between gap-4'>
         <div data-onboarding='dashboard-greeting'>
-          <h1 className='flex items-baseline gap-2 text-3xl leading-tight'>
-            <span className='font-bold'>{getGreeting()}</span>
-            <span className='max-w-[18ch] truncate font-bold'>
-              {user?.name ?? ''}
+          <h1 className='text-3xl leading-tight'>
+            <span className='block font-bold'>
+              {getGreeting()} {user?.name ?? ''} <span aria-hidden>👋</span>
             </span>
-            <span aria-hidden>👋</span>
           </h1>
           <p className='mt-1 text-muted-foreground'>{t.dashboard.subtitle}</p>
         </div>
@@ -382,7 +380,10 @@ export default function Dashboard() {
               </Button>
             )}
 
-            <div className='flex gap-3'>
+            <div
+              className='-mx-2 flex gap-3 overflow-x-auto overscroll-contain px-2 pb-2 sm:overflow-x-visible'
+              style={{ WebkitOverflowScrolling: 'touch' }}
+            >
               {accounts
                 .slice(accountScrollIndex, accountScrollIndex + 3)
                 .map((account) => {
@@ -419,7 +420,7 @@ export default function Dashboard() {
                   return (
                     <div
                       key={account.id}
-                      className='flex min-w-0 items-center gap-3 rounded-lg border bg-card px-4 py-2 shadow-sm'
+                      className='flex min-w-[12rem] flex-shrink-0 items-center gap-3 rounded-lg border bg-card px-4 py-2 shadow-sm'
                     >
                       <div className={`rounded-full p-2 ${colors.bg}`}>
                         {account.type === 'checking' && (
@@ -466,7 +467,7 @@ export default function Dashboard() {
 
       {/* Stats Cards */}
       <div
-        className='grid gap-4 md:grid-cols-2 lg:grid-cols-4'
+        className='grid grid-cols-2 gap-4 lg:grid-cols-4'
         data-onboarding='dashboard-stats'
       >
         <div data-onboarding='stat-income' className='h-full'>

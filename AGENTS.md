@@ -24,6 +24,11 @@ Fluxby - A local-first financial dashboard for visualizing bank transactions. Mo
 - Release (interactive): `npm run release`
 - Release dry-run: `npm run release:dry`
 
+## Prerequisites
+
+- Node: `>=22.0.0` (see `package.json` engines)
+- npm: `>=10.0.0`
+
 ## Workflow Requirements
 
 ### Before Starting Complex Tasks
@@ -93,7 +98,6 @@ The API server (`apps/api`) is **optional** and intended only for developers who
 1. User sets a password during onboarding
 2. Password hash stored via PBKDF2 (100k iterations)
 3. App locks on idle/close - password required to unlock UI
-4. Database is NOT encrypted - data stays local in OPFS
 
 ### Sync (Peer-to-Peer)
 
@@ -101,6 +105,57 @@ The API server (`apps/api`) is **optional** and intended only for developers who
 - Conflict resolution: Last-Write-Wins (LWW)
 - Device pairing via PeerJS (WebRTC)
 - No central server - devices sync directly
+
+### OPFS Database Performance
+
+**CRITICAL**: OPFS (Origin Private File System) has high overhead for individual sync operations. Follow these guidelines to ensure good performance:
+
+#### Always Use Transactions for Bulk Operations
+
+When inserting, updating, or deleting multiple rows, **always** wrap the operations in a transaction:
+
+```typescript
+// ❌ Wrong - each INSERT triggers an OPFS sync
+for (const item of items) {
+  await db.runAsync('INSERT INTO table VALUES (?)', [item]);
+}
+
+// ✅ Correct - all INSERTs happen in one transaction, single OPFS sync
+await db.transactionAsync(async () => {
+  for (const item of items) {
+    await db.runAsync('INSERT INTO table VALUES (?)', [item]);
+  }
+});
+```
+
+**Why**: Each individual `db.runAsync()` outside a transaction causes:
+
+1. A Main Thread → Worker hop
+2. A disk sync to OPFS
+3. High latency per operation (~10-50ms)
+
+With transactions, all operations share a single commit/sync, dramatically improving performance.
+
+#### When to Use Transactions
+
+- **Profile creation**: Seeding categories, rules, and settings
+- **CSV imports**: Inserting multiple transactions
+- **Bulk updates**: Reordering accounts, applying rules to transactions
+- **Migrations**: Any operation touching multiple rows
+
+#### Data Access Optimization
+
+- Prefer selecting specific columns over `SELECT *` for large tables
+- Use indexes for frequently filtered/sorted columns
+- Consider pagination for large result sets
+- Cache frequently accessed static data (categories, rules)
+
+#### OPFS Worker Communication
+
+- The database runs in a Web Worker to avoid blocking the UI
+- All database operations are async and go through the worker
+- Minimize worker communication by batching operations
+- Use `queryClient.invalidateQueries()` efficiently after mutations
 
 ## Code Style
 
@@ -111,6 +166,13 @@ The API server (`apps/api`) is **optional** and intended only for developers who
 - Tailwind CSS with shadcn/ui components
 - Bilingual UI (Dutch and English)
 
+## Security Considerations
+
+- Ensure all sensitive data is encrypted at rest and in transit.
+- Regularly update dependencies to patch known vulnerabilities.
+- Use environment variables for storing secrets and API keys.
+- Implement role-based access control (RBAC) for API endpoints.
+
 ## Testing Instructions
 
 - Run `npm run lint` to check TypeScript and ESLint
@@ -118,6 +180,25 @@ The API server (`apps/api`) is **optional** and intended only for developers who
 - Run `npm run test:coverage` for coverage report
 - Test API endpoints via Swagger UI or frontend
 - Check for TypeScript errors: `npm run typecheck`
+
+### Integration Tests
+
+- Integration tests should be added for new API endpoints.
+- Use `vitest` for unit tests and `supertest` for API testing.
+- Example:
+
+```javascript
+import request from 'supertest';
+import app from '../src/app';
+
+describe('GET /api/example', () => {
+  it('should return 200 and expected data', async () => {
+    const res = await request(app).get('/api/example');
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveProperty('data');
+  });
+});
+```
 
 ### Test Structure
 
@@ -346,13 +427,13 @@ Example:
 
 ```typescript
 // ❌ Wrong - hardcoded string
-setToastMessage('Contact added');
+alert('Contact added');
 
 // ✅ Correct - using translation
-setToastMessage(t.addressBook?.contactAdded || 'Contact added');
+alert(t.addressBook?.contactAdded || 'Contact added');
 
 // ✅ Correct - with interpolation
-setToastMessage(
+alert(
   (t.addressBook?.namesUpdated || '{count} names updated').replace(
     '{count}',
     String(count)
@@ -380,6 +461,24 @@ setToastMessage(
 
 ### Toast Notifications
 
+**IMPORTANT**: Do not create local state for notifications. Always use the Global Toast Context.
+
+Import and use the toast hook:
+
+```typescript
+import { useToast } from '@/contexts/ToastContext';
+
+// In your component:
+const toast = useToast();
+
+// Show toasts with appropriate variants:
+toast.success('Operation completed'); // Green - auto-dismisses
+toast.info('Information message'); // Purple - auto-dismisses
+toast.warning('Warning message'); // Orange - requires manual dismiss
+toast.error('Error occurred'); // Red - requires manual dismiss
+toast.error(error); // Also accepts Error objects
+```
+
 Always show a toast notification for:
 
 - Creating items (contacts, rules, budgets, etc.)
@@ -398,9 +497,9 @@ Always show a toast notification for:
 
 ## Commit Messages
 
-**IMPORTANT**: At the end of each task, provide a conventional commit message command that the user can run.
+**IMPORTANT**: At the end of each task, agents should use the git tools to stage and commit changes themselves, then output the commit message they used.
 
-Format: `git commit -m "<type>(<scope>): <description>" -m "<body>"`
+Format: Use conventional commit format with `git commit -m "<type>(<scope>): <description>" -m "<body>"`
 
 Types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `chore`, `ci`, `build`
 

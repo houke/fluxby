@@ -1,10 +1,7 @@
 import { Router } from 'express';
 import { query, queryOne, run, runMany } from '../db/index.js';
 import type { Profile, ProfileCreate, ProfileType } from '@fluxby/shared';
-import {
-  SEED_CATEGORIES,
-  flattenCategoriesForDB,
-} from '../db/seed-categories.js';
+import { SEED_CATEGORIES, flattenCategoriesForDB } from '../db/seed-data.js';
 
 const router = Router();
 
@@ -1003,6 +1000,30 @@ router.post('/:id/seed-demo', (req, res) => {
         });
       }
     }
+
+    // Add a "proposed contact" transaction - this IBAN is NOT in the address book
+    // so it will appear as a proposed contact in the UI
+    const proposedContactDate = new Date(
+      Date.UTC(todayYear, todayMonth, Math.max(1, todayDay - 3))
+    );
+    const PROPOSED_CONTACT_DEMO = {
+      iban: 'NL00DEMO0095000001',
+      name: 'Marktplaats Verkoper',
+      description: 'Marktplaats aankoop',
+      amount: -45.0,
+    };
+    transactions.push({
+      date: proposedContactDate.toISOString().split('T')[0],
+      amount: PROPOSED_CONTACT_DEMO.amount,
+      type: 'expense',
+      description: PROPOSED_CONTACT_DEMO.description,
+      merchant_name: PROPOSED_CONTACT_DEMO.name,
+      account_id: mainAccountId,
+      opposing_iban: PROPOSED_CONTACT_DEMO.iban,
+      opposing_name: PROPOSED_CONTACT_DEMO.name,
+      category_id: null,
+      payment_method: 'iDEAL',
+    });
 
     // Sanitize transactions: clamp future dates to today and ensure at most 2 transactions for the current date
     let todayCount = 0;

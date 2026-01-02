@@ -33,6 +33,7 @@ describe('AddressBook Integration Tests', () => {
         iban: 'NL99TEST0001234567',
         type: 'checking',
       });
+    expect(accRes.status).toBe(201);
     accountId = accRes.body.data?.id || 1;
   });
 

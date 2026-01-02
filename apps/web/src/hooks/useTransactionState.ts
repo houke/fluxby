@@ -524,23 +524,33 @@ export function useModalState() {
         });
       });
 
-      // Add remaining merchants as individual groups
-      merchantNames.forEach((name, i) => {
-        if (!groupedIndices.has(i)) {
-          groups.push({
-            id: String(groups.length),
-            entries: [
-              {
-                name,
-                transactionCount:
-                  sharedIban.merchants[i]?.transactionCount || 0,
-              },
-            ],
-            editedName: name,
-            isSplit: false,
-          });
-        }
-      });
+      // Add remaining merchants: if multiple remain, group them together
+      // This ensures shared IBAN merchants are shown as a single group
+      const ungroupedEntries = merchantNames
+        .map((name, i) => ({ name, i }))
+        .filter(({ i }) => !groupedIndices.has(i))
+        .map(({ name, i }) => ({
+          name,
+          transactionCount: sharedIban.merchants[i]?.transactionCount || 0,
+        }));
+
+      if (ungroupedEntries.length > 1) {
+        // Multiple ungrouped items: present as one group (can be split)
+        groups.push({
+          id: String(groups.length),
+          entries: ungroupedEntries,
+          editedName: ungroupedEntries[0].name,
+          isSplit: false,
+        });
+      } else if (ungroupedEntries.length === 1) {
+        // Single ungrouped item: add as individual group
+        groups.push({
+          id: String(groups.length),
+          entries: ungroupedEntries,
+          editedName: ungroupedEntries[0].name,
+          isSplit: false,
+        });
+      }
 
       setSharedIbanGroups(groups);
       setSplitInputValues({});
@@ -660,39 +670,6 @@ export function useModalState() {
 }
 
 // ============================================================================
-// Toast State Hook
-// ============================================================================
-
-export function useToastState() {
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
-  const [toastType, setToastType] = useState<
-    'info' | 'success' | 'warning' | 'error'
-  >('info');
-
-  const showToast = useCallback(
-    (
-      message: string,
-      type: 'info' | 'success' | 'warning' | 'error' = 'info'
-    ) => {
-      setToastMessage(message);
-      setToastType(type);
-    },
-    []
-  );
-
-  const hideToast = useCallback(() => {
-    setToastMessage(null);
-  }, []);
-
-  return {
-    toastMessage,
-    toastType,
-    showToast,
-    hideToast,
-  };
-}
-
-// ============================================================================
 // Pagination State Hook
 // ============================================================================
 
@@ -772,7 +749,12 @@ export function useTransactionData(
         type: typeParam || '',
         startDate,
         endDate,
-        categoryIds: categoryIdsParam?.join(',') || '',
+        // Pass undefined when no categories are selected. If an array is present
+        // (even if it contains the empty-string marker '' for uncategorized),
+        // we join and pass the resulting string.
+        ...(categoryIdsParam
+          ? { categoryIds: categoryIdsParam.join(',') }
+          : {}),
         opposingAccountIbans: ibansParam?.join(',') || '',
         opposingAccountName: nameParam || '',
         addressBookId: addressBookIdParam?.toString() || '',

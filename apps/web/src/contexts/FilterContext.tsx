@@ -62,8 +62,18 @@ export function FilterProvider({ children }: { children: ReactNode }) {
       const stored = localStorage.getItem(FILTER_STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
+
+        // Normalize categories: ensure they are strings and map empty marker '' to '0'
+        const categories = Array.isArray(parsed.categories)
+          ? parsed.categories
+              .map((c: unknown) => String(c))
+              .map((s: string) => (s === '' ? '0' : s))
+              .filter(Boolean)
+          : [];
+
         return {
           ...parsed,
+          categories,
           dateRange: {
             start: new Date(parsed.dateRange.start),
             end: new Date(parsed.dateRange.end),
@@ -96,7 +106,13 @@ export function FilterProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const setCategories = useCallback((categories: string[]) => {
-    setFilters((prev) => ({ ...prev, categories }));
+    // Normalize input: coerce to strings and map '' -> '0'
+    const normalized = (categories || [])
+      .map((c) => String(c))
+      .map((s) => (s === '' ? '0' : s))
+      .filter(Boolean);
+
+    setFilters((prev) => ({ ...prev, categories: normalized }));
   }, []);
 
   const setTransactionType = useCallback(

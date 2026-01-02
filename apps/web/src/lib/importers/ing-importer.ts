@@ -11,6 +11,7 @@ interface INGImportOptions {
     iban?: string;
     counterparty?: string;
     balance?: string;
+    direction?: string;
     notes?: string;
     paymentMethod?: string;
   };
@@ -48,8 +49,8 @@ export async function processINGRow(
   }
 
   // Handle direction column (Af/Bij)
-  const directionColumn = 'Af Bij'; // ING specific column name if not in mapping
-  const direction = row[directionColumn] || row['Af/Bij'];
+  const directionColumn = mapping.direction || 'Af Bij'; // Use mapping or fallback to ING default
+  const direction = row[directionColumn];
   if (direction) {
     const dir = direction.toLowerCase().trim();
     if (dir === 'af') {

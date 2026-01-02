@@ -563,6 +563,11 @@ export const api = {
     await ds.deletePaymentProviderRule(id);
   },
 
+  applyPaymentProviderRulesToTransactions: async () => {
+    const ds = getDataService();
+    return ds.applyPaymentProviderRulesToTransactions();
+  },
+
   // ============= Import =============
   // Import history is now stored in the database for local-first mode
   getImportHistory: async () => {
@@ -869,6 +874,11 @@ export const api = {
     return ds.deleteAllTransactions();
   },
 
+  deleteImportHistory: async () => {
+    const ds = getDataService();
+    return ds.deleteImportHistory();
+  },
+
   deleteAllAccounts: async () => {
     const ds = getDataService();
     return ds.deleteAllAccounts();
@@ -975,7 +985,7 @@ export const api = {
   // ============= AddressBook Methods =============
   applyCleanupRulesToTransactions: async () => {
     const ds = getDataService();
-    return ds.applyCleanupRules();
+    return ds.applyCleanupRulesToTransactions();
   },
 
   backfillAddressbook: async () => {

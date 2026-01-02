@@ -26,6 +26,7 @@ import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useProfile } from '@/contexts/ProfileContext';
 import { useFilters } from '@/contexts/FilterContext';
+import { useToast } from '@/contexts/ToastContext';
 import { formatCurrency, cn, findSimilarNameGroups } from '@/lib/utils';
 import {
   Card,
@@ -57,42 +58,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { api } from '@/lib/api';
-
-interface ToastProps {
-  message: string;
-  onClose: () => void;
-  type?: 'info' | 'success' | 'warning' | 'error';
-}
-
-function Toast({ message, onClose, type = 'info' }: ToastProps) {
-  useEffect(() => {
-    // Warning and error toasts must be dismissed by the user
-    if (type === 'warning' || type === 'error') return;
-    const timer = setTimeout(onClose, 3000);
-    return () => clearTimeout(timer);
-  }, [onClose, type]);
-
-  const styles = {
-    info: 'bg-purple-50 border-purple-300 text-purple-900 dark:bg-purple-950/30 dark:border-purple-700 dark:text-purple-100',
-    success:
-      'bg-emerald-50 border-emerald-300 text-emerald-900 dark:bg-emerald-950/30 dark:border-emerald-700 dark:text-emerald-100',
-    warning:
-      'bg-amber-50 border-amber-300 text-amber-900 dark:bg-amber-950/30 dark:border-amber-700 dark:text-amber-100',
-    error:
-      'bg-rose-50 border-rose-300 text-rose-900 dark:bg-rose-950/30 dark:border-rose-700 dark:text-rose-100',
-  };
-
-  return (
-    <div
-      className={`fixed right-4 top-4 z-[100] flex max-w-[320px] items-center gap-2 break-words rounded-md border px-4 py-2 shadow-lg animate-in slide-in-from-top-2 ${styles[type]}`}
-    >
-      <span>{message}</span>
-      <button onClick={onClose} className='ml-2 hover:opacity-80'>
-        <X className='h-4 w-4' />
-      </button>
-    </div>
-  );
-}
+import { useConfirm } from '@/contexts/ConfirmContext';
 
 interface AddressBookEntry {
   id: string;
@@ -137,6 +103,7 @@ export default function AddressBook() {
   const { t } = useLanguage();
   const { activeProfileId } = useProfile();
   const navigate = useNavigate();
+  const confirm = useConfirm();
   const {
     filters,
     setOpposingAccountIbans,
@@ -217,11 +184,8 @@ export default function AddressBook() {
   );
   const [splitNameWarning, setSplitNameWarning] = useState<string | null>(null);
 
-  // Toast state
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
-  const [toastType, setToastType] = useState<
-    'info' | 'success' | 'warning' | 'error'
-  >('info');
+  // Toast (global context)
+  const toast = useToast();
 
   // Sort switch indicator ref
   const indicatorRef = useRef<HTMLDivElement | null>(null);
@@ -270,8 +234,10 @@ export default function AddressBook() {
       queryClient.invalidateQueries({
         queryKey: ['addressbook', activeProfileId],
       });
+      // Use exact: false to match all topAccounts queries regardless of the type parameter
       queryClient.invalidateQueries({
         queryKey: ['topAccounts', activeProfileId],
+        exact: false,
       });
       queryClient.invalidateQueries({
         queryKey: ['transactions', activeProfileId],
@@ -282,18 +248,15 @@ export default function AddressBook() {
       setNewContactDescription('');
       const mergedResult = result as { merged?: boolean } | undefined;
       if (mergedResult?.merged) {
-        setToastType('info');
-        setToastMessage(
+        toast.info(
           t.addressBook?.ibanAddedToExisting || 'IBAN added to existing contact'
         );
       } else {
-        setToastType('success');
-        setToastMessage(t.addressBook?.contactAdded || 'Contact added');
+        toast.success(t.addressBook?.contactAdded || 'Contact added');
       }
     },
     onError: (error: Error) => {
-      setToastType('error');
-      setToastMessage(
+      toast.error(
         error.message ||
           t.addressBook?.createError ||
           'Failed to create contact'
@@ -320,7 +283,7 @@ export default function AddressBook() {
         queryKey: ['transactions', activeProfileId],
       });
       setEditingContactId(null);
-      setToastMessage(t.addressBook?.contactUpdated || 'Contact updated');
+      toast.success(t.addressBook?.contactUpdated || 'Contact updated');
     },
   });
 
@@ -343,7 +306,7 @@ export default function AddressBook() {
       if (filters.addressBookId === deletedId) {
         clearOpposingAccountFilters();
       }
-      setToastMessage(t.addressBook?.contactDeleted || 'Contact verwijderd');
+      toast.success(t.addressBook?.contactDeleted || 'Contact verwijderd');
     },
   });
 
@@ -377,7 +340,7 @@ export default function AddressBook() {
       const transactionsCount = data?.data?.transactionsUpdated || 0;
       const total = addressBookCount + transactionsCount;
       if (total > 0) {
-        setToastMessage(
+        toast.success(
           (
             t.addressBook?.ruleAppliedAuto ||
             'Rule added and applied: {addressBook} contacts, {transactions} transactions updated'
@@ -386,7 +349,7 @@ export default function AddressBook() {
             .replace('{transactions}', String(transactionsCount))
         );
       } else {
-        setToastMessage(t.addressBook?.ruleAdded || 'Cleanup rule added');
+        toast.success(t.addressBook?.ruleAdded || 'Cleanup rule added');
       }
     },
     onError: (error) => {
@@ -395,7 +358,7 @@ export default function AddressBook() {
         errorMessage.includes('409') ||
         errorMessage.includes('already exists')
       ) {
-        setToastMessage(t.addressBook?.ruleExists || 'Rule already exists');
+        toast.warning(t.addressBook?.ruleExists || 'Rule already exists');
       }
     },
   });
@@ -418,8 +381,7 @@ export default function AddressBook() {
       queryClient.invalidateQueries({
         queryKey: ['topAccounts', activeProfileId],
       });
-      setToastType('info');
-      setToastMessage(
+      toast.info(
         t.addressBook?.namesUpdatedInAddressBook ||
           'Cleanup rules applied to address book'
       );
@@ -435,8 +397,7 @@ export default function AddressBook() {
       queryClient.invalidateQueries({
         queryKey: ['sharedIbans', activeProfileId],
       });
-      setToastType('info');
-      setToastMessage(
+      toast.info(
         t.addressBook?.transactionNamesUpdated ||
           'Cleanup rules applied to transactions'
       );
@@ -520,7 +481,7 @@ export default function AddressBook() {
       const detectedCount = data.detected || 0;
       const addedCount = data.addedToShared || 0;
       if (addedCount > 0) {
-        setToastMessage(
+        toast.success(
           (
             t.addressBook?.sharedIbansDetected ||
             '{added} shared IBANs added ({detected} detected)'
@@ -529,7 +490,7 @@ export default function AddressBook() {
             .replace('{detected}', String(detectedCount))
         );
       } else if (detectedCount > 0) {
-        setToastMessage(
+        toast.info(
           (
             t.addressBook?.sharedIbansDetected ||
             '{added} shared IBANs ({detected} detected)'
@@ -538,7 +499,7 @@ export default function AddressBook() {
             .replace('{detected}', String(detectedCount))
         );
       } else {
-        setToastMessage(
+        toast.info(
           t.addressBook?.noSharedIbansFound || 'No shared IBANs found'
         );
       }
@@ -570,7 +531,7 @@ export default function AddressBook() {
         queryKey: ['transactions', activeProfileId],
       });
       const data = result as { data?: { transactionsUpdated?: number } };
-      setToastMessage(
+      toast.success(
         (
           t.addressBook?.contactAddedTransactionsUpdated ||
           'Contact added, {count} transactions updated'
@@ -578,14 +539,13 @@ export default function AddressBook() {
       );
     },
     onError: (error: Error) => {
-      setToastType('error');
       if (error.message.includes('already exists')) {
-        setToastMessage(
+        toast.error(
           t.addressBook?.contactAlreadyExists ||
             'Contact with this IBAN already exists'
         );
       } else {
-        setToastMessage(
+        toast.error(
           t.addressBook?.errorAddingContact || 'Error adding contact'
         );
       }
@@ -607,19 +567,21 @@ export default function AddressBook() {
         queryKey: ['addressbook', activeProfileId],
       });
       queryClient.invalidateQueries({
+        queryKey: ['topAccounts', activeProfileId],
+        exact: false,
+      });
+      queryClient.invalidateQueries({
         queryKey: ['sharedIbans', activeProfileId],
       });
       queryClient.invalidateQueries({
         queryKey: ['transactions', activeProfileId],
       });
-      setToastType('success');
-      setToastMessage(
+      toast.success(
         t.addressBook?.ibanAddedToExisting || 'IBAN added to existing contact'
       );
     },
     onError: (error: Error) => {
-      setToastType('error');
-      setToastMessage(
+      toast.error(
         error.message || t.addressBook?.errorAddingIban || 'Error adding IBAN'
       );
     },
@@ -645,14 +607,12 @@ export default function AddressBook() {
         queryKey: ['transactions', activeProfileId],
       });
       setEditingContactId(null);
-      setToastType('success');
-      setToastMessage(
+      toast.success(
         t.addressBook?.contactsMerged || 'Contacts merged successfully'
       );
     },
     onError: (error: Error) => {
-      setToastType('error');
-      setToastMessage(
+      toast.error(
         error.message ||
           t.addressBook?.errorMergingContacts ||
           'Error merging contacts'
@@ -840,14 +800,6 @@ export default function AddressBook() {
 
   return (
     <>
-      {/* Toast - rendered outside main layout to avoid affecting layout */}
-      {toastMessage && (
-        <Toast
-          message={toastMessage}
-          onClose={() => setToastMessage(null)}
-          type={toastType}
-        />
-      )}
       <div className='space-y-6'>
         {/* Header with Add button */}
         <div className='flex items-start justify-between'>
@@ -943,13 +895,16 @@ export default function AddressBook() {
                       variant='ghost'
                       size='icon'
                       className='rounded-md transition-colors hover:bg-red-600 hover:text-white dark:hover:bg-red-700'
-                      onClick={() => {
-                        if (
-                          confirm(
+                      onClick={async () => {
+                        const isConfirmed = await confirm({
+                          title:
+                            t.addressBook?.deleteRuleTitle || 'Delete rule',
+                          message:
                             t.addressBook?.confirmDeleteRule ||
-                              'Are you sure you want to delete this rule?'
-                          )
-                        ) {
+                            'Are you sure you want to delete this rule?',
+                          variant: 'danger',
+                        });
+                        if (isConfirmed) {
                           deleteRuleMutation.mutate(rule.id);
                         }
                       }}
@@ -1282,22 +1237,39 @@ export default function AddressBook() {
                                   });
                                 }
 
-                                // Add ungrouped items as individual groups
-                                shared.merchants.forEach((m, idx) => {
-                                  if (!assignedIndices.has(idx)) {
-                                    groups.push({
-                                      id: crypto.randomUUID(),
-                                      entries: [
-                                        {
-                                          name: m.name,
-                                          transactionCount: m.transactionCount,
-                                        },
-                                      ],
-                                      editedName: m.name,
-                                      isSplit: false,
-                                    });
-                                  }
-                                });
+                                // Add ungrouped items: if multiple remain, group them together
+                                // This ensures shared IBAN merchants are shown as a single group
+                                // giving the user the option to merge or split them
+                                const ungroupedEntries = shared.merchants
+                                  .filter((_, idx) => !assignedIndices.has(idx))
+                                  .map((m) => ({
+                                    name: m.name,
+                                    transactionCount: m.transactionCount,
+                                  }));
+
+                                if (ungroupedEntries.length > 1) {
+                                  // Multiple ungrouped items: present as one group (can be split)
+                                  const mostCommon = ungroupedEntries.reduce(
+                                    (a, b) =>
+                                      a.transactionCount > b.transactionCount
+                                        ? a
+                                        : b
+                                  );
+                                  groups.push({
+                                    id: crypto.randomUUID(),
+                                    entries: ungroupedEntries,
+                                    editedName: mostCommon.name,
+                                    isSplit: false,
+                                  });
+                                } else if (ungroupedEntries.length === 1) {
+                                  // Single ungrouped item: add as individual group
+                                  groups.push({
+                                    id: crypto.randomUUID(),
+                                    entries: ungroupedEntries,
+                                    editedName: ungroupedEntries[0].name,
+                                    isSplit: false,
+                                  });
+                                }
 
                                 setEditModalGroups(groups);
                                 setSharedIbanEditModalOpen(true);
@@ -2274,8 +2246,7 @@ export default function AddressBook() {
                     });
                     setSplitModalOpen(false);
 
-                    setToastType('success');
-                    setToastMessage(
+                    toast.success(
                       (
                         t.addressBook?.contactSplit ||
                         'Contact split ({count} created)'
@@ -3050,13 +3021,18 @@ export default function AddressBook() {
                                         size='icon'
                                         variant='ghost'
                                         className='rounded-md text-destructive transition-colors hover:bg-red-600 hover:text-white dark:hover:bg-red-700'
-                                        onClick={() => {
-                                          if (
-                                            confirm(
+                                        onClick={async () => {
+                                          const isConfirmed = await confirm({
+                                            title:
+                                              t.addressBook
+                                                ?.deleteContactTitle ||
+                                              'Delete contact',
+                                            message:
                                               t.settings.addressBook
-                                                .deleteConfirm
-                                            )
-                                          ) {
+                                                .deleteConfirm,
+                                            variant: 'danger',
+                                          });
+                                          if (isConfirmed) {
                                             deleteContactMutation.mutate(
                                               contact.id
                                             );

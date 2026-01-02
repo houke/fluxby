@@ -1083,13 +1083,16 @@ export const DEFAULT_PAYMENT_PROVIDER_RULES = [
   { name: 'PayPal', patterns: 'paypal, paypal *, via paypal' },
   { name: 'Tikkie', patterns: 'tikkie, tikkie *' },
   { name: 'Bunq', patterns: 'bunq, bunq *' },
-  { name: 'Adyen', patterns: 'adyen, via adyen' },
+  { name: 'Adyen', patterns: 'adyen, via adyen, adyb' },
   { name: 'Mollie', patterns: 'mollie, via mollie' },
   { name: 'iDEAL', patterns: 'ideal, via ideal' },
   { name: 'Buckaroo', patterns: 'buckaroo, via buckaroo' },
   { name: 'Pay.nl', patterns: 'pay.nl, via pay.nl' },
   { name: 'Klarna', patterns: 'klarna, via klarna' },
   { name: 'Afterpay', patterns: 'afterpay, via afterpay' },
+  // Mobile wallet payment providers
+  { name: 'Google Pay', patterns: 'google pay, g.co/helppay, g.co/pay' },
+  { name: 'Apple Pay', patterns: 'apple pay, *apple pay' },
 ];
 
 /**
@@ -1114,3 +1117,15 @@ export const DEFAULT_DEMO_BUDGETS = [
   { categoryName: 'Streaming & Media', amount: 50 },
   { categoryName: 'Sport & Wellness', amount: 40 },
 ];
+
+/**
+ * Proposed contact demo data
+ * This IBAN should NOT be added to address book during seeding,
+ * so it appears as a "Proposed Contact" in the UI
+ */
+export const PROPOSED_CONTACT_DEMO = {
+  iban: 'NL00DEMO0095000001',
+  name: 'Marktplaats Verkoper',
+  description: 'Marktplaats aankoop',
+  amount: -45.0,
+};

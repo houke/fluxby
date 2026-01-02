@@ -119,7 +119,7 @@ export default function DashboardAnimation({
             x='100'
             y='95'
             textAnchor='middle'
-            className='fill-white text-lg font-bold'
+            className='fill-gray-800 text-lg font-bold dark:fill-white'
             style={{ fontSize: '14px' }}
           >
             €{total.toFixed(0)}
@@ -128,7 +128,7 @@ export default function DashboardAnimation({
             x='100'
             y='112'
             textAnchor='middle'
-            className='fill-white/70'
+            className='fill-gray-500 dark:fill-white/70'
             style={{ fontSize: '10px' }}
           >
             {anim?.total || 'total'}
@@ -141,7 +141,7 @@ export default function DashboardAnimation({
         {categories.map((cat, idx) => (
           <div
             key={idx}
-            className={`flex items-center gap-2 rounded-lg px-2 py-1 transition-all duration-300 ${idx === activeIndex ? 'scale-105 bg-white/20' : 'bg-white/5'}`}
+            className={`flex items-center gap-2 rounded-lg px-2 py-1 transition-all duration-300 ${idx === activeIndex ? 'scale-105 bg-gray-800/10 dark:bg-white/20' : 'bg-gray-800/5 dark:bg-white/5'}`}
           >
             <div
               className='flex h-6 w-6 items-center justify-center rounded text-xs'
@@ -149,7 +149,9 @@ export default function DashboardAnimation({
             >
               {cat.icon}
             </div>
-            <span className='text-xs text-white/90'>{cat.name}</span>
+            <span className='text-xs text-gray-700 dark:text-white/90'>
+              {cat.name}
+            </span>
           </div>
         ))}
       </div>

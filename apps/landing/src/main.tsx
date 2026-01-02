@@ -1,6 +1,12 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { consumeSessionRedirect, getRedirectToRestore } from '@fluxby/shared';
+import {
+  applyMotionTierAttribute,
+  consumeSessionRedirect,
+  detectMotionTier,
+  getRedirectToRestore,
+  observeMotionTier,
+} from '@fluxby/shared';
 import App from './App.tsx';
 import './index.css';
 
@@ -13,6 +19,18 @@ if (pendingRedirect) {
   if (restored) {
     window.history.replaceState(null, '', restored);
   }
+}
+
+const initialMotionTier = detectMotionTier();
+applyMotionTierAttribute(initialMotionTier);
+const stopMotionObserver = observeMotionTier((tier) => {
+  applyMotionTierAttribute(tier);
+});
+
+if (import.meta.hot) {
+  import.meta.hot.dispose(() => {
+    stopMotionObserver();
+  });
 }
 
 const rootElement = document.getElementById('root');

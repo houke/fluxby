@@ -237,9 +237,9 @@ export const CategoryFilter = memo(function CategoryFilter({
     [categories, selectedIds, onChange, getChildCategoryIds]
   );
 
-  // Toggle uncategorized (empty string for uncategorized)
+  // Toggle uncategorized (use '0' as explicit marker for uncategorized)
   const toggleUncategorized = useCallback(() => {
-    const uncategorizedId = '';
+    const uncategorizedId = '0';
     if (selectedIds.includes(uncategorizedId)) {
       onChange(selectedIds.filter((id) => id !== uncategorizedId));
     } else {

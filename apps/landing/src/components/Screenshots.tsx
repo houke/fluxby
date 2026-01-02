@@ -120,9 +120,9 @@ const Screenshots = () => {
                 {/* Animation Container */}
                 <div className='w-full flex-1'>
                   <div className='relative md:px-0'>
-                    <div className='from-fluxby-purple to-fluxby-pink absolute inset-0 hidden scale-105 transform rounded-3xl bg-gradient-to-r opacity-20 blur-2xl md:block'></div>
+                    <div className='from-fluxby-purple to-fluxby-pink absolute inset-0 hidden scale-105 transform rounded-3xl bg-gradient-to-r opacity-20 blur-2xl dark:opacity-30 md:block'></div>
                     <div
-                      className='relative -ml-8 aspect-[4/3] w-[calc(100%+4rem)] select-none overflow-hidden border-0 border-white/20 bg-gradient-to-br from-purple-600 to-purple-700 shadow-none md:ml-0 md:w-full md:rounded-2xl md:border md:shadow-2xl'
+                      className='relative -ml-8 aspect-[4/3] w-[calc(100%+4rem)] select-none overflow-hidden border-0 border-purple-200 bg-gradient-to-br from-purple-50 via-pink-50 to-indigo-100 shadow-none dark:border-purple-700/30 dark:from-gray-800 dark:via-gray-700 dark:to-gray-800 md:ml-0 md:w-full md:rounded-2xl md:border md:shadow-2xl'
                       style={{ pointerEvents: 'none' }}
                     >
                       {AnimationComponent && (

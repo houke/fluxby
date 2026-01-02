@@ -256,6 +256,15 @@ export interface SharedIbanModalProps {
       addToAddressBookDescription?: string;
       allNamesProcessed?: string;
       addButton?: string;
+      possiblySameGroup?: string;
+      variants?: string;
+      transaction?: string;
+      transactionsPlural?: string;
+      split?: string;
+      merge?: string;
+      nameForAddressBook?: string;
+      allVariantsMergedInfo?: string;
+      close?: string;
     };
     addressBook?: {
       assignToExisting?: string;
@@ -265,6 +274,9 @@ export interface SharedIbanModalProps {
     };
     apiErrors?: {
       ibanAddedToContact?: string;
+    };
+    common?: {
+      close?: string;
     };
   };
 }
@@ -364,7 +376,10 @@ export const SharedIbanModal = memo(function SharedIbanModal({
                                 })
                               }
                               className='h-8 text-sm'
-                              placeholder='Naam voor adresboek'
+                              placeholder={
+                                t.transactions?.nameForAddressBook ||
+                                'Naam voor adresboek'
+                              }
                             />
                           </div>
                         </div>
@@ -576,8 +591,12 @@ export const SharedIbanModal = memo(function SharedIbanModal({
                       <div className='flex items-center gap-2'>
                         <Users className='h-4 w-4 text-purple-600' />
                         <span className='text-sm font-medium text-purple-700 dark:text-purple-300'>
-                          Mogelijk dezelfde ({group.entries.length} varianten,{' '}
-                          {totalTransactions} transacties)
+                          {t.transactions?.possiblySameGroup ||
+                            'Mogelijk dezelfde'}{' '}
+                          ({group.entries.length}{' '}
+                          {t.transactions?.variants || 'varianten'},{' '}
+                          {totalTransactions}{' '}
+                          {t.transactions?.transactionsPlural || 'transacties'})
                         </span>
                       </div>
                       <Button
@@ -593,7 +612,7 @@ export const SharedIbanModal = memo(function SharedIbanModal({
                         }}
                       >
                         <Scissors className='mr-1 h-4 w-4' />
-                        Splitsen
+                        {t.transactions?.split || 'Splitsen'}
                       </Button>
                     </div>
 
@@ -626,7 +645,10 @@ export const SharedIbanModal = memo(function SharedIbanModal({
                           );
                         }}
                         className='h-9 flex-1'
-                        placeholder='Naam voor adresboek'
+                        placeholder={
+                          t.transactions?.nameForAddressBook ||
+                          'Naam voor adresboek'
+                        }
                       />
                       <Button
                         className='bg-purple-600 hover:bg-purple-700'
@@ -648,13 +670,15 @@ export const SharedIbanModal = memo(function SharedIbanModal({
                         disabled={!group.editedName.trim() || isResolving}
                       >
                         <Merge className='mr-1 h-4 w-4' />
-                        Samenvoegen
+                        {t.transactions?.merge || 'Samenvoegen'}
                       </Button>
                     </div>
 
                     <p className='mt-2 text-xs text-muted-foreground'>
-                      Alle {group.entries.length} varianten worden samengevoegd
-                      onder deze naam.
+                      {(
+                        t.transactions?.allVariantsMergedInfo ||
+                        'Alle {count} varianten worden samengevoegd onder deze naam.'
+                      ).replace('{count}', String(group.entries.length))}
                     </p>
                   </div>
                 );
@@ -674,8 +698,8 @@ export const SharedIbanModal = memo(function SharedIbanModal({
                       <span className='text-xs text-muted-foreground'>
                         ({group.entries[0].transactionCount}{' '}
                         {group.entries[0].transactionCount === 1
-                          ? 'transactie'
-                          : 'transacties'}
+                          ? t.transactions?.transaction || 'transactie'
+                          : t.transactions?.transactionsPlural || 'transacties'}
                         )
                       </span>
                     </div>
@@ -692,7 +716,10 @@ export const SharedIbanModal = memo(function SharedIbanModal({
                           );
                         }}
                         className='h-8 text-sm'
-                        placeholder='Naam voor adresboek'
+                        placeholder={
+                          t.transactions?.nameForAddressBook ||
+                          'Naam voor adresboek'
+                        }
                       />
                     </div>
                   </div>
@@ -727,7 +754,7 @@ export const SharedIbanModal = memo(function SharedIbanModal({
               onGroupsChange([]);
             }}
           >
-            Sluiten
+            {t.transactions?.close || t.common?.close || 'Sluiten'}
           </Button>
         </DialogFooter>
       </DialogContent>

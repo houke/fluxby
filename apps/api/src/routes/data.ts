@@ -1,9 +1,6 @@
 import { Router } from 'express';
 import { db, query, run, runMany } from '../db/index.js';
-import {
-  flattenCategoriesForDB,
-  SEED_CATEGORIES,
-} from '../db/seed-categories.js';
+import { flattenCategoriesForDB, SEED_CATEGORIES } from '../db/seed-data.js';
 
 const router = Router();
 

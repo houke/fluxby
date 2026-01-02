@@ -6,10 +6,7 @@ import {
   getEffectiveProfileId,
   // verifyCategoryProfile is available for future use
 } from '../middleware/profileAuth.js';
-import {
-  SEED_CATEGORIES,
-  getCategoriesForLanguage,
-} from '../db/seed-categories.js';
+import { SEED_CATEGORIES, getCategoriesForLanguage } from '../db/seed-data.js';
 
 const router = Router();
 

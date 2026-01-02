@@ -49,6 +49,7 @@ import {
 
 import { api } from '@/lib/api';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useConfirm, type ConfirmOptions } from '@/contexts/ConfirmContext';
 import {
   Tooltip,
   TooltipContent,
@@ -87,6 +88,7 @@ interface SortableAccountItemProps {
   getAccountIcon: (type: string, balance?: number) => React.ReactElement;
   getAccountTypeLabel: (type: string) => string;
   formatCurrency: (value: number) => string;
+  confirm: (options: ConfirmOptions) => Promise<boolean>;
   t: {
     settings: {
       accounts: {
@@ -98,6 +100,7 @@ interface SortableAccountItemProps {
         title: string;
         currentBalance: string;
         deleteConfirm: string;
+        deleteAccountTitle?: string;
       };
     };
     common: {
@@ -127,6 +130,7 @@ const SortableAccountItem = React.memo(function SortableAccountItem({
   getAccountIcon,
   getAccountTypeLabel,
   formatCurrency,
+  confirm,
   t,
   ACCOUNT_TYPES,
 }: SortableAccountItemProps) {
@@ -288,8 +292,15 @@ const SortableAccountItem = React.memo(function SortableAccountItem({
                       size='icon'
                       variant='ghost'
                       className='rounded-md text-destructive transition-colors hover:bg-red-600 hover:text-white dark:hover:bg-red-700'
-                      onClick={() => {
-                        if (confirm(t.settings.accounts.deleteConfirm)) {
+                      onClick={async () => {
+                        const isConfirmed = await confirm({
+                          title:
+                            t.settings.accounts.deleteAccountTitle ||
+                            'Delete account',
+                          message: t.settings.accounts.deleteConfirm,
+                          variant: 'danger',
+                        });
+                        if (isConfirmed) {
                           deleteMutation.mutate(account.id);
                         }
                       }}
@@ -320,6 +331,7 @@ export function AccountSettings() {
     languages: any;
   };
   const { activeProfileId } = useProfile();
+  const confirm = useConfirm();
   const queryClient = useQueryClient();
   const [newIban, setNewIban] = useState('');
   const [newName, setNewName] = useState('');
@@ -592,6 +604,7 @@ export function AccountSettings() {
                           getAccountIcon={getAccountIcon}
                           getAccountTypeLabel={getAccountTypeLabel}
                           formatCurrency={formatCurrency}
+                          confirm={confirm}
                           t={t}
                           ACCOUNT_TYPES={ACCOUNT_TYPES}
                         />

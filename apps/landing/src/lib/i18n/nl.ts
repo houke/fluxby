@@ -1511,13 +1511,13 @@ export const nl: LandingTranslationKeys = {
         ],
       },
       ai: {
-        title: 'AI-gestuurde inzichten',
+        title: 'Slimme categorisatie regels',
         description:
-          'Lokale AI helpt je bij het categoriseren en begrijpen van je uitgaven zonder je data te delen.',
+          'Maak aangepaste regels om je transacties automatisch te categoriseren. Stel patronen in voor handelaren, bedragen en beschrijvingen om je financiën moeiteloos georganiseerd te houden.',
         highlights: [
-          'Categorisatie suggesties',
-          'Uitgavenpatronen',
-          'Bespaartips',
+          'Aangepaste categorisatie regels',
+          'Patroon matching',
+          'Automatische organisatie',
         ],
       },
       multiAccount: {

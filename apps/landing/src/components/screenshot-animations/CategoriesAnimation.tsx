@@ -76,9 +76,9 @@ export default function CategoriesAnimation({
 
         // Scroll at 25px per second
         setScrollY((prev) => {
-          const cardHeight = 120; // Approximate height per category card
-          const totalHeight = categoryGroups.length * cardHeight;
           const newY = prev + (delta / 1000) * 25;
+          const cardHeight = 160; // Approximate height per category card including margin
+          const totalHeight = categoryGroups.length * cardHeight;
           return newY % totalHeight;
         });
 
@@ -101,23 +101,27 @@ export default function CategoriesAnimation({
     };
   }, [isVisible, categoryGroups.length]);
 
-  // Double for seamless loop
-  const doubledCategories = [...categoryGroups, ...categoryGroups];
+  // Triple for seamless loop
+  const tripledCategories = [
+    ...categoryGroups,
+    ...categoryGroups,
+    ...categoryGroups,
+  ];
 
   return (
     <div className='relative h-full w-full overflow-hidden'>
       {/* Top gradient */}
-      <div className='pointer-events-none absolute left-0 right-0 top-0 z-10 h-8 bg-gradient-to-b from-purple-600 to-transparent' />
+      <div className='pointer-events-none absolute left-0 right-0 top-0 z-10 h-8 bg-gradient-to-b from-purple-50 to-transparent dark:from-transparent' />
 
       {/* Scrolling categories */}
       <div
         className='absolute left-0 right-0 px-4'
         style={{ transform: `translateY(-${scrollY}px)` }}
       >
-        {doubledCategories.map((category, idx) => (
+        {tripledCategories.map((category, idx) => (
           <div
             key={idx}
-            className='mb-3 overflow-hidden rounded-xl bg-white/10'
+            className='mb-3 overflow-hidden rounded-xl bg-white/80 shadow-sm dark:bg-white/10 dark:shadow-none'
           >
             {/* Parent category header */}
             <div
@@ -130,7 +134,7 @@ export default function CategoriesAnimation({
               >
                 <span className='text-base'>{category.icon}</span>
               </div>
-              <span className='text-sm font-semibold text-white'>
+              <span className='text-sm font-semibold text-gray-900 dark:text-white'>
                 {category.name}
               </span>
             </div>
@@ -141,10 +145,12 @@ export default function CategoriesAnimation({
                 {category.subcategories.map((sub, subIdx) => (
                   <div
                     key={subIdx}
-                    className='flex items-center gap-1.5 rounded-lg bg-white/5 px-2 py-1'
+                    className='flex items-center gap-1.5 rounded-lg bg-gray-100 px-2 py-1 dark:bg-white/5'
                   >
                     <span className='text-xs'>{sub.icon}</span>
-                    <span className='text-xs text-white/80'>{sub.name}</span>
+                    <span className='text-xs text-gray-600 dark:text-white/80'>
+                      {sub.name}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -154,7 +160,7 @@ export default function CategoriesAnimation({
       </div>
 
       {/* Bottom gradient */}
-      <div className='pointer-events-none absolute bottom-0 left-0 right-0 z-10 h-8 bg-gradient-to-t from-purple-600 to-transparent' />
+      <div className='pointer-events-none absolute bottom-0 left-0 right-0 z-10 h-8 bg-gradient-to-t from-indigo-100 to-transparent dark:from-transparent' />
     </div>
   );
 }

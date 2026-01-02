@@ -138,98 +138,101 @@ export function createDataService(db: Database) {
       // Ensure a user exists before creating profile
       const userId = await ensureUserExists();
 
-      await db.runAsync(
-        `INSERT INTO profiles (id, user_id, name, type, avatar_url, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        [
-          id,
-          userId,
-          data.name,
-          data.type || 'personal',
-          data.avatarUrl || null,
-          now,
-          now,
-        ]
-      );
-
-      // Seed default categories with subcategories and rules for the new profile
-      const { parentCategories, subcategories } = flattenCategoriesForDB(
-        SEED_CATEGORIES,
-        'nl'
-      );
-      const categoryIdMap: Record<string, string> = {};
-
-      // Insert parent categories
-      for (const cat of parentCategories) {
-        const categoryId = crypto.randomUUID();
+      // Use a transaction to batch all inserts - prevents OPFS sync overhead per row
+      await db.transactionAsync(async () => {
         await db.runAsync(
-          `INSERT INTO categories (id, name, icon, color, description, profile_id, updated_at, created_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+          `INSERT INTO profiles (id, user_id, name, type, avatar_url, created_at, updated_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?)`,
           [
-            categoryId,
-            cat.name,
-            cat.icon,
-            cat.color,
-            cat.description,
             id,
+            userId,
+            data.name,
+            data.type || 'personal',
+            data.avatarUrl || null,
             now,
             now,
           ]
         );
-        categoryIdMap[cat.name] = categoryId;
-      }
 
-      // Insert subcategories with their rules
-      for (const sub of subcategories) {
-        const parentId = categoryIdMap[sub.parentName];
-        const subId = crypto.randomUUID();
-        await db.runAsync(
-          `INSERT INTO categories (id, name, parent_id, icon, color, description, profile_id, updated_at, created_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-          [
-            subId,
-            sub.name,
-            parentId,
-            sub.icon,
-            sub.color,
-            sub.description,
-            id,
-            now,
-            now,
-          ]
+        // Seed default categories with subcategories and rules for the new profile
+        const { parentCategories, subcategories } = flattenCategoriesForDB(
+          SEED_CATEGORIES,
+          'nl'
         );
-        categoryIdMap[sub.name] = subId;
+        const categoryIdMap: Record<string, string> = {};
 
-        // Add category rules for subcategory
-        for (const rule of sub.rules) {
+        // Insert parent categories
+        for (const cat of parentCategories) {
+          const categoryId = crypto.randomUUID();
+          await db.runAsync(
+            `INSERT INTO categories (id, name, icon, color, description, profile_id, updated_at, created_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+              categoryId,
+              cat.name,
+              cat.icon,
+              cat.color,
+              cat.description,
+              id,
+              now,
+              now,
+            ]
+          );
+          categoryIdMap[cat.name] = categoryId;
+        }
+
+        // Insert subcategories with their rules
+        for (const sub of subcategories) {
+          const parentId = categoryIdMap[sub.parentName];
+          const subId = crypto.randomUUID();
+          await db.runAsync(
+            `INSERT INTO categories (id, name, parent_id, icon, color, description, profile_id, updated_at, created_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+              subId,
+              sub.name,
+              parentId,
+              sub.icon,
+              sub.color,
+              sub.description,
+              id,
+              now,
+              now,
+            ]
+          );
+          categoryIdMap[sub.name] = subId;
+
+          // Add category rules for subcategory
+          for (const rule of sub.rules) {
+            const ruleId = crypto.randomUUID();
+            await db.runAsync(
+              `INSERT INTO category_rules (id, pattern, category_id, priority, profile_id, created_at, updated_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?)`,
+              [ruleId, rule, subId, 0, id, now, now]
+            );
+          }
+        }
+
+        // Seed default name cleanup rules for the new profile
+        for (const pattern of DEFAULT_NAME_CLEANUP_RULES) {
           const ruleId = crypto.randomUUID();
           await db.runAsync(
-            `INSERT INTO category_rules (id, pattern, category_id, priority, profile_id, created_at, updated_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?)`,
-            [ruleId, rule, subId, 0, id, now, now]
+            `INSERT OR IGNORE INTO name_cleanup_rules (id, pattern, profile_id, is_active, created_at, updated_at)
+             VALUES (?, ?, ?, 1, ?, ?)`,
+            [ruleId, pattern, id, now, now]
           );
         }
-      }
 
-      // Seed default name cleanup rules for the new profile
-      for (const pattern of DEFAULT_NAME_CLEANUP_RULES) {
-        const ruleId = crypto.randomUUID();
-        await db.runAsync(
-          `INSERT OR IGNORE INTO name_cleanup_rules (id, pattern, profile_id, is_active, created_at, updated_at)
-           VALUES (?, ?, ?, 1, ?, ?)`,
-          [ruleId, pattern, id, now, now]
-        );
-      }
-
-      // Seed default payment provider rules for the new profile
-      for (const rule of DEFAULT_PAYMENT_PROVIDER_RULES) {
-        const ruleId = crypto.randomUUID();
-        await db.runAsync(
-          `INSERT OR IGNORE INTO payment_provider_rules (id, name, patterns, profile_id, created_at, updated_at)
-           VALUES (?, ?, ?, ?, ?, ?)`,
-          [ruleId, rule.name, rule.patterns, id, now, now]
-        );
-      }
+        // Seed default payment provider rules for the new profile
+        for (const rule of DEFAULT_PAYMENT_PROVIDER_RULES) {
+          const ruleId = crypto.randomUUID();
+          await db.runAsync(
+            `INSERT OR IGNORE INTO payment_provider_rules (id, name, patterns, profile_id, created_at, updated_at)
+             VALUES (?, ?, ?, ?, ?, ?)`,
+            [ruleId, rule.name, rule.patterns, id, now, now]
+          );
+        }
+      });
 
       const profile = await this.getProfile(id);
       if (!profile) throw new Error('Failed to create profile');
@@ -628,31 +631,32 @@ export function createDataService(db: Database) {
           params.push(filters.categoryId);
         }
         // Support multiple category IDs (comma-separated)
-        if (filters.categoryIds) {
-          const categoryIds = filters.categoryIds.split(',').filter(Boolean);
-          if (categoryIds.length > 0) {
-            // Check if '0' is included (meaning "uncategorized")
-            const includesUncategorized = categoryIds.includes('0');
-            const categoryIdsWithoutZero = categoryIds.filter(
-              (id) => id !== '0'
-            );
+        if (filters.categoryIds !== undefined) {
+          // Allow empty string ('') from CategoryFilter to indicate uncategorized
+          const rawIds = filters.categoryIds.split(',');
 
-            if (includesUncategorized && categoryIdsWithoutZero.length > 0) {
-              // Both uncategorized and specific categories
-              const placeholders = categoryIdsWithoutZero
-                .map(() => '?')
-                .join(',');
-              sql += ` AND (t.category_id IS NULL OR t.category_id IN (${placeholders}))`;
-              params.push(...categoryIdsWithoutZero);
-            } else if (includesUncategorized) {
-              // Only uncategorized
-              sql += ' AND t.category_id IS NULL';
-            } else {
-              // Only specific categories
-              const placeholders = categoryIds.map(() => '?').join(',');
-              sql += ` AND t.category_id IN (${placeholders})`;
-              params.push(...categoryIds);
-            }
+          // Consider both empty string and '0' as markers for uncategorized
+          const includesUncategorized =
+            rawIds.includes('') || rawIds.includes('0');
+
+          // Normalize actual category ids (exclude '' and '0')
+          const categoryIds = rawIds
+            .filter((id) => id !== '' && id !== '0')
+            .filter(Boolean);
+
+          if (includesUncategorized && categoryIds.length > 0) {
+            // Both uncategorized and specific categories
+            const placeholders = categoryIds.map(() => '?').join(',');
+            sql += ` AND (t.category_id IS NULL OR t.category_id IN (${placeholders}))`;
+            params.push(...categoryIds);
+          } else if (includesUncategorized) {
+            // Only uncategorized
+            sql += ' AND t.category_id IS NULL';
+          } else if (categoryIds.length > 0) {
+            // Only specific categories
+            const placeholders = categoryIds.map(() => '?').join(',');
+            sql += ` AND t.category_id IN (${placeholders})`;
+            params.push(...categoryIds);
           }
         }
         if (filters.accountId) {
@@ -2261,13 +2265,16 @@ export function createDataService(db: Database) {
       const now = Date.now();
       let updated = 0;
 
-      for (let i = 0; i < orderedIds.length; i++) {
-        const result = await db.runAsync(
-          'UPDATE accounts SET order_index = ?, updated_at = ? WHERE id = ? AND profile_id = ?',
-          [i, now, orderedIds[i], pid]
-        );
-        updated += result.changes;
-      }
+      // Use a transaction for batch updates to prevent OPFS sync overhead per row
+      await db.transactionAsync(async () => {
+        for (let i = 0; i < orderedIds.length; i++) {
+          const result = await db.runAsync(
+            'UPDATE accounts SET order_index = ?, updated_at = ? WHERE id = ? AND profile_id = ?',
+            [i, now, orderedIds[i], pid]
+          );
+          updated += result.changes;
+        }
+      });
 
       return { updated };
     },
@@ -2574,6 +2581,73 @@ export function createDataService(db: Database) {
       const rules = await this.getCleanupRules();
       if (!rules || rules.length === 0) return { updated: 0 };
 
+      // Get all address book entries
+      const entries = await db.queryAsync<{
+        id: string;
+        name: string;
+        original_name: string | null;
+      }>(
+        `SELECT id, name, original_name FROM address_book 
+         WHERE profile_id = ? AND is_deleted = 0`,
+        [pid]
+      );
+
+      let updated = 0;
+      const now = Date.now();
+
+      await db.transactionAsync(async () => {
+        for (const entry of entries) {
+          const name = entry.name || '';
+          let cleaned = name;
+
+          for (const rule of rules) {
+            if (
+              rule.pattern.startsWith('/') &&
+              rule.pattern.lastIndexOf('/') > 0
+            ) {
+              try {
+                const lastSlash = rule.pattern.lastIndexOf('/');
+                const pattern = rule.pattern.slice(1, lastSlash);
+                const flags = rule.pattern.slice(lastSlash + 1) || 'gi';
+                const regex = new RegExp(pattern, flags);
+                cleaned = cleaned.replace(regex, '').trim();
+              } catch {
+                // Skip invalid regex
+              }
+            } else {
+              const escapedPattern = rule.pattern.replace(
+                /[.*+?^${}()|[\]\\]/g,
+                '\\$&'
+              );
+              cleaned = cleaned
+                .replace(new RegExp(escapedPattern, 'gi'), '')
+                .trim();
+            }
+          }
+
+          cleaned = cleaned.replace(/\s+/g, ' ').trim() || name;
+
+          if (cleaned !== name) {
+            // Store original name if not already set, then update name
+            await db.runAsync(
+              `UPDATE address_book SET name = ?, original_name = COALESCE(original_name, ?), updated_at = ? WHERE id = ?`,
+              [cleaned, name, now, entry.id]
+            );
+            updated++;
+          }
+        }
+      });
+
+      return { updated };
+    },
+
+    async applyCleanupRulesToTransactions() {
+      const pid = profileId();
+      if (!pid) return { updated: 0 };
+
+      const rules = await this.getCleanupRules();
+      if (!rules || rules.length === 0) return { updated: 0 };
+
       // Get all transactions with merchant names
       const transactions = await db.queryAsync<{
         id: string;
@@ -2590,45 +2664,47 @@ export function createDataService(db: Database) {
       let updated = 0;
       const now = Date.now();
 
-      for (const tx of transactions) {
-        const name = tx.merchant_name || tx.opposing_account_name || '';
-        let cleaned = name;
+      await db.transactionAsync(async () => {
+        for (const tx of transactions) {
+          const name = tx.merchant_name || tx.opposing_account_name || '';
+          let cleaned = name;
 
-        for (const rule of rules) {
-          if (
-            rule.pattern.startsWith('/') &&
-            rule.pattern.lastIndexOf('/') > 0
-          ) {
-            try {
-              const lastSlash = rule.pattern.lastIndexOf('/');
-              const pattern = rule.pattern.slice(1, lastSlash);
-              const flags = rule.pattern.slice(lastSlash + 1) || 'gi';
-              const regex = new RegExp(pattern, flags);
-              cleaned = cleaned.replace(regex, '').trim();
-            } catch {
-              // Skip invalid regex
+          for (const rule of rules) {
+            if (
+              rule.pattern.startsWith('/') &&
+              rule.pattern.lastIndexOf('/') > 0
+            ) {
+              try {
+                const lastSlash = rule.pattern.lastIndexOf('/');
+                const pattern = rule.pattern.slice(1, lastSlash);
+                const flags = rule.pattern.slice(lastSlash + 1) || 'gi';
+                const regex = new RegExp(pattern, flags);
+                cleaned = cleaned.replace(regex, '').trim();
+              } catch {
+                // Skip invalid regex
+              }
+            } else {
+              const escapedPattern = rule.pattern.replace(
+                /[.*+?^${}()|[\]\\]/g,
+                '\\$&'
+              );
+              cleaned = cleaned
+                .replace(new RegExp(escapedPattern, 'gi'), '')
+                .trim();
             }
-          } else {
-            const escapedPattern = rule.pattern.replace(
-              /[.*+?^${}()|[\]\\]/g,
-              '\\$&'
+          }
+
+          cleaned = cleaned.replace(/\s+/g, ' ').trim() || name;
+
+          if (cleaned !== name) {
+            await db.runAsync(
+              'UPDATE transactions SET merchant_name = ?, updated_at = ? WHERE id = ?',
+              [cleaned, now, tx.id]
             );
-            cleaned = cleaned
-              .replace(new RegExp(escapedPattern, 'gi'), '')
-              .trim();
+            updated++;
           }
         }
-
-        cleaned = cleaned.replace(/\s+/g, ' ').trim() || name;
-
-        if (cleaned !== name) {
-          await db.runAsync(
-            'UPDATE transactions SET merchant_name = ?, updated_at = ? WHERE id = ?',
-            [cleaned, now, tx.id]
-          );
-          updated++;
-        }
-      }
+      });
 
       return { updated };
     },
@@ -2664,13 +2740,15 @@ export function createDataService(db: Database) {
       }
 
       let dateCondition = '';
-      const queryParams: (string | number)[] = [pid, pid, pid];
+      const queryParams: (string | number)[] = [pid, pid, pid, pid];
       if (startDate && endDate) {
         dateCondition = 'AND t.date >= ? AND t.date <= ?';
         queryParams.push(startDate, endDate);
       }
       queryParams.push(limit);
 
+      // Updated query to check both address_book.iban AND contact_ibans for merged contacts
+      // This ensures IBANs that are part of multi-IBAN contacts are properly detected
       const rows = await db.queryAsync<{
         iban: string;
         name: string;
@@ -2684,16 +2762,18 @@ export function createDataService(db: Database) {
         `
         SELECT 
           t.opposing_account_iban as iban,
-          COALESCE(ab.name, t.opposing_account_name) as name,
-          ab.description,
-          CASE WHEN ab.id IS NOT NULL THEN 1 ELSE 0 END as is_in_addressbook,
-          ab.id as addressbook_id,
+          COALESCE(ab.name, ci_ab.name, t.opposing_account_name) as name,
+          COALESCE(ab.description, ci_ab.description) as description,
+          CASE WHEN ab.id IS NOT NULL OR ci_ab.id IS NOT NULL THEN 1 ELSE 0 END as is_in_addressbook,
+          COALESCE(ab.id, ci_ab.id) as addressbook_id,
           COUNT(t.id) as transaction_count,
           SUM(ABS(t.amount)) as total_amount,
           SUM(t.amount) as net_amount
         FROM transactions t
         JOIN accounts a ON t.account_id = a.id
         LEFT JOIN address_book ab ON ab.iban = t.opposing_account_iban AND ab.profile_id = ? AND ab.is_deleted = 0
+        LEFT JOIN contact_ibans ci ON ci.iban = t.opposing_account_iban
+        LEFT JOIN address_book ci_ab ON ci_ab.id = ci.contact_id AND ci_ab.profile_id = ? AND ci_ab.is_deleted = 0
         WHERE a.profile_id = ?
           AND t.type != 'transfer'
           AND t.opposing_account_iban IS NOT NULL
@@ -2958,6 +3038,86 @@ export function createDataService(db: Database) {
       );
     },
 
+    async applyPaymentProviderRulesToTransactions(): Promise<{
+      updated: number;
+    }> {
+      const pid = profileId();
+      if (!pid) return { updated: 0 };
+
+      // Get all payment provider rules for this profile
+      const providerRules = await this.getPaymentProviderRules();
+      if (!providerRules || providerRules.length === 0) return { updated: 0 };
+
+      // Get all transactions with relevant fields
+      const transactions = await db.queryAsync<{
+        id: string;
+        opposing_account_iban: string | null;
+        opposing_account_name: string | null;
+        merchant_name: string | null;
+        description: string | null;
+        payment_provider: string | null;
+      }>(
+        `SELECT t.id, t.opposing_account_iban, t.opposing_account_name, t.merchant_name, t.description, t.payment_provider
+         FROM transactions t
+         JOIN accounts a ON t.account_id = a.id
+         WHERE a.profile_id = ? AND t.is_deleted = 0`,
+        [pid]
+      );
+
+      // Helper function to detect payment provider
+      const detectProvider = (
+        iban: string | null,
+        merchantName: string | null,
+        opposingName: string | null,
+        description: string | null
+      ): string | null => {
+        const searchText = [
+          iban || '',
+          merchantName || '',
+          opposingName || '',
+          description || '',
+        ]
+          .join(' ')
+          .toUpperCase();
+
+        for (const rule of providerRules) {
+          const patterns = rule.patterns.split(/[|,]/).map((p) => p.trim());
+          for (const pattern of patterns) {
+            if (pattern && searchText.includes(pattern.toUpperCase())) {
+              return rule.name;
+            }
+          }
+        }
+        return null;
+      };
+
+      let updated = 0;
+      const now = Date.now();
+
+      // Use transaction for bulk update
+      await db.transactionAsync(async () => {
+        for (const tx of transactions) {
+          const detected = detectProvider(
+            tx.opposing_account_iban,
+            tx.merchant_name,
+            tx.opposing_account_name,
+            tx.description
+          );
+
+          // Only update if we detected a provider and it's different from current
+          if (detected && detected !== tx.payment_provider) {
+            await db.runAsync(
+              'UPDATE transactions SET payment_provider = ?, updated_at = ? WHERE id = ?',
+              [detected, now, tx.id]
+            );
+            updated++;
+          }
+        }
+      });
+
+      return { updated };
+    },
+
     // ============= Import Methods =============
     async getImportHistory(): Promise<
       Array<{
@@ -3005,6 +3165,18 @@ export function createDataService(db: Database) {
         duplicatesSkipped: row.duplicates_skipped || 0,
         parseErrors: row.parse_errors || 0,
       }));
+    },
+
+    async deleteImportHistory() {
+      const pid = profileId();
+      if (!pid) return { deleted: 0 };
+
+      const result = await db.runAsync(
+        'UPDATE imports SET is_deleted = 1, updated_at = ? WHERE profile_id = ? AND is_deleted = 0',
+        [Date.now(), pid]
+      );
+
+      return { deleted: result.changes };
     },
 
     async previewCsvImport(csvContent: string) {
@@ -3066,7 +3238,7 @@ export function createDataService(db: Database) {
 
       const preview = await this.previewCsvImport(csvContent);
       if (preview.rows.length === 0)
-        return { imported: 0, skipped: 0, errors: [] };
+        return { imported: 0, skipped: 0, errors: [], skippedRows: [] };
 
       // Get or create default mapping
       const mapping = options.mapping || {
@@ -3097,6 +3269,38 @@ export function createDataService(db: Database) {
       // Load category rules for auto-categorization
       const categoryRules = await this.getCategoryRules();
 
+      // Load payment provider rules for detection during import
+      const providerRules = await this.getPaymentProviderRules();
+
+      // Helper function to detect payment provider
+      const detectPaymentProvider = (
+        iban: string | null,
+        merchantName: string | null,
+        description: string | null
+      ): string | null => {
+        if (providerRules.length === 0) return null;
+        const searchText = [iban || '', merchantName || '', description || '']
+          .join(' ')
+          .toUpperCase();
+        for (const rule of providerRules) {
+          const patterns = rule.patterns.split(/[|,]/).map((p) => p.trim());
+          for (const pattern of patterns) {
+            if (pattern && searchText.includes(pattern.toUpperCase())) {
+              return rule.name;
+            }
+          }
+        }
+        return null;
+      };
+
+      // Get the "Overboekingen" / "Internal transfers" category ID for auto-assignment
+      const transfersCategory = await db.queryOneAsync<{ id: string }>(
+        `SELECT id FROM categories WHERE profile_id = ? AND is_deleted = 0 
+         AND (LOWER(name) = 'overboekingen' OR LOWER(name) = 'internal transfers')`,
+        [pid]
+      );
+      const transfersCategoryId = transfersCategory?.id || null;
+
       // Get user's own account IBANs (to exclude from address book)
       const ownAccountsResult = await db.queryAsync<{ iban: string }>(
         'SELECT iban FROM accounts WHERE profile_id = ? AND is_deleted = 0',
@@ -3114,6 +3318,28 @@ export function createDataService(db: Database) {
       const importedTxIds: string[] = [];
       const uniqueIbanMap = new Map<string, string>(); // iban -> name
 
+      // Track skipped rows with detailed reasons for transparency
+      interface SkippedRow {
+        rowIndex: number;
+        date: string | null;
+        amount: number | null;
+        description: string;
+        reason: 'duplicate' | 'invalidDate' | 'invalidAmount' | 'parseError';
+      }
+      const skippedRows: SkippedRow[] = [];
+
+      // Collect all transactions to insert for batching
+      const transactionsToInsert: Array<{
+        id: string;
+        transactionData: TransactionCreate;
+        hash: string;
+        categoryId: string | null;
+        opposingIban: string | null;
+        merchantName: string;
+        paymentProvider: string | null;
+      }> = [];
+
+      // First pass: validate and prepare all transactions
       for (let i = 0; i < preview.rows.length; i++) {
         const row = preview.rows[i];
         try {
@@ -3129,15 +3355,16 @@ export function createDataService(db: Database) {
               {
                 accountId: options.accountId,
                 profileId: pid,
-                mapping: mapping as {
-                  date: string;
-                  amount: string;
-                  description: string;
-                  iban?: string;
-                  counterparty?: string;
-                  balance?: string;
-                  notes?: string;
-                  paymentMethod?: string;
+                mapping: {
+                  date: mapping.date,
+                  amount: mapping.amount,
+                  description: mapping.description,
+                  iban: mapping.iban,
+                  counterparty: mapping.counterparty,
+                  balance: mapping.balance,
+                  direction: directionColumn,
+                  notes: mapping.notes,
+                  paymentMethod: mapping.paymentMethod,
                 },
                 ownAccountIbans,
               },
@@ -3151,26 +3378,69 @@ export function createDataService(db: Database) {
               }
             );
 
-            if ('error' in result) {
-              errors.push(`Row ${i + 1}: ${result.error}`);
+            if ('error' in result && result.error) {
+              const errorMsg = result.error;
+              skippedRows.push({
+                rowIndex: i + 1,
+                date: row[mapping.date] || null,
+                amount: this._parseFlexibleAmount(row[mapping.amount]),
+                description: row[mapping.description] || '',
+                reason: errorMsg.includes('date')
+                  ? 'invalidDate'
+                  : errorMsg.includes('amount')
+                    ? 'invalidAmount'
+                    : 'parseError',
+              });
+              errors.push(`Row ${i + 1}: ${errorMsg}`);
+              continue;
+            }
+
+            // Type guard: if there's no error, we have success result
+            if (
+              !('transaction' in result) ||
+              !result.transaction ||
+              !result.hash
+            ) {
+              skippedRows.push({
+                rowIndex: i + 1,
+                date: row[mapping.date] || null,
+                amount: this._parseFlexibleAmount(row[mapping.amount]),
+                description: row[mapping.description] || '',
+                reason: 'parseError',
+              });
+              errors.push(`Row ${i + 1}: Failed to process row`);
               continue;
             }
 
             transactionData = result.transaction;
             hash = result.hash;
-            opposingIban = result.opposingIban;
-            merchantName = result.merchantName;
+            opposingIban = result.opposingIban ?? null;
+            merchantName = result.merchantName ?? '';
           } else {
             // Generic processing
             const dateStr = row[mapping.date];
             const date = this._parseFlexibleDate(dateStr);
             if (!date) {
+              skippedRows.push({
+                rowIndex: i + 1,
+                date: dateStr || null,
+                amount: this._parseFlexibleAmount(row[mapping.amount]),
+                description: row[mapping.description] || '',
+                reason: 'invalidDate',
+              });
               errors.push(`Row ${i + 1}: Invalid date "${dateStr}"`);
               continue;
             }
 
             let amount = this._parseFlexibleAmount(row[mapping.amount]);
             if (amount === null) {
+              skippedRows.push({
+                rowIndex: i + 1,
+                date: date,
+                amount: null,
+                description: row[mapping.description] || '',
+                reason: 'invalidAmount',
+              });
               errors.push(
                 `Row ${i + 1}: Invalid amount "${row[mapping.amount]}"`
               );
@@ -3253,13 +3523,28 @@ export function createDataService(db: Database) {
             [hash, pid]
           );
 
-          if (existing) continue;
+          if (existing) {
+            // Track as duplicate skip
+            skippedRows.push({
+              rowIndex: i + 1,
+              date: transactionData.date,
+              amount: transactionData.amount,
+              description: transactionData.description || '',
+              reason: 'duplicate',
+            });
+            continue;
+          }
 
           const id = crypto.randomUUID();
           let categoryId: string | null = null;
 
-          // Apply category rules for auto-categorization
-          if (categoryRules.length > 0) {
+          // Auto-assign "Overboekingen" category for internal transfers
+          if (transactionData.type === 'transfer' && transfersCategoryId) {
+            categoryId = transfersCategoryId;
+          }
+
+          // Apply category rules for auto-categorization (only if no category assigned yet)
+          if (!categoryId && categoryRules.length > 0) {
             const matchedRule = this._findMatchingCategoryRule(
               transactionData.description || '',
               merchantName,
@@ -3270,32 +3555,23 @@ export function createDataService(db: Database) {
             }
           }
 
-          await db.runAsync(
-            `INSERT INTO transactions (id, date, amount, type, description, merchant_name, account_id, 
-             opposing_account_iban, opposing_account_name, category_id, notes, payment_method, import_hash, profile_id, created_at, updated_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [
-              id,
-              transactionData.date,
-              transactionData.amount,
-              transactionData.type,
-              transactionData.description,
-              transactionData.merchantName,
-              transactionData.accountId,
-              transactionData.opposingAccountIban,
-              transactionData.opposingAccountName,
-              categoryId,
-              transactionData.notes,
-              transactionData.paymentMethod,
-              hash,
-              pid,
-              now,
-              now,
-            ]
+          // Detect payment provider
+          const paymentProvider = detectPaymentProvider(
+            opposingIban,
+            merchantName,
+            transactionData.description || null
           );
 
-          importedTxIds.push(id);
-          imported++;
+          // Queue for batch insert instead of inserting immediately
+          transactionsToInsert.push({
+            id,
+            transactionData,
+            hash,
+            categoryId,
+            opposingIban,
+            merchantName,
+            paymentProvider,
+          });
 
           // Track unique IBANs for address book (exclude own accounts and empty IBANs)
           if (
@@ -3308,10 +3584,69 @@ export function createDataService(db: Database) {
             }
           }
         } catch (err) {
+          skippedRows.push({
+            rowIndex: i + 1,
+            date: row[mapping.date] || null,
+            amount: this._parseFlexibleAmount(row[mapping.amount]),
+            description: row[mapping.description] || '',
+            reason: 'parseError',
+          });
           errors.push(
             `Row ${i + 1}: ${err instanceof Error ? err.message : 'Unknown error'}`
           );
         }
+      }
+
+      // Batch insert all transactions using bulk INSERT for OPFS performance
+      // This minimizes OPFS syncs - critical for large imports
+      if (transactionsToInsert.length > 0) {
+        const CHUNK_SIZE = 500; // SQLite has a limit on query parameters, chunk large imports
+        const chunks: (typeof transactionsToInsert)[] = [];
+
+        for (let i = 0; i < transactionsToInsert.length; i += CHUNK_SIZE) {
+          chunks.push(transactionsToInsert.slice(i, i + CHUNK_SIZE));
+        }
+
+        await db.transactionAsync(async () => {
+          for (const chunk of chunks) {
+            // Build bulk INSERT with multiple value sets
+            const placeholders = chunk
+              .map(() => '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+              .join(', ');
+            const values = chunk.flatMap((item) => [
+              item.id,
+              item.transactionData.date,
+              item.transactionData.amount,
+              item.transactionData.type,
+              item.transactionData.description,
+              item.transactionData.merchantName,
+              item.transactionData.accountId,
+              item.transactionData.opposingAccountIban,
+              item.transactionData.opposingAccountName,
+              item.categoryId,
+              item.transactionData.notes,
+              item.transactionData.paymentMethod,
+              item.paymentProvider,
+              item.hash,
+              pid,
+              now,
+              now,
+            ]);
+
+            await db.runAsync(
+              `INSERT INTO transactions (id, date, amount, type, description, merchant_name, account_id, 
+               opposing_account_iban, opposing_account_name, category_id, notes, payment_method, payment_provider, import_hash, profile_id, created_at, updated_at)
+               VALUES ${placeholders}`,
+              values
+            );
+
+            // Track imported IDs
+            for (const item of chunk) {
+              importedTxIds.push(item.id);
+              imported++;
+            }
+          }
+        });
       }
 
       // Post-import: Add unique IBANs to address book and link transactions
@@ -3328,9 +3663,29 @@ export function createDataService(db: Database) {
         await this._linkTransactionsToAddressBook(importedTxIds, pid, now);
       }
 
-      // Create import history record
+      // Create import history record with detailed skipped row information
       const importId = crypto.randomUUID();
-      const duplicatesSkipped = preview.rows.length - imported - errors.length;
+      const duplicatesSkipped = skippedRows.filter(
+        (r) => r.reason === 'duplicate'
+      ).length;
+      const parseErrorsCount = skippedRows.filter(
+        (r) => r.reason !== 'duplicate'
+      ).length;
+
+      // Store skipped rows with proper structure for UI display
+      const skippedRowsJson =
+        skippedRows.length > 0
+          ? JSON.stringify(
+              skippedRows.map((row) => ({
+                rowIndex: row.rowIndex,
+                date: row.date,
+                amount: row.amount,
+                description: row.description,
+                reason: row.reason,
+              }))
+            )
+          : null;
+
       await db.runAsync(
         `INSERT INTO imports (id, filename, bank, transaction_count, status, skipped_rows, duplicates_skipped, parse_errors, profile_id, created_at, updated_at)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -3340,11 +3695,9 @@ export function createDataService(db: Database) {
           options.bank || 'generic',
           imported,
           'completed',
-          errors.length > 0
-            ? JSON.stringify(errors.map((e, i) => ({ row: i + 1, reason: e })))
-            : null,
+          skippedRowsJson,
           duplicatesSkipped,
-          errors.length,
+          parseErrorsCount,
           pid,
           now,
           now,
@@ -3353,8 +3706,9 @@ export function createDataService(db: Database) {
 
       return {
         imported,
-        skipped: duplicatesSkipped,
+        skipped: skippedRows.length,
         errors,
+        skippedRows,
       };
     },
 
@@ -3519,7 +3873,7 @@ export function createDataService(db: Database) {
         'SELECT id, name FROM address_book WHERE iban = ? AND profile_id = ? AND is_deleted = 0',
         [normalizedIban, pid]
       );
-      
+
       if (existing) {
         // Check if the name is different - this indicates a shared IBAN
         if (existing.name.toLowerCase().trim() !== name.toLowerCase().trim()) {
@@ -3670,40 +4024,52 @@ export function createDataService(db: Database) {
         INCOME_SOURCES,
         DEFAULT_DEMO_BUDGETS,
         DEFAULT_PAYMENT_PROVIDER_RULES,
+        PROPOSED_CONTACT_DEMO,
       } = await import('@fluxby/shared');
 
-      // 1. Clear existing data for this profile
-      await db.runAsync('DELETE FROM budgets WHERE profile_id = ?', [
-        targetProfileId,
-      ]);
-      await db.runAsync('DELETE FROM category_rules WHERE profile_id = ?', [
-        targetProfileId,
-      ]);
-      await db.runAsync(
-        'DELETE FROM transactions WHERE account_id IN (SELECT id FROM accounts WHERE profile_id = ?)',
-        [targetProfileId]
-      );
-      await db.runAsync('DELETE FROM accounts WHERE profile_id = ?', [
-        targetProfileId,
-      ]);
-      await db.runAsync('DELETE FROM categories WHERE profile_id = ?', [
-        targetProfileId,
-      ]);
-      await db.runAsync('DELETE FROM address_book WHERE profile_id = ?', [
-        targetProfileId,
-      ]);
+      // === PERFORMANCE: Wrap all operations in a single transaction ===
+      await db.runAsync('BEGIN TRANSACTION', []);
 
-      // 2. Seed categories with subcategories
-      const { parentCategories, subcategories } = flattenCategoriesForDB();
-      const categoryIdMap: Record<string, string> = {};
-
-      // Insert parent categories
-      for (const cat of parentCategories) {
-        const catId = crypto.randomUUID();
+      try {
+        // 1. Clear existing data for this profile
+        await db.runAsync('DELETE FROM budgets WHERE profile_id = ?', [
+          targetProfileId,
+        ]);
+        await db.runAsync('DELETE FROM category_rules WHERE profile_id = ?', [
+          targetProfileId,
+        ]);
         await db.runAsync(
-          'INSERT INTO categories (id, name, icon, color, description, profile_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-          [
-            catId,
+          'DELETE FROM transactions WHERE account_id IN (SELECT id FROM accounts WHERE profile_id = ?)',
+          [targetProfileId]
+        );
+        await db.runAsync('DELETE FROM accounts WHERE profile_id = ?', [
+          targetProfileId,
+        ]);
+        await db.runAsync('DELETE FROM categories WHERE profile_id = ?', [
+          targetProfileId,
+        ]);
+        await db.runAsync('DELETE FROM address_book WHERE profile_id = ?', [
+          targetProfileId,
+        ]);
+
+        // 2. Seed categories with subcategories using bulk inserts
+        const { parentCategories, subcategories } = flattenCategoriesForDB();
+        const categoryIdMap: Record<string, string> = {};
+
+        // Prepare parent categories with pre-generated IDs
+        const parentCatData = parentCategories.map((cat) => {
+          const catId = crypto.randomUUID();
+          categoryIdMap[cat.name] = catId;
+          return { id: catId, ...cat };
+        });
+
+        // Bulk insert parent categories
+        if (parentCatData.length > 0) {
+          const placeholders = parentCatData
+            .map(() => '(?, ?, ?, ?, ?, ?, ?, ?)')
+            .join(', ');
+          const values = parentCatData.flatMap((cat) => [
+            cat.id,
             cat.name,
             cat.icon,
             cat.color,
@@ -3711,546 +4077,629 @@ export function createDataService(db: Database) {
             targetProfileId,
             now,
             now,
-          ]
-        );
-        categoryIdMap[cat.name] = catId;
-      }
+          ]);
+          await db.runAsync(
+            `INSERT INTO categories (id, name, icon, color, description, profile_id, created_at, updated_at) VALUES ${placeholders}`,
+            values
+          );
+        }
 
-      // Insert subcategories with their rules
-      for (const sub of subcategories) {
-        const parentId = categoryIdMap[sub.parentName];
-        const subId = crypto.randomUUID();
-        await db.runAsync(
-          'INSERT INTO categories (id, name, parent_id, icon, color, description, profile_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-          [
-            subId,
+        // Prepare subcategories with pre-generated IDs and collect rules
+        const allRules: Array<{
+          id: string;
+          pattern: string;
+          categoryId: string;
+        }> = [];
+        const subCatData = subcategories.map((sub) => {
+          const parentId = categoryIdMap[sub.parentName];
+          const subId = crypto.randomUUID();
+          categoryIdMap[sub.name] = subId;
+
+          // Collect rules for this subcategory
+          for (const rule of sub.rules) {
+            allRules.push({
+              id: crypto.randomUUID(),
+              pattern: rule,
+              categoryId: subId,
+            });
+          }
+
+          return { id: subId, parentId, ...sub };
+        });
+
+        // Bulk insert subcategories
+        if (subCatData.length > 0) {
+          const placeholders = subCatData
+            .map(() => '(?, ?, ?, ?, ?, ?, ?, ?, ?)')
+            .join(', ');
+          const values = subCatData.flatMap((sub) => [
+            sub.id,
             sub.name,
-            parentId,
+            sub.parentId,
             sub.icon,
             sub.color,
             sub.description,
             targetProfileId,
             now,
             now,
-          ]
-        );
-        categoryIdMap[sub.name] = subId;
-
-        // Add category rules for subcategory
-        for (const rule of sub.rules) {
+          ]);
           await db.runAsync(
-            'INSERT INTO category_rules (id, pattern, category_id, priority, profile_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
-            [crypto.randomUUID(), rule, subId, 0, targetProfileId, now, now]
+            `INSERT INTO categories (id, name, parent_id, icon, color, description, profile_id, created_at, updated_at) VALUES ${placeholders}`,
+            values
           );
         }
-      }
 
-      // 3. Create demo accounts
-      const mainAccountId = crypto.randomUUID();
-      const savingsAccountId = crypto.randomUUID();
-      const demoAccountIban = 'NL00DEMO9999999999';
-      const savingsAccountIban = 'NL00DEMO8888888888';
+        // Bulk insert category rules (chunk if needed)
+        const RULE_CHUNK_SIZE = 500;
+        for (let i = 0; i < allRules.length; i += RULE_CHUNK_SIZE) {
+          const chunk = allRules.slice(i, i + RULE_CHUNK_SIZE);
+          const placeholders = chunk
+            .map(() => '(?, ?, ?, ?, ?, ?, ?)')
+            .join(', ');
+          const values = chunk.flatMap((rule) => [
+            rule.id,
+            rule.pattern,
+            rule.categoryId,
+            0,
+            targetProfileId,
+            now,
+            now,
+          ]);
+          await db.runAsync(
+            `INSERT INTO category_rules (id, pattern, category_id, priority, profile_id, created_at, updated_at) VALUES ${placeholders}`,
+            values
+          );
+        }
 
-      await db.runAsync(
-        'INSERT INTO accounts (id, iban, name, type, bank, current_balance, profile_id, order_index, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-        [
-          mainAccountId,
-          demoAccountIban,
-          'Demo Betaalrekening',
-          'checking',
-          'demo',
-          2500.0,
-          targetProfileId,
-          0,
-          now,
-          now,
-        ]
-      );
+        // 3. Create demo accounts
+        const mainAccountId = crypto.randomUUID();
+        const savingsAccountId = crypto.randomUUID();
+        const demoAccountIban = 'NL00DEMO9999999999';
+        const savingsAccountIban = 'NL00DEMO8888888888';
 
-      await db.runAsync(
-        'INSERT INTO accounts (id, iban, name, type, bank, current_balance, profile_id, order_index, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-        [
-          savingsAccountId,
-          savingsAccountIban,
-          'Demo Spaarrekening',
-          'savings',
-          'demo',
-          5000.0,
-          targetProfileId,
-          1,
-          now,
-          now,
-        ]
-      );
+        await db.runAsync(
+          'INSERT INTO accounts (id, iban, name, type, bank, current_balance, profile_id, order_index, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+          [
+            mainAccountId,
+            demoAccountIban,
+            'Demo Betaalrekening',
+            'checking',
+            'demo',
+            2500.0,
+            targetProfileId,
+            0,
+            now,
+            now,
+          ]
+        );
 
-      // 4. Generate transactions for 18 months back
-      const currentDate = new Date();
-      const todayYear = currentDate.getUTCFullYear();
-      const todayMonth = currentDate.getUTCMonth();
-      const todayDay = currentDate.getUTCDate();
+        await db.runAsync(
+          'INSERT INTO accounts (id, iban, name, type, bank, current_balance, profile_id, order_index, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+          [
+            savingsAccountId,
+            savingsAccountIban,
+            'Demo Spaarrekening',
+            'savings',
+            'demo',
+            5000.0,
+            targetProfileId,
+            1,
+            now,
+            now,
+          ]
+        );
 
-      // Helper functions
-      const randomItem = <T>(arr: T[]): T =>
-        arr[Math.floor(Math.random() * arr.length)];
-      const randomAmount = (min: number, max: number) =>
-        Math.round((min + Math.random() * (max - min)) * 100) / 100;
+        // 4. Generate transactions for 18 months back
+        const currentDate = new Date();
+        const todayYear = currentDate.getUTCFullYear();
+        const todayMonth = currentDate.getUTCMonth();
+        const todayDay = currentDate.getUTCDate();
 
-      // Allow certain merchants (e.g. Albert Heijn) to rotate through multiple IBANs
-      // so the demo address book can reliably show merged contacts.
-      const multiIbansByName = new Map(
-        MULTI_IBAN_CONTACTS.map((c: { name: string; ibans: string[] }) => [
-          c.name,
-          c.ibans,
-        ])
-      );
+        // Helper functions
+        const randomItem = <T>(arr: T[]): T =>
+          arr[Math.floor(Math.random() * arr.length)];
+        const randomAmount = (min: number, max: number) =>
+          Math.round((min + Math.random() * (max - min)) * 100) / 100;
 
-      type DemoTransaction = {
-        date: string;
-        amount: number;
-        type: 'income' | 'expense' | 'transfer';
-        description: string;
-        merchant_name: string;
-        account_id: string;
-        opposing_iban: string;
-        opposing_name: string;
-        category_id: string | null;
-        payment_method: string | null;
-        payment_provider: string | null;
-      };
+        // Allow certain merchants (e.g. Albert Heijn) to rotate through multiple IBANs
+        // so the demo address book can reliably show merged contacts.
+        const multiIbansByName = new Map(
+          MULTI_IBAN_CONTACTS.map((c: { name: string; ibans: string[] }) => [
+            c.name,
+            c.ibans,
+          ])
+        );
 
-      let transactions: DemoTransaction[] = [];
+        type DemoTransaction = {
+          date: string;
+          amount: number;
+          type: 'income' | 'expense' | 'transfer';
+          description: string;
+          merchant_name: string;
+          account_id: string;
+          opposing_iban: string;
+          opposing_name: string;
+          category_id: string | null;
+          payment_method: string | null;
+          payment_provider: string | null;
+        };
 
-      // Generate 18 months of data
-      for (let monthOffset = 0; monthOffset < 18; monthOffset++) {
-        const monthDate = new Date(currentDate);
-        // Anchor to the 1st to avoid month overflow issues (e.g. 31st -> shorter months)
-        monthDate.setDate(1);
-        monthDate.setMonth(monthDate.getMonth() - monthOffset);
-        const year = monthDate.getFullYear();
-        const month = monthDate.getMonth();
-        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        let transactions: DemoTransaction[] = [];
 
-        // Random number of transactions per month (10-30)
-        const txCount = 10 + Math.floor(Math.random() * 21);
+        // Generate 18 months of data
+        for (let monthOffset = 0; monthOffset < 18; monthOffset++) {
+          const monthDate = new Date(currentDate);
+          // Anchor to the 1st to avoid month overflow issues (e.g. 31st -> shorter months)
+          monthDate.setDate(1);
+          monthDate.setMonth(monthDate.getMonth() - monthOffset);
+          const year = monthDate.getFullYear();
+          const month = monthDate.getMonth();
+          const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-        // Monthly salary on the 24th
-        const salarySource = INCOME_SOURCES[0];
-        const salaryDay = 24;
-        if (monthOffset > 0 || currentDate.getDate() >= salaryDay) {
+          // Random number of transactions per month (10-30)
+          const txCount = 10 + Math.floor(Math.random() * 21);
+
+          // Monthly salary on the 24th
+          const salarySource = INCOME_SOURCES[0];
+          const salaryDay = 24;
+          if (monthOffset > 0 || currentDate.getDate() >= salaryDay) {
+            transactions.push({
+              date: new Date(Date.UTC(year, month, salaryDay))
+                .toISOString()
+                .split('T')[0],
+              amount: 2800 + randomAmount(-200, 200),
+              type: 'income',
+              description: 'Salaris',
+              merchant_name: salarySource.name,
+              account_id: mainAccountId,
+              opposing_iban: salarySource.iban,
+              opposing_name: salarySource.name,
+              category_id: categoryIdMap['Salaris'] || null,
+              payment_method: 'Overboeking',
+              payment_provider: null,
+            });
+          }
+
+          // Occasional zorgtoeslag (around 5th)
+          if (Math.random() > 0.3) {
+            const toeslagSource = INCOME_SOURCES[1];
+            transactions.push({
+              date: new Date(Date.UTC(year, month, 5))
+                .toISOString()
+                .split('T')[0],
+              amount: 115 + randomAmount(-10, 10),
+              type: 'income',
+              description: 'Zorgtoeslag',
+              merchant_name: toeslagSource.name,
+              account_id: mainAccountId,
+              opposing_iban: toeslagSource.iban,
+              opposing_name: toeslagSource.name,
+              category_id: categoryIdMap['Teruggaven'] || null,
+              payment_method: 'Overboeking',
+              payment_provider: null,
+            });
+          }
+
+          // Housing costs (around 1st)
+          const housing = randomItem(DEMO_MERCHANTS.housing);
           transactions.push({
-            date: new Date(Date.UTC(year, month, salaryDay))
+            date: new Date(Date.UTC(year, month, 1))
               .toISOString()
               .split('T')[0],
-            amount: 2800 + randomAmount(-200, 200),
-            type: 'income',
-            description: 'Salaris',
-            merchant_name: salarySource.name,
+            amount: -850,
+            type: 'expense',
+            description: 'Huur',
+            merchant_name: housing.name,
             account_id: mainAccountId,
-            opposing_iban: salarySource.iban,
-            opposing_name: salarySource.name,
-            category_id: categoryIdMap['Salaris'] || null,
+            opposing_iban: housing.iban,
+            opposing_name: housing.name,
+            category_id: categoryIdMap['Huur & Hypotheek'] || null,
+            payment_method: 'Incasso',
+            payment_provider: null,
+          });
+
+          // Utilities (around 15th)
+          for (const utility of DEMO_MERCHANTS.utilities) {
+            transactions.push({
+              date: new Date(Date.UTC(year, month, 15))
+                .toISOString()
+                .split('T')[0],
+              amount: -randomAmount(80, 150),
+              type: 'expense',
+              description: 'Maandelijkse kosten',
+              merchant_name: utility.name,
+              account_id: mainAccountId,
+              opposing_iban: utility.iban,
+              opposing_name: utility.name,
+              category_id:
+                utility.name === 'Ziggo'
+                  ? categoryIdMap['Mobiel & Internet'] || null
+                  : categoryIdMap['Energie & Water'] || null,
+              payment_method: 'Incasso',
+              payment_provider: null,
+            });
+          }
+
+          // Insurance (around 27th)
+          for (const ins of DEMO_MERCHANTS.insurance) {
+            transactions.push({
+              date: new Date(Date.UTC(year, month, 27))
+                .toISOString()
+                .split('T')[0],
+              amount: -randomAmount(100, 180),
+              type: 'expense',
+              description: ins.name.includes('Zilveren')
+                ? 'Zorgverzekering'
+                : 'Autoverzekering',
+              merchant_name: ins.name,
+              account_id: mainAccountId,
+              opposing_iban: ins.iban,
+              opposing_name: ins.name,
+              category_id: ins.name.includes('Zilveren')
+                ? categoryIdMap['Zorgverzekering'] || null
+                : categoryIdMap['Auto Kosten'] || null,
+              payment_method: 'Incasso',
+              payment_provider: null,
+            });
+          }
+
+          // Monthly subscriptions
+          for (const sub of DEMO_MERCHANTS.subscriptions) {
+            transactions.push({
+              date: new Date(
+                Date.UTC(year, month, 10 + Math.floor(Math.random() * 5))
+              )
+                .toISOString()
+                .split('T')[0],
+              amount: -randomAmount(10, 20),
+              type: 'expense',
+              description: 'Maandabonnement',
+              merchant_name: sub.name,
+              account_id: mainAccountId,
+              opposing_iban: sub.iban,
+              opposing_name: sub.name,
+              category_id:
+                sub.name === 'KPN'
+                  ? categoryIdMap['Mobiel & Internet'] || null
+                  : categoryIdMap['Streaming & Media'] || null,
+              payment_method: 'Incasso',
+              payment_provider: null,
+            });
+          }
+
+          // Savings transfer (around 2nd)
+          transactions.push({
+            date: new Date(Date.UTC(year, month, 2))
+              .toISOString()
+              .split('T')[0],
+            amount: -250,
+            type: 'transfer',
+            description: 'Sparen',
+            merchant_name: 'Eigen rekening',
+            account_id: mainAccountId,
+            opposing_iban: savingsAccountIban,
+            opposing_name: 'Demo Spaarrekening',
+            category_id: null,
             payment_method: 'Overboeking',
             payment_provider: null,
           });
-        }
 
-        // Occasional zorgtoeslag (around 5th)
-        if (Math.random() > 0.3) {
-          const toeslagSource = INCOME_SOURCES[1];
-          transactions.push({
-            date: new Date(Date.UTC(year, month, 5))
-              .toISOString()
-              .split('T')[0],
-            amount: 115 + randomAmount(-10, 10),
-            type: 'income',
-            description: 'Zorgtoeslag',
-            merchant_name: toeslagSource.name,
-            account_id: mainAccountId,
-            opposing_iban: toeslagSource.iban,
-            opposing_name: toeslagSource.name,
-            category_id: categoryIdMap['Teruggaven'] || null,
-            payment_method: 'Overboeking',
-            payment_provider: null,
-          });
-        }
-
-        // Housing costs (around 1st)
-        const housing = randomItem(DEMO_MERCHANTS.housing);
-        transactions.push({
-          date: new Date(Date.UTC(year, month, 1)).toISOString().split('T')[0],
-          amount: -850,
-          type: 'expense',
-          description: 'Huur',
-          merchant_name: housing.name,
-          account_id: mainAccountId,
-          opposing_iban: housing.iban,
-          opposing_name: housing.name,
-          category_id: categoryIdMap['Huur & Hypotheek'] || null,
-          payment_method: 'Incasso',
-          payment_provider: null,
-        });
-
-        // Utilities (around 15th)
-        for (const utility of DEMO_MERCHANTS.utilities) {
-          transactions.push({
-            date: new Date(Date.UTC(year, month, 15))
-              .toISOString()
-              .split('T')[0],
-            amount: -randomAmount(80, 150),
-            type: 'expense',
-            description: 'Maandelijkse kosten',
-            merchant_name: utility.name,
-            account_id: mainAccountId,
-            opposing_iban: utility.iban,
-            opposing_name: utility.name,
-            category_id:
-              utility.name === 'Ziggo'
-                ? categoryIdMap['Mobiel & Internet'] || null
-                : categoryIdMap['Energie & Water'] || null,
-            payment_method: 'Incasso',
-            payment_provider: null,
-          });
-        }
-
-        // Insurance (around 27th)
-        for (const ins of DEMO_MERCHANTS.insurance) {
-          transactions.push({
-            date: new Date(Date.UTC(year, month, 27))
-              .toISOString()
-              .split('T')[0],
-            amount: -randomAmount(100, 180),
-            type: 'expense',
-            description: ins.name.includes('Zilveren')
-              ? 'Zorgverzekering'
-              : 'Autoverzekering',
-            merchant_name: ins.name,
-            account_id: mainAccountId,
-            opposing_iban: ins.iban,
-            opposing_name: ins.name,
-            category_id: ins.name.includes('Zilveren')
-              ? categoryIdMap['Zorgverzekering'] || null
-              : categoryIdMap['Auto Kosten'] || null,
-            payment_method: 'Incasso',
-            payment_provider: null,
-          });
-        }
-
-        // Monthly subscriptions
-        for (const sub of DEMO_MERCHANTS.subscriptions) {
-          transactions.push({
-            date: new Date(
-              Date.UTC(year, month, 10 + Math.floor(Math.random() * 5))
-            )
-              .toISOString()
-              .split('T')[0],
-            amount: -randomAmount(10, 20),
-            type: 'expense',
-            description: 'Maandabonnement',
-            merchant_name: sub.name,
-            account_id: mainAccountId,
-            opposing_iban: sub.iban,
-            opposing_name: sub.name,
-            category_id:
-              sub.name === 'KPN'
-                ? categoryIdMap['Mobiel & Internet'] || null
-                : categoryIdMap['Streaming & Media'] || null,
-            payment_method: 'Incasso',
-            payment_provider: null,
-          });
-        }
-
-        // Savings transfer (around 2nd)
-        transactions.push({
-          date: new Date(Date.UTC(year, month, 2)).toISOString().split('T')[0],
-          amount: -250,
-          type: 'transfer',
-          description: 'Sparen',
-          merchant_name: 'Eigen rekening',
-          account_id: mainAccountId,
-          opposing_iban: savingsAccountIban,
-          opposing_name: 'Demo Spaarrekening',
-          category_id: null,
-          payment_method: 'Overboeking',
-          payment_provider: null,
-        });
-
-        // Random daily expenses
-        for (let i = 0; i < txCount; i++) {
-          const maxDay =
-            monthOffset === 0
-              ? Math.min(daysInMonth, currentDate.getDate())
-              : daysInMonth;
-          const day = 1 + Math.floor(Math.random() * maxDay);
-          const expenseType = Math.random();
-
-          let merchant: { name: string; iban: string };
-          let amount: number;
-          let description: string;
-          let categoryId: string | null = null;
-
-          const useProcessor = Math.random() > 0.6;
-          const processor = useProcessor
-            ? randomItem(PAYMENT_PROCESSORS)
-            : null;
-
-          if (expenseType < 0.3) {
-            merchant = randomItem(DEMO_MERCHANTS.supermarkets);
-            amount = -randomAmount(15, 120);
-            description = 'Boodschappen';
-            categoryId = categoryIdMap['Supermarkt'] || null;
-          } else if (expenseType < 0.45) {
-            merchant = randomItem(DEMO_MERCHANTS.restaurants);
-            amount = -randomAmount(12, 60);
-            description =
-              merchant.name.includes('bezorgd') ||
-              merchant.name.includes('Uber')
-                ? 'Eten bestellen'
-                : 'Uit eten';
-            categoryId =
-              merchant.name.includes('bezorgd') ||
-              merchant.name.includes('Uber')
-                ? categoryIdMap['Eten Bestellen'] || null
-                : categoryIdMap['Restaurants & Bars'] || null;
-          } else if (expenseType < 0.55) {
-            merchant = randomItem(DEMO_MERCHANTS.transport);
-            amount = -randomAmount(5, 80);
-            description = merchant.name === 'NS' ? 'Treinreis' : 'Tanken';
-            categoryId =
-              merchant.name === 'NS'
-                ? categoryIdMap['Openbaar Vervoer'] || null
-                : merchant.name.includes('Park')
-                  ? categoryIdMap['Parkeren & Taxi'] || null
-                  : categoryIdMap['Brandstof & Laden'] || null;
-          } else if (expenseType < 0.65) {
-            merchant = randomItem(DEMO_MERCHANTS.health);
-            amount = -randomAmount(8, 35);
-            description = 'Persoonlijke verzorging';
-            categoryId = categoryIdMap['Drogisterij'] || null;
-          } else if (expenseType < 0.8) {
-            merchant = randomItem(DEMO_MERCHANTS.shopping);
-            amount = -randomAmount(15, 150);
-            description = 'Aankoop';
-            categoryId =
-              merchant.name === 'IKEA'
-                ? categoryIdMap['Inrichting & Tuin'] || null
-                : categoryIdMap['Kleding & Schoenen'] || null;
-          } else {
-            merchant = randomItem(DEMO_MERCHANTS.leisure);
-            amount = -randomAmount(10, 50);
-            description = merchant.name.includes('Fit')
-              ? 'Sportschool'
-              : 'Uitje';
-            categoryId = merchant.name.includes('Fit')
-              ? categoryIdMap['Sport & Wellness'] || null
-              : categoryIdMap['Uitjes & Cultuur'] || null;
-          }
-
-          let paymentMethod: string;
-          if (processor) {
-            paymentMethod = 'iDEAL';
-          } else if (
-            ['Bol.com', 'Amazon', 'MediaMarkt'].includes(merchant.name)
-          ) {
-            paymentMethod = 'iDEAL';
-          } else {
-            paymentMethod = 'Pinpas';
-          }
-
-          transactions.push({
-            date: new Date(Date.UTC(year, month, day))
-              .toISOString()
-              .split('T')[0],
-            amount,
-            type: 'expense',
-            description,
-            merchant_name: processor
-              ? `${merchant.name} via ${processor.name}`
-              : merchant.name,
-            account_id: mainAccountId,
-            opposing_iban: processor
-              ? processor.iban
-              : multiIbansByName.get(merchant.name)?.length
-                ? multiIbansByName.get(merchant.name)![
-                    (monthOffset + day) %
-                      multiIbansByName.get(merchant.name)!.length
-                  ]
-                : merchant.iban,
-            opposing_name: processor ? merchant.name : merchant.name,
-            category_id: categoryId,
-            payment_method: paymentMethod,
-            payment_provider: processor ? processor.name : null,
-          });
-        }
-
-        // Multi-IBAN contact transactions
-        for (const contact of MULTI_IBAN_CONTACTS) {
-          const txCount = 1 + (monthOffset % 2);
+          // Random daily expenses
           for (let i = 0; i < txCount; i++) {
-            const ibanIndex = (monthOffset + i) % contact.ibans.length;
+            const maxDay =
+              monthOffset === 0
+                ? Math.min(daysInMonth, currentDate.getDate())
+                : daysInMonth;
+            const day = 1 + Math.floor(Math.random() * maxDay);
+            const expenseType = Math.random();
+
+            let merchant: { name: string; iban: string };
+            let amount: number;
+            let description: string;
+            let categoryId: string | null = null;
+
+            const useProcessor = Math.random() > 0.6;
+            const processor = useProcessor
+              ? randomItem(PAYMENT_PROCESSORS)
+              : null;
+
+            if (expenseType < 0.3) {
+              merchant = randomItem(DEMO_MERCHANTS.supermarkets);
+              amount = -randomAmount(15, 120);
+              description = 'Boodschappen';
+              categoryId = categoryIdMap['Supermarkt'] || null;
+            } else if (expenseType < 0.45) {
+              merchant = randomItem(DEMO_MERCHANTS.restaurants);
+              amount = -randomAmount(12, 60);
+              description =
+                merchant.name.includes('bezorgd') ||
+                merchant.name.includes('Uber')
+                  ? 'Eten bestellen'
+                  : 'Uit eten';
+              categoryId =
+                merchant.name.includes('bezorgd') ||
+                merchant.name.includes('Uber')
+                  ? categoryIdMap['Eten Bestellen'] || null
+                  : categoryIdMap['Restaurants & Bars'] || null;
+            } else if (expenseType < 0.55) {
+              merchant = randomItem(DEMO_MERCHANTS.transport);
+              amount = -randomAmount(5, 80);
+              description = merchant.name === 'NS' ? 'Treinreis' : 'Tanken';
+              categoryId =
+                merchant.name === 'NS'
+                  ? categoryIdMap['Openbaar Vervoer'] || null
+                  : merchant.name.includes('Park')
+                    ? categoryIdMap['Parkeren & Taxi'] || null
+                    : categoryIdMap['Brandstof & Laden'] || null;
+            } else if (expenseType < 0.65) {
+              merchant = randomItem(DEMO_MERCHANTS.health);
+              amount = -randomAmount(8, 35);
+              description = 'Persoonlijke verzorging';
+              categoryId = categoryIdMap['Drogisterij'] || null;
+            } else if (expenseType < 0.8) {
+              merchant = randomItem(DEMO_MERCHANTS.shopping);
+              amount = -randomAmount(15, 150);
+              description = 'Aankoop';
+              categoryId =
+                merchant.name === 'IKEA'
+                  ? categoryIdMap['Inrichting & Tuin'] || null
+                  : categoryIdMap['Kleding & Schoenen'] || null;
+            } else {
+              merchant = randomItem(DEMO_MERCHANTS.leisure);
+              amount = -randomAmount(10, 50);
+              description = merchant.name.includes('Fit')
+                ? 'Sportschool'
+                : 'Uitje';
+              categoryId = merchant.name.includes('Fit')
+                ? categoryIdMap['Sport & Wellness'] || null
+                : categoryIdMap['Uitjes & Cultuur'] || null;
+            }
+
+            let paymentMethod: string;
+            if (processor) {
+              paymentMethod = 'iDEAL';
+            } else if (
+              ['Bol.com', 'Amazon', 'MediaMarkt'].includes(merchant.name)
+            ) {
+              paymentMethod = 'iDEAL';
+            } else {
+              paymentMethod = 'Pinpas';
+            }
+
+            transactions.push({
+              date: new Date(Date.UTC(year, month, day))
+                .toISOString()
+                .split('T')[0],
+              amount,
+              type: 'expense',
+              description,
+              merchant_name: processor
+                ? `${merchant.name} via ${processor.name}`
+                : merchant.name,
+              account_id: mainAccountId,
+              opposing_iban: processor
+                ? processor.iban
+                : multiIbansByName.get(merchant.name)?.length
+                  ? multiIbansByName.get(merchant.name)![
+                      (monthOffset + day) %
+                        multiIbansByName.get(merchant.name)!.length
+                    ]
+                  : merchant.iban,
+              opposing_name: processor ? merchant.name : merchant.name,
+              category_id: categoryId,
+              payment_method: paymentMethod,
+              payment_provider: processor ? processor.name : null,
+            });
+          }
+
+          // Multi-IBAN contact transactions
+          for (const contact of MULTI_IBAN_CONTACTS) {
+            const txCount = 1 + (monthOffset % 2);
+            for (let i = 0; i < txCount; i++) {
+              const ibanIndex = (monthOffset + i) % contact.ibans.length;
+              transactions.push({
+                date: new Date(
+                  Date.UTC(
+                    year,
+                    month,
+                    5 + i * 10 + Math.floor(Math.random() * 5)
+                  )
+                )
+                  .toISOString()
+                  .split('T')[0],
+                amount: -randomAmount(40, 180),
+                type: 'expense',
+                description: contact.descriptions[ibanIndex],
+                merchant_name: contact.name,
+                account_id: mainAccountId,
+                opposing_iban: contact.ibans[ibanIndex],
+                opposing_name: contact.name,
+                category_id: null,
+                payment_method: 'Overboeking',
+                payment_provider: null,
+              });
+            }
+          }
+
+          // Payment processor transactions
+          const idealMerchants = [
+            'Bol.com',
+            'Coolblue',
+            'MediaMarkt',
+            'Wehkamp',
+          ];
+          for (let i = 0; i < 2; i++) {
+            const merchant =
+              idealMerchants[(monthOffset * 3 + i) % idealMerchants.length];
+            transactions.push({
+              date: new Date(
+                Date.UTC(year, month, 5 + i * 7 + Math.floor(Math.random() * 3))
+              )
+                .toISOString()
+                .split('T')[0],
+              amount: -randomAmount(20, 180),
+              type: 'expense',
+              description: `Online aankoop ${merchant}`,
+              merchant_name: `${merchant} via ${PAYMENT_PROCESSORS[0].name}`,
+              account_id: mainAccountId,
+              opposing_iban: PAYMENT_PROCESSORS[0].iban,
+              opposing_name: merchant,
+              category_id: categoryIdMap['Warenhuis'] || null,
+              payment_method: 'iDEAL',
+              payment_provider: PAYMENT_PROCESSORS[0].name,
+            });
+          }
+
+          const adyenMerchants = ['Netflix', 'Spotify', 'Disney+', 'Uber'];
+          for (let i = 0; i < 2; i++) {
+            const merchant =
+              adyenMerchants[(monthOffset * 2 + i) % adyenMerchants.length];
+            transactions.push({
+              date: new Date(
+                Date.UTC(year, month, 1 + i * 8 + Math.floor(Math.random() * 3))
+              )
+                .toISOString()
+                .split('T')[0],
+              amount:
+                merchant === 'Uber'
+                  ? -randomAmount(10, 45)
+                  : -randomAmount(8, 18),
+              type: 'expense',
+              description:
+                merchant === 'Uber' ? 'Uber rit' : `${merchant} abonnement`,
+              merchant_name: `${merchant} via ${PAYMENT_PROCESSORS[1].name}`,
+              account_id: mainAccountId,
+              opposing_iban: PAYMENT_PROCESSORS[1].iban,
+              opposing_name: merchant,
+              category_id:
+                merchant === 'Uber'
+                  ? categoryIdMap['Parkeren & Taxi'] || null
+                  : categoryIdMap['Streaming & Media'] || null,
+              payment_method: merchant === 'Uber' ? 'iDEAL' : 'Incasso',
+              payment_provider: PAYMENT_PROCESSORS[1].name,
+            });
+          }
+
+          const mollieMerchants = ['Thuisbezorgd.nl', 'Zalando', 'Picnic'];
+          for (let i = 0; i < 2; i++) {
+            const merchant =
+              mollieMerchants[(monthOffset * 2 + i) % mollieMerchants.length];
+            const isDelivery = ['Thuisbezorgd.nl', 'Picnic'].includes(merchant);
             transactions.push({
               date: new Date(
                 Date.UTC(
                   year,
                   month,
-                  5 + i * 10 + Math.floor(Math.random() * 5)
+                  12 + i * 6 + Math.floor(Math.random() * 3)
                 )
               )
                 .toISOString()
                 .split('T')[0],
-              amount: -randomAmount(40, 180),
+              amount: isDelivery
+                ? -randomAmount(15, 70)
+                : -randomAmount(30, 100),
               type: 'expense',
-              description: contact.descriptions[ibanIndex],
-              merchant_name: contact.name,
+              description: isDelivery
+                ? 'Boodschappen bezorgd'
+                : 'Online aankoop',
+              merchant_name: `${merchant} via ${PAYMENT_PROCESSORS[2].name}`,
               account_id: mainAccountId,
-              opposing_iban: contact.ibans[ibanIndex],
-              opposing_name: contact.name,
-              category_id: null,
-              payment_method: 'Overboeking',
-              payment_provider: null,
+              opposing_iban: PAYMENT_PROCESSORS[2].iban,
+              opposing_name: merchant,
+              category_id: isDelivery
+                ? merchant === 'Thuisbezorgd.nl'
+                  ? categoryIdMap['Eten Bestellen'] || null
+                  : categoryIdMap['Supermarkt'] || null
+                : categoryIdMap['Kleding & Schoenen'] || null,
+              payment_method: 'iDEAL',
+              payment_provider: PAYMENT_PROCESSORS[2].name,
             });
           }
         }
 
-        // Payment processor transactions
-        const idealMerchants = ['Bol.com', 'Coolblue', 'MediaMarkt', 'Wehkamp'];
-        for (let i = 0; i < 2; i++) {
-          const merchant =
-            idealMerchants[(monthOffset * 3 + i) % idealMerchants.length];
-          transactions.push({
-            date: new Date(
-              Date.UTC(year, month, 5 + i * 7 + Math.floor(Math.random() * 3))
-            )
-              .toISOString()
-              .split('T')[0],
-            amount: -randomAmount(20, 180),
-            type: 'expense',
-            description: `Online aankoop ${merchant}`,
-            merchant_name: `${merchant} via ${PAYMENT_PROCESSORS[0].name}`,
-            account_id: mainAccountId,
-            opposing_iban: PAYMENT_PROCESSORS[0].iban,
-            opposing_name: merchant,
-            category_id: categoryIdMap['Warenhuis'] || null,
-            payment_method: 'iDEAL',
-            payment_provider: PAYMENT_PROCESSORS[0].name,
-          });
-        }
+        // Add a "proposed contact" transaction - this IBAN is NOT in the address book
+        // so it will appear as a proposed contact in the UI
+        const proposedContactDate = new Date(
+          Date.UTC(todayYear, todayMonth, Math.max(1, todayDay - 3))
+        );
+        transactions.push({
+          date: proposedContactDate.toISOString().split('T')[0],
+          amount: PROPOSED_CONTACT_DEMO.amount,
+          type: 'expense',
+          description: PROPOSED_CONTACT_DEMO.description,
+          merchant_name: PROPOSED_CONTACT_DEMO.name,
+          account_id: mainAccountId,
+          opposing_iban: PROPOSED_CONTACT_DEMO.iban,
+          opposing_name: PROPOSED_CONTACT_DEMO.name,
+          category_id: null,
+          payment_method: 'iDEAL',
+          payment_provider: null,
+        });
 
-        const adyenMerchants = ['Netflix', 'Spotify', 'Disney+', 'Uber'];
-        for (let i = 0; i < 2; i++) {
-          const merchant =
-            adyenMerchants[(monthOffset * 2 + i) % adyenMerchants.length];
-          transactions.push({
-            date: new Date(
-              Date.UTC(year, month, 1 + i * 8 + Math.floor(Math.random() * 3))
-            )
-              .toISOString()
-              .split('T')[0],
-            amount:
-              merchant === 'Uber'
-                ? -randomAmount(10, 45)
-                : -randomAmount(8, 18),
-            type: 'expense',
-            description:
-              merchant === 'Uber' ? 'Uber rit' : `${merchant} abonnement`,
-            merchant_name: `${merchant} via ${PAYMENT_PROCESSORS[1].name}`,
-            account_id: mainAccountId,
-            opposing_iban: PAYMENT_PROCESSORS[1].iban,
-            opposing_name: merchant,
-            category_id:
-              merchant === 'Uber'
-                ? categoryIdMap['Parkeren & Taxi'] || null
-                : categoryIdMap['Streaming & Media'] || null,
-            payment_method: merchant === 'Uber' ? 'iDEAL' : 'Incasso',
-            payment_provider: PAYMENT_PROCESSORS[1].name,
-          });
-        }
+        // Sanitize transactions: ensure at most 2 transactions for today
+        let todayCount = 0;
+        const sanitized: DemoTransaction[] = [];
 
-        const mollieMerchants = ['Thuisbezorgd.nl', 'Zalando', 'Picnic'];
-        for (let i = 0; i < 2; i++) {
-          const merchant =
-            mollieMerchants[(monthOffset * 2 + i) % mollieMerchants.length];
-          const isDelivery = ['Thuisbezorgd.nl', 'Picnic'].includes(merchant);
-          transactions.push({
-            date: new Date(
-              Date.UTC(year, month, 12 + i * 6 + Math.floor(Math.random() * 3))
-            )
-              .toISOString()
-              .split('T')[0],
-            amount: isDelivery ? -randomAmount(15, 70) : -randomAmount(30, 100),
-            type: 'expense',
-            description: isDelivery ? 'Boodschappen bezorgd' : 'Online aankoop',
-            merchant_name: `${merchant} via ${PAYMENT_PROCESSORS[2].name}`,
-            account_id: mainAccountId,
-            opposing_iban: PAYMENT_PROCESSORS[2].iban,
-            opposing_name: merchant,
-            category_id: isDelivery
-              ? merchant === 'Thuisbezorgd.nl'
-                ? categoryIdMap['Eten Bestellen'] || null
-                : categoryIdMap['Supermarkt'] || null
-              : categoryIdMap['Kleding & Schoenen'] || null,
-            payment_method: 'iDEAL',
-            payment_provider: PAYMENT_PROCESSORS[2].name,
-          });
-        }
-      }
+        for (const tx of transactions) {
+          let txDate = new Date(tx.date + 'T00:00:00Z');
 
-      // Sanitize transactions: ensure at most 2 transactions for today
-      let todayCount = 0;
-      const sanitized: DemoTransaction[] = [];
-
-      for (const tx of transactions) {
-        let txDate = new Date(tx.date + 'T00:00:00Z');
-
-        if (
-          txDate.getUTCFullYear() === todayYear &&
-          txDate.getUTCMonth() === todayMonth &&
-          txDate.getUTCDate() > todayDay
-        ) {
-          if (todayDay > 1) {
-            const newDay = 1 + Math.floor(Math.random() * (todayDay - 1));
-            txDate = new Date(Date.UTC(todayYear, todayMonth, newDay));
-          } else {
-            txDate = new Date(Date.UTC(todayYear, todayMonth, todayDay));
-          }
-        }
-
-        if (
-          txDate.getUTCFullYear() === todayYear &&
-          txDate.getUTCMonth() === todayMonth &&
-          txDate.getUTCDate() === todayDay
-        ) {
-          if (todayCount < 2) {
-            todayCount++;
-          } else {
+          if (
+            txDate.getUTCFullYear() === todayYear &&
+            txDate.getUTCMonth() === todayMonth &&
+            txDate.getUTCDate() > todayDay
+          ) {
             if (todayDay > 1) {
               const newDay = 1 + Math.floor(Math.random() * (todayDay - 1));
               txDate = new Date(Date.UTC(todayYear, todayMonth, newDay));
             } else {
-              continue;
+              txDate = new Date(Date.UTC(todayYear, todayMonth, todayDay));
             }
           }
+
+          if (
+            txDate.getUTCFullYear() === todayYear &&
+            txDate.getUTCMonth() === todayMonth &&
+            txDate.getUTCDate() === todayDay
+          ) {
+            if (todayCount < 2) {
+              todayCount++;
+            } else {
+              if (todayDay > 1) {
+                const newDay = 1 + Math.floor(Math.random() * (todayDay - 1));
+                txDate = new Date(Date.UTC(todayYear, todayMonth, newDay));
+              } else {
+                continue;
+              }
+            }
+          }
+
+          tx.date = txDate.toISOString().split('T')[0];
+          sanitized.push(tx);
         }
 
-        tx.date = txDate.toISOString().split('T')[0];
-        sanitized.push(tx);
-      }
+        transactions = sanitized;
+        transactions.sort(
+          (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+        );
 
-      transactions = sanitized;
-      transactions.sort(
-        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-      );
+        // Prepare transactions with balance calculation and pre-generated data
+        let balance = 2500;
+        const txData = transactions.map((tx) => {
+          balance += tx.amount;
+          const id = crypto.randomUUID();
+          const importHash = `demo_${targetProfileId}_${tx.date}_${tx.amount}_${tx.merchant_name}_${Math.random().toString(36).substring(7)}`;
+          return { id, balance, importHash, ...tx };
+        });
 
-      // Insert transactions
-      let balance = 2500;
-      for (const tx of transactions) {
-        balance += tx.amount;
-        const importHash = `demo_${targetProfileId}_${tx.date}_${tx.amount}_${tx.merchant_name}_${Math.random().toString(36).substring(7)}`;
-
-        await db.runAsync(
-          `INSERT INTO transactions (id, date, amount, type, description, merchant_name, account_id, opposing_account_iban, opposing_account_name, category_id, balance_after, payment_method, payment_provider, import_hash, profile_id, created_at, updated_at) 
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-          [
-            crypto.randomUUID(),
+        // Bulk insert transactions (chunk to avoid SQLite parameter limits)
+        const TX_CHUNK_SIZE = 200; // 17 params per row, stay well under SQLite limits
+        for (let i = 0; i < txData.length; i += TX_CHUNK_SIZE) {
+          const chunk = txData.slice(i, i + TX_CHUNK_SIZE);
+          const placeholders = chunk
+            .map(() => '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+            .join(', ');
+          const values = chunk.flatMap((tx) => [
+            tx.id,
             tx.date,
             tx.amount,
             tx.type,
@@ -4260,148 +4709,191 @@ export function createDataService(db: Database) {
             tx.opposing_iban,
             tx.opposing_name,
             tx.category_id,
-            balance,
+            tx.balance,
             tx.payment_method,
             tx.payment_provider,
-            importHash,
+            tx.importHash,
             targetProfileId,
             now,
             now,
-          ]
-        );
-      }
-
-      // 5. Create address book entries from unique opposing accounts
-      const uniqueIbans = new Map<string, string>();
-      for (const tx of transactions) {
-        if (!uniqueIbans.has(tx.opposing_iban)) {
-          uniqueIbans.set(tx.opposing_iban, tx.opposing_name);
-        }
-      }
-
-      const processorIbans = new Set(PAYMENT_PROCESSORS.map((p) => p.iban));
-      const multiIbanSet = new Set(MULTI_IBAN_CONTACTS.flatMap((c) => c.ibans));
-
-      // Ensure unique address book names by merging IBANs into a single contact.
-      const nameToContactId = new Map<string, string>();
-
-      for (const [iban, name] of uniqueIbans) {
-        if (
-          iban !== savingsAccountIban &&
-          iban !== demoAccountIban &&
-          !processorIbans.has(iban) &&
-          !multiIbanSet.has(iban)
-        ) {
-          const normalizedName = String(name).trim();
-          const existingContactId = nameToContactId.get(normalizedName);
-
-          if (existingContactId) {
-            // Merge additional IBAN into existing contact
-            await db.runAsync(
-              'INSERT OR IGNORE INTO contact_ibans (id, contact_id, iban, is_primary, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)',
-              [crypto.randomUUID(), existingContactId, iban, 0, now, now]
-            );
-          } else {
-            // Create new contact
-            const contactId = crypto.randomUUID();
-            nameToContactId.set(normalizedName, contactId);
-
-            await db.runAsync(
-              'INSERT INTO address_book (id, iban, name, profile_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)',
-              [contactId, iban, normalizedName, targetProfileId, now, now]
-            );
-
-            await db.runAsync(
-              'INSERT OR IGNORE INTO contact_ibans (id, contact_id, iban, is_primary, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)',
-              [crypto.randomUUID(), contactId, iban, 1, now, now]
-            );
-          }
-        }
-      }
-
-      // Add multi-IBAN contacts
-      for (const contact of MULTI_IBAN_CONTACTS) {
-        const primaryIban = contact.ibans.find((iban) => uniqueIbans.has(iban));
-        if (!primaryIban) continue;
-
-        const normalizedName = String(contact.name).trim();
-        const existingContactId = nameToContactId.get(normalizedName);
-        const contactId = existingContactId || crypto.randomUUID();
-
-        if (!existingContactId) {
-          nameToContactId.set(normalizedName, contactId);
+          ]);
           await db.runAsync(
-            'INSERT INTO address_book (id, iban, name, profile_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)',
-            [contactId, primaryIban, normalizedName, targetProfileId, now, now]
+            `INSERT INTO transactions (id, date, amount, type, description, merchant_name, account_id, opposing_account_iban, opposing_account_name, category_id, balance_after, payment_method, payment_provider, import_hash, profile_id, created_at, updated_at) 
+           VALUES ${placeholders}`,
+            values
           );
         }
 
-        // Persist primary + secondary IBANs so the UI can show merged contacts.
-        await db.runAsync(
-          'INSERT OR IGNORE INTO contact_ibans (id, contact_id, iban, is_primary, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)',
-          [crypto.randomUUID(), contactId, primaryIban, 1, now, now]
-        );
-
-        for (const iban of contact.ibans) {
-          if (iban !== primaryIban && uniqueIbans.has(iban)) {
-            await db.runAsync(
-              'INSERT OR IGNORE INTO contact_ibans (id, contact_id, iban, is_primary, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)',
-              [crypto.randomUUID(), contactId, iban, 0, now, now]
-            );
+        // 5. Create address book entries from unique opposing accounts
+        const uniqueIbans = new Map<string, string>();
+        for (const tx of transactions) {
+          if (!uniqueIbans.has(tx.opposing_iban)) {
+            uniqueIbans.set(tx.opposing_iban, tx.opposing_name);
           }
         }
-      }
 
-      // Mark payment processor IBANs as shared
-      for (const processor of PAYMENT_PROCESSORS) {
-        await db.runAsync(
-          'INSERT OR IGNORE INTO shared_ibans (iban, provider_name, created_at, updated_at) VALUES (?, ?, ?, ?)',
-          [processor.iban, processor.name, now, now]
+        const processorIbans = new Set(PAYMENT_PROCESSORS.map((p) => p.iban));
+        const multiIbanSet = new Set(
+          MULTI_IBAN_CONTACTS.flatMap((c) => c.ibans)
         );
-      }
 
-      // 6. Seed payment provider rules
-      for (const rule of DEFAULT_PAYMENT_PROVIDER_RULES) {
-        await db.runAsync(
-          'INSERT OR IGNORE INTO payment_provider_rules (id, name, patterns, profile_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)',
-          [
+        // Ensure unique address book names by merging IBANs into a single contact.
+        const nameToContactId = new Map<string, string>();
+
+        for (const [iban, name] of uniqueIbans) {
+          if (
+            iban !== savingsAccountIban &&
+            iban !== demoAccountIban &&
+            !processorIbans.has(iban) &&
+            !multiIbanSet.has(iban)
+          ) {
+            const normalizedName = String(name).trim();
+            const existingContactId = nameToContactId.get(normalizedName);
+
+            if (existingContactId) {
+              // Merge additional IBAN into existing contact
+              await db.runAsync(
+                'INSERT OR IGNORE INTO contact_ibans (id, contact_id, iban, is_primary, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)',
+                [crypto.randomUUID(), existingContactId, iban, 0, now, now]
+              );
+            } else {
+              // Create new contact
+              const contactId = crypto.randomUUID();
+              nameToContactId.set(normalizedName, contactId);
+
+              await db.runAsync(
+                'INSERT INTO address_book (id, iban, name, profile_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)',
+                [contactId, iban, normalizedName, targetProfileId, now, now]
+              );
+
+              await db.runAsync(
+                'INSERT OR IGNORE INTO contact_ibans (id, contact_id, iban, is_primary, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)',
+                [crypto.randomUUID(), contactId, iban, 1, now, now]
+              );
+            }
+          }
+        }
+
+        // Add multi-IBAN contacts
+        for (const contact of MULTI_IBAN_CONTACTS) {
+          const primaryIban = contact.ibans.find((iban) =>
+            uniqueIbans.has(iban)
+          );
+          if (!primaryIban) continue;
+
+          const normalizedName = String(contact.name).trim();
+          const existingContactId = nameToContactId.get(normalizedName);
+          const contactId = existingContactId || crypto.randomUUID();
+
+          if (!existingContactId) {
+            nameToContactId.set(normalizedName, contactId);
+            await db.runAsync(
+              'INSERT INTO address_book (id, iban, name, profile_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)',
+              [
+                contactId,
+                primaryIban,
+                normalizedName,
+                targetProfileId,
+                now,
+                now,
+              ]
+            );
+          }
+
+          // Persist primary + secondary IBANs so the UI can show merged contacts.
+          await db.runAsync(
+            'INSERT OR IGNORE INTO contact_ibans (id, contact_id, iban, is_primary, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)',
+            [crypto.randomUUID(), contactId, primaryIban, 1, now, now]
+          );
+
+          for (const iban of contact.ibans) {
+            if (iban !== primaryIban && uniqueIbans.has(iban)) {
+              await db.runAsync(
+                'INSERT OR IGNORE INTO contact_ibans (id, contact_id, iban, is_primary, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)',
+                [crypto.randomUUID(), contactId, iban, 0, now, now]
+              );
+            }
+          }
+        }
+
+        // Mark payment processor IBANs as shared (bulk insert)
+        if (PAYMENT_PROCESSORS.length > 0) {
+          const placeholders = PAYMENT_PROCESSORS.map(
+            () => '(?, ?, ?, ?)'
+          ).join(', ');
+          const values = PAYMENT_PROCESSORS.flatMap((processor) => [
+            processor.iban,
+            processor.name,
+            now,
+            now,
+          ]);
+          await db.runAsync(
+            `INSERT OR IGNORE INTO shared_ibans (iban, provider_name, created_at, updated_at) VALUES ${placeholders}`,
+            values
+          );
+        }
+
+        // 6. Seed payment provider rules (bulk insert)
+        if (DEFAULT_PAYMENT_PROVIDER_RULES.length > 0) {
+          const placeholders = DEFAULT_PAYMENT_PROVIDER_RULES.map(
+            () => '(?, ?, ?, ?, ?, ?)'
+          ).join(', ');
+          const values = DEFAULT_PAYMENT_PROVIDER_RULES.flatMap((rule) => [
             crypto.randomUUID(),
             rule.name,
             rule.patterns,
             targetProfileId,
             now,
             now,
-          ]
-        );
-      }
-
-      // 7. Create budgets
-      for (const budget of DEFAULT_DEMO_BUDGETS) {
-        const catId = categoryIdMap[budget.categoryName];
-        if (catId) {
+          ]);
           await db.runAsync(
-            'INSERT INTO budgets (id, category_id, amount, period, profile_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
-            [
-              crypto.randomUUID(),
-              catId,
-              budget.amount,
-              'monthly',
-              targetProfileId,
-              now,
-              now,
-            ]
+            `INSERT OR IGNORE INTO payment_provider_rules (id, name, patterns, profile_id, created_at, updated_at) VALUES ${placeholders}`,
+            values
           );
         }
-      }
 
-      return {
-        profileId: targetProfileId,
-        categories: Object.keys(categoryIdMap).length,
-        transactions: transactions.length,
-        addressBookEntries: uniqueIbans.size,
-        budgets: DEFAULT_DEMO_BUDGETS.length,
-        accounts: 2,
-      };
+        // 7. Create budgets (bulk insert)
+        const budgetsToInsert = DEFAULT_DEMO_BUDGETS.map((budget) => ({
+          id: crypto.randomUUID(),
+          categoryId: categoryIdMap[budget.categoryName],
+          amount: budget.amount,
+        })).filter((b) => b.categoryId); // Only include budgets with valid category IDs
+
+        if (budgetsToInsert.length > 0) {
+          const placeholders = budgetsToInsert
+            .map(() => '(?, ?, ?, ?, ?, ?, ?)')
+            .join(', ');
+          const values = budgetsToInsert.flatMap((budget) => [
+            budget.id,
+            budget.categoryId,
+            budget.amount,
+            'monthly',
+            targetProfileId,
+            now,
+            now,
+          ]);
+          await db.runAsync(
+            `INSERT INTO budgets (id, category_id, amount, period, profile_id, created_at, updated_at) VALUES ${placeholders}`,
+            values
+          );
+        }
+
+        // === PERFORMANCE: Commit the transaction ===
+        await db.runAsync('COMMIT', []);
+
+        return {
+          profileId: targetProfileId,
+          categories: Object.keys(categoryIdMap).length,
+          transactions: transactions.length,
+          addressBookEntries: uniqueIbans.size,
+          budgets: DEFAULT_DEMO_BUDGETS.length,
+          accounts: 2,
+        };
+      } catch (error) {
+        // Rollback on any error
+        await db.runAsync('ROLLBACK', []);
+        throw error;
+      }
     },
 
     async getUser() {

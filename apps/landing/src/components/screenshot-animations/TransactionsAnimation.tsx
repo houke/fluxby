@@ -157,7 +157,7 @@ export default function TransactionsAnimation({
   return (
     <div className='relative h-full w-full overflow-hidden'>
       {/* Top gradient fade */}
-      <div className='pointer-events-none absolute left-0 right-0 top-0 z-10 h-12 bg-gradient-to-b from-purple-600 to-transparent' />
+      <div className='pointer-events-none absolute left-0 right-0 top-0 z-10 h-12 bg-gradient-to-b from-purple-50 to-transparent dark:from-transparent' />
 
       {/* Scrolling transactions */}
       <div
@@ -167,19 +167,19 @@ export default function TransactionsAnimation({
         {doubledTransactions.map((tx, idx) => (
           <div
             key={`${tx.id}-${idx}`}
-            className='flex items-center gap-3 border-b border-white/10 px-4 py-3'
+            className='flex items-center gap-3 border-b border-gray-200 px-4 py-3 dark:border-white/10'
           >
             {/* Icon */}
-            <div className='flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-white/10'>
+            <div className='flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-purple-100 dark:bg-white/10'>
               <span className='text-lg'>{tx.icon}</span>
             </div>
 
             {/* Details */}
             <div className='min-w-0 flex-1'>
-              <div className='truncate text-sm font-medium text-white'>
+              <div className='truncate text-sm font-medium text-gray-900 dark:text-white'>
                 {tx.name}
               </div>
-              <div className='flex items-center gap-2 text-xs text-white/60'>
+              <div className='flex items-center gap-2 text-xs text-gray-500 dark:text-white/60'>
                 <span>{tx.date}</span>
                 <span>•</span>
                 <span>{tx.category}</span>
@@ -190,10 +190,10 @@ export default function TransactionsAnimation({
             <div
               className={`flex-shrink-0 text-sm font-semibold ${
                 tx.type === 'income'
-                  ? 'text-emerald-400'
+                  ? 'text-emerald-600 dark:text-emerald-400'
                   : tx.type === 'transfer'
-                    ? 'text-blue-400'
-                    : 'text-white'
+                    ? 'text-blue-600 dark:text-blue-400'
+                    : 'text-gray-900 dark:text-white'
               }`}
             >
               {tx.amount >= 0 ? '+' : ''}€
@@ -207,7 +207,7 @@ export default function TransactionsAnimation({
       </div>
 
       {/* Bottom gradient fade */}
-      <div className='pointer-events-none absolute bottom-0 left-0 right-0 z-10 h-12 bg-gradient-to-t from-purple-600 to-transparent' />
+      <div className='pointer-events-none absolute bottom-0 left-0 right-0 z-10 h-12 bg-gradient-to-t from-indigo-100 to-transparent dark:from-transparent' />
     </div>
   );
 }

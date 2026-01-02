@@ -28,6 +28,7 @@ import {
 import { useLanguage } from '@/contexts/LanguageContext';
 import { api } from '@/lib/api';
 import { useEncryption } from '@/contexts/EncryptionContext';
+import { Toast, type ToastType } from '@/components/ui/toast';
 
 export function AppSettings() {
   const { t, language, setLanguage, languages } = useLanguage();
@@ -58,8 +59,11 @@ export function AppSettings() {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordError, setPasswordError] = useState<string | null>(null);
-  const [passwordSuccess, setPasswordSuccess] = useState<string | null>(null);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [toast, setToast] = useState<{
+    message: string;
+    type: ToastType;
+  } | null>(null);
 
   useEffect(() => {
     if (user?.name) {
@@ -78,7 +82,6 @@ export function AppSettings() {
     setNewPassword('');
     setConfirmPassword('');
     setPasswordError(null);
-    setPasswordSuccess(null);
   };
 
   const handleChangePassword = async () => {
@@ -87,36 +90,30 @@ export function AppSettings() {
     // Validation
     if (!currentPassword) {
       setPasswordError(
-        language === 'nl'
-          ? 'Voer je huidige wachtwoord in'
-          : 'Enter your current password'
+        t.security?.currentPassword || 'Enter your current password'
       );
       return;
     }
 
     if (newPassword.length < 8) {
       setPasswordError(
-        language === 'nl'
-          ? 'Nieuw wachtwoord moet minimaal 8 tekens zijn'
-          : 'New password must be at least 8 characters'
+        t.security?.passwordTooShort ||
+          'New password must be at least 8 characters'
       );
       return;
     }
 
     if (newPassword !== confirmPassword) {
       setPasswordError(
-        language === 'nl'
-          ? 'Wachtwoorden komen niet overeen'
-          : 'Passwords do not match'
+        t.security?.passwordsNoMatch || 'Passwords do not match'
       );
       return;
     }
 
     if (currentPassword === newPassword) {
       setPasswordError(
-        language === 'nl'
-          ? 'Nieuw wachtwoord moet anders zijn dan het huidige'
-          : 'New password must be different from current'
+        t.settings?.masterPasswordMustDiffer ||
+          'New password must be different from current'
       );
       return;
     }
@@ -127,28 +124,30 @@ export function AppSettings() {
       const success = await changePassword(currentPassword, newPassword);
 
       if (success) {
-        // Success - show message
-        setPasswordSuccess(
-          language === 'nl'
-            ? 'Je master wachtwoord is succesvol gewijzigd.'
-            : 'Your master password has been successfully changed.'
-        );
-        // Clear success message after 5 seconds
-        setTimeout(() => setPasswordSuccess(null), 5000);
-        // Reset form
-        setCurrentPassword('');
-        setNewPassword('');
-        setConfirmPassword('');
+        setToast({
+          message:
+            t.security?.passwordChangedSuccess ||
+            'Your master password has been successfully changed.',
+          type: 'success',
+        });
+        setIsPasswordDialogOpen(false);
+        resetPasswordForm();
       } else {
-        setPasswordError(
-          language === 'nl'
-            ? 'Huidig wachtwoord is onjuist'
-            : 'Current password is incorrect'
-        );
+        const message =
+          t.security?.wrongPassword || 'Current password is incorrect';
+        setPasswordError(message);
+        setToast({ message, type: 'error' });
       }
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : String(err);
       setPasswordError(errorMessage);
+      setToast({
+        message:
+          errorMessage ||
+          t.security?.unlockError ||
+          'Failed to change password',
+        type: 'error',
+      });
     } finally {
       setIsChangingPassword(false);
     }
@@ -172,12 +171,10 @@ export function AppSettings() {
             <div className='flex items-center justify-between py-3'>
               <div>
                 <p className='font-medium'>
-                  {language === 'nl' ? 'Je naam' : 'Your name'}
+                  {t.settings?.appNameLabel || 'Your name'}
                 </p>
                 <p className='text-sm text-muted-foreground'>
-                  {language === 'nl'
-                    ? 'Wordt gebruikt in de begroeting'
-                    : 'Used in the greeting'}
+                  {t.settings?.appNameDescription || 'Used in the greeting'}
                 </p>
               </div>
               <div className='flex items-center gap-2'>
@@ -188,7 +185,7 @@ export function AppSettings() {
                       onChange={(e) => setEditedName(e.target.value)}
                       className='w-40'
                       placeholder={
-                        language === 'nl' ? 'Je naam...' : 'Your name...'
+                        t.settings?.appNamePlaceholder || 'Your name...'
                       }
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') handleSaveName();
@@ -211,8 +208,7 @@ export function AppSettings() {
                 ) : (
                   <>
                     <span className='text-sm text-muted-foreground'>
-                      {user?.name ||
-                        (language === 'nl' ? 'Niet ingesteld' : 'Not set')}
+                      {user?.name || t.settings?.appNameUnset || 'Not set'}
                     </span>
                     <TooltipProvider delayDuration={200}>
                       <Tooltip>
@@ -227,8 +223,7 @@ export function AppSettings() {
                           </Button>
                         </TooltipTrigger>
                         <TooltipContent>
-                          {t.common?.edit ||
-                            (language === 'nl' ? 'Bewerken' : 'Edit')}
+                          {t.common?.edit || 'Edit'}
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
@@ -242,14 +237,11 @@ export function AppSettings() {
               <div className='flex items-start gap-3'>
                 <div>
                   <p className='font-medium'>
-                    {language === 'nl'
-                      ? 'Master wachtwoord'
-                      : 'Master password'}
+                    {t.settings?.masterPasswordTitle || 'Master password'}
                   </p>
                   <p className='text-sm text-muted-foreground'>
-                    {language === 'nl'
-                      ? 'Versleutelt al je financiële gegevens lokaal'
-                      : 'Encrypts all your financial data locally'}
+                    {t.settings?.masterPasswordDescription ||
+                      'Encrypts all your financial data locally'}
                   </p>
                 </div>
               </div>
@@ -262,22 +254,20 @@ export function AppSettings() {
               >
                 <DialogTrigger asChild>
                   <Button variant='outline' size='sm'>
-                    {language === 'nl'
-                      ? 'Wachtwoord wijzigen'
-                      : 'Change password'}
+                    {t.settings?.masterPasswordChange ||
+                      t.security?.changePassword ||
+                      'Change password'}
                   </Button>
                 </DialogTrigger>
                 <DialogContent className='sm:max-w-md'>
                   <DialogHeader>
                     <DialogTitle>
-                      {language === 'nl'
-                        ? 'Master wachtwoord wijzigen'
-                        : 'Change master password'}
+                      {t.settings?.masterPasswordDialogTitle ||
+                        'Change master password'}
                     </DialogTitle>
                     <DialogDescription>
-                      {language === 'nl'
-                        ? 'Voer je huidige wachtwoord in en kies een nieuw wachtwoord.'
-                        : 'Enter your current password and choose a new password.'}
+                      {t.settings?.masterPasswordDialogDescription ||
+                        'Enter your current password and choose a new password.'}
                     </DialogDescription>
                   </DialogHeader>
 
@@ -285,9 +275,8 @@ export function AppSettings() {
                     <div className='rounded-lg bg-amber-50 p-3 dark:bg-amber-950/30'>
                       <p className='flex items-start gap-2 text-sm text-amber-800 dark:text-amber-200'>
                         <AlertTriangle className='mt-0.5 h-4 w-4 flex-shrink-0' />
-                        {language === 'nl'
-                          ? 'Let op: Je wachtwoord kan niet worden hersteld. Als je het vergeet, kunnen je gegevens niet meer worden ontsleuteld.'
-                          : 'Warning: Your password cannot be recovered. If you forget it, your data cannot be decrypted.'}
+                        {t.settings?.masterPasswordWarning ||
+                          'Warning: Your password cannot be recovered. If you forget it, your data cannot be decrypted.'}
                       </p>
                     </div>
                     <div className='space-y-2'>
@@ -295,9 +284,9 @@ export function AppSettings() {
                         htmlFor='current-password'
                         className='text-sm font-medium'
                       >
-                        {language === 'nl'
-                          ? 'Huidig wachtwoord'
-                          : 'Current password'}
+                        {t.settings?.masterPasswordCurrent ||
+                          t.security?.currentPassword ||
+                          'Current password'}
                       </label>
                       <Input
                         id='current-password'
@@ -316,9 +305,7 @@ export function AppSettings() {
                         htmlFor='new-password'
                         className='text-sm font-medium'
                       >
-                        {language === 'nl'
-                          ? 'Nieuw wachtwoord'
-                          : 'New password'}
+                        {t.settings?.masterPasswordNew || 'New password'}
                       </label>
                       <Input
                         id='new-password'
@@ -332,9 +319,8 @@ export function AppSettings() {
                         minLength={8}
                       />
                       <p className='text-xs text-muted-foreground'>
-                        {language === 'nl'
-                          ? 'Minimaal 8 tekens'
-                          : 'Minimum 8 characters'}
+                        {t.settings?.masterPasswordMinLength ||
+                          'Minimum 8 characters'}
                       </p>
                     </div>
 
@@ -343,9 +329,8 @@ export function AppSettings() {
                         htmlFor='confirm-password'
                         className='text-sm font-medium'
                       >
-                        {language === 'nl'
-                          ? 'Bevestig nieuw wachtwoord'
-                          : 'Confirm new password'}
+                        {t.settings?.masterPasswordConfirm ||
+                          'Confirm new password'}
                       </label>
                       <Input
                         id='confirm-password'
@@ -366,13 +351,6 @@ export function AppSettings() {
                         {passwordError}
                       </p>
                     )}
-
-                    {passwordSuccess && (
-                      <p className='flex items-center gap-2 text-sm text-emerald-600'>
-                        <Check className='h-4 w-4' />
-                        {passwordSuccess}
-                      </p>
-                    )}
                   </div>
 
                   <DialogFooter>
@@ -383,7 +361,7 @@ export function AppSettings() {
                         resetPasswordForm();
                       }}
                     >
-                      {language === 'nl' ? 'Annuleren' : 'Cancel'}
+                      {t.common?.cancel || 'Cancel'}
                     </Button>
                     <Button
                       onClick={handleChangePassword}
@@ -396,12 +374,10 @@ export function AppSettings() {
                       className='bg-purple-600 hover:bg-purple-700'
                     >
                       {isChangingPassword
-                        ? language === 'nl'
-                          ? 'Wijzigen...'
-                          : 'Changing...'
-                        : language === 'nl'
-                          ? 'Wachtwoord wijzigen'
-                          : 'Change password'}
+                        ? t.settings?.masterPasswordChanging || 'Changing...'
+                        : t.settings?.masterPasswordChange ||
+                          t.security?.changePassword ||
+                          'Change password'}
                     </Button>
                   </DialogFooter>
                 </DialogContent>
@@ -480,6 +456,14 @@ export function AppSettings() {
           </div>
         </CardContent>
       </Card>
+
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
     </div>
   );
 }
