@@ -1462,7 +1462,7 @@ export const en: LandingTranslationKeys = {
       intro: {
         title: 'The Story of Fluxby',
         content:
-          "This is the only human written piece of content in this whole project. Everything else you see, from stunning visual designs to content, documentation, and every single line of code, came from AI prompts. This is not just an app, it's proof that AI has become capable enough to work alongside a developer to build a complete, professional application without the developer writing any code themselves. I was on my Christmas break and wanted to do an experiment where I didn't want to write code the traditional way. No coding from me. Just prompts, feedback, and watching an AI turn ideas into reality.",
+          "This is the only human written piece of content in this whole project, and even this has been reformatted by AI before it was added to the page. Everything else you see, from stunning visual designs to content, documentation, and every single line of code, came from AI prompts. This is not just an app, it's proof that AI has become capable enough to work alongside a developer to build a complete, professional application without the developer writing any code themselves. I was on my Christmas break and wanted to do an experiment where I didn't want to write code the traditional way. No coding from me. Just prompts, feedback, and watching an AI turn ideas into reality.",
       },
       background: {
         title: 'Why I Did This',

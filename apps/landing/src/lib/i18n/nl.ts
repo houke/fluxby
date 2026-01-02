@@ -1666,7 +1666,7 @@ export const nl: LandingTranslationKeys = {
       intro: {
         title: 'Het verhaal van Fluxby',
         content:
-          'Dit is het enige door mensen geschreven stuk content in dit hele project. Al het andere wat je ziet - prachtige visuele designs, inhoud, documentatie en letterlijk elke regel code - is tot stand gekomen door AI prompts. Dit is niet zomaar een app - het is een bewijs dat AI capabel genoeg is geworden om samen met een developer een volledige, professionele applicatie te bouwen zonder dat de developer zelf code hoeft te schrijven. Ik zat in mijn kerstvakantie en had geen zin om traditioneel code te schrijven, dus besloot ik dit experiment aan te gaan. Geen coderen van mij. Alleen prompts, feedback, en het kijken hoe AI ideeën in werkelijkheid omzet.',
+          'Dit is het enige door mensen geschreven stuk content in dit hele project, en zelfs dit is door AI geherformatteerd voordat het aan de pagina werd toegevoegd. Al het andere wat je ziet - prachtige visuele designs, inhoud, documentatie en letterlijk elke regel code - is tot stand gekomen door AI prompts. Dit is niet zomaar een app - het is een bewijs dat AI capabel genoeg is geworden om samen met een developer een volledige, professionele applicatie te bouwen zonder dat de developer zelf code hoeft te schrijven. Ik zat in mijn kerstvakantie en had geen zin om traditioneel code te schrijven, dus besloot ik dit experiment aan te gaan. Geen coderen van mij. Alleen prompts, feedback, en het kijken hoe AI ideeën in werkelijkheid omzet.',
       },
       background: {
         title: 'Waarom ik dit deed',
