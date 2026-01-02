@@ -1,5 +1,11 @@
 name: Deploy to GitHub Pages
-description: 'Builds and deploys the Fluxby web and landing apps to GitHub Pages on every push to main.'
+# Builds and deploys the Fluxby web and landing apps to GitHub Pages on every push to main.
+#
+# IMPORTANT: To prevent the README from showing during deployments, ensure your repository's
+# GitHub Pages settings are configured as follows:
+#   Settings → Pages → Build and deployment → Source: "GitHub Actions"
+# Do NOT use "Deploy from a branch" as that would serve the repository root (including README.md)
+# during the deployment process.
 
 on:
   push:
@@ -19,7 +25,9 @@ permissions:
 
 concurrency:
   group: 'pages'
-  cancel-in-progress: true
+  # IMPORTANT: Don't cancel in-progress deployments to prevent showing README
+  # during the transition. Wait for current deployment to finish instead.
+  cancel-in-progress: false
 
 jobs:
   build:
