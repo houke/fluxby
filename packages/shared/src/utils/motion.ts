@@ -15,51 +15,64 @@ const TABLET_REGEX = /iPad|Tablet/i;
 
 const DEFAULT_TIER: MotionTier = 'full';
 
-const MIN_MEDIUM_CPU = 3;
-const MIN_LOW_CPU = 2;
-const MIN_LOW_MEMORY = 3;
-// GPU-capable threshold: devices with good GPU support can handle full quality
-const MIN_FULL_QUALITY_CPU = 2;
-
 const CONNECTION_TYPES_PENALTY = new Set(['slow-2g', '2g']);
 
 /**
  * Check if the device likely has good GPU/rendering capabilities.
- * Used to allow high-fidelity mode on capable mobile devices.
+ * This is the PRIMARY performance indicator as it cannot be restricted
+ * by hosting environments like GitHub Pages.
+ *
+ * Returns a score from 0-3:
+ * - 0: No WebGL support
+ * - 1: Basic WebGL support
+ * - 2: Good GPU (recognized renderer or large texture support)
+ * - 3: High-end GPU (WebGL2 + recognized renderer + large textures)
  */
-function hasGoodGPUSupport(): boolean {
-  if (typeof window === 'undefined') return false;
+function getGPUCapabilityScore(): number {
+  if (typeof window === 'undefined') return 0;
 
   try {
     const canvas = document.createElement('canvas');
+
+    // Try WebGL2 first (indicates more modern GPU)
+    const gl2 = canvas.getContext('webgl2');
     const gl =
-      canvas.getContext('webgl2') ||
+      gl2 ||
       canvas.getContext('webgl') ||
       canvas.getContext('experimental-webgl');
-    if (!gl) return false;
 
-    // Check for reasonable GPU capabilities
-    const debugInfo = (gl as WebGLRenderingContext).getExtension(
-      'WEBGL_debug_renderer_info'
-    );
+    if (!gl) return 0;
+
+    const glContext = gl as WebGLRenderingContext;
+    let score = 1; // Basic WebGL support
+
+    // Check for recognized high-performance GPU renderer
+    const debugInfo = glContext.getExtension('WEBGL_debug_renderer_info');
     if (debugInfo) {
-      const renderer = (gl as WebGLRenderingContext).getParameter(
+      const renderer = glContext.getParameter(
         debugInfo.UNMASKED_RENDERER_WEBGL
       );
-      // Modern mobile GPUs that can handle full quality
-      const goodGPUs = /adreno|mali|apple|powervr|nvidia|intel/i;
+      // Modern GPUs that can handle full quality animations
+      const goodGPUs = /adreno|mali|apple|powervr|nvidia|intel|radeon|geforce/i;
       if (goodGPUs.test(renderer)) {
-        return true;
+        score = 2;
       }
     }
 
-    // Fallback: check max texture size as proxy for GPU capability
-    const maxTextureSize = (gl as WebGLRenderingContext).getParameter(
-      (gl as WebGLRenderingContext).MAX_TEXTURE_SIZE
-    );
-    return maxTextureSize >= 4096;
+    // Check max texture size as additional GPU capability proxy
+    const maxTextureSize = glContext.getParameter(glContext.MAX_TEXTURE_SIZE);
+    if (maxTextureSize >= 8192) {
+      score = Math.max(score, 2);
+    }
+
+    // WebGL2 support indicates a more capable GPU
+    if (gl2 && score >= 2) {
+      score = 3;
+    }
+
+    return score;
   } catch {
-    return false;
+    return 0;
   }
 }
 
@@ -68,6 +81,7 @@ export function detectMotionTier(): MotionTier {
     return DEFAULT_TIER;
   }
 
+  // 1. User preference for reduced motion - always respect this
   try {
     if (window.matchMedia?.(MOTION_MEDIA_QUERY).matches) {
       return 'minimal';
@@ -89,65 +103,65 @@ export function detectMotionTier(): MotionTier {
     };
   };
 
-  const hardwareConcurrency = navigatorRef.hardwareConcurrency ?? 8;
-  const deviceMemory = navigatorRef.deviceMemory ?? 8;
   const connection = navigatorRef.connection;
   const saveData = Boolean(connection?.saveData);
   const effectiveType = connection?.effectiveType ?? '';
   const userAgent = navigatorRef.userAgent ?? '';
   const isMobile = MOBILE_REGEX.test(userAgent);
   const isTablet = TABLET_REGEX.test(userAgent);
-  const isMac = /Macintosh/i.test(userAgent);
-  const dpr = window.devicePixelRatio || 1;
 
-  // High-performance indicators that are harder to manipulate
-  const isHighDPI = dpr >= 2;
-  const hasGoodGPU = hasGoodGPUSupport();
-
-  // Data saver mode always gets low quality
+  // 2. Data saver mode - user explicitly wants reduced data usage
   if (saveData || CONNECTION_TYPES_PENALTY.has(effectiveType)) {
     return 'low';
   }
 
-  // Very low memory devices get low quality
-  if (deviceMemory && deviceMemory <= MIN_LOW_MEMORY) {
-    // Allow high-end devices with restricted memory reporting to stay at medium
-    if (isHighDPI && hasGoodGPU) return 'medium';
-    return 'low';
-  }
+  // 3. PRIMARY DETECTION: Use devicePixelRatio and GPU capabilities
+  // These cannot be restricted by hosting environments like GitHub Pages
+  const dpr = window.devicePixelRatio || 1;
+  const isHighDPI = dpr >= 2;
+  const gpuScore = getGPUCapabilityScore();
 
-  // Very low CPU devices get low quality
-  if (hardwareConcurrency && hardwareConcurrency <= MIN_LOW_CPU) {
-    if (isHighDPI && hasGoodGPU) return 'medium';
-    return 'low';
-  }
-
-  // For mobile/tablet: check if device has good GPU support
-  // Capable mobile devices (4+ cores with good GPU) can handle full quality
-  if (isMobile || isTablet) {
-    if (
-      (hardwareConcurrency >= MIN_FULL_QUALITY_CPU || isHighDPI) &&
-      deviceMemory >= 4 &&
-      hasGoodGPU
-    ) {
-      return 'full';
-    }
-    return 'medium';
-  }
-
-  // Desktop: If it has a high-end GPU and high DPI, it's likely a high-end machine
-  // even if hardwareConcurrency is restricted by the host (e.g. GitHub Pages)
-  // Special case for M1/M2/M3 Macs which are always high-end
-  if ((isHighDPI && hasGoodGPU) || (isMac && isHighDPI)) {
+  // High-end device detection based on reliable indicators:
+  // - High DPI display (Retina/HiDPI) indicates modern hardware
+  // - GPU capability score indicates actual rendering performance
+  if (gpuScore >= 3 || (gpuScore >= 2 && isHighDPI)) {
+    // High-end GPU or good GPU with high DPI = full quality
     return 'full';
   }
 
-  // Desktop with medium CPU gets medium quality
-  if (hardwareConcurrency <= MIN_MEDIUM_CPU) {
+  if (gpuScore >= 2) {
+    // Good GPU but standard DPI - still capable of full on desktop
+    if (!isMobile && !isTablet) {
+      return 'full';
+    }
+    // Mobile with good GPU but no high DPI = medium
     return 'medium';
   }
 
-  return DEFAULT_TIER;
+  if (gpuScore === 1 && isHighDPI) {
+    // Basic WebGL but high DPI suggests decent modern device
+    return 'medium';
+  }
+
+  // 4. FALLBACK: Only use CPU/memory as downgrade signals, not primary detection
+  // Note: These values can be restricted by hosts like GitHub Pages,
+  // so we only use them to potentially downgrade, never to upgrade
+  const hardwareConcurrency = navigatorRef.hardwareConcurrency ?? 8;
+  const deviceMemory = navigatorRef.deviceMemory ?? 8;
+
+  // If GPU detection passed but memory/CPU report very low,
+  // it's likely a restricted environment - trust GPU over CPU/memory
+  if (gpuScore >= 1) {
+    return 'medium';
+  }
+
+  // No WebGL support at all - use CPU/memory as last resort
+  if (deviceMemory <= 2 || hardwareConcurrency <= 2) {
+    return 'low';
+  }
+
+  // Default to medium for unknown configurations
+  return 'medium';
 }
 
 export function observeMotionTier(
