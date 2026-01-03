@@ -6,7 +6,7 @@
     "description": "API for managing financial transactions, categories, budgets, and analytics. This API is intended for developers building custom interfaces.",
     "license": {
       "name": "MIT",
-      "url": "https://github.com/fluxby/fluxby/blob/main/LICENSE"
+      "url": "https://github.com/houke/fluxby/blob/main/LICENSE"
     }
   },
   "servers": [
@@ -74,9 +74,7 @@
     "/api/accounts": {
       "get": {
         "summary": "Haal alle rekeningen op",
-        "tags": [
-          "Accounts"
-        ],
+        "tags": ["Accounts"],
         "parameters": [
           {
             "in": "header",
@@ -95,9 +93,7 @@
       },
       "post": {
         "summary": "Maak een nieuwe rekening aan",
-        "tags": [
-          "Accounts"
-        ],
+        "tags": ["Accounts"],
         "parameters": [
           {
             "in": "header",
@@ -113,10 +109,7 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "iban",
-                  "name"
-                ],
+                "required": ["iban", "name"],
                 "properties": {
                   "iban": {
                     "type": "string"
@@ -126,11 +119,7 @@
                   },
                   "type": {
                     "type": "string",
-                    "enum": [
-                      "checking",
-                      "savings",
-                      "credit"
-                    ]
+                    "enum": ["checking", "savings", "credit"]
                   }
                 }
               }
@@ -152,9 +141,7 @@
       "delete": {
         "summary": "Delete all accounts for current profile",
         "description": "Deletes all accounts for the current profile. Transactions will be unlinked (account_id set to null) but not deleted.",
-        "tags": [
-          "Accounts"
-        ],
+        "tags": ["Accounts"],
         "parameters": [
           {
             "in": "header",
@@ -174,9 +161,7 @@
     "/api/accounts/{id}": {
       "get": {
         "summary": "Haal een specifieke rekening op",
-        "tags": [
-          "Accounts"
-        ],
+        "tags": ["Accounts"],
         "parameters": [
           {
             "in": "path",
@@ -205,9 +190,7 @@
       },
       "patch": {
         "summary": "Werk een rekening bij",
-        "tags": [
-          "Accounts"
-        ],
+        "tags": ["Accounts"],
         "parameters": [
           {
             "in": "path",
@@ -236,11 +219,7 @@
                   },
                   "type": {
                     "type": "string",
-                    "enum": [
-                      "checking",
-                      "savings",
-                      "credit"
-                    ]
+                    "enum": ["checking", "savings", "credit"]
                   },
                   "currentBalance": {
                     "type": "number"
@@ -262,9 +241,7 @@
       "delete": {
         "summary": "Delete an account",
         "description": "Deletes an account. Transactions linked to this account will remain but be unlinked (account_id set to null).",
-        "tags": [
-          "Accounts"
-        ],
+        "tags": ["Accounts"],
         "parameters": [
           {
             "in": "path",
@@ -295,9 +272,7 @@
     "/api/accounts/order": {
       "patch": {
         "summary": "Update the display order of accounts",
-        "tags": [
-          "Accounts"
-        ],
+        "tags": ["Accounts"],
         "parameters": [
           {
             "in": "header",
@@ -313,9 +288,7 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "accountIds"
-                ],
+                "required": ["accountIds"],
                 "properties": {
                   "accountIds": {
                     "type": "array",
@@ -342,9 +315,7 @@
     "/api/addressbook": {
       "get": {
         "summary": "Haal alle adresboek entries op",
-        "tags": [
-          "AddressBook"
-        ],
+        "tags": ["AddressBook"],
         "responses": {
           "200": {
             "description": "Lijst met adresboek entries inclusief statistieken"
@@ -354,19 +325,14 @@
       "post": {
         "summary": "Maak een nieuwe adresboek entry aan of voeg IBAN toe aan bestaand contact",
         "description": "Als een contact met dezelfde naam al bestaat, wordt de nieuwe IBAN toegevoegd aan het bestaande contact. Dit voorkomt duplicaten. Als de IBAN een gedeelde IBAN is (payment processor), wordt de entry toegevoegd aan shared_iban_merchants in plaats van address_book.\n",
-        "tags": [
-          "AddressBook"
-        ],
+        "tags": ["AddressBook"],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "iban",
-                  "name"
-                ],
+                "required": ["iban", "name"],
                 "properties": {
                   "iban": {
                     "type": "string"
@@ -403,9 +369,7 @@
     "/api/addressbook/top-accounts": {
       "get": {
         "summary": "Haal top accounts op basis van transactiewaarde",
-        "tags": [
-          "AddressBook"
-        ],
+        "tags": ["AddressBook"],
         "parameters": [
           {
             "in": "query",
@@ -420,11 +384,7 @@
             "name": "type",
             "schema": {
               "type": "string",
-              "enum": [
-                "expense",
-                "income",
-                "all"
-              ],
+              "enum": ["expense", "income", "all"],
               "default": "expense"
             }
           },
@@ -455,9 +415,7 @@
     "/api/addressbook/cleanup-rules": {
       "get": {
         "summary": "Haal alle naam opschoon regels op",
-        "tags": [
-          "AddressBook"
-        ],
+        "tags": ["AddressBook"],
         "responses": {
           "200": {
             "description": "Lijst met opschoon regels"
@@ -466,18 +424,14 @@
       },
       "post": {
         "summary": "Voeg een nieuwe opschoon regel toe",
-        "tags": [
-          "AddressBook"
-        ],
+        "tags": ["AddressBook"],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "pattern"
-                ],
+                "required": ["pattern"],
                 "properties": {
                   "pattern": {
                     "type": "string"
@@ -500,9 +454,7 @@
     "/api/addressbook/cleanup-rules/{id}": {
       "delete": {
         "summary": "Verwijder een opschoon regel",
-        "tags": [
-          "AddressBook"
-        ],
+        "tags": ["AddressBook"],
         "parameters": [
           {
             "in": "path",
@@ -523,9 +475,7 @@
     "/api/addressbook/apply-cleanup-rules": {
       "post": {
         "summary": "Pas opschoon regels toe op alle address book entries",
-        "tags": [
-          "AddressBook"
-        ],
+        "tags": ["AddressBook"],
         "responses": {
           "200": {
             "description": "Aantal entries bijgewerkt"
@@ -536,9 +486,7 @@
     "/api/addressbook/shared-ibans": {
       "get": {
         "summary": "Haal gedeelde IBANs op (payment processors met meerdere merchants)",
-        "tags": [
-          "AddressBook"
-        ],
+        "tags": ["AddressBook"],
         "responses": {
           "200": {
             "description": "Lijst met gedeelde IBANs en hun merchants"
@@ -547,18 +495,14 @@
       },
       "post": {
         "summary": "Markeer een IBAN als gedeeld (payment processor)",
-        "tags": [
-          "AddressBook"
-        ],
+        "tags": ["AddressBook"],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "iban"
-                ],
+                "required": ["iban"],
                 "properties": {
                   "iban": {
                     "type": "string"
@@ -581,9 +525,7 @@
     "/api/addressbook/shared-ibans/{iban}": {
       "delete": {
         "summary": "Verwijder een IBAN uit de gedeelde lijst",
-        "tags": [
-          "AddressBook"
-        ],
+        "tags": ["AddressBook"],
         "parameters": [
           {
             "in": "path",
@@ -605,9 +547,7 @@
       "post": {
         "summary": "Detecteer en verwerk gedeelde IBANs",
         "description": "Vindt IBANs met meerdere namen, verwijdert ze uit het adresboek, en voegt ze toe aan de shared_ibans tabel\n",
-        "tags": [
-          "AddressBook"
-        ],
+        "tags": ["AddressBook"],
         "responses": {
           "200": {
             "description": "Aantal gedetecteerde en verwerkte gedeelde IBANs"
@@ -618,9 +558,7 @@
     "/api/addressbook/shared-iban-merchants": {
       "get": {
         "summary": "Haal alle merchant mappings op voor gedeelde IBANs",
-        "tags": [
-          "AddressBook"
-        ],
+        "tags": ["AddressBook"],
         "parameters": [
           {
             "in": "query",
@@ -639,19 +577,14 @@
       },
       "post": {
         "summary": "Voeg merchants toe van een gedeelde IBAN",
-        "tags": [
-          "AddressBook"
-        ],
+        "tags": ["AddressBook"],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "iban",
-                  "merchants"
-                ],
+                "required": ["iban", "merchants"],
                 "properties": {
                   "iban": {
                     "type": "string"
@@ -685,9 +618,7 @@
     "/api/addressbook/shared-iban-merchants/{id}": {
       "delete": {
         "summary": "Verwijder een merchant mapping",
-        "tags": [
-          "AddressBook"
-        ],
+        "tags": ["AddressBook"],
         "parameters": [
           {
             "in": "path",
@@ -709,20 +640,14 @@
       "post": {
         "summary": "Voeg een entry toe aan adresboek vanuit gedeelde IBAN en update transacties",
         "description": "Voegt een entry toe aan het adresboek, update merchant_name in transacties voor de opgegeven originele namen, en verwijdert de IBAN uit shared_ibans als alle namen zijn verwerkt.\n",
-        "tags": [
-          "AddressBook"
-        ],
+        "tags": ["AddressBook"],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "iban",
-                  "name",
-                  "originalNames"
-                ],
+                "required": ["iban", "name", "originalNames"],
                 "properties": {
                   "iban": {
                     "type": "string"
@@ -752,9 +677,7 @@
     "/api/addressbook/payment-providers": {
       "get": {
         "summary": "Haal alle bekende payment processors op",
-        "tags": [
-          "AddressBook"
-        ],
+        "tags": ["AddressBook"],
         "responses": {
           "200": {
             "description": "Lijst met payment processors"
@@ -763,19 +686,14 @@
       },
       "post": {
         "summary": "Voeg een payment processor toe",
-        "tags": [
-          "AddressBook"
-        ],
+        "tags": ["AddressBook"],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "iban",
-                  "name"
-                ],
+                "required": ["iban", "name"],
                 "properties": {
                   "iban": {
                     "type": "string"
@@ -798,9 +716,7 @@
     "/api/addressbook/payment-providers/{id}": {
       "delete": {
         "summary": "Verwijder een payment processor",
-        "tags": [
-          "AddressBook"
-        ],
+        "tags": ["AddressBook"],
         "parameters": [
           {
             "in": "path",
@@ -821,9 +737,7 @@
     "/api/addressbook/payment-provider-rules": {
       "get": {
         "summary": "Haal alle payment processor regels op",
-        "tags": [
-          "AddressBook"
-        ],
+        "tags": ["AddressBook"],
         "responses": {
           "200": {
             "description": "Lijst met payment processor regels"
@@ -832,19 +746,14 @@
       },
       "post": {
         "summary": "Voeg een payment processor regel toe",
-        "tags": [
-          "AddressBook"
-        ],
+        "tags": ["AddressBook"],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "name",
-                  "patterns"
-                ],
+                "required": ["name", "patterns"],
                 "properties": {
                   "name": {
                     "type": "string"
@@ -868,9 +777,7 @@
     "/api/addressbook/payment-provider-rules/{id}": {
       "patch": {
         "summary": "Update een payment processor regel",
-        "tags": [
-          "AddressBook"
-        ],
+        "tags": ["AddressBook"],
         "parameters": [
           {
             "in": "path",
@@ -907,9 +814,7 @@
       },
       "delete": {
         "summary": "Verwijder een payment processor regel",
-        "tags": [
-          "AddressBook"
-        ],
+        "tags": ["AddressBook"],
         "parameters": [
           {
             "in": "path",
@@ -930,9 +835,7 @@
     "/api/addressbook/detect-payment-provider": {
       "post": {
         "summary": "Detecteer payment processor voor een transactie",
-        "tags": [
-          "AddressBook"
-        ],
+        "tags": ["AddressBook"],
         "requestBody": {
           "required": true,
           "content": {
@@ -964,9 +867,7 @@
     "/api/addressbook/{id}": {
       "get": {
         "summary": "Haal een specifieke adresboek entry op",
-        "tags": [
-          "AddressBook"
-        ],
+        "tags": ["AddressBook"],
         "parameters": [
           {
             "in": "path",
@@ -988,9 +889,7 @@
       },
       "patch": {
         "summary": "Update een adresboek entry",
-        "tags": [
-          "AddressBook"
-        ],
+        "tags": ["AddressBook"],
         "parameters": [
           {
             "in": "path",
@@ -1033,9 +932,7 @@
       },
       "delete": {
         "summary": "Verwijder een adresboek entry",
-        "tags": [
-          "AddressBook"
-        ],
+        "tags": ["AddressBook"],
         "parameters": [
           {
             "in": "path",
@@ -1059,9 +956,7 @@
     "/api/addressbook/by-iban/{iban}": {
       "get": {
         "summary": "Haal adresboek entry op via IBAN",
-        "tags": [
-          "AddressBook"
-        ],
+        "tags": ["AddressBook"],
         "parameters": [
           {
             "in": "path",
@@ -1085,9 +980,7 @@
     "/api/addressbook/{id}/ibans": {
       "get": {
         "summary": "Haal alle IBANs op voor een contact",
-        "tags": [
-          "AddressBook"
-        ],
+        "tags": ["AddressBook"],
         "parameters": [
           {
             "in": "path",
@@ -1106,9 +999,7 @@
       },
       "post": {
         "summary": "Voeg een IBAN toe aan een bestaand contact",
-        "tags": [
-          "AddressBook"
-        ],
+        "tags": ["AddressBook"],
         "parameters": [
           {
             "in": "path",
@@ -1125,9 +1016,7 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "iban"
-                ],
+                "required": ["iban"],
                 "properties": {
                   "iban": {
                     "type": "string"
@@ -1147,9 +1036,7 @@
     "/api/addressbook/{id}/ibans/{ibanId}": {
       "delete": {
         "summary": "Verwijder een IBAN van een contact",
-        "tags": [
-          "AddressBook"
-        ],
+        "tags": ["AddressBook"],
         "parameters": [
           {
             "in": "path",
@@ -1179,9 +1066,7 @@
       "post": {
         "summary": "Automatisch samenvoegen van contacten met dezelfde naam",
         "description": "Vindt alle contacten met dezelfde naam (case-insensitive) en voegt ze samen. De eerste entry wordt de primaire, alle IBANs worden samengevoegd.\n",
-        "tags": [
-          "AddressBook"
-        ],
+        "tags": ["AddressBook"],
         "responses": {
           "200": {
             "description": "Aantal samengevoegde duplicaten"
@@ -1193,18 +1078,14 @@
       "post": {
         "summary": "Voeg twee of meer contacten samen tot één",
         "description": "Voegt meerdere contacten samen. De eerste contact ID wordt de primaire en alle IBANs van de andere contacten worden hieraan toegevoegd. De andere contacten worden verwijderd.\n",
-        "tags": [
-          "AddressBook"
-        ],
+        "tags": ["AddressBook"],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "contactIds"
-                ],
+                "required": ["contactIds"],
                 "properties": {
                   "contactIds": {
                     "type": "array",
@@ -1233,19 +1114,14 @@
       "post": {
         "summary": "Splits een contact met meerdere IBANs in losse contacten",
         "description": "Splits een contact op basis van opgegeven IBAN->naam mappings. Als een naam al bestaat in het adresboek, wordt er een warning teruggegeven en de split voor dat IBAN wordt niet uitgevoerd.\n",
-        "tags": [
-          "AddressBook"
-        ],
+        "tags": ["AddressBook"],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "contactId",
-                  "mappings"
-                ],
+                "required": ["contactId", "mappings"],
                 "properties": {
                   "contactId": {
                     "type": "integer"
@@ -1279,9 +1155,7 @@
     "/api/analytics/years": {
       "get": {
         "summary": "Haal beschikbare jaren op uit transacties",
-        "tags": [
-          "Analytics"
-        ],
+        "tags": ["Analytics"],
         "responses": {
           "200": {
             "description": "Array van jaren waarvoor data beschikbaar is"
@@ -1292,9 +1166,7 @@
     "/api/analytics/dates": {
       "get": {
         "summary": "Haal minimum en maximum datum op uit transacties",
-        "tags": [
-          "Analytics"
-        ],
+        "tags": ["Analytics"],
         "responses": {
           "200": {
             "description": "Object met minDate en maxDate"
@@ -1305,9 +1177,7 @@
     "/api/analytics/dashboard": {
       "get": {
         "summary": "Haal dashboard statistieken op",
-        "tags": [
-          "Analytics"
-        ],
+        "tags": ["Analytics"],
         "parameters": [
           {
             "in": "query",
@@ -1332,10 +1202,7 @@
             "name": "type",
             "schema": {
               "type": "string",
-              "enum": [
-                "income",
-                "expense"
-              ]
+              "enum": ["income", "expense"]
             },
             "description": "Filter op type"
           },
@@ -1361,9 +1228,7 @@
     "/api/analytics/monthly": {
       "get": {
         "summary": "Haal maandelijkse data op voor grafieken",
-        "tags": [
-          "Analytics"
-        ],
+        "tags": ["Analytics"],
         "parameters": [
           {
             "in": "query",
@@ -1392,9 +1257,7 @@
     "/api/analytics/categories": {
       "get": {
         "summary": "Haal categorie verdeling op",
-        "tags": [
-          "Analytics"
-        ],
+        "tags": ["Analytics"],
         "parameters": [
           {
             "in": "query",
@@ -1417,10 +1280,7 @@
             "name": "type",
             "schema": {
               "type": "string",
-              "enum": [
-                "income",
-                "expense"
-              ],
+              "enum": ["income", "expense"],
               "default": "expense"
             }
           }
@@ -1435,9 +1295,7 @@
     "/api/analytics/daily-expenses": {
       "get": {
         "summary": "Haal dagelijkse uitgaven op voor timeline",
-        "tags": [
-          "Analytics"
-        ],
+        "tags": ["Analytics"],
         "parameters": [
           {
             "in": "query",
@@ -1468,9 +1326,7 @@
     "/api/analytics/balance-forecast": {
       "get": {
         "summary": "Haal saldo prognose op voor einde periode",
-        "tags": [
-          "Analytics"
-        ],
+        "tags": ["Analytics"],
         "parameters": [
           {
             "in": "query",
@@ -1499,9 +1355,7 @@
     "/api/budgets": {
       "get": {
         "summary": "Haal alle budgetten op met uitgaven",
-        "tags": [
-          "Budgets"
-        ],
+        "tags": ["Budgets"],
         "parameters": [
           {
             "in": "query",
@@ -1536,18 +1390,14 @@
       },
       "post": {
         "summary": "Maak een nieuw budget aan",
-        "tags": [
-          "Budgets"
-        ],
+        "tags": ["Budgets"],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "amount"
-                ],
+                "required": ["amount"],
                 "properties": {
                   "categoryId": {
                     "type": "integer"
@@ -1557,10 +1407,7 @@
                   },
                   "period": {
                     "type": "string",
-                    "enum": [
-                      "monthly",
-                      "yearly"
-                    ]
+                    "enum": ["monthly", "yearly"]
                   },
                   "startDate": {
                     "type": "string",
@@ -1586,9 +1433,7 @@
       },
       "delete": {
         "summary": "Verwijder alle budgetten",
-        "tags": [
-          "Budgets"
-        ],
+        "tags": ["Budgets"],
         "responses": {
           "200": {
             "description": "Alle budgetten verwijderd"
@@ -1599,9 +1444,7 @@
     "/api/budgets/propose": {
       "get": {
         "summary": "Krijg voorgestelde budgetten voor categorieën zonder budget",
-        "tags": [
-          "Budgets"
-        ],
+        "tags": ["Budgets"],
         "responses": {
           "200": {
             "description": "Voorgestelde budgetten gebaseerd op historische transacties"
@@ -1612,9 +1455,7 @@
     "/api/categories": {
       "get": {
         "summary": "Haal alle categorieën op",
-        "tags": [
-          "Categories"
-        ],
+        "tags": ["Categories"],
         "parameters": [
           {
             "in": "query",
@@ -1636,18 +1477,14 @@
       },
       "post": {
         "summary": "Maak een nieuwe categorie aan",
-        "tags": [
-          "Categories"
-        ],
+        "tags": ["Categories"],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "name"
-                ],
+                "required": ["name"],
                 "properties": {
                   "name": {
                     "type": "string"
@@ -1677,9 +1514,7 @@
       },
       "delete": {
         "summary": "Verwijder alle categorieën",
-        "tags": [
-          "Categories"
-        ],
+        "tags": ["Categories"],
         "responses": {
           "200": {
             "description": "Alle categorieën verwijderd"
@@ -1690,9 +1525,7 @@
     "/api/categories/{id}": {
       "get": {
         "summary": "Haal een specifieke categorie op",
-        "tags": [
-          "Categories"
-        ],
+        "tags": ["Categories"],
         "parameters": [
           {
             "in": "path",
@@ -1714,9 +1547,7 @@
       },
       "patch": {
         "summary": "Update een categorie",
-        "tags": [
-          "Categories"
-        ],
+        "tags": ["Categories"],
         "parameters": [
           {
             "in": "path",
@@ -1760,19 +1591,14 @@
     "/api/categories/seed-data": {
       "get": {
         "summary": "Get seed categories with subcategories and rules",
-        "tags": [
-          "Categories"
-        ],
+        "tags": ["Categories"],
         "parameters": [
           {
             "in": "query",
             "name": "language",
             "schema": {
               "type": "string",
-              "enum": [
-                "nl",
-                "en"
-              ]
+              "enum": ["nl", "en"]
             },
             "description": "Language for category names and descriptions (default nl)"
           }
@@ -1787,9 +1613,7 @@
     "/api/categories/seed": {
       "post": {
         "summary": "Seed categories with subcategories into current profile",
-        "tags": [
-          "Categories"
-        ],
+        "tags": ["Categories"],
         "requestBody": {
           "required": true,
           "content": {
@@ -1819,9 +1643,7 @@
     "/api/categories/rules/all": {
       "get": {
         "summary": "Haal alle auto-categorisatie regels op",
-        "tags": [
-          "Rules"
-        ],
+        "tags": ["Rules"],
         "responses": {
           "200": {
             "description": "Lijst van categorisatie regels"
@@ -1832,19 +1654,14 @@
     "/api/categories/rules": {
       "post": {
         "summary": "Maak een nieuwe auto-categorisatie regel",
-        "tags": [
-          "Rules"
-        ],
+        "tags": ["Rules"],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "pattern",
-                  "categoryId"
-                ],
+                "required": ["pattern", "categoryId"],
                 "properties": {
                   "pattern": {
                     "type": "string"
@@ -1870,9 +1687,7 @@
     "/api/categories/rules/{id}": {
       "delete": {
         "summary": "Verwijder een auto-categorisatie regel",
-        "tags": [
-          "Rules"
-        ],
+        "tags": ["Rules"],
         "parameters": [
           {
             "in": "path",
@@ -1893,9 +1708,7 @@
     "/api/categories/rules/apply": {
       "post": {
         "summary": "Pas regels toe op ongecategoriseerde transacties",
-        "tags": [
-          "Rules"
-        ],
+        "tags": ["Rules"],
         "responses": {
           "200": {
             "description": "Aantal bijgewerkte transacties"
@@ -1906,9 +1719,7 @@
     "/api/categories/rules/apply-all": {
       "post": {
         "summary": "Pas regels toe op ALLE transacties (inclusief gecategoriseerde)",
-        "tags": [
-          "Rules"
-        ],
+        "tags": ["Rules"],
         "responses": {
           "200": {
             "description": "Aantal bijgewerkte transacties"
@@ -1919,9 +1730,7 @@
     "/api/data/export": {
       "get": {
         "summary": "Exporteer alle data als JSON",
-        "tags": [
-          "Data"
-        ],
+        "tags": ["Data"],
         "responses": {
           "200": {
             "description": "Volledige dataset"
@@ -1932,9 +1741,7 @@
     "/api/data/import": {
       "post": {
         "summary": "Importeer volledige dataset (maakt bestaande data leeg)",
-        "tags": [
-          "Data"
-        ],
+        "tags": ["Data"],
         "requestBody": {
           "required": true,
           "content": {
@@ -2030,9 +1837,7 @@
       "delete": {
         "summary": "Reset all data and restore demo profile",
         "description": "Deletes ALL data across all profiles, then creates/restores the demo profile with sample data. This is a destructive operation that cannot be undone.",
-        "tags": [
-          "Data"
-        ],
+        "tags": ["Data"],
         "responses": {
           "200": {
             "description": "Data reset and demo profile restored",
@@ -2069,18 +1874,14 @@
     "/api/import/csv": {
       "post": {
         "summary": "Upload en importeer een CSV bestand",
-        "tags": [
-          "Import"
-        ],
+        "tags": ["Import"],
         "requestBody": {
           "required": true,
           "content": {
             "multipart/form-data": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "file"
-                ],
+                "required": ["file"],
                 "properties": {
                   "file": {
                     "type": "string",
@@ -2111,9 +1912,7 @@
       "get": {
         "summary": "Get import history for the current profile",
         "description": "Returns the 10 most recent imports that have transactions belonging to the current profile. Includes details about skipped rows, duplicates, and parse errors.\n",
-        "tags": [
-          "Import"
-        ],
+        "tags": ["Import"],
         "responses": {
           "200": {
             "description": "Import history retrieved successfully",
@@ -2190,18 +1989,14 @@
     "/api/import/generic/parse": {
       "post": {
         "summary": "Parse a generic CSV file and return headers for mapping",
-        "tags": [
-          "Import"
-        ],
+        "tags": ["Import"],
         "requestBody": {
           "required": true,
           "content": {
             "multipart/form-data": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "file"
-                ],
+                "required": ["file"],
                 "properties": {
                   "file": {
                     "type": "string",
@@ -2226,19 +2021,14 @@
     "/api/import/generic/import": {
       "post": {
         "summary": "Import transactions from a generic CSV file with column mapping",
-        "tags": [
-          "Import"
-        ],
+        "tags": ["Import"],
         "requestBody": {
           "required": true,
           "content": {
             "multipart/form-data": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "file",
-                  "mapping"
-                ],
+                "required": ["file", "mapping"],
                 "properties": {
                   "file": {
                     "type": "string",
@@ -2272,9 +2062,7 @@
       "post": {
         "summary": "Backfill address book with all unique IBANs from transactions",
         "description": "Goes through all existing transactions and adds any IBAN that's not yet in the address book. Applies cleanup rules to names (via Mollie, etc.). Excludes IBANs that belong to the user's own accounts.\n",
-        "tags": [
-          "Import"
-        ],
+        "tags": ["Import"],
         "responses": {
           "200": {
             "description": "Number of IBANs added to address book"
@@ -2286,9 +2074,7 @@
       "post": {
         "summary": "Merge address book entries with duplicate names",
         "description": "Finds all address book entries with the same name (case-insensitive) and merges them into a single contact with multiple IBANs.\n",
-        "tags": [
-          "Import"
-        ],
+        "tags": ["Import"],
         "responses": {
           "200": {
             "description": "Number of entries merged"
@@ -2299,9 +2085,7 @@
     "/api/profiles": {
       "get": {
         "summary": "Get all profiles for current user",
-        "tags": [
-          "Profiles"
-        ],
+        "tags": ["Profiles"],
         "responses": {
           "200": {
             "description": "List of profiles"
@@ -2310,31 +2094,21 @@
       },
       "post": {
         "summary": "Create a new profile",
-        "tags": [
-          "Profiles"
-        ],
+        "tags": ["Profiles"],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "name",
-                  "type"
-                ],
+                "required": ["name", "type"],
                 "properties": {
                   "name": {
                     "type": "string"
                   },
                   "type": {
                     "type": "string",
-                    "enum": [
-                      "personal",
-                      "business",
-                      "shared",
-                      "savings"
-                    ]
+                    "enum": ["personal", "business", "shared", "savings"]
                   },
                   "avatarUrl": {
                     "type": "string"
@@ -2357,9 +2131,7 @@
     "/api/profiles/{id}": {
       "get": {
         "summary": "Get a single profile by ID",
-        "tags": [
-          "Profiles"
-        ],
+        "tags": ["Profiles"],
         "parameters": [
           {
             "in": "path",
@@ -2381,9 +2153,7 @@
       },
       "patch": {
         "summary": "Update an existing profile",
-        "tags": [
-          "Profiles"
-        ],
+        "tags": ["Profiles"],
         "parameters": [
           {
             "in": "path",
@@ -2406,12 +2176,7 @@
                   },
                   "type": {
                     "type": "string",
-                    "enum": [
-                      "personal",
-                      "business",
-                      "shared",
-                      "savings"
-                    ]
+                    "enum": ["personal", "business", "shared", "savings"]
                   },
                   "avatarUrl": {
                     "type": "string"
@@ -2432,9 +2197,7 @@
       },
       "delete": {
         "summary": "Delete a profile and all associated data",
-        "tags": [
-          "Profiles"
-        ],
+        "tags": ["Profiles"],
         "parameters": [
           {
             "in": "path",
@@ -2461,9 +2224,7 @@
     "/api/profiles/{id}/seed-demo": {
       "post": {
         "summary": "Seed demo data for a profile (categories, transactions, addressbook, budgets)",
-        "tags": [
-          "Profiles"
-        ],
+        "tags": ["Profiles"],
         "parameters": [
           {
             "in": "path",
@@ -2487,9 +2248,7 @@
     "/api/profiles/create-demo": {
       "post": {
         "summary": "Create a demo profile and seed it with data",
-        "tags": [
-          "Profiles"
-        ],
+        "tags": ["Profiles"],
         "responses": {
           "201": {
             "description": "Demo profile created and seeded successfully"
@@ -2500,9 +2259,7 @@
     "/api/profiles/demo": {
       "get": {
         "summary": "Get the demo profile if it exists",
-        "tags": [
-          "Profiles"
-        ],
+        "tags": ["Profiles"],
         "responses": {
           "200": {
             "description": "Demo profile details or null if not found"
@@ -2513,9 +2270,7 @@
     "/api/transactions": {
       "get": {
         "summary": "Haal alle transacties op met filters",
-        "tags": [
-          "Transactions"
-        ],
+        "tags": ["Transactions"],
         "parameters": [
           {
             "in": "query",
@@ -2540,11 +2295,7 @@
             "name": "type",
             "schema": {
               "type": "string",
-              "enum": [
-                "income",
-                "expense",
-                "transfer"
-              ]
+              "enum": ["income", "expense", "transfer"]
             },
             "description": "Type transactie"
           },
@@ -2608,21 +2359,14 @@
       },
       "post": {
         "summary": "Create a new transaction",
-        "tags": [
-          "Transactions"
-        ],
+        "tags": ["Transactions"],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "date",
-                  "amount",
-                  "type",
-                  "accountId"
-                ],
+                "required": ["date", "amount", "type", "accountId"],
                 "properties": {
                   "date": {
                     "type": "string",
@@ -2633,11 +2377,7 @@
                   },
                   "type": {
                     "type": "string",
-                    "enum": [
-                      "income",
-                      "expense",
-                      "transfer"
-                    ]
+                    "enum": ["income", "expense", "transfer"]
                   },
                   "description": {
                     "type": "string"
@@ -2676,9 +2416,7 @@
       },
       "delete": {
         "summary": "Verwijder alle transacties",
-        "tags": [
-          "Transactions"
-        ],
+        "tags": ["Transactions"],
         "responses": {
           "200": {
             "description": "Alle transacties verwijderd"
@@ -2692,9 +2430,7 @@
     "/api/transactions/{id}": {
       "get": {
         "summary": "Haal een specifieke transactie op",
-        "tags": [
-          "Transactions"
-        ],
+        "tags": ["Transactions"],
         "parameters": [
           {
             "in": "path",
@@ -2720,9 +2456,7 @@
       },
       "patch": {
         "summary": "Update een transactie (type, categorie, notities, betaalmethode, adresboek, betaalplatform)",
-        "tags": [
-          "Transactions"
-        ],
+        "tags": ["Transactions"],
         "parameters": [
           {
             "in": "path",
@@ -2742,11 +2476,7 @@
                 "properties": {
                   "type": {
                     "type": "string",
-                    "enum": [
-                      "income",
-                      "expense",
-                      "transfer"
-                    ],
+                    "enum": ["income", "expense", "transfer"],
                     "description": "Transactie type (income, expense, transfer). Gebruik 'transfer' voor interne overboekingen tussen eigen rekeningen."
                   },
                   "categoryId": {
@@ -2792,9 +2522,7 @@
       },
       "delete": {
         "summary": "Verwijder een transactie",
-        "tags": [
-          "Transactions"
-        ],
+        "tags": ["Transactions"],
         "parameters": [
           {
             "in": "path",
@@ -2820,19 +2548,14 @@
       "post": {
         "summary": "Categoriseer alle transacties van dezelfde tegenpartij",
         "description": "Past de categorie toe op alle transacties met dezelfde tegenrekening naam",
-        "tags": [
-          "Transactions"
-        ],
+        "tags": ["Transactions"],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "transactionId",
-                  "categoryId"
-                ],
+                "required": ["transactionId", "categoryId"],
                 "properties": {
                   "transactionId": {
                     "type": "integer",
@@ -2887,19 +2610,14 @@
       "post": {
         "summary": "Hernoem merchant/tegenpartij voor gerelateerde transacties",
         "description": "Hernoem alle transacties met dezelfde tegenpartij (opposing IBAN of opposing name) naar een nieuwe merchant naam",
-        "tags": [
-          "Transactions"
-        ],
+        "tags": ["Transactions"],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "transactionId",
-                  "merchantName"
-                ],
+                "required": ["transactionId", "merchantName"],
                 "properties": {
                   "transactionId": {
                     "type": "integer"
@@ -2945,19 +2663,14 @@
       "post": {
         "summary": "Bulk categoriseer meerdere transacties",
         "description": "Pas dezelfde categorie toe op meerdere transacties tegelijk",
-        "tags": [
-          "Transactions"
-        ],
+        "tags": ["Transactions"],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "transactionIds",
-                  "categoryId"
-                ],
+                "required": ["transactionIds", "categoryId"],
                 "properties": {
                   "transactionIds": {
                     "type": "array",
@@ -3007,9 +2720,7 @@
       "post": {
         "summary": "Reset alle merchant_name velden naar NULL",
         "description": "Zet alle merchant_name velden terug naar NULL zodat transacties weer hun originele beschrijving (opposing_account_name) tonen. Dit is een bulk operatie die niet ongedaan kan worden gemaakt.\n",
-        "tags": [
-          "Transactions"
-        ],
+        "tags": ["Transactions"],
         "responses": {
           "200": {
             "description": "Merchant names gereset",
@@ -3037,9 +2748,7 @@
       "post": {
         "summary": "Pas naam opschoon regels toe op alle transacties",
         "description": "Update opposing_account_name en merchant_name met opgeschoonde namen",
-        "tags": [
-          "Transactions"
-        ],
+        "tags": ["Transactions"],
         "responses": {
           "200": {
             "description": "Aantal transacties bijgewerkt",
@@ -3074,9 +2783,7 @@
       "post": {
         "summary": "Detecteer en markeer interne overboekingen",
         "description": "Scan alle transacties en markeer transacties als interne overboeking wanneer de tegenrekening (IBAN) overeenkomt met een eigen rekening, of wanneer de naam overeenkomt met een spaarrekening.\n",
-        "tags": [
-          "Transactions"
-        ],
+        "tags": ["Transactions"],
         "responses": {
           "200": {
             "description": "Aantal gedetecteerde overboekingen",
@@ -3108,9 +2815,7 @@
     "/api/user": {
       "get": {
         "summary": "Haal het gebruikersprofiel op",
-        "tags": [
-          "User"
-        ],
+        "tags": ["User"],
         "responses": {
           "200": {
             "description": "Het huidige profiel"
@@ -3119,9 +2824,7 @@
       },
       "patch": {
         "summary": "Werk het gebruikersprofiel bij",
-        "tags": [
-          "User"
-        ],
+        "tags": ["User"],
         "requestBody": {
           "required": true,
           "content": {

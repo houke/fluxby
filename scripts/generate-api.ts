@@ -26,7 +26,7 @@ const options: swaggerJsdoc.Options = {
         'API for managing financial transactions, categories, budgets, and analytics. This API is intended for developers building custom interfaces.',
       license: {
         name: 'MIT',
-        url: 'https://github.com/fluxby/fluxby/blob/main/LICENSE',
+        url: 'https://github.com/houke/fluxby/blob/main/LICENSE',
       },
     },
     servers: [
