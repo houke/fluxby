@@ -990,7 +990,9 @@ export default function Transactions() {
       const result = await api.createAddressBookEntry(data);
       // Then link the transaction to the new address book entry if a transactionId was provided
       // Support both direct return format and potentially wrapped format
-      const contactId = (result as any).id || (result as any).data?.id;
+      const contactId =
+        (result as { data?: { id: string } }).data?.id ||
+        (result as { id?: string }).id;
       if (data.transactionId && contactId) {
         await api.updateTransaction(data.transactionId, {
           addressBookId: contactId,

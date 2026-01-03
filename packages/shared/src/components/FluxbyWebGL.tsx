@@ -1213,6 +1213,9 @@ export function FluxbyWebGL({
     effectiveParticleCount,
     qualitySettings,
     isInView,
+    avatarData,
+    fractalNoise,
+    seededRandom,
   ]);
 
   const handleMouseMove = useCallback(

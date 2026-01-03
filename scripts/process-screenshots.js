@@ -9,7 +9,6 @@ const __dirname = path.dirname(__filename);
 
 const SRC_DIR = path.join(__dirname, '../apps/screenshots');
 const FRAME_PATH = path.join(SRC_DIR, 'frame.svg');
-const OUT_DIR = path.join(SRC_DIR, 'processed');
 const FRAME_WIDTH = 900;
 const FRAME_HEIGHT = 600;
 const FRAME_X = 20;

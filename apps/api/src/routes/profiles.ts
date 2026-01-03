@@ -853,12 +853,12 @@ router.post('/:id/seed-demo', (req, res) => {
           account_id: mainAccountId,
           opposing_iban: processor
             ? processor.iban
-            : multiIbansByName.get(merchant.name)?.length
-              ? multiIbansByName.get(merchant.name)![
-                  (monthOffset + day) %
-                    multiIbansByName.get(merchant.name)!.length
-                ]
-              : merchant.iban,
+            : (() => {
+                const ibans = multiIbansByName.get(merchant.name);
+                return ibans?.length
+                  ? ibans[(monthOffset + day) % ibans.length]
+                  : merchant.iban;
+              })(),
           // For processors: use merchant name as opposing_name to create shared IBAN scenario
           // This simulates real payment processors where the same IBAN has different merchant names
           opposing_name: processor ? merchant.name : merchant.name,

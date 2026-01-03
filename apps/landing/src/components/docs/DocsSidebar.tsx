@@ -31,7 +31,7 @@ export default function DocsSidebar({ isOpen, onClose }: DocsSidebarProps) {
   // Close sidebar on route change (mobile)
   useEffect(() => {
     onClose();
-  }, [location.pathname]);
+  }, [location.pathname, onClose]);
 
   const navigation: NavSection[] = [
     {

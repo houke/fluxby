@@ -60,7 +60,7 @@ const options: swaggerJsdoc.Options = {
   apis: [join(__dirname, '../apps/api/src/routes/*.ts')],
 };
 
-const swaggerSpec = swaggerJsdoc(options) as any;
+const swaggerSpec = swaggerJsdoc(options) as Record<string, unknown>;
 
 // --- Generate OpenAPI JSON ---
 const landingPublicDir = join(__dirname, '../apps/landing/public');
@@ -69,7 +69,7 @@ writeFileSync(
   join(landingPublicDir, 'openapi.json'),
   JSON.stringify(swaggerSpec, null, 2)
 );
-console.log('✅ OpenAPI spec generated at apps/landing/public/openapi.json');
+console.warn('✅ OpenAPI spec generated at apps/landing/public/openapi.json');
 
 // --- Generate Bruno Collection ---
 const brunoDir = join(__dirname, '../apps/api/bruno');
@@ -86,18 +86,23 @@ function getSafeFilename(name: string) {
   return name.replace(/[/\\?%*:|"<>]/g, '-');
 }
 
-console.log('Generating Bruno collection...');
+console.warn('Generating Bruno collection...');
 
 // 1. Get all paths and group by tag
-const paths = swaggerSpec.paths;
-const requestsByTag: Record<string, any[]> = {};
+const paths = swaggerSpec.paths as Record<string, Record<string, unknown>>;
+const requestsByTag: Record<
+  string,
+  Array<{ path: string; method: string; detail: unknown }>
+> = {};
 
-Object.entries(paths).forEach(([path, methods]: [string, any]) => {
-  Object.entries(methods).forEach(([method, detail]: [string, any]) => {
-    const tag = detail.tags?.[0] || 'Other';
-    if (!requestsByTag[tag]) requestsByTag[tag] = [];
-    requestsByTag[tag].push({ path, method, detail });
-  });
+Object.entries(paths).forEach(([path, methods]: [string, unknown]) => {
+  Object.entries(methods as Record<string, unknown>).forEach(
+    ([method, detail]: [string, unknown]) => {
+      const tag = (detail as { tags?: string[] }).tags?.[0] || 'Other';
+      if (!requestsByTag[tag]) requestsByTag[tag] = [];
+      requestsByTag[tag].push({ path, method, detail });
+    }
+  );
 });
 
 // 2. Process each tag (folder)
@@ -168,4 +173,4 @@ ${method} {
   });
 });
 
-console.log('✅ Bruno collection updated at apps/api/bruno/');
+console.warn('✅ Bruno collection updated at apps/api/bruno/');

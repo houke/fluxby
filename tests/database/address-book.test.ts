@@ -11,12 +11,12 @@ const mockAdapter = {
 };
 
 describe('Address Book Functionality', () => {
-  let db: Database;
+  let _db: Database;
 
   beforeEach(async () => {
     vi.clearAllMocks();
     // In-memory database for testing
-    db = new Database({
+    _db = new Database({
       adapter: mockAdapter as any,
       dbPath: ':memory:',
       autoMigrate: true,

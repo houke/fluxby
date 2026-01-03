@@ -31,7 +31,7 @@ export default function HelpSidebar({ isOpen, onClose }: HelpSidebarProps) {
   // Close sidebar on route change (mobile)
   useEffect(() => {
     onClose();
-  }, [location.pathname]);
+  }, [location.pathname, onClose]);
 
   // User Guide navigation
   const navigation: NavSection[] = [

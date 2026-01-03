@@ -2441,10 +2441,12 @@ export function createDataService(db: Database) {
       // Build a map of contact_id -> ibans[]
       const ibansByContact = new Map<string, string[]>();
       for (const ci of contactIbans) {
-        if (!ibansByContact.has(ci.contact_id)) {
-          ibansByContact.set(ci.contact_id, []);
+        const existing = ibansByContact.get(ci.contact_id);
+        if (!existing) {
+          ibansByContact.set(ci.contact_id, [ci.iban]);
+        } else {
+          existing.push(ci.iban);
         }
-        ibansByContact.get(ci.contact_id)!.push(ci.iban);
       }
 
       // Return contacts with ibans array and isMerged flag
@@ -4479,12 +4481,12 @@ export function createDataService(db: Database) {
               account_id: mainAccountId,
               opposing_iban: processor
                 ? processor.iban
-                : multiIbansByName.get(merchant.name)?.length
-                  ? multiIbansByName.get(merchant.name)![
-                      (monthOffset + day) %
-                        multiIbansByName.get(merchant.name)!.length
-                    ]
-                  : merchant.iban,
+                : (() => {
+                    const ibans = multiIbansByName.get(merchant.name);
+                    return ibans?.length
+                      ? ibans[(monthOffset + day) % ibans.length]
+                      : merchant.iban;
+                  })(),
               opposing_name: processor ? merchant.name : merchant.name,
               category_id: categoryId,
               payment_method: paymentMethod,

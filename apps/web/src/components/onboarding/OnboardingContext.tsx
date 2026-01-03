@@ -175,7 +175,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
       onboardingChapters[totalChapters - 1].steps.length - 1;
 
   // Check if user completed initial setup (has name or language set)
-  const hasCompletedInitialSetup =
+  const _hasCompletedInitialSetup =
     state.hasCompletedOnboarding ||
     state.currentChapterIndex > 0 ||
     !!state.userName ||
@@ -330,7 +330,6 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
     [
       navigate,
       state.currentChapterIndex,
-      hasCompletedInitialSetup,
       profiles,
       switchProfile,
       setProfileHidden,
