@@ -191,8 +191,8 @@ export default function Analytics() {
     <div className='space-y-6'>
       <div className='flex items-center justify-between'>
         <div>
-          <h1 className='text-3xl font-bold'>{t.analytics.title}</h1>
-          <p className='mt-1 text-sm text-muted-foreground'>
+          <h1 className='text-2xl font-bold sm:text-3xl'>{t.analytics.title}</h1>
+          <p className='mt-1 text-xs text-muted-foreground sm:text-sm'>
             {t.analytics.subtitle}
           </p>
         </div>
@@ -200,9 +200,10 @@ export default function Analytics() {
       </div>
 
       {/* Savings Over Time */}
-      <Card className='card-hover' data-onboarding='net-savings-chart'>
+      <div className='-mx-3 sm:mx-0'>
+      <Card className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm' data-onboarding='net-savings-chart'>
         <CardHeader>
-          <CardTitle>{t.analytics.netOverTime}</CardTitle>
+          <CardTitle className='text-base sm:text-lg'>{t.analytics.netOverTime}</CardTitle>
         </CardHeader>
         <CardContent>
           <div
@@ -342,11 +343,13 @@ export default function Analytics() {
           </div>
         </CardContent>
       </Card>
+      </div>
 
       {/* Income vs Expenses Trend */}
-      <Card className='card-hover' data-onboarding='income-expenses-trend'>
+      <div className='-mx-3 sm:mx-0'>
+      <Card className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm' data-onboarding='income-expenses-trend'>
         <CardHeader>
-          <CardTitle>{t.analytics.incomeVsExpensesTrend}</CardTitle>
+          <CardTitle className='text-base sm:text-lg'>{t.analytics.incomeVsExpensesTrend}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className='h-[300px] overflow-x-auto' ref={trendChartScrollRef}>
@@ -467,12 +470,14 @@ export default function Analytics() {
           </div>
         </CardContent>
       </Card>
+      </div>
 
       {/* Category Breakdown */}
-      <div className='grid gap-6 md:grid-cols-2'>
+      <div className='-mx-3 sm:mx-0'>
+        <div className='grid gap-px bg-border sm:gap-6 sm:bg-transparent md:grid-cols-2'>
         {/* Expense Categories */}
         <Card
-          className='card-hover'
+          className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'
           onClick={() => {
             setActiveExpenseIndex(null);
             setPinnedExpenseIndex(null);
@@ -480,7 +485,7 @@ export default function Analytics() {
           data-onboarding='expense-breakdown'
         >
           <CardHeader className='flex flex-row items-center justify-between'>
-            <CardTitle>{t.analytics.expenseBreakdown}</CardTitle>
+            <CardTitle className='text-base sm:text-lg'>{t.analytics.expenseBreakdown}</CardTitle>
             <span
               className='min-h-7 text-lg font-semibold'
               style={{
@@ -650,7 +655,7 @@ export default function Analytics() {
 
         {/* Income Categories */}
         <Card
-          className='card-hover'
+          className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'
           onClick={() => {
             setActiveIncomeIndex(null);
             setPinnedIncomeIndex(null);
@@ -658,7 +663,7 @@ export default function Analytics() {
           data-onboarding='income-breakdown'
         >
           <CardHeader className='flex flex-row items-center justify-between'>
-            <CardTitle>{t.analytics.incomeBreakdown}</CardTitle>
+            <CardTitle className='text-base sm:text-lg'>{t.analytics.incomeBreakdown}</CardTitle>
             <span
               className='min-h-7 text-lg font-semibold'
               style={{
@@ -825,14 +830,16 @@ export default function Analytics() {
             </div>
           </CardContent>
         </Card>
+        </div>
       </div>
 
       {/* Category Breakdown Lists - 50/50 */}
-      <div className='grid gap-6 md:grid-cols-2'>
+      <div className='-mx-3 sm:mx-0'>
+        <div className='grid gap-px bg-border sm:gap-6 sm:bg-transparent md:grid-cols-2'>
         {/* Expense Categories List */}
-        <Card className='card-hover'>
+        <Card className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'>
           <CardHeader>
-            <CardTitle>{t.analytics.expenseBreakdown}</CardTitle>
+            <CardTitle className='text-base sm:text-lg'>{t.analytics.expenseBreakdown}</CardTitle>
           </CardHeader>
           <CardContent>
             {expenseCategories && expenseCategories.length > 0 ? (
@@ -908,9 +915,9 @@ export default function Analytics() {
         </Card>
 
         {/* Income Categories List */}
-        <Card className='card-hover'>
+        <Card className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'>
           <CardHeader>
-            <CardTitle>{t.analytics.incomeBreakdown}</CardTitle>
+            <CardTitle className='text-base sm:text-lg'>{t.analytics.incomeBreakdown}</CardTitle>
           </CardHeader>
           <CardContent>
             {incomeCategories && incomeCategories.length > 0 ? (
@@ -981,6 +988,7 @@ export default function Analytics() {
             )}
           </CardContent>
         </Card>
+        </div>
       </div>
     </div>
   );

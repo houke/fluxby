@@ -29,6 +29,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { api } from '@/lib/api';
 import { useEncryption } from '@/contexts/EncryptionContext';
 import { Toast, type ToastType } from '@/components/ui/toast';
+import { PWAInstallBanner } from '@/components/settings/PWAInstallBanner';
 
 export function AppSettings() {
   const { t, language, setLanguage, languages } = useLanguage();
@@ -160,6 +161,8 @@ export function AppSettings() {
 
   return (
     <div className='space-y-6'>
+      <PWAInstallBanner />
+
       <Card data-onboarding='settings-app-preferences'>
         <CardHeader>
           <CardTitle>{t.settings.appSettings}</CardTitle>

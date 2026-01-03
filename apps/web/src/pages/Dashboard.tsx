@@ -529,11 +529,12 @@ export default function Dashboard() {
       </div>
 
       {/* Charts Row */}
-      <div className='grid gap-6 lg:grid-cols-2'>
+      <div className='-mx-3 sm:mx-0'>
+        <div className='grid gap-px bg-border sm:gap-6 sm:bg-transparent lg:grid-cols-2'>
         {/* Monthly Earnings Chart */}
-        <Card className='card-hover' data-onboarding='monthly-income-chart'>
+        <Card className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm' data-onboarding='monthly-income-chart'>
           <CardHeader>
-            <CardTitle>{t.dashboard.monthlyIncome}</CardTitle>
+            <CardTitle className='text-base sm:text-lg'>{t.dashboard.monthlyIncome}</CardTitle>
           </CardHeader>
           <CardContent>
             {monthlyData.reduce((sum, d) => sum + d.income, 0) > 0 ? (
@@ -656,7 +657,7 @@ export default function Dashboard() {
 
         {/* Spending by Category */}
         <Card
-          className='card-hover'
+          className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'
           onClick={() => {
             setActiveCategoryIndex(null);
             setPinnedCategoryIndex(null);
@@ -664,7 +665,7 @@ export default function Dashboard() {
           data-onboarding='category-pie-chart'
         >
           <CardHeader className='flex flex-row items-center justify-between'>
-            <CardTitle>{t.dashboard.expensesByCategory}</CardTitle>
+            <CardTitle className='text-base sm:text-lg'>{t.dashboard.expensesByCategory}</CardTitle>
             <span
               className='min-h-7 text-lg font-semibold'
               style={{
@@ -835,12 +836,14 @@ export default function Dashboard() {
             </div>
           </CardContent>
         </Card>
+        </div>
       </div>
 
       {/* Income vs Expenses Chart */}
-      <Card className='card-hover' data-onboarding='income-expenses-chart'>
+      <div className='-mx-3 sm:mx-0'>
+      <Card className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm' data-onboarding='income-expenses-chart'>
         <CardHeader>
-          <CardTitle>{t.dashboard.incomeVsExpenses}</CardTitle>
+          <CardTitle className='text-base sm:text-lg'>{t.dashboard.incomeVsExpenses}</CardTitle>
         </CardHeader>
         <CardContent>
           {monthlyData.length > 0 ? (
@@ -976,14 +979,16 @@ export default function Dashboard() {
           )}
         </CardContent>
       </Card>
+      </div>
 
       {/* Daily Expenses Timeline */}
+      <div className='-mx-3 sm:mx-0'>
       <Card
-        className='card-hover overflow-hidden'
+        className='overflow-hidden rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'
         data-onboarding='daily-expenses-chart'
       >
         <CardHeader>
-          <CardTitle>{t.dashboard.dailyExpenses}</CardTitle>
+          <CardTitle className='text-base sm:text-lg'>{t.dashboard.dailyExpenses}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className='flex h-[200px] overflow-hidden'>
@@ -1139,13 +1144,15 @@ export default function Dashboard() {
           </div>
         </CardContent>
       </Card>
+      </div>
 
       {/* Budget and Balance Widgets */}
-      <div className='grid gap-4 md:grid-cols-2'>
+      <div className='-mx-3 sm:mx-0'>
+        <div className='grid gap-px bg-border sm:gap-4 sm:bg-transparent md:grid-cols-2'>
         {/* Budget Widget */}
-        <Card className='card-hover' data-onboarding='budget-progress'>
+        <Card className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm' data-onboarding='budget-progress'>
           <CardHeader>
-            <CardTitle className='flex items-center justify-between'>
+            <CardTitle className='flex items-center justify-between text-base sm:text-lg'>
               <span>{t.dashboard.budget}</span>
               <span className='text-sm font-normal text-muted-foreground'>
                 {t.dashboard.daysProgress
@@ -1306,9 +1313,9 @@ export default function Dashboard() {
         </Card>
 
         {/* Current vs Expected Balance Widget */}
-        <Card className='card-hover' data-onboarding='balance-forecast'>
+        <Card className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm' data-onboarding='balance-forecast'>
           <CardHeader>
-            <CardTitle>
+            <CardTitle className='text-base sm:text-lg'>
               {hasEnoughData && balanceForecast?.isPastPeriod
                 ? t.dashboard.periodSummary
                 : t.dashboard.forecast}
@@ -1430,14 +1437,16 @@ export default function Dashboard() {
             )}
           </CardContent>
         </Card>
+        </div>
       </div>
 
       {/* Recent Transactions & Top Accounts - Side by side on large screens */}
-      <div className='grid grid-cols-1 gap-6 lg:grid-cols-2'>
+      <div className='-mx-3 sm:mx-0'>
+        <div className='grid grid-cols-1 gap-px bg-border sm:gap-6 sm:bg-transparent lg:grid-cols-2'>
         {/* Recent Transactions */}
-        <Card className='card-hover' data-onboarding='recent-transactions'>
+        <Card className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm' data-onboarding='recent-transactions'>
           <CardHeader>
-            <CardTitle className='truncate pb-1'>Recente transacties</CardTitle>
+            <CardTitle className='truncate pb-1 text-base sm:text-lg'>Recente transacties</CardTitle>
           </CardHeader>
           <CardContent>
             {recentTransactions.length > 0 ? (
@@ -1525,9 +1534,9 @@ export default function Dashboard() {
         </Card>
 
         {/* Top Accounts Widget */}
-        <Card className='card-hover' data-onboarding='top-accounts'>
+        <Card className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm' data-onboarding='top-accounts'>
           <CardHeader>
-            <CardTitle className='truncate pb-1'>
+            <CardTitle className='truncate pb-1 text-base sm:text-lg'>
               {t.dashboard?.topAccounts || 'Top tegenrekeningen'}
             </CardTitle>
           </CardHeader>
@@ -1606,6 +1615,7 @@ export default function Dashboard() {
             )}
           </CardContent>
         </Card>
+        </div>
       </div>
     </div>
   );

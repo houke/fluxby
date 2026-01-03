@@ -804,10 +804,10 @@ export default function AddressBook() {
         {/* Header with Add button */}
         <div className='flex items-start justify-between'>
           <div>
-            <h1 className='text-3xl font-bold'>
+            <h1 className='text-2xl font-bold sm:text-3xl'>
               {t.addressBook?.title || t.settings.addressBook.title}
             </h1>
-            <p className='mt-1 text-muted-foreground'>
+            <p className='mt-1 text-xs text-muted-foreground sm:text-base'>
               {t.addressBook?.subtitle || t.settings.addressBook.description}
             </p>
           </div>
@@ -2522,7 +2522,8 @@ export default function AddressBook() {
         )}
 
         {/* Filter Card - separate like Transactions */}
-        <Card data-onboarding='addressbook-search'>
+        <div className='-mx-3 sm:mx-0'>
+        <Card className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm' data-onboarding='addressbook-search'>
           <CardContent className='p-4'>
             <div className='flex flex-col gap-4'>
               {/* Search bar */}
@@ -2570,11 +2571,13 @@ export default function AddressBook() {
             </div>
           </CardContent>
         </Card>
+        </div>
 
         {/* Contacts List Card */}
-        <Card data-onboarding='contact-list'>
+        <div className='-mx-3 sm:mx-0'>
+        <Card className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm' data-onboarding='contact-list'>
           <CardHeader>
-            <CardTitle>{t.addressBook?.contactsTitle || 'Contacts'}</CardTitle>
+            <CardTitle className='text-base sm:text-lg'>{t.addressBook?.contactsTitle || 'Contacts'}</CardTitle>
           </CardHeader>
           <CardContent>
             {isLoading ? (
@@ -3077,6 +3080,7 @@ export default function AddressBook() {
             )}
           </CardContent>
         </Card>
+        </div>
       </div>
     </>
   );

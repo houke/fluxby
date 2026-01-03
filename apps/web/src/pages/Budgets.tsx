@@ -388,8 +388,8 @@ export default function Budgets() {
       {/* Header with Add button */}
       <div className='flex items-start justify-between'>
         <div>
-          <h1 className='text-3xl font-bold'>{t.budgets.title}</h1>
-          <p className='mt-1 text-muted-foreground'>{t.budgets.subtitle}</p>
+          <h1 className='text-2xl font-bold sm:text-3xl'>{t.budgets.title}</h1>
+          <p className='mt-1 text-xs text-muted-foreground sm:text-base'>{t.budgets.subtitle}</p>
         </div>
         <div className='flex gap-2'>
           {hasEnoughData && (
@@ -651,9 +651,10 @@ export default function Budgets() {
       </Dialog>
 
       {/* Overall Progress */}
-      <Card className='card-hover'>
+      <div className='-mx-3 sm:mx-0'>
+      <Card className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'>
         <CardHeader>
-          <CardTitle>{t.budgets.monthlyOverview}</CardTitle>
+          <CardTitle className='text-base sm:text-lg'>{t.budgets.monthlyOverview}</CardTitle>
           <CardDescription>
             {budgets?.length || 0} {t.budgets.budgetsSet}
           </CardDescription>
@@ -691,9 +692,11 @@ export default function Budgets() {
           </div>
         </CardContent>
       </Card>
+      </div>
 
       {/* Filter Card */}
-      <Card data-onboarding='budget-search'>
+      <div className='-mx-3 sm:mx-0'>
+      <Card className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm' data-onboarding='budget-search'>
         <CardContent className='p-4'>
           <div className='flex flex-col gap-4'>
             {/* Search bar */}
@@ -740,11 +743,13 @@ export default function Budgets() {
           </div>
         </CardContent>
       </Card>
+      </div>
 
       {/* Budget List */}
-      <Card data-onboarding='budget-list'>
+      <div className='-mx-3 sm:mx-0'>
+      <Card className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm' data-onboarding='budget-list'>
         <CardHeader>
-          <CardTitle>{t.budgets.yourBudgets}</CardTitle>
+          <CardTitle className='text-base sm:text-lg'>{t.budgets.yourBudgets}</CardTitle>
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -974,6 +979,7 @@ export default function Budgets() {
           )}
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 }

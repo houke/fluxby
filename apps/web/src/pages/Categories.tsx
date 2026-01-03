@@ -1006,7 +1006,7 @@ export default function Categories() {
     const totals = parentTotals.get(category.id) || { count: 0, amount: 0 };
 
     return (
-      <Card key={category.id} className='overflow-hidden'>
+      <Card key={category.id} className='overflow-hidden rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'>
         {isEditing ? (
           <CardContent className='p-4'>
             <div className='space-y-4'>
@@ -1235,8 +1235,8 @@ export default function Categories() {
       {/* Header */}
       <div className='flex items-start justify-between'>
         <div>
-          <h1 className='text-3xl font-bold'>{t.categories.title}</h1>
-          <p className='mt-1 text-muted-foreground'>{t.categories.subtitle}</p>
+          <h1 className='text-2xl font-bold sm:text-3xl'>{t.categories.title}</h1>
+          <p className='mt-1 text-xs text-muted-foreground sm:text-base'>{t.categories.subtitle}</p>
         </div>
         <div className='flex gap-2'>
           <TooltipProvider>
@@ -1394,7 +1394,8 @@ export default function Categories() {
       )}
 
       {/* Filter Card */}
-      <Card data-onboarding='category-search'>
+      <div className='-mx-3 sm:mx-0'>
+      <Card className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm' data-onboarding='category-search'>
         <CardContent className='p-4'>
           <div className='flex flex-col gap-4'>
             <div className='relative flex-1'>
@@ -1447,8 +1448,10 @@ export default function Categories() {
           </div>
         </CardContent>
       </Card>
+      </div>
 
       {/* Category List */}
+      <div className='-mx-3 sm:mx-0'>
       {categoriesLoading ? (
         <div className='space-y-4'>
           {[...Array(4)].map((_, idx) => (
@@ -1456,7 +1459,7 @@ export default function Categories() {
           ))}
         </div>
       ) : !categories || categories.length === 0 ? (
-        <Card>
+        <Card className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'>
           <CardContent className='flex flex-col items-center justify-center py-12 text-center'>
             <FolderOpen className='mb-4 h-12 w-12 text-muted-foreground/50' />
             <h3 className='text-lg font-medium text-muted-foreground'>
@@ -1476,7 +1479,7 @@ export default function Categories() {
           </CardContent>
         </Card>
       ) : filteredSortedParents.length === 0 ? (
-        <Card>
+        <Card className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'>
           <CardContent className='py-12 text-center text-muted-foreground'>
             <p className='font-medium'>
               {t.addressBook?.noResults || 'No results found'}
@@ -1510,6 +1513,7 @@ export default function Categories() {
           )}
         </div>
       )}
+      </div>
 
       {/* Progress Modal */}
       <Dialog open={showProgressModal} onOpenChange={setShowProgressModal}>
