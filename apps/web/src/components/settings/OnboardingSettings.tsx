@@ -155,172 +155,179 @@ export function OnboardingSettings() {
 
   return (
     <>
-      <Card data-onboarding='onboarding-settings'>
-        <CardHeader>
-          <CardTitle>{getText('Rondleiding', 'Onboarding Tour')}</CardTitle>
-        </CardHeader>
-        <CardContent className='space-y-4'>
-          {/* Progress Section */}
-          <div className='space-y-2'>
-            <div className='flex items-center justify-between text-sm'>
-              <span className='text-muted-foreground'>
-                {getText('Voortgang', 'Progress')}
-              </span>
-              <span className='font-medium'>
-                {isCompleted ? (
-                  <span className='flex items-center gap-1 text-green-600'>
-                    <Check className='h-4 w-4' />
-                    {getText('Voltooid', 'Completed')}
-                  </span>
-                ) : wasStarted ? (
-                  `${progressPercentage}%`
-                ) : (
-                  getText('Nog niet gestart', 'Not started')
-                )}
-              </span>
-            </div>
-            <Progress
-              value={progressPercentage}
-              className='h-2'
-              indicatorClassName={
-                isCompleted ? 'bg-green-600' : 'bg-purple-600'
-              }
-            />
-          </div>
-
-          {/* Description */}
-          <p className='text-sm text-muted-foreground'>
-            {isCompleted
-              ? getText(
-                  'Je hebt de rondleiding voltooid! Je kunt deze altijd opnieuw starten om alle functies te bekijken.',
-                  'You have completed the tour! You can always restart it to review all features.'
-                )
-              : wasStarted
-                ? getText(
-                    'Je bent bezig met de rondleiding. Ga verder waar je gebleven was of start opnieuw.',
-                    'You are in the middle of the tour. Continue where you left off or restart.'
-                  )
-                : getText(
-                    'Ontdek alle functies van Fluxby met onze interactieve rondleiding.',
-                    'Discover all features of Fluxby with our interactive tour.'
+      <div className='-mx-3 sm:mx-0'>
+        <Card
+          className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'
+          data-onboarding='onboarding-settings'
+        >
+          <CardHeader className='px-3 py-3 sm:px-6 sm:py-4'>
+            <CardTitle className='text-base sm:text-lg'>
+              {getText('Rondleiding', 'Onboarding Tour')}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className='space-y-4 px-3 pb-3 sm:px-6 sm:pb-6'>
+            {/* Progress Section */}
+            <div className='space-y-2'>
+              <div className='flex items-center justify-between text-sm'>
+                <span className='text-muted-foreground'>
+                  {getText('Voortgang', 'Progress')}
+                </span>
+                <span className='font-medium'>
+                  {isCompleted ? (
+                    <span className='flex items-center gap-1 text-green-600'>
+                      <Check className='h-4 w-4' />
+                      {getText('Voltooid', 'Completed')}
+                    </span>
+                  ) : wasStarted ? (
+                    `${progressPercentage}%`
+                  ) : (
+                    getText('Nog niet gestart', 'Not started')
                   )}
-          </p>
+                </span>
+              </div>
+              <Progress
+                value={progressPercentage}
+                className='h-2'
+                indicatorClassName={
+                  isCompleted ? 'bg-green-600' : 'bg-purple-600'
+                }
+              />
+            </div>
 
-          {/* Action Buttons */}
-          <div className='flex flex-wrap gap-2'>
-            {!state.isActive && !isCompleted && wasStarted && (
-              <Button
-                onClick={() => {
-                  // Navigate to the route of the current chapter first, then start
-                  const currentChapter =
-                    onboardingChapters[state.currentChapterIndex];
-                  if (currentChapter) {
-                    navigate(currentChapter.route);
-                    // Small delay to allow navigation, then start
-                    setTimeout(() => startOnboarding(false), 100);
-                  } else {
-                    startOnboarding(false);
-                  }
-                }}
-                size='sm'
-                className='gap-2 bg-purple-600 hover:bg-purple-700'
-              >
-                <Play className='h-4 w-4' />
-                {getText('Verder gaan', 'Continue')}
-              </Button>
-            )}
+            {/* Description */}
+            <p className='text-sm text-muted-foreground'>
+              {isCompleted
+                ? getText(
+                    'Je hebt de rondleiding voltooid! Je kunt deze altijd opnieuw starten om alle functies te bekijken.',
+                    'You have completed the tour! You can always restart it to review all features.'
+                  )
+                : wasStarted
+                  ? getText(
+                      'Je bent bezig met de rondleiding. Ga verder waar je gebleven was of start opnieuw.',
+                      'You are in the middle of the tour. Continue where you left off or restart.'
+                    )
+                  : getText(
+                      'Ontdek alle functies van Fluxby met onze interactieve rondleiding.',
+                      'Discover all features of Fluxby with our interactive tour.'
+                    )}
+            </p>
 
-            {!state.isActive && !wasStarted && (
-              <Button
-                onClick={() => startOnboarding(false)}
-                size='sm'
-                className='gap-2 bg-purple-600 hover:bg-purple-700'
-              >
-                <Play className='h-4 w-4' />
-                {getText('Start rondleiding', 'Start Tour')}
-              </Button>
-            )}
+            {/* Action Buttons */}
+            <div className='flex flex-wrap gap-2'>
+              {!state.isActive && !isCompleted && wasStarted && (
+                <Button
+                  onClick={() => {
+                    // Navigate to the route of the current chapter first, then start
+                    const currentChapter =
+                      onboardingChapters[state.currentChapterIndex];
+                    if (currentChapter) {
+                      navigate(currentChapter.route);
+                      // Small delay to allow navigation, then start
+                      setTimeout(() => startOnboarding(false), 100);
+                    } else {
+                      startOnboarding(false);
+                    }
+                  }}
+                  size='sm'
+                  className='gap-2 bg-purple-600 hover:bg-purple-700'
+                >
+                  <Play className='h-4 w-4' />
+                  {getText('Verder gaan', 'Continue')}
+                </Button>
+              )}
 
-            {(isCompleted || wasStarted) && !state.isActive && (
-              <Button
-                variant='outline'
-                onClick={() => setShowRestartDialog(true)}
-                size='sm'
-                className='gap-2'
-              >
-                <RotateCcw className='h-4 w-4' />
-                {getText('Opnieuw starten', 'Restart')}
-              </Button>
-            )}
+              {!state.isActive && !wasStarted && (
+                <Button
+                  onClick={() => startOnboarding(false)}
+                  size='sm'
+                  className='gap-2 bg-purple-600 hover:bg-purple-700'
+                >
+                  <Play className='h-4 w-4' />
+                  {getText('Start rondleiding', 'Start Tour')}
+                </Button>
+              )}
 
-            {state.isActive && (
-              <div className='flex items-center gap-2 rounded-lg bg-purple-100 px-3 py-1.5 text-sm font-medium text-purple-700 dark:bg-purple-900/30 dark:text-purple-300'>
-                <div className='h-2 w-2 animate-pulse rounded-full bg-purple-600' />
-                {getText('Rondleiding is actief', 'Tour is active')}
+              {(isCompleted || wasStarted) && !state.isActive && (
+                <Button
+                  variant='outline'
+                  onClick={() => setShowRestartDialog(true)}
+                  size='sm'
+                  className='gap-2'
+                >
+                  <RotateCcw className='h-4 w-4' />
+                  {getText('Opnieuw starten', 'Restart')}
+                </Button>
+              )}
+
+              {state.isActive && (
+                <div className='flex items-center gap-2 rounded-lg bg-purple-100 px-3 py-1.5 text-sm font-medium text-purple-700 dark:bg-purple-900/30 dark:text-purple-300'>
+                  <div className='h-2 w-2 animate-pulse rounded-full bg-purple-600' />
+                  {getText('Rondleiding is actief', 'Tour is active')}
+                </div>
+              )}
+            </div>
+
+            {/* Chapter Overview */}
+            {wasStarted && !isCompleted && (
+              <div className='mt-4 border-t pt-4'>
+                <p className='mb-2 text-xs font-medium text-muted-foreground'>
+                  {getText('Hoofdstukken', 'Chapters')}
+                </p>
+                <TooltipProvider delayDuration={0}>
+                  <div className='flex flex-wrap items-center gap-2'>
+                    {onboardingChapters.slice(1, -1).map((chapter, idx) => {
+                      const actualIdx = idx + 1;
+                      const isCurrentChapter =
+                        actualIdx === state.currentChapterIndex;
+                      const isChapterCompleted =
+                        actualIdx < state.currentChapterIndex;
+                      const ChapterIcon =
+                        CHAPTER_ICONS[chapter.icon] || LayoutDashboard;
+                      const chapterTitle =
+                        chapter.title[language === 'nl' ? 'nl' : 'en'];
+
+                      return (
+                        <Tooltip key={chapter.id}>
+                          <TooltipTrigger asChild>
+                            <div
+                              className={cn(
+                                'flex items-center gap-1.5 rounded-full px-2 py-1 text-xs font-medium transition-colors',
+                                isChapterCompleted &&
+                                  'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
+                                isCurrentChapter &&
+                                  'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300',
+                                !isChapterCompleted &&
+                                  !isCurrentChapter &&
+                                  'bg-muted text-muted-foreground'
+                              )}
+                            >
+                              {isChapterCompleted ? (
+                                <Check className='h-3 w-3' />
+                              ) : (
+                                <ChapterIcon className='h-3 w-3' />
+                              )}
+                              {isCurrentChapter && (
+                                <span className='max-w-[80px] truncate'>
+                                  {chapterTitle}
+                                </span>
+                              )}
+                            </div>
+                          </TooltipTrigger>
+                          {!isCurrentChapter && (
+                            <TooltipContent side='bottom'>
+                              <p>{chapterTitle}</p>
+                            </TooltipContent>
+                          )}
+                        </Tooltip>
+                      );
+                    })}
+                  </div>
+                </TooltipProvider>
               </div>
             )}
-          </div>
-
-          {/* Chapter Overview */}
-          {wasStarted && !isCompleted && (
-            <div className='mt-4 border-t pt-4'>
-              <p className='mb-2 text-xs font-medium text-muted-foreground'>
-                {getText('Hoofdstukken', 'Chapters')}
-              </p>
-              <TooltipProvider delayDuration={0}>
-                <div className='flex flex-wrap items-center gap-2'>
-                  {onboardingChapters.slice(1, -1).map((chapter, idx) => {
-                    const actualIdx = idx + 1;
-                    const isCurrentChapter =
-                      actualIdx === state.currentChapterIndex;
-                    const isChapterCompleted =
-                      actualIdx < state.currentChapterIndex;
-                    const ChapterIcon =
-                      CHAPTER_ICONS[chapter.icon] || LayoutDashboard;
-                    const chapterTitle =
-                      chapter.title[language === 'nl' ? 'nl' : 'en'];
-
-                    return (
-                      <Tooltip key={chapter.id}>
-                        <TooltipTrigger asChild>
-                          <div
-                            className={cn(
-                              'flex items-center gap-1.5 rounded-full px-2 py-1 text-xs font-medium transition-colors',
-                              isChapterCompleted &&
-                                'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
-                              isCurrentChapter &&
-                                'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300',
-                              !isChapterCompleted &&
-                                !isCurrentChapter &&
-                                'bg-muted text-muted-foreground'
-                            )}
-                          >
-                            {isChapterCompleted ? (
-                              <Check className='h-3 w-3' />
-                            ) : (
-                              <ChapterIcon className='h-3 w-3' />
-                            )}
-                            {isCurrentChapter && (
-                              <span className='max-w-[80px] truncate'>
-                                {chapterTitle}
-                              </span>
-                            )}
-                          </div>
-                        </TooltipTrigger>
-                        {!isCurrentChapter && (
-                          <TooltipContent side='bottom'>
-                            <p>{chapterTitle}</p>
-                          </TooltipContent>
-                        )}
-                      </Tooltip>
-                    );
-                  })}
-                </div>
-              </TooltipProvider>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Restart Confirmation Dialog */}
       <Dialog open={showRestartDialog} onOpenChange={setShowRestartDialog}>

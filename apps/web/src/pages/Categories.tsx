@@ -1006,7 +1006,10 @@ export default function Categories() {
     const totals = parentTotals.get(category.id) || { count: 0, amount: 0 };
 
     return (
-      <Card key={category.id} className='overflow-hidden rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'>
+      <Card
+        key={category.id}
+        className='overflow-hidden rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'
+      >
         {isEditing ? (
           <CardContent className='p-4'>
             <div className='space-y-4'>
@@ -1235,8 +1238,12 @@ export default function Categories() {
       {/* Header */}
       <div className='flex items-start justify-between'>
         <div>
-          <h1 className='text-2xl font-bold sm:text-3xl'>{t.categories.title}</h1>
-          <p className='mt-1 text-xs text-muted-foreground sm:text-base'>{t.categories.subtitle}</p>
+          <h1 className='text-2xl font-bold sm:text-3xl'>
+            {t.categories.title}
+          </h1>
+          <p className='mt-1 text-xs text-muted-foreground sm:text-base'>
+            {t.categories.subtitle}
+          </p>
         </div>
         <div className='flex gap-2'>
           <TooltipProvider>
@@ -1395,124 +1402,128 @@ export default function Categories() {
 
       {/* Filter Card */}
       <div className='-mx-3 sm:mx-0'>
-      <Card className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm' data-onboarding='category-search'>
-        <CardContent className='p-4'>
-          <div className='flex flex-col gap-4'>
-            <div className='relative flex-1'>
-              <Search className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
-              <Input
-                placeholder={
-                  t.categories.searchPlaceholder || 'Search categories...'
-                }
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className='pl-10'
-              />
-            </div>
-
-            <div className='flex items-center justify-between'>
-              <span className='text-sm text-muted-foreground'>
-                {filteredSortedParents.length} {t.categories.categoriesCount}
-                {' • '}
-                {filteredSortedParents.reduce(
-                  (acc, cat) =>
-                    acc + (subcategoriesByParent.get(cat.id)?.length || 0),
-                  0
-                )}{' '}
-                {t.categories.subcategoriesCount || 'subcategories'}
-              </span>
-              <div
-                ref={sortSwitchOuterRef}
-                className='relative inline-flex items-center rounded-lg border border-border bg-muted/50 p-0.5'
-              >
-                <div
-                  ref={sortIndicatorRef}
-                  className='absolute top-0.5 h-[calc(100%-4px)] rounded-md bg-purple-600 shadow-sm transition-all duration-200 ease-out'
+        <Card
+          className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'
+          data-onboarding='category-search'
+        >
+          <CardContent className='p-4'>
+            <div className='flex flex-col gap-4'>
+              <div className='relative flex-1'>
+                <Search className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
+                <Input
+                  placeholder={
+                    t.categories.searchPlaceholder || 'Search categories...'
+                  }
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className='pl-10'
                 />
-                {sortOptions.map((option) => (
-                  <button
-                    key={option.key}
-                    onClick={() => setSortBy(option.key)}
-                    className={cn(
-                      'relative z-10 whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-medium transition-colors',
-                      sortBy === option.key
-                        ? 'text-white'
-                        : 'text-muted-foreground hover:text-foreground'
-                    )}
-                  >
-                    {option.label}
-                  </button>
-                ))}
+              </div>
+
+              <div className='flex items-center justify-between'>
+                <span className='text-sm text-muted-foreground'>
+                  {filteredSortedParents.length} {t.categories.categoriesCount}
+                  {' • '}
+                  {filteredSortedParents.reduce(
+                    (acc, cat) =>
+                      acc + (subcategoriesByParent.get(cat.id)?.length || 0),
+                    0
+                  )}{' '}
+                  {t.categories.subcategoriesCount || 'subcategories'}
+                </span>
+                <div
+                  ref={sortSwitchOuterRef}
+                  className='relative inline-flex items-center rounded-lg border border-border bg-muted/50 p-0.5'
+                >
+                  <div
+                    ref={sortIndicatorRef}
+                    className='absolute top-0.5 h-[calc(100%-4px)] rounded-md bg-purple-600 shadow-sm transition-all duration-200 ease-out'
+                  />
+                  {sortOptions.map((option) => (
+                    <button
+                      key={option.key}
+                      onClick={() => setSortBy(option.key)}
+                      className={cn(
+                        'relative z-10 whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-medium transition-colors',
+                        sortBy === option.key
+                          ? 'text-white'
+                          : 'text-muted-foreground hover:text-foreground'
+                      )}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Category List */}
       <div className='-mx-3 sm:mx-0'>
-      {categoriesLoading ? (
-        <div className='space-y-4'>
-          {[...Array(4)].map((_, idx) => (
-            <Skeleton key={idx} className='h-48' />
-          ))}
-        </div>
-      ) : !categories || categories.length === 0 ? (
-        <Card className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'>
-          <CardContent className='flex flex-col items-center justify-center py-12 text-center'>
-            <FolderOpen className='mb-4 h-12 w-12 text-muted-foreground/50' />
-            <h3 className='text-lg font-medium text-muted-foreground'>
-              {t.categories.noCategories}
-            </h3>
-            <p className='mb-6 mt-1 text-sm text-muted-foreground'>
-              {t.categories.createFirst}
-            </p>
-            <Button
-              variant='outline'
-              onClick={handleSeedClick}
-              data-onboarding='seed-categories'
-            >
-              <Sparkles className='mr-2 h-4 w-4' />
-              {t.categories.seedWithDefaultData || 'Seed with default data'}
-            </Button>
-          </CardContent>
-        </Card>
-      ) : filteredSortedParents.length === 0 ? (
-        <Card className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'>
-          <CardContent className='py-12 text-center text-muted-foreground'>
-            <p className='font-medium'>
-              {t.addressBook?.noResults || 'No results found'}
-            </p>
-            <p className='mt-1 text-sm'>
-              {t.addressBook?.tryDifferentSearch ||
-                'Try a different search term'}
-            </p>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className='space-y-4' data-onboarding='category-list'>
-          {filteredSortedParents.map((category) =>
-            renderCategoryCard(category)
-          )}
+        {categoriesLoading ? (
+          <div className='space-y-4'>
+            {[...Array(4)].map((_, idx) => (
+              <Skeleton key={idx} className='h-48' />
+            ))}
+          </div>
+        ) : !categories || categories.length === 0 ? (
+          <Card className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'>
+            <CardContent className='flex flex-col items-center justify-center py-12 text-center'>
+              <FolderOpen className='mb-4 h-12 w-12 text-muted-foreground/50' />
+              <h3 className='text-lg font-medium text-muted-foreground'>
+                {t.categories.noCategories}
+              </h3>
+              <p className='mb-6 mt-1 text-sm text-muted-foreground'>
+                {t.categories.createFirst}
+              </p>
+              <Button
+                variant='outline'
+                onClick={handleSeedClick}
+                data-onboarding='seed-categories'
+              >
+                <Sparkles className='mr-2 h-4 w-4' />
+                {t.categories.seedWithDefaultData || 'Seed with default data'}
+              </Button>
+            </CardContent>
+          </Card>
+        ) : filteredSortedParents.length === 0 ? (
+          <Card className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'>
+            <CardContent className='py-12 text-center text-muted-foreground'>
+              <p className='font-medium'>
+                {t.addressBook?.noResults || 'No results found'}
+              </p>
+              <p className='mt-1 text-sm'>
+                {t.addressBook?.tryDifferentSearch ||
+                  'Try a different search term'}
+              </p>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className='space-y-4' data-onboarding='category-list'>
+            {filteredSortedParents.map((category) =>
+              renderCategoryCard(category)
+            )}
 
-          {/* Show orphan subcategories if any */}
-          {orphanSubcategories.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle className='text-muted-foreground'>
-                  {t.categories.uncategorized || 'Uncategorized subcategories'}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className='p-0'>
-                {orphanSubcategories.map((sub) =>
-                  renderSubcategoryRow(sub, PRESET_COLORS[0])
-                )}
-              </CardContent>
-            </Card>
-          )}
-        </div>
-      )}
+            {/* Show orphan subcategories if any */}
+            {orphanSubcategories.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className='text-muted-foreground'>
+                    {t.categories.uncategorized ||
+                      'Uncategorized subcategories'}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className='p-0'>
+                  {orphanSubcategories.map((sub) =>
+                    renderSubcategoryRow(sub, PRESET_COLORS[0])
+                  )}
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Progress Modal */}

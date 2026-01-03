@@ -1213,4 +1213,52 @@ export const en: TranslationKeys = {
     allCategoriesDeleted: 'All categories deleted',
     allBudgetsDeleted: 'All budgets deleted',
   },
+  pwa: {
+    installTitle: 'Install Fluxby',
+    installDescription:
+      'Install Fluxby for faster loading, offline access, and a native-like experience — it adds an icon to your device and improves startup time.',
+    installButton: 'Install',
+    installedTitle: 'Fluxby is installed',
+    installedDescription: 'You are using the installed version of Fluxby.',
+    manualInstructions: {
+      generic: 'Use your browser menu to install this app.',
+      iosSafari: {
+        title: 'Install on iOS',
+        steps: [
+          'Tap the Share button (square with arrow pointing up)',
+          'Scroll down and tap "Add to Home Screen"',
+          'Tap "Add" to confirm',
+        ],
+      },
+      macosSafari: {
+        title: 'Install via Safari',
+        steps: ['Click "File" in the menu bar', 'Select "Add to Dock"'],
+      },
+      desktop: {
+        title: 'Install on desktop',
+        steps: [
+          'Click the install icon in the address bar (right side)',
+          'Or open the browser menu and select "Install Fluxby"',
+          'Confirm installation to add Fluxby to your device',
+        ],
+      },
+      android: {
+        title: 'Install on Android',
+        steps: [
+          'Tap the menu (⋮) in the top right',
+          'Tap "Add to Home screen" or "Install app"',
+          'Tap "Add" to confirm',
+        ],
+      },
+    },
+    desktopInstall: {
+      title: 'Install instructions',
+      description:
+        "Look for the install icon in your browser's address bar, or use the menu to install Fluxby.",
+      buttonText: 'Install Now',
+      buttonDisabledText: 'Use Browser Install Icon',
+      alertMessage:
+        "Look for the install icon (⊕) in your browser's address bar to install Fluxby.",
+    },
+  },
 };

@@ -546,126 +546,139 @@ export function AccountSettings() {
   };
 
   return (
-    <Card data-onboarding='settings-accounts'>
-      <CardHeader>
-        <CardTitle>{t.settings.accounts.title}</CardTitle>
-        <CardDescription>{t.settings.accounts.description}</CardDescription>
-      </CardHeader>
-      <CardContent>
-        {orderNotice && (
-          <div
-            className={`mb-4 rounded border px-3 py-2 text-sm ${
-              orderNotice.type === 'success'
-                ? 'border-emerald-300 bg-emerald-50 text-emerald-800'
-                : 'border-rose-300 bg-rose-50 text-rose-800'
-            }`}
-          >
-            {orderNotice.text}
-          </div>
-        )}
+    <div className='-mx-3 sm:mx-0'>
+      <Card
+        className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'
+        data-onboarding='settings-accounts'
+      >
+        <CardHeader className='px-3 py-3 sm:px-6 sm:py-4'>
+          <CardTitle className='text-base sm:text-lg'>
+            {t.settings.accounts.title}
+          </CardTitle>
+          <CardDescription className='text-xs sm:text-sm'>
+            {t.settings.accounts.description}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className='px-3 pb-3 pt-0 sm:px-6 sm:pb-6 sm:pt-0'>
+          {orderNotice && (
+            <div
+              className={`mb-4 rounded border px-3 py-2 text-sm ${
+                orderNotice.type === 'success'
+                  ? 'border-emerald-300 bg-emerald-50 text-emerald-800'
+                  : 'border-rose-300 bg-rose-50 text-rose-800'
+              }`}
+            >
+              {orderNotice.text}
+            </div>
+          )}
 
-        {isLoading ? (
-          <div className='space-y-3'>
-            <Skeleton className='h-16 w-full' />
-            <Skeleton className='h-16 w-full' />
-          </div>
-        ) : (
-          <div className='space-y-4'>
-            {/* Existing Accounts */}
-            {accounts && accounts.length > 0 && (
-              <div className='space-y-3'>
-                <DndContext
-                  sensors={sensors}
-                  collisionDetection={closestCenter}
-                  onDragEnd={handleDragEnd}
-                >
-                  <SortableContext
-                    items={accountOrder}
-                    strategy={verticalListSortingStrategy}
+          {isLoading ? (
+            <div className='space-y-3'>
+              <Skeleton className='h-16 w-full' />
+              <Skeleton className='h-16 w-full' />
+            </div>
+          ) : (
+            <div className='space-y-4'>
+              {/* Existing Accounts */}
+              {accounts && accounts.length > 0 && (
+                <div className='space-y-3'>
+                  <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={handleDragEnd}
                   >
-                    {accountOrder.map((accountId) => {
-                      const account = accounts.find((a) => a.id === accountId);
-                      if (!account) return null;
+                    <SortableContext
+                      items={accountOrder}
+                      strategy={verticalListSortingStrategy}
+                    >
+                      {accountOrder.map((accountId) => {
+                        const account = accounts.find(
+                          (a) => a.id === accountId
+                        );
+                        if (!account) return null;
 
-                      return (
-                        <SortableAccountItem
-                          key={account.id}
-                          account={account}
-                          editingId={editingId}
-                          editName={editName}
-                          editType={editType}
-                          editBalance={editBalance}
-                          setEditName={setEditName}
-                          setEditType={setEditType}
-                          setEditBalance={setEditBalance}
-                          setEditingId={setEditingId}
-                          handleUpdate={handleUpdate}
-                          deleteMutation={deleteMutation}
-                          getAccountIcon={getAccountIcon}
-                          getAccountTypeLabel={getAccountTypeLabel}
-                          formatCurrency={formatCurrency}
-                          confirm={confirm}
-                          t={t}
-                          ACCOUNT_TYPES={ACCOUNT_TYPES}
-                        />
-                      );
-                    })}
-                  </SortableContext>
-                </DndContext>
-              </div>
-            )}
+                        return (
+                          <SortableAccountItem
+                            key={account.id}
+                            account={account}
+                            editingId={editingId}
+                            editName={editName}
+                            editType={editType}
+                            editBalance={editBalance}
+                            setEditName={setEditName}
+                            setEditType={setEditType}
+                            setEditBalance={setEditBalance}
+                            setEditingId={setEditingId}
+                            handleUpdate={handleUpdate}
+                            deleteMutation={deleteMutation}
+                            getAccountIcon={getAccountIcon}
+                            getAccountTypeLabel={getAccountTypeLabel}
+                            formatCurrency={formatCurrency}
+                            confirm={confirm}
+                            t={t}
+                            ACCOUNT_TYPES={ACCOUNT_TYPES}
+                          />
+                        );
+                      })}
+                    </SortableContext>
+                  </DndContext>
+                </div>
+              )}
 
-            {/* New Account Form (always visible) */}
-            <div className='border-t pt-4'>
-              <p className='mb-3 text-sm font-medium'>
-                {t.settings.accounts.addTitle}
-              </p>
-              <div className='flex gap-2'>
-                <Input
-                  placeholder={t.settings.accounts.ibanPlaceholder}
-                  value={newIban}
-                  onChange={(e) =>
-                    setNewIban(e.target.value.toUpperCase().replace(/\s/g, ''))
-                  }
-                  className='flex-1'
-                />
-                <Input
-                  placeholder={t.settings.accounts.namePlaceholder}
-                  value={newName}
-                  onChange={(e) => setNewName(e.target.value.trim())}
-                  className='flex-1'
-                />
-                <Select
-                  value={newType}
-                  onValueChange={(v) => setNewType(v as typeof newType)}
-                >
-                  <SelectTrigger className='w-40'>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {ACCOUNT_TYPES.map((type) => (
-                      <SelectItem key={type.value} value={type.value}>
-                        {type.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Button
-                  onClick={handleCreate}
-                  disabled={
-                    createMutation.isPending ||
-                    !newIban.trim() ||
-                    !newName.trim()
-                  }
-                >
-                  <Plus className='mr-2 h-4 w-4' />
-                  {t.settings.accounts.add}
-                </Button>
+              {/* New Account Form (always visible) */}
+              <div className='border-t pt-4'>
+                <p className='mb-3 text-sm font-medium'>
+                  {t.settings.accounts.addTitle}
+                </p>
+                <div className='flex gap-2'>
+                  <Input
+                    placeholder={t.settings.accounts.ibanPlaceholder}
+                    value={newIban}
+                    onChange={(e) =>
+                      setNewIban(
+                        e.target.value.toUpperCase().replace(/\s/g, '')
+                      )
+                    }
+                    className='flex-1'
+                  />
+                  <Input
+                    placeholder={t.settings.accounts.namePlaceholder}
+                    value={newName}
+                    onChange={(e) => setNewName(e.target.value.trim())}
+                    className='flex-1'
+                  />
+                  <Select
+                    value={newType}
+                    onValueChange={(v) => setNewType(v as typeof newType)}
+                  >
+                    <SelectTrigger className='w-40'>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {ACCOUNT_TYPES.map((type) => (
+                        <SelectItem key={type.value} value={type.value}>
+                          {type.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    onClick={handleCreate}
+                    disabled={
+                      createMutation.isPending ||
+                      !newIban.trim() ||
+                      !newName.trim()
+                    }
+                  >
+                    <Plus className='mr-2 h-4 w-4' />
+                    {t.settings.accounts.add}
+                  </Button>
+                </div>
               </div>
             </div>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 }

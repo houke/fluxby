@@ -1,5 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
 
+declare global {
+  interface Navigator {
+    brave?: boolean;
+    standalone?: boolean;
+  }
+}
+
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed'; platform: string }>;
@@ -40,7 +47,7 @@ function detectBrowser(): Browser {
   const ua = navigator.userAgent.toLowerCase();
   // Order matters - check more specific browsers first
   // Brave exposes 'brave' on the navigator in some builds
-  if ((navigator as any)?.brave) return 'brave';
+  if (navigator.brave) return 'brave';
   if (/edg/.test(ua)) return 'edge';
   if (/opr|opera/.test(ua)) return 'opera';
   if (/samsungbrowser/.test(ua)) return 'samsung';
@@ -52,7 +59,7 @@ function detectBrowser(): Browser {
 
 function checkIsInstalled(): boolean {
   if (window.matchMedia('(display-mode: standalone)').matches) return true;
-  if ('standalone' in navigator && (navigator as any).standalone) return true;
+  if (navigator.standalone) return true;
   return false;
 }
 
@@ -104,7 +111,10 @@ export function usePWAInstall(): PWAInstallInfo {
 
     return () => {
       mediaQuery.removeEventListener('change', handleDisplayModeChange);
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener(
+        'beforeinstallprompt',
+        handleBeforeInstallPrompt
+      );
       window.removeEventListener('appinstalled', handleAppInstalled);
     };
   }, []);
@@ -118,13 +128,16 @@ export function usePWAInstall(): PWAInstallInfo {
     }
   }, [deferredPrompt]);
 
-  const hasManifest = typeof window !== 'undefined' && !!document.querySelector('link[rel="manifest"]');
+  const hasManifest =
+    typeof window !== 'undefined' &&
+    !!document.querySelector('link[rel="manifest"]');
 
   // Show PWA support if browser heuristics detect support OR a manifest is present
   const supportsPWA = browserSupportsPWA(browser, platform) || hasManifest;
   const canPromptInstall = !!deferredPrompt && !isInstalled;
 
-  const showManualInstructions = supportsPWA && !canPromptInstall && !isInstalled;
+  const showManualInstructions =
+    supportsPWA && !canPromptInstall && !isInstalled;
 
   return {
     canPromptInstall,

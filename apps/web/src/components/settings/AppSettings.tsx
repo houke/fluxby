@@ -29,7 +29,6 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { api } from '@/lib/api';
 import { useEncryption } from '@/contexts/EncryptionContext';
 import { Toast, type ToastType } from '@/components/ui/toast';
-import { PWAInstallBanner } from '@/components/settings/PWAInstallBanner';
 
 export function AppSettings() {
   const { t, language, setLanguage, languages } = useLanguage();
@@ -160,244 +159,251 @@ export function AppSettings() {
   );
 
   return (
-    <div className='space-y-6'>
-      <PWAInstallBanner />
-
-      <Card data-onboarding='settings-app-preferences'>
-        <CardHeader>
-          <CardTitle>{t.settings.appSettings}</CardTitle>
-          <CardDescription>{t.settings.appSettingsDescription}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className='space-y-4'>
-            {/* User Name */}
-            <div className='flex items-center justify-between py-3'>
-              <div>
-                <p className='font-medium'>
-                  {t.settings?.appNameLabel || 'Your name'}
-                </p>
-                <p className='text-sm text-muted-foreground'>
-                  {t.settings?.appNameDescription || 'Used in the greeting'}
-                </p>
-              </div>
-              <div className='flex items-center gap-2'>
-                {isEditingName ? (
-                  <>
-                    <Input
-                      value={editedName}
-                      onChange={(e) => setEditedName(e.target.value)}
-                      className='w-40'
-                      placeholder={
-                        t.settings?.appNamePlaceholder || 'Your name...'
-                      }
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') handleSaveName();
-                        if (e.key === 'Escape') {
-                          setIsEditingName(false);
-                          setEditedName(user?.name || '');
-                        }
-                      }}
-                      autoFocus
-                    />
-                    <Button
-                      size='icon'
-                      onClick={handleSaveName}
-                      disabled={updateUserMutation.isPending}
-                      className='rounded-md hover:bg-purple-600 hover:text-white'
-                    >
-                      <Check className='h-4 w-4' />
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    <span className='text-sm text-muted-foreground'>
-                      {user?.name || t.settings?.appNameUnset || 'Not set'}
-                    </span>
-                    <TooltipProvider delayDuration={200}>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant='ghost'
-                            size='icon'
-                            onClick={() => setIsEditingName(true)}
-                            className='rounded-md hover:bg-purple-600 hover:text-white'
-                          >
-                            <Pencil className='h-4 w-4' />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          {t.common?.edit || 'Edit'}
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </>
-                )}
-              </div>
-            </div>
-
-            {/* Master Password */}
-            <div className='flex items-center justify-between border-t py-3'>
-              <div className='flex items-start gap-3'>
+    <div className='space-y-0 sm:space-y-6'>
+      <div className='-mx-3 sm:mx-0'>
+        <Card
+          className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'
+          data-onboarding='settings-app-preferences'
+        >
+          <CardHeader className='px-3 py-3 sm:px-6 sm:py-4'>
+            <CardTitle className='text-base sm:text-lg'>
+              {t.settings.appSettings}
+            </CardTitle>
+            <CardDescription className='text-xs sm:text-sm'>
+              {t.settings.appSettingsDescription}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className='px-3 pb-3 pt-0 sm:px-6 sm:pb-6 sm:pt-0'>
+            <div className='space-y-4'>
+              {/* User Name */}
+              <div className='flex items-center justify-between py-3'>
                 <div>
                   <p className='font-medium'>
-                    {t.settings?.masterPasswordTitle || 'Master password'}
+                    {t.settings?.appNameLabel || 'Your name'}
                   </p>
                   <p className='text-sm text-muted-foreground'>
-                    {t.settings?.masterPasswordDescription ||
-                      'Encrypts all your financial data locally'}
+                    {t.settings?.appNameDescription || 'Used in the greeting'}
                   </p>
                 </div>
+                <div className='flex items-center gap-2'>
+                  {isEditingName ? (
+                    <>
+                      <Input
+                        value={editedName}
+                        onChange={(e) => setEditedName(e.target.value)}
+                        className='w-40'
+                        placeholder={
+                          t.settings?.appNamePlaceholder || 'Your name...'
+                        }
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') handleSaveName();
+                          if (e.key === 'Escape') {
+                            setIsEditingName(false);
+                            setEditedName(user?.name || '');
+                          }
+                        }}
+                        autoFocus
+                      />
+                      <Button
+                        size='icon'
+                        onClick={handleSaveName}
+                        disabled={updateUserMutation.isPending}
+                        className='rounded-md hover:bg-purple-600 hover:text-white'
+                      >
+                        <Check className='h-4 w-4' />
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <span className='text-sm text-muted-foreground'>
+                        {user?.name || t.settings?.appNameUnset || 'Not set'}
+                      </span>
+                      <TooltipProvider delayDuration={200}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant='ghost'
+                              size='icon'
+                              onClick={() => setIsEditingName(true)}
+                              className='rounded-md hover:bg-purple-600 hover:text-white'
+                            >
+                              <Pencil className='h-4 w-4' />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            {t.common?.edit || 'Edit'}
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </>
+                  )}
+                </div>
               </div>
-              <Dialog
-                open={isPasswordDialogOpen}
-                onOpenChange={(open) => {
-                  setIsPasswordDialogOpen(open);
-                  if (!open) resetPasswordForm();
-                }}
-              >
-                <DialogTrigger asChild>
-                  <Button variant='outline' size='sm'>
-                    {t.settings?.masterPasswordChange ||
-                      t.security?.changePassword ||
-                      'Change password'}
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className='sm:max-w-md'>
-                  <DialogHeader>
-                    <DialogTitle>
-                      {t.settings?.masterPasswordDialogTitle ||
-                        'Change master password'}
-                    </DialogTitle>
-                    <DialogDescription>
-                      {t.settings?.masterPasswordDialogDescription ||
-                        'Enter your current password and choose a new password.'}
-                    </DialogDescription>
-                  </DialogHeader>
 
-                  <div className='space-y-4'>
-                    <div className='rounded-lg bg-amber-50 p-3 dark:bg-amber-950/30'>
-                      <p className='flex items-start gap-2 text-sm text-amber-800 dark:text-amber-200'>
-                        <AlertTriangle className='mt-0.5 h-4 w-4 flex-shrink-0' />
-                        {t.settings?.masterPasswordWarning ||
-                          'Warning: Your password cannot be recovered. If you forget it, your data cannot be decrypted.'}
-                      </p>
-                    </div>
-                    <div className='space-y-2'>
-                      <label
-                        htmlFor='current-password'
-                        className='text-sm font-medium'
-                      >
-                        {t.settings?.masterPasswordCurrent ||
-                          t.security?.currentPassword ||
-                          'Current password'}
-                      </label>
-                      <Input
-                        id='current-password'
-                        type='password'
-                        value={currentPassword}
-                        onChange={(e) => {
-                          setCurrentPassword(e.target.value);
-                          setPasswordError(null);
-                        }}
-                        placeholder='••••••••'
-                      />
-                    </div>
-
-                    <div className='space-y-2'>
-                      <label
-                        htmlFor='new-password'
-                        className='text-sm font-medium'
-                      >
-                        {t.settings?.masterPasswordNew || 'New password'}
-                      </label>
-                      <Input
-                        id='new-password'
-                        type='password'
-                        value={newPassword}
-                        onChange={(e) => {
-                          setNewPassword(e.target.value);
-                          setPasswordError(null);
-                        }}
-                        placeholder='••••••••'
-                        minLength={8}
-                      />
-                      <p className='text-xs text-muted-foreground'>
-                        {t.settings?.masterPasswordMinLength ||
-                          'Minimum 8 characters'}
-                      </p>
-                    </div>
-
-                    <div className='space-y-2'>
-                      <label
-                        htmlFor='confirm-password'
-                        className='text-sm font-medium'
-                      >
-                        {t.settings?.masterPasswordConfirm ||
-                          'Confirm new password'}
-                      </label>
-                      <Input
-                        id='confirm-password'
-                        type='password'
-                        value={confirmPassword}
-                        onChange={(e) => {
-                          setConfirmPassword(e.target.value);
-                          setPasswordError(null);
-                        }}
-                        placeholder='••••••••'
-                        minLength={8}
-                      />
-                    </div>
-
-                    {passwordError && (
-                      <p className='flex items-center gap-2 text-sm text-red-500'>
-                        <AlertTriangle className='h-4 w-4' />
-                        {passwordError}
-                      </p>
-                    )}
+              {/* Master Password */}
+              <div className='flex items-center justify-between border-t py-3'>
+                <div className='flex items-start gap-3'>
+                  <div>
+                    <p className='font-medium'>
+                      {t.settings?.masterPasswordTitle || 'Master password'}
+                    </p>
+                    <p className='text-sm text-muted-foreground'>
+                      {t.settings?.masterPasswordDescription ||
+                        'Encrypts all your financial data locally'}
+                    </p>
                   </div>
-
-                  <DialogFooter>
-                    <Button
-                      variant='outline'
-                      onClick={() => {
-                        setIsPasswordDialogOpen(false);
-                        resetPasswordForm();
-                      }}
-                    >
-                      {t.common?.cancel || 'Cancel'}
+                </div>
+                <Dialog
+                  open={isPasswordDialogOpen}
+                  onOpenChange={(open) => {
+                    setIsPasswordDialogOpen(open);
+                    if (!open) resetPasswordForm();
+                  }}
+                >
+                  <DialogTrigger asChild>
+                    <Button variant='outline' size='sm'>
+                      {t.settings?.masterPasswordChange ||
+                        t.security?.changePassword ||
+                        'Change password'}
                     </Button>
-                    <Button
-                      onClick={handleChangePassword}
-                      disabled={
-                        isChangingPassword ||
-                        !currentPassword ||
-                        !newPassword ||
-                        !confirmPassword
-                      }
-                      className='bg-purple-600 hover:bg-purple-700'
-                    >
-                      {isChangingPassword
-                        ? t.settings?.masterPasswordChanging || 'Changing...'
-                        : t.settings?.masterPasswordChange ||
-                          t.security?.changePassword ||
-                          'Change password'}
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
-            </div>
+                  </DialogTrigger>
+                  <DialogContent className='sm:max-w-md'>
+                    <DialogHeader>
+                      <DialogTitle>
+                        {t.settings?.masterPasswordDialogTitle ||
+                          'Change master password'}
+                      </DialogTitle>
+                      <DialogDescription>
+                        {t.settings?.masterPasswordDialogDescription ||
+                          'Enter your current password and choose a new password.'}
+                      </DialogDescription>
+                    </DialogHeader>
 
-            {/* Language */}
-            <div className='flex items-center justify-between border-t py-3'>
-              <div>
-                <p className='font-medium'>{t.settings.language}</p>
-                <p className='text-sm text-muted-foreground'>
-                  {t.settings.languageDescription}
-                </p>
+                    <div className='space-y-4'>
+                      <div className='rounded-lg bg-amber-50 p-3 dark:bg-amber-950/30'>
+                        <p className='flex items-start gap-2 text-sm text-amber-800 dark:text-amber-200'>
+                          <AlertTriangle className='mt-0.5 h-4 w-4 flex-shrink-0' />
+                          {t.settings?.masterPasswordWarning ||
+                            'Warning: Your password cannot be recovered. If you forget it, your data cannot be decrypted.'}
+                        </p>
+                      </div>
+                      <div className='space-y-2'>
+                        <label
+                          htmlFor='current-password'
+                          className='text-sm font-medium'
+                        >
+                          {t.settings?.masterPasswordCurrent ||
+                            t.security?.currentPassword ||
+                            'Current password'}
+                        </label>
+                        <Input
+                          id='current-password'
+                          type='password'
+                          value={currentPassword}
+                          onChange={(e) => {
+                            setCurrentPassword(e.target.value);
+                            setPasswordError(null);
+                          }}
+                          placeholder='••••••••'
+                        />
+                      </div>
+
+                      <div className='space-y-2'>
+                        <label
+                          htmlFor='new-password'
+                          className='text-sm font-medium'
+                        >
+                          {t.settings?.masterPasswordNew || 'New password'}
+                        </label>
+                        <Input
+                          id='new-password'
+                          type='password'
+                          value={newPassword}
+                          onChange={(e) => {
+                            setNewPassword(e.target.value);
+                            setPasswordError(null);
+                          }}
+                          placeholder='••••••••'
+                          minLength={8}
+                        />
+                        <p className='text-xs text-muted-foreground'>
+                          {t.settings?.masterPasswordMinLength ||
+                            'Minimum 8 characters'}
+                        </p>
+                      </div>
+
+                      <div className='space-y-2'>
+                        <label
+                          htmlFor='confirm-password'
+                          className='text-sm font-medium'
+                        >
+                          {t.settings?.masterPasswordConfirm ||
+                            'Confirm new password'}
+                        </label>
+                        <Input
+                          id='confirm-password'
+                          type='password'
+                          value={confirmPassword}
+                          onChange={(e) => {
+                            setConfirmPassword(e.target.value);
+                            setPasswordError(null);
+                          }}
+                          placeholder='••••••••'
+                          minLength={8}
+                        />
+                      </div>
+
+                      {passwordError && (
+                        <p className='flex items-center gap-2 text-sm text-red-500'>
+                          <AlertTriangle className='h-4 w-4' />
+                          {passwordError}
+                        </p>
+                      )}
+                    </div>
+
+                    <DialogFooter>
+                      <Button
+                        variant='outline'
+                        onClick={() => {
+                          setIsPasswordDialogOpen(false);
+                          resetPasswordForm();
+                        }}
+                      >
+                        {t.common?.cancel || 'Cancel'}
+                      </Button>
+                      <Button
+                        onClick={handleChangePassword}
+                        disabled={
+                          isChangingPassword ||
+                          !currentPassword ||
+                          !newPassword ||
+                          !confirmPassword
+                        }
+                        className='bg-purple-600 hover:bg-purple-700'
+                      >
+                        {isChangingPassword
+                          ? t.settings?.masterPasswordChanging || 'Changing...'
+                          : t.settings?.masterPasswordChange ||
+                            t.security?.changePassword ||
+                            'Change password'}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
               </div>
-              <div className='flex gap-1'>
-                {(Object.keys(languages) as Array<keyof typeof languages>).map(
-                  (lang) => (
+
+              {/* Language */}
+              <div className='flex items-center justify-between border-t py-3'>
+                <div>
+                  <p className='font-medium'>{t.settings.language}</p>
+                  <p className='text-sm text-muted-foreground'>
+                    {t.settings.languageDescription}
+                  </p>
+                </div>
+                <div className='flex gap-1'>
+                  {(
+                    Object.keys(languages) as Array<keyof typeof languages>
+                  ).map((lang) => (
                     <Button
                       key={lang}
                       variant={language === lang ? 'default' : 'outline'}
@@ -407,58 +413,58 @@ export function AppSettings() {
                     >
                       {languages[lang].flag} {languages[lang].name}
                     </Button>
-                  )
-                )}
+                  ))}
+                </div>
               </div>
-            </div>
 
-            {/* Currency */}
-            <div className='flex items-center justify-between border-t py-3'>
-              <div>
-                <p className='font-medium'>{t.settings.currency}</p>
-                <p className='text-sm text-muted-foreground'>
-                  {t.settings.currencyDescription}
-                </p>
+              {/* Currency */}
+              <div className='flex items-center justify-between border-t py-3'>
+                <div>
+                  <p className='font-medium'>{t.settings.currency}</p>
+                  <p className='text-sm text-muted-foreground'>
+                    {t.settings.currencyDescription}
+                  </p>
+                </div>
+                <span className='text-sm text-muted-foreground'>€</span>
               </div>
-              <span className='text-sm text-muted-foreground'>€</span>
-            </div>
 
-            {/* Theme */}
-            <div className='flex items-center justify-between border-t py-3'>
-              <div>
-                <p className='font-medium'>{t.settings.theme}</p>
-                <p className='text-sm text-muted-foreground'>
-                  {t.settings.themeDescription}
-                </p>
-              </div>
-              <div className='flex gap-1'>
-                <Button
-                  variant={currentTheme === 'light' ? 'default' : 'outline'}
-                  size='sm'
-                  onClick={() => {
-                    document.documentElement.classList.remove('dark');
-                    setCurrentTheme('light');
-                  }}
-                  className='px-2'
-                >
-                  ☀️ {t.settings.themeLight}
-                </Button>
-                <Button
-                  variant={currentTheme === 'dark' ? 'default' : 'outline'}
-                  size='sm'
-                  onClick={() => {
-                    document.documentElement.classList.add('dark');
-                    setCurrentTheme('dark');
-                  }}
-                  className='px-2'
-                >
-                  🌙 {t.settings.themeDark}
-                </Button>
+              {/* Theme */}
+              <div className='flex items-center justify-between border-t py-3'>
+                <div>
+                  <p className='font-medium'>{t.settings.theme}</p>
+                  <p className='text-sm text-muted-foreground'>
+                    {t.settings.themeDescription}
+                  </p>
+                </div>
+                <div className='flex gap-1'>
+                  <Button
+                    variant={currentTheme === 'light' ? 'default' : 'outline'}
+                    size='sm'
+                    onClick={() => {
+                      document.documentElement.classList.remove('dark');
+                      setCurrentTheme('light');
+                    }}
+                    className='px-2'
+                  >
+                    ☀️ {t.settings.themeLight}
+                  </Button>
+                  <Button
+                    variant={currentTheme === 'dark' ? 'default' : 'outline'}
+                    size='sm'
+                    onClick={() => {
+                      document.documentElement.classList.add('dark');
+                      setCurrentTheme('dark');
+                    }}
+                    className='px-2'
+                  >
+                    🌙 {t.settings.themeDark}
+                  </Button>
+                </div>
               </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </div>
 
       {toast && (
         <Toast

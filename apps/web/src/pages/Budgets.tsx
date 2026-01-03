@@ -389,7 +389,9 @@ export default function Budgets() {
       <div className='flex items-start justify-between'>
         <div>
           <h1 className='text-2xl font-bold sm:text-3xl'>{t.budgets.title}</h1>
-          <p className='mt-1 text-xs text-muted-foreground sm:text-base'>{t.budgets.subtitle}</p>
+          <p className='mt-1 text-xs text-muted-foreground sm:text-base'>
+            {t.budgets.subtitle}
+          </p>
         </div>
         <div className='flex gap-2'>
           {hasEnoughData && (
@@ -652,333 +654,343 @@ export default function Budgets() {
 
       {/* Overall Progress */}
       <div className='-mx-3 sm:mx-0'>
-      <Card className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'>
-        <CardHeader>
-          <CardTitle className='text-base sm:text-lg'>{t.budgets.monthlyOverview}</CardTitle>
-          <CardDescription>
-            {budgets?.length || 0} {t.budgets.budgetsSet}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className='space-y-4'>
-            <div className='flex items-center justify-between'>
-              <span className='text-2xl font-bold'>
-                {formatCurrency(totalSpent)}
-              </span>
-              <span className='text-muted-foreground'>
-                {t.common.of} {formatCurrency(totalBudget)}
-              </span>
+        <Card className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'>
+          <CardHeader>
+            <CardTitle className='text-base sm:text-lg'>
+              {t.budgets.monthlyOverview}
+            </CardTitle>
+            <CardDescription>
+              {budgets?.length || 0} {t.budgets.budgetsSet}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className='space-y-4'>
+              <div className='flex items-center justify-between'>
+                <span className='text-2xl font-bold'>
+                  {formatCurrency(totalSpent)}
+                </span>
+                <span className='text-muted-foreground'>
+                  {t.common.of} {formatCurrency(totalBudget)}
+                </span>
+              </div>
+              <Progress
+                value={Math.min(overallPercentage, 100)}
+                className='h-3'
+                indicatorClassName={cn(
+                  overallPercentage > 100
+                    ? 'bg-destructive'
+                    : overallPercentage > 80
+                      ? 'bg-yellow-500'
+                      : 'bg-success'
+                )}
+              />
+              <p className='text-sm text-muted-foreground'>
+                {overallPercentage > 100
+                  ? `${formatCurrency(totalSpent - totalBudget)} ${
+                      t.budgets.overBudget
+                    }`
+                  : `${formatCurrency(totalBudget - totalSpent)} ${
+                      t.budgets.remaining
+                    }`}
+              </p>
             </div>
-            <Progress
-              value={Math.min(overallPercentage, 100)}
-              className='h-3'
-              indicatorClassName={cn(
-                overallPercentage > 100
-                  ? 'bg-destructive'
-                  : overallPercentage > 80
-                    ? 'bg-yellow-500'
-                    : 'bg-success'
-              )}
-            />
-            <p className='text-sm text-muted-foreground'>
-              {overallPercentage > 100
-                ? `${formatCurrency(totalSpent - totalBudget)} ${
-                    t.budgets.overBudget
-                  }`
-                : `${formatCurrency(totalBudget - totalSpent)} ${
-                    t.budgets.remaining
-                  }`}
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Filter Card */}
       <div className='-mx-3 sm:mx-0'>
-      <Card className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm' data-onboarding='budget-search'>
-        <CardContent className='p-4'>
-          <div className='flex flex-col gap-4'>
-            {/* Search bar */}
-            <div className='relative flex-1'>
-              <Search className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
-              <Input
-                placeholder='Search budgets...'
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className='pl-10'
-              />
-            </div>
-
-            {/* Sort Switch */}
-            <div className='flex items-center justify-between'>
-              <span className='text-sm text-muted-foreground'>
-                {filteredSortedBudgets.length} {t.budgets.budgetsSet}
-              </span>
-              <div
-                ref={sortSwitchOuterRef}
-                className='relative inline-flex items-center rounded-lg border border-border bg-muted/50 p-0.5'
-              >
-                {/* Sliding indicator */}
-                <div
-                  ref={sortIndicatorRef}
-                  className='absolute top-0.5 h-[calc(100%-4px)] rounded-md bg-purple-600 shadow-sm transition-all duration-200 ease-out'
+        <Card
+          className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'
+          data-onboarding='budget-search'
+        >
+          <CardContent className='p-4'>
+            <div className='flex flex-col gap-4'>
+              {/* Search bar */}
+              <div className='relative flex-1'>
+                <Search className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
+                <Input
+                  placeholder='Search budgets...'
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className='pl-10'
                 />
-                {sortOptions.map((option) => (
-                  <button
-                    key={option.key}
-                    onClick={() => setSortBy(option.key)}
-                    className={cn(
-                      'relative z-10 whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-medium transition-colors',
-                      sortBy === option.key
-                        ? 'text-white'
-                        : 'text-muted-foreground hover:text-foreground'
-                    )}
-                  >
-                    {option.label}
-                  </button>
-                ))}
+              </div>
+
+              {/* Sort Switch */}
+              <div className='flex items-center justify-between'>
+                <span className='text-sm text-muted-foreground'>
+                  {filteredSortedBudgets.length} {t.budgets.budgetsSet}
+                </span>
+                <div
+                  ref={sortSwitchOuterRef}
+                  className='relative inline-flex items-center rounded-lg border border-border bg-muted/50 p-0.5'
+                >
+                  {/* Sliding indicator */}
+                  <div
+                    ref={sortIndicatorRef}
+                    className='absolute top-0.5 h-[calc(100%-4px)] rounded-md bg-purple-600 shadow-sm transition-all duration-200 ease-out'
+                  />
+                  {sortOptions.map((option) => (
+                    <button
+                      key={option.key}
+                      onClick={() => setSortBy(option.key)}
+                      className={cn(
+                        'relative z-10 whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-medium transition-colors',
+                        sortBy === option.key
+                          ? 'text-white'
+                          : 'text-muted-foreground hover:text-foreground'
+                      )}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Budget List */}
       <div className='-mx-3 sm:mx-0'>
-      <Card className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm' data-onboarding='budget-list'>
-        <CardHeader>
-          <CardTitle className='text-base sm:text-lg'>{t.budgets.yourBudgets}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className='space-y-4'>
-              {[...Array(3)].map((_, i) => (
-                <Skeleton key={i} className='h-20' />
-              ))}
-            </div>
-          ) : filteredSortedBudgets.length > 0 ? (
-            <div className='space-y-4'>
-              {filteredSortedBudgets.map((budget, budgetIndex) => {
-                const categoryInfo = getCategoryInfo(budget.categoryId);
-                const isEditing = editingId === budget.id;
-                const isFirstBudget = budgetIndex === 0;
+        <Card
+          className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'
+          data-onboarding='budget-list'
+        >
+          <CardHeader>
+            <CardTitle className='text-base sm:text-lg'>
+              {t.budgets.yourBudgets}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <div className='space-y-4'>
+                {[...Array(3)].map((_, i) => (
+                  <Skeleton key={i} className='h-20' />
+                ))}
+              </div>
+            ) : filteredSortedBudgets.length > 0 ? (
+              <div className='space-y-4'>
+                {filteredSortedBudgets.map((budget, budgetIndex) => {
+                  const categoryInfo = getCategoryInfo(budget.categoryId);
+                  const isEditing = editingId === budget.id;
+                  const isFirstBudget = budgetIndex === 0;
 
-                return (
-                  <div
-                    key={budget.id}
-                    className={cn(
-                      'group rounded-lg border bg-card p-4',
-                      !isEditing &&
-                        'cursor-pointer transition-colors hover:bg-muted/50'
-                    )}
-                    onClick={() => {
-                      if (!isEditing && budget.categoryId) {
-                        // Clear all other filters and set only the category
-                        setTransactionType('all');
-                        clearOpposingAccountFilters();
-                        setCategories([budget.categoryId]);
-                        navigate('/transactions/');
-                      }
-                    }}
-                    {...(isFirstBudget
-                      ? { 'data-onboarding': 'budget-view-transactions' }
-                      : {})}
-                  >
-                    <div className='mb-3 flex items-center justify-between'>
-                      <div className='flex items-center gap-3'>
-                        {/* Category icon with color like Categories page */}
-                        <div
-                          className='flex h-10 w-10 items-center justify-center rounded-lg border border-border text-lg'
-                          style={{
-                            backgroundColor: colorWithOpacity(
-                              budget.categoryColor
-                            ),
-                            color: budget.categoryColor || '#3B82F6',
-                          }}
-                        >
-                          {categoryInfo?.icon ||
-                            budget.categoryIcon ||
-                            (budget.categoryId ? '📦' : '💰')}
+                  return (
+                    <div
+                      key={budget.id}
+                      className={cn(
+                        'group rounded-lg border bg-card p-4',
+                        !isEditing &&
+                          'cursor-pointer transition-colors hover:bg-muted/50'
+                      )}
+                      onClick={() => {
+                        if (!isEditing && budget.categoryId) {
+                          // Clear all other filters and set only the category
+                          setTransactionType('all');
+                          clearOpposingAccountFilters();
+                          setCategories([budget.categoryId]);
+                          navigate('/transactions/');
+                        }
+                      }}
+                      {...(isFirstBudget
+                        ? { 'data-onboarding': 'budget-view-transactions' }
+                        : {})}
+                    >
+                      <div className='mb-3 flex items-center justify-between'>
+                        <div className='flex items-center gap-3'>
+                          {/* Category icon with color like Categories page */}
+                          <div
+                            className='flex h-10 w-10 items-center justify-center rounded-lg border border-border text-lg'
+                            style={{
+                              backgroundColor: colorWithOpacity(
+                                budget.categoryColor
+                              ),
+                              color: budget.categoryColor || '#3B82F6',
+                            }}
+                          >
+                            {categoryInfo?.icon ||
+                              budget.categoryIcon ||
+                              (budget.categoryId ? '📦' : '💰')}
+                          </div>
+                          <div className='flex items-center gap-2'>
+                            <span className='font-medium'>
+                              {budget.categoryName || t.budgets.totalBudget}
+                            </span>
+                            {/* Navigate icon on hover */}
+                            {!isEditing && budget.categoryId && (
+                              <TooltipProvider delayDuration={100}>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <span className='inline-flex'>
+                                      <ExternalLink className='h-4 w-4 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100' />
+                                    </span>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    {t.budgets.viewTransactions ||
+                                      'View transactions'}
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            )}
+                          </div>
                         </div>
                         <div className='flex items-center gap-2'>
-                          <span className='font-medium'>
-                            {budget.categoryName || t.budgets.totalBudget}
-                          </span>
-                          {/* Navigate icon on hover */}
-                          {!isEditing && budget.categoryId && (
-                            <TooltipProvider delayDuration={100}>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <span className='inline-flex'>
-                                    <ExternalLink className='h-4 w-4 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100' />
-                                  </span>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  {t.budgets.viewTransactions ||
-                                    'View transactions'}
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
+                          {isEditing ? (
+                            <>
+                              <Input
+                                type='number'
+                                value={editAmount}
+                                onChange={(e) => setEditAmount(e.target.value)}
+                                className='h-8 w-24'
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                              <TooltipProvider delayDuration={100}>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      size='icon'
+                                      variant='ghost'
+                                      className='h-8 w-8 rounded-full hover:bg-purple-600 hover:text-white'
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        saveEditing();
+                                      }}
+                                    >
+                                      <Check className='h-4 w-4' />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>{t.common.save}</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                              <TooltipProvider delayDuration={100}>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      size='icon'
+                                      variant='ghost'
+                                      className='h-8 w-8 rounded-full hover:bg-purple-600 hover:text-white'
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        cancelEditing();
+                                      }}
+                                    >
+                                      <X className='h-4 w-4' />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>{t.common.cancel}</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            </>
+                          ) : (
+                            <>
+                              <span className='text-sm text-muted-foreground'>
+                                {(budget.percentage ?? 0).toFixed(0)}%
+                              </span>
+                              <Button
+                                variant='ghost'
+                                size='icon'
+                                className='rounded-md transition-colors hover:bg-purple-600 hover:text-white'
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  startEditing(budget);
+                                }}
+                                {...(isFirstBudget
+                                  ? { 'data-onboarding': 'budget-edit' }
+                                  : {})}
+                              >
+                                <Pencil className='h-4 w-4' />
+                              </Button>
+                              <Button
+                                variant='ghost'
+                                size='icon'
+                                className='rounded-md text-destructive transition-colors hover:bg-red-600 hover:text-white dark:hover:bg-red-700'
+                                onClick={async (e) => {
+                                  e.stopPropagation();
+                                  const isConfirmed = await confirm({
+                                    title:
+                                      t.budgets.deleteBudget || 'Delete budget',
+                                    message: t.budgets.confirmDelete,
+                                    variant: 'danger',
+                                  });
+                                  if (isConfirmed) {
+                                    deleteMutation.mutate(budget.id);
+                                  }
+                                }}
+                              >
+                                <Trash2 className='h-4 w-4' />
+                              </Button>
+                            </>
                           )}
                         </div>
                       </div>
-                      <div className='flex items-center gap-2'>
-                        {isEditing ? (
-                          <>
-                            <Input
-                              type='number'
-                              value={editAmount}
-                              onChange={(e) => setEditAmount(e.target.value)}
-                              className='h-8 w-24'
-                              onClick={(e) => e.stopPropagation()}
-                            />
-                            <TooltipProvider delayDuration={100}>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button
-                                    size='icon'
-                                    variant='ghost'
-                                    className='h-8 w-8 rounded-full hover:bg-purple-600 hover:text-white'
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      saveEditing();
-                                    }}
-                                  >
-                                    <Check className='h-4 w-4' />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p>{t.common.save}</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                            <TooltipProvider delayDuration={100}>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button
-                                    size='icon'
-                                    variant='ghost'
-                                    className='h-8 w-8 rounded-full hover:bg-purple-600 hover:text-white'
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      cancelEditing();
-                                    }}
-                                  >
-                                    <X className='h-4 w-4' />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p>{t.common.cancel}</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                          </>
-                        ) : (
-                          <>
-                            <span className='text-sm text-muted-foreground'>
-                              {(budget.percentage ?? 0).toFixed(0)}%
-                            </span>
-                            <Button
-                              variant='ghost'
-                              size='icon'
-                              className='rounded-md transition-colors hover:bg-purple-600 hover:text-white'
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                startEditing(budget);
-                              }}
-                              {...(isFirstBudget
-                                ? { 'data-onboarding': 'budget-edit' }
-                                : {})}
-                            >
-                              <Pencil className='h-4 w-4' />
-                            </Button>
-                            <Button
-                              variant='ghost'
-                              size='icon'
-                              className='rounded-md text-destructive transition-colors hover:bg-red-600 hover:text-white dark:hover:bg-red-700'
-                              onClick={async (e) => {
-                                e.stopPropagation();
-                                const isConfirmed = await confirm({
-                                  title:
-                                    t.budgets.deleteBudget || 'Delete budget',
-                                  message: t.budgets.confirmDelete,
-                                  variant: 'danger',
-                                });
-                                if (isConfirmed) {
-                                  deleteMutation.mutate(budget.id);
-                                }
-                              }}
-                            >
-                              <Trash2 className='h-4 w-4' />
-                            </Button>
-                          </>
+                      <Progress
+                        value={Math.min(budget.percentage, 100)}
+                        className='mb-2 h-2'
+                        data-onboarding='budget-progress-bar'
+                        indicatorClassName={cn(
+                          budget.percentage > 100
+                            ? 'bg-destructive'
+                            : budget.percentage > 80
+                              ? 'bg-yellow-500'
+                              : 'bg-primary'
                         )}
+                      />
+                      <div className='flex justify-between text-sm'>
+                        <span className='text-muted-foreground'>
+                          {t.budgets.spent}: {formatCurrency(budget.spent)}
+                        </span>
+                        <span
+                          className={cn(
+                            budget.remaining < 0
+                              ? 'text-destructive'
+                              : 'text-muted-foreground'
+                          )}
+                        >
+                          {budget.remaining >= 0
+                            ? `${t.budgets.remaining}: ${formatCurrency(
+                                budget.remaining
+                              )}`
+                            : `${t.budgets.over}: ${formatCurrency(
+                                Math.abs(budget.remaining)
+                              )}`}
+                        </span>
+                        <span className='font-medium'>
+                          {t.budgets.budget}: {formatCurrency(budget.amount)}
+                        </span>
                       </div>
                     </div>
-                    <Progress
-                      value={Math.min(budget.percentage, 100)}
-                      className='mb-2 h-2'
-                      data-onboarding='budget-progress-bar'
-                      indicatorClassName={cn(
-                        budget.percentage > 100
-                          ? 'bg-destructive'
-                          : budget.percentage > 80
-                            ? 'bg-yellow-500'
-                            : 'bg-primary'
-                      )}
-                    />
-                    <div className='flex justify-between text-sm'>
-                      <span className='text-muted-foreground'>
-                        {t.budgets.spent}: {formatCurrency(budget.spent)}
-                      </span>
-                      <span
-                        className={cn(
-                          budget.remaining < 0
-                            ? 'text-destructive'
-                            : 'text-muted-foreground'
-                        )}
-                      >
-                        {budget.remaining >= 0
-                          ? `${t.budgets.remaining}: ${formatCurrency(
-                              budget.remaining
-                            )}`
-                          : `${t.budgets.over}: ${formatCurrency(
-                              Math.abs(budget.remaining)
-                            )}`}
-                      </span>
-                      <span className='font-medium'>
-                        {t.budgets.budget}: {formatCurrency(budget.amount)}
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          ) : budgets && budgets.length > 0 ? (
-            <div className='py-8 text-center text-muted-foreground'>
-              <p className='font-medium'>
-                {t.addressBook?.noResults || 'No results found'}
-              </p>
-              <p className='mt-1 text-sm'>
-                {t.addressBook?.tryDifferentSearch ||
-                  'Try a different search term'}
-              </p>
-            </div>
-          ) : (
-            <div className='flex flex-col items-center justify-center py-8 text-center'>
-              <PiggyBank className='mb-4 h-12 w-12 text-muted-foreground/50' />
-              <h3 className='text-lg font-medium text-muted-foreground'>
-                {t.budgets.noBudgets}
-              </h3>
-              <p className='mt-1 text-sm text-muted-foreground'>
-                {t.budgets.createFirst}
-              </p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                  );
+                })}
+              </div>
+            ) : budgets && budgets.length > 0 ? (
+              <div className='py-8 text-center text-muted-foreground'>
+                <p className='font-medium'>
+                  {t.addressBook?.noResults || 'No results found'}
+                </p>
+                <p className='mt-1 text-sm'>
+                  {t.addressBook?.tryDifferentSearch ||
+                    'Try a different search term'}
+                </p>
+              </div>
+            ) : (
+              <div className='flex flex-col items-center justify-center py-8 text-center'>
+                <PiggyBank className='mb-4 h-12 w-12 text-muted-foreground/50' />
+                <h3 className='text-lg font-medium text-muted-foreground'>
+                  {t.budgets.noBudgets}
+                </h3>
+                <p className='mt-1 text-sm text-muted-foreground'>
+                  {t.budgets.createFirst}
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

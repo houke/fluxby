@@ -13,6 +13,7 @@ import { ProfileManager } from '@/components/settings/ProfileManager';
 import { OnboardingSettings } from '@/components/settings/OnboardingSettings';
 import { ProfileDataSettings } from '@/components/settings/ProfileDataSettings';
 import { SyncSettings } from '@/components/settings/SyncSettings';
+import { PWAInstallBanner } from '@/components/settings/PWAInstallBanner';
 
 const VALID_TABS = ['active-profile', 'manage-profiles', 'app-settings'];
 
@@ -31,16 +32,18 @@ export default function Settings() {
   };
 
   return (
-    <div className='space-y-6'>
-      <div>
-        <h1 className='text-3xl font-bold'>{t.settings.title}</h1>
-        <p className='mt-1 text-muted-foreground'>{t.settings.subtitle}</p>
+    <div className='space-y-0 sm:space-y-6'>
+      <div className='pb-4 sm:pb-0'>
+        <h1 className='text-xl font-bold sm:text-3xl'>{t.settings.title}</h1>
+        <p className='mt-1 text-xs text-muted-foreground sm:text-base'>
+          {t.settings.subtitle}
+        </p>
       </div>
 
       <Tabs
         value={activeTab}
         onValueChange={handleTabChange}
-        className='space-y-6'
+        className='space-y-0 sm:space-y-6'
         data-onboarding='settings-tabs'
       >
         <TabsList>
@@ -64,7 +67,7 @@ export default function Settings() {
         {/* Tab 1: Active Profile Settings */}
         <TabsContent
           value='active-profile'
-          className='space-y-6'
+          className='space-y-0 sm:space-y-6'
           data-onboarding='settings-profile-content'
         >
           <AccountSettings />
@@ -74,7 +77,7 @@ export default function Settings() {
         {/* Tab 2: Profile Management */}
         <TabsContent
           value='manage-profiles'
-          className='space-y-6'
+          className='space-y-0 sm:space-y-6'
           data-onboarding='settings-manage-content'
         >
           <ProfileManager />
@@ -83,9 +86,10 @@ export default function Settings() {
         {/* Tab 3: Global App Settings */}
         <TabsContent
           value='app-settings'
-          className='space-y-6'
+          className='space-y-0 sm:space-y-6'
           data-onboarding='settings-app-content'
         >
+          <PWAInstallBanner />
           <OnboardingSettings />
           <AppSettings />
           <PaymentProcessorSettings />

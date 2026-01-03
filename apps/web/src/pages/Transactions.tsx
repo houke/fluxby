@@ -1826,11 +1826,13 @@ export default function Transactions() {
   return (
     <>
       {/* Toasts are handled via ToastContext */}
-      <div className='space-y-6'>
-        <div className='flex flex-wrap items-start justify-between gap-4'>
+      <div className='space-y-0 sm:space-y-6'>
+        <div className='flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between'>
           <div>
-            <h1 className='text-3xl font-bold'>{t.transactions.title}</h1>
-            <p className='mt-1 text-muted-foreground'>
+            <h1 className='text-xl font-bold sm:text-3xl'>
+              {t.transactions.title}
+            </h1>
+            <p className='mt-1 text-xs text-muted-foreground sm:text-base'>
               {t.transactions.subtitle}
             </p>
           </div>
@@ -1838,7 +1840,7 @@ export default function Transactions() {
           {/* Account Balance Cards - Same as Dashboard */}
           {accounts && accounts.length > 0 && (
             <div
-              className='flex items-center gap-2'
+              className='-mx-3 flex items-center gap-2 sm:mx-0'
               data-onboarding='transaction-accounts'
             >
               {accounts.length > 3 && (
@@ -1855,7 +1857,7 @@ export default function Transactions() {
                 </Button>
               )}
 
-              <div className='flex gap-3'>
+              <div className='flex flex-1 gap-px overflow-x-auto overscroll-contain bg-border sm:flex-initial sm:gap-3 sm:bg-transparent'>
                 {accounts
                   .slice(accountScrollIndex, accountScrollIndex + 3)
                   .map((account) => {
@@ -1894,7 +1896,7 @@ export default function Transactions() {
                     return (
                       <div
                         key={account.id}
-                        className='flex min-w-0 items-center gap-3 rounded-lg border bg-card px-4 py-2 shadow-sm'
+                        className='flex min-w-0 flex-1 items-center gap-3 border-r border-border bg-card px-3 py-2 last:border-r-0 sm:flex-initial sm:rounded-lg sm:border sm:px-4 sm:shadow-sm'
                       >
                         <div className={`rounded-full p-2 ${colors.bg}`}>
                           {account.type === 'checking' && (
@@ -1941,51 +1943,51 @@ export default function Transactions() {
 
         {/* Summary Cards - Same as Dashboard */}
         <div
-          className='grid gap-4 md:grid-cols-2 lg:grid-cols-4'
+          className='-mx-3 grid gap-px bg-border sm:mx-0 sm:gap-4 sm:bg-transparent md:grid-cols-2 lg:grid-cols-4'
           data-onboarding='transaction-summary'
         >
-          <Card className='card-hover h-full'>
-            <CardContent className='flex h-full flex-col justify-between p-6'>
+          <Card className='h-full rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'>
+            <CardContent className='flex h-full flex-col justify-between p-4 sm:p-6'>
               <div className='flex items-center justify-between'>
                 <div className='mr-4 min-w-0 flex-1'>
-                  <p className='text-sm text-muted-foreground'>
+                  <p className='text-xs text-muted-foreground sm:text-sm'>
                     {t.dashboard.income}
                   </p>
-                  <p className='mt-1 whitespace-nowrap text-2xl font-bold'>
+                  <p className='mt-1 whitespace-nowrap text-lg font-bold sm:text-2xl'>
                     {formatCurrency(totals.income)}
                   </p>
                 </div>
-                <div className='flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/30'>
-                  <ArrowUpRight className='h-6 w-6 text-emerald-600' />
+                <div className='flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/30 sm:h-12 sm:w-12'>
+                  <ArrowUpRight className='h-5 w-5 text-emerald-600 sm:h-6 sm:w-6' />
                 </div>
               </div>
             </CardContent>
           </Card>
-          <Card className='card-hover h-full'>
-            <CardContent className='flex h-full flex-col justify-between p-6'>
+          <Card className='h-full rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'>
+            <CardContent className='flex h-full flex-col justify-between p-4 sm:p-6'>
               <div className='flex items-center justify-between'>
                 <div className='mr-4 min-w-0 flex-1'>
-                  <p className='text-sm text-muted-foreground'>
+                  <p className='text-xs text-muted-foreground sm:text-sm'>
                     {t.dashboard.expenses}
                   </p>
-                  <p className='mt-1 whitespace-nowrap text-2xl font-bold'>
+                  <p className='mt-1 whitespace-nowrap text-lg font-bold sm:text-2xl'>
                     {formatCurrency(totals.expenses)}
                   </p>
                 </div>
-                <div className='flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-rose-100 dark:bg-rose-900/30'>
-                  <ArrowDownRight className='h-6 w-6 text-rose-600' />
+                <div className='flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-rose-100 dark:bg-rose-900/30 sm:h-12 sm:w-12'>
+                  <ArrowDownRight className='h-5 w-5 text-rose-600 sm:h-6 sm:w-6' />
                 </div>
               </div>
             </CardContent>
           </Card>
-          <Card className='card-hover h-full'>
-            <CardContent className='flex h-full flex-col justify-between p-6'>
+          <Card className='h-full rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'>
+            <CardContent className='flex h-full flex-col justify-between p-4 sm:p-6'>
               <div className='flex items-center justify-between'>
                 <div className='mr-4 min-w-0 flex-1'>
-                  <p className='text-sm text-muted-foreground'>
+                  <p className='text-xs text-muted-foreground sm:text-sm'>
                     {t.dashboard.toSavings}
                   </p>
-                  <p className='mt-1 whitespace-nowrap text-2xl font-bold'>
+                  <p className='mt-1 whitespace-nowrap text-lg font-bold sm:text-2xl'>
                     {formatCurrency(totals.netSavingsTransfer)}
                   </p>
                   <p className='mt-1 whitespace-nowrap text-xs text-muted-foreground'>
@@ -1993,22 +1995,22 @@ export default function Transactions() {
                     {formatCurrency(totals.transferFromSavings)}
                   </p>
                 </div>
-                <div className='flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30'>
-                  <PiggyBank className='h-6 w-6 text-blue-600' />
+                <div className='flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30 sm:h-12 sm:w-12'>
+                  <PiggyBank className='h-5 w-5 text-blue-600 sm:h-6 sm:w-6' />
                 </div>
               </div>
             </CardContent>
           </Card>
-          <Card className='card-hover h-full'>
-            <CardContent className='flex h-full flex-col justify-between p-6'>
+          <Card className='h-full rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'>
+            <CardContent className='flex h-full flex-col justify-between p-4 sm:p-6'>
               <div className='flex items-center justify-between'>
                 <div className='mr-4 min-w-0 flex-1'>
-                  <p className='text-sm text-muted-foreground'>
+                  <p className='text-xs text-muted-foreground sm:text-sm'>
                     {t.dashboard.netResult}
                   </p>
                   <p
                     className={cn(
-                      'mt-1 whitespace-nowrap text-2xl font-bold',
+                      'mt-1 whitespace-nowrap text-lg font-bold sm:text-2xl',
                       totals.balance >= 0 ? 'text-emerald-600' : 'text-rose-600'
                     )}
                   >
@@ -2017,7 +2019,7 @@ export default function Transactions() {
                 </div>
                 <div
                   className={cn(
-                    'flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full',
+                    'flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full sm:h-12 sm:w-12',
                     totals.balance >= 0
                       ? 'bg-emerald-100 dark:bg-emerald-900/30'
                       : 'bg-rose-100 dark:bg-rose-900/30'
@@ -2036,428 +2038,425 @@ export default function Transactions() {
         </div>
 
         {/* Filters */}
-        <Card data-onboarding='transaction-filters'>
-          <CardContent className='p-4'>
-            <div className='flex flex-wrap gap-4'>
-              <div
-                className='min-w-[200px] flex-1'
-                data-onboarding='transaction-search'
-              >
-                <SearchInput
-                  value={search}
-                  onChange={setSearch}
-                  placeholder={t.transactions.searchPlaceholder}
-                  debounceMs={300}
-                />
-              </div>
-              <div
-                className='flex gap-2'
-                data-onboarding='transaction-filter-buttons'
-              >
-                {/* Transaction type filter - Optimized */}
-                <TypeFilter
-                  value={transactionType}
-                  onChange={(type) =>
-                    startTransition(() => setTransactionType(type))
-                  }
-                  translations={{
-                    transactions: t.nav.transactions,
-                    income: t.transactions.income,
-                    expense: t.transactions.expense,
-                    transfer: t.transactions.transfer,
-                    clearAll: t.common.clearAll,
-                  }}
-                />
-
-                {/* Category Filter - Optimized */}
-                <CategoryFilter
-                  categories={categories}
-                  selectedIds={selectedCategoryIds}
-                  onChange={setCategories}
-                  translations={{
-                    categories: t.transactions.categories,
-                    noCategory: t.transactions.noCategory || 'Geen categorie',
-                    search: t.common.search || 'Zoeken...',
-                    clearAll: t.common.clearAll,
-                  }}
-                />
-
-                {/* Address Book Filter - Optimized */}
-                <AddressBookFilter
-                  addressBook={addressBook}
-                  isLoading={addressBookLoading}
-                  selectedIbans={selectedIbans}
-                  selectedAddressBookId={selectedAddressBookId}
-                  selectedAccountName={selectedAccountName}
-                  onIbansChange={(ibans) => {
-                    setSelectedIbans(ibans);
-                    setOpposingAccountIbans(ibans);
-                  }}
-                  onAddressBookIdChange={(id) => {
-                    setSelectedAddressBookId(id);
-                    setAddressBookId(id);
-                  }}
-                  onAccountNameChange={(name) => {
-                    setSelectedAccountName(name);
-                    setOpposingAccountName(null);
-                  }}
-                  onOpen={() => {
-                    if (!addressBookFilterOpened) {
-                      setAddressBookFilterOpened(true);
+        <div className='-mx-3 sm:mx-0'>
+          <Card
+            className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'
+            data-onboarding='transaction-filters'
+          >
+            <CardContent className='p-3 sm:p-4'>
+              <div className='flex flex-wrap gap-4'>
+                <div
+                  className='min-w-[200px] flex-1'
+                  data-onboarding='transaction-search'
+                >
+                  <SearchInput
+                    value={search}
+                    onChange={setSearch}
+                    placeholder={t.transactions.searchPlaceholder}
+                    debounceMs={300}
+                  />
+                </div>
+                <div
+                  className='flex gap-2'
+                  data-onboarding='transaction-filter-buttons'
+                >
+                  {/* Transaction type filter - Optimized */}
+                  <TypeFilter
+                    value={transactionType}
+                    onChange={(type) =>
+                      startTransition(() => setTransactionType(type))
                     }
-                  }}
-                  data-onboarding='transaction-addressbook-filter'
-                  translations={{
-                    addressBook: t.transactions.addressBook,
-                    search: t.common.search || 'Zoeken...',
-                    clearAll: t.common.clearAll,
-                    loading: t.common?.loading || 'Laden...',
-                    noContacts: t.transactions.noContacts,
-                    contacts: t.transactions.contacts,
-                    contactsPlural: t.transactions.contactsPlural,
-                  }}
-                />
+                    translations={{
+                      transactions: t.nav.transactions,
+                      income: t.transactions.income,
+                      expense: t.transactions.expense,
+                      transfer: t.transactions.transfer,
+                      clearAll: t.common.clearAll,
+                    }}
+                  />
 
-                {/* Payment Method Filter - Optimized */}
-                <PaymentMethodFilter
-                  selectedMethods={selectedPaymentMethods}
-                  onChange={setSelectedPaymentMethods}
-                  data-onboarding='transaction-payment-filter'
-                  translations={{
-                    paymentMethod: t.transactions.paymentMethodFilter,
-                    pin: t.transactions.paymentMethods.pin,
-                    ideal: t.transactions.paymentMethods.ideal,
-                    transfer: t.transactions.paymentMethods.transfer,
-                    incasso: t.transactions.paymentMethods.incasso,
-                    atm: t.transactions.paymentMethods.atm,
-                    clearAll: t.common.clearAll,
-                  }}
-                />
+                  {/* Category Filter - Optimized */}
+                  <CategoryFilter
+                    categories={categories}
+                    selectedIds={selectedCategoryIds}
+                    onChange={setCategories}
+                    translations={{
+                      categories: t.transactions.categories,
+                      noCategory: t.transactions.noCategory || 'Geen categorie',
+                      search: t.common.search || 'Zoeken...',
+                      clearAll: t.common.clearAll,
+                    }}
+                  />
 
-                {/* Payment Processor Filter - Optimized */}
-                <PaymentProcessorFilter
-                  processors={paymentProviderRules}
-                  selectedProcessors={selectedPaymentProcessors}
-                  onChange={setSelectedPaymentProcessors}
-                  translations={{
-                    paymentProcessor: t.transactions.paymentProcessorFilter,
-                    clearAll: t.common.clearAll,
-                  }}
-                />
+                  {/* Address Book Filter - Optimized */}
+                  <AddressBookFilter
+                    addressBook={addressBook}
+                    isLoading={addressBookLoading}
+                    selectedIbans={selectedIbans}
+                    selectedAddressBookId={selectedAddressBookId}
+                    selectedAccountName={selectedAccountName}
+                    onIbansChange={(ibans) => {
+                      setSelectedIbans(ibans);
+                      setOpposingAccountIbans(ibans);
+                    }}
+                    onAddressBookIdChange={(id) => {
+                      setSelectedAddressBookId(id);
+                      setAddressBookId(id);
+                    }}
+                    onAccountNameChange={(name) => {
+                      setSelectedAccountName(name);
+                      setOpposingAccountName(null);
+                    }}
+                    onOpen={() => {
+                      if (!addressBookFilterOpened) {
+                        setAddressBookFilterOpened(true);
+                      }
+                    }}
+                    data-onboarding='transaction-addressbook-filter'
+                    translations={{
+                      addressBook: t.transactions.addressBook,
+                      search: t.common.search || 'Zoeken...',
+                      clearAll: t.common.clearAll,
+                      loading: t.common?.loading || 'Laden...',
+                      noContacts: t.transactions.noContacts,
+                      contacts: t.transactions.contacts,
+                      contactsPlural: t.transactions.contactsPlural,
+                    }}
+                  />
+
+                  {/* Payment Method Filter - Optimized */}
+                  <PaymentMethodFilter
+                    selectedMethods={selectedPaymentMethods}
+                    onChange={setSelectedPaymentMethods}
+                    data-onboarding='transaction-payment-filter'
+                    translations={{
+                      paymentMethod: t.transactions.paymentMethodFilter,
+                      pin: t.transactions.paymentMethods.pin,
+                      ideal: t.transactions.paymentMethods.ideal,
+                      transfer: t.transactions.paymentMethods.transfer,
+                      incasso: t.transactions.paymentMethods.incasso,
+                      atm: t.transactions.paymentMethods.atm,
+                      clearAll: t.common.clearAll,
+                    }}
+                  />
+
+                  {/* Payment Processor Filter - Optimized */}
+                  <PaymentProcessorFilter
+                    processors={paymentProviderRules}
+                    selectedProcessors={selectedPaymentProcessors}
+                    onChange={setSelectedPaymentProcessors}
+                    translations={{
+                      paymentProcessor: t.transactions.paymentProcessorFilter,
+                      clearAll: t.common.clearAll,
+                    }}
+                  />
+                </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </div>
 
         {/* Transactions List */}
-        <Card data-onboarding='transaction-list'>
-          <CardHeader className='flex flex-row items-center justify-between gap-4 space-y-0'>
-            <div className='min-w-0 flex-1'>
-              <CardTitle className='flex items-center gap-2'>
-                {t.transactions.allTransactions}
-                {(isStale || isPending) && (
-                  <span className='h-2 w-2 animate-pulse rounded-full bg-primary' />
-                )}
-              </CardTitle>
-              <CardDescription>
-                {deferredTransactions?.length || 0}{' '}
-                {t.transactions.transactionsFound}
-              </CardDescription>
-            </div>
-            <div className='flex flex-shrink-0 items-center gap-2'>
-              {/* Active filters summary */}
-              <div className='flex flex-wrap items-center gap-2'>
-                {transactionType !== 'all' && (
-                  <span className='rounded bg-muted px-2 py-1 text-xs'>
-                    {transactionType === 'income'
-                      ? t.transactions.income
-                      : transactionType === 'expense'
-                        ? t.transactions.expense
-                        : t.transactions.transfer}
-                  </span>
-                )}
-                {selectedCategoryIds.length > 0 && (
-                  <span className='rounded bg-muted px-2 py-1 text-xs'>
-                    {categories
-                      ?.filter((c) => selectedCategoryIds.includes(c.id))
-                      .slice(0, 2)
-                      .map((c) => c.name)
-                      .join(', ')}
-                    {selectedCategoryIds.length > 2 &&
-                      ` +${selectedCategoryIds.length - 2}`}
-                  </span>
-                )}
-                {selectedAccountName && (
-                  <span className='rounded bg-muted px-2 py-1 text-xs'>
-                    {selectedAccountName}
-                  </span>
-                )}
-                {!selectedAccountName && selectedIbans.length > 0 && (
-                  <span className='rounded bg-muted px-2 py-1 text-xs'>
-                    {selectedIbans.length}{' '}
-                    {selectedIbans.length === 1
-                      ? t.transactions.contacts
-                      : t.transactions.contactsPlural}
-                  </span>
-                )}
-                {selectedPaymentMethods.length > 0 && (
-                  <span className='rounded bg-muted px-2 py-1 text-xs'>
-                    {selectedPaymentMethods
-                      .slice(0, 2)
-                      .map((m) => {
-                        if (m === 'pin')
-                          return t.transactions.paymentMethods.pin;
-                        if (m === 'ideal')
-                          return t.transactions.paymentMethods.ideal;
-                        if (m === 'transfer')
-                          return t.transactions.paymentMethods.transfer;
-                        if (m === 'incasso')
-                          return t.transactions.paymentMethods.incasso;
-                        if (m === 'geldautomaat')
-                          return t.transactions.paymentMethods.atm;
-                        return m;
-                      })
-                      .join(', ')}
-                    {selectedPaymentMethods.length > 2 &&
-                      ` +${selectedPaymentMethods.length - 2}`}
-                  </span>
-                )}
-                {selectedPaymentProcessors.length > 0 && (
-                  <span className='rounded bg-muted px-2 py-1 text-xs'>
-                    {selectedPaymentProcessors.slice(0, 2).join(', ')}
-                    {selectedPaymentProcessors.length > 2 &&
-                      ` +${selectedPaymentProcessors.length - 2}`}
-                  </span>
-                )}
+        <div className='-mx-3 sm:mx-0'>
+          <Card
+            className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'
+            data-onboarding='transaction-list'
+          >
+            <CardHeader className='flex flex-row items-center justify-between gap-4 space-y-0 px-3 py-3 sm:px-6 sm:py-4'>
+              <div className='min-w-0 flex-1'>
+                <CardTitle className='flex items-center gap-2 text-base sm:text-lg'>
+                  {t.transactions.allTransactions}
+                  {(isStale || isPending) && (
+                    <span className='h-2 w-2 animate-pulse rounded-full bg-primary' />
+                  )}
+                </CardTitle>
+                <CardDescription>
+                  {deferredTransactions?.length || 0}{' '}
+                  {t.transactions.transactionsFound}
+                </CardDescription>
               </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {/* Show skeleton during:
+              <div className='flex flex-shrink-0 items-center gap-2'>
+                {/* Active filters summary */}
+                <div className='flex flex-wrap items-center gap-2'>
+                  {transactionType !== 'all' && (
+                    <span className='rounded bg-muted px-2 py-1 text-xs'>
+                      {transactionType === 'income'
+                        ? t.transactions.income
+                        : transactionType === 'expense'
+                          ? t.transactions.expense
+                          : t.transactions.transfer}
+                    </span>
+                  )}
+                  {selectedCategoryIds.length > 0 && (
+                    <span className='rounded bg-muted px-2 py-1 text-xs'>
+                      {categories
+                        ?.filter((c) => selectedCategoryIds.includes(c.id))
+                        .slice(0, 2)
+                        .map((c) => c.name)
+                        .join(', ')}
+                      {selectedCategoryIds.length > 2 &&
+                        ` +${selectedCategoryIds.length - 2}`}
+                    </span>
+                  )}
+                  {selectedAccountName && (
+                    <span className='rounded bg-muted px-2 py-1 text-xs'>
+                      {selectedAccountName}
+                    </span>
+                  )}
+                  {!selectedAccountName && selectedIbans.length > 0 && (
+                    <span className='rounded bg-muted px-2 py-1 text-xs'>
+                      {selectedIbans.length}{' '}
+                      {selectedIbans.length === 1
+                        ? t.transactions.contacts
+                        : t.transactions.contactsPlural}
+                    </span>
+                  )}
+                  {selectedPaymentMethods.length > 0 && (
+                    <span className='rounded bg-muted px-2 py-1 text-xs'>
+                      {selectedPaymentMethods
+                        .slice(0, 2)
+                        .map((m) => {
+                          if (m === 'pin')
+                            return t.transactions.paymentMethods.pin;
+                          if (m === 'ideal')
+                            return t.transactions.paymentMethods.ideal;
+                          if (m === 'transfer')
+                            return t.transactions.paymentMethods.transfer;
+                          if (m === 'incasso')
+                            return t.transactions.paymentMethods.incasso;
+                          if (m === 'geldautomaat')
+                            return t.transactions.paymentMethods.atm;
+                          return m;
+                        })
+                        .join(', ')}
+                      {selectedPaymentMethods.length > 2 &&
+                        ` +${selectedPaymentMethods.length - 2}`}
+                    </span>
+                  )}
+                  {selectedPaymentProcessors.length > 0 && (
+                    <span className='rounded bg-muted px-2 py-1 text-xs'>
+                      {selectedPaymentProcessors.slice(0, 2).join(', ')}
+                      {selectedPaymentProcessors.length > 2 &&
+                        ` +${selectedPaymentProcessors.length - 2}`}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className='px-3 pb-3 pt-0 sm:px-6 sm:pb-6 sm:pt-0'>
+              {/* Show skeleton during:
                 1. Initial load (isLoading)
                 2. Fetching with no data yet
                 3. Actively fetching after filter changes (prevents "flash of empty state")
                 Note: We check isPending (from useTransition) OR isFetching to catch filter changes */}
-            {isLoading ||
-            (isFetching && (!transactions?.length || isPending)) ? (
-              <div className='space-y-4'>
-                {[...Array(5)].map((_, i) => (
-                  <Skeleton key={i} className='h-16' />
-                ))}
-              </div>
-            ) : (deferredTransactions?.length || 0) > 0 ? (
-              <>
-                <div
-                  className={cn(
-                    'space-y-2 transition-opacity duration-150',
-                    isStale && 'opacity-70'
-                  )}
-                >
-                  {deferredTransactions?.slice(0, visibleCount).map((tx) => {
-                    const paymentInfo = getPaymentMethodInfo(tx.paymentMethod);
-                    const recurring = isRecurring(tx);
-                    const merchantKey =
-                      tx.merchantName?.toLowerCase().trim() || '';
-                    const isExpanded =
-                      expandedMerchant === `${merchantKey}-${tx.id}`;
-                    const history = recurring ? getRecurringHistory(tx) : [];
-                    const _suggestion = suggestions[tx.id];
-                    const addressBookEntry = findAddressBookEntry(tx);
-                    const _sharedData = getSharedIbanData(
-                      tx.opposingAccountIban
-                    );
-                    const historyTotal = history.reduce(
-                      (sum, h) => sum + h.amount,
-                      0
-                    );
+              {isLoading ||
+              (isFetching && (!transactions?.length || isPending)) ? (
+                <div className='space-y-4'>
+                  {[...Array(5)].map((_, i) => (
+                    <Skeleton key={i} className='h-16' />
+                  ))}
+                </div>
+              ) : (deferredTransactions?.length || 0) > 0 ? (
+                <>
+                  <div
+                    className={cn(
+                      'space-y-2 transition-opacity duration-150',
+                      isStale && 'opacity-70'
+                    )}
+                  >
+                    {deferredTransactions?.slice(0, visibleCount).map((tx) => {
+                      const paymentInfo = getPaymentMethodInfo(
+                        tx.paymentMethod
+                      );
+                      const recurring = isRecurring(tx);
+                      const merchantKey =
+                        tx.merchantName?.toLowerCase().trim() || '';
+                      const isExpanded =
+                        expandedMerchant === `${merchantKey}-${tx.id}`;
+                      const history = recurring ? getRecurringHistory(tx) : [];
+                      const _suggestion = suggestions[tx.id];
+                      const addressBookEntry = findAddressBookEntry(tx);
+                      const _sharedData = getSharedIbanData(
+                        tx.opposingAccountIban
+                      );
+                      const historyTotal = history.reduce(
+                        (sum, h) => sum + h.amount,
+                        0
+                      );
 
-                    return (
-                      <div
-                        key={tx.id}
-                        className='rounded-lg border'
-                        data-onboarding='transaction-row'
-                      >
+                      return (
                         <div
-                          className={cn(
-                            'group flex items-center justify-between rounded-lg p-4 transition-colors hover:bg-muted/50',
-                            recurring && 'cursor-pointer'
-                          )}
-                          onClick={() => {
-                            if (recurring) {
-                              startTransition(() => {
-                                setExpandedMerchant(
-                                  isExpanded ? null : `${merchantKey}-${tx.id}`
-                                );
-                              });
-                            }
-                          }}
+                          key={tx.id}
+                          className='rounded-lg border'
+                          data-onboarding='transaction-row'
                         >
-                          <div className='flex min-w-0 flex-1 items-center gap-4'>
-                            <div
-                              className={cn(
-                                'flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full',
-                                tx.type === 'transfer'
-                                  ? 'bg-blue-100'
-                                  : tx.amount > 0
-                                    ? 'bg-emerald-100'
-                                    : 'bg-rose-100'
-                              )}
-                            >
-                              {tx.type === 'transfer' ? (
-                                <ArrowLeftRight className='h-5 w-5 text-blue-600' />
-                              ) : tx.amount > 0 ? (
-                                <ArrowUpRight className='h-5 w-5 text-emerald-600' />
-                              ) : (
-                                <ArrowDownRight className='h-5 w-5 text-rose-600' />
-                              )}
-                            </div>
-                            <div className='min-w-0 flex-1'>
-                              <div className='flex items-center gap-2'>
-                                {editingLabelId === tx.id ? (
-                                  <div
-                                    className='relative z-10 flex items-center gap-2'
-                                    onClick={(e) => e.stopPropagation()}
-                                  >
-                                    <div className='relative'>
-                                      <Input
-                                        value={labelDraft}
-                                        onChange={(e) =>
-                                          setLabelDraft(e.target.value)
-                                        }
-                                        placeholder={t.transactions.newLabel}
-                                        className='h-8 w-80 pr-8 text-base'
-                                        autoFocus
-                                      />
-                                      {labelDraft !== originalLabelValue && (
-                                        <TooltipProvider delayDuration={100}>
-                                          <Tooltip>
-                                            <TooltipTrigger asChild>
-                                              <Button
-                                                size='sm'
-                                                variant='ghost'
-                                                className='absolute right-1 top-1/2 h-6 w-6 -translate-y-1/2 rounded-md p-0 text-muted-foreground hover:bg-purple-600 hover:text-white'
-                                                onClick={() =>
-                                                  setLabelDraft(
-                                                    originalLabelValue
-                                                  )
-                                                }
-                                              >
-                                                <RotateCcw className='h-3.5 w-3.5' />
-                                              </Button>
-                                            </TooltipTrigger>
-                                            <TooltipContent>
-                                              {t.transactions
-                                                ?.resetToOriginal ||
-                                                'Terugzetten naar origineel'}
-                                            </TooltipContent>
-                                          </Tooltip>
-                                        </TooltipProvider>
-                                      )}
-                                    </div>
-                                    <TooltipProvider delayDuration={100}>
-                                      <Tooltip>
-                                        <TooltipTrigger asChild>
-                                          <Button
-                                            size='sm'
-                                            variant='ghost'
-                                            className='h-7 w-7 rounded-md p-0 hover:bg-purple-600 hover:text-white'
-                                            onClick={() => saveLabel(tx.id)}
-                                            disabled={updateMutation.isPending}
-                                          >
-                                            <Check className='h-4 w-4' />
-                                          </Button>
-                                        </TooltipTrigger>
-                                        <TooltipContent>
-                                          {t.common.save}
-                                        </TooltipContent>
-                                      </Tooltip>
-                                    </TooltipProvider>
-                                    <TooltipProvider delayDuration={100}>
-                                      <Tooltip>
-                                        <TooltipTrigger asChild>
-                                          <Button
-                                            size='sm'
-                                            variant='ghost'
-                                            className='h-7 w-7 rounded-md p-0 hover:bg-purple-600 hover:text-white'
-                                            onClick={cancelLabelEdit}
-                                            disabled={updateMutation.isPending}
-                                          >
-                                            <X className='h-4 w-4' />
-                                          </Button>
-                                        </TooltipTrigger>
-                                        <TooltipContent>
-                                          {t.common.cancel}
-                                        </TooltipContent>
-                                      </Tooltip>
-                                    </TooltipProvider>
-                                  </div>
+                          <div
+                            className={cn(
+                              'group flex items-center justify-between rounded-lg p-4 transition-colors hover:bg-muted/50',
+                              recurring && 'cursor-pointer'
+                            )}
+                            onClick={() => {
+                              if (recurring) {
+                                startTransition(() => {
+                                  setExpandedMerchant(
+                                    isExpanded
+                                      ? null
+                                      : `${merchantKey}-${tx.id}`
+                                  );
+                                });
+                              }
+                            }}
+                          >
+                            <div className='flex min-w-0 flex-1 items-center gap-4'>
+                              <div
+                                className={cn(
+                                  'flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full',
+                                  tx.type === 'transfer'
+                                    ? 'bg-blue-100'
+                                    : tx.amount > 0
+                                      ? 'bg-emerald-100'
+                                      : 'bg-rose-100'
+                                )}
+                              >
+                                {tx.type === 'transfer' ? (
+                                  <ArrowLeftRight className='h-5 w-5 text-blue-600' />
+                                ) : tx.amount > 0 ? (
+                                  <ArrowUpRight className='h-5 w-5 text-emerald-600' />
                                 ) : (
-                                  <div className='flex min-w-0 items-center gap-2'>
-                                    <p
-                                      className='min-w-0 truncate font-medium'
-                                      title={
-                                        tx.opposingAccountName ||
-                                        tx.description ||
-                                        undefined
-                                      }
+                                  <ArrowDownRight className='h-5 w-5 text-rose-600' />
+                                )}
+                              </div>
+                              <div className='min-w-0 flex-1'>
+                                <div className='flex items-center gap-2'>
+                                  {editingLabelId === tx.id ? (
+                                    <div
+                                      className='relative z-10 flex items-center gap-2'
+                                      onClick={(e) => e.stopPropagation()}
                                     >
-                                      {tx.merchantName ||
-                                        tx.opposingAccountName ||
-                                        tx.description ||
-                                        t.transactions.unknown}
-                                      {addressBookEntry?.description && (
-                                        <span className='ml-2 font-normal text-muted-foreground'>
-                                          ({addressBookEntry.description})
-                                        </span>
-                                      )}
-                                    </p>
-                                    <TooltipProvider delayDuration={100}>
-                                      <Tooltip>
-                                        <TooltipTrigger asChild>
-                                          <span className='inline-flex flex-shrink-0 cursor-default items-center text-muted-foreground'>
-                                            <Info className='h-4 w-4' />
-                                          </span>
-                                        </TooltipTrigger>
-                                        <TooltipContent className='max-w-xs whitespace-normal break-words'>
-                                          <div className='space-y-1 text-sm'>
-                                            {tx.description && (
-                                              <p>
-                                                <span className='font-semibold'>
-                                                  {t.transactions.description}:
-                                                </span>{' '}
-                                                {tx.description}
-                                              </p>
-                                            )}
-                                            {tx.notes && (
-                                              <p>
-                                                <span className='font-semibold'>
-                                                  {t.transactions.notes}:
-                                                </span>{' '}
-                                                {tx.notes}
-                                              </p>
-                                            )}
-                                            {addressBookEntry ? (
-                                              <p>
-                                                <span className='font-semibold'>
-                                                  {
-                                                    t.transactions
-                                                      .counterAccount
-                                                  }
-                                                  :
-                                                </span>{' '}
-                                                {addressBookEntry.name}
-                                                {addressBookEntry.description && (
-                                                  <span className='ml-2 font-normal text-muted-foreground'>
-                                                    (
-                                                    {
-                                                      addressBookEntry.description
-                                                    }
+                                      <div className='relative'>
+                                        <Input
+                                          value={labelDraft}
+                                          onChange={(e) =>
+                                            setLabelDraft(e.target.value)
+                                          }
+                                          placeholder={t.transactions.newLabel}
+                                          className='h-8 w-80 pr-8 text-base'
+                                          autoFocus
+                                        />
+                                        {labelDraft !== originalLabelValue && (
+                                          <TooltipProvider delayDuration={100}>
+                                            <Tooltip>
+                                              <TooltipTrigger asChild>
+                                                <Button
+                                                  size='sm'
+                                                  variant='ghost'
+                                                  className='absolute right-1 top-1/2 h-6 w-6 -translate-y-1/2 rounded-md p-0 text-muted-foreground hover:bg-purple-600 hover:text-white'
+                                                  onClick={() =>
+                                                    setLabelDraft(
+                                                      originalLabelValue
                                                     )
-                                                  </span>
-                                                )}
-                                              </p>
-                                            ) : (
-                                              tx.opposingAccountName && (
+                                                  }
+                                                >
+                                                  <RotateCcw className='h-3.5 w-3.5' />
+                                                </Button>
+                                              </TooltipTrigger>
+                                              <TooltipContent>
+                                                {t.transactions
+                                                  ?.resetToOriginal ||
+                                                  'Terugzetten naar origineel'}
+                                              </TooltipContent>
+                                            </Tooltip>
+                                          </TooltipProvider>
+                                        )}
+                                      </div>
+                                      <TooltipProvider delayDuration={100}>
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <Button
+                                              size='sm'
+                                              variant='ghost'
+                                              className='h-7 w-7 rounded-md p-0 hover:bg-purple-600 hover:text-white'
+                                              onClick={() => saveLabel(tx.id)}
+                                              disabled={
+                                                updateMutation.isPending
+                                              }
+                                            >
+                                              <Check className='h-4 w-4' />
+                                            </Button>
+                                          </TooltipTrigger>
+                                          <TooltipContent>
+                                            {t.common.save}
+                                          </TooltipContent>
+                                        </Tooltip>
+                                      </TooltipProvider>
+                                      <TooltipProvider delayDuration={100}>
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <Button
+                                              size='sm'
+                                              variant='ghost'
+                                              className='h-7 w-7 rounded-md p-0 hover:bg-purple-600 hover:text-white'
+                                              onClick={cancelLabelEdit}
+                                              disabled={
+                                                updateMutation.isPending
+                                              }
+                                            >
+                                              <X className='h-4 w-4' />
+                                            </Button>
+                                          </TooltipTrigger>
+                                          <TooltipContent>
+                                            {t.common.cancel}
+                                          </TooltipContent>
+                                        </Tooltip>
+                                      </TooltipProvider>
+                                    </div>
+                                  ) : (
+                                    <div className='flex min-w-0 items-center gap-2'>
+                                      <p
+                                        className='min-w-0 truncate font-medium'
+                                        title={
+                                          tx.opposingAccountName ||
+                                          tx.description ||
+                                          undefined
+                                        }
+                                      >
+                                        {tx.merchantName ||
+                                          tx.opposingAccountName ||
+                                          tx.description ||
+                                          t.transactions.unknown}
+                                        {addressBookEntry?.description && (
+                                          <span className='ml-2 font-normal text-muted-foreground'>
+                                            ({addressBookEntry.description})
+                                          </span>
+                                        )}
+                                      </p>
+                                      <TooltipProvider delayDuration={100}>
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <span className='inline-flex flex-shrink-0 cursor-default items-center text-muted-foreground'>
+                                              <Info className='h-4 w-4' />
+                                            </span>
+                                          </TooltipTrigger>
+                                          <TooltipContent className='max-w-xs whitespace-normal break-words'>
+                                            <div className='space-y-1 text-sm'>
+                                              {tx.description && (
+                                                <p>
+                                                  <span className='font-semibold'>
+                                                    {t.transactions.description}
+                                                    :
+                                                  </span>{' '}
+                                                  {tx.description}
+                                                </p>
+                                              )}
+                                              {tx.notes && (
+                                                <p>
+                                                  <span className='font-semibold'>
+                                                    {t.transactions.notes}:
+                                                  </span>{' '}
+                                                  {tx.notes}
+                                                </p>
+                                              )}
+                                              {addressBookEntry ? (
                                                 <p>
                                                   <span className='font-semibold'>
                                                     {
@@ -2466,258 +2465,213 @@ export default function Transactions() {
                                                     }
                                                     :
                                                   </span>{' '}
-                                                  {tx.opposingAccountName}
+                                                  {addressBookEntry.name}
+                                                  {addressBookEntry.description && (
+                                                    <span className='ml-2 font-normal text-muted-foreground'>
+                                                      (
+                                                      {
+                                                        addressBookEntry.description
+                                                      }
+                                                      )
+                                                    </span>
+                                                  )}
                                                 </p>
-                                              )
-                                            )}
+                                              ) : (
+                                                tx.opposingAccountName && (
+                                                  <p>
+                                                    <span className='font-semibold'>
+                                                      {
+                                                        t.transactions
+                                                          .counterAccount
+                                                      }
+                                                      :
+                                                    </span>{' '}
+                                                    {tx.opposingAccountName}
+                                                  </p>
+                                                )
+                                              )}
 
-                                            {tx.opposingAccountIban && (
-                                              <p>
-                                                <span className='font-semibold'>
-                                                  {t.transactions.iban}:
-                                                </span>{' '}
-                                                {tx.opposingAccountIban}
-                                              </p>
-                                            )}
-                                          </div>
-                                        </TooltipContent>
-                                      </Tooltip>
-                                    </TooltipProvider>
-                                    <TooltipProvider delayDuration={100}>
-                                      <Tooltip>
-                                        <TooltipTrigger asChild>
-                                          <button
-                                            className='flex-shrink-0 rounded p-1 text-muted-foreground opacity-0 transition-colors hover:bg-muted focus:opacity-100 group-hover:opacity-100'
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              startLabelEdit(tx);
-                                            }}
-                                          >
-                                            <Pencil className='h-4 w-4' />
-                                          </button>
-                                        </TooltipTrigger>
-                                        <TooltipContent>
-                                          <p>
-                                            {t.transactions.editTransactionName}
-                                          </p>
-                                        </TooltipContent>
-                                      </Tooltip>
-                                    </TooltipProvider>
-                                  </div>
-                                )}
-                              </div>
-                              {/* Date and IBAN on one line */}
-                              <div className='flex items-center gap-2 text-sm text-muted-foreground'>
-                                <span className='flex-shrink-0'>
-                                  {formatDate(tx.date)}
-                                </span>
-                                {tx.opposingAccountIban && (
-                                  <>
-                                    <span className='flex-shrink-0 text-muted-foreground/50'>
-                                      •
-                                    </span>
-                                    <span
-                                      className='min-w-0 truncate'
-                                      title={tx.opposingAccountIban}
-                                    >
-                                      {/* Show truncated IBAN on mobile, full on desktop */}
-                                      <span className='sm:hidden'>
-                                        {tx.opposingAccountIban.length > 18
-                                          ? `${tx.opposingAccountIban.slice(0, 8)}...${tx.opposingAccountIban.slice(-4)}`
-                                          : tx.opposingAccountIban}
-                                      </span>
-                                      <span className='hidden sm:inline'>
-                                        {tx.opposingAccountIban}
-                                      </span>
-                                    </span>
-                                  </>
-                                )}
-                              </div>
-                              {/* Badges row - Optimized component with internal state management */}
-                              <TransactionRowBadges
-                                transaction={tx}
-                                categories={categories}
-                                categoryName={getCategoryName(tx.categoryId)}
-                                categoryColor={getCategoryColor(tx.categoryId)}
-                                paymentInfo={paymentInfo}
-                                paymentMethods={paymentMethods}
-                                paymentProviderRules={paymentProviderRules}
-                                addressBook={addressBook}
-                                addressBookEntry={addressBookEntry}
-                                isInAddressBook={isInAddressBook(tx)}
-                                onCategorySelect={handleCategorySelect}
-                                onPaymentMethodSelect={
-                                  handlePaymentMethodSelect
-                                }
-                                onPaymentProcessorSelect={
-                                  handlePaymentProcessorSelect
-                                }
-                                onAddressBookSelect={handleAddressBookSelect}
-                                onAddToAddressBook={addToAddressBook}
-                                onTransferToggle={handleTransferToggle}
-                                isUpdatePending={updateMutation.isPending}
-                                translations={{
-                                  searchCategories:
-                                    t.categories?.searchCategories ||
-                                    'Zoek categorie...',
-                                  paymentMethods: {
-                                    other:
-                                      t.transactions.paymentMethods.other ||
-                                      'Onbekend',
-                                  },
-                                  remove: t.common?.remove || 'Verwijderen',
-                                  addToAddressBook:
-                                    t.transactions.addToAddressBook,
-                                  inAddressBook: t.transactions.inAddressBook,
-                                  searchContacts:
-                                    t.addressBook?.searchContacts ||
-                                    'Zoek contact...',
-                                  noContactsFound:
-                                    t.addressBook?.noContactsFound ||
-                                    'Geen contacten gevonden',
-                                  internalTransfer:
-                                    t.transactions.internalTransfer ||
-                                    'Internal transfer',
-                                  removeTransferMark:
-                                    t.transactions.removeTransferMark ||
-                                    'Remove internal transfer mark',
-                                  markAsTransfer:
-                                    t.transactions.markAsTransfer ||
-                                    'Mark as internal transfer',
-                                }}
-                              />
-                            </div>
-                          </div>
-                          <div className='flex flex-col items-end gap-1 text-right'>
-                            <p
-                              className={cn(
-                                'text-lg font-bold',
-                                tx.type === 'transfer'
-                                  ? 'text-blue-600'
-                                  : tx.amount > 0
-                                    ? 'text-emerald-600'
-                                    : 'text-rose-600'
-                              )}
-                            >
-                              {tx.type === 'transfer'
-                                ? ''
-                                : tx.amount > 0
-                                  ? '+'
-                                  : ''}
-                              {formatCurrency(tx.amount)}
-                            </p>
-                            {recurring && (
-                              <span
-                                data-onboarding='transaction-recurring-badge'
-                                className='inline-flex items-center gap-1 rounded-full bg-violet-100 px-2 py-0.5 text-xs font-medium text-violet-700'
-                              >
-                                <Repeat className='h-3 w-3' />
-                                {history.length}×
-                              </span>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Expanded Recurring History */}
-                        {isExpanded && (
-                          <div className='space-y-3 border-t bg-muted/30 p-4'>
-                            <div className='flex items-center justify-between'>
-                              <h4 className='flex items-center gap-2 text-sm font-semibold'>
-                                <History className='h-4 w-4' />
-                                {t.transactions.recurringHistory}
-                              </h4>
-                              <div className='text-sm'>
-                                <span className='text-muted-foreground'>
-                                  {t.transactions.totalThisPeriod}:
-                                </span>{' '}
-                                <span className='font-bold'>
-                                  {formatCurrency(historyTotal)}
-                                </span>
-                              </div>
-                            </div>
-                            <div className='grid gap-2'>
-                              {(() => {
-                                // Smart truncation: show max 7 items - 3 before, current, 3 after
-                                const MAX_VISIBLE = 7;
-                                const CONTEXT_SIZE = 3;
-                                const currentIndex = history.findIndex(
-                                  (h) => h.id === tx.id
-                                );
-
-                                if (history.length <= MAX_VISIBLE) {
-                                  // Show all if small list
-                                  return history.map((h) => (
-                                    <div
-                                      key={h.id}
-                                      className={cn(
-                                        '-mx-2 flex items-center justify-between rounded border-b border-dashed px-2 py-1 text-sm last:border-0',
-                                        h.id === tx.id &&
-                                          'bg-purple-100 dark:bg-purple-900/30'
-                                      )}
-                                    >
-                                      <span className='text-muted-foreground'>
-                                        {formatDate(h.date)}
-                                      </span>
-                                      <span className='font-medium'>
-                                        {formatCurrency(h.amount)}
-                                      </span>
+                                              {tx.opposingAccountIban && (
+                                                <p>
+                                                  <span className='font-semibold'>
+                                                    {t.transactions.iban}:
+                                                  </span>{' '}
+                                                  {tx.opposingAccountIban}
+                                                </p>
+                                              )}
+                                            </div>
+                                          </TooltipContent>
+                                        </Tooltip>
+                                      </TooltipProvider>
+                                      <TooltipProvider delayDuration={100}>
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <button
+                                              className='flex-shrink-0 rounded p-1 text-muted-foreground opacity-0 transition-colors hover:bg-muted focus:opacity-100 group-hover:opacity-100'
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                startLabelEdit(tx);
+                                              }}
+                                            >
+                                              <Pencil className='h-4 w-4' />
+                                            </button>
+                                          </TooltipTrigger>
+                                          <TooltipContent>
+                                            <p>
+                                              {
+                                                t.transactions
+                                                  .editTransactionName
+                                              }
+                                            </p>
+                                          </TooltipContent>
+                                        </Tooltip>
+                                      </TooltipProvider>
                                     </div>
-                                  ));
-                                }
-
-                                // Calculate window around current transaction
-                                const _beforeCount = currentIndex;
-                                const _afterCount =
-                                  history.length - currentIndex - 1;
-
-                                let startIdx = Math.max(
-                                  0,
-                                  currentIndex - CONTEXT_SIZE
-                                );
-                                let endIdx = Math.min(
-                                  history.length - 1,
-                                  currentIndex + CONTEXT_SIZE
-                                );
-
-                                // Adjust window if at edges
-                                if (startIdx === 0) {
-                                  endIdx = Math.min(
-                                    history.length - 1,
-                                    MAX_VISIBLE - 1
-                                  );
-                                } else if (endIdx === history.length - 1) {
-                                  startIdx = Math.max(
-                                    0,
-                                    history.length - MAX_VISIBLE
-                                  );
-                                }
-
-                                const visibleHistory = history.slice(
-                                  startIdx,
-                                  endIdx + 1
-                                );
-                                const hiddenBefore = startIdx;
-                                const hiddenAfter = history.length - endIdx - 1;
-
-                                return (
-                                  <>
-                                    {hiddenBefore > 0 && (
-                                      <div className='-mx-2 flex items-center justify-center gap-2 px-2 py-1 text-xs text-muted-foreground'>
-                                        <span className='flex-1 border-b border-dashed' />
-                                        <span>
-                                          {hiddenBefore}{' '}
-                                          {hiddenBefore === 1
-                                            ? t.transactions
-                                                ?.laterTransaction ||
-                                              'latere transactie'
-                                            : t.transactions
-                                                ?.laterTransactions ||
-                                              'latere transacties'}
+                                  )}
+                                </div>
+                                {/* Date and IBAN on one line */}
+                                <div className='flex items-center gap-2 text-sm text-muted-foreground'>
+                                  <span className='flex-shrink-0'>
+                                    {formatDate(tx.date)}
+                                  </span>
+                                  {tx.opposingAccountIban && (
+                                    <>
+                                      <span className='flex-shrink-0 text-muted-foreground/50'>
+                                        •
+                                      </span>
+                                      <span
+                                        className='min-w-0 truncate'
+                                        title={tx.opposingAccountIban}
+                                      >
+                                        {/* Show truncated IBAN on mobile, full on desktop */}
+                                        <span className='sm:hidden'>
+                                          {tx.opposingAccountIban.length > 18
+                                            ? `${tx.opposingAccountIban.slice(0, 8)}...${tx.opposingAccountIban.slice(-4)}`
+                                            : tx.opposingAccountIban}
                                         </span>
-                                        <span className='flex-1 border-b border-dashed' />
-                                      </div>
-                                    )}
-                                    {visibleHistory.map((h) => (
+                                        <span className='hidden sm:inline'>
+                                          {tx.opposingAccountIban}
+                                        </span>
+                                      </span>
+                                    </>
+                                  )}
+                                </div>
+                                {/* Badges row - Optimized component with internal state management */}
+                                <TransactionRowBadges
+                                  transaction={tx}
+                                  categories={categories}
+                                  categoryName={getCategoryName(tx.categoryId)}
+                                  categoryColor={getCategoryColor(
+                                    tx.categoryId
+                                  )}
+                                  paymentInfo={paymentInfo}
+                                  paymentMethods={paymentMethods}
+                                  paymentProviderRules={paymentProviderRules}
+                                  addressBook={addressBook}
+                                  addressBookEntry={addressBookEntry}
+                                  isInAddressBook={isInAddressBook(tx)}
+                                  onCategorySelect={handleCategorySelect}
+                                  onPaymentMethodSelect={
+                                    handlePaymentMethodSelect
+                                  }
+                                  onPaymentProcessorSelect={
+                                    handlePaymentProcessorSelect
+                                  }
+                                  onAddressBookSelect={handleAddressBookSelect}
+                                  onAddToAddressBook={addToAddressBook}
+                                  onTransferToggle={handleTransferToggle}
+                                  isUpdatePending={updateMutation.isPending}
+                                  translations={{
+                                    searchCategories:
+                                      t.categories?.searchCategories ||
+                                      'Zoek categorie...',
+                                    paymentMethods: {
+                                      other:
+                                        t.transactions.paymentMethods.other ||
+                                        'Onbekend',
+                                    },
+                                    remove: t.common?.remove || 'Verwijderen',
+                                    addToAddressBook:
+                                      t.transactions.addToAddressBook,
+                                    inAddressBook: t.transactions.inAddressBook,
+                                    searchContacts:
+                                      t.addressBook?.searchContacts ||
+                                      'Zoek contact...',
+                                    noContactsFound:
+                                      t.addressBook?.noContactsFound ||
+                                      'Geen contacten gevonden',
+                                    internalTransfer:
+                                      t.transactions.internalTransfer ||
+                                      'Internal transfer',
+                                    removeTransferMark:
+                                      t.transactions.removeTransferMark ||
+                                      'Remove internal transfer mark',
+                                    markAsTransfer:
+                                      t.transactions.markAsTransfer ||
+                                      'Mark as internal transfer',
+                                  }}
+                                />
+                              </div>
+                            </div>
+                            <div className='flex flex-col items-end gap-1 text-right'>
+                              <p
+                                className={cn(
+                                  'text-lg font-bold',
+                                  tx.type === 'transfer'
+                                    ? 'text-blue-600'
+                                    : tx.amount > 0
+                                      ? 'text-emerald-600'
+                                      : 'text-rose-600'
+                                )}
+                              >
+                                {tx.type === 'transfer'
+                                  ? ''
+                                  : tx.amount > 0
+                                    ? '+'
+                                    : ''}
+                                {formatCurrency(tx.amount)}
+                              </p>
+                              {recurring && (
+                                <span
+                                  data-onboarding='transaction-recurring-badge'
+                                  className='inline-flex items-center gap-1 rounded-full bg-violet-100 px-2 py-0.5 text-xs font-medium text-violet-700'
+                                >
+                                  <Repeat className='h-3 w-3' />
+                                  {history.length}×
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Expanded Recurring History */}
+                          {isExpanded && (
+                            <div className='space-y-3 border-t bg-muted/30 p-4'>
+                              <div className='flex items-center justify-between'>
+                                <h4 className='flex items-center gap-2 text-sm font-semibold'>
+                                  <History className='h-4 w-4' />
+                                  {t.transactions.recurringHistory}
+                                </h4>
+                                <div className='text-sm'>
+                                  <span className='text-muted-foreground'>
+                                    {t.transactions.totalThisPeriod}:
+                                  </span>{' '}
+                                  <span className='font-bold'>
+                                    {formatCurrency(historyTotal)}
+                                  </span>
+                                </div>
+                              </div>
+                              <div className='grid gap-2'>
+                                {(() => {
+                                  // Smart truncation: show max 7 items - 3 before, current, 3 after
+                                  const MAX_VISIBLE = 7;
+                                  const CONTEXT_SIZE = 3;
+                                  const currentIndex = history.findIndex(
+                                    (h) => h.id === tx.id
+                                  );
+
+                                  if (history.length <= MAX_VISIBLE) {
+                                    // Show all if small list
+                                    return history.map((h) => (
                                       <div
                                         key={h.id}
                                         className={cn(
@@ -2733,103 +2687,176 @@ export default function Transactions() {
                                           {formatCurrency(h.amount)}
                                         </span>
                                       </div>
-                                    ))}
-                                    {hiddenAfter > 0 && (
-                                      <div className='-mx-2 flex items-center justify-center gap-2 px-2 py-1 text-xs text-muted-foreground'>
-                                        <span className='flex-1 border-b border-dashed' />
-                                        <span>
-                                          {hiddenAfter}{' '}
-                                          {hiddenAfter === 1
-                                            ? t.transactions
-                                                ?.earlierTransaction ||
-                                              'eerdere transactie'
-                                            : t.transactions
-                                                ?.earlierTransactions ||
-                                              'eerdere transacties'}
-                                        </span>
-                                        <span className='flex-1 border-b border-dashed' />
-                                      </div>
-                                    )}
-                                  </>
-                                );
-                              })()}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
+                                    ));
+                                  }
 
-                {visibleCount < (deferredTransactions?.length || 0) && (
-                  <div className='mt-6 flex flex-col items-center gap-2'>
-                    {/* Sentinel observed by IntersectionObserver for auto-loading */}
-                    <div ref={loadMoreSentinelRef} className='h-4 w-full' />
-                    <Button
-                      ref={loadMoreRef}
-                      variant='outline'
-                      onClick={() => setVisibleCount((prev) => prev + 50)}
-                    >
-                      {t.transactions.loadMore}
-                    </Button>
+                                  // Calculate window around current transaction
+                                  const _beforeCount = currentIndex;
+                                  const _afterCount =
+                                    history.length - currentIndex - 1;
+
+                                  let startIdx = Math.max(
+                                    0,
+                                    currentIndex - CONTEXT_SIZE
+                                  );
+                                  let endIdx = Math.min(
+                                    history.length - 1,
+                                    currentIndex + CONTEXT_SIZE
+                                  );
+
+                                  // Adjust window if at edges
+                                  if (startIdx === 0) {
+                                    endIdx = Math.min(
+                                      history.length - 1,
+                                      MAX_VISIBLE - 1
+                                    );
+                                  } else if (endIdx === history.length - 1) {
+                                    startIdx = Math.max(
+                                      0,
+                                      history.length - MAX_VISIBLE
+                                    );
+                                  }
+
+                                  const visibleHistory = history.slice(
+                                    startIdx,
+                                    endIdx + 1
+                                  );
+                                  const hiddenBefore = startIdx;
+                                  const hiddenAfter =
+                                    history.length - endIdx - 1;
+
+                                  return (
+                                    <>
+                                      {hiddenBefore > 0 && (
+                                        <div className='-mx-2 flex items-center justify-center gap-2 px-2 py-1 text-xs text-muted-foreground'>
+                                          <span className='flex-1 border-b border-dashed' />
+                                          <span>
+                                            {hiddenBefore}{' '}
+                                            {hiddenBefore === 1
+                                              ? t.transactions
+                                                  ?.laterTransaction ||
+                                                'latere transactie'
+                                              : t.transactions
+                                                  ?.laterTransactions ||
+                                                'latere transacties'}
+                                          </span>
+                                          <span className='flex-1 border-b border-dashed' />
+                                        </div>
+                                      )}
+                                      {visibleHistory.map((h) => (
+                                        <div
+                                          key={h.id}
+                                          className={cn(
+                                            '-mx-2 flex items-center justify-between rounded border-b border-dashed px-2 py-1 text-sm last:border-0',
+                                            h.id === tx.id &&
+                                              'bg-purple-100 dark:bg-purple-900/30'
+                                          )}
+                                        >
+                                          <span className='text-muted-foreground'>
+                                            {formatDate(h.date)}
+                                          </span>
+                                          <span className='font-medium'>
+                                            {formatCurrency(h.amount)}
+                                          </span>
+                                        </div>
+                                      ))}
+                                      {hiddenAfter > 0 && (
+                                        <div className='-mx-2 flex items-center justify-center gap-2 px-2 py-1 text-xs text-muted-foreground'>
+                                          <span className='flex-1 border-b border-dashed' />
+                                          <span>
+                                            {hiddenAfter}{' '}
+                                            {hiddenAfter === 1
+                                              ? t.transactions
+                                                  ?.earlierTransaction ||
+                                                'eerdere transactie'
+                                              : t.transactions
+                                                  ?.earlierTransactions ||
+                                                'eerdere transacties'}
+                                          </span>
+                                          <span className='flex-1 border-b border-dashed' />
+                                        </div>
+                                      )}
+                                    </>
+                                  );
+                                })()}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
-                )}
-              </>
-            ) : hasActiveFilters ? (
-              <div className='py-12 text-center'>
-                <Search className='mx-auto mb-4 h-12 w-12 text-muted-foreground/50' />
-                <h3 className='text-lg font-medium'>
-                  {t.transactions.noTransactionsFound}
-                </h3>
-                <p className='mx-auto mt-2 max-w-xs text-muted-foreground'>
-                  {t.transactions.adjustFilters}
-                </p>
-                <Button
-                  variant='ghost'
-                  className='mt-4 text-purple-600 hover:bg-purple-600 hover:text-white dark:text-purple-400 dark:hover:bg-purple-600 dark:hover:text-white'
-                  onClick={() => {
-                    // Reset all filters
-                    setSearch('');
-                    setTransactionType('all');
-                    setDebouncedType('all');
-                    setContextTransactionType('all');
-                    setSelectedCategoryIds([]);
-                    setCategories([]);
-                    setSelectedIbans([]);
-                    setSelectedAccountName(null);
-                    setSelectedAddressBookId(null);
-                    setOpposingAccountIbans([]);
-                    setOpposingAccountName(null);
-                    setAddressBookId(null);
-                    setSelectedPaymentMethods([]);
-                    setSelectedPaymentProcessors([]);
-                  }}
-                >
-                  {t.addressBook?.clearFilters || 'Filters wissen'}
-                </Button>
-              </div>
-            ) : (
-              // Empty state when NO filters are active - show "Import" CTA
-              <div className='flex flex-col items-center justify-center py-12 text-center'>
-                <History className='mx-auto mb-4 h-12 w-12 text-muted-foreground/50' />
-                <h3 className='text-lg font-medium text-muted-foreground'>
-                  {t.transactions.noTransactions || 'Nog geen transacties'}
-                </h3>
-                <p className='mt-2 text-sm text-muted-foreground'>
-                  {t.transactions.importTransactions ||
-                    'Importeer je eerste transacties om te beginnen.'}
-                </p>
-                <Button
-                  onClick={() => navigate('/import/')}
-                  variant='link'
-                  className='mt-2 text-primary hover:underline'
-                >
-                  {t.transactions.goToImport || 'Ga naar importeren'}
-                </Button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+
+                  {visibleCount < (deferredTransactions?.length || 0) && (
+                    <div className='mt-6 flex flex-col items-center gap-2'>
+                      {/* Sentinel observed by IntersectionObserver for auto-loading */}
+                      <div ref={loadMoreSentinelRef} className='h-4 w-full' />
+                      <Button
+                        ref={loadMoreRef}
+                        variant='outline'
+                        onClick={() => setVisibleCount((prev) => prev + 50)}
+                      >
+                        {t.transactions.loadMore}
+                      </Button>
+                    </div>
+                  )}
+                </>
+              ) : hasActiveFilters ? (
+                <div className='py-12 text-center'>
+                  <Search className='mx-auto mb-4 h-12 w-12 text-muted-foreground/50' />
+                  <h3 className='text-lg font-medium'>
+                    {t.transactions.noTransactionsFound}
+                  </h3>
+                  <p className='mx-auto mt-2 max-w-xs text-muted-foreground'>
+                    {t.transactions.adjustFilters}
+                  </p>
+                  <Button
+                    variant='ghost'
+                    className='mt-4 text-purple-600 hover:bg-purple-600 hover:text-white dark:text-purple-400 dark:hover:bg-purple-600 dark:hover:text-white'
+                    onClick={() => {
+                      // Reset all filters
+                      setSearch('');
+                      setTransactionType('all');
+                      setDebouncedType('all');
+                      setContextTransactionType('all');
+                      setSelectedCategoryIds([]);
+                      setCategories([]);
+                      setSelectedIbans([]);
+                      setSelectedAccountName(null);
+                      setSelectedAddressBookId(null);
+                      setOpposingAccountIbans([]);
+                      setOpposingAccountName(null);
+                      setAddressBookId(null);
+                      setSelectedPaymentMethods([]);
+                      setSelectedPaymentProcessors([]);
+                    }}
+                  >
+                    {t.addressBook?.clearFilters || 'Filters wissen'}
+                  </Button>
+                </div>
+              ) : (
+                // Empty state when NO filters are active - show "Import" CTA
+                <div className='flex flex-col items-center justify-center py-12 text-center'>
+                  <History className='mx-auto mb-4 h-12 w-12 text-muted-foreground/50' />
+                  <h3 className='text-lg font-medium text-muted-foreground'>
+                    {t.transactions.noTransactions || 'Nog geen transacties'}
+                  </h3>
+                  <p className='mt-2 text-sm text-muted-foreground'>
+                    {t.transactions.importTransactions ||
+                      'Importeer je eerste transacties om te beginnen.'}
+                  </p>
+                  <Button
+                    onClick={() => navigate('/import/')}
+                    variant='link'
+                    className='mt-2 text-primary hover:underline'
+                  >
+                    {t.transactions.goToImport || 'Ga naar importeren'}
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
 
         {/* Create Contact Modal with Transaction Context */}
         <Dialog

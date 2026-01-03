@@ -349,21 +349,23 @@ export default function Dashboard() {
   };
 
   return (
-    <div className='space-y-6'>
-      <div className='flex flex-wrap items-start justify-between gap-4'>
+    <div className='space-y-0 sm:space-y-6'>
+      <div className='flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between'>
         <div data-onboarding='dashboard-greeting'>
-          <h1 className='text-3xl leading-tight'>
+          <h1 className='text-xl leading-tight sm:text-3xl'>
             <span className='block font-bold'>
               {getGreeting()} {user?.name ?? ''} <span aria-hidden>👋</span>
             </span>
           </h1>
-          <p className='mt-1 text-muted-foreground'>{t.dashboard.subtitle}</p>
+          <p className='mt-1 text-xs text-muted-foreground sm:text-base'>
+            {t.dashboard.subtitle}
+          </p>
         </div>
 
         {/* Account Balance Cards */}
         {accounts && accounts.length > 0 && (
           <div
-            className='flex items-center gap-2'
+            className='-mx-3 flex items-center gap-2 sm:mx-0'
             data-onboarding='dashboard-accounts'
           >
             {accounts.length > 3 && (
@@ -381,7 +383,7 @@ export default function Dashboard() {
             )}
 
             <div
-              className='-mx-2 flex gap-3 overflow-x-auto overscroll-contain px-2 pb-2 sm:overflow-x-visible'
+              className='flex flex-1 gap-px overflow-x-auto overscroll-contain bg-border sm:flex-initial sm:gap-3 sm:bg-transparent sm:px-2 sm:pb-2'
               style={{ WebkitOverflowScrolling: 'touch' }}
             >
               {accounts
@@ -420,7 +422,7 @@ export default function Dashboard() {
                   return (
                     <div
                       key={account.id}
-                      className='flex min-w-[12rem] flex-shrink-0 items-center gap-3 rounded-lg border bg-card px-4 py-2 shadow-sm'
+                      className='flex min-w-[10rem] flex-1 flex-shrink-0 items-center gap-3 border-r border-border bg-card px-3 py-2 last:border-r-0 sm:min-w-[12rem] sm:flex-initial sm:rounded-lg sm:border sm:px-4 sm:shadow-sm'
                     >
                       <div className={`rounded-full p-2 ${colors.bg}`}>
                         {account.type === 'checking' && (
@@ -467,7 +469,7 @@ export default function Dashboard() {
 
       {/* Stats Cards */}
       <div
-        className='grid grid-cols-2 gap-4 lg:grid-cols-4'
+        className='-mx-3 grid grid-cols-2 gap-px bg-border sm:mx-0 sm:gap-4 sm:bg-transparent lg:grid-cols-4'
         data-onboarding='dashboard-stats'
       >
         <div data-onboarding='stat-income' className='h-full'>
@@ -531,599 +533,303 @@ export default function Dashboard() {
       {/* Charts Row */}
       <div className='-mx-3 sm:mx-0'>
         <div className='grid gap-px bg-border sm:gap-6 sm:bg-transparent lg:grid-cols-2'>
-        {/* Monthly Earnings Chart */}
-        <Card className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm' data-onboarding='monthly-income-chart'>
-          <CardHeader>
-            <CardTitle className='text-base sm:text-lg'>{t.dashboard.monthlyIncome}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {monthlyData.reduce((sum, d) => sum + d.income, 0) > 0 ? (
-              <div
-                className={`h-[300px] overflow-y-hidden ${
-                  monthlyData.length > 12
-                    ? 'overflow-x-auto'
-                    : 'overflow-x-hidden'
-                }`}
-                style={{ maxWidth: '100%' }}
-                ref={monthlyIncomeScrollRef}
-              >
+          {/* Monthly Earnings Chart */}
+          <Card
+            className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'
+            data-onboarding='monthly-income-chart'
+          >
+            <CardHeader>
+              <CardTitle className='text-base sm:text-lg'>
+                {t.dashboard.monthlyIncome}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {monthlyData.reduce((sum, d) => sum + d.income, 0) > 0 ? (
                 <div
-                  ref={monthlyIncomeInnerRef}
-                  style={{
-                    width: '100%',
-                    minWidth: '100%',
-                    height: '100%',
-                    minHeight: '300px',
-                  }}
+                  className={`h-[300px] overflow-y-hidden ${
+                    monthlyData.length > 12
+                      ? 'overflow-x-auto'
+                      : 'overflow-x-hidden'
+                  }`}
+                  style={{ maxWidth: '100%' }}
+                  ref={monthlyIncomeScrollRef}
                 >
+                  <div
+                    ref={monthlyIncomeInnerRef}
+                    style={{
+                      width: '100%',
+                      minWidth: '100%',
+                      height: '100%',
+                      minHeight: '300px',
+                    }}
+                  >
+                    <ResponsiveContainer
+                      width='100%'
+                      height='100%'
+                      minHeight={1}
+                      minWidth={1}
+                    >
+                      <AreaChart data={monthlyData}>
+                        <defs>
+                          <linearGradient
+                            id='colorIncome'
+                            x1='0'
+                            y1='0'
+                            x2='0'
+                            y2='1'
+                          >
+                            <stop
+                              offset='5%'
+                              stopColor='#8B5CF6'
+                              stopOpacity={0.3}
+                            />
+                            <stop
+                              offset='95%'
+                              stopColor='#8B5CF6'
+                              stopOpacity={0}
+                            />
+                          </linearGradient>
+                        </defs>
+                        <XAxis
+                          dataKey='month'
+                          tickFormatter={(value) => {
+                            const [, month] = value.split('-');
+                            return t.common.monthsShort[parseInt(month) - 1];
+                          }}
+                          tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                          axisLine={false}
+                          tickLine={false}
+                        />
+                        <YAxis
+                          tickFormatter={(value) =>
+                            value >= 1000
+                              ? `€${(value / 1000).toFixed(0)}k`
+                              : `€${value}`
+                          }
+                          tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                          axisLine={false}
+                          tickLine={false}
+                          domain={[0, 'auto']}
+                        />
+                        <Tooltip
+                          formatter={(value) => [
+                            formatCurrency(value as number),
+                            t.dashboard.income,
+                          ]}
+                          labelFormatter={(label) => {
+                            if (typeof label !== 'string') return '';
+                            const [year, month] = label.split('-');
+                            return `${
+                              t.common.months[parseInt(month) - 1]
+                            } ${year}`;
+                          }}
+                          contentStyle={{
+                            backgroundColor: 'hsl(var(--card))',
+                            border: '1px solid hsl(var(--border))',
+                            borderRadius: '8px',
+                          }}
+                        />
+                        <Area
+                          type='monotone'
+                          dataKey='income'
+                          stroke='#8B5CF6'
+                          strokeWidth={2}
+                          fill='url(#colorIncome)'
+                          isAnimationActive={monthlyData.length <= 10}
+                          animationDuration={1500}
+                          animationEasing='ease-out'
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              ) : (
+                <div className='flex h-[300px] flex-col items-center justify-center text-center'>
+                  <ArrowUpRight className='mb-4 h-12 w-12 text-muted-foreground/50' />
+                  <p className='text-muted-foreground'>
+                    {t.dashboard.noIncome}
+                  </p>
+                  <p className='mt-1 text-sm text-muted-foreground'>
+                    {t.dashboard.importTransactions}
+                  </p>
+                  <Button
+                    onClick={() => navigate('/import/')}
+                    variant='link'
+                    className='mt-2'
+                  >
+                    {t.dashboard.goToImport}
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Spending by Category */}
+          <Card
+            className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'
+            onClick={() => {
+              setActiveCategoryIndex(null);
+              setPinnedCategoryIndex(null);
+            }}
+            data-onboarding='category-pie-chart'
+          >
+            <CardHeader className='flex flex-row items-center justify-between'>
+              <CardTitle className='text-base sm:text-lg'>
+                {t.dashboard.expensesByCategory}
+              </CardTitle>
+              <span
+                className='min-h-7 text-lg font-semibold'
+                style={{
+                  color:
+                    activeCategoryIndex !== null &&
+                    categoryData[activeCategoryIndex]
+                      ? categoryData[activeCategoryIndex].color
+                      : 'transparent',
+                }}
+              >
+                {activeCategoryIndex !== null &&
+                categoryData[activeCategoryIndex]
+                  ? formatCurrency(categoryData[activeCategoryIndex].amount)
+                  : '\u00A0'}
+              </span>
+            </CardHeader>
+            <CardContent>
+              <div className='flex h-[300px] items-center justify-center'>
+                {categoryData.length > 0 ? (
                   <ResponsiveContainer
                     width='100%'
                     height='100%'
                     minHeight={1}
                     minWidth={1}
                   >
-                    <AreaChart data={monthlyData}>
-                      <defs>
-                        <linearGradient
-                          id='colorIncome'
-                          x1='0'
-                          y1='0'
-                          x2='0'
-                          y2='1'
-                        >
-                          <stop
-                            offset='5%'
-                            stopColor='#8B5CF6'
-                            stopOpacity={0.3}
-                          />
-                          <stop
-                            offset='95%'
-                            stopColor='#8B5CF6'
-                            stopOpacity={0}
-                          />
-                        </linearGradient>
-                      </defs>
-                      <XAxis
-                        dataKey='month'
-                        tickFormatter={(value) => {
-                          const [, month] = value.split('-');
-                          return t.common.monthsShort[parseInt(month) - 1];
+                    <PieChart>
+                      <Pie
+                        data={categoryData}
+                        cx='50%'
+                        cy='50%'
+                        innerRadius={60}
+                        outerRadius={100}
+                        paddingAngle={2}
+                        dataKey='amount'
+                        nameKey='categoryName'
+                        startAngle={90}
+                        endAngle={-270}
+                        isAnimationActive={false}
+                        {...{
+                          activeIndex:
+                            activeCategoryIndex !== null
+                              ? activeCategoryIndex
+                              : undefined,
                         }}
-                        tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                        axisLine={false}
-                        tickLine={false}
-                      />
-                      <YAxis
-                        tickFormatter={(value) =>
-                          value >= 1000
-                            ? `€${(value / 1000).toFixed(0)}k`
-                            : `€${value}`
-                        }
-                        tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                        axisLine={false}
-                        tickLine={false}
-                        domain={[0, 'auto']}
-                      />
+                        activeShape={(props: PieSectorDataItem) => {
+                          const {
+                            cx,
+                            cy,
+                            innerRadius,
+                            outerRadius,
+                            startAngle,
+                            endAngle,
+                            fill,
+                          } = props;
+                          return (
+                            <Sector
+                              cx={cx}
+                              cy={cy}
+                              innerRadius={innerRadius}
+                              outerRadius={(outerRadius || 100) + 15}
+                              startAngle={startAngle}
+                              endAngle={endAngle}
+                              fill={fill}
+                              style={{ outline: 'none' }}
+                            />
+                          );
+                        }}
+                        onClick={(_, index) => {
+                          // Toggle selection on click - grows the segment
+                          if (pinnedCategoryIndex === index) {
+                            setPinnedCategoryIndex(null);
+                            setActiveCategoryIndex(null);
+                          } else {
+                            setPinnedCategoryIndex(index);
+                            setActiveCategoryIndex(index);
+                          }
+                        }}
+                        style={{ cursor: 'pointer' }}
+                      >
+                        {categoryData.map((entry, index) => (
+                          <Cell
+                            key={`cell-${index}`}
+                            fill={entry.color}
+                            opacity={
+                              activeCategoryIndex !== null &&
+                              activeCategoryIndex !== index
+                                ? 0.3
+                                : 1
+                            }
+                          />
+                        ))}
+                      </Pie>
                       <Tooltip
-                        formatter={(value) => [
-                          formatCurrency(value as number),
-                          t.dashboard.income,
-                        ]}
-                        labelFormatter={(label) => {
-                          if (typeof label !== 'string') return '';
-                          const [year, month] = label.split('-');
-                          return `${
-                            t.common.months[parseInt(month) - 1]
-                          } ${year}`;
-                        }}
+                        formatter={(value) => formatCurrency(value as number)}
                         contentStyle={{
                           backgroundColor: 'hsl(var(--card))',
                           border: '1px solid hsl(var(--border))',
                           borderRadius: '8px',
                         }}
                       />
-                      <Area
-                        type='monotone'
-                        dataKey='income'
-                        stroke='#8B5CF6'
-                        strokeWidth={2}
-                        fill='url(#colorIncome)'
-                        isAnimationActive={monthlyData.length <= 10}
-                        animationDuration={1500}
-                        animationEasing='ease-out'
-                      />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-            ) : (
-              <div className='flex h-[300px] flex-col items-center justify-center text-center'>
-                <ArrowUpRight className='mb-4 h-12 w-12 text-muted-foreground/50' />
-                <p className='text-muted-foreground'>{t.dashboard.noIncome}</p>
-                <p className='mt-1 text-sm text-muted-foreground'>
-                  {t.dashboard.importTransactions}
-                </p>
-                <Button
-                  onClick={() => navigate('/import/')}
-                  variant='link'
-                  className='mt-2'
-                >
-                  {t.dashboard.goToImport}
-                </Button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Spending by Category */}
-        <Card
-          className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'
-          onClick={() => {
-            setActiveCategoryIndex(null);
-            setPinnedCategoryIndex(null);
-          }}
-          data-onboarding='category-pie-chart'
-        >
-          <CardHeader className='flex flex-row items-center justify-between'>
-            <CardTitle className='text-base sm:text-lg'>{t.dashboard.expensesByCategory}</CardTitle>
-            <span
-              className='min-h-7 text-lg font-semibold'
-              style={{
-                color:
-                  activeCategoryIndex !== null &&
-                  categoryData[activeCategoryIndex]
-                    ? categoryData[activeCategoryIndex].color
-                    : 'transparent',
-              }}
-            >
-              {activeCategoryIndex !== null && categoryData[activeCategoryIndex]
-                ? formatCurrency(categoryData[activeCategoryIndex].amount)
-                : '\u00A0'}
-            </span>
-          </CardHeader>
-          <CardContent>
-            <div className='flex h-[300px] items-center justify-center'>
-              {categoryData.length > 0 ? (
-                <ResponsiveContainer
-                  width='100%'
-                  height='100%'
-                  minHeight={1}
-                  minWidth={1}
-                >
-                  <PieChart>
-                    <Pie
-                      data={categoryData}
-                      cx='50%'
-                      cy='50%'
-                      innerRadius={60}
-                      outerRadius={100}
-                      paddingAngle={2}
-                      dataKey='amount'
-                      nameKey='categoryName'
-                      startAngle={90}
-                      endAngle={-270}
-                      isAnimationActive={false}
-                      {...{
-                        activeIndex:
-                          activeCategoryIndex !== null
-                            ? activeCategoryIndex
-                            : undefined,
-                      }}
-                      activeShape={(props: PieSectorDataItem) => {
-                        const {
-                          cx,
-                          cy,
-                          innerRadius,
-                          outerRadius,
-                          startAngle,
-                          endAngle,
-                          fill,
-                        } = props;
-                        return (
-                          <Sector
-                            cx={cx}
-                            cy={cy}
-                            innerRadius={innerRadius}
-                            outerRadius={(outerRadius || 100) + 15}
-                            startAngle={startAngle}
-                            endAngle={endAngle}
-                            fill={fill}
-                            style={{ outline: 'none' }}
-                          />
-                        );
-                      }}
-                      onClick={(_, index) => {
-                        // Toggle selection on click - grows the segment
-                        if (pinnedCategoryIndex === index) {
-                          setPinnedCategoryIndex(null);
-                          setActiveCategoryIndex(null);
-                        } else {
-                          setPinnedCategoryIndex(index);
-                          setActiveCategoryIndex(index);
-                        }
-                      }}
-                      style={{ cursor: 'pointer' }}
-                    >
-                      {categoryData.map((entry, index) => (
-                        <Cell
-                          key={`cell-${index}`}
-                          fill={entry.color}
-                          opacity={
-                            activeCategoryIndex !== null &&
-                            activeCategoryIndex !== index
-                              ? 0.3
-                              : 1
-                          }
-                        />
-                      ))}
-                    </Pie>
-                    <Tooltip
-                      formatter={(value) => formatCurrency(value as number)}
-                      contentStyle={{
-                        backgroundColor: 'hsl(var(--card))',
-                        border: '1px solid hsl(var(--border))',
-                        borderRadius: '8px',
-                      }}
-                    />
-                    <Legend
-                      layout='vertical'
-                      align='right'
-                      verticalAlign='middle'
-                      wrapperStyle={{
-                        maxHeight: '280px',
-                        overflowY: 'auto',
-                      }}
-                      content={() => (
-                        <div ref={legendContainerRef} className='space-y-1'>
-                          {categoryData.map((entry, index) => (
-                            <div
-                              key={index}
-                              data-category-index={index}
-                              className={`flex cursor-pointer items-center gap-2 rounded px-1 py-0.5 ${
-                                activeCategoryIndex === index
-                                  ? 'bg-muted'
-                                  : 'hover:bg-muted/50'
-                              }`}
-                              onClick={(event) => {
-                                event.stopPropagation();
-                                // Toggle selection on click - grows the segment
-                                if (pinnedCategoryIndex === index) {
-                                  setPinnedCategoryIndex(null);
-                                  setActiveCategoryIndex(null);
-                                } else {
-                                  setPinnedCategoryIndex(index);
-                                  setActiveCategoryIndex(index);
-                                }
-                              }}
-                            >
+                      <Legend
+                        layout='vertical'
+                        align='right'
+                        verticalAlign='middle'
+                        wrapperStyle={{
+                          maxHeight: '280px',
+                          overflowY: 'auto',
+                        }}
+                        content={() => (
+                          <div ref={legendContainerRef} className='space-y-1'>
+                            {categoryData.map((entry, index) => (
                               <div
-                                className='h-3 w-3 flex-shrink-0 rounded-full'
-                                style={{ backgroundColor: entry.color }}
-                              />
-                              <span
-                                className={`truncate text-sm text-foreground ${
+                                key={index}
+                                data-category-index={index}
+                                className={`flex cursor-pointer items-center gap-2 rounded px-1 py-0.5 ${
                                   activeCategoryIndex === index
-                                    ? 'font-bold'
-                                    : ''
+                                    ? 'bg-muted'
+                                    : 'hover:bg-muted/50'
                                 }`}
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  // Toggle selection on click - grows the segment
+                                  if (pinnedCategoryIndex === index) {
+                                    setPinnedCategoryIndex(null);
+                                    setActiveCategoryIndex(null);
+                                  } else {
+                                    setPinnedCategoryIndex(index);
+                                    setActiveCategoryIndex(index);
+                                  }
+                                }}
                               >
-                                {entry.categoryName}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className='flex flex-col items-center justify-center py-8 text-center'>
-                  <ArrowDownRight className='mb-4 h-12 w-12 text-muted-foreground/50' />
-                  <p className='text-muted-foreground'>
-                    {t.dashboard.noExpenses}
-                  </p>
-                  <p className='mt-1 text-sm text-muted-foreground'>
-                    {t.dashboard.importTransactions}
-                  </p>
-                  <button
-                    onClick={() => navigate('/import/')}
-                    className='mt-3 text-sm text-primary hover:underline'
-                  >
-                    {t.dashboard.goToImport}
-                  </button>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-        </div>
-      </div>
-
-      {/* Income vs Expenses Chart */}
-      <div className='-mx-3 sm:mx-0'>
-      <Card className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm' data-onboarding='income-expenses-chart'>
-        <CardHeader>
-          <CardTitle className='text-base sm:text-lg'>{t.dashboard.incomeVsExpenses}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {monthlyData.length > 0 ? (
-            <div
-              className='h-[300px] overflow-x-auto overflow-y-hidden'
-              style={{ maxWidth: '100%' }}
-              ref={monthlyComparisonScrollRef}
-              data-testid='monthly-comparison-scroll'
-            >
-              <div
-                style={{
-                  width: `${Math.max(720, monthlyData.length * 60)}px`,
-                  minWidth: '100%',
-                  height: '100%',
-                  minHeight: '300px',
-                }}
-              >
-                <ResponsiveContainer
-                  width='100%'
-                  height='100%'
-                  minHeight={1}
-                  minWidth={1}
-                >
-                  <BarChart data={monthlyData}>
-                    <CartesianGrid
-                      strokeDasharray='3 3'
-                      vertical={false}
-                      stroke='hsl(var(--border))'
-                    />
-                    <XAxis
-                      dataKey='month'
-                      tickFormatter={(value) => {
-                        const [, month] = value.split('-');
-                        return t.common.monthsShort[parseInt(month) - 1];
-                      }}
-                      tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                      axisLine={false}
-                      tickLine={false}
-                    />
-                    <YAxis
-                      tickFormatter={(value) =>
-                        value >= 1000
-                          ? `€${(value / 1000).toFixed(value >= 10000 ? 0 : 1)}k`
-                          : `€${Math.round(value)}`
-                      }
-                      tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                      axisLine={{ stroke: 'hsl(var(--border))' }}
-                      tickLine={false}
-                      domain={[
-                        0,
-                        (dataMax: number) => {
-                          if (dataMax <= 1000)
-                            return Math.ceil(dataMax / 100) * 100;
-                          if (dataMax <= 5000)
-                            return Math.ceil(dataMax / 500) * 500;
-                          if (dataMax <= 20000)
-                            return Math.ceil(dataMax / 1000) * 1000;
-                          return Math.ceil(dataMax / 5000) * 5000;
-                        },
-                      ]}
-                      allowDecimals={false}
-                    />
-                    <Tooltip
-                      content={({ active, payload, label }) => {
-                        if (
-                          active &&
-                          payload &&
-                          payload.length &&
-                          typeof label === 'string'
-                        ) {
-                          const income =
-                            (payload.find((p) => p.dataKey === 'income')
-                              ?.value as number) || 0;
-                          const expenses =
-                            (payload.find((p) => p.dataKey === 'expenses')
-                              ?.value as number) || 0;
-                          const balance = income - expenses;
-                          const [year, month] = label.split('-');
-                          return (
-                            <div className='rounded-lg border bg-card p-3 shadow-lg'>
-                              <p className='mb-2 font-medium'>
-                                {t.common.months[parseInt(month) - 1]} {year}
-                              </p>
-                              <p className='text-emerald-600'>
-                                {t.dashboard.income}: {formatCurrency(income)}
-                              </p>
-                              <p className='text-rose-600'>
-                                {t.dashboard.expenses}:{' '}
-                                {formatCurrency(expenses)}
-                              </p>
-                              <p
-                                className={`mt-1 border-t pt-1 font-semibold ${
-                                  balance >= 0
-                                    ? 'text-emerald-600'
-                                    : 'text-rose-600'
-                                }`}
-                              >
-                                {t.common.total}: {formatCurrency(balance)}
-                              </p>
-                            </div>
-                          );
-                        }
-                        return null;
-                      }}
-                      cursor={{ fill: 'hsl(var(--muted)/0.3)' }}
-                    />
-                    <Legend />
-                    <Bar
-                      dataKey='income'
-                      name={t.dashboard.income}
-                      fill='#10B981'
-                      radius={[4, 4, 0, 0]}
-                      activeBar={{ fill: '#047857' }}
-                    />
-                    <Bar
-                      dataKey='expenses'
-                      name={t.dashboard.expenses}
-                      fill='#F43F5E'
-                      radius={[4, 4, 0, 0]}
-                      activeBar={{ fill: '#B91C1C' }}
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-          ) : (
-            <div className='flex h-[300px] flex-col items-center justify-center text-center'>
-              <ArrowLeftRight className='mb-4 h-12 w-12 text-muted-foreground/50' />
-              <p className='text-muted-foreground'>
-                {t.dashboard.noComparison || 'Geen data beschikbaar'}
-              </p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-      </div>
-
-      {/* Daily Expenses Timeline */}
-      <div className='-mx-3 sm:mx-0'>
-      <Card
-        className='overflow-hidden rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'
-        data-onboarding='daily-expenses-chart'
-      >
-        <CardHeader>
-          <CardTitle className='text-base sm:text-lg'>{t.dashboard.dailyExpenses}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className='flex h-[200px] overflow-hidden'>
-            {/* Fixed Y-Axis */}
-            <div className='h-full w-[50px] flex-shrink-0'>
-              <ResponsiveContainer
-                width='100%'
-                height='100%'
-                minHeight={1}
-                minWidth={1}
-              >
-                <BarChart data={dailyData} layout='horizontal'>
-                  <YAxis
-                    tickFormatter={(value) =>
-                      value >= 1000
-                        ? `€${(value / 1000).toFixed(1)}k`
-                        : `€${Math.round(value)}`
-                    }
-                    tick={{
-                      fill: 'hsl(var(--muted-foreground))',
-                      fontSize: 11,
-                    }}
-                    axisLine={{ stroke: 'hsl(var(--border))' }}
-                    tickLine={false}
-                    domain={[
-                      0,
-                      (dataMax: number) => {
-                        if (dataMax <= 100) return Math.ceil(dataMax / 20) * 20;
-                        if (dataMax <= 500)
-                          return Math.ceil(dataMax / 100) * 100;
-                        if (dataMax <= 2000)
-                          return Math.ceil(dataMax / 500) * 500;
-                        return Math.ceil(dataMax / 1000) * 1000;
-                      },
-                    ]}
-                    width={50}
-                    allowDecimals={false}
-                    tickCount={5}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-
-            {/* Scrollable Chart Content */}
-            <div
-              className='flex-1 overflow-x-auto overflow-y-hidden'
-              ref={dailyScrollRef}
-            >
-              {dailyData.reduce((sum, day) => sum + day.expenses, 0) > 0 ? (
-                <div
-                  style={{
-                    width:
-                      dailyData.length > 15
-                        ? `${dailyData.length * 25}px`
-                        : '100%',
-                    minWidth: '100%',
-                    height: '100%',
-                  }}
-                >
-                  <ResponsiveContainer
-                    width='100%'
-                    height='100%'
-                    minHeight={1}
-                    minWidth={1}
-                  >
-                    <BarChart data={dailyData} barCategoryGap='15%'>
-                      <CartesianGrid
-                        strokeDasharray='3 3'
-                        vertical={false}
-                        stroke='hsl(var(--border))'
+                                <div
+                                  className='h-3 w-3 flex-shrink-0 rounded-full'
+                                  style={{ backgroundColor: entry.color }}
+                                />
+                                <span
+                                  className={`truncate text-sm text-foreground ${
+                                    activeCategoryIndex === index
+                                      ? 'font-bold'
+                                      : ''
+                                  }`}
+                                >
+                                  {entry.categoryName}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       />
-                      <XAxis
-                        dataKey='date'
-                        tickFormatter={(value) => {
-                          const date = new Date(value);
-                          return `${date.getDate()}`;
-                        }}
-                        tick={{
-                          fill: 'hsl(var(--muted-foreground))',
-                          fontSize: 11,
-                        }}
-                        axisLine={false}
-                        tickLine={false}
-                        interval={0}
-                      />
-                      {/* Hidden YAxis to ensure same scale */}
-                      <YAxis
-                        hide
-                        domain={[
-                          0,
-                          (dataMax: number) => {
-                            if (dataMax <= 100)
-                              return Math.ceil(dataMax / 20) * 20;
-                            if (dataMax <= 500)
-                              return Math.ceil(dataMax / 100) * 100;
-                            if (dataMax <= 2000)
-                              return Math.ceil(dataMax / 500) * 500;
-                            return Math.ceil(dataMax / 1000) * 1000;
-                          },
-                        ]}
-                      />
-                      <Tooltip
-                        formatter={(value) => [
-                          formatCurrency(value as number),
-                          t.dashboard.expenses,
-                        ]}
-                        labelFormatter={(label) => {
-                          const date = new Date(label as string);
-                          return date.toLocaleDateString(
-                            language === 'nl' ? 'nl-NL' : 'en-US',
-                            {
-                              weekday: 'short',
-                              day: 'numeric',
-                              month: 'short',
-                            }
-                          );
-                        }}
-                        contentStyle={{
-                          backgroundColor: 'hsl(var(--card))',
-                          border: '1px solid hsl(var(--border))',
-                        }}
-                        cursor={{ fill: 'hsl(var(--muted)/0.3)' }}
-                      />
-                      <Bar
-                        dataKey='expenses'
-                        fill='#F43F5E'
-                        radius={[4, 4, 0, 0]}
-                        activeBar={{ fill: '#B91C1C' }}
-                      />
-                    </BarChart>
+                    </PieChart>
                   </ResponsiveContainer>
-                </div>
-              ) : (
-                <div className='flex h-full items-center justify-center overflow-hidden text-muted-foreground'>
-                  <div className='flex flex-col items-center justify-center text-center'>
+                ) : (
+                  <div className='flex flex-col items-center justify-center py-8 text-center'>
                     <ArrowDownRight className='mb-4 h-12 w-12 text-muted-foreground/50' />
                     <p className='text-muted-foreground'>
                       {t.dashboard.noExpenses}
@@ -1138,483 +844,813 @@ export default function Dashboard() {
                       {t.dashboard.goToImport}
                     </button>
                   </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      {/* Income vs Expenses Chart */}
+      <div className='-mx-3 sm:mx-0'>
+        <Card
+          className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'
+          data-onboarding='income-expenses-chart'
+        >
+          <CardHeader>
+            <CardTitle className='text-base sm:text-lg'>
+              {t.dashboard.incomeVsExpenses}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {monthlyData.length > 0 ? (
+              <div
+                className='h-[300px] overflow-x-auto overflow-y-hidden'
+                style={{ maxWidth: '100%' }}
+                ref={monthlyComparisonScrollRef}
+                data-testid='monthly-comparison-scroll'
+              >
+                <div
+                  style={{
+                    width: `${Math.max(720, monthlyData.length * 60)}px`,
+                    minWidth: '100%',
+                    height: '100%',
+                    minHeight: '300px',
+                  }}
+                >
+                  <ResponsiveContainer
+                    width='100%'
+                    height='100%'
+                    minHeight={1}
+                    minWidth={1}
+                  >
+                    <BarChart data={monthlyData}>
+                      <CartesianGrid
+                        strokeDasharray='3 3'
+                        vertical={false}
+                        stroke='hsl(var(--border))'
+                      />
+                      <XAxis
+                        dataKey='month'
+                        tickFormatter={(value) => {
+                          const [, month] = value.split('-');
+                          return t.common.monthsShort[parseInt(month) - 1];
+                        }}
+                        tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                        axisLine={false}
+                        tickLine={false}
+                      />
+                      <YAxis
+                        tickFormatter={(value) =>
+                          value >= 1000
+                            ? `€${(value / 1000).toFixed(value >= 10000 ? 0 : 1)}k`
+                            : `€${Math.round(value)}`
+                        }
+                        tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                        axisLine={{ stroke: 'hsl(var(--border))' }}
+                        tickLine={false}
+                        domain={[
+                          0,
+                          (dataMax: number) => {
+                            if (dataMax <= 1000)
+                              return Math.ceil(dataMax / 100) * 100;
+                            if (dataMax <= 5000)
+                              return Math.ceil(dataMax / 500) * 500;
+                            if (dataMax <= 20000)
+                              return Math.ceil(dataMax / 1000) * 1000;
+                            return Math.ceil(dataMax / 5000) * 5000;
+                          },
+                        ]}
+                        allowDecimals={false}
+                      />
+                      <Tooltip
+                        content={({ active, payload, label }) => {
+                          if (
+                            active &&
+                            payload &&
+                            payload.length &&
+                            typeof label === 'string'
+                          ) {
+                            const income =
+                              (payload.find((p) => p.dataKey === 'income')
+                                ?.value as number) || 0;
+                            const expenses =
+                              (payload.find((p) => p.dataKey === 'expenses')
+                                ?.value as number) || 0;
+                            const balance = income - expenses;
+                            const [year, month] = label.split('-');
+                            return (
+                              <div className='rounded-lg border bg-card p-3 shadow-lg'>
+                                <p className='mb-2 font-medium'>
+                                  {t.common.months[parseInt(month) - 1]} {year}
+                                </p>
+                                <p className='text-emerald-600'>
+                                  {t.dashboard.income}: {formatCurrency(income)}
+                                </p>
+                                <p className='text-rose-600'>
+                                  {t.dashboard.expenses}:{' '}
+                                  {formatCurrency(expenses)}
+                                </p>
+                                <p
+                                  className={`mt-1 border-t pt-1 font-semibold ${
+                                    balance >= 0
+                                      ? 'text-emerald-600'
+                                      : 'text-rose-600'
+                                  }`}
+                                >
+                                  {t.common.total}: {formatCurrency(balance)}
+                                </p>
+                              </div>
+                            );
+                          }
+                          return null;
+                        }}
+                        cursor={{ fill: 'hsl(var(--muted)/0.3)' }}
+                      />
+                      <Legend />
+                      <Bar
+                        dataKey='income'
+                        name={t.dashboard.income}
+                        fill='#10B981'
+                        radius={[4, 4, 0, 0]}
+                        activeBar={{ fill: '#047857' }}
+                      />
+                      <Bar
+                        dataKey='expenses'
+                        name={t.dashboard.expenses}
+                        fill='#F43F5E'
+                        radius={[4, 4, 0, 0]}
+                        activeBar={{ fill: '#B91C1C' }}
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
                 </div>
-              )}
+              </div>
+            ) : (
+              <div className='flex h-[300px] flex-col items-center justify-center text-center'>
+                <ArrowLeftRight className='mb-4 h-12 w-12 text-muted-foreground/50' />
+                <p className='text-muted-foreground'>
+                  {t.dashboard.noComparison || 'Geen data beschikbaar'}
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Daily Expenses Timeline */}
+      <div className='-mx-3 sm:mx-0'>
+        <Card
+          className='overflow-hidden rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'
+          data-onboarding='daily-expenses-chart'
+        >
+          <CardHeader>
+            <CardTitle className='text-base sm:text-lg'>
+              {t.dashboard.dailyExpenses}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className='flex h-[200px] overflow-hidden'>
+              {/* Fixed Y-Axis */}
+              <div className='h-full w-[50px] flex-shrink-0'>
+                <ResponsiveContainer
+                  width='100%'
+                  height='100%'
+                  minHeight={1}
+                  minWidth={1}
+                >
+                  <BarChart data={dailyData} layout='horizontal'>
+                    <YAxis
+                      tickFormatter={(value) =>
+                        value >= 1000
+                          ? `€${(value / 1000).toFixed(1)}k`
+                          : `€${Math.round(value)}`
+                      }
+                      tick={{
+                        fill: 'hsl(var(--muted-foreground))',
+                        fontSize: 11,
+                      }}
+                      axisLine={{ stroke: 'hsl(var(--border))' }}
+                      tickLine={false}
+                      domain={[
+                        0,
+                        (dataMax: number) => {
+                          if (dataMax <= 100)
+                            return Math.ceil(dataMax / 20) * 20;
+                          if (dataMax <= 500)
+                            return Math.ceil(dataMax / 100) * 100;
+                          if (dataMax <= 2000)
+                            return Math.ceil(dataMax / 500) * 500;
+                          return Math.ceil(dataMax / 1000) * 1000;
+                        },
+                      ]}
+                      width={50}
+                      allowDecimals={false}
+                      tickCount={5}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+
+              {/* Scrollable Chart Content */}
+              <div
+                className='flex-1 overflow-x-auto overflow-y-hidden'
+                ref={dailyScrollRef}
+              >
+                {dailyData.reduce((sum, day) => sum + day.expenses, 0) > 0 ? (
+                  <div
+                    style={{
+                      width:
+                        dailyData.length > 15
+                          ? `${dailyData.length * 25}px`
+                          : '100%',
+                      minWidth: '100%',
+                      height: '100%',
+                    }}
+                  >
+                    <ResponsiveContainer
+                      width='100%'
+                      height='100%'
+                      minHeight={1}
+                      minWidth={1}
+                    >
+                      <BarChart data={dailyData} barCategoryGap='15%'>
+                        <CartesianGrid
+                          strokeDasharray='3 3'
+                          vertical={false}
+                          stroke='hsl(var(--border))'
+                        />
+                        <XAxis
+                          dataKey='date'
+                          tickFormatter={(value) => {
+                            const date = new Date(value);
+                            return `${date.getDate()}`;
+                          }}
+                          tick={{
+                            fill: 'hsl(var(--muted-foreground))',
+                            fontSize: 11,
+                          }}
+                          axisLine={false}
+                          tickLine={false}
+                          interval={0}
+                        />
+                        {/* Hidden YAxis to ensure same scale */}
+                        <YAxis
+                          hide
+                          domain={[
+                            0,
+                            (dataMax: number) => {
+                              if (dataMax <= 100)
+                                return Math.ceil(dataMax / 20) * 20;
+                              if (dataMax <= 500)
+                                return Math.ceil(dataMax / 100) * 100;
+                              if (dataMax <= 2000)
+                                return Math.ceil(dataMax / 500) * 500;
+                              return Math.ceil(dataMax / 1000) * 1000;
+                            },
+                          ]}
+                        />
+                        <Tooltip
+                          formatter={(value) => [
+                            formatCurrency(value as number),
+                            t.dashboard.expenses,
+                          ]}
+                          labelFormatter={(label) => {
+                            const date = new Date(label as string);
+                            return date.toLocaleDateString(
+                              language === 'nl' ? 'nl-NL' : 'en-US',
+                              {
+                                weekday: 'short',
+                                day: 'numeric',
+                                month: 'short',
+                              }
+                            );
+                          }}
+                          contentStyle={{
+                            backgroundColor: 'hsl(var(--card))',
+                            border: '1px solid hsl(var(--border))',
+                          }}
+                          cursor={{ fill: 'hsl(var(--muted)/0.3)' }}
+                        />
+                        <Bar
+                          dataKey='expenses'
+                          fill='#F43F5E'
+                          radius={[4, 4, 0, 0]}
+                          activeBar={{ fill: '#B91C1C' }}
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                ) : (
+                  <div className='flex h-full items-center justify-center overflow-hidden text-muted-foreground'>
+                    <div className='flex flex-col items-center justify-center text-center'>
+                      <ArrowDownRight className='mb-4 h-12 w-12 text-muted-foreground/50' />
+                      <p className='text-muted-foreground'>
+                        {t.dashboard.noExpenses}
+                      </p>
+                      <p className='mt-1 text-sm text-muted-foreground'>
+                        {t.dashboard.importTransactions}
+                      </p>
+                      <button
+                        onClick={() => navigate('/import/')}
+                        className='mt-3 text-sm text-primary hover:underline'
+                      >
+                        {t.dashboard.goToImport}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Budget and Balance Widgets */}
       <div className='-mx-3 sm:mx-0'>
         <div className='grid gap-px bg-border sm:gap-4 sm:bg-transparent md:grid-cols-2'>
-        {/* Budget Widget */}
-        <Card className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm' data-onboarding='budget-progress'>
-          <CardHeader>
-            <CardTitle className='flex items-center justify-between text-base sm:text-lg'>
-              <span>{t.dashboard.budget}</span>
-              <span className='text-sm font-normal text-muted-foreground'>
-                {t.dashboard.daysProgress
-                  .replace('{passed}', daysPassed.toString())
-                  .replace('{total}', totalDays.toString())}
-              </span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {totalBudget > 0 ? (
-              <div className='space-y-4'>
-                <div className='flex items-center justify-between'>
-                  <span className='text-sm text-muted-foreground'>
-                    {t.dashboard.totalBudget}
-                  </span>
-                  <span className='font-semibold'>
-                    {formatCurrency(totalBudget)}
-                  </span>
-                </div>
-                <div className='flex items-center justify-between'>
-                  <span className='text-sm text-muted-foreground'>
-                    {t.dashboard.spent}
-                  </span>
-                  <span className='font-semibold'>
-                    {formatCurrency(totalSpent)}
-                  </span>
-                </div>
-                <div className='flex items-center justify-between'>
-                  <span className='text-sm text-muted-foreground'>
-                    {t.budgets.remaining}
-                  </span>
-                  <span
-                    className={`font-semibold ${
-                      totalBudget - totalSpent >= 0
-                        ? 'text-emerald-600'
-                        : 'text-rose-600'
-                    }`}
-                  >
-                    {formatCurrency(totalBudget - totalSpent)}
-                  </span>
-                </div>
-                {/* Progress bar at the bottom */}
-                <div className='space-y-2 border-t pt-2'>
-                  {(() => {
-                    const spentPercentage =
-                      totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
-                    const isOverBudget = spentPercentage > 100;
-                    const roundedPercentage = Math.round(spentPercentage);
+          {/* Budget Widget */}
+          <Card
+            className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'
+            data-onboarding='budget-progress'
+          >
+            <CardHeader>
+              <CardTitle className='flex items-center justify-between text-base sm:text-lg'>
+                <span>{t.dashboard.budget}</span>
+                <span className='text-sm font-normal text-muted-foreground'>
+                  {t.dashboard.daysProgress
+                    .replace('{passed}', daysPassed.toString())
+                    .replace('{total}', totalDays.toString())}
+                </span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {totalBudget > 0 ? (
+                <div className='space-y-4'>
+                  <div className='flex items-center justify-between'>
+                    <span className='text-sm text-muted-foreground'>
+                      {t.dashboard.totalBudget}
+                    </span>
+                    <span className='font-semibold'>
+                      {formatCurrency(totalBudget)}
+                    </span>
+                  </div>
+                  <div className='flex items-center justify-between'>
+                    <span className='text-sm text-muted-foreground'>
+                      {t.dashboard.spent}
+                    </span>
+                    <span className='font-semibold'>
+                      {formatCurrency(totalSpent)}
+                    </span>
+                  </div>
+                  <div className='flex items-center justify-between'>
+                    <span className='text-sm text-muted-foreground'>
+                      {t.budgets.remaining}
+                    </span>
+                    <span
+                      className={`font-semibold ${
+                        totalBudget - totalSpent >= 0
+                          ? 'text-emerald-600'
+                          : 'text-rose-600'
+                      }`}
+                    >
+                      {formatCurrency(totalBudget - totalSpent)}
+                    </span>
+                  </div>
+                  {/* Progress bar at the bottom */}
+                  <div className='space-y-2 border-t pt-2'>
+                    {(() => {
+                      const spentPercentage =
+                        totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
+                      const isOverBudget = spentPercentage > 100;
+                      const roundedPercentage = Math.round(spentPercentage);
 
-                    return (
-                      <>
-                        <div className='flex justify-between text-sm'>
-                          <span>{t.dashboard.spent}</span>
-                          <span
-                            className={
-                              isOverBudget
-                                ? 'font-semibold text-rose-600'
-                                : 'text-emerald-600'
-                            }
-                          >
-                            {isOverBudget
-                              ? t.dashboard.overBudget
-                              : t.dashboard.underBudget}
-                          </span>
-                        </div>
-                        {/* Progress bar container with 100% marker */}
-                        <div className='relative'>
-                          <div className='h-4 w-full overflow-hidden rounded-full bg-muted'>
-                            {isOverBudget ? (
-                              // Over budget: show green up to 100%, then red for excess
-                              <div className='relative flex h-full'>
-                                <div
-                                  className='h-full bg-emerald-500'
-                                  style={{
-                                    width: `${(100 / spentPercentage) * 100}%`,
-                                  }}
-                                />
-                                <div
-                                  className='flex h-full items-center justify-end bg-rose-500 pr-1'
-                                  style={{
-                                    width: `${
-                                      ((spentPercentage - 100) /
-                                        spentPercentage) *
-                                      100
-                                    }%`,
-                                  }}
-                                >
-                                  <span className='text-xs font-semibold text-white'>
-                                    {roundedPercentage}%
-                                  </span>
-                                </div>
-                              </div>
-                            ) : (
-                              // Under budget: green bar with percentage inside or outside
-                              <div className='relative h-full'>
-                                <div
-                                  className='flex h-full items-center justify-end rounded-full bg-emerald-500 transition-all duration-300'
-                                  style={{ width: `${spentPercentage}%` }}
-                                >
-                                  {spentPercentage >= 10 && (
-                                    <span className='pr-1 text-xs font-semibold text-white'>
+                      return (
+                        <>
+                          <div className='flex justify-between text-sm'>
+                            <span>{t.dashboard.spent}</span>
+                            <span
+                              className={
+                                isOverBudget
+                                  ? 'font-semibold text-rose-600'
+                                  : 'text-emerald-600'
+                              }
+                            >
+                              {isOverBudget
+                                ? t.dashboard.overBudget
+                                : t.dashboard.underBudget}
+                            </span>
+                          </div>
+                          {/* Progress bar container with 100% marker */}
+                          <div className='relative'>
+                            <div className='h-4 w-full overflow-hidden rounded-full bg-muted'>
+                              {isOverBudget ? (
+                                // Over budget: show green up to 100%, then red for excess
+                                <div className='relative flex h-full'>
+                                  <div
+                                    className='h-full bg-emerald-500'
+                                    style={{
+                                      width: `${(100 / spentPercentage) * 100}%`,
+                                    }}
+                                  />
+                                  <div
+                                    className='flex h-full items-center justify-end bg-rose-500 pr-1'
+                                    style={{
+                                      width: `${
+                                        ((spentPercentage - 100) /
+                                          spentPercentage) *
+                                        100
+                                      }%`,
+                                    }}
+                                  >
+                                    <span className='text-xs font-semibold text-white'>
                                       {roundedPercentage}%
                                     </span>
-                                  )}
+                                  </div>
                                 </div>
-                                {spentPercentage < 10 &&
-                                  spentPercentage > 0 && (
-                                    <span
-                                      className='absolute top-1/2 -translate-y-1/2 text-xs font-medium text-muted-foreground'
-                                      style={{
-                                        left: `${Math.max(
-                                          spentPercentage + 2,
-                                          5
-                                        )}%`,
-                                      }}
-                                    >
-                                      {roundedPercentage}%
-                                    </span>
-                                  )}
-                              </div>
+                              ) : (
+                                // Under budget: green bar with percentage inside or outside
+                                <div className='relative h-full'>
+                                  <div
+                                    className='flex h-full items-center justify-end rounded-full bg-emerald-500 transition-all duration-300'
+                                    style={{ width: `${spentPercentage}%` }}
+                                  >
+                                    {spentPercentage >= 10 && (
+                                      <span className='pr-1 text-xs font-semibold text-white'>
+                                        {roundedPercentage}%
+                                      </span>
+                                    )}
+                                  </div>
+                                  {spentPercentage < 10 &&
+                                    spentPercentage > 0 && (
+                                      <span
+                                        className='absolute top-1/2 -translate-y-1/2 text-xs font-medium text-muted-foreground'
+                                        style={{
+                                          left: `${Math.max(
+                                            spentPercentage + 2,
+                                            5
+                                          )}%`,
+                                        }}
+                                      >
+                                        {roundedPercentage}%
+                                      </span>
+                                    )}
+                                </div>
+                              )}
+                            </div>
+                            {/* 100% marker line when over budget */}
+                            {isOverBudget && (
+                              <div
+                                className='absolute top-0 h-4 w-0.5 bg-foreground/70'
+                                style={{
+                                  left: `${(100 / spentPercentage) * 100}%`,
+                                }}
+                              />
                             )}
                           </div>
-                          {/* 100% marker line when over budget */}
-                          {isOverBudget && (
-                            <div
-                              className='absolute top-0 h-4 w-0.5 bg-foreground/70'
-                              style={{
-                                left: `${(100 / spentPercentage) * 100}%`,
-                              }}
-                            />
-                          )}
-                        </div>
-                        <div className='flex justify-between text-xs text-muted-foreground'>
-                          <span>0%</span>
-                          {!isOverBudget && <span>100%</span>}
-                        </div>
-                      </>
-                    );
-                  })()}
+                          <div className='flex justify-between text-xs text-muted-foreground'>
+                            <span>0%</span>
+                            {!isOverBudget && <span>100%</span>}
+                          </div>
+                        </>
+                      );
+                    })()}
+                  </div>
                 </div>
-              </div>
-            ) : (
-              <div className='flex flex-col items-center justify-center py-8 text-center'>
-                <PiggyBank className='mb-4 h-12 w-12 text-muted-foreground/50' />
-                <p className='text-muted-foreground'>{t.dashboard.noBudgets}</p>
-                <p className='mt-1 text-sm text-muted-foreground'>
-                  {t.dashboard.setBudgets}
-                </p>
-                <button
-                  onClick={() => navigate('/budgets/')}
-                  className='mt-3 text-sm text-primary hover:underline'
-                >
-                  {t.dashboard.goToBudgets}
-                </button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+              ) : (
+                <div className='flex flex-col items-center justify-center py-8 text-center'>
+                  <PiggyBank className='mb-4 h-12 w-12 text-muted-foreground/50' />
+                  <p className='text-muted-foreground'>
+                    {t.dashboard.noBudgets}
+                  </p>
+                  <p className='mt-1 text-sm text-muted-foreground'>
+                    {t.dashboard.setBudgets}
+                  </p>
+                  <button
+                    onClick={() => navigate('/budgets/')}
+                    className='mt-3 text-sm text-primary hover:underline'
+                  >
+                    {t.dashboard.goToBudgets}
+                  </button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
-        {/* Current vs Expected Balance Widget */}
-        <Card className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm' data-onboarding='balance-forecast'>
-          <CardHeader>
-            <CardTitle className='text-base sm:text-lg'>
-              {hasEnoughData && balanceForecast?.isPastPeriod
-                ? t.dashboard.periodSummary
-                : t.dashboard.forecast}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {hasEnoughData && balanceForecast?.isPastPeriod ? (
-              // Past period - show totals
-              <div className='space-y-4'>
-                <div className='flex items-center justify-between'>
-                  <span className='text-sm text-muted-foreground'>
-                    {t.dashboard.totalIncome}
-                  </span>
-                  <span className='font-semibold text-emerald-600'>
-                    {formatCurrency(balanceForecast.currentMonthIncome)}
-                  </span>
+          {/* Current vs Expected Balance Widget */}
+          <Card
+            className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'
+            data-onboarding='balance-forecast'
+          >
+            <CardHeader>
+              <CardTitle className='text-base sm:text-lg'>
+                {hasEnoughData && balanceForecast?.isPastPeriod
+                  ? t.dashboard.periodSummary
+                  : t.dashboard.forecast}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {hasEnoughData && balanceForecast?.isPastPeriod ? (
+                // Past period - show totals
+                <div className='space-y-4'>
+                  <div className='flex items-center justify-between'>
+                    <span className='text-sm text-muted-foreground'>
+                      {t.dashboard.totalIncome}
+                    </span>
+                    <span className='font-semibold text-emerald-600'>
+                      {formatCurrency(balanceForecast.currentMonthIncome)}
+                    </span>
+                  </div>
+                  <div className='flex items-center justify-between'>
+                    <span className='text-sm text-muted-foreground'>
+                      {t.dashboard.totalExpenses}
+                    </span>
+                    <span className='font-semibold text-rose-600'>
+                      {formatCurrency(balanceForecast.currentMonthExpenses)}
+                    </span>
+                  </div>
+                  <div className='flex items-center justify-between border-t pt-2'>
+                    <span className='text-sm text-muted-foreground'>
+                      {t.dashboard.netResult}
+                    </span>
+                    <span
+                      className={`font-semibold ${
+                        balanceForecast.expectedEndBalance >= 0
+                          ? 'text-emerald-600'
+                          : 'text-rose-600'
+                      }`}
+                    >
+                      {formatCurrency(balanceForecast.expectedEndBalance)}
+                    </span>
+                  </div>
                 </div>
-                <div className='flex items-center justify-between'>
-                  <span className='text-sm text-muted-foreground'>
-                    {t.dashboard.totalExpenses}
-                  </span>
-                  <span className='font-semibold text-rose-600'>
-                    {formatCurrency(balanceForecast.currentMonthExpenses)}
-                  </span>
+              ) : hasEnoughData && balanceForecast ? (
+                // Current/future period - show forecast
+                <div className='space-y-4'>
+                  <div className='flex items-center justify-between'>
+                    <span className='text-sm text-muted-foreground'>
+                      {t.dashboard.currentIncome}
+                    </span>
+                    <span className='font-semibold text-emerald-600'>
+                      {formatCurrency(balanceForecast.currentMonthIncome)}
+                    </span>
+                  </div>
+                  <div className='flex items-center justify-between'>
+                    <span className='text-sm text-muted-foreground'>
+                      {t.dashboard.expectedIncome}
+                    </span>
+                    <span className='font-semibold text-emerald-600'>
+                      {formatCurrency(balanceForecast.expectedIncome)}
+                    </span>
+                  </div>
+                  <div className='flex items-center justify-between'>
+                    <span className='text-sm text-muted-foreground'>
+                      {t.dashboard.currentExpenses}
+                    </span>
+                    <span className='font-semibold text-rose-600'>
+                      {formatCurrency(balanceForecast.currentMonthExpenses)}
+                    </span>
+                  </div>
+                  <div className='flex items-center justify-between'>
+                    <span className='text-sm text-muted-foreground'>
+                      {t.dashboard.expectedExpenses}
+                    </span>
+                    <span className='font-semibold text-rose-600'>
+                      {formatCurrency(balanceForecast.expectedExpenses)}
+                    </span>
+                  </div>
+                  <div className='flex items-center justify-between border-t pt-2'>
+                    <span className='text-sm text-muted-foreground'>
+                      {t.dashboard.expectedResult}
+                    </span>
+                    <span
+                      className={`font-semibold ${
+                        balanceForecast.expectedEndBalance >= 0
+                          ? 'text-emerald-600'
+                          : 'text-rose-600'
+                      }`}
+                    >
+                      {formatCurrency(balanceForecast.expectedEndBalance)}
+                    </span>
+                  </div>
                 </div>
-                <div className='flex items-center justify-between border-t pt-2'>
-                  <span className='text-sm text-muted-foreground'>
-                    {t.dashboard.netResult}
-                  </span>
-                  <span
-                    className={`font-semibold ${
-                      balanceForecast.expectedEndBalance >= 0
-                        ? 'text-emerald-600'
-                        : 'text-rose-600'
-                    }`}
+              ) : recentTransactions.length > 0 ? (
+                // Has transactions but not enough historical data for forecast
+                <div className='flex flex-col items-center justify-center py-8 text-center'>
+                  <TrendingUp className='mb-4 h-12 w-12 text-muted-foreground/50' />
+                  <p className='text-muted-foreground'>
+                    {t.dashboard.insufficientData}
+                  </p>
+                  <p className='mt-1 text-sm text-muted-foreground'>
+                    {t.dashboard.needMoreHistory}
+                  </p>
+                </div>
+              ) : (
+                // No transactions at all
+                <div className='flex flex-col items-center justify-center py-8 text-center'>
+                  <TrendingUp className='mb-4 h-12 w-12 text-muted-foreground/50' />
+                  <p className='text-muted-foreground'>
+                    {t.dashboard.noForecast}
+                  </p>
+                  <p className='mt-1 text-sm text-muted-foreground'>
+                    {t.dashboard.importTransactions}
+                  </p>
+                  <button
+                    onClick={() => navigate('/import/')}
+                    className='mt-3 text-sm text-primary hover:underline'
                   >
-                    {formatCurrency(balanceForecast.expectedEndBalance)}
-                  </span>
+                    {t.dashboard.goToImport}
+                  </button>
                 </div>
-              </div>
-            ) : hasEnoughData && balanceForecast ? (
-              // Current/future period - show forecast
-              <div className='space-y-4'>
-                <div className='flex items-center justify-between'>
-                  <span className='text-sm text-muted-foreground'>
-                    {t.dashboard.currentIncome}
-                  </span>
-                  <span className='font-semibold text-emerald-600'>
-                    {formatCurrency(balanceForecast.currentMonthIncome)}
-                  </span>
-                </div>
-                <div className='flex items-center justify-between'>
-                  <span className='text-sm text-muted-foreground'>
-                    {t.dashboard.expectedIncome}
-                  </span>
-                  <span className='font-semibold text-emerald-600'>
-                    {formatCurrency(balanceForecast.expectedIncome)}
-                  </span>
-                </div>
-                <div className='flex items-center justify-between'>
-                  <span className='text-sm text-muted-foreground'>
-                    {t.dashboard.currentExpenses}
-                  </span>
-                  <span className='font-semibold text-rose-600'>
-                    {formatCurrency(balanceForecast.currentMonthExpenses)}
-                  </span>
-                </div>
-                <div className='flex items-center justify-between'>
-                  <span className='text-sm text-muted-foreground'>
-                    {t.dashboard.expectedExpenses}
-                  </span>
-                  <span className='font-semibold text-rose-600'>
-                    {formatCurrency(balanceForecast.expectedExpenses)}
-                  </span>
-                </div>
-                <div className='flex items-center justify-between border-t pt-2'>
-                  <span className='text-sm text-muted-foreground'>
-                    {t.dashboard.expectedResult}
-                  </span>
-                  <span
-                    className={`font-semibold ${
-                      balanceForecast.expectedEndBalance >= 0
-                        ? 'text-emerald-600'
-                        : 'text-rose-600'
-                    }`}
-                  >
-                    {formatCurrency(balanceForecast.expectedEndBalance)}
-                  </span>
-                </div>
-              </div>
-            ) : recentTransactions.length > 0 ? (
-              // Has transactions but not enough historical data for forecast
-              <div className='flex flex-col items-center justify-center py-8 text-center'>
-                <TrendingUp className='mb-4 h-12 w-12 text-muted-foreground/50' />
-                <p className='text-muted-foreground'>
-                  {t.dashboard.insufficientData}
-                </p>
-                <p className='mt-1 text-sm text-muted-foreground'>
-                  {t.dashboard.needMoreHistory}
-                </p>
-              </div>
-            ) : (
-              // No transactions at all
-              <div className='flex flex-col items-center justify-center py-8 text-center'>
-                <TrendingUp className='mb-4 h-12 w-12 text-muted-foreground/50' />
-                <p className='text-muted-foreground'>
-                  {t.dashboard.noForecast}
-                </p>
-                <p className='mt-1 text-sm text-muted-foreground'>
-                  {t.dashboard.importTransactions}
-                </p>
-                <button
-                  onClick={() => navigate('/import/')}
-                  className='mt-3 text-sm text-primary hover:underline'
-                >
-                  {t.dashboard.goToImport}
-                </button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </div>
 
       {/* Recent Transactions & Top Accounts - Side by side on large screens */}
       <div className='-mx-3 sm:mx-0'>
         <div className='grid grid-cols-1 gap-px bg-border sm:gap-6 sm:bg-transparent lg:grid-cols-2'>
-        {/* Recent Transactions */}
-        <Card className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm' data-onboarding='recent-transactions'>
-          <CardHeader>
-            <CardTitle className='truncate pb-1 text-base sm:text-lg'>Recente transacties</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {recentTransactions.length > 0 ? (
-              <div className='space-y-4'>
-                {recentTransactions.map((tx) => (
-                  <div
-                    key={tx.id}
-                    className='flex items-center justify-between gap-3 border-b py-2 last:border-0'
-                  >
-                    <div className='flex min-w-0 flex-1 items-center gap-3'>
-                      <div
-                        className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full ${
+          {/* Recent Transactions */}
+          <Card
+            className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'
+            data-onboarding='recent-transactions'
+          >
+            <CardHeader>
+              <CardTitle className='truncate pb-1 text-base sm:text-lg'>
+                Recente transacties
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {recentTransactions.length > 0 ? (
+                <div className='space-y-4'>
+                  {recentTransactions.map((tx) => (
+                    <div
+                      key={tx.id}
+                      className='flex items-center justify-between gap-3 border-b py-2 last:border-0'
+                    >
+                      <div className='flex min-w-0 flex-1 items-center gap-3'>
+                        <div
+                          className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full ${
+                            tx.type === 'transfer'
+                              ? 'bg-blue-100'
+                              : tx.amount > 0
+                                ? 'bg-emerald-100'
+                                : 'bg-rose-100'
+                          }`}
+                        >
+                          {tx.type === 'transfer' ? (
+                            <ArrowLeftRight className='h-5 w-5 text-blue-600' />
+                          ) : tx.amount > 0 ? (
+                            <ArrowUpRight className='h-5 w-5 text-emerald-600' />
+                          ) : (
+                            <ArrowDownRight className='h-5 w-5 text-rose-600' />
+                          )}
+                        </div>
+                        <div className='min-w-0 flex-1'>
+                          <p className='truncate font-medium'>
+                            {tx.merchantName ||
+                              tx.opposingAccountName ||
+                              tx.description ||
+                              'Onbekend'}
+                          </p>
+                          <p className='text-sm text-muted-foreground'>
+                            {formatDateShort(tx.date)}
+                          </p>
+                        </div>
+                      </div>
+                      <span
+                        className={`flex-shrink-0 font-semibold ${
                           tx.type === 'transfer'
-                            ? 'bg-blue-100'
+                            ? 'text-blue-600'
                             : tx.amount > 0
+                              ? 'text-emerald-600'
+                              : 'text-rose-600'
+                        }`}
+                      >
+                        {tx.amount > 0 ? '+' : ''}
+                        {formatCurrency(tx.amount)}
+                      </span>
+                    </div>
+                  ))}
+                  <div className='pt-4'>
+                    <Button
+                      variant='outline'
+                      onClick={() => {
+                        resetFilters();
+                        navigate('/transactions/');
+                      }}
+                    >
+                      Alle transacties
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className='flex flex-col items-center justify-center py-8 text-center'>
+                  <History className='mb-4 h-12 w-12 text-muted-foreground/50' />
+                  <p className='text-muted-foreground'>
+                    {t.dashboard.noTransactions}
+                  </p>
+                  <p className='mt-1 text-sm text-muted-foreground'>
+                    {t.dashboard.importTransactions}
+                  </p>
+                  <Button
+                    onClick={() => navigate('/import/')}
+                    variant='link'
+                    className='mt-2'
+                  >
+                    {t.dashboard.goToImport}
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Top Accounts Widget */}
+          <Card
+            className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'
+            data-onboarding='top-accounts'
+          >
+            <CardHeader>
+              <CardTitle className='truncate pb-1 text-base sm:text-lg'>
+                {t.dashboard?.topAccounts || 'Top tegenrekeningen'}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {topAccounts && topAccounts.accounts.length > 0 ? (
+                <div className='space-y-4'>
+                  {topAccounts.accounts.map((account) => (
+                    <div
+                      key={account.iban}
+                      className='flex items-center justify-between gap-3 border-b py-2 last:border-0'
+                    >
+                      <div className='flex min-w-0 flex-1 items-center gap-3'>
+                        <div
+                          className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full ${
+                            account.netAmount > 0
                               ? 'bg-emerald-100'
                               : 'bg-rose-100'
-                        }`}
-                      >
-                        {tx.type === 'transfer' ? (
-                          <ArrowLeftRight className='h-5 w-5 text-blue-600' />
-                        ) : tx.amount > 0 ? (
-                          <ArrowUpRight className='h-5 w-5 text-emerald-600' />
-                        ) : (
-                          <ArrowDownRight className='h-5 w-5 text-rose-600' />
-                        )}
+                          }`}
+                        >
+                          {account.netAmount > 0 ? (
+                            <ArrowUpRight className='h-5 w-5 text-emerald-600' />
+                          ) : (
+                            <ArrowDownRight className='h-5 w-5 text-rose-600' />
+                          )}
+                        </div>
+                        <div className='min-w-0 flex-1'>
+                          <p className='truncate font-medium'>{account.name}</p>
+                          <p className='text-sm text-muted-foreground'>
+                            {account.transactionCount} transacties
+                          </p>
+                        </div>
                       </div>
-                      <div className='min-w-0 flex-1'>
-                        <p className='truncate font-medium'>
-                          {tx.merchantName ||
-                            tx.opposingAccountName ||
-                            tx.description ||
-                            'Onbekend'}
-                        </p>
-                        <p className='text-sm text-muted-foreground'>
-                          {formatDateShort(tx.date)}
-                        </p>
-                      </div>
-                    </div>
-                    <span
-                      className={`flex-shrink-0 font-semibold ${
-                        tx.type === 'transfer'
-                          ? 'text-blue-600'
-                          : tx.amount > 0
+                      <span
+                        className={`flex-shrink-0 font-semibold ${
+                          account.netAmount > 0
                             ? 'text-emerald-600'
                             : 'text-rose-600'
-                      }`}
-                    >
-                      {tx.amount > 0 ? '+' : ''}
-                      {formatCurrency(tx.amount)}
-                    </span>
-                  </div>
-                ))}
-                <div className='pt-4'>
-                  <Button
-                    variant='outline'
-                    onClick={() => {
-                      resetFilters();
-                      navigate('/transactions/');
-                    }}
-                  >
-                    Alle transacties
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <div className='flex flex-col items-center justify-center py-8 text-center'>
-                <History className='mb-4 h-12 w-12 text-muted-foreground/50' />
-                <p className='text-muted-foreground'>
-                  {t.dashboard.noTransactions}
-                </p>
-                <p className='mt-1 text-sm text-muted-foreground'>
-                  {t.dashboard.importTransactions}
-                </p>
-                <Button
-                  onClick={() => navigate('/import/')}
-                  variant='link'
-                  className='mt-2'
-                >
-                  {t.dashboard.goToImport}
-                </Button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Top Accounts Widget */}
-        <Card className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm' data-onboarding='top-accounts'>
-          <CardHeader>
-            <CardTitle className='truncate pb-1 text-base sm:text-lg'>
-              {t.dashboard?.topAccounts || 'Top tegenrekeningen'}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {topAccounts && topAccounts.accounts.length > 0 ? (
-              <div className='space-y-4'>
-                {topAccounts.accounts.map((account) => (
-                  <div
-                    key={account.iban}
-                    className='flex items-center justify-between gap-3 border-b py-2 last:border-0'
-                  >
-                    <div className='flex min-w-0 flex-1 items-center gap-3'>
-                      <div
-                        className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full ${
-                          account.netAmount > 0
-                            ? 'bg-emerald-100'
-                            : 'bg-rose-100'
                         }`}
                       >
-                        {account.netAmount > 0 ? (
-                          <ArrowUpRight className='h-5 w-5 text-emerald-600' />
-                        ) : (
-                          <ArrowDownRight className='h-5 w-5 text-rose-600' />
-                        )}
-                      </div>
-                      <div className='min-w-0 flex-1'>
-                        <p className='truncate font-medium'>{account.name}</p>
-                        <p className='text-sm text-muted-foreground'>
-                          {account.transactionCount} transacties
-                        </p>
-                      </div>
+                        {account.netAmount > 0 ? '+' : ''}
+                        {formatCurrency(account.netAmount)}
+                      </span>
                     </div>
-                    <span
-                      className={`flex-shrink-0 font-semibold ${
-                        account.netAmount > 0
-                          ? 'text-emerald-600'
-                          : 'text-rose-600'
-                      }`}
+                  ))}
+                  <div className='pt-4'>
+                    <Button
+                      variant='outline'
+                      onClick={() => {
+                        resetFilters();
+                        navigate('/addressbook/');
+                      }}
                     >
-                      {account.netAmount > 0 ? '+' : ''}
-                      {formatCurrency(account.netAmount)}
-                    </span>
+                      {t.dashboard?.viewAddressBook || 'Bekijk adresboek'}
+                    </Button>
                   </div>
-                ))}
-                <div className='pt-4'>
+                </div>
+              ) : (
+                <div className='flex flex-col items-center justify-center py-8 text-center'>
+                  <Users className='mb-4 h-12 w-12 text-muted-foreground/50' />
+                  <p className='text-muted-foreground'>
+                    {t.dashboard?.noTopAccounts ||
+                      'Nog geen tegenrekeningen bekend'}
+                  </p>
+                  <p className='mt-1 text-sm text-muted-foreground'>
+                    {t.dashboard?.addContactsToAddressBook ||
+                      'Voeg contacten toe aan je adresboek'}
+                  </p>
                   <Button
-                    variant='outline'
-                    onClick={() => {
-                      resetFilters();
-                      navigate('/addressbook/');
-                    }}
+                    onClick={() => navigate('/addressbook/')}
+                    variant='link'
+                    className='mt-2'
                   >
-                    {t.dashboard?.viewAddressBook || 'Bekijk adresboek'}
+                    {t.dashboard?.goToAddressBook || 'Ga naar adresboek'}
                   </Button>
                 </div>
-              </div>
-            ) : (
-              <div className='flex flex-col items-center justify-center py-8 text-center'>
-                <Users className='mb-4 h-12 w-12 text-muted-foreground/50' />
-                <p className='text-muted-foreground'>
-                  {t.dashboard?.noTopAccounts ||
-                    'Nog geen tegenrekeningen bekend'}
-                </p>
-                <p className='mt-1 text-sm text-muted-foreground'>
-                  {t.dashboard?.addContactsToAddressBook ||
-                    'Voeg contacten toe aan je adresboek'}
-                </p>
-                <Button
-                  onClick={() => navigate('/addressbook/')}
-                  variant='link'
-                  className='mt-2'
-                >
-                  {t.dashboard?.goToAddressBook || 'Ga naar adresboek'}
-                </Button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
@@ -1652,12 +1688,14 @@ function StatsCard({
   };
 
   return (
-    <Card className='card-hover h-full'>
-      <CardContent className='flex h-full flex-col justify-between p-6'>
+    <Card className='h-full rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'>
+      <CardContent className='flex h-full flex-col justify-between p-4 sm:p-6'>
         <div className='flex items-center justify-between'>
           <div>
-            <p className='text-sm text-muted-foreground'>{title}</p>
-            <p className={`mt-1 text-2xl font-bold ${valueColor || ''}`}>
+            <p className='text-xs text-muted-foreground sm:text-sm'>{title}</p>
+            <p
+              className={`mt-1 text-lg font-bold sm:text-2xl ${valueColor || ''}`}
+            >
               {value}
             </p>
             {trend !== undefined && trend !== 0 ? (

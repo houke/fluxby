@@ -6,150 +6,33 @@ import {
   useMemo,
   type ReactNode,
 } from 'react';
-import { X, CheckCircle, AlertTriangle, AlertCircle, Info } from 'lucide-react';
+import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-export type ToastVariant = 'success' | 'info' | 'warning' | 'error';
+import type {
+  ToastVariant,
+  ToastMessage,
+  ToastContextType,
+} from '@/contexts/toastTypes';
 
-export interface ToastMessage {
-  id: string;
-  message: string;
-  variant: ToastVariant;
-  autoDismiss: boolean;
-  duration: number;
-}
-
-interface ToastContextType {
-  /**
-   * Show a success toast (purple). Auto-dismisses after duration.
-   * Use for: operations completed successfully
-   */
-  success: (message: string, duration?: number) => void;
-
-  /**
-   * Show an info toast (purple). Auto-dismisses after duration.
-   * Use for: informational messages, status updates
-   */
-  info: (message: string, duration?: number) => void;
-
-  /**
-   * Show a warning toast (orange). Does NOT auto-dismiss.
-   * Use for: important warnings that need attention
-   */
-  warning: (message: string) => void;
-
-  /**
-   * Show an error toast (red). Does NOT auto-dismiss.
-   * Messages are sanitized for end-users (no stack traces).
-   * Use for: errors, failures
-   */
-  error: (message: string | Error) => void;
-
-  /**
-   * Dismiss a toast by ID
-   */
-  dismiss: (id: string) => void;
-
-  /**
-   * Dismiss all toasts
-   */
-  dismissAll: () => void;
-}
+import {
+  DEFAULT_SUCCESS_DURATION,
+  DEFAULT_INFO_DURATION,
+  variantStyles,
+  variantTextColors,
+  variantIconColors,
+  sanitizeErrorMessage,
+} from '@/contexts/toastUtils';
 
 const ToastContext = createContext<ToastContextType | null>(null);
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useToast() {
   const context = useContext(ToastContext);
   if (!context) {
     throw new Error('useToast must be used within a ToastProvider');
   }
   return context;
-}
-
-const DEFAULT_SUCCESS_DURATION = 4000;
-const DEFAULT_INFO_DURATION = 3000;
-
-// Variant styling configuration
-const variantStyles: Record<
-  ToastVariant,
-  { bg: string; border: string; icon: typeof CheckCircle }
-> = {
-  success: {
-    bg: 'bg-white dark:bg-gray-900',
-    border: 'border-l-4 border-green-500',
-    icon: CheckCircle,
-  },
-  info: {
-    bg: 'bg-white dark:bg-gray-900',
-    border: 'border-l-4 border-purple-500',
-    icon: Info,
-  },
-  warning: {
-    bg: 'bg-white dark:bg-gray-900',
-    border: 'border-l-4 border-orange-500',
-    icon: AlertTriangle,
-  },
-  error: {
-    bg: 'bg-white dark:bg-gray-900',
-    border: 'border-l-4 border-red-500',
-    icon: AlertCircle,
-  },
-};
-
-const variantTextColors: Record<ToastVariant, string> = {
-  success: 'text-green-900 dark:text-green-100',
-  info: 'text-purple-900 dark:text-purple-100',
-  warning: 'text-orange-900 dark:text-orange-100',
-  error: 'text-red-900 dark:text-red-100',
-};
-
-const variantIconColors: Record<ToastVariant, string> = {
-  success: 'text-green-500',
-  info: 'text-purple-500',
-  warning: 'text-orange-500',
-  error: 'text-red-500',
-};
-
-/**
- * Sanitize error messages for end-users.
- * Removes stack traces, technical details, and limits length.
- */
-function sanitizeErrorMessage(error: string | Error): string {
-  let message: string;
-
-  if (error instanceof Error) {
-    message = error.message;
-  } else {
-    message = String(error);
-  }
-
-  // Remove stack traces
-  message = message.split('\n')[0];
-
-  // Remove common technical prefixes
-  message = message
-    .replace(/^Error:\s*/i, '')
-    .replace(/^TypeError:\s*/i, '')
-    .replace(/^SyntaxError:\s*/i, '')
-    .replace(/^ReferenceError:\s*/i, '')
-    .replace(/^NetworkError:\s*/i, '')
-    .replace(/^SQLITE_ERROR:\s*/i, '');
-
-  // Remove file paths and line numbers
-  message = message.replace(/\s+at\s+.+$/g, '');
-  message = message.replace(/\(.+:\d+:\d+\)/g, '');
-
-  // Limit length
-  if (message.length > 200) {
-    message = message.substring(0, 197) + '...';
-  }
-
-  // Default fallback for empty messages
-  if (!message.trim()) {
-    message = 'An unexpected error occurred';
-  }
-
-  return message;
 }
 
 // Individual Toast Component

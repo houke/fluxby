@@ -9,7 +9,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Download, Check, Monitor, Smartphone, Info } from 'lucide-react';
+import { Download, Info } from 'lucide-react';
 
 function getManualInstructions(
   browser: string,
@@ -92,15 +92,23 @@ export function PWAInstallBanner() {
   // Show installed state
   if (isInstalled) {
     return (
-      <Card className='border-green-500/20 bg-green-500/5'>
-        <CardHeader className='pb-3'>
-          <div className='flex items-center gap-2'>
-            <Check className='h-5 w-5 text-green-500' />
-            <CardTitle className='text-lg'>{t.pwa?.installedTitle}</CardTitle>
-          </div>
-          <CardDescription>{t.pwa?.installedDescription}</CardDescription>
-        </CardHeader>
-      </Card>
+      <div className='-mx-3 sm:mx-0'>
+        <Card className='rounded-none border-x-0 border-green-500/20 bg-green-500/5 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'>
+          <CardHeader className='px-3 py-3 sm:px-6 sm:pb-3'>
+            <div className='flex items-start justify-between gap-4'>
+              <div>
+                <CardTitle className='text-base sm:text-lg'>
+                  {t.pwa?.installedTitle || 'Fluxby is installed'}
+                </CardTitle>
+                <CardDescription className='text-xs sm:text-sm'>
+                  {t.pwa?.installedDescription ||
+                    'You are using the installed version of Fluxby.'}
+                </CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+        </Card>
+      </div>
     );
   }
 
@@ -109,82 +117,116 @@ export function PWAInstallBanner() {
     const instructions = getManualInstructions(browser, platform, t);
 
     return (
-      <Card className='border-primary/20 bg-primary/5'>
-        <CardHeader className='pb-3'>
-          <div className='flex items-center gap-2'>
-            <Download className='h-5 w-5 text-primary' />
-            <CardTitle className='text-lg'>{t.pwa?.installTitle}</CardTitle>
-          </div>
-          <CardDescription>{t.pwa?.installDescription}</CardDescription>
-        </CardHeader>
-        <CardContent className='space-y-3'>
-          {instructions ? (
-            <div className='rounded-md bg-muted/50 p-3'>
-              <div className='mb-2 flex items-center gap-2 text-sm font-medium'>
-                <Info className='h-4 w-4' />
-                {instructions.title}
+      <div className='-mx-3 sm:mx-0'>
+        <Card className='rounded-none border-x-0 border-primary/20 bg-primary/5 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'>
+          <CardHeader className='px-3 py-3 sm:px-6 sm:pb-3'>
+            <div className='flex items-start justify-between gap-4'>
+              <div>
+                <CardTitle className='text-base sm:text-lg'>
+                  {t.pwa?.installTitle || 'Install Fluxby'}
+                </CardTitle>
+                <CardDescription className='text-xs sm:text-sm'>
+                  {t.pwa?.installDescription ||
+                    'Install Fluxby for faster loading, offline access, and a native-like experience.'}
+                </CardDescription>
               </div>
-              <ol className='list-inside list-decimal space-y-1 text-sm text-muted-foreground'>
-                {instructions.steps.map((step, index) => (
-                  <li key={index}>{step}</li>
-                ))}
-              </ol>
-            </div>
-          ) : null}
 
-          <Button onClick={installPWA} className='w-full sm:w-auto'>
-            <Download className='mr-2 h-4 w-4' />
-            {t.pwa?.installButton}
-          </Button>
-        </CardContent>
-      </Card>
+              <div className='flex items-center'>
+                <Button onClick={installPWA} variant='secondary' size='sm'>
+                  <Download className='mr-2 h-4 w-4' />
+                  {t.pwa?.installButton}
+                </Button>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className='space-y-3 px-3 pb-3 pt-0 sm:px-6 sm:pb-6 sm:pt-0'>
+            {instructions ? (
+              <div className='rounded-md bg-muted/50 p-3'>
+                <div className='mb-2 flex items-center gap-2 text-sm font-medium'>
+                  <Info className='h-4 w-4' />
+                  {instructions.title}
+                </div>
+                <ol className='list-inside list-decimal space-y-1 text-sm text-muted-foreground'>
+                  {instructions.steps.map((step, index) => (
+                    <li key={index}>{step}</li>
+                  ))}
+                </ol>
+              </div>
+            ) : null}
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
   // Show manual instructions for browsers without beforeinstallprompt
   if (showManualInstructions) {
     const instructions = getManualInstructions(browser, platform, t);
-    const isMobile = ['ios', 'android'].includes(platform);
+    const isDesktop = ['windows', 'macos', 'linux'].includes(platform);
 
     return (
-      <Card className='border-primary/20 bg-primary/5'>
-        <CardHeader className='pb-3'>
-          <div className='flex items-center gap-2'>
-            {isMobile ? (
-              <Smartphone className='h-5 w-5 text-primary' />
-            ) : (
-              <Monitor className='h-5 w-5 text-primary' />
-            )}
-            <CardTitle className='text-lg'>{t.pwa?.installTitle}</CardTitle>
-          </div>
-          <CardDescription>{t.pwa?.installDescription}</CardDescription>
-        </CardHeader>
-        <CardContent className='space-y-3'>
-          {instructions ? (
-            <div className='rounded-md bg-muted/50 p-3'>
-              <div className='mb-2 flex items-center gap-2 text-sm font-medium'>
-                <Info className='h-4 w-4' />
-                {instructions.title}
+      <div className='-mx-3 sm:mx-0'>
+        <Card className='rounded-none border-x-0 border-primary/20 bg-primary/5 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'>
+          <CardHeader className='px-3 py-3 sm:px-6 sm:pb-3'>
+            <div className='flex items-center gap-2'>
+              <div>
+                <CardTitle className='text-base sm:text-lg'>
+                  {t.pwa?.installTitle || 'Install Fluxby'}
+                </CardTitle>
+                <CardDescription className='mt-0 text-xs sm:text-sm'>
+                  {t.pwa?.installDescription ||
+                    'Install Fluxby for faster loading, offline access, and a native-like experience.'}
+                </CardDescription>
               </div>
-              <ol className='list-inside list-decimal space-y-1 text-sm text-muted-foreground'>
-                {instructions.steps.map((step, index) => (
-                  <li key={index}>{step}</li>
-                ))}
-              </ol>
             </div>
-          ) : (
-            <p className='text-sm text-muted-foreground'>
-              {t.pwa?.manualInstructions?.generic ||
-                'Use your browser menu to install this app.'}
-            </p>
-          )}
+          </CardHeader>
 
+          <CardContent className='px-3 pb-3 pt-0 sm:px-6 sm:pb-6 sm:pt-0'>
+            {/* Primary manual instructions for the detected platform */}
+            {instructions ? (
+              <div className='mb-3 rounded-md bg-muted/50 p-3'>
+                <div className='mb-2 flex items-center gap-2 text-sm font-medium'>
+                  <Info className='h-4 w-4' />
+                  {instructions.title}
+                </div>
+                <ol className='list-inside list-decimal space-y-1 text-sm text-muted-foreground'>
+                  {instructions.steps.map((step, index) => (
+                    <li key={index}>{step}</li>
+                  ))}
+                </ol>
+              </div>
+            ) : null}
 
-        </CardContent>
-      </Card>
+            {/* Re-introduce a short list of alternative install methods for desktop */}
+            {isDesktop && (
+              <div className='rounded-md bg-muted/50 p-3'>
+                <div className='mb-2 text-sm font-medium'>
+                  <Info className='mr-2 inline-block h-4 w-4' />
+                  {t.pwa?.desktopInstall?.title || 'Install instructions'}
+                </div>
+                <ul className='list-inside list-disc space-y-1 pl-5 text-sm text-muted-foreground'>
+                  <li>
+                    {t.pwa?.desktopInstall?.description ||
+                      "Click the install icon in your browser's address bar."}
+                  </li>
+                  <li>
+                    {
+                      "Open the browser menu (⋮) and choose 'Install Fluxby' if available."
+                    }
+                  </li>
+                  <li>
+                    {
+                      'On macOS Safari: File → Add to Dock / Add to Applications.'
+                    }
+                  </li>
+                </ul>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
   return null;
-
 }

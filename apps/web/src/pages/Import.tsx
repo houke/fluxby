@@ -746,10 +746,12 @@ export default function Import() {
   };
 
   return (
-    <div className='space-y-6'>
-      <div>
-        <h1 className='text-3xl font-bold'>{t.import.title}</h1>
-        <p className='mt-1 text-muted-foreground'>{t.import.subtitle}</p>
+    <div className='space-y-0 sm:space-y-6'>
+      <div className='pb-4 sm:pb-0'>
+        <h1 className='text-xl font-bold sm:text-3xl'>{t.import.title}</h1>
+        <p className='mt-1 text-xs text-muted-foreground sm:text-base'>
+          {t.import.subtitle}
+        </p>
       </div>
 
       {/* Generic CSV Mapping Dialog */}
@@ -1181,107 +1183,125 @@ export default function Import() {
       </Dialog>
 
       {/* Upload Area */}
-      <Card className='card-hover' data-onboarding='import-dropzone'>
-        <CardHeader>
-          <CardTitle>{t.import.uploadCSV}</CardTitle>
-          <CardDescription>{t.import.mapHeadersDescription}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div
-            {...getRootProps()}
-            className={`cursor-pointer rounded-xl border-2 border-dashed p-12 text-center transition-colors duration-200 ${
-              isDragActive
-                ? 'border-primary bg-primary/5'
-                : 'border-border hover:border-primary/50'
-            } ${isProcessing ? 'pointer-events-none opacity-50' : ''} `}
-          >
-            <input {...getInputProps()} />
-            <div className='flex flex-col items-center gap-4'>
-              {isProcessing ? (
-                <>
-                  <Loader2 className='h-12 w-12 animate-spin text-primary' />
-                  <div>
-                    <p className='text-lg font-medium'>
-                      {t.import.processingFile}
-                    </p>
-                    <p className='mt-1 text-sm text-muted-foreground'>
-                      {t.import.processingDescription}
-                    </p>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className='flex h-16 w-16 items-center justify-center rounded-full bg-primary/10'>
-                    <Upload className='h-8 w-8 text-primary' />
-                  </div>
-                  <div>
-                    <p className='text-lg font-medium'>{t.import.dragDrop}</p>
-                    <p className='mt-1 text-sm text-muted-foreground'>
-                      {t.import.onlyCSV}
-                    </p>
-                  </div>
-                  <Button variant='outline'>{t.import.selectFile}</Button>
-                </>
-              )}
-            </div>
-          </div>
-
-          {/* Upload Error */}
-          {uploadError && (
-            <div className='mt-6 rounded-lg border border-destructive/20 bg-destructive/10 p-4'>
-              <div className='flex items-start gap-3'>
-                <AlertCircle className='mt-0.5 h-5 w-5 text-destructive' />
-                <div>
-                  <p className='font-medium text-destructive'>
-                    {t.import.importError}
-                  </p>
-                  <p className='mt-1 text-sm'>{uploadError}</p>
-                </div>
+      <div className='-mx-3 sm:mx-0'>
+        <Card
+          className='card-hover rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'
+          data-onboarding='import-dropzone'
+        >
+          <CardHeader className='px-3 py-3 sm:px-6 sm:py-4'>
+            <CardTitle className='text-base sm:text-lg'>
+              {t.import.uploadCSV}
+            </CardTitle>
+            <CardDescription className='text-xs sm:text-sm'>
+              {t.import.mapHeadersDescription}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className='px-3 pb-3 pt-0 sm:px-6 sm:pb-6 sm:pt-0'>
+            <div
+              {...getRootProps()}
+              className={`cursor-pointer rounded-xl border-2 border-dashed p-12 text-center transition-colors duration-200 ${
+                isDragActive
+                  ? 'border-primary bg-primary/5'
+                  : 'border-border hover:border-primary/50'
+              } ${isProcessing ? 'pointer-events-none opacity-50' : ''} `}
+            >
+              <input {...getInputProps()} />
+              <div className='flex flex-col items-center gap-4'>
+                {isProcessing ? (
+                  <>
+                    <Loader2 className='h-12 w-12 animate-spin text-primary' />
+                    <div>
+                      <p className='text-lg font-medium'>
+                        {t.import.processingFile}
+                      </p>
+                      <p className='mt-1 text-sm text-muted-foreground'>
+                        {t.import.processingDescription}
+                      </p>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className='flex h-16 w-16 items-center justify-center rounded-full bg-primary/10'>
+                      <Upload className='h-8 w-8 text-primary' />
+                    </div>
+                    <div>
+                      <p className='text-lg font-medium'>{t.import.dragDrop}</p>
+                      <p className='mt-1 text-sm text-muted-foreground'>
+                        {t.import.onlyCSV}
+                      </p>
+                    </div>
+                    <Button variant='outline'>{t.import.selectFile}</Button>
+                  </>
+                )}
               </div>
             </div>
-          )}
-        </CardContent>
-      </Card>
+
+            {/* Upload Error */}
+            {uploadError && (
+              <div className='mt-6 rounded-lg border border-destructive/20 bg-destructive/10 p-4'>
+                <div className='flex items-start gap-3'>
+                  <AlertCircle className='mt-0.5 h-5 w-5 text-destructive' />
+                  <div>
+                    <p className='font-medium text-destructive'>
+                      {t.import.importError}
+                    </p>
+                    <p className='mt-1 text-sm'>{uploadError}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Import History */}
-      <Card data-onboarding='import-history'>
-        <CardHeader>
-          <CardTitle>{t.import.importHistory}</CardTitle>
-          <CardDescription>{t.import.noHistory}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {historyLoading ? (
-            <div className='py-8 text-center text-muted-foreground'>
-              {t.common.loading}...
-            </div>
-          ) : history && history.length > 0 ? (
-            <div className='space-y-3'>
-              {history.map((item) => {
-                const hasSkippedRows =
-                  (item.skippedRows && item.skippedRows.length > 0) ||
-                  (item.duplicatesSkipped !== undefined &&
-                    item.duplicatesSkipped > 0);
-                const totalSkipped =
-                  (item.duplicatesSkipped || 0) + (item.parseErrors || 0);
-                return (
-                  <HistoryCard
-                    key={item.id}
-                    item={item}
-                    hasSkippedRows={hasSkippedRows}
-                    totalSkipped={totalSkipped}
-                    t={t}
-                    getErrorLabel={getErrorLabel}
-                  />
-                );
-              })}
-            </div>
-          ) : (
-            <div className='py-8 text-center text-muted-foreground'>
+      <div className='-mx-3 sm:mx-0'>
+        <Card
+          className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'
+          data-onboarding='import-history'
+        >
+          <CardHeader className='px-3 py-3 sm:px-6 sm:py-4'>
+            <CardTitle className='text-base sm:text-lg'>
+              {t.import.importHistory}
+            </CardTitle>
+            <CardDescription className='text-xs sm:text-sm'>
               {t.import.noHistory}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+            </CardDescription>
+          </CardHeader>
+          <CardContent className='px-3 pb-3 pt-0 sm:px-6 sm:pb-6 sm:pt-0'>
+            {historyLoading ? (
+              <div className='py-8 text-center text-muted-foreground'>
+                {t.common.loading}...
+              </div>
+            ) : history && history.length > 0 ? (
+              <div className='space-y-3'>
+                {history.map((item) => {
+                  const hasSkippedRows =
+                    (item.skippedRows && item.skippedRows.length > 0) ||
+                    (item.duplicatesSkipped !== undefined &&
+                      item.duplicatesSkipped > 0);
+                  const totalSkipped =
+                    (item.duplicatesSkipped || 0) + (item.parseErrors || 0);
+                  return (
+                    <HistoryCard
+                      key={item.id}
+                      item={item}
+                      hasSkippedRows={hasSkippedRows}
+                      totalSkipped={totalSkipped}
+                      t={t}
+                      getErrorLabel={getErrorLabel}
+                    />
+                  );
+                })}
+              </div>
+            ) : (
+              <div className='py-8 text-center text-muted-foreground'>
+                {t.import.noHistory}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

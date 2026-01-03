@@ -159,94 +159,102 @@ export function ProfileDataSettings() {
   };
 
   return (
-    <Card data-onboarding='settings-profile-data'>
-      <CardHeader>
-        <CardTitle className='flex items-center gap-2'>
-          {getText('title', 'Profielgegevens verwijderen')}
-        </CardTitle>
-        <CardDescription>
-          {(
-            getText('description', 'Verwijder gegevens van {profile}') as string
-          ).replace('{profile}', activeProfile?.name || 'dit profiel')}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className='space-y-4'>
-          {notice && (
-            <div
-              className={`rounded border px-3 py-2 text-sm ${
-                notice.type === 'success'
-                  ? 'border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-700 dark:bg-emerald-950 dark:text-emerald-300'
-                  : 'border-rose-300 bg-rose-50 text-rose-800 dark:border-rose-700 dark:bg-rose-950 dark:text-rose-300'
-              }`}
-            >
-              {notice.text}
-            </div>
-          )}
-
-          {deleteItems.map((item, index) => (
-            <div
-              key={item.titleKey}
-              className={`flex items-center justify-between py-3 ${index > 0 ? 'border-t' : ''}`}
-            >
-              <div>
-                <p className='font-medium text-orange-600'>
-                  {getText(
-                    item.titleKey as keyof typeof t.settings.profileData,
-                    item.fallbackTitle
-                  )}
-                </p>
-                <p className='text-sm text-muted-foreground'>
-                  {getText(
-                    item.descKey as keyof typeof t.settings.profileData,
-                    item.fallbackDesc
-                  )}
-                </p>
+    <div className='-mx-3 sm:mx-0'>
+      <Card
+        className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'
+        data-onboarding='settings-profile-data'
+      >
+        <CardHeader className='px-3 py-3 sm:px-6 sm:py-4'>
+          <CardTitle className='flex items-center gap-2 text-base sm:text-lg'>
+            {getText('title', 'Profielgegevens verwijderen')}
+          </CardTitle>
+          <CardDescription className='text-xs sm:text-sm'>
+            {(
+              getText(
+                'description',
+                'Verwijder gegevens van {profile}'
+              ) as string
+            ).replace('{profile}', activeProfile?.name || 'dit profiel')}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className='px-3 pb-3 pt-0 sm:px-6 sm:pb-6 sm:pt-0'>
+          <div className='space-y-4'>
+            {notice && (
+              <div
+                className={`rounded border px-3 py-2 text-sm ${
+                  notice.type === 'success'
+                    ? 'border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-700 dark:bg-emerald-950 dark:text-emerald-300'
+                    : 'border-rose-300 bg-rose-50 text-rose-800 dark:border-rose-700 dark:bg-rose-950 dark:text-rose-300'
+                }`}
+              >
+                {notice.text}
               </div>
-              <Button
-                variant='outline'
-                className='border-orange-500 bg-orange-50 text-orange-700 hover:border-orange-600 hover:bg-orange-100 hover:text-orange-800 dark:border-orange-700 dark:bg-orange-950 dark:text-orange-400 dark:hover:bg-orange-900'
-                disabled={isLoading}
-                onClick={async () => {
-                  const confirmMsg = getText(
-                    item.confirmKey as keyof typeof t.settings.profileData,
-                    item.fallbackConfirm
-                  );
-                  const isConfirmed = await confirm({
-                    title: getText(
+            )}
+
+            {deleteItems.map((item, index) => (
+              <div
+                key={item.titleKey}
+                className={`flex items-center justify-between py-3 ${index > 0 ? 'border-t' : ''}`}
+              >
+                <div>
+                  <p className='font-medium text-orange-600'>
+                    {getText(
                       item.titleKey as keyof typeof t.settings.profileData,
                       item.fallbackTitle
-                    ),
-                    message: confirmMsg,
-                    variant: 'danger',
-                  });
-                  if (isConfirmed) {
-                    handleDelete(
-                      item.action,
-                      getText(
-                        item.successKey as keyof typeof t.settings.profileData,
-                        item.fallbackSuccess
-                      ),
-                      getText(
-                        item.errorKey as keyof typeof t.settings.profileData,
-                        item.fallbackError
-                      )
+                    )}
+                  </p>
+                  <p className='text-sm text-muted-foreground'>
+                    {getText(
+                      item.descKey as keyof typeof t.settings.profileData,
+                      item.fallbackDesc
+                    )}
+                  </p>
+                </div>
+                <Button
+                  variant='outline'
+                  className='border-orange-500 bg-orange-50 text-orange-700 hover:border-orange-600 hover:bg-orange-100 hover:text-orange-800 dark:border-orange-700 dark:bg-orange-950 dark:text-orange-400 dark:hover:bg-orange-900'
+                  disabled={isLoading}
+                  onClick={async () => {
+                    const confirmMsg = getText(
+                      item.confirmKey as keyof typeof t.settings.profileData,
+                      item.fallbackConfirm
                     );
-                  }
-                }}
-              >
-                {isLoading && (
-                  <RefreshCcw className='mr-2 h-4 w-4 animate-spin' />
-                )}
-                {getText(
-                  item.buttonKey as keyof typeof t.settings.profileData,
-                  item.fallbackButton
-                )}
-              </Button>
-            </div>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
+                    const isConfirmed = await confirm({
+                      title: getText(
+                        item.titleKey as keyof typeof t.settings.profileData,
+                        item.fallbackTitle
+                      ),
+                      message: confirmMsg,
+                      variant: 'danger',
+                    });
+                    if (isConfirmed) {
+                      handleDelete(
+                        item.action,
+                        getText(
+                          item.successKey as keyof typeof t.settings.profileData,
+                          item.fallbackSuccess
+                        ),
+                        getText(
+                          item.errorKey as keyof typeof t.settings.profileData,
+                          item.fallbackError
+                        )
+                      );
+                    }
+                  }}
+                >
+                  {isLoading && (
+                    <RefreshCcw className='mr-2 h-4 w-4 animate-spin' />
+                  )}
+                  {getText(
+                    item.buttonKey as keyof typeof t.settings.profileData,
+                    item.fallbackButton
+                  )}
+                </Button>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
