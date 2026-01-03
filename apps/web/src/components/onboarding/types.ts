@@ -22,6 +22,7 @@ export interface OnboardingChapter {
 export interface OnboardingState {
   isActive: boolean;
   hasCompletedOnboarding: boolean;
+  hasDismissedOnboarding: boolean;
   currentChapterIndex: number;
   currentStepIndex: number;
   userName: string;
@@ -40,6 +41,7 @@ export interface OnboardingContextType {
   startOnboarding: (restart?: boolean, startAtCurrentPage?: boolean) => void;
   completeOnboarding: () => void;
   skipOnboarding: () => void;
+  dismissOnboarding: () => void;
   nextStep: () => void;
   previousStep: () => void;
   goToChapter: (chapterIndex: number) => void;

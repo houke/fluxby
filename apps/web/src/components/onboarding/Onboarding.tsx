@@ -16,7 +16,7 @@ export function Onboarding() {
     isLoadingUser,
     nextStep,
     previousStep,
-    skipOnboarding,
+    dismissOnboarding,
     completeOnboarding,
     setLanguage,
     setUserName,
@@ -96,7 +96,7 @@ export function Onboarding() {
       userName={state.userName}
       onNext={nextStep}
       onPrevious={previousStep}
-      onSkip={skipOnboarding}
+      onSkip={dismissOnboarding}
       onComplete={completeOnboarding}
       onLanguageSelect={handleLanguageSelect}
       onUserNameChange={setUserName}

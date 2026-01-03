@@ -22,10 +22,12 @@ const COMPLETED_FLAG_KEY = 'fluxby_onboarding_complete';
 const defaultState: OnboardingState = {
   isActive: false,
   hasCompletedOnboarding: false,
+  hasDismissedOnboarding: false,
   currentChapterIndex: 0,
   currentStepIndex: 0,
   userName: '',
   language: null,
+  hasDismissedOnboarding: false,
 };
 
 // Check if onboarding restart was requested
@@ -42,7 +44,8 @@ const checkRestartFlag = (): boolean => {
 };
 
 // Load state from localStorage
-// On page refresh, resume if it was active
+// On page refresh, don't auto-restart onboarding
+// User must manually restart from settings or mascot click
 const loadState = (): OnboardingState => {
   const shouldRestart = checkRestartFlag();
 
@@ -64,8 +67,10 @@ const loadState = (): OnboardingState => {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
       const parsed = JSON.parse(stored);
-      // Resume isActive state from storage instead of forcing false
-      return { ...defaultState, ...parsed };
+      // CRITICAL: Always set isActive: false on page refresh
+      // The user dismissed/closed the modal, so don't auto-restart
+      // They can resume manually from settings or mascot click
+      return { ...defaultState, ...parsed, isActive: false };
     }
   } catch {
     // Ignore parse errors
@@ -129,6 +134,10 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
     // If user has completed onboarding before, don't restart
     if (state.hasCompletedOnboarding) return;
 
+    // If user has dismissed onboarding before, don't auto-start
+    // They can manually restart from settings or by clicking the mascot
+    if (state.hasDismissedOnboarding) return;
+
     // If we've already progressed past the first step, don't reset to start
     // This prevents restarting onboarding after query invalidation
     if (state.currentChapterIndex > 0 || state.currentStepIndex > 0) return;
@@ -152,6 +161,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
     isUserFetched,
     state.isActive,
     state.hasCompletedOnboarding,
+    state.hasDismissedOnboarding,
     state.currentChapterIndex,
     state.currentStepIndex,
     navigate,
@@ -265,6 +275,15 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
         }
       }
 
+      // Determine what to do based on current state
+      const shouldResume =
+        !startAtCurrentPage &&
+        !restart &&
+        (state.currentChapterIndex > 0 || state.currentStepIndex > 0);
+      const resumeChapter = shouldResume
+        ? onboardingChapters[state.currentChapterIndex]
+        : null;
+
       setState((prev) => {
         // If starting at current page (mascot click), always start at that chapter
         // Note: startChapterIndex > 0 because index 0 is welcome, and we found a content chapter
@@ -272,6 +291,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
           return {
             ...prev,
             isActive: true,
+            hasDismissedOnboarding: false,
             currentChapterIndex: startChapterIndex,
             currentStepIndex: 0,
           };
@@ -282,6 +302,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
           return {
             ...prev,
             isActive: true,
+            hasDismissedOnboarding: false,
             currentChapterIndex: 1, // Start at navigation chapter
             currentStepIndex: 0,
           };
@@ -289,9 +310,13 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
 
         // If restarting, start from beginning
         if (restart) {
+          // Also clear the completed flag in localStorage when restarting
+          localStorage.removeItem(COMPLETED_FLAG_KEY);
           return {
             ...prev,
             isActive: true,
+            hasCompletedOnboarding: false,
+            hasDismissedOnboarding: false,
             currentChapterIndex: 0,
             currentStepIndex: 0,
           };
@@ -300,14 +325,10 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
         // Resume from saved position (continue session)
         // Only resume if we have made progress (not at the start)
         if (prev.currentChapterIndex > 0 || prev.currentStepIndex > 0) {
-          // Navigate to the saved chapter's route
-          const savedChapter = onboardingChapters[prev.currentChapterIndex];
-          if (savedChapter) {
-            navigate(savedChapter.route);
-          }
           return {
             ...prev,
             isActive: true,
+            hasDismissedOnboarding: false,
           };
         }
 
@@ -315,21 +336,26 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
         return {
           ...prev,
           isActive: true,
+          hasDismissedOnboarding: false,
           currentChapterIndex: 0,
           currentStepIndex: 0,
         };
       });
-      // Navigate to the appropriate route (for restart or resume cases)
-      if (!startAtCurrentPage) {
+
+      // Navigate after state update (deferred to avoid React warning)
+      if (shouldResume && resumeChapter) {
+        setTimeout(() => navigate(resumeChapter.route), 0);
+      } else if (!startAtCurrentPage) {
         const targetChapter = restart
           ? onboardingChapters[0]
           : onboardingChapters[state.currentChapterIndex];
-        navigate(targetChapter?.route || '/dashboard/');
+        setTimeout(() => navigate(targetChapter?.route || '/dashboard/'), 0);
       }
     },
     [
       navigate,
       state.currentChapterIndex,
+      state.currentStepIndex,
       profiles,
       switchProfile,
       setProfileHidden,
@@ -384,71 +410,76 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
     }));
   }, [state.userName, queryClient]);
 
+  // Dismiss onboarding (close modal but preserve progress)
+  // Use this when user clicks X to close - they can resume later from settings or mascot
+  const dismissOnboarding = useCallback(() => {
+    // Don't set COMPLETED_FLAG_KEY - onboarding is not completed, just paused
+    // Progress (currentChapterIndex, currentStepIndex) is preserved in state
+    // Set hasDismissedOnboarding to prevent auto-start on refresh
+    setState((prev) => ({
+      ...prev,
+      isActive: false,
+      hasDismissedOnboarding: true,
+    }));
+  }, []);
+
   // Navigate to next step
   const nextStep = useCallback(() => {
-    setState((prev) => {
-      const chapter = onboardingChapters[prev.currentChapterIndex];
-      if (!chapter) return prev;
+    // Calculate the next state first
+    const chapter = onboardingChapters[state.currentChapterIndex];
+    if (!chapter) return;
 
-      // Check if there are more steps in current chapter
-      if (prev.currentStepIndex < chapter.steps.length - 1) {
-        const nextStepIndex = prev.currentStepIndex + 1;
+    // Check if there are more steps in current chapter
+    if (state.currentStepIndex < chapter.steps.length - 1) {
+      setState((prev) => ({
+        ...prev,
+        currentStepIndex: prev.currentStepIndex + 1,
+      }));
+      return;
+    }
 
-        // Click action is now handled by OnboardingModal useEffect
+    // Move to next chapter
+    if (state.currentChapterIndex < onboardingChapters.length - 1) {
+      const nextChapter = onboardingChapters[state.currentChapterIndex + 1];
 
-        return {
-          ...prev,
-          currentStepIndex: nextStepIndex,
-        };
-      }
+      // Update state first, then navigate
+      setState((prev) => ({
+        ...prev,
+        currentChapterIndex: prev.currentChapterIndex + 1,
+        currentStepIndex: 0,
+      }));
 
-      // Move to next chapter
-      if (prev.currentChapterIndex < onboardingChapters.length - 1) {
-        const nextChapter = onboardingChapters[prev.currentChapterIndex + 1];
-
-        // Navigate to new route
-        navigate(nextChapter.route);
-
-        // Click action is now handled by OnboardingModal useEffect
-
-        return {
-          ...prev,
-          currentChapterIndex: prev.currentChapterIndex + 1,
-          currentStepIndex: 0,
-        };
-      }
-
-      // End of onboarding
-      return prev;
-    });
-  }, [navigate]);
+      // Navigate after state update (deferred to avoid React warning)
+      setTimeout(() => navigate(nextChapter.route), 0);
+    }
+  }, [state.currentChapterIndex, state.currentStepIndex, navigate]);
 
   // Navigate to previous step
   const previousStep = useCallback(() => {
-    setState((prev) => {
-      // Check if there are previous steps in current chapter
-      if (prev.currentStepIndex > 0) {
-        return {
-          ...prev,
-          currentStepIndex: prev.currentStepIndex - 1,
-        };
-      }
+    // Check if there are previous steps in current chapter
+    if (state.currentStepIndex > 0) {
+      setState((prev) => ({
+        ...prev,
+        currentStepIndex: prev.currentStepIndex - 1,
+      }));
+      return;
+    }
 
-      // Move to previous chapter
-      if (prev.currentChapterIndex > 0) {
-        const prevChapter = onboardingChapters[prev.currentChapterIndex - 1];
-        // Navigate to previous route
-        navigate(prevChapter.route);
-        return {
-          ...prev,
-          currentChapterIndex: prev.currentChapterIndex - 1,
-          currentStepIndex: prevChapter.steps.length - 1,
-        };
-      }
+    // Move to previous chapter
+    if (state.currentChapterIndex > 0) {
+      const prevChapter = onboardingChapters[state.currentChapterIndex - 1];
 
-      return prev;
-    });
-  }, [navigate]);
+      // Update state first
+      setState((prev) => ({
+        ...prev,
+        currentChapterIndex: prev.currentChapterIndex - 1,
+        currentStepIndex: prevChapter.steps.length - 1,
+      }));
+
+      // Navigate after state update (deferred to avoid React warning)
+      setTimeout(() => navigate(prevChapter.route), 0);
+    }
+  }, [state.currentChapterIndex, state.currentStepIndex, navigate]);
 
   // Go to specific chapter
   const goToChapter = useCallback(
@@ -560,6 +591,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
     startOnboarding,
     completeOnboarding,
     skipOnboarding,
+    dismissOnboarding,
     nextStep,
     previousStep,
     goToChapter,
