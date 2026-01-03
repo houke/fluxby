@@ -17,7 +17,7 @@ export const en: LandingTranslationKeys = {
     title: 'Meet',
     subtitle: 'your adorable financial mascotte!',
     description:
-      'Make money management fun with your own digital mascotte. Track expenses, set goals, and get better insights into your spending!',
+      'Make money management fun with your own digital mascotte. Track expenses, set goals, and get better insights into your spending! Completely free forever.',
     getStarted: 'Get started 🚀',
     scrollDown: 'Scroll down',
   },

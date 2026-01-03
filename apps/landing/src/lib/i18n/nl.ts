@@ -173,7 +173,7 @@ export const nl: LandingTranslationKeys = {
     title: 'Ontmoet',
     subtitle: 'je schattige financiële mascotte!',
     description:
-      'Maak geldbeheer leuk met je eigen digitale mascotte. Volg uitgaven, stel doelen en krijg betere inzichten in je uitgaven!',
+      'Maak geldbeheer leuk met je eigen digitale mascotte. Volg uitgaven, stel doelen en krijg betere inzichten in je uitgaven! Volledig gratis voor altijd.',
     getStarted: 'Beginnen 🚀',
     scrollDown: 'Scroll naar beneden',
   },

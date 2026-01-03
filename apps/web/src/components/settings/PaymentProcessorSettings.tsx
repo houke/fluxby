@@ -16,7 +16,6 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
@@ -144,14 +143,34 @@ export function PaymentProcessorSettings() {
         data-onboarding='settings-payment-processors'
       >
         <CardHeader className='px-3 py-3 sm:px-6 sm:py-4'>
-          <CardTitle className='text-base sm:text-lg'>
-            {t.settings.paymentProcessors?.rulesTitle ||
-              'Payment processor regels'}
-          </CardTitle>
-          <CardDescription className='text-xs sm:text-sm'>
-            {t.settings.paymentProcessors?.rulesDescription ||
-              'Definieer regels om payment processors te detecteren op basis van transactiegegevens. Voeg komma-gescheiden patronen toe die gematcht worden op IBAN, beschrijving of naam.'}
-          </CardDescription>
+          <div className='flex items-start justify-between gap-4'>
+            <div className='flex-1'>
+              <CardTitle className='text-base sm:text-lg'>
+                {t.settings.paymentProcessors?.rulesTitle ||
+                  'Payment processor regels'}
+              </CardTitle>
+              <CardDescription className='text-xs sm:text-sm'>
+                {t.settings.paymentProcessors?.rulesDescription ||
+                  'Definieer regels om payment processors te detecteren op basis van transactiegegevens. Voeg komma-gescheiden patronen toe die gematcht worden op IBAN, beschrijving of naam.'}
+              </CardDescription>
+            </div>
+            <Button
+              variant='secondary'
+              onClick={() => applyRulesMutation.mutate()}
+              disabled={
+                applyRulesMutation.isPending || providerRules.length === 0
+              }
+              className='shrink-0'
+            >
+              {applyRulesMutation.isPending ? (
+                <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+              ) : (
+                <RefreshCw className='mr-2 h-4 w-4' />
+              )}
+              {t.settings.paymentProcessors?.applyToTransactions ||
+                'Apply to transactions'}
+            </Button>
+          </div>
         </CardHeader>
         <CardContent className='px-3 pb-3 pt-0 sm:px-6 sm:pb-6 sm:pt-0'>
           <div className='space-y-4'>
@@ -330,23 +349,6 @@ export function PaymentProcessorSettings() {
             )}
           </div>
         </CardContent>
-        <CardFooter className='border-t px-3 py-3 sm:px-6 sm:py-4'>
-          <Button
-            onClick={() => applyRulesMutation.mutate()}
-            disabled={
-              applyRulesMutation.isPending || providerRules.length === 0
-            }
-            className='w-full'
-          >
-            {applyRulesMutation.isPending ? (
-              <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-            ) : (
-              <RefreshCw className='mr-2 h-4 w-4' />
-            )}
-            {t.settings.paymentProcessors?.applyToTransactions ||
-              'Apply to transactions'}
-          </Button>
-        </CardFooter>
       </Card>
     </div>
   );
