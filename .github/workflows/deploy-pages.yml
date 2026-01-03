@@ -47,9 +47,7 @@ jobs:
 
       - name: Build GitHub Pages site
         run: npm run build:pages
-        env:
-          # Set base URL for GitHub Pages project site
-          VITE_BASE_URL: /${{ github.event.repository.name }}/
+        # No VITE_BASE_URL needed - custom domain (fluxby.app) serves from root /
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
