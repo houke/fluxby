@@ -27,7 +27,6 @@ const defaultState: OnboardingState = {
   currentStepIndex: 0,
   userName: '',
   language: null,
-  hasDismissedOnboarding: false,
 };
 
 // Check if onboarding restart was requested

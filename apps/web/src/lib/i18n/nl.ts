@@ -1012,6 +1012,48 @@ export interface TranslationKeys {
     ibanRemovedFromContact: string;
     allCategoriesDeleted: string;
     allBudgetsDeleted: string;
+    pwa?: {
+      installTitle: string;
+      installDescription: string;
+      installButton: string;
+      installedTitle: string;
+      installedDescription: string;
+      manualInstructions?: {
+        generic: string;
+        iosSafari?: { title: string; steps: string[] };
+        macosSafari?: { title: string; steps: string[] };
+        desktop?: { title: string; steps: string[] };
+        android?: { title: string; steps: string[] };
+      };
+      desktopInstall?: {
+        title: string;
+        description: string;
+        buttonText: string;
+        buttonDisabledText: string;
+        alertMessage?: string;
+      };
+    };
+  };
+  pwa?: {
+    installTitle: string;
+    installDescription: string;
+    installButton: string;
+    installedTitle: string;
+    installedDescription: string;
+    manualInstructions?: {
+      generic: string;
+      iosSafari?: { title: string; steps: string[] };
+      macosSafari?: { title: string; steps: string[] };
+      desktop?: { title: string; steps: string[] };
+      android?: { title: string; steps: string[] };
+    };
+    desktopInstall?: {
+      title: string;
+      description: string;
+      buttonText: string;
+      buttonDisabledText: string;
+      alertMessage?: string;
+    };
   };
 }
 
