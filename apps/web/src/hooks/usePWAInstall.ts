@@ -118,12 +118,10 @@ export function usePWAInstall(): PWAInstallInfo {
     }
   }, [deferredPrompt]);
 
-  const hasManifestAndSW =
-    typeof window !== 'undefined' &&
-    'serviceWorker' in navigator &&
-    !!document.querySelector('link[rel="manifest"]');
+  const hasManifest = typeof window !== 'undefined' && !!document.querySelector('link[rel="manifest"]');
 
-  const supportsPWA = browserSupportsPWA(browser, platform) || hasManifestAndSW;
+  // Show PWA support if browser heuristics detect support OR a manifest is present
+  const supportsPWA = browserSupportsPWA(browser, platform) || hasManifest;
   const canPromptInstall = !!deferredPrompt && !isInstalled;
 
   const showManualInstructions = supportsPWA && !canPromptInstall && !isInstalled;

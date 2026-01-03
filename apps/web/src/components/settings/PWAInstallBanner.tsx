@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Download, Check, Monitor, Smartphone, Info } from 'lucide-react';
+import { useToast } from '@/contexts/ToastContext';
 
 function getManualInstructions(
   browser: string,
@@ -83,6 +84,7 @@ export function PWAInstallBanner() {
     installPWA,
   } = usePWAInstall();
   const { t } = useLanguage();
+  const toast = useToast();
 
   // Don't show anything if PWA isn't supported, not installable, and not already installed
   if (!supportsPWA && !canPromptInstall && !isInstalled) {
@@ -163,26 +165,34 @@ export function PWAInstallBanner() {
             </p>
           )}
 
-          {/* Install button shown when browser supports PWA installs. */}
+          {/* Install helper box shown when browser supports PWA installs. */}
           {supportsPWA && (
-            <div>
-              <Button
-                onClick={() => {
-                  if (canPromptInstall) {
-                    installPWA();
-                  } else {
-                    alert(
-                      t.pwa?.desktopInstall?.alertMessage ||
-                        "Look for the install icon (⊕) in your browser's address bar to install Fluxby."
-                    );
-                  }
-                }}
-                variant='outline'
-                className='w-full sm:w-auto'
-              >
-                <Download className='mr-2 h-4 w-4' />
-                {t.pwa?.desktopInstall?.buttonText || t.pwa?.installButton}
-              </Button>
+            <div className='rounded-md bg-muted/50 p-3'>
+              <div className='flex items-center justify-between gap-4'>
+                <p className='text-sm text-muted-foreground'>
+                  {t.pwa?.desktopInstall?.description ||
+                    "Look for the install icon in your browser's address bar, or use the menu to install Fluxby."}
+                </p>
+                <div className='shrink-0'>
+                  <Button
+                    onClick={() => {
+                      if (canPromptInstall) {
+                        installPWA();
+                      } else {
+                        toast.info(
+                          t.pwa?.desktopInstall?.alertMessage ||
+                            "Look for the install icon (⊕) in your browser's address bar to install Fluxby."
+                        );
+                      }
+                    }}
+                    variant='outline'
+                    className='w-full sm:w-auto'
+                  >
+                    <Download className='mr-2 h-4 w-4' />
+                    {t.pwa?.desktopInstall?.buttonText || t.pwa?.installButton}
+                  </Button>
+                </div>
+              </div>
             </div>
           )}
         </CardContent>
