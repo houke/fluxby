@@ -10,7 +10,6 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Download, Check, Monitor, Smartphone, Info } from 'lucide-react';
-import { useToast } from '@/contexts/ToastContext';
 
 function getManualInstructions(
   browser: string,
@@ -84,7 +83,6 @@ export function PWAInstallBanner() {
     installPWA,
   } = usePWAInstall();
   const { t } = useLanguage();
-  const toast = useToast();
 
   // Don't show anything if PWA isn't supported, not installable, and not already installed
   if (!supportsPWA && !canPromptInstall && !isInstalled) {
@@ -108,6 +106,8 @@ export function PWAInstallBanner() {
 
   // Show native install prompt if available
   if (canPromptInstall) {
+    const instructions = getManualInstructions(browser, platform, t);
+
     return (
       <Card className='border-primary/20 bg-primary/5'>
         <CardHeader className='pb-3'>
@@ -117,7 +117,21 @@ export function PWAInstallBanner() {
           </div>
           <CardDescription>{t.pwa?.installDescription}</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className='space-y-3'>
+          {instructions ? (
+            <div className='rounded-md bg-muted/50 p-3'>
+              <div className='mb-2 flex items-center gap-2 text-sm font-medium'>
+                <Info className='h-4 w-4' />
+                {instructions.title}
+              </div>
+              <ol className='list-inside list-decimal space-y-1 text-sm text-muted-foreground'>
+                {instructions.steps.map((step, index) => (
+                  <li key={index}>{step}</li>
+                ))}
+              </ol>
+            </div>
+          ) : null}
+
           <Button onClick={installPWA} className='w-full sm:w-auto'>
             <Download className='mr-2 h-4 w-4' />
             {t.pwa?.installButton}
@@ -165,40 +179,12 @@ export function PWAInstallBanner() {
             </p>
           )}
 
-          {/* Install helper box shown when browser supports PWA installs. */}
-          {supportsPWA && (
-            <div className='rounded-md bg-muted/50 p-3'>
-              <div className='flex items-center justify-between gap-4'>
-                <p className='text-sm text-muted-foreground'>
-                  {t.pwa?.desktopInstall?.description ||
-                    "Look for the install icon in your browser's address bar, or use the menu to install Fluxby."}
-                </p>
-                <div className='shrink-0'>
-                  <Button
-                    onClick={() => {
-                      if (canPromptInstall) {
-                        installPWA();
-                      } else {
-                        toast.info(
-                          t.pwa?.desktopInstall?.alertMessage ||
-                            "Look for the install icon (⊕) in your browser's address bar to install Fluxby."
-                        );
-                      }
-                    }}
-                    variant='outline'
-                    className='w-full sm:w-auto'
-                  >
-                    <Download className='mr-2 h-4 w-4' />
-                    {t.pwa?.desktopInstall?.buttonText || t.pwa?.installButton}
-                  </Button>
-                </div>
-              </div>
-            </div>
-          )}
+
         </CardContent>
       </Card>
     );
   }
 
   return null;
+
 }
