@@ -13,36 +13,48 @@ const Downloads = () => {
 
   const platforms = [
     {
-      id: 'mac-arm',
-      name: 'macOS (Apple Silicon)',
+      id: 'mac',
+      name: 'macOS',
       icon: Apple,
-      description: 'Voor M1, M2, M3, en M4 Macs.',
-      link: getDownloadLink('Fluxby_1.0.0_aarch64.dmg'),
-      type: 'ARM64 DMG',
-    },
-    {
-      id: 'mac-intel',
-      name: 'macOS (Intel)',
-      icon: Apple,
-      description: 'Voor Intel-gebaseerde Macs.',
-      link: getDownloadLink('Fluxby_1.0.0_x64.dmg'),
-      type: 'x64 DMG',
+      description: 'Native ervaring voor Apple Silicon & Intel Macs.',
+      downloads: [
+        {
+          label: 'Apple Silicon',
+          link: getDownloadLink('Fluxby_1.0.0_aarch64.dmg'),
+          type: 'M1/M2/M3/M4',
+        },
+        {
+          label: 'Intel',
+          link: getDownloadLink('Fluxby_1.0.0_x64.dmg'),
+          type: 'x64',
+        },
+      ],
     },
     {
       id: 'windows',
       name: 'Windows',
       icon: Monitor,
       description: 'Eenvoudige installatie voor Windows 10 & 11.',
-      link: getDownloadLink('Fluxby_1.0.0_x64-setup.exe'),
-      type: 'x64 EXE',
+      downloads: [
+        {
+          label: 'Download',
+          link: getDownloadLink('Fluxby_1.0.0_x64-setup.exe'),
+          type: 'x64 EXE',
+        },
+      ],
     },
     {
       id: 'linux',
       name: 'Linux',
       icon: AppWindow,
       description: 'Standalone AppImage voor alle distributies.',
-      link: getDownloadLink('fluxby_1.0.0_amd64.AppImage'),
-      type: 'AMD64 AppImage',
+      downloads: [
+        {
+          label: 'Download',
+          link: getDownloadLink('fluxby_1.0.0_amd64.AppImage'),
+          type: 'AMD64 AppImage',
+        },
+      ],
     },
   ];
 
@@ -63,7 +75,7 @@ const Downloads = () => {
           </p>
         </div>
 
-        <div className='grid gap-8 md:grid-cols-2 lg:grid-cols-4'>
+        <div className='grid gap-8 md:grid-cols-3'>
           {platforms.map((platform) => {
             const Icon = platform.icon;
             return (
@@ -76,7 +88,7 @@ const Downloads = () => {
                     <Icon className='h-8 w-8' />
                   </div>
                   <span className='rounded-full bg-gray-100 px-3 py-1 text-xs font-bold uppercase tracking-wider text-gray-600 dark:bg-gray-700 dark:text-gray-400'>
-                    {platform.type}
+                    {platform.downloads[0].type}
                   </span>
                 </div>
 
@@ -87,15 +99,20 @@ const Downloads = () => {
                   {platform.description}
                 </p>
 
-                <a
-                  href={platform.link}
-                  target='_blank'
-                  rel='noopener noreferrer'
-                  className='bg-fluxby-purple hover:bg-fluxby-dark flex w-full items-center justify-center gap-2 rounded-xl py-3 font-bold text-white transition-colors'
-                >
-                  <Download className='h-5 w-5' />
-                  Download
-                </a>
+                <div className='flex flex-col gap-3'>
+                  {platform.downloads.map((download, idx) => (
+                    <a
+                      key={idx}
+                      href={download.link}
+                      target='_blank'
+                      rel='noopener noreferrer'
+                      className='bg-fluxby-purple hover:bg-fluxby-dark flex w-full items-center justify-center gap-2 rounded-xl py-3 font-bold text-white transition-colors'
+                    >
+                      <Download className='h-5 w-5' />
+                      {download.label}
+                    </a>
+                  ))}
+                </div>
               </div>
             );
           })}
