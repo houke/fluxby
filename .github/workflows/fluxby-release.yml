@@ -259,12 +259,13 @@ jobs:
 
       - name: Create release
         id: create-release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ needs.initialize-release.outputs.version }}
           name: Fluxby v${{ needs.initialize-release.outputs.version }}
           draft: true
           prerelease: false
+          make_latest: true
           body_path: release_body.md
 
   # Step 3: Build for all platforms
@@ -354,9 +355,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh api \
-            --method PATCH \
-            -H "Accept: application/vnd.github+json" \
-            /repos/${{ github.repository }}/releases/${{ needs.create-release.outputs.release_id }} \
-            -f draft=false \
-            -f make_latest=true
+          gh release edit v${{ needs.initialize-release.outputs.version }} \
+            --repo ${{ github.repository }} \
+            --draft=false \
+            --latest
