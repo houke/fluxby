@@ -107,7 +107,7 @@ export function LockScreen({
   };
 
   return (
-    <div className='bg-app-gradient flex min-h-screen flex-col items-center justify-center p-4'>
+    <div className='bg-app-gradient flex min-h-screen flex-col items-center justify-start p-4 pt-16 md:justify-center md:pt-0'>
       <div className='w-full max-w-md duration-500 animate-in fade-in zoom-in'>
         <Card className='glass-morphism border-white/20 bg-white/70 shadow-2xl backdrop-blur-xl dark:bg-gray-900/80'>
           <CardHeader className='text-center'>
