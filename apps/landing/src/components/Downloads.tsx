@@ -81,7 +81,7 @@ const Downloads = () => {
             return (
               <div
                 key={platform.id}
-                className='group relative rounded-3xl border border-gray-200 bg-white p-8 shadow-xl transition-all duration-300 hover:-translate-y-2 hover:border-purple-200 hover:shadow-2xl dark:border-gray-700 dark:bg-gray-800 dark:hover:border-purple-800'
+                className='group relative flex flex-col rounded-3xl border border-gray-200 bg-white p-8 shadow-xl transition-all duration-300 hover:-translate-y-2 hover:border-purple-200 hover:shadow-2xl dark:border-gray-700 dark:bg-gray-800 dark:hover:border-purple-800'
               >
                 <div className='mb-6 flex items-center justify-between'>
                   <div className='flex h-16 w-16 items-center justify-center rounded-2xl bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-300'>
@@ -95,7 +95,7 @@ const Downloads = () => {
                 <h3 className='mb-2 text-2xl font-bold text-gray-900 dark:text-white'>
                   {platform.name}
                 </h3>
-                <p className='mb-8 text-gray-600 dark:text-gray-400'>
+                <p className='mb-8 flex-grow text-gray-600 dark:text-gray-400'>
                   {platform.description}
                 </p>
 

@@ -244,7 +244,7 @@ function bundleCommits(commits) {
         scope: scope === '_no_scope_' ? null : scope,
         commits: groupCommits,
       };
-      
+
       // Generate bundled title and description
       if (scope === '_no_scope_') {
         bundle.titleNl = 'Diverse verbeteringen';
@@ -354,19 +354,23 @@ function generateDescriptionEn(commit) {
  * Generate a bundled Dutch description from multiple commits
  */
 function generateBundledDescriptionNl(commits) {
-  const features = commits.filter(c => c.type === 'feat');
-  const fixes = commits.filter(c => c.type === 'fix');
-  const other = commits.filter(c => c.type !== 'feat' && c.type !== 'fix');
+  const features = commits.filter((c) => c.type === 'feat');
+  const fixes = commits.filter((c) => c.type === 'fix');
+  const other = commits.filter((c) => c.type !== 'feat' && c.type !== 'fix');
 
   const parts = [];
   if (features.length > 0) {
-    parts.push(`${features.length} nieuwe ${features.length === 1 ? 'feature' : 'features'}`);
+    parts.push(
+      `${features.length} nieuwe ${features.length === 1 ? 'feature' : 'features'}`
+    );
   }
   if (fixes.length > 0) {
     parts.push(`${fixes.length} ${fixes.length === 1 ? 'bugfix' : 'bugfixes'}`);
   }
   if (other.length > 0) {
-    parts.push(`${other.length} ${other.length === 1 ? 'verbetering' : 'verbeteringen'}`);
+    parts.push(
+      `${other.length} ${other.length === 1 ? 'verbetering' : 'verbeteringen'}`
+    );
   }
 
   if (parts.length === 0) {
@@ -379,19 +383,23 @@ function generateBundledDescriptionNl(commits) {
  * Generate a bundled English description from multiple commits
  */
 function generateBundledDescriptionEn(commits) {
-  const features = commits.filter(c => c.type === 'feat');
-  const fixes = commits.filter(c => c.type === 'fix');
-  const other = commits.filter(c => c.type !== 'feat' && c.type !== 'fix');
+  const features = commits.filter((c) => c.type === 'feat');
+  const fixes = commits.filter((c) => c.type === 'fix');
+  const other = commits.filter((c) => c.type !== 'feat' && c.type !== 'fix');
 
   const parts = [];
   if (features.length > 0) {
-    parts.push(`${features.length} new ${features.length === 1 ? 'feature' : 'features'}`);
+    parts.push(
+      `${features.length} new ${features.length === 1 ? 'feature' : 'features'}`
+    );
   }
   if (fixes.length > 0) {
     parts.push(`${fixes.length} bug ${fixes.length === 1 ? 'fix' : 'fixes'}`);
   }
   if (other.length > 0) {
-    parts.push(`${other.length} ${other.length === 1 ? 'improvement' : 'improvements'}`);
+    parts.push(
+      `${other.length} ${other.length === 1 ? 'improvement' : 'improvements'}`
+    );
   }
 
   if (parts.length === 0) {
@@ -565,7 +573,7 @@ function generateUpdatesEntry(commits, version) {
 
   // Bundle features smartly
   const featureBundles = bundleCommits(features);
-  
+
   // Bundle fixes smartly (if there are multiple, combine them)
   let fixBundles = [];
   if (fixes.length > 0) {
@@ -574,15 +582,17 @@ function generateUpdatesEntry(commits, version) {
       fixBundles = bundleCommits(fixes);
     } else {
       // Many fixes - combine into one summary
-      fixBundles = [{
-        icon: 'Wrench',
-        titleNl: 'Bugfixes',
-        titleEn: 'Bug fixes',
-        descriptionNl: `${fixes.length} bugs opgelost. Zie changelog voor details.`,
-        descriptionEn: `${fixes.length} bugs fixed. See changelog for details.`,
-        scope: null,
-        commits: fixes,
-      }];
+      fixBundles = [
+        {
+          icon: 'Wrench',
+          titleNl: 'Bugfixes',
+          titleEn: 'Bug fixes',
+          descriptionNl: `${fixes.length} bugs opgelost. Zie changelog voor details.`,
+          descriptionEn: `${fixes.length} bugs fixed. See changelog for details.`,
+          scope: null,
+          commits: fixes,
+        },
+      ];
     }
   }
 
@@ -611,38 +621,45 @@ function updateUpdatesContent(entry) {
   let content = readFileSync(filePath, 'utf-8');
 
   const versionKey = entry.version.replace(/\./g, '');
-  
+
   // Get all required icons
   const requiredIcons = getRequiredIcons(entry.bundles);
-  
+
   // Check which icons are already imported
   const importMatch = content.match(/import \{([^}]+)\} from 'lucide-react';/);
   if (importMatch) {
-    const existingIcons = importMatch[1].split(',').map(s => s.trim());
-    const missingIcons = requiredIcons.filter(icon => !existingIcons.includes(icon));
-    
+    const existingIcons = importMatch[1].split(',').map((s) => s.trim());
+    const missingIcons = requiredIcons.filter(
+      (icon) => !existingIcons.includes(icon)
+    );
+
     if (missingIcons.length > 0) {
       // Add missing icons to import
       const allIcons = [...existingIcons, ...missingIcons].sort();
       const newImport = `import {\n  ${allIcons.join(',\n  ')},\n} from 'lucide-react';`;
-      content = content.replace(/import \{[^}]+\} from 'lucide-react';/, newImport);
+      content = content.replace(
+        /import \{[^}]+\} from 'lucide-react';/,
+        newImport
+      );
     }
   }
 
   // Generate features code for each bundle
-  const featuresCode = entry.bundles.map((bundle, index) => {
-    const featureNum = index + 1;
-    return `        {
+  const featuresCode = entry.bundles
+    .map((bundle, index) => {
+      const featureNum = index + 1;
+      return `        {
           icon: ${bundle.icon},
           title: updatesPage?.v${versionKey}F${featureNum}Title || '${escapeString(bundle.titleNl)}',
           description: updatesPage?.v${versionKey}F${featureNum}Desc || '${escapeString(bundle.descriptionNl)}',
         },`;
-  }).join('\n');
+    })
+    .join('\n');
 
   // Generate the description based on what changed
   let descriptionNl = 'Nieuwe verbeteringen en bugfixes.';
   let descriptionEn = 'New improvements and bug fixes.';
-  
+
   if (entry.totalFeatures > 0 && entry.totalFixes > 0) {
     descriptionNl = `${entry.totalFeatures} nieuwe ${entry.totalFeatures === 1 ? 'feature' : 'features'} en ${entry.totalFixes} ${entry.totalFixes === 1 ? 'bugfix' : 'bugfixes'}.`;
     descriptionEn = `${entry.totalFeatures} new ${entry.totalFeatures === 1 ? 'feature' : 'features'} and ${entry.totalFixes} bug ${entry.totalFixes === 1 ? 'fix' : 'fixes'}.`;
@@ -692,17 +709,27 @@ function escapeString(str) {
  */
 function updateTranslations(entry, descriptionNl, descriptionEn) {
   const versionKey = entry.version.replace(/\./g, '');
-  
+
   // Generate translation entries for both languages
-  const nlTranslations = generateTranslationEntriesNl(entry, versionKey, descriptionNl);
-  const enTranslations = generateTranslationEntriesEn(entry, versionKey, descriptionEn);
-  
+  const nlTranslations = generateTranslationEntriesNl(
+    entry,
+    versionKey,
+    descriptionNl
+  );
+  const enTranslations = generateTranslationEntriesEn(
+    entry,
+    versionKey,
+    descriptionEn
+  );
+
   // Update nl.ts
   const nlPath = join(ROOT_DIR, 'apps/landing/src/lib/i18n/nl.ts');
   let nlContent = readFileSync(nlPath, 'utf-8');
-  
+
   // Find the updatesPage section and add new entries after 'intro'
-  const nlUpdatesMatch = nlContent.match(/(updatesPage:\s*\{[\s\S]*?intro:[^,]+,)/);
+  const nlUpdatesMatch = nlContent.match(
+    /(updatesPage:\s*\{[\s\S]*?intro:[^,]+,)/
+  );
   if (nlUpdatesMatch) {
     nlContent = nlContent.replace(
       nlUpdatesMatch[0],
@@ -711,12 +738,14 @@ function updateTranslations(entry, descriptionNl, descriptionEn) {
     writeFileSync(nlPath, nlContent);
     log('✓ Updated nl.ts translations', 'green');
   }
-  
+
   // Update en.ts
   const enPath = join(ROOT_DIR, 'apps/landing/src/lib/i18n/en.ts');
   let enContent = readFileSync(enPath, 'utf-8');
-  
-  const enUpdatesMatch = enContent.match(/(updatesPage:\s*\{[\s\S]*?intro:[^,]+,)/);
+
+  const enUpdatesMatch = enContent.match(
+    /(updatesPage:\s*\{[\s\S]*?intro:[^,]+,)/
+  );
   if (enUpdatesMatch) {
     enContent = enContent.replace(
       enUpdatesMatch[0],
@@ -736,13 +765,17 @@ function generateTranslationEntriesNl(entry, versionKey, descriptionNl) {
     `      v${versionKey}Title: 'Release ${entry.version}',`,
     `      v${versionKey}Description: '${escapeString(descriptionNl)}',`,
   ];
-  
+
   entry.bundles.forEach((bundle, index) => {
     const featureNum = index + 1;
-    lines.push(`      v${versionKey}F${featureNum}Title: '${escapeString(bundle.titleNl)}',`);
-    lines.push(`      v${versionKey}F${featureNum}Desc: '${escapeString(bundle.descriptionNl)}',`);
+    lines.push(
+      `      v${versionKey}F${featureNum}Title: '${escapeString(bundle.titleNl)}',`
+    );
+    lines.push(
+      `      v${versionKey}F${featureNum}Desc: '${escapeString(bundle.descriptionNl)}',`
+    );
   });
-  
+
   return lines.join('\n');
 }
 
@@ -755,13 +788,17 @@ function generateTranslationEntriesEn(entry, versionKey, descriptionEn) {
     `      v${versionKey}Title: 'Release ${entry.version}',`,
     `      v${versionKey}Description: '${escapeString(descriptionEn)}',`,
   ];
-  
+
   entry.bundles.forEach((bundle, index) => {
     const featureNum = index + 1;
-    lines.push(`      v${versionKey}F${featureNum}Title: '${escapeString(bundle.titleEn)}',`);
-    lines.push(`      v${versionKey}F${featureNum}Desc: '${escapeString(bundle.descriptionEn)}',`);
+    lines.push(
+      `      v${versionKey}F${featureNum}Title: '${escapeString(bundle.titleEn)}',`
+    );
+    lines.push(
+      `      v${versionKey}F${featureNum}Desc: '${escapeString(bundle.descriptionEn)}',`
+    );
   });
-  
+
   return lines.join('\n');
 }
 
@@ -843,7 +880,9 @@ async function main() {
       join(ROOT_DIR, 'apps/landing/src/pages/legal/UpdatesContent.tsx'),
       'utf-8'
     );
-    updatesContentHasVersion = updatesContent.includes(`version: '${newVersion}'`);
+    updatesContentHasVersion = updatesContent.includes(
+      `version: '${newVersion}'`
+    );
   } catch {
     // Ignore if UpdatesContent.tsx does not exist or cannot be read
   }
@@ -865,7 +904,12 @@ async function main() {
     // Ignore if CHANGELOG.md does not exist or cannot be read
   }
 
-  if (packageJsonHasVersion && updatesContentHasVersion && changelogHasVersion && translationsHaveVersion) {
+  if (
+    packageJsonHasVersion &&
+    updatesContentHasVersion &&
+    changelogHasVersion &&
+    translationsHaveVersion
+  ) {
     log(
       `\nVersion ${newVersion} already exists in all files. Skipping all file changes.`,
       'yellow'
@@ -909,8 +953,11 @@ async function main() {
     const result = updateUpdatesContent(entry);
     if (result.success) {
       log('✓ Updated UpdatesContent.tsx', 'green');
-      log(`  → Added ${entry.bundles.length} feature cards with smart icons`, 'cyan');
-      
+      log(
+        `  → Added ${entry.bundles.length} feature cards with smart icons`,
+        'cyan'
+      );
+
       // Update translation files
       logStep('6/9', 'Updating translations...');
       updateTranslations(entry, result.descriptionNl, result.descriptionEn);
