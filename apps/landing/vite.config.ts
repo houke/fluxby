@@ -1,5 +1,13 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { readFileSync } from 'fs';
+import { resolve } from 'path';
+
+// Read root package.json for app version
+const rootPackageJson = JSON.parse(
+  readFileSync(resolve(__dirname, '../../package.json'), 'utf-8')
+);
+const appVersion = rootPackageJson.version;
 
 const base = process.env.VITE_BASE_URL
   ? process.env.VITE_BASE_URL.endsWith('/')
@@ -31,4 +39,7 @@ export default defineConfig({
     outDir: 'dist',
   },
   base, // Dynamic base path for deployment (GitHub Pages)
+  define: {
+    __APP_VERSION__: JSON.stringify(appVersion),
+  },
 });

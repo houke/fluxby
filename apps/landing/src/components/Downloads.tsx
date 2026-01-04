@@ -2,9 +2,16 @@ import { useRef } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { Download, Monitor, Apple, AppWindow } from 'lucide-react';
 
+// Injected at build time from root package.json
+declare const __APP_VERSION__: string;
+
 const Downloads = () => {
   useLanguage();
   const downloadsRef = useRef<HTMLElement>(null);
+
+  // Version from build-time injection (falls back for dev)
+  const version =
+    typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '1.0.0';
 
   // Direct link to the latest release on GitHub
   const getDownloadLink = (filename: string) => {
@@ -20,12 +27,12 @@ const Downloads = () => {
       downloads: [
         {
           label: 'Apple Silicon',
-          link: getDownloadLink('Fluxby_1.0.0_aarch64.dmg'),
+          link: getDownloadLink(`Fluxby_${version}_aarch64.dmg`),
           type: 'M1/M2/M3/M4',
         },
         {
           label: 'Intel',
-          link: getDownloadLink('Fluxby_1.0.0_x64.dmg'),
+          link: getDownloadLink(`Fluxby_${version}_x64.dmg`),
           type: 'x64',
         },
       ],
@@ -38,7 +45,7 @@ const Downloads = () => {
       downloads: [
         {
           label: 'Download',
-          link: getDownloadLink('Fluxby_1.0.0_x64-setup.exe'),
+          link: getDownloadLink(`Fluxby_${version}_x64-setup.exe`),
           type: 'x64 EXE',
         },
       ],
@@ -51,7 +58,7 @@ const Downloads = () => {
       downloads: [
         {
           label: 'Download',
-          link: getDownloadLink('fluxby_1.0.0_amd64.AppImage'),
+          link: getDownloadLink(`fluxby_${version}_amd64.AppImage`),
           type: 'AMD64 AppImage',
         },
       ],
