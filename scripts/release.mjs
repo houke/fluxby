@@ -363,37 +363,29 @@ async function main() {
   log(`Version bump: ${bump}`, 'cyan');
   log(`New version: ${newVersion}`, 'green');
 
-  // Step 3.5: Check if version already exists in package.json, UpdatesContent.tsx, or CHANGELOG.md
-  let versionExists = false;
-  // Check package.json
-  if (pkg.version === newVersion) {
-    versionExists = true;
-  }
-  // Check UpdatesContent.tsx
+  // Step 3.5: Check if version already exists in each file
+  let packageJsonHasVersion = pkg.version === newVersion;
+  let updatesContentHasVersion = false;
   try {
     const updatesContent = readFileSync(
       join(ROOT_DIR, 'apps/landing/src/pages/legal/UpdatesContent.tsx'),
       'utf-8'
     );
-    if (updatesContent.includes(`version: '${newVersion}'`)) {
-      versionExists = true;
-    }
+    updatesContentHasVersion = updatesContent.includes(`version: '${newVersion}'`);
   } catch {
     // Ignore if UpdatesContent.tsx does not exist or cannot be read
   }
-  // Check CHANGELOG.md
+  let changelogHasVersion = false;
   try {
     const changelogFile = readFileSync(join(ROOT_DIR, 'CHANGELOG.md'), 'utf-8');
-    if (changelogFile.includes(`v${newVersion}`)) {
-      versionExists = true;
-    }
+    changelogHasVersion = changelogFile.includes(`v${newVersion}`);
   } catch {
     // Ignore if CHANGELOG.md does not exist or cannot be read
   }
 
-  if (versionExists) {
+  if (packageJsonHasVersion && updatesContentHasVersion && changelogHasVersion) {
     log(
-      `\nVersion ${newVersion} already exists in one or more files. Skipping file changes.`,
+      `\nVersion ${newVersion} already exists in all files. Skipping all file changes.`,
       'yellow'
     );
     return;
@@ -422,13 +414,21 @@ async function main() {
   logStep('5/7', 'Updating files...');
 
   // Update package.json
-  updatePackageJsonVersion(newVersion);
-  log('✓ Updated package.json', 'green');
+  if (!packageJsonHasVersion) {
+    updatePackageJsonVersion(newVersion);
+    log('✓ Updated package.json', 'green');
+  } else {
+    log('⏭️ Skipped package.json (version already exists)', 'yellow');
+  }
 
   // Update UpdatesContent.tsx
   const entry = generateUpdatesEntry(commits, newVersion);
-  if (updateUpdatesContent(entry)) {
-    log('✓ Updated UpdatesContent.tsx', 'green');
+  if (!updatesContentHasVersion) {
+    if (updateUpdatesContent(entry)) {
+      log('✓ Updated UpdatesContent.tsx', 'green');
+    }
+  } else {
+    log('⏭️ Skipped UpdatesContent.tsx (version already exists)', 'yellow');
   }
 
   // Generate API assets (OpenAPI & Bruno)
@@ -437,18 +437,22 @@ async function main() {
   log('✓ Generated API assets', 'green');
 
   // Write CHANGELOG.md
-  const changelogPath = join(ROOT_DIR, 'CHANGELOG.md');
-  let existingChangelog = '';
-  if (existsSync(changelogPath)) {
-    existingChangelog = readFileSync(changelogPath, 'utf-8');
-    // Remove header if present
-    existingChangelog = existingChangelog.replace(/^# Changelog\n+/, '');
+  if (!changelogHasVersion) {
+    const changelogPath = join(ROOT_DIR, 'CHANGELOG.md');
+    let existingChangelog = '';
+    if (existsSync(changelogPath)) {
+      existingChangelog = readFileSync(changelogPath, 'utf-8');
+      // Remove header if present
+      existingChangelog = existingChangelog.replace(/^# Changelog\n+/, '');
+    }
+    writeFileSync(
+      changelogPath,
+      `# Changelog\n\n${changelog}${existingChangelog}`
+    );
+    log('✓ Updated CHANGELOG.md', 'green');
+  } else {
+    log('⏭️ Skipped CHANGELOG.md (version already exists)', 'yellow');
   }
-  writeFileSync(
-    changelogPath,
-    `# Changelog\n\n${changelog}${existingChangelog}`
-  );
-  log('✓ Updated CHANGELOG.md', 'green');
 
   // Step 6: Commit and tag
   logStep('6/7', 'Creating commit and tag...');
