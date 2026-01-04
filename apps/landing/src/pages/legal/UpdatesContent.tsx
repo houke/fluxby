@@ -23,7 +23,7 @@ const UpdatesContent = () => {
   const releases = [
     {
       version: '1.0.0',
-      date: updatesPage?.v100Date || '24 december 2024',
+      date: updatesPage?.v100Date || '04 januari 2026',
       title: updatesPage?.v100Title || 'Eerste release',
       description:
         updatesPage?.v100Description ||

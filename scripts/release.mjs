@@ -363,6 +363,42 @@ async function main() {
   log(`Version bump: ${bump}`, 'cyan');
   log(`New version: ${newVersion}`, 'green');
 
+  // Step 3.5: Check if version already exists in package.json, UpdatesContent.tsx, or CHANGELOG.md
+  let versionExists = false;
+  // Check package.json
+  if (pkg.version === newVersion) {
+    versionExists = true;
+  }
+  // Check UpdatesContent.tsx
+  try {
+    const updatesContent = readFileSync(
+      join(ROOT_DIR, 'apps/landing/src/pages/legal/UpdatesContent.tsx'),
+      'utf-8'
+    );
+    if (updatesContent.includes(`version: '${newVersion}'`)) {
+      versionExists = true;
+    }
+  } catch {
+    // Ignore if UpdatesContent.tsx does not exist or cannot be read
+  }
+  // Check CHANGELOG.md
+  try {
+    const changelogFile = readFileSync(join(ROOT_DIR, 'CHANGELOG.md'), 'utf-8');
+    if (changelogFile.includes(`v${newVersion}`)) {
+      versionExists = true;
+    }
+  } catch {
+    // Ignore if CHANGELOG.md does not exist or cannot be read
+  }
+
+  if (versionExists) {
+    log(
+      `\nVersion ${newVersion} already exists in one or more files. Skipping file changes.`,
+      'yellow'
+    );
+    return;
+  }
+
   // Step 4: Generate changelog
   logStep('4/7', 'Generating changelog...');
   const changelog = generateChangelog(commits, newVersion);
