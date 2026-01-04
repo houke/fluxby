@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.0.4
+
+**Release Date:** 2026-01-04
+
+### Chores
+
+- **ci:** fix set-output deprecation and mark release as latest
+
 ## v1.0.3
 
 **Release Date:** 2026-01-04
