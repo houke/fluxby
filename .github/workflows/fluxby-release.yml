@@ -352,7 +352,11 @@ jobs:
     if: needs.initialize-release.outputs.dry_run != 'true'
     steps:
       - name: Publish release
-        uses: softprops/action-gh-release@v1
-        with:
-          tag_name: v${{ needs.initialize-release.outputs.version }}
-          draft: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh api \
+            --method PATCH \
+            -H "Accept: application/vnd.github+json" \
+            /repos/${{ github.repository }}/releases/${{ needs.create-release.outputs.release_id }} \
+            -f draft=false

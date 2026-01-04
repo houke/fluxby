@@ -1,6 +1,5 @@
 import { useLanguage } from '../../contexts/LanguageContext';
 import {
-  ,
   BarChart3,
   BookOpen,
   Brain,
@@ -23,18 +22,18 @@ const UpdatesContent = () => {
   const updatesPage = t.legal?.updatesPage;
 
   const releases = [
-        {
+    {
       version: '1.0.2',
       date: updatesPage?.v102Date || '4 januari 2026',
       title: updatesPage?.v102Title || 'Release 1.0.2',
-      description:
-        updatesPage?.v102Description ||
-        '5 bugfixes.',
+      description: updatesPage?.v102Description || '5 bugfixes.',
       features: [
         {
           icon: Wrench,
           title: updatesPage?.v102F1Title || 'Bugfixes',
-          description: updatesPage?.v102F1Desc || '5 bugs opgelost. Zie changelog voor details.',
+          description:
+            updatesPage?.v102F1Desc ||
+            '5 bugs opgelost. Zie changelog voor details.',
         },
       ],
     },

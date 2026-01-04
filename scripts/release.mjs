@@ -803,13 +803,28 @@ function generateTranslationEntriesEn(entry, versionKey, descriptionEn) {
 }
 
 /**
- * Update package.json version
+ * Update package.json version (root, tauri app, and tauri.conf.json)
  */
 function updatePackageJsonVersion(newVersion) {
+  // Update root package.json
   const packagePath = join(ROOT_DIR, 'package.json');
   const pkg = JSON.parse(readFileSync(packagePath, 'utf-8'));
   pkg.version = newVersion;
   writeFileSync(packagePath, JSON.stringify(pkg, null, 2) + '\n');
+
+  // Update apps/tauri/package.json
+  const tauriPackagePath = join(ROOT_DIR, 'apps/tauri/package.json');
+  const tauriPkg = JSON.parse(readFileSync(tauriPackagePath, 'utf-8'));
+  tauriPkg.version = newVersion;
+  writeFileSync(tauriPackagePath, JSON.stringify(tauriPkg, null, 2) + '\n');
+
+  // Update apps/tauri/tauri.conf.json
+  const tauriConfPath = join(ROOT_DIR, 'apps/tauri/tauri.conf.json');
+  const tauriConf = JSON.parse(readFileSync(tauriConfPath, 'utf-8'));
+  tauriConf.version = newVersion;
+  writeFileSync(tauriConfPath, JSON.stringify(tauriConf, null, 2) + '\n');
+
+  log(`✓ Updated versions to ${newVersion} in package.json, apps/tauri/package.json, and tauri.conf.json`, 'green');
 }
 
 /**
