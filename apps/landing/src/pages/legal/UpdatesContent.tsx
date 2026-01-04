@@ -1,6 +1,5 @@
 import { useLanguage } from '../../contexts/LanguageContext';
 import {
-  ,
   BarChart3,
   BookOpen,
   Brain,

@@ -304,10 +304,9 @@ jobs:
           cache: 'npm'
 
       - name: Install Rust stable
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: stable
-          profile: minimal
 
       - name: Add Rust target
         if: matrix.rust-target != ''
@@ -359,4 +358,5 @@ jobs:
             --method PATCH \
             -H "Accept: application/vnd.github+json" \
             /repos/${{ github.repository }}/releases/${{ needs.create-release.outputs.release_id }} \
-            -f draft=false
+            -f draft=false \
+            -f make_latest=true
