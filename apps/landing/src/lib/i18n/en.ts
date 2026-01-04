@@ -1407,6 +1407,11 @@ export const en: LandingTranslationKeys = {
     updatesPage: {
       intro:
         "See what's new in Fluxby. Here you'll find all updates and new features.",
+      v103Date: 'January 4, 2026',
+      v103Title: 'Release 1.0.3',
+      v103Description: '1 bug fix.',
+      v103F1Title: 'Sync versions to tauri files and fix duplicate releases',
+      v103F1Desc: 'Bug fixed.',
       v102Date: 'January 4, 2026',
       v102Title: 'Release 1.0.2',
       v102Description: '5 bug fixes.',

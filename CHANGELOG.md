@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.0.3
+
+**Release Date:** 2026-01-04
+
+### Bug Fixes
+
+- **release:** sync versions to tauri files and fix duplicate releases
+
 ## v1.0.2
 
 **Release Date:** 2026-01-04

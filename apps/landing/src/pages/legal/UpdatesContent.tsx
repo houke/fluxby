@@ -1,5 +1,6 @@
 import { useLanguage } from '../../contexts/LanguageContext';
 import {
+  ,
   BarChart3,
   BookOpen,
   Brain,
@@ -8,6 +9,7 @@ import {
   FileSpreadsheet,
   Globe,
   Palette,
+  Rocket,
   Shield,
   Sparkles,
   Tag,
@@ -22,6 +24,21 @@ const UpdatesContent = () => {
   const updatesPage = t.legal?.updatesPage;
 
   const releases = [
+        {
+      version: '1.0.3',
+      date: updatesPage?.v103Date || '4 januari 2026',
+      title: updatesPage?.v103Title || 'Release 1.0.3',
+      description:
+        updatesPage?.v103Description ||
+        '1 bugfix.',
+      features: [
+        {
+          icon: Rocket,
+          title: updatesPage?.v103F1Title || 'Sync versions to tauri files and fix duplicate releases',
+          description: updatesPage?.v103F1Desc || 'Bug opgelost.',
+        },
+      ],
+    },
     {
       version: '1.0.2',
       date: updatesPage?.v102Date || '4 januari 2026',
