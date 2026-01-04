@@ -237,6 +237,26 @@ jobs:
           echo "Changelog content:"
           cat changelog_body.md
 
+      - name: Build release body with downloads table
+        id: build-body
+        run: |
+          VERSION="${{ needs.initialize-release.outputs.version }}"
+          cat changelog_body.md > release_body.md
+          cat >> release_body.md << EOF
+
+          ---
+
+          ## Downloads
+
+          | Platform | Download |
+          |----------|----------|
+          | Windows | [Fluxby_${VERSION}_x64-setup.exe](https://github.com/${{ github.repository }}/releases/download/v${VERSION}/Fluxby_${VERSION}_x64-setup.exe) |
+          | macOS (Intel) | [Fluxby_${VERSION}_x64.dmg](https://github.com/${{ github.repository }}/releases/download/v${VERSION}/Fluxby_${VERSION}_x64.dmg) |
+          | macOS (Apple Silicon) | [Fluxby_${VERSION}_aarch64.dmg](https://github.com/${{ github.repository }}/releases/download/v${VERSION}/Fluxby_${VERSION}_aarch64.dmg) |
+          | Linux (AppImage) | [fluxby_${VERSION}_amd64.AppImage](https://github.com/${{ github.repository }}/releases/download/v${VERSION}/fluxby_${VERSION}_amd64.AppImage) |
+          | Linux (Debian) | [fluxby_${VERSION}_amd64.deb](https://github.com/${{ github.repository }}/releases/download/v${VERSION}/fluxby_${VERSION}_amd64.deb) |
+          EOF
+
       - name: Create release
         id: create-release
         uses: softprops/action-gh-release@v1
@@ -245,28 +265,7 @@ jobs:
           name: Fluxby v${{ needs.initialize-release.outputs.version }}
           draft: true
           prerelease: false
-          body_path: changelog_body.md
-          append_body: true
-
-      - name: Add downloads table to release
-        uses: softprops/action-gh-release@v1
-        with:
-          tag_name: v${{ needs.initialize-release.outputs.version }}
-          draft: true
-          append_body: true
-          body: |
-
-            ---
-
-            ## Downloads
-
-            | Platform | Download |
-            |----------|----------|
-            | Windows | [Fluxby_${{ needs.initialize-release.outputs.version }}_x64-setup.exe](https://github.com/${{ github.repository }}/releases/download/v${{ needs.initialize-release.outputs.version }}/Fluxby_${{ needs.initialize-release.outputs.version }}_x64-setup.exe) |
-            | macOS (Intel) | [Fluxby_${{ needs.initialize-release.outputs.version }}_x64.dmg](https://github.com/${{ github.repository }}/releases/download/v${{ needs.initialize-release.outputs.version }}/Fluxby_${{ needs.initialize-release.outputs.version }}_x64.dmg) |
-            | macOS (Apple Silicon) | [Fluxby_${{ needs.initialize-release.outputs.version }}_aarch64.dmg](https://github.com/${{ github.repository }}/releases/download/v${{ needs.initialize-release.outputs.version }}/Fluxby_${{ needs.initialize-release.outputs.version }}_aarch64.dmg) |
-            | Linux (AppImage) | [fluxby_${{ needs.initialize-release.outputs.version }}_amd64.AppImage](https://github.com/${{ github.repository }}/releases/download/v${{ needs.initialize-release.outputs.version }}/fluxby_${{ needs.initialize-release.outputs.version }}_amd64.AppImage) |
-            | Linux (Debian) | [fluxby_${{ needs.initialize-release.outputs.version }}_amd64.deb](https://github.com/${{ github.repository }}/releases/download/v${{ needs.initialize-release.outputs.version }}/fluxby_${{ needs.initialize-release.outputs.version }}_amd64.deb) |
+          body_path: release_body.md
 
   # Step 3: Build for all platforms
   build-tauri:
@@ -340,11 +339,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: v${{ needs.initialize-release.outputs.version }}
-          releaseName: Fluxby v${{ needs.initialize-release.outputs.version }}
-          releaseBody: ''
-          releaseDraft: true
-          prerelease: false
+          releaseId: ${{ needs.create-release.outputs.release_id }}
           projectPath: apps/tauri
           args: ${{ matrix.args }}
 
