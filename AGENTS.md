@@ -518,4 +518,4 @@ The commit message should:
 - Be comprehensive (include all changes in the body)
 - List specific files/components changed when helpful
 - Mention translations, tests, and docs updates if applicable
-- End the commit message body with "developed by [model name] used for generation" (replacing [model name] with the actual model name used)
+- End the commit message body with "---" followed by "Developed by [model name]" on a new line (replacing [model name] with the actual model name used)
