@@ -20,7 +20,7 @@ export default function NotFound() {
 
   // Navigate to dashboard using React Router (soft navigation)
   const goToDashboard = () => {
-    navigate('/');
+    navigate('/dashboard');
   };
 
   return (

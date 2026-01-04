@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/layout/Layout';
 import Dashboard from './pages/Dashboard';
 import Transactions from './pages/Transactions';
@@ -47,7 +47,8 @@ function AppContent() {
       <Onboarding />
       <Routes>
         <Route path='/' element={<Layout />}>
-          <Route index element={<Dashboard />} />
+          <Route index element={<Navigate to='/dashboard' replace />} />
+          <Route path='dashboard' element={<Dashboard />} />
           <Route path='transactions' element={<Transactions />} />
           <Route path='analytics' element={<Analytics />} />
           <Route path='budgets' element={<Budgets />} />

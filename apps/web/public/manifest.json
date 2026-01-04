@@ -2,7 +2,7 @@
   "name": "Fluxby",
   "short_name": "Fluxby",
   "description": "Local-first financial dashboard for bank transactions",
-  "start_url": "/app/",
+  "start_url": "/app/dashboard",
   "display": "standalone",
   "background_color": "#0f172a",
   "theme_color": "#8B5CF6",

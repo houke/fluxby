@@ -58,7 +58,7 @@ export default function Layout() {
 
   const navItems = [
     {
-      to: '/',
+      to: '/dashboard',
       icon: LayoutDashboard,
       label: t.nav.dashboard,
       onboarding: 'nav-dashboard',
