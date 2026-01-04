@@ -92,7 +92,7 @@ jobs:
             # Triggered by other means: get the latest tag
             PREV_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
           fi
-          
+
           if [ -n "$PREV_TAG" ]; then
             REVISION_RANGE="${PREV_TAG}..HEAD"
           else
@@ -255,16 +255,16 @@ jobs:
           draft: true
           append_body: true
           body: |
-            
+
             ---
 
             ## Downloads
 
             | Platform | Download |
             |----------|----------|
-            | Windows | [fluxby_${{ needs.initialize-release.outputs.version }}_x64-setup.exe](https://github.com/${{ github.repository }}/releases/download/v${{ needs.initialize-release.outputs.version }}/fluxby_${{ needs.initialize-release.outputs.version }}_x64-setup.exe) |
-            | macOS (Intel) | [fluxby_${{ needs.initialize-release.outputs.version }}_x64.dmg](https://github.com/${{ github.repository }}/releases/download/v${{ needs.initialize-release.outputs.version }}/fluxby_${{ needs.initialize-release.outputs.version }}_x64.dmg) |
-            | macOS (Apple Silicon) | [fluxby_${{ needs.initialize-release.outputs.version }}_aarch64.dmg](https://github.com/${{ github.repository }}/releases/download/v${{ needs.initialize-release.outputs.version }}/fluxby_${{ needs.initialize-release.outputs.version }}_aarch64.dmg) |
+            | Windows | [Fluxby_${{ needs.initialize-release.outputs.version }}_x64-setup.exe](https://github.com/${{ github.repository }}/releases/download/v${{ needs.initialize-release.outputs.version }}/Fluxby_${{ needs.initialize-release.outputs.version }}_x64-setup.exe) |
+            | macOS (Intel) | [Fluxby_${{ needs.initialize-release.outputs.version }}_x64.dmg](https://github.com/${{ github.repository }}/releases/download/v${{ needs.initialize-release.outputs.version }}/Fluxby_${{ needs.initialize-release.outputs.version }}_x64.dmg) |
+            | macOS (Apple Silicon) | [Fluxby_${{ needs.initialize-release.outputs.version }}_aarch64.dmg](https://github.com/${{ github.repository }}/releases/download/v${{ needs.initialize-release.outputs.version }}/Fluxby_${{ needs.initialize-release.outputs.version }}_aarch64.dmg) |
             | Linux (AppImage) | [fluxby_${{ needs.initialize-release.outputs.version }}_amd64.AppImage](https://github.com/${{ github.repository }}/releases/download/v${{ needs.initialize-release.outputs.version }}/fluxby_${{ needs.initialize-release.outputs.version }}_amd64.AppImage) |
             | Linux (Debian) | [fluxby_${{ needs.initialize-release.outputs.version }}_amd64.deb](https://github.com/${{ github.repository }}/releases/download/v${{ needs.initialize-release.outputs.version }}/fluxby_${{ needs.initialize-release.outputs.version }}_amd64.deb) |
 
@@ -340,7 +340,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          releaseId: ${{ needs.create-release.outputs.release_id }}
+          tagName: v${{ needs.initialize-release.outputs.version }}
+          releaseName: Fluxby v${{ needs.initialize-release.outputs.version }}
+          releaseBody: ''
+          releaseDraft: true
+          prerelease: false
           projectPath: apps/tauri
           args: ${{ matrix.args }}
 
