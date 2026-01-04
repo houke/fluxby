@@ -1943,7 +1943,7 @@ export default function Transactions() {
 
         {/* Summary Cards - Same as Dashboard */}
         <div
-          className='-mx-3 grid gap-px bg-border sm:mx-0 sm:gap-4 sm:bg-transparent md:grid-cols-2 lg:grid-cols-4'
+          className='-mx-3 grid grid-cols-2 gap-px bg-border sm:mx-0 sm:gap-4 sm:bg-transparent lg:grid-cols-4'
           data-onboarding='transaction-summary'
         >
           <Card className='h-full rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'>

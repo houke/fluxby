@@ -1730,7 +1730,7 @@ function StatsCard({
               bgColor || getBgColor(iconColor)
             } flex items-center justify-center`}
           >
-            <Icon className={`h-6 w-6 ${iconColor}`} />
+            <Icon className={`h-5 w-5 sm:h-6 sm:w-6 ${iconColor}`} />
           </div>
         </div>
       </CardContent>
