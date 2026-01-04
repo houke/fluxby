@@ -13,20 +13,27 @@ const Downloads = () => {
 
   const platforms = [
     {
-      id: 'mac',
-      name: 'macOS',
+      id: 'mac-arm',
+      name: 'macOS (Apple Silicon)',
       icon: Apple,
-      description: 'Native ervaring voor Apple Silicon & Intel Macs.',
-      // We use the DMG for the public download link as it's the standard for macOS distribution
-      link: getDownloadLink('fluxby_1.0.0_aarch64.dmg'),
-      type: 'Universal DMG',
+      description: 'Voor M1, M2, M3, en M4 Macs.',
+      link: getDownloadLink('Fluxby_1.0.0_aarch64.dmg'),
+      type: 'ARM64 DMG',
+    },
+    {
+      id: 'mac-intel',
+      name: 'macOS (Intel)',
+      icon: Apple,
+      description: 'Voor Intel-gebaseerde Macs.',
+      link: getDownloadLink('Fluxby_1.0.0_x64.dmg'),
+      type: 'x64 DMG',
     },
     {
       id: 'windows',
       name: 'Windows',
       icon: Monitor,
       description: 'Eenvoudige installatie voor Windows 10 & 11.',
-      link: getDownloadLink('fluxby_1.0.0_x64-setup.exe'),
+      link: getDownloadLink('Fluxby_1.0.0_x64-setup.exe'),
       type: 'x64 EXE',
     },
     {
@@ -56,7 +63,7 @@ const Downloads = () => {
           </p>
         </div>
 
-        <div className='grid gap-8 md:grid-cols-3'>
+        <div className='grid gap-8 md:grid-cols-2 lg:grid-cols-4'>
           {platforms.map((platform) => {
             const Icon = platform.icon;
             return (

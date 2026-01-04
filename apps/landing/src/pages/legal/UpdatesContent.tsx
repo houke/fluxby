@@ -21,18 +21,18 @@ const UpdatesContent = () => {
   const updatesPage = t.legal?.updatesPage;
 
   const releases = [
-        {
+    {
       version: '1.0.1',
       date: updatesPage?.v101Date || '4 januari 2026',
       title: updatesPage?.v101Title || 'Release 1.0.1',
       description:
-        updatesPage?.v101Description ||
-        'Nieuwe verbeteringen en bugfixes.',
+        updatesPage?.v101Description || 'Nieuwe verbeteringen en bugfixes.',
       features: [
         // Features from v1.0.1
         {
           icon: Sparkles,
-          title: updatesPage?.v101F1Title || 'implement per-file version checking',
+          title:
+            updatesPage?.v101F1Title || 'implement per-file version checking',
           description: updatesPage?.v101F1Desc || 'See changelog for details.',
         },
       ],
