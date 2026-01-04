@@ -1,7 +1,6 @@
 name: 'Fluxby Release'
 description: 'Builds, tags, and publishes a new Fluxby release when a version tag (v*) is pushed. Do not run manually.'
 
-
 on:
   push:
     tags:
@@ -44,14 +43,14 @@ jobs:
         if: github.event_name == 'workflow_dispatch'
         run: |
           VERSION="${{ steps.get-version.outputs.version }}"
-          
+
           # Update package.json files
           sed -i "s/\"version\": \"[^\"]*\"/\"version\": \"$VERSION\"/" package.json
           sed -i "s/\"version\": \"[^\"]*\"/\"version\": \"$VERSION\"/" apps/tauri/package.json
-          
+
           # Update tauri.conf.json
           sed -i "s/\"version\": \"[^\"]*\"/\"version\": \"$VERSION\"/" apps/tauri/tauri.conf.json
-          
+
           echo "Updated versions to $VERSION"
 
       - name: Update UpdatesContent.tsx
@@ -86,7 +85,13 @@ jobs:
         id: changelog
         run: |
           # Get previous tag
-          PREV_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            # Triggered by tag push: we are ON the tag, so we need the one before it
+            PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          else
+            # Triggered by other means: get the latest tag
+            PREV_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          fi
           
           if [ -n "$PREV_TAG" ]; then
             REVISION_RANGE="${PREV_TAG}..HEAD"
@@ -126,6 +131,51 @@ jobs:
               echo "$PERF"
               echo ""
             fi
+
+            # Refactoring
+            REFACTOR=$(git log $REVISION_RANGE --oneline --no-merges --grep="^refactor" --format="- %s" 2>/dev/null | sed 's/^- refactor(\([^)]*\)): /- **\1:** /' | sed 's/^- refactor: /- /')
+            if [ -n "$REFACTOR" ]; then
+              echo "### 🛠️ Refactoring"
+              echo ""
+              echo "$REFACTOR"
+              echo ""
+            fi
+
+            # Documentation
+            DOCS=$(git log $REVISION_RANGE --oneline --no-merges --grep="^docs" --format="- %s" 2>/dev/null | sed 's/^- docs(\([^)]*\)): /- **\1:** /' | sed 's/^- docs: /- /')
+            if [ -n "$DOCS" ]; then
+              echo "### 📝 Documentation"
+              echo ""
+              echo "$DOCS"
+              echo ""
+            fi
+
+            # Chores
+            CHORE=$(git log $REVISION_RANGE --oneline --no-merges --grep="^chore" --format="- %s" 2>/dev/null | sed 's/^- chore(\([^)]*\)): /- **\1:** /' | sed 's/^- chore: /- /')
+            if [ -n "$CHORE" ]; then
+              echo "### 🧹 Chores"
+              echo ""
+              echo "$CHORE"
+              echo ""
+            fi
+
+            # Styles
+            STYLES=$(git log $REVISION_RANGE --oneline --no-merges --grep="^style" --format="- %s" 2>/dev/null | sed 's/^- style(\([^)]*\)): /- **\1:** /' | sed 's/^- style: /- /')
+            if [ -n "$STYLES" ]; then
+              echo "### 🎨 Styles"
+              echo ""
+              echo "$STYLES"
+              echo ""
+            fi
+
+            # Tests
+            TESTS=$(git log $REVISION_RANGE --oneline --no-merges --grep="^test" --format="- %s" 2>/dev/null | sed 's/^- test(\([^)]*\)): /- **\1:** /' | sed 's/^- test: /- /')
+            if [ -n "$TESTS" ]; then
+              echo "### 🧪 Tests"
+              echo ""
+              echo "$TESTS"
+              echo ""
+            fi
           } > changelog_body.md
 
           # Store changelog as output
@@ -150,7 +200,7 @@ jobs:
           git add -A
           git commit -m "chore(release): v${VERSION} [skip ci]"
           git tag -a "v${VERSION}" -m "Release v${VERSION}"
-          
+
           git push origin main
           git push origin "v${VERSION}"
           echo "Committed, tagged and pushed version $VERSION"
@@ -228,9 +278,14 @@ jobs:
           cache: 'npm'
 
       - name: Install Rust stable
-        uses: dtolnay/rust-action@stable
+        uses: actions-rs/toolchain@v1
         with:
-          targets: ${{ matrix.rust-target }}
+          toolchain: stable
+          profile: minimal
+
+      - name: Add Rust target
+        if: matrix.rust-target != ''
+        run: rustup target add ${{ matrix.rust-target }}
 
       - name: Install Linux dependencies
         if: matrix.platform == 'ubuntu-22.04'
