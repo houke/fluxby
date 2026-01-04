@@ -14,9 +14,19 @@ import {
   type Profile,
   type ProfileCreate,
 } from '@fluxby/shared';
+import { readFromOPFSSync, isSettingsCacheInitialized } from '@fluxby/database';
 
 // Note: getApiBaseUrl/setApiBaseUrl are only needed for HTTP API mode (api-http.ts)
 // The local-first OPFS mode doesn't need these functions
+
+// Helper to get active profile ID from OPFS cache
+function getActiveProfileIdSync(): string | null {
+  if (typeof window === 'undefined') return null;
+  if (isSettingsCacheInitialized()) {
+    return readFromOPFSSync<string>('fluxby.activeProfileId');
+  }
+  return null;
+}
 
 /**
  * The api object provides compatibility with the old HTTP API interface.
@@ -886,7 +896,7 @@ export const api = {
 
   createDemoData: async () => {
     const ds = getDataService();
-    const profileId = window.localStorage.getItem('fluxby.activeProfileId');
+    const profileId = getActiveProfileIdSync();
     if (!profileId) throw new Error('No active profile');
     return ds.createDemoData(profileId);
   },

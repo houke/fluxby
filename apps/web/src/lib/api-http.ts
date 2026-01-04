@@ -1,21 +1,40 @@
 import type { Profile, ProfileCreate } from '@fluxby/shared';
+import {
+  readFromOPFSSync,
+  writeToOPFSWithCache,
+  deleteFromOPFSWithCache,
+  isSettingsCacheInitialized,
+} from '@fluxby/database';
 
 const API_STORAGE_KEY = 'finance.apiBaseUrl';
+const PROFILE_KEY = 'fluxby.activeProfileId';
 
 export function getApiBaseUrl(): string {
   if (typeof window === 'undefined') return '';
-  const value = window.localStorage.getItem(API_STORAGE_KEY);
-  return (value ?? '').trim();
+  if (isSettingsCacheInitialized()) {
+    const value = readFromOPFSSync<string>(API_STORAGE_KEY);
+    return (value ?? '').trim();
+  }
+  return '';
 }
 
 export function setApiBaseUrl(value: string): void {
   if (typeof window === 'undefined') return;
   const next = value.trim();
   if (!next) {
-    window.localStorage.removeItem(API_STORAGE_KEY);
+    deleteFromOPFSWithCache(API_STORAGE_KEY).catch(() => {});
     return;
   }
-  window.localStorage.setItem(API_STORAGE_KEY, next);
+  writeToOPFSWithCache(API_STORAGE_KEY, next).catch(() => {});
+}
+
+// Helper to get active profile ID from OPFS cache
+function getActiveProfileIdSync(): string {
+  if (typeof window === 'undefined') return '';
+  if (isSettingsCacheInitialized()) {
+    return readFromOPFSSync<string>(PROFILE_KEY) || '';
+  }
+  return '';
 }
 
 function buildApiUrl(endpoint: string): string {
@@ -37,10 +56,7 @@ async function fetchAPI<T>(
     ...options,
     headers: {
       'Content-Type': 'application/json',
-      'X-Profile-ID':
-        typeof window !== 'undefined'
-          ? window.localStorage.getItem('fluxby.activeProfileId') || ''
-          : '',
+      'X-Profile-ID': getActiveProfileIdSync(),
       ...options?.headers,
     },
   });
@@ -428,10 +444,7 @@ export const api = {
     formData.append('file', file);
     formData.append('bank', bank);
 
-    const profileId =
-      typeof window !== 'undefined'
-        ? window.localStorage.getItem('fluxby.activeProfileId') || ''
-        : '';
+    const profileId = getActiveProfileIdSync();
 
     const response = await fetch(buildApiUrl('/import/csv'), {
       method: 'POST',
@@ -457,10 +470,7 @@ export const api = {
     formData.append('file', file);
     formData.append('bank', bank);
 
-    const profileId =
-      typeof window !== 'undefined'
-        ? window.localStorage.getItem('fluxby.activeProfileId') || ''
-        : '';
+    const profileId = getActiveProfileIdSync();
 
     const response = await fetch(buildApiUrl('/import/preview'), {
       method: 'POST',
@@ -488,10 +498,7 @@ export const api = {
     const formData = new FormData();
     formData.append('file', file);
 
-    const profileId =
-      typeof window !== 'undefined'
-        ? window.localStorage.getItem('fluxby.activeProfileId') || ''
-        : '';
+    const profileId = getActiveProfileIdSync();
 
     const response = await fetch(buildApiUrl('/import/generic/parse'), {
       method: 'POST',
@@ -535,10 +542,7 @@ export const api = {
       formData.append('bank', bank);
     }
 
-    const profileId =
-      typeof window !== 'undefined'
-        ? window.localStorage.getItem('fluxby.activeProfileId') || ''
-        : '';
+    const profileId = getActiveProfileIdSync();
 
     const response = await fetch(buildApiUrl('/import/generic/import'), {
       method: 'POST',
@@ -738,10 +742,7 @@ export const api = {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-Profile-ID':
-            typeof window !== 'undefined'
-              ? window.localStorage.getItem('fluxby.activeProfileId') || ''
-              : '',
+          'X-Profile-ID': getActiveProfileIdSync(),
         },
         body: JSON.stringify({ iban }),
       }

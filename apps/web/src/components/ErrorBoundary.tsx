@@ -1,6 +1,7 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { AlertTriangle, Home, RefreshCw } from 'lucide-react';
 import { resetAppAndRestartOnboarding } from '@/lib/database-reset';
+import { readFromOPFSSync } from '@fluxby/database';
 
 interface Props {
   children: ReactNode;
@@ -50,7 +51,7 @@ export class ErrorBoundary extends Component<Props, State> {
     if (message.includes('memory access out of bounds')) return true;
 
     try {
-      return window.localStorage.getItem('fluxby-db-fatal') === 'true';
+      return readFromOPFSSync('fluxby-db-fatal') === 'true';
     } catch {
       return false;
     }

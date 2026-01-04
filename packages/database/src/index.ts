@@ -27,6 +27,9 @@ export * from './backup.js';
 // Session management
 export * from './session.js';
 
+// OPFS Settings Storage
+export * from './opfs-settings.js';
+
 // Factory function for creating database instance
 export {
   createDatabase,

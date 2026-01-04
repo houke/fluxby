@@ -13,10 +13,18 @@ import { useEncryption } from '@/contexts/EncryptionContext';
 import { DEMO_PROFILE_ID } from '@fluxby/shared';
 import { isDatabaseReady as isGlobalDbReady } from '@/lib/db-singleton';
 import type { OnboardingContextType, OnboardingState } from './types';
+import {
+  readFromOPFSSync,
+  writeToOPFSWithCache,
+  deleteFromOPFSWithCache,
+  isSettingsCacheInitialized,
+} from '@fluxby/database';
 
 const STORAGE_KEY = 'fluxby_onboarding';
 // Synchronous flag to prevent onboarding restart on immediate refresh
 const COMPLETED_FLAG_KEY = 'fluxby_onboarding_complete';
+const RESTART_FLAG_KEY = 'fluxby-onboarding-restart';
+const SWITCHING_OVERLAY_KEY = 'fluxby-switching-overlay';
 
 // Default state
 const defaultState: OnboardingState = {
@@ -29,61 +37,58 @@ const defaultState: OnboardingState = {
   language: null,
 };
 
-// Check if onboarding restart was requested
+// Check if onboarding restart was requested (from OPFS)
 const checkRestartFlag = (): boolean => {
-  const restartFlag = localStorage.getItem('fluxby-onboarding-restart');
-  if (restartFlag === 'true') {
-    // Clear the flag immediately
-    localStorage.removeItem('fluxby-onboarding-restart');
-    // Also remove the switching overlay flag so the app can hide the overlay when onboarding is ready
-    localStorage.removeItem('fluxby-switching-overlay');
+  if (!isSettingsCacheInitialized()) return false;
+
+  const restartFlag = readFromOPFSSync<boolean>(RESTART_FLAG_KEY);
+  if (restartFlag === true) {
+    // Clear the flag immediately (async)
+    deleteFromOPFSWithCache(RESTART_FLAG_KEY).catch(() => {});
+    // Also remove the switching overlay flag
+    deleteFromOPFSWithCache(SWITCHING_OVERLAY_KEY).catch(() => {});
     return true;
   }
   return false;
 };
 
-// Load state from localStorage
+// Load state from OPFS cache
 // On page refresh, don't auto-restart onboarding
 // User must manually restart from settings or mascot click
 const loadState = (): OnboardingState => {
   const shouldRestart = checkRestartFlag();
 
   if (shouldRestart) {
-    // Clear the completed flag when restarting
-    localStorage.removeItem(COMPLETED_FLAG_KEY);
+    // Clear the completed flag when restarting (async)
+    deleteFromOPFSWithCache(COMPLETED_FLAG_KEY).catch(() => {});
     // Start fresh onboarding
     return { ...defaultState, isActive: true };
   }
 
-  // Check synchronous completion flag FIRST
-  // This prevents race condition if page refreshes before useEffect saves full state
-  const completedFlag = localStorage.getItem(COMPLETED_FLAG_KEY);
-  if (completedFlag === 'true') {
-    return { ...defaultState, hasCompletedOnboarding: true, isActive: false };
-  }
+  // Check synchronous completion flag FIRST from OPFS cache
+  if (isSettingsCacheInitialized()) {
+    const completedFlag = readFromOPFSSync<boolean>(COMPLETED_FLAG_KEY);
+    if (completedFlag === true) {
+      return { ...defaultState, hasCompletedOnboarding: true, isActive: false };
+    }
 
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
+    // Try to load full state from OPFS cache
+    const stored = readFromOPFSSync<OnboardingState>(STORAGE_KEY);
     if (stored) {
-      const parsed = JSON.parse(stored);
       // CRITICAL: Always set isActive: false on page refresh
       // The user dismissed/closed the modal, so don't auto-restart
-      // They can resume manually from settings or mascot click
-      return { ...defaultState, ...parsed, isActive: false };
+      return { ...defaultState, ...stored, isActive: false };
     }
-  } catch {
-    // Ignore parse errors
   }
+
   return defaultState;
 };
 
-// Save state to localStorage
+// Save state to OPFS (async)
 const saveState = (state: OnboardingState) => {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  } catch {
+  writeToOPFSWithCache(STORAGE_KEY, state).catch(() => {
     // Ignore storage errors
-  }
+  });
 };
 
 // Provider component
@@ -309,8 +314,8 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
 
         // If restarting, start from beginning
         if (restart) {
-          // Also clear the completed flag in localStorage when restarting
-          localStorage.removeItem(COMPLETED_FLAG_KEY);
+          // Also clear the completed flag in OPFS when restarting
+          deleteFromOPFSWithCache(COMPLETED_FLAG_KEY).catch(() => {});
           return {
             ...prev,
             isActive: true,
@@ -367,9 +372,9 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
   // NOTE: Demo profile and data seeding is handled by SecuritySetup
   // This function just marks onboarding as complete
   const completeOnboarding = useCallback(async () => {
-    // Set synchronous flag IMMEDIATELY to prevent restart on refresh
+    // Set flag in OPFS to prevent restart on refresh
     // This ensures completion is persisted even if page refreshes before useEffect
-    localStorage.setItem(COMPLETED_FLAG_KEY, 'true');
+    await writeToOPFSWithCache(COMPLETED_FLAG_KEY, true);
 
     // If demo profile exists but not active, switch to it
     const demoProfile = profiles.find(
@@ -389,9 +394,9 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
 
   // Skip onboarding
   const skipOnboarding = useCallback(async () => {
-    // Set synchronous flag IMMEDIATELY to prevent restart on refresh
+    // Set flag in OPFS to prevent restart on refresh
     // This ensures completion is persisted even if page refreshes before useEffect
-    localStorage.setItem(COMPLETED_FLAG_KEY, 'true');
+    await writeToOPFSWithCache(COMPLETED_FLAG_KEY, true);
 
     // Create user if name is set (using async/await instead of mutation)
     if (state.userName) {

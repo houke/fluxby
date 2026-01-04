@@ -20,8 +20,13 @@ import {
   type SyncChange,
   type SyncableRow,
 } from '@fluxby/core';
+import {
+  readFromOPFSSync,
+  writeToOPFSWithCache,
+  isSettingsCacheInitialized,
+} from '@fluxby/database';
 
-// Storage keys
+// Storage keys (used as OPFS filenames)
 const DEVICE_ID_KEY = 'fluxby.deviceId';
 const DEVICE_NAME_KEY = 'fluxby.deviceName';
 const PAIRED_DEVICES_KEY = 'fluxby.pairedDevices';
@@ -77,24 +82,32 @@ interface SyncProviderProps {
   onSyncReceived?: (changes: SyncChange<SyncableRow>[]) => void;
 }
 
-// Generate or retrieve device ID
+// Generate or retrieve device ID from OPFS cache
 function getOrCreateDeviceId(): string {
   if (typeof window === 'undefined') return crypto.randomUUID();
 
-  let deviceId = localStorage.getItem(DEVICE_ID_KEY);
-  if (!deviceId) {
-    deviceId = crypto.randomUUID();
-    localStorage.setItem(DEVICE_ID_KEY, deviceId);
+  // Try to get from OPFS cache
+  if (isSettingsCacheInitialized()) {
+    const deviceId = readFromOPFSSync<string>(DEVICE_ID_KEY);
+    if (deviceId) return deviceId;
   }
-  return deviceId;
+
+  // Generate new ID and store it (async)
+  const newDeviceId = crypto.randomUUID();
+  writeToOPFSWithCache(DEVICE_ID_KEY, newDeviceId).catch((err) =>
+    console.warn('Failed to save device ID to OPFS:', err)
+  );
+  return newDeviceId;
 }
 
-// Get stored device name
+// Get stored device name from OPFS cache
 function getDeviceName(): string {
   if (typeof window === 'undefined') return 'Unknown Device';
 
-  const stored = localStorage.getItem(DEVICE_NAME_KEY);
-  if (stored) return stored;
+  if (isSettingsCacheInitialized()) {
+    const stored = readFromOPFSSync<string>(DEVICE_NAME_KEY);
+    if (stored) return stored;
+  }
 
   // Generate a default name based on browser/platform
   const platform = navigator.platform || 'Unknown';
@@ -111,24 +124,24 @@ function getBrowserName(): string {
   return 'Browser';
 }
 
-// Get stored paired devices
+// Get stored paired devices from OPFS cache
 function getStoredPairedDevices(): PeerDevice[] {
   if (typeof window === 'undefined') return [];
 
-  const stored = localStorage.getItem(PAIRED_DEVICES_KEY);
-  if (!stored) return [];
-
-  try {
-    return JSON.parse(stored);
-  } catch {
-    return [];
+  if (isSettingsCacheInitialized()) {
+    const stored = readFromOPFSSync<PeerDevice[]>(PAIRED_DEVICES_KEY);
+    if (stored && Array.isArray(stored)) return stored;
   }
+
+  return [];
 }
 
-// Save paired devices
+// Save paired devices to OPFS
 function savePairedDevices(devices: PeerDevice[]): void {
   if (typeof window === 'undefined') return;
-  localStorage.setItem(PAIRED_DEVICES_KEY, JSON.stringify(devices));
+  writeToOPFSWithCache(PAIRED_DEVICES_KEY, devices).catch((err) =>
+    console.warn('Failed to save paired devices to OPFS:', err)
+  );
 }
 
 export function SyncProvider({ children, onSyncReceived }: SyncProviderProps) {
@@ -255,7 +268,9 @@ export function SyncProvider({ children, onSyncReceived }: SyncProviderProps) {
   const setDeviceName = useCallback((name: string) => {
     setDeviceNameState(name);
     if (typeof window !== 'undefined') {
-      localStorage.setItem(DEVICE_NAME_KEY, name);
+      writeToOPFSWithCache(DEVICE_NAME_KEY, name).catch((err) =>
+        console.warn('Failed to save device name to OPFS:', err)
+      );
     }
   }, []);
 

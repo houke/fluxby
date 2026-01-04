@@ -5,6 +5,12 @@
  * Useful for recovering from WASM memory errors or database corruption.
  */
 
+import {
+  clearAllOPFSSettings,
+  clearSettingsCache,
+  writeToOPFSWithCache,
+} from '@fluxby/database';
+
 /**
  * Clear all OPFS database files
  * This will force a complete database re-initialization on next load
@@ -65,7 +71,7 @@ export async function clearOPFSDatabase(): Promise<void> {
 }
 
 /**
- * Clear all app data including localStorage and database
+ * Clear all app data including localStorage, OPFS settings, and database
  * WARNING: This will delete ALL user data
  */
 export async function clearAllAppData(): Promise<void> {
@@ -73,7 +79,11 @@ export async function clearAllAppData(): Promise<void> {
   const keysToRemove: string[] = [];
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i);
-    if (key?.startsWith('fluxby.')) {
+    if (
+      key?.startsWith('fluxby.') ||
+      key?.startsWith('fluxby-') ||
+      key?.startsWith('finance')
+    ) {
       keysToRemove.push(key);
     }
   }
@@ -85,6 +95,16 @@ export async function clearAllAppData(): Promise<void> {
   sessionStorage.clear();
   // eslint-disable-next-line no-console
   console.log('Cleared sessionStorage');
+
+  // Clear OPFS settings (password, language, profile, etc.)
+  try {
+    clearSettingsCache();
+    await clearAllOPFSSettings();
+    // eslint-disable-next-line no-console
+    console.log('Cleared OPFS settings');
+  } catch (error) {
+    console.warn('Failed to clear OPFS settings:', error);
+  }
 
   // Clear database
   await clearOPFSDatabase();
@@ -125,15 +145,13 @@ export async function resetAppAndRestartOnboarding(): Promise<void> {
 
   // Explicitly clear password protection state to ensure clean restart
   // This runs AFTER clearAllAppData in case it failed
+  // Note: These keys are now stored in OPFS, but we clear localStorage too for cleanup
   try {
-    // New password-only keys
     localStorage.removeItem('fluxby.passwordHash');
     localStorage.removeItem('fluxby.passwordSalt');
-    // Legacy encryption keys (for backwards compatibility cleanup)
     localStorage.removeItem('fluxby.wrappedKey');
     localStorage.removeItem('fluxby.encryptionEnabled');
     localStorage.removeItem('fluxby-onboarding-state');
-    // Clear any database-related flags
     localStorage.removeItem('fluxby-db-fatal');
   } catch {
     // ignore
@@ -141,7 +159,7 @@ export async function resetAppAndRestartOnboarding(): Promise<void> {
 
   try {
     // Ensure onboarding starts immediately after reload.
-    localStorage.setItem('fluxby-onboarding-restart', 'true');
+    await writeToOPFSWithCache('fluxby-onboarding-restart', true);
   } catch {
     // ignore
   }

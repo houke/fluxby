@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Play,
   RotateCcw,
@@ -43,6 +43,11 @@ import { useProfile } from '@/contexts/ProfileContext';
 import { api } from '@/lib/api';
 import { useQueryClient } from '@tanstack/react-query';
 import { cn } from '@/lib/utils';
+import {
+  readFromOPFSSync,
+  writeToOPFSWithCache,
+  deleteFromOPFSWithCache,
+} from '@fluxby/database';
 
 // Icon mapping for chapters (same as OnboardingModal)
 const CHAPTER_ICONS: Record<
@@ -86,9 +91,19 @@ export function OnboardingSettings() {
   }
   completedSteps += state.currentStepIndex;
 
-  // Check if onboarding was completed (stored in localStorage)
-  const isCompleted =
-    localStorage.getItem('fluxby-onboarding-completed') === 'true';
+  // Check if onboarding was completed (stored in OPFS)
+  const [isCompleted, setIsCompleted] = useState(
+    () => readFromOPFSSync('fluxby-onboarding-completed') === 'true'
+  );
+
+  // Keep isCompleted in sync with OPFS state
+  useEffect(() => {
+    const completed =
+      readFromOPFSSync('fluxby-onboarding-completed') === 'true';
+    if (completed !== isCompleted) {
+      setIsCompleted(completed);
+    }
+  }, [state.currentChapterIndex, state.currentStepIndex, isCompleted]);
 
   // Check if onboarding was ever started (has state saved)
   const wasStarted =
@@ -123,15 +138,15 @@ export function OnboardingSettings() {
       await api.seedDemoData(demoProfile.id);
 
       // Clear onboarding completion flag
-      localStorage.removeItem('fluxby-onboarding-completed');
+      await deleteFromOPFSWithCache('fluxby-onboarding-completed');
 
       // Clear onboarding state to force fresh start
-      localStorage.removeItem('fluxby_onboarding');
+      await deleteFromOPFSWithCache('fluxby_onboarding');
 
       // Set restart flag so onboarding starts after reload
-      localStorage.setItem('fluxby-onboarding-restart', 'true');
+      await writeToOPFSWithCache('fluxby-onboarding-restart', 'true');
       // Show blocking overlay during profile switch/reload
-      localStorage.setItem('fluxby-switching-overlay', 'true');
+      await writeToOPFSWithCache('fluxby-switching-overlay', 'true');
 
       // Switch to demo profile
       switchProfile(demoProfile.id);

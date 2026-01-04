@@ -8,7 +8,7 @@
  * Security Model:
  * 1. Master Key (32 bytes) encrypts all data
  * 2. User's password wraps the Master Key using PBKDF2
- * 3. Wrapped Key stored in localStorage, Master Key only in RAM
+ * 3. Wrapped Key stored in OPFS, Master Key only in RAM
  * 4. Auto-lock on idle/close
  * 5. Optional WebAuthn biometric as unlock method
  */
@@ -19,18 +19,27 @@ import {
   useEffect,
   useState,
   useCallback,
+  useRef,
   ReactNode,
 } from 'react';
-import { SessionManager } from '@fluxby/database';
+import {
+  SessionManager,
+  readFromOPFSSync,
+  writeToOPFSWithCache,
+  deleteFromOPFSWithCache,
+  isSettingsCacheInitialized,
+  readFromOPFS,
+} from '@fluxby/database';
 import { useLanguage } from './LanguageContext';
 
-// Storage keys
+// Storage keys (used as OPFS filenames)
 const STORAGE_KEYS = {
   WRAPPED_KEY: 'fluxby.security.wrappedKey',
   HAS_SETUP: 'fluxby.security.hasSetup',
   BIOMETRIC_CREDENTIAL: 'fluxby.security.biometricCredential',
   AUTO_LOCK_TIMEOUT: 'fluxby.security.autoLockTimeout',
   BIOMETRIC_ENABLED: 'fluxby.security.biometricEnabled',
+  BIOMETRIC_PASSWORD: 'fluxby.security.biometricPassword',
 } as const;
 
 // Default auto-lock timeout (15 minutes)
@@ -171,16 +180,112 @@ async function unwrapMasterKey(
   }
 }
 
+// Helper functions to get initial values from OPFS cache
+function getInitialHasSetup(): boolean {
+  if (typeof window === 'undefined') return false;
+  if (isSettingsCacheInitialized()) {
+    return readFromOPFSSync<boolean>(STORAGE_KEYS.HAS_SETUP) === true;
+  }
+  return false;
+}
+
+function getInitialBiometricEnabled(): boolean {
+  if (typeof window === 'undefined') return false;
+  if (isSettingsCacheInitialized()) {
+    return readFromOPFSSync<boolean>(STORAGE_KEYS.BIOMETRIC_ENABLED) === true;
+  }
+  return false;
+}
+
+function getInitialAutoLockTimeout(): number {
+  if (typeof window === 'undefined') return DEFAULT_AUTO_LOCK_TIMEOUT;
+  if (isSettingsCacheInitialized()) {
+    const stored = readFromOPFSSync<number>(STORAGE_KEYS.AUTO_LOCK_TIMEOUT);
+    if (stored && typeof stored === 'number') return stored;
+  }
+  return DEFAULT_AUTO_LOCK_TIMEOUT;
+}
+
+function getInitialWrappedKey(): WrappedKey | null {
+  if (typeof window === 'undefined') return null;
+  if (isSettingsCacheInitialized()) {
+    return readFromOPFSSync<WrappedKey>(STORAGE_KEYS.WRAPPED_KEY);
+  }
+  return null;
+}
+
+function getInitialBiometricCredential(): {
+  credentialId: string;
+  password: string;
+} | null {
+  if (typeof window === 'undefined') return null;
+  if (isSettingsCacheInitialized()) {
+    return readFromOPFSSync<{ credentialId: string; password: string }>(
+      STORAGE_KEYS.BIOMETRIC_CREDENTIAL
+    );
+  }
+  return null;
+}
+
 export function SecurityProvider({ children }: SecurityProviderProps) {
   const { t } = useLanguage();
   const [sessionManager] = useState(() => new SessionManager());
   const [isLocked, setIsLocked] = useState(true);
-  const [hasSetup, setHasSetup] = useState(false);
+  const [hasSetup, setHasSetup] = useState(getInitialHasSetup);
   const [biometricAvailable, setBiometricAvailable] = useState(false);
-  const [biometricEnabled, setBiometricEnabled] = useState(false);
-  const [autoLockTimeout, setAutoLockTimeoutState] = useState(
-    DEFAULT_AUTO_LOCK_TIMEOUT
+  const [biometricEnabled, setBiometricEnabled] = useState(
+    getInitialBiometricEnabled
   );
+  const [autoLockTimeout, setAutoLockTimeoutState] = useState(
+    getInitialAutoLockTimeout
+  );
+  const [wrappedKey, setWrappedKey] = useState<WrappedKey | null>(
+    getInitialWrappedKey
+  );
+  const [biometricCredential, setBiometricCredential] = useState<{
+    credentialId: string;
+    password: string;
+  } | null>(getInitialBiometricCredential);
+
+  const mountedRef = useRef(true);
+
+  // Load from OPFS if cache wasn't initialized
+  useEffect(() => {
+    mountedRef.current = true;
+
+    if (!isSettingsCacheInitialized()) {
+      Promise.all([
+        readFromOPFS<boolean>(STORAGE_KEYS.HAS_SETUP),
+        readFromOPFS<boolean>(STORAGE_KEYS.BIOMETRIC_ENABLED),
+        readFromOPFS<number>(STORAGE_KEYS.AUTO_LOCK_TIMEOUT),
+        readFromOPFS<WrappedKey>(STORAGE_KEYS.WRAPPED_KEY),
+        readFromOPFS<{ credentialId: string; password: string }>(
+          STORAGE_KEYS.BIOMETRIC_CREDENTIAL
+        ),
+      ]).then(
+        ([
+          hasSetupStored,
+          biometricEnabledStored,
+          timeoutStored,
+          wrappedKeyStored,
+          biometricCredStored,
+        ]) => {
+          if (!mountedRef.current) return;
+          if (hasSetupStored === true) setHasSetup(true);
+          if (biometricEnabledStored === true) setBiometricEnabled(true);
+          if (timeoutStored && typeof timeoutStored === 'number') {
+            setAutoLockTimeoutState(timeoutStored);
+          }
+          if (wrappedKeyStored) setWrappedKey(wrappedKeyStored);
+          if (biometricCredStored) setBiometricCredential(biometricCredStored);
+        }
+      );
+    }
+
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
 
   // Check for WebAuthn availability
   useEffect(() => {
@@ -200,22 +305,6 @@ export function SecurityProvider({ children }: SecurityProviderProps) {
       }
     };
     checkBiometric();
-  }, []);
-
-  // Load settings from localStorage
-  useEffect(() => {
-    const hasSetupStored = localStorage.getItem(STORAGE_KEYS.HAS_SETUP);
-    setHasSetup(hasSetupStored === 'true');
-
-    const biometricEnabledStored = localStorage.getItem(
-      STORAGE_KEYS.BIOMETRIC_ENABLED
-    );
-    setBiometricEnabled(biometricEnabledStored === 'true');
-
-    const timeoutStored = localStorage.getItem(STORAGE_KEYS.AUTO_LOCK_TIMEOUT);
-    if (timeoutStored) {
-      setAutoLockTimeoutState(parseInt(timeoutStored, 10));
-    }
   }, []);
 
   // Subscribe to session manager events
@@ -248,14 +337,13 @@ export function SecurityProvider({ children }: SecurityProviderProps) {
       const masterKey = await generateMasterKey();
 
       // Wrap it with the password
-      const wrappedKey = await wrapMasterKey(masterKey, password);
+      const newWrappedKey = await wrapMasterKey(masterKey, password);
 
-      // Store wrapped key
-      localStorage.setItem(
-        STORAGE_KEYS.WRAPPED_KEY,
-        JSON.stringify(wrappedKey)
-      );
-      localStorage.setItem(STORAGE_KEYS.HAS_SETUP, 'true');
+      // Store wrapped key in OPFS
+      await writeToOPFSWithCache(STORAGE_KEYS.WRAPPED_KEY, newWrappedKey);
+      await writeToOPFSWithCache(STORAGE_KEYS.HAS_SETUP, true);
+
+      setWrappedKey(newWrappedKey);
 
       // Unlock session
       sessionManager.unlock(masterKey);
@@ -269,13 +357,11 @@ export function SecurityProvider({ children }: SecurityProviderProps) {
   // Unlock with password
   const unlock = useCallback(
     async (password: string): Promise<boolean> => {
-      const wrappedKeyJson = localStorage.getItem(STORAGE_KEYS.WRAPPED_KEY);
-      if (!wrappedKeyJson) {
+      if (!wrappedKey) {
         return false;
       }
 
       try {
-        const wrappedKey = JSON.parse(wrappedKeyJson) as WrappedKey;
         const masterKey = await unwrapMasterKey(wrappedKey, password);
 
         if (!masterKey) {
@@ -289,25 +375,16 @@ export function SecurityProvider({ children }: SecurityProviderProps) {
         return false;
       }
     },
-    [sessionManager]
+    [sessionManager, wrappedKey]
   );
 
   // Unlock with biometric (WebAuthn)
   const unlockWithBiometric = useCallback(async (): Promise<boolean> => {
-    if (!biometricEnabled || !biometricAvailable) {
-      return false;
-    }
-
-    const credentialJson = localStorage.getItem(
-      STORAGE_KEYS.BIOMETRIC_CREDENTIAL
-    );
-    if (!credentialJson) {
+    if (!biometricEnabled || !biometricAvailable || !biometricCredential) {
       return false;
     }
 
     try {
-      const storedCredential = JSON.parse(credentialJson);
-
       // Use WebAuthn to authenticate
       const assertion = await navigator.credentials.get({
         publicKey: {
@@ -315,7 +392,9 @@ export function SecurityProvider({ children }: SecurityProviderProps) {
           rpId: window.location.hostname,
           allowCredentials: [
             {
-              id: base64ToArray(storedCredential.credentialId) as BufferSource,
+              id: base64ToArray(
+                biometricCredential.credentialId
+              ) as BufferSource,
               type: 'public-key',
             },
           ],
@@ -328,23 +407,12 @@ export function SecurityProvider({ children }: SecurityProviderProps) {
         return false;
       }
 
-      // If biometric succeeded, the password is stored encrypted with the biometric key
-      // For simplicity, we store the wrapped key password in sessionStorage during biometric setup
-      const encryptedPassword = localStorage.getItem(
-        'fluxby.security.biometricPassword'
-      );
-      if (!encryptedPassword) {
-        return false;
-      }
-
-      // Decrypt password using the biometric authenticator data
-      // For this simplified implementation, we use the credential to verify
-      // and then use the stored password
-      return await unlock(storedCredential.password);
+      // If biometric succeeded, use the stored password
+      return await unlock(biometricCredential.password);
     } catch {
       return false;
     }
-  }, [biometricEnabled, biometricAvailable, unlock]);
+  }, [biometricEnabled, biometricAvailable, biometricCredential, unlock]);
 
   // Lock the session
   const lock = useCallback(() => {
@@ -355,13 +423,11 @@ export function SecurityProvider({ children }: SecurityProviderProps) {
   // Change master password
   const changeMasterPassword = useCallback(
     async (currentPassword: string, newPassword: string): Promise<boolean> => {
-      const wrappedKeyJson = localStorage.getItem(STORAGE_KEYS.WRAPPED_KEY);
-      if (!wrappedKeyJson) {
+      if (!wrappedKey) {
         return false;
       }
 
       try {
-        const wrappedKey = JSON.parse(wrappedKeyJson) as WrappedKey;
         const masterKey = await unwrapMasterKey(wrappedKey, currentPassword);
 
         if (!masterKey) {
@@ -370,39 +436,32 @@ export function SecurityProvider({ children }: SecurityProviderProps) {
 
         // Re-wrap with new password
         const newWrappedKey = await wrapMasterKey(masterKey, newPassword);
-        localStorage.setItem(
-          STORAGE_KEYS.WRAPPED_KEY,
-          JSON.stringify(newWrappedKey)
-        );
+        await writeToOPFSWithCache(STORAGE_KEYS.WRAPPED_KEY, newWrappedKey);
+
+        setWrappedKey(newWrappedKey);
 
         // Disable biometric since password changed
         setBiometricEnabled(false);
-        localStorage.removeItem(STORAGE_KEYS.BIOMETRIC_ENABLED);
-        localStorage.removeItem(STORAGE_KEYS.BIOMETRIC_CREDENTIAL);
+        setBiometricCredential(null);
+        await deleteFromOPFSWithCache(STORAGE_KEYS.BIOMETRIC_ENABLED);
+        await deleteFromOPFSWithCache(STORAGE_KEYS.BIOMETRIC_CREDENTIAL);
 
         return true;
       } catch {
         return false;
       }
     },
-    []
+    [wrappedKey]
   );
 
   // Enable biometric authentication
   const enableBiometric = useCallback(
     async (password: string): Promise<boolean> => {
-      if (!biometricAvailable) {
-        return false;
-      }
-
-      // First verify the password is correct
-      const wrappedKeyJson = localStorage.getItem(STORAGE_KEYS.WRAPPED_KEY);
-      if (!wrappedKeyJson) {
+      if (!biometricAvailable || !wrappedKey) {
         return false;
       }
 
       try {
-        const wrappedKey = JSON.parse(wrappedKeyJson) as WrappedKey;
         const masterKey = await unwrapMasterKey(wrappedKey, password);
 
         if (!masterKey) {
@@ -448,11 +507,13 @@ export function SecurityProvider({ children }: SecurityProviderProps) {
           password: password, // In production, encrypt this with device key
         };
 
-        localStorage.setItem(
+        await writeToOPFSWithCache(
           STORAGE_KEYS.BIOMETRIC_CREDENTIAL,
-          JSON.stringify(credentialData)
+          credentialData
         );
-        localStorage.setItem(STORAGE_KEYS.BIOMETRIC_ENABLED, 'true');
+        await writeToOPFSWithCache(STORAGE_KEYS.BIOMETRIC_ENABLED, true);
+
+        setBiometricCredential(credentialData);
         setBiometricEnabled(true);
 
         return true;
@@ -460,23 +521,21 @@ export function SecurityProvider({ children }: SecurityProviderProps) {
         return false;
       }
     },
-    [biometricAvailable, t]
+    [biometricAvailable, wrappedKey, t]
   );
 
   // Disable biometric
-  const disableBiometric = useCallback(() => {
-    localStorage.removeItem(STORAGE_KEYS.BIOMETRIC_CREDENTIAL);
-    localStorage.removeItem(STORAGE_KEYS.BIOMETRIC_ENABLED);
+  const disableBiometric = useCallback(async () => {
+    await deleteFromOPFSWithCache(STORAGE_KEYS.BIOMETRIC_CREDENTIAL);
+    await deleteFromOPFSWithCache(STORAGE_KEYS.BIOMETRIC_ENABLED);
+    setBiometricCredential(null);
     setBiometricEnabled(false);
   }, []);
 
   // Set auto-lock timeout
   const setAutoLockTimeout = useCallback(
-    (timeoutMs: number) => {
-      localStorage.setItem(
-        STORAGE_KEYS.AUTO_LOCK_TIMEOUT,
-        timeoutMs.toString()
-      );
+    async (timeoutMs: number) => {
+      await writeToOPFSWithCache(STORAGE_KEYS.AUTO_LOCK_TIMEOUT, timeoutMs);
       setAutoLockTimeoutState(timeoutMs);
       sessionManager.setAutoLockTimeout(timeoutMs);
     },
@@ -485,12 +544,14 @@ export function SecurityProvider({ children }: SecurityProviderProps) {
 
   // Reset all security data (DANGER!)
   const resetAll = useCallback(async () => {
-    localStorage.removeItem(STORAGE_KEYS.WRAPPED_KEY);
-    localStorage.removeItem(STORAGE_KEYS.HAS_SETUP);
-    localStorage.removeItem(STORAGE_KEYS.BIOMETRIC_CREDENTIAL);
-    localStorage.removeItem(STORAGE_KEYS.BIOMETRIC_ENABLED);
-    localStorage.removeItem(STORAGE_KEYS.AUTO_LOCK_TIMEOUT);
+    await deleteFromOPFSWithCache(STORAGE_KEYS.WRAPPED_KEY);
+    await deleteFromOPFSWithCache(STORAGE_KEYS.HAS_SETUP);
+    await deleteFromOPFSWithCache(STORAGE_KEYS.BIOMETRIC_CREDENTIAL);
+    await deleteFromOPFSWithCache(STORAGE_KEYS.BIOMETRIC_ENABLED);
+    await deleteFromOPFSWithCache(STORAGE_KEYS.AUTO_LOCK_TIMEOUT);
 
+    setWrappedKey(null);
+    setBiometricCredential(null);
     sessionManager.lock();
     setIsLocked(true);
     setHasSetup(false);

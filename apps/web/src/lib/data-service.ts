@@ -9,7 +9,11 @@
  * The API server is an optional layer for external integrations.
  */
 
-import { type Database } from '@fluxby/database';
+import {
+  type Database,
+  readFromOPFSSync,
+  isSettingsCacheInitialized,
+} from '@fluxby/database';
 import {
   type Profile,
   type Transaction,
@@ -26,11 +30,14 @@ import {
 import { processINGRow } from './importers/ing-importer';
 
 /**
- * Get the active profile ID from localStorage
+ * Get the active profile ID from OPFS settings
  */
 function getActiveProfileId(): string | null {
   if (typeof window === 'undefined') return null;
-  return window.localStorage.getItem('fluxby.activeProfileId');
+  if (isSettingsCacheInitialized()) {
+    return readFromOPFSSync<string>('fluxby.activeProfileId');
+  }
+  return null;
 }
 
 /**

@@ -13,6 +13,8 @@ import {
   getDatabaseInstance,
   getDbPromise,
   resetDatabase,
+  clearAllOPFSSettings,
+  clearSettingsCache,
   type Database,
 } from '@fluxby/database';
 import { Loader2, RefreshCw, AlertCircle } from 'lucide-react';
@@ -161,6 +163,11 @@ export function DatabaseProvider({ children }: DatabaseProviderProps) {
       devLog('Clearing localStorage and sessionStorage...');
       localStorage.clear();
       sessionStorage.clear();
+
+      // Clear OPFS settings
+      devLog('Clearing OPFS settings...');
+      await clearAllOPFSSettings();
+      clearSettingsCache();
 
       devLog('Reset complete, reloading...');
       window.location.reload();

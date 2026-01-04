@@ -6,9 +6,16 @@ import {
   useEffect,
   useCallback,
   useMemo,
+  useRef,
   ReactNode,
 } from 'react';
 import { useProfile } from './ProfileContext';
+import {
+  readFromOPFSSync,
+  writeToOPFSWithCache,
+  isSettingsCacheInitialized,
+  readFromOPFS,
+} from '@fluxby/database';
 
 interface FilterState {
   dateRange: {
@@ -53,38 +60,80 @@ const defaultFilters: FilterState = {
 
 const FILTER_STORAGE_KEY = 'finance-filters';
 
+// Serializable filter state for storage
+interface StoredFilterState {
+  dateRange: {
+    start: string;
+    end: string;
+  };
+  categories: string[];
+  transactionType: 'all' | 'income' | 'expense' | 'transfer';
+  opposingAccountIbans: string[];
+  opposingAccountName: string | null;
+  addressBookId: string | null;
+}
+
+// Helper to parse stored filters
+function parseStoredFilters(stored: StoredFilterState | null): FilterState {
+  if (!stored) return defaultFilters;
+
+  try {
+    // Normalize categories: ensure they are strings and map empty marker '' to '0'
+    const categories = Array.isArray(stored.categories)
+      ? stored.categories
+          .map((c: unknown) => String(c))
+          .map((s: string) => (s === '' ? '0' : s))
+          .filter(Boolean)
+      : [];
+
+    return {
+      ...stored,
+      categories,
+      dateRange: {
+        start: new Date(stored.dateRange.start),
+        end: new Date(stored.dateRange.end),
+      },
+    };
+  } catch {
+    return defaultFilters;
+  }
+}
+
+// Helper to get initial filters from OPFS cache
+function getInitialFilters(): FilterState {
+  if (typeof window === 'undefined') return defaultFilters;
+
+  if (isSettingsCacheInitialized()) {
+    const stored = readFromOPFSSync<StoredFilterState>(FILTER_STORAGE_KEY);
+    return parseStoredFilters(stored);
+  }
+
+  return defaultFilters;
+}
+
 const FilterContext = createContext<FilterContextType | undefined>(undefined);
 
 export function FilterProvider({ children }: { children: ReactNode }) {
   const { activeProfileId } = useProfile();
-  const [filters, setFilters] = useState<FilterState>(() => {
-    try {
-      const stored = localStorage.getItem(FILTER_STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
+  const [filters, setFilters] = useState<FilterState>(getInitialFilters);
+  const mountedRef = useRef(true);
 
-        // Normalize categories: ensure they are strings and map empty marker '' to '0'
-        const categories = Array.isArray(parsed.categories)
-          ? parsed.categories
-              .map((c: unknown) => String(c))
-              .map((s: string) => (s === '' ? '0' : s))
-              .filter(Boolean)
-          : [];
+  // Load from OPFS if cache wasn't initialized
+  useEffect(() => {
+    mountedRef.current = true;
 
-        return {
-          ...parsed,
-          categories,
-          dateRange: {
-            start: new Date(parsed.dateRange.start),
-            end: new Date(parsed.dateRange.end),
-          },
-        };
-      }
-    } catch (error) {
-      console.warn('Failed to load filters from localStorage:', error);
+    if (!isSettingsCacheInitialized()) {
+      readFromOPFS<StoredFilterState>(FILTER_STORAGE_KEY).then((stored) => {
+        if (mountedRef.current && stored) {
+          setFilters(parseStoredFilters(stored));
+        }
+      });
     }
-    return defaultFilters;
-  });
+
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
 
   // Reset filters when profile changes
   useEffect(() => {
@@ -93,12 +142,19 @@ export function FilterProvider({ children }: { children: ReactNode }) {
     }
   }, [activeProfileId]);
 
+  // Save filters to OPFS when they change
   useEffect(() => {
-    try {
-      localStorage.setItem(FILTER_STORAGE_KEY, JSON.stringify(filters));
-    } catch (error) {
-      console.warn('Failed to save filters to localStorage:', error);
-    }
+    const storedFilters: StoredFilterState = {
+      ...filters,
+      dateRange: {
+        start: filters.dateRange.start.toISOString(),
+        end: filters.dateRange.end.toISOString(),
+      },
+    };
+
+    writeToOPFSWithCache(FILTER_STORAGE_KEY, storedFilters).catch((error) => {
+      console.warn('Failed to save filters to OPFS:', error);
+    });
   }, [filters]);
 
   const setDateRange = useCallback((start: Date, end: Date) => {

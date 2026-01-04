@@ -6,13 +6,30 @@ import React, {
   useEffect,
   useCallback,
   useMemo,
+  useRef,
 } from 'react';
 import type { Profile, ProfileType } from '@fluxby/shared';
 import { useDatabase } from '@/contexts/DatabaseContext';
 import { createDataService } from '@/lib/data-service';
 import { useQueryClient } from '@tanstack/react-query';
+import {
+  readFromOPFSSync,
+  writeToOPFSWithCache,
+  deleteFromOPFSWithCache,
+  isSettingsCacheInitialized,
+  readFromOPFS,
+} from '@fluxby/database';
 
 const ACTIVE_PROFILE_KEY = 'fluxby.activeProfileId';
+
+// Helper to get initial value from OPFS cache
+function getInitialProfileId(): string | null {
+  if (typeof window === 'undefined') return null;
+  if (isSettingsCacheInitialized()) {
+    return readFromOPFSSync<string>(ACTIVE_PROFILE_KEY);
+  }
+  return null;
+}
 
 interface ProfileContextValue {
   activeProfile: Profile | null;
@@ -43,14 +60,29 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
   const queryClient = useQueryClient();
   const { db, isReady } = useDatabase();
   const [profiles, setProfiles] = useState<Profile[]>([]);
-  const [activeProfileId, setActiveProfileId] = useState<string | null>(() => {
-    // Load from localStorage on init
-    if (typeof window === 'undefined') return null;
-    const stored = localStorage.getItem(ACTIVE_PROFILE_KEY);
-    return stored || null;
-  });
+  const [activeProfileId, setActiveProfileId] = useState<string | null>(
+    getInitialProfileId
+  );
   const [isLoading, setIsLoading] = useState(true);
   const [isSwitching, setIsSwitching] = useState(false);
+  const mountedRef = useRef(true);
+
+  // Load from OPFS if cache wasn't initialized
+  useEffect(() => {
+    mountedRef.current = true;
+
+    if (!isSettingsCacheInitialized()) {
+      readFromOPFS<string>(ACTIVE_PROFILE_KEY).then((stored) => {
+        if (mountedRef.current && stored) {
+          setActiveProfileId(stored);
+        }
+      });
+    }
+
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
 
   // Create data service when db is ready
   const dataService = useMemo(() => {
@@ -70,14 +102,19 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
         setActiveProfileId((currentId) => {
           const found = data.find((p) => p.id === currentId);
           if (!found) {
-            localStorage.setItem(ACTIVE_PROFILE_KEY, data[0].id);
+            // Store in OPFS (async)
+            writeToOPFSWithCache(ACTIVE_PROFILE_KEY, data[0].id).catch((err) =>
+              console.warn('Failed to save profile ID to OPFS:', err)
+            );
             return data[0].id;
           }
           return currentId;
         });
       } else {
         // No profiles exist - clear any stale activeProfileId
-        localStorage.removeItem(ACTIVE_PROFILE_KEY);
+        deleteFromOPFSWithCache(ACTIVE_PROFILE_KEY).catch((err) =>
+          console.warn('Failed to clear profile ID from OPFS:', err)
+        );
         setActiveProfileId(null);
       }
     } catch (error) {
@@ -104,7 +141,10 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
 
       setIsSwitching(true);
       setActiveProfileId(id);
-      localStorage.setItem(ACTIVE_PROFILE_KEY, id);
+      // Store in OPFS (async)
+      writeToOPFSWithCache(ACTIVE_PROFILE_KEY, id).catch((err) =>
+        console.warn('Failed to save profile ID to OPFS:', err)
+      );
 
       // Invalidate all profile-scoped queries to refetch with new profile
       queryClient.invalidateQueries({ queryKey: ['accounts'] });

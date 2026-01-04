@@ -8,6 +8,8 @@
  *
  * The password is verified using PBKDF2 key derivation - we store a wrapped
  * "dummy" key that can only be unwrapped with the correct password.
+ *
+ * Settings are stored in OPFS for persistence (survives localStorage clearing).
  */
 import {
   createContext,
@@ -15,10 +17,19 @@ import {
   useState,
   useCallback,
   useMemo,
+  useEffect,
+  useRef,
   ReactNode,
 } from 'react';
+import {
+  readFromOPFSSync,
+  writeToOPFSWithCache,
+  deleteFromOPFSWithCache,
+  isSettingsCacheInitialized,
+  readFromOPFS,
+} from '@fluxby/database';
 
-// Storage keys
+// Storage keys (used as OPFS filenames)
 const PASSWORD_HASH_KEY = 'fluxby.passwordHash';
 const PASSWORD_SALT_KEY = 'fluxby.passwordSalt';
 
@@ -74,6 +85,23 @@ function hexToUint8Array(hex: string): Uint8Array {
   return bytes;
 }
 
+// Helper to get initial value from OPFS cache
+function getInitialHash(): string | null {
+  if (typeof window === 'undefined') return null;
+  if (isSettingsCacheInitialized()) {
+    return readFromOPFSSync<string>(PASSWORD_HASH_KEY);
+  }
+  return null;
+}
+
+function getInitialSalt(): string | null {
+  if (typeof window === 'undefined') return null;
+  if (isSettingsCacheInitialized()) {
+    return readFromOPFSSync<string>(PASSWORD_SALT_KEY);
+  }
+  return null;
+}
+
 interface EncryptionContextType {
   /** Whether password protection is set up (kept as isEncryptionEnabled for compatibility) */
   isEncryptionEnabled: boolean;
@@ -113,11 +141,38 @@ interface EncryptionProviderProps {
 }
 
 export function EncryptionProvider({ children }: EncryptionProviderProps) {
+  // Store hash and salt in state (loaded from OPFS cache)
+  const [passwordHash, setPasswordHash] = useState<string | null>(
+    getInitialHash
+  );
+  const [passwordSalt, setPasswordSalt] = useState<string | null>(
+    getInitialSalt
+  );
+  const mountedRef = useRef(true);
+
+  // Load from OPFS if cache wasn't initialized
+  useEffect(() => {
+    mountedRef.current = true;
+
+    if (!isSettingsCacheInitialized()) {
+      Promise.all([
+        readFromOPFS<string>(PASSWORD_HASH_KEY),
+        readFromOPFS<string>(PASSWORD_SALT_KEY),
+      ]).then(([hash, salt]) => {
+        if (mountedRef.current) {
+          if (hash) setPasswordHash(hash);
+          if (salt) setPasswordSalt(salt);
+        }
+      });
+    }
+
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
   // Check if password protection is set up
-  const [isEncryptionEnabled, setIsEncryptionEnabled] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    return localStorage.getItem(PASSWORD_HASH_KEY) !== null;
-  });
+  const isEncryptionEnabled = passwordHash !== null;
 
   // Auto-unlock in development mode for easier debugging
   const [isUnlocked, setIsUnlocked] = useState(() => {
@@ -128,35 +183,37 @@ export function EncryptionProvider({ children }: EncryptionProviderProps) {
   const setupEncryption = useCallback(async (password: string) => {
     const { hash, salt } = await hashPassword(password);
 
-    localStorage.setItem(PASSWORD_HASH_KEY, hash);
-    localStorage.setItem(PASSWORD_SALT_KEY, salt);
+    // Store in OPFS
+    await writeToOPFSWithCache(PASSWORD_HASH_KEY, hash);
+    await writeToOPFSWithCache(PASSWORD_SALT_KEY, salt);
 
-    setIsEncryptionEnabled(true);
+    setPasswordHash(hash);
+    setPasswordSalt(salt);
     setIsUnlocked(true);
   }, []);
 
   // Unlock the app with password
-  const unlock = useCallback(async (password: string): Promise<boolean> => {
-    const storedHash = localStorage.getItem(PASSWORD_HASH_KEY);
-    const storedSalt = localStorage.getItem(PASSWORD_SALT_KEY);
-
-    if (!storedHash || !storedSalt) {
-      return false;
-    }
-
-    try {
-      const salt = hexToUint8Array(storedSalt);
-      const { hash } = await hashPassword(password, salt);
-
-      if (hash === storedHash) {
-        setIsUnlocked(true);
-        return true;
+  const unlock = useCallback(
+    async (password: string): Promise<boolean> => {
+      if (!passwordHash || !passwordSalt) {
+        return false;
       }
-      return false;
-    } catch {
-      return false;
-    }
-  }, []);
+
+      try {
+        const salt = hexToUint8Array(passwordSalt);
+        const { hash } = await hashPassword(password, salt);
+
+        if (hash === passwordHash) {
+          setIsUnlocked(true);
+          return true;
+        }
+        return false;
+      } catch {
+        return false;
+      }
+    },
+    [passwordHash, passwordSalt]
+  );
 
   // Lock the app
   const lock = useCallback(() => {
@@ -166,55 +223,54 @@ export function EncryptionProvider({ children }: EncryptionProviderProps) {
   // Change password
   const changePassword = useCallback(
     async (currentPassword: string, newPassword: string): Promise<boolean> => {
-      const storedHash = localStorage.getItem(PASSWORD_HASH_KEY);
-      const storedSalt = localStorage.getItem(PASSWORD_SALT_KEY);
-
-      if (!storedHash || !storedSalt) {
+      if (!passwordHash || !passwordSalt) {
         return false;
       }
 
       try {
         // Verify current password
-        const salt = hexToUint8Array(storedSalt);
+        const salt = hexToUint8Array(passwordSalt);
         const { hash: currentHash } = await hashPassword(currentPassword, salt);
 
-        if (currentHash !== storedHash) {
+        if (currentHash !== passwordHash) {
           return false;
         }
 
         // Set new password
         const { hash: newHash, salt: newSalt } =
           await hashPassword(newPassword);
-        localStorage.setItem(PASSWORD_HASH_KEY, newHash);
-        localStorage.setItem(PASSWORD_SALT_KEY, newSalt);
+
+        // Store in OPFS
+        await writeToOPFSWithCache(PASSWORD_HASH_KEY, newHash);
+        await writeToOPFSWithCache(PASSWORD_SALT_KEY, newSalt);
+
+        setPasswordHash(newHash);
+        setPasswordSalt(newSalt);
 
         return true;
       } catch {
         return false;
       }
     },
-    []
+    [passwordHash, passwordSalt]
   );
 
   // Verify password
   const verifyPasswordFn = useCallback(
     async (password: string): Promise<boolean> => {
-      const storedHash = localStorage.getItem(PASSWORD_HASH_KEY);
-      const storedSalt = localStorage.getItem(PASSWORD_SALT_KEY);
-
-      if (!storedHash || !storedSalt) {
+      if (!passwordHash || !passwordSalt) {
         return false;
       }
 
       try {
-        const salt = hexToUint8Array(storedSalt);
+        const salt = hexToUint8Array(passwordSalt);
         const { hash } = await hashPassword(password, salt);
-        return hash === storedHash;
+        return hash === passwordHash;
       } catch {
         return false;
       }
     },
-    []
+    [passwordHash, passwordSalt]
   );
 
   // Disable password protection
@@ -226,10 +282,12 @@ export function EncryptionProvider({ children }: EncryptionProviderProps) {
         return false;
       }
 
-      localStorage.removeItem(PASSWORD_HASH_KEY);
-      localStorage.removeItem(PASSWORD_SALT_KEY);
+      // Delete from OPFS
+      await deleteFromOPFSWithCache(PASSWORD_HASH_KEY);
+      await deleteFromOPFSWithCache(PASSWORD_SALT_KEY);
 
-      setIsEncryptionEnabled(false);
+      setPasswordHash(null);
+      setPasswordSalt(null);
       setIsUnlocked(false);
       return true;
     },

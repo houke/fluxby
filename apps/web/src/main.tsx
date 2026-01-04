@@ -2,6 +2,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { consumeSessionRedirect, getRedirectToRestore } from '@fluxby/shared';
+import { initializeSettingsCache } from '@fluxby/database';
 import App from './App';
 import './index.css';
 
@@ -44,15 +45,28 @@ const queryClient = new QueryClient({
 
 const rootElement = document.getElementById('root');
 
-if (rootElement) {
-  createRoot(rootElement).render(
-    <StrictMode>
-      <QueryClientProvider client={queryClient}>
-        <App />
-      </QueryClientProvider>
-    </StrictMode>
-  );
+// Initialize OPFS settings cache before rendering
+// This allows synchronous access to settings during initial render
+async function initializeApp() {
+  try {
+    await initializeSettingsCache();
+  } catch (error) {
+    // OPFS might not be available (e.g., in some browsers)
+    console.warn('Failed to initialize OPFS settings cache:', error);
+  }
+
+  if (rootElement) {
+    createRoot(rootElement).render(
+      <StrictMode>
+        <QueryClientProvider client={queryClient}>
+          <App />
+        </QueryClientProvider>
+      </StrictMode>
+    );
+  }
 }
+
+initializeApp();
 
 // Register service worker for PWA support and COI headers
 if ('serviceWorker' in navigator) {

@@ -33,6 +33,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useProfile } from '@/contexts/ProfileContext';
 import { useOnboarding } from '@/components/onboarding';
 import { NoDataModal } from '@/components/NoDataModal';
+import { readFromOPFSSync, deleteFromOPFSWithCache } from '@fluxby/database';
 
 interface UserProfile {
   id: string;
@@ -133,38 +134,33 @@ export default function Layout() {
   const [showOverlay, setShowOverlay] = React.useState<boolean>(() => {
     try {
       return (
-        localStorage.getItem('fluxby-switching-overlay') === 'true' ||
-        isSwitching
+        readFromOPFSSync('fluxby-switching-overlay') === 'true' || isSwitching
       );
     } catch {
       return isSwitching;
     }
   });
 
-  // Sync overlay with switching and onboarding state / localStorage
+  // Sync overlay with switching and onboarding state / OPFS
   React.useEffect(() => {
     const check = () =>
       setShowOverlay(
-        localStorage.getItem('fluxby-switching-overlay') === 'true' ||
-          isSwitching
+        readFromOPFSSync('fluxby-switching-overlay') === 'true' || isSwitching
       );
 
     check();
 
-    const onStorage = () => check();
-    window.addEventListener('storage', onStorage);
-    return () => window.removeEventListener('storage', onStorage);
+    // Note: OPFS doesn't have storage events like localStorage,
+    // so we rely on the isSwitching prop and onboardingState changes
   }, [isSwitching]);
 
   // Hide overlay when onboarding becomes active (onboarding ready)
   React.useEffect(() => {
     if (onboardingState.isActive) {
       setShowOverlay(false);
-      try {
-        localStorage.removeItem('fluxby-switching-overlay');
-      } catch {
-        // Ignore localStorage errors
-      }
+      deleteFromOPFSWithCache('fluxby-switching-overlay').catch(() => {
+        // Ignore OPFS errors
+      });
     }
   }, [onboardingState.isActive]);
 
