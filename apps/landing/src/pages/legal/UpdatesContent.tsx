@@ -1,19 +1,21 @@
 import { useLanguage } from '../../contexts/LanguageContext';
 import {
-  Sparkles,
+  ,
   BarChart3,
-  Target,
-  Shield,
-  Building2,
-  FileSpreadsheet,
-  Users,
-  Palette,
-  Globe,
-  Zap,
-  Brain,
-  Download,
-  Tag,
   BookOpen,
+  Brain,
+  Building2,
+  Download,
+  FileSpreadsheet,
+  Globe,
+  Palette,
+  Shield,
+  Sparkles,
+  Tag,
+  Target,
+  Users,
+  Wrench,
+  Zap,
 } from 'lucide-react';
 
 const UpdatesContent = () => {
@@ -21,6 +23,21 @@ const UpdatesContent = () => {
   const updatesPage = t.legal?.updatesPage;
 
   const releases = [
+        {
+      version: '1.0.2',
+      date: updatesPage?.v102Date || '4 januari 2026',
+      title: updatesPage?.v102Title || 'Release 1.0.2',
+      description:
+        updatesPage?.v102Description ||
+        '5 bugfixes.',
+      features: [
+        {
+          icon: Wrench,
+          title: updatesPage?.v102F1Title || 'Bugfixes',
+          description: updatesPage?.v102F1Desc || '5 bugs opgelost. Zie changelog voor details.',
+        },
+      ],
+    },
     {
       version: '1.0.1',
       date: updatesPage?.v101Date || '4 januari 2026',

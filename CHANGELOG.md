@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.0.2
+
+**Release Date:** 2026-01-04
+
+### Bug Fixes
+
+- **landing:** use dynamic version for download links
+- **ci:** consolidate GitHub release into single release with all assets
+- **landing:** align download buttons at bottom of cards
+- **landing:** unify macOS download card with dual download buttons
+- **landing:** correct download links and split macOS options
+
 ## v1.0.1
 
 **Release Date:** 2026-01-04
