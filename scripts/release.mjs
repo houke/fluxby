@@ -849,7 +849,10 @@ function updatePackageJsonVersion(newVersion) {
   const databasePackagePath = join(ROOT_DIR, 'packages/database/package.json');
   const databasePkg = JSON.parse(readFileSync(databasePackagePath, 'utf-8'));
   databasePkg.version = newVersion;
-  writeFileSync(databasePackagePath, JSON.stringify(databasePkg, null, 2) + '\n');
+  writeFileSync(
+    databasePackagePath,
+    JSON.stringify(databasePkg, null, 2) + '\n'
+  );
 
   // Update packages/core/package.json
   const corePackagePath = join(ROOT_DIR, 'packages/core/package.json');
