@@ -11,7 +11,7 @@
  * 2. Parses conventional commits since last tag
  * 3. Determines version bump (major/minor/patch)
  * 4. Generates changelog
- * 5. Updates package.json version
+ * 5. Updates version in package.json, tauri.conf.json, and Cargo.toml
  * 6. Updates UpdatesContent.tsx with smart feature bundling and icons
  * 7. Updates translation files (nl.ts and en.ts) with new version strings
  * 8. Updates CHANGELOG.md
@@ -809,7 +809,7 @@ function generateTranslationEntriesEn(entry, versionKey, descriptionEn) {
 }
 
 /**
- * Update package.json version (root, tauri app, and tauri.conf.json)
+ * Update package.json version (root, tauri app, tauri.conf.json, and Cargo.toml)
  */
 function updatePackageJsonVersion(newVersion) {
   // Update root package.json
@@ -830,8 +830,14 @@ function updatePackageJsonVersion(newVersion) {
   tauriConf.version = newVersion;
   writeFileSync(tauriConfPath, JSON.stringify(tauriConf, null, 2) + '\n');
 
+  // Update apps/tauri/Cargo.toml
+  const cargoTomlPath = join(ROOT_DIR, 'apps/tauri/Cargo.toml');
+  let cargoToml = readFileSync(cargoTomlPath, 'utf-8');
+  cargoToml = cargoToml.replace(/^version = "[^"]*"$/m, `version = "${newVersion}"`);
+  writeFileSync(cargoTomlPath, cargoToml);
+
   log(
-    `✓ Updated versions to ${newVersion} in package.json, apps/tauri/package.json, and tauri.conf.json`,
+    `✓ Updated versions to ${newVersion} in package.json, apps/tauri/package.json, tauri.conf.json, and Cargo.toml`,
     'green'
   );
 }
@@ -881,7 +887,7 @@ async function main() {
       exec('npm run build');
       log('✓ Build verification passed', 'green');
     } catch (error) {
-      log('\n❌ Build failed! Cannot proceed with release.', 'red');
+      log(`\n❌ Build failed: ${error.message}`, 'red');
       process.exit(1);
     }
   } else {
