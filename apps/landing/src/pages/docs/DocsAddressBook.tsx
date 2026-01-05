@@ -116,7 +116,7 @@ fetch('http://localhost:3001/api/addressbook/shared-ibans', {
         {t.docs.addressBook.endpointsTitle}
       </h2>
 
-      <div className='mt-6 overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700'>
+      <div className='not-prose mt-6 overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700'>
         <table className='min-w-full'>
           <thead className='bg-gray-50 dark:bg-gray-800'>
             <tr>
@@ -212,7 +212,7 @@ fetch('http://localhost:3001/api/addressbook/shared-ibans', {
       <h3 className='mt-6 text-lg font-semibold text-gray-900 dark:text-gray-100'>
         {t.docs.common.queryParams}
       </h3>
-      <div className='mt-6 overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700'>
+      <div className='not-prose mt-6 overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700'>
         <table className='min-w-full'>
           <thead className='bg-gray-50 dark:bg-gray-800'>
             <tr>
@@ -313,7 +313,7 @@ fetch('http://localhost:3001/api/addressbook/shared-ibans', {
         {t.docs.addressBook.cleanupRulesText}
       </p>
 
-      <div className='mt-6 overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700'>
+      <div className='not-prose mt-6 overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700'>
         <table className='min-w-full'>
           <thead className='bg-gray-50 dark:bg-gray-800'>
             <tr>
@@ -414,7 +414,7 @@ fetch('http://localhost:3001/api/addressbook/shared-ibans', {
         </p>
       </div>
 
-      <div className='mt-6 overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700'>
+      <div className='not-prose mt-6 overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700'>
         <table className='min-w-full'>
           <thead className='bg-gray-50 dark:bg-gray-800'>
             <tr>
@@ -504,7 +504,7 @@ fetch('http://localhost:3001/api/addressbook/shared-ibans', {
         {t.docs.addressBook.mergeText}
       </p>
 
-      <div className='mt-6 overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700'>
+      <div className='not-prose mt-6 overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700'>
         <table className='min-w-full'>
           <thead className='bg-gray-50 dark:bg-gray-800'>
             <tr>
@@ -581,7 +581,7 @@ fetch('http://localhost:3001/api/addressbook/shared-ibans', {
         {t.docs.addressBook.multiIbanText}
       </p>
 
-      <div className='mt-6 overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700'>
+      <div className='not-prose mt-6 overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700'>
         <table className='min-w-full'>
           <thead className='bg-gray-50 dark:bg-gray-800'>
             <tr>
@@ -647,7 +647,7 @@ fetch('http://localhost:3001/api/addressbook/shared-ibans', {
         {t.docs.addressBook.objectTitle}
       </h2>
 
-      <div className='mt-6 overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700'>
+      <div className='not-prose mt-6 overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700'>
         <table className='min-w-full'>
           <thead className='bg-gray-50 dark:bg-gray-800'>
             <tr>

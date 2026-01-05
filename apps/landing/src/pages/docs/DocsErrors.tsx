@@ -36,7 +36,7 @@ export default function DocsErrors() {
       <p className='text-gray-600 dark:text-gray-400'>
         {t.docs.errors.httpStatusText}
       </p>
-      <div className='mt-6 overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700'>
+      <div className='not-prose mt-6 overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700'>
         <table className='min-w-full'>
           <thead className='bg-gray-50 dark:bg-gray-800'>
             <tr>

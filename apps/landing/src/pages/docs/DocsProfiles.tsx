@@ -125,7 +125,7 @@ fetch('http://localhost:3001/api/profiles', {
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
         {t.docs.profiles.profileTypesTitle}
       </h2>
-      <div className='mt-6 overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700'>
+      <div className='not-prose mt-6 overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700'>
         <table className='min-w-full'>
           <thead className='bg-gray-50 dark:bg-gray-800'>
             <tr>

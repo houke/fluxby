@@ -102,7 +102,7 @@ fetch('http://localhost:3001/api/transactions/txn_123abc', {
       <h3 className='mt-6 text-lg font-semibold text-gray-900 dark:text-gray-100'>
         {t.docs.transactions.queryParams}
       </h3>
-      <div className='mt-6 overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700'>
+      <div className='not-prose mt-6 overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700'>
         <table className='min-w-full'>
           <thead className='bg-gray-50 dark:bg-gray-800'>
             <tr>
