@@ -192,7 +192,7 @@ export const nl: LandingTranslationKeys = {
     mac: {
       name: 'macOS',
       description: 'Voor Apple Silicon en Intel Macs',
-      aarchLabel: 'Apple Silicon (M1/M2/M3)',
+      aarchLabel: 'Apple Silicon',
       x64Label: 'Intel Mac',
     },
     windows: {
