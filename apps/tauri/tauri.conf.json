@@ -44,7 +44,7 @@
     "category": "Finance",
     "shortDescription": "Lokale financiële visualisatie app",
     "longDescription": "Een privacy-first financieel dashboard voor het visualiseren van bank transacties. Al je data blijft lokaal op je apparaat.",
-    "copyright": "© 2024 Fluxby",
+    "copyright": "© 2026 Fluxby",
     "macOS": {
       "entitlements": null,
       "exceptionDomain": "",
@@ -75,15 +75,8 @@
   "plugins": {
     "fs": {
       "scope": {
-        "allow": [
-          "$APPLOCALDATA/**",
-          "$DOWNLOAD/**",
-          "$DOCUMENT/**"
-        ],
-        "deny": [
-          "$HOME/**",
-          "$APPCONFIG/**"
-        ]
+        "allow": ["$APPLOCALDATA/**", "$DOWNLOAD/**", "$DOCUMENT/**"],
+        "deny": ["$HOME/**", "$APPCONFIG/**"]
       }
     },
     "dialog": {
