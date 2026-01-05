@@ -205,7 +205,7 @@ export const nl: LandingTranslationKeys = {
       description: 'Voor alle grote Linux distributies',
       label: 'Download .AppImage',
     },
-    note: 'Fluxby is gratis en open source.',
+    note: 'Je hoeft niets te installeren om Fluxby te gebruiken; het werkt volledig in je browser. Deze downloads zijn beschikbaar voor gebruikers die de voorkeur geven aan een dedicated applicatie op hun systeem.',
   },
   common: {
     copied: 'Gekopieerd!',
@@ -879,7 +879,8 @@ export const nl: LandingTranslationKeys = {
       updateTitle: 'Categorie bijwerken',
       updateText: 'Wijzig een bestaande categorie:',
       deleteTitle: 'Categorie verwijderen',
-      deleteText: 'Verwijder een categorie. Transacties worden ongecategoriseerd:',
+      deleteText:
+        'Verwijder een categorie. Transacties worden ongecategoriseerd:',
       autoCategorizationTitle: 'Auto-categorisatie',
       autoCategorizationText:
         'Fluxby kan transacties automatisch categoriseren op basis van regels die je definieert. Stel regels in via de app onder Categorieën → Regels, of gebruik de API voor aangepaste automatisering.',
@@ -1693,8 +1694,7 @@ export const nl: LandingTranslationKeys = {
         description: 'Standalone AppImage voor alle distributies.',
         label: 'Download',
       },
-      note:
-        'Je hoeft niets te installeren om Fluxby te gebruiken; het werkt volledig in je browser. Deze downloads zijn beschikbaar voor wie de voorkeur geeft aan een dedicated applicatie op hun systeem.',
+      note: 'Je hoeft niets te installeren om Fluxby te gebruiken; het werkt volledig in je browser. Deze downloads zijn beschikbaar voor wie de voorkeur geeft aan een dedicated applicatie op hun systeem.',
     },
     pricingTitle: 'Prijzen',
     pricingPage: {
