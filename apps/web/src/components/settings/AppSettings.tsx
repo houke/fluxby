@@ -29,6 +29,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { api } from '@/lib/api';
 import { useEncryption } from '@/contexts/EncryptionContext';
 import { Toast, type ToastType } from '@/components/ui/toast';
+import { version } from '../../../package.json';
 
 export function AppSettings() {
   const { t, language, setLanguage, languages } = useLanguage();
@@ -166,12 +167,19 @@ export function AppSettings() {
           data-onboarding='settings-app-preferences'
         >
           <CardHeader className='px-3 py-3 sm:px-6 sm:py-4'>
-            <CardTitle className='text-base sm:text-lg'>
-              {t.settings.appSettings}
-            </CardTitle>
-            <CardDescription className='text-xs sm:text-sm'>
-              {t.settings.appSettingsDescription}
-            </CardDescription>
+            <div className='flex items-center justify-between'>
+              <div>
+                <CardTitle className='text-base sm:text-lg'>
+                  {t.settings.appSettings}
+                </CardTitle>
+                <CardDescription className='text-xs sm:text-sm'>
+                  {t.settings.appSettingsDescription}
+                </CardDescription>
+              </div>
+              <div className='rounded-md bg-muted px-2 py-1 text-xs text-muted-foreground'>
+                v{version}
+              </div>
+            </div>
           </CardHeader>
           <CardContent className='px-3 pb-3 pt-0 sm:px-6 sm:pb-6 sm:pt-0'>
             <div className='space-y-4'>

@@ -11,19 +11,6 @@
   },
   "app": {
     "withGlobalTauri": true,
-    "fs": {
-      "scope": {
-        "allow": [
-          "$APPLOCALDATA/**",
-          "$DOWNLOAD/**",
-          "$DOCUMENT/**"
-        ],
-        "deny": [
-          "$HOME/**",
-          "$APPCONFIG/**"
-        ]
-      }
-    },
     "windows": [
       {
         "title": "Fluxby - Financieel Dashboard",
