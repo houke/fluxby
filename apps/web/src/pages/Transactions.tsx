@@ -1857,7 +1857,7 @@ export default function Transactions() {
                 </Button>
               )}
 
-              <div className='flex flex-1 gap-px overflow-x-auto overscroll-contain bg-border sm:flex-initial sm:gap-3 sm:bg-transparent'>
+              <div className='flex flex-1 gap-px overflow-x-auto overscroll-contain border-b-0 bg-border sm:flex-initial sm:gap-3 sm:bg-transparent'>
                 {accounts
                   .slice(accountScrollIndex, accountScrollIndex + 3)
                   .map((account) => {

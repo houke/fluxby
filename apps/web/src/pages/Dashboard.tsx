@@ -383,7 +383,7 @@ export default function Dashboard() {
             )}
 
             <div
-              className='flex flex-1 gap-px overflow-x-auto overscroll-contain bg-border sm:flex-initial sm:gap-3 sm:bg-transparent sm:px-2 sm:pb-2'
+              className='flex flex-1 gap-px overflow-x-auto overscroll-contain border-b-0 bg-border sm:flex-initial sm:gap-3 sm:bg-transparent sm:px-2 sm:pb-2'
               style={{ WebkitOverflowScrolling: 'touch' }}
             >
               {accounts
