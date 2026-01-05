@@ -10,7 +10,7 @@ export default function DocsLayout() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
-    <div className='flex min-h-screen overflow-x-hidden bg-gray-50 dark:bg-gray-900'>
+    <div className='flex min-h-screen bg-gray-50 dark:bg-gray-900'>
       <DocsSidebar
         isOpen={isMobileMenuOpen}
         onClose={() => setIsMobileMenuOpen(false)}
@@ -121,14 +121,14 @@ export default function DocsLayout() {
 
         {/* Main content */}
         <main className='flex-1 px-4 py-8 lg:px-8 lg:py-12'>
-          <div className='mx-auto max-w-4xl'>
+          <div className='mx-auto'>
             <Outlet />
           </div>
         </main>
 
         {/* Footer */}
         <footer className='border-t border-gray-200 bg-white px-8 py-6 dark:border-gray-700 dark:bg-gray-800'>
-          <div className='mx-auto max-w-4xl text-center text-sm text-gray-500 dark:text-gray-400'>
+          <div className='mx-auto text-center text-sm text-gray-500 dark:text-gray-400'>
             © Fluxby. {t.docs?.footerText || 'Built with ❤️ for developers.'}
           </div>
         </footer>
