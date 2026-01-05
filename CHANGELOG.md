@@ -1,5 +1,42 @@
 # Changelog
 
+## v1.1.0
+
+**Release Date:** 2026-01-05
+
+### Features
+
+- **settings:** remove Install Fluxby card from app settings
+- **web:** improve mobile transaction UI
+- **landing:** fix developer docs responsiveness and table overflow
+- **landing:** localize developer documentation and fix mobile responsiveness
+- **landing:** translate Downloads section
+- **web:** replace all localStorage usage with OPFS for persistent storage
+- **web:** restrict PWA manifest to /app and set /dashboard as root
+
+### Bug Fixes
+
+- **web:** add consistent horizontal spacing to mobile cards
+- **web,landing:** improve mobile UI styling across multiple pages
+- **landing:** add missing OpenAPI documentation translations
+- **landing:** constrain developer docs width to match help center
+- **ui:** reposition KPI card icons to right side on desktop
+- **docs:** remove overflow-x-hidden and max-width constraints
+- **i18n:** remove M1/M2/M3 specification from Apple Silicon label
+- **i18n:** correct Dutch downloads note translation
+- **landing:** prevent horizontal overflow in developer docs on mobile
+- **landing:** use shared CTA translations for Features download section
+
+### Styles
+
+- **web:** improve mobile layout for transaction filters and rows
+- **web:** fix double borders between account cards and KPI cards on mobile
+- **web:** fix responsive KPI card icon positioning
+
+### Chores
+
+- **ci:** ensure GitHub release is marked as latest
+
 ## v1.0.4
 
 **Release Date:** 2026-01-04

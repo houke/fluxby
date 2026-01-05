@@ -1761,6 +1761,17 @@ export const nl: LandingTranslationKeys = {
     updatesPage: {
       intro:
         'Bekijk wat er nieuw is in Fluxby. Hier vind je alle updates en nieuwe features.',
+      v110Date: '5 januari 2026',
+      v110Title: 'Release 1.1.0',
+      v110Description: '7 nieuwe features en 10 bugfixes.',
+      v110F1Title: 'Remove Install Fluxby card from app settings',
+      v110F1Desc: 'Nieuwe functionaliteit toegevoegd.',
+      v110F2Title: 'Web app verbeteringen',
+      v110F2Desc: '3 nieuwe features. Zie changelog voor details.',
+      v110F3Title: 'Landingspagina verbeteringen',
+      v110F3Desc: '3 nieuwe features. Zie changelog voor details.',
+      v110F4Title: 'Bugfixes',
+      v110F4Desc: '10 bugs opgelost. Zie changelog voor details.',
       v104Date: '4 januari 2026',
       v104Title: 'Release 1.0.4',
       v104Description: 'Nieuwe verbeteringen en bugfixes.',

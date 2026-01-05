@@ -1,14 +1,17 @@
 import { useLanguage } from '../../contexts/LanguageContext';
 import {
+  ,
   BarChart3,
   BookOpen,
   Brain,
   Building2,
   Download,
   FileSpreadsheet,
+  FileText,
   Globe,
   Palette,
   Rocket,
+  Settings,
   Shield,
   Sparkles,
   Tag,
@@ -23,6 +26,36 @@ const UpdatesContent = () => {
   const updatesPage = t.legal?.updatesPage;
 
   const releases = [
+        {
+      version: '1.1.0',
+      date: updatesPage?.v110Date || '5 januari 2026',
+      title: updatesPage?.v110Title || 'Release 1.1.0',
+      description:
+        updatesPage?.v110Description ||
+        '7 nieuwe features en 10 bugfixes.',
+      features: [
+        {
+          icon: Settings,
+          title: updatesPage?.v110F1Title || 'Remove Install Fluxby card from app settings',
+          description: updatesPage?.v110F1Desc || 'Nieuwe functionaliteit toegevoegd.',
+        },
+        {
+          icon: Globe,
+          title: updatesPage?.v110F2Title || 'Web app verbeteringen',
+          description: updatesPage?.v110F2Desc || '3 nieuwe features. Zie changelog voor details.',
+        },
+        {
+          icon: FileText,
+          title: updatesPage?.v110F3Title || 'Landingspagina verbeteringen',
+          description: updatesPage?.v110F3Desc || '3 nieuwe features. Zie changelog voor details.',
+        },
+        {
+          icon: Wrench,
+          title: updatesPage?.v110F4Title || 'Bugfixes',
+          description: updatesPage?.v110F4Desc || '10 bugs opgelost. Zie changelog voor details.',
+        },
+      ],
+    },
     {
       version: '1.0.4',
       date: updatesPage?.v104Date || '4 januari 2026',
