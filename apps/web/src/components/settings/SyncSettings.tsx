@@ -2,7 +2,7 @@
  * Sync Settings Component
  * UI for peer-to-peer device syncing
  */
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import {
   Smartphone,
   Laptop,
@@ -43,6 +43,7 @@ import {
 import { useSync } from '@/contexts/SyncContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
+import { SyncDebugPanel } from './SyncDebugPanel';
 
 export function SyncSettings() {
   const { t } = useLanguage();
@@ -68,6 +69,28 @@ export function SyncSettings() {
   const [isConnecting, setIsConnecting] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
   const [connectionError, setConnectionError] = useState<string | null>(null);
+  const [showDebugPanel, setShowDebugPanel] = useState(false);
+
+  // Triple-click detection for debug panel
+  const clickCountRef = useRef(0);
+  const clickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleTitleClick = () => {
+    clickCountRef.current += 1;
+
+    if (clickTimerRef.current) {
+      clearTimeout(clickTimerRef.current);
+    }
+
+    if (clickCountRef.current === 3) {
+      setShowDebugPanel(!showDebugPanel);
+      clickCountRef.current = 0;
+    } else {
+      clickTimerRef.current = setTimeout(() => {
+        clickCountRef.current = 0;
+      }, 500);
+    }
+  };
 
   // Handle device name save
   const handleSaveName = () => {
@@ -138,7 +161,10 @@ export function SyncSettings() {
     <div className='-mx-3 sm:mx-0'>
       <Card className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'>
         <CardHeader className='px-3 py-3 sm:px-6 sm:py-4'>
-          <CardTitle className='flex items-center gap-2 text-base sm:text-lg'>
+          <CardTitle
+            className='flex cursor-default select-none items-center gap-2 text-base sm:text-lg'
+            onClick={handleTitleClick}
+          >
             {t.settings?.sync?.title || 'Device sync'}
             <Badge variant='secondary'>
               {t.settings?.sync?.inDevelopment || 'In development'}

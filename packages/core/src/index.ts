@@ -17,8 +17,17 @@ export * from './analytics.js';
 // Sync logic
 export * from './sync.js';
 
+// Sync logger
+export * from './sync-logger.js';
+
+// Sync protocol
+export * from './sync-protocol.js';
+
 // Peer-to-peer device pairing
 export * from './peer.js';
+
+// Enhanced peer sync with heartbeats
+export * from './peer-enhanced.js';
 
 // Data validation
 export * from './validation.js';

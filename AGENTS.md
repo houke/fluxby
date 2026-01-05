@@ -57,6 +57,10 @@ npm run test:run
 
 Only commit when all checks pass. Fix any issues before proceeding.
 
+### General LLM Contribution Guidelines
+
+**IMPORTANT**: Any LLM contributing to this project must ensure that all ESLint, TypeScript, and test errors are fixed, even if they are outside the immediate scope of the task.
+
 ## Project Structure
 
 ```
