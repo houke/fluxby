@@ -94,18 +94,10 @@ export default function DocsOpenAPI() {
             {t.docs.openapi.withSwagger}
           </h3>
           <ol className='mb-0 list-decimal space-y-2 pl-5 text-gray-600 dark:text-gray-400'>
-            <li>
-              {t.docs.openapi.swaggerStep1}
-            </li>
-            <li>
-              {t.docs.openapi.swaggerStep2}
-            </li>
-            <li>
-              {t.docs.openapi.swaggerStep3}
-            </li>
-            <li>
-              {t.docs.openapi.swaggerStep4}
-            </li>
+            <li>{t.docs.openapi.swaggerStep1}</li>
+            <li>{t.docs.openapi.swaggerStep2}</li>
+            <li>{t.docs.openapi.swaggerStep3}</li>
+            <li>{t.docs.openapi.swaggerStep4}</li>
           </ol>
         </div>
 
@@ -114,18 +106,10 @@ export default function DocsOpenAPI() {
             {t.docs.openapi.withPostman}
           </h3>
           <ol className='mb-0 list-decimal space-y-2 pl-5 text-gray-600 dark:text-gray-400'>
-            <li>
-              {t.docs.openapi.postmanStep1}
-            </li>
-            <li>
-              {t.docs.openapi.postmanStep2}
-            </li>
-            <li>
-              {t.docs.openapi.postmanStep3}
-            </li>
-            <li>
-              {t.docs.openapi.postmanStep4}
-            </li>
+            <li>{t.docs.openapi.postmanStep1}</li>
+            <li>{t.docs.openapi.postmanStep2}</li>
+            <li>{t.docs.openapi.postmanStep3}</li>
+            <li>{t.docs.openapi.postmanStep4}</li>
           </ol>
         </div>
 
@@ -156,18 +140,10 @@ npx @openapitools/openapi-generator-cli generate \\
             {t.docs.openapi.brunoDescription}
           </p>
           <ol className='mb-4 list-decimal space-y-2 pl-5 text-gray-600 dark:text-gray-400'>
-            <li>
-              {t.docs.openapi.brunoStep1}
-            </li>
-            <li>
-              {t.docs.openapi.brunoStep2}
-            </li>
-            <li>
-              {t.docs.openapi.brunoStep3}
-            </li>
-            <li>
-              {t.docs.openapi.brunoStep4}
-            </li>
+            <li>{t.docs.openapi.brunoStep1}</li>
+            <li>{t.docs.openapi.brunoStep2}</li>
+            <li>{t.docs.openapi.brunoStep3}</li>
+            <li>{t.docs.openapi.brunoStep4}</li>
           </ol>
           <div className='flex flex-wrap gap-3'>
             <a

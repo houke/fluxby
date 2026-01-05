@@ -1689,8 +1689,8 @@ function StatsCard({
 
   return (
     <Card className='h-full rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'>
-      <CardContent className='relative flex h-full items-center justify-between overflow-hidden p-4 sm:p-6'>
-        <div className='flex-1'>
+      <CardContent className='relative flex h-full flex-col justify-between overflow-hidden p-4 sm:flex-row sm:items-center sm:justify-between sm:p-6'>
+        <div className='flex-1 sm:mr-4'>
           <p className='text-xs text-muted-foreground sm:text-sm'>{title}</p>
           <p
             className={`mt-1 text-lg font-bold sm:text-2xl ${valueColor || ''}`}
@@ -1723,7 +1723,7 @@ function StatsCard({
           ) : null}
         </div>
         <div
-          className={`ml-4 flex h-12 w-12 shrink-0 items-center justify-center rounded-full ${
+          className={`absolute -right-2 -top-2 h-12 w-12 rounded-full flex items-center justify-center sm:relative sm:inset-auto sm:top-auto sm:right-auto sm:ml-4 sm:flex-shrink-0 ${
             bgColor || getBgColor(iconColor)
           }`}
         >

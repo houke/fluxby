@@ -111,8 +111,7 @@ function mergeChanges(local, remote) {
       </p>
       <div className='mt-4 rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-950/30'>
         <p className='mb-0 text-sm text-amber-800 dark:text-amber-300'>
-          <strong>ℹ️</strong>{' '}
-          {t.docs.architecture.privacyNote}
+          <strong>ℹ️</strong> {t.docs.architecture.privacyNote}
         </p>
       </div>
       <CodeBlock code={securityExample} language='text' />
@@ -122,16 +121,13 @@ function mergeChanges(local, remote) {
       </h3>
       <ul className='text-gray-600 dark:text-gray-400'>
         <li>
-          <strong>Web:</strong>{' '}
-          {t.docs.architecture.autoLockWeb}
+          <strong>Web:</strong> {t.docs.architecture.autoLockWeb}
         </li>
         <li>
-          <strong>Desktop:</strong>{' '}
-          {t.docs.architecture.autoLockDesktop}
+          <strong>Desktop:</strong> {t.docs.architecture.autoLockDesktop}
         </li>
         <li>
-          <strong>Idle timeout:</strong>{' '}
-          {t.docs.architecture.autoLockIdle}
+          <strong>Idle timeout:</strong> {t.docs.architecture.autoLockIdle}
         </li>
       </ul>
 
@@ -219,16 +215,13 @@ function mergeChanges(local, remote) {
       </p>
       <ul className='text-gray-600 dark:text-gray-400'>
         <li>
-          <strong>Desktop:</strong>{' '}
-          {t.docs.architecture.backupDesktop}
+          <strong>Desktop:</strong> {t.docs.architecture.backupDesktop}
         </li>
         <li>
-          <strong>Web:</strong>{' '}
-          {t.docs.architecture.backupWeb}
+          <strong>Web:</strong> {t.docs.architecture.backupWeb}
         </li>
         <li>
-          <strong>Formaat:</strong>{' '}
-          {t.docs.architecture.backupFormat}
+          <strong>Formaat:</strong> {t.docs.architecture.backupFormat}
         </li>
       </ul>
 
@@ -353,20 +346,16 @@ function mergeChanges(local, remote) {
       </h3>
       <ul className='text-gray-600 dark:text-gray-400'>
         <li>
-          <strong>Privacy:</strong>{' '}
-          {t.docs.architecture.whySeparate1}
+          <strong>Privacy:</strong> {t.docs.architecture.whySeparate1}
         </li>
         <li>
-          <strong>Isolatie:</strong>{' '}
-          {t.docs.architecture.whySeparate2}
+          <strong>Isolatie:</strong> {t.docs.architecture.whySeparate2}
         </li>
         <li>
-          <strong>Flexibiliteit:</strong>{' '}
-          {t.docs.architecture.whySeparate3}
+          <strong>Flexibiliteit:</strong> {t.docs.architecture.whySeparate3}
         </li>
         <li>
-          <strong>Serverless:</strong>{' '}
-          {t.docs.architecture.whySeparate4}
+          <strong>Serverless:</strong> {t.docs.architecture.whySeparate4}
         </li>
       </ul>
     </article>

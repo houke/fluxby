@@ -23,7 +23,9 @@ const Downloads = () => {
       id: 'mac',
       name: t.downloads?.mac?.name || 'macOS',
       icon: Apple,
-      description: t.downloads?.mac?.description || 'Native ervaring voor Apple Silicon & Intel Macs.',
+      description:
+        t.downloads?.mac?.description ||
+        'Native ervaring voor Apple Silicon & Intel Macs.',
       downloads: [
         {
           label: t.downloads?.mac?.aarchLabel || 'Apple Silicon',
@@ -41,7 +43,9 @@ const Downloads = () => {
       id: 'windows',
       name: t.downloads?.windows?.name || 'Windows',
       icon: Monitor,
-      description: t.downloads?.windows?.description || 'Eenvoudige installatie voor Windows 10 & 11.',
+      description:
+        t.downloads?.windows?.description ||
+        'Eenvoudige installatie voor Windows 10 & 11.',
       downloads: [
         {
           label: t.downloads?.windows?.label || 'Download',
@@ -54,7 +58,9 @@ const Downloads = () => {
       id: 'linux',
       name: t.downloads?.linux?.name || 'Linux',
       icon: AppWindow,
-      description: t.downloads?.linux?.description || 'Standalone AppImage voor alle distributies.',
+      description:
+        t.downloads?.linux?.description ||
+        'Standalone AppImage voor alle distributies.',
       downloads: [
         {
           label: t.downloads?.linux?.label || 'Download',
@@ -137,8 +143,8 @@ const Downloads = () => {
                 <span className='text-fluxby-purple font-semibold'>
                   volledig in je browser
                 </span>
-                . Deze downloads zijn beschikbaar voor wie de voorkeur geeft aan een
-                dedicated applicatie op hun systeem.
+                . Deze downloads zijn beschikbaar voor wie de voorkeur geeft aan
+                een dedicated applicatie op hun systeem.
               </>
             )}
           </p>
