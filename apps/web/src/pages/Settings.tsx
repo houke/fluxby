@@ -13,7 +13,6 @@ import { ProfileManager } from '@/components/settings/ProfileManager';
 import { OnboardingSettings } from '@/components/settings/OnboardingSettings';
 import { ProfileDataSettings } from '@/components/settings/ProfileDataSettings';
 import { SyncSettings } from '@/components/settings/SyncSettings';
-import { PWAInstallBanner } from '@/components/settings/PWAInstallBanner';
 
 const VALID_TABS = ['active-profile', 'manage-profiles', 'app-settings'];
 
@@ -89,7 +88,6 @@ export default function Settings() {
           className='space-y-0 sm:space-y-6'
           data-onboarding='settings-app-content'
         >
-          <PWAInstallBanner />
           <OnboardingSettings />
           <AppSettings />
           <PaymentProcessorSettings />
