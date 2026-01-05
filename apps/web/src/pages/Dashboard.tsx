@@ -1689,47 +1689,43 @@ function StatsCard({
 
   return (
     <Card className='h-full rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'>
-      <CardContent className='relative flex h-full flex-col justify-between overflow-hidden p-4 sm:p-6'>
-        <div className='flex items-center justify-between'>
-          <div>
-            <p className='text-xs text-muted-foreground sm:text-sm'>{title}</p>
-            <p
-              className={`mt-1 text-lg font-bold sm:text-2xl ${valueColor || ''}`}
-            >
-              {value}
-            </p>
-            {trend !== undefined && trend !== 0 ? (
-              <div className='mt-1 flex items-center gap-1'>
-                {trend > 0 ? (
-                  <TrendingUp className='h-4 w-4 text-success' />
-                ) : (
-                  <TrendingDown className='h-4 w-4 text-destructive' />
-                )}
-                <span
-                  className={`text-sm ${
-                    trend > 0 ? 'text-success' : 'text-destructive'
-                  }`}
-                >
-                  {trend > 0 ? '+' : ''}
-                  {trend.toFixed(1)}%
+      <CardContent className='relative flex h-full items-center justify-between overflow-hidden p-4 sm:p-6'>
+        <div className='flex-1'>
+          <p className='text-xs text-muted-foreground sm:text-sm'>{title}</p>
+          <p
+            className={`mt-1 text-lg font-bold sm:text-2xl ${valueColor || ''}`}
+          >
+            {value}
+          </p>
+          {trend !== undefined && trend !== 0 ? (
+            <div className='mt-1 flex items-center gap-1'>
+              {trend > 0 ? (
+                <TrendingUp className='h-4 w-4 text-success' />
+              ) : (
+                <TrendingDown className='h-4 w-4 text-destructive' />
+              )}
+              <span
+                className={`text-sm ${
+                  trend > 0 ? 'text-success' : 'text-destructive'
+                }`}
+              >
+                {trend > 0 ? '+' : ''}
+                {trend.toFixed(1)}%
+              </span>
+              {trendLabel && (
+                <span className='text-sm text-muted-foreground'>
+                  {trendLabel}
                 </span>
-                {trendLabel && (
-                  <span className='text-sm text-muted-foreground'>
-                    {trendLabel}
-                  </span>
-                )}
-              </div>
-            ) : trendLabel ? (
-              <p className='mt-1 text-xs text-muted-foreground'>{trendLabel}</p>
-            ) : (
-              <p className='mt-1 text-xs text-transparent'>-</p>
-            )}
-          </div>
+              )}
+            </div>
+          ) : trendLabel ? (
+            <p className='mt-1 text-xs text-muted-foreground'>{trendLabel}</p>
+          ) : null}
         </div>
         <div
-          className={`absolute -right-2 -top-2 h-12 w-12 rounded-full ${
+          className={`ml-4 flex h-12 w-12 shrink-0 items-center justify-center rounded-full ${
             bgColor || getBgColor(iconColor)
-          } flex items-center justify-center sm:static sm:flex-shrink-0`}
+          }`}
         >
           <Icon className={`h-5 w-5 sm:h-6 sm:w-6 ${iconColor}`} />
         </div>

@@ -1947,84 +1947,76 @@ export default function Transactions() {
           data-onboarding='transaction-summary'
         >
           <Card className='h-full rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'>
-            <CardContent className='relative flex h-full flex-col justify-between overflow-hidden p-4 sm:p-6'>
-              <div className='flex items-center justify-between'>
-                <div className='mr-4 min-w-0 flex-1'>
-                  <p className='text-xs text-muted-foreground sm:text-sm'>
-                    {t.dashboard.income}
-                  </p>
-                  <p className='mt-1 whitespace-nowrap text-lg font-bold sm:text-2xl'>
-                    {formatCurrency(totals.income)}
-                  </p>
-                </div>
+            <CardContent className='relative flex h-full items-center justify-between overflow-hidden p-4 sm:p-6'>
+              <div className='flex-1'>
+                <p className='text-xs text-muted-foreground sm:text-sm'>
+                  {t.dashboard.income}
+                </p>
+                <p className='mt-1 whitespace-nowrap text-lg font-bold sm:text-2xl'>
+                  {formatCurrency(totals.income)}
+                </p>
               </div>
-              <div className='absolute -right-2 -top-2 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/30 sm:static sm:flex-shrink-0'>
+              <div className='ml-4 flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/30'>
                 <ArrowUpRight className='h-5 w-5 text-emerald-600 sm:h-6 sm:w-6' />
               </div>
             </CardContent>
           </Card>
           <Card className='h-full rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'>
-            <CardContent className='relative flex h-full flex-col justify-between overflow-hidden p-4 sm:p-6'>
-              <div className='flex items-center justify-between'>
-                <div className='mr-4 min-w-0 flex-1'>
-                  <p className='text-xs text-muted-foreground sm:text-sm'>
-                    {t.dashboard.expenses}
-                  </p>
-                  <p className='mt-1 whitespace-nowrap text-lg font-bold sm:text-2xl'>
-                    {formatCurrency(totals.expenses)}
-                  </p>
-                </div>
+            <CardContent className='relative flex h-full items-center justify-between overflow-hidden p-4 sm:p-6'>
+              <div className='flex-1'>
+                <p className='text-xs text-muted-foreground sm:text-sm'>
+                  {t.dashboard.expenses}
+                </p>
+                <p className='mt-1 whitespace-nowrap text-lg font-bold sm:text-2xl'>
+                  {formatCurrency(totals.expenses)}
+                </p>
               </div>
-              <div className='absolute -right-2 -top-2 flex h-12 w-12 items-center justify-center rounded-full bg-rose-100 dark:bg-rose-900/30 sm:static sm:flex-shrink-0'>
+              <div className='ml-4 flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-rose-100 dark:bg-rose-900/30'>
                 <ArrowDownRight className='h-5 w-5 text-rose-600 sm:h-6 sm:w-6' />
               </div>
             </CardContent>
           </Card>
           <Card className='h-full rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'>
-            <CardContent className='relative flex h-full flex-col justify-between overflow-hidden p-4 sm:p-6'>
-              <div className='flex items-center justify-between'>
-                <div className='mr-4 min-w-0 flex-1'>
-                  <p className='text-xs text-muted-foreground sm:text-sm'>
-                    {t.dashboard.toSavings}
-                  </p>
-                  <p className='mt-1 whitespace-nowrap text-lg font-bold sm:text-2xl'>
-                    {formatCurrency(totals.netSavingsTransfer)}
-                  </p>
-                  <p className='mt-1 whitespace-nowrap text-xs text-muted-foreground'>
-                    +{formatCurrency(totals.transferToSavings)} / -
-                    {formatCurrency(totals.transferFromSavings)}
-                  </p>
-                </div>
+            <CardContent className='relative flex h-full items-center justify-between overflow-hidden p-4 sm:p-6'>
+              <div className='flex-1'>
+                <p className='text-xs text-muted-foreground sm:text-sm'>
+                  {t.dashboard.toSavings}
+                </p>
+                <p className='mt-1 whitespace-nowrap text-lg font-bold sm:text-2xl'>
+                  {formatCurrency(totals.netSavingsTransfer)}
+                </p>
+                <p className='mt-1 whitespace-nowrap text-xs text-muted-foreground'>
+                  +{formatCurrency(totals.transferToSavings)} / -
+                  {formatCurrency(totals.transferFromSavings)}
+                </p>
               </div>
-              <div className='absolute -right-2 -top-2 flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30 sm:static sm:flex-shrink-0'>
+              <div className='ml-4 flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30'>
                 <PiggyBank className='h-5 w-5 text-blue-600 sm:h-6 sm:w-6' />
               </div>
             </CardContent>
           </Card>
           <Card className='h-full rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'>
-            <CardContent className='relative flex h-full flex-col justify-between overflow-hidden p-4 sm:p-6'>
-              <div className='flex items-center justify-between'>
-                <div className='mr-4 min-w-0 flex-1'>
-                  <p className='text-xs text-muted-foreground sm:text-sm'>
-                    {t.dashboard.netResult}
-                  </p>
-                  <p
-                    className={cn(
-                      'mt-1 whitespace-nowrap text-lg font-bold sm:text-2xl',
-                      totals.balance === 0
-                        ? 'text-gray-900 dark:text-gray-100'
-                        : totals.balance > 0
-                          ? 'text-emerald-600'
-                          : 'text-rose-600'
-                    )}
-                  >
-                    {formatCurrency(totals.balance)}
-                  </p>
-                </div>
+            <CardContent className='relative flex h-full items-center justify-between overflow-hidden p-4 sm:p-6'>
+              <div className='flex-1'>
+                <p className='text-xs text-muted-foreground sm:text-sm'>
+                  {t.dashboard.netResult}
+                </p>
+                <p
+                  className={cn(
+                    'mt-1 whitespace-nowrap text-lg font-bold sm:text-2xl',
+                    totals.balance === 0
+                      ? 'text-gray-900 dark:text-gray-100'
+                      : totals.balance > 0
+                        ? 'text-emerald-600'
+                        : 'text-rose-600'
+                  )}
+                >
+                  {formatCurrency(totals.balance)}
+                </p>
               </div>
               <div
                 className={cn(
-                  'absolute -right-2 -top-2 flex h-12 w-12 items-center justify-center rounded-full sm:static sm:flex-shrink-0',
+                  'ml-4 flex h-12 w-12 shrink-0 items-center justify-center rounded-full',
                   totals.balance === 0
                     ? 'bg-gray-100 dark:bg-gray-900/30'
                     : totals.balance > 0
