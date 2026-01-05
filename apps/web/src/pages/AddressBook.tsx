@@ -2612,7 +2612,7 @@ export default function AddressBook() {
                   </p>
                 </div>
               ) : (
-                <div className='space-y-3'>
+                <div className='space-y-0 sm:space-y-3'>
                   {(() => {
                     let firstMergedFound = false;
                     return visibleContacts.map((contact, contactIndex) => {
@@ -2627,7 +2627,7 @@ export default function AddressBook() {
                         <div
                           key={contact.id}
                           className={cn(
-                            'group flex items-center justify-between rounded-lg border bg-card p-4',
+                            'group flex items-center justify-between border-x-0 border-b-0 border-t bg-card p-4 sm:rounded-lg sm:border',
                             editingContactId !== contact.id &&
                               'cursor-pointer transition-colors hover:bg-muted/50'
                           )}

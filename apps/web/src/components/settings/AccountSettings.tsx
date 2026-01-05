@@ -152,22 +152,23 @@ const SortableAccountItem = React.memo(function SortableAccountItem({
     <div
       ref={setNodeRef}
       style={style}
-      className={`flex items-center justify-between rounded-lg border bg-card p-4 ${
+      className={`flex flex-col items-start gap-3 rounded-lg border bg-card p-4 sm:flex-row sm:items-center sm:justify-between ${
         isDragging ? 'opacity-50' : ''
       }`}
     >
       {editingId === account.id ? (
-        <div className='flex flex-1 items-center gap-3'>
+        <div className='flex w-full flex-col gap-3 sm:flex-row sm:items-center'>
           <Input
             value={editName}
             onChange={(e) => setEditName(e.target.value)}
             className='flex-1'
+            placeholder='Account name'
           />
           <Select
             value={editType}
             onValueChange={(v) => setEditType(v as typeof editType)}
           >
-            <SelectTrigger className='w-40'>
+            <SelectTrigger className='w-full sm:w-40'>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -184,47 +185,49 @@ const SortableAccountItem = React.memo(function SortableAccountItem({
             value={editBalance}
             onChange={(e) => setEditBalance(e.target.value)}
             placeholder='Balance'
-            className='w-32'
+            className='w-full sm:w-32'
           />
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  size='icon'
-                  onClick={handleUpdate}
-                  className='h-8 w-8 rounded-full hover:bg-purple-600 hover:text-white'
-                >
-                  <Check className='h-4 w-4' />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                <p>{(t.common as any)?.save || 'Opslaan'}</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  size='icon'
-                  variant='ghost'
-                  onClick={() => setEditingId(null)}
-                  className='h-8 w-8 rounded-full hover:bg-purple-600 hover:text-white'
-                >
-                  <X className='h-4 w-4' />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                <p>{(t.common as any)?.cancel || 'Annuleren'}</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          <div className='flex gap-2'>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    size='icon'
+                    onClick={handleUpdate}
+                    className='h-8 w-8 rounded-full hover:bg-purple-600 hover:text-white'
+                  >
+                    <Check className='h-4 w-4' />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                  <p>{(t.common as any)?.save || 'Opslaan'}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    size='icon'
+                    variant='ghost'
+                    onClick={() => setEditingId(null)}
+                    className='h-8 w-8 rounded-full hover:bg-purple-600 hover:text-white'
+                  >
+                    <X className='h-4 w-4' />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                  <p>{(t.common as any)?.cancel || 'Annuleren'}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
         </div>
       ) : (
         <>
-          <div className='flex items-center gap-3'>
+          <div className='flex w-full items-center gap-3 sm:w-auto'>
             <button
               className='cursor-grab rounded p-1 hover:bg-muted active:cursor-grabbing'
               {...attributes}
@@ -245,15 +248,15 @@ const SortableAccountItem = React.memo(function SortableAccountItem({
             >
               {getAccountIcon(account.type, account.currentBalance)}
             </div>
-            <div>
-              <p className='font-medium'>{account.name}</p>
-              <p className='text-sm text-muted-foreground'>
+            <div className='min-w-0 flex-1'>
+              <p className='truncate font-medium'>{account.name}</p>
+              <p className='truncate text-sm text-muted-foreground'>
                 {account.iban} • {getAccountTypeLabel(account.type)}
               </p>
             </div>
           </div>
-          <div className='flex items-center gap-4'>
-            <div className='text-right'>
+          <div className='flex w-full items-center justify-between gap-4 sm:w-auto'>
+            <div className='text-left sm:text-right'>
               <p className='text-lg font-semibold'>
                 {formatCurrency(account.currentBalance)}
               </p>

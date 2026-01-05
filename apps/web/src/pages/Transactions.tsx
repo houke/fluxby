@@ -2045,10 +2045,10 @@ export default function Transactions() {
             className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'
             data-onboarding='transaction-filters'
           >
-            <CardContent className='p-3 sm:p-4'>
+            <CardContent className='px-0 py-3 sm:p-4'>
               <div className='flex flex-wrap gap-4'>
                 <div
-                  className='min-w-[200px] flex-1'
+                  className='w-full min-w-[200px] sm:flex-1'
                   data-onboarding='transaction-search'
                 >
                   <SearchInput
@@ -2059,7 +2059,7 @@ export default function Transactions() {
                   />
                 </div>
                 <div
-                  className='flex flex-col gap-2 sm:flex-row'
+                  className='flex w-full flex-col gap-2 sm:w-auto sm:flex-row'
                   data-onboarding='transaction-filter-buttons'
                 >
                   {/* Transaction type filter - Optimized */}
@@ -2245,7 +2245,7 @@ export default function Transactions() {
                 </div>
               </div>
             </CardHeader>
-            <CardContent className='px-3 pb-3 pt-0 sm:px-6 sm:pb-6 sm:pt-0'>
+            <CardContent className='px-0 pb-3 pt-0 sm:px-6 sm:pb-6 sm:pt-0'>
               {/* Show skeleton during:
                 1. Initial load (isLoading)
                 2. Fetching with no data yet
@@ -2309,7 +2309,7 @@ export default function Transactions() {
                               }
                             }}
                           >
-                            <div className='flex min-w-0 flex-1 items-center gap-4 p-4 sm:p-0'>
+                            <div className='flex min-w-0 flex-1 items-center gap-4 px-0 py-4 sm:p-0'>
                               <div
                                 className={cn(
                                   'flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full',

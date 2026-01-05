@@ -771,7 +771,7 @@ export default function Budgets() {
                 ))}
               </div>
             ) : filteredSortedBudgets.length > 0 ? (
-              <div className='space-y-4'>
+              <div className='space-y-0 sm:space-y-4'>
                 {filteredSortedBudgets.map((budget, budgetIndex) => {
                   const categoryInfo = getCategoryInfo(budget.categoryId);
                   const isEditing = editingId === budget.id;
@@ -781,7 +781,7 @@ export default function Budgets() {
                     <div
                       key={budget.id}
                       className={cn(
-                        'group rounded-lg border bg-card p-4',
+                        'group border-x-0 border-b-0 border-t bg-card p-4 sm:rounded-lg sm:border',
                         !isEditing &&
                           'cursor-pointer transition-colors hover:bg-muted/50'
                       )}
