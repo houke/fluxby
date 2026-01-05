@@ -11,12 +11,17 @@ const Footer = () => {
         <div className='mb-12 grid gap-8 md:grid-cols-4'>
           {/* Brand */}
           <div className='md:col-span-2'>
-            <Link
-              to='/'
-              className='text-fluxby-light mb-4 block text-3xl font-black transition-opacity hover:opacity-80'
-            >
-              Fluxby
-            </Link>
+            <div className='mb-4 flex items-center gap-3'>
+              <Link
+                to='/'
+                className='text-fluxby-light text-3xl font-black transition-opacity hover:opacity-80'
+              >
+                Fluxby
+              </Link>
+              <span className='inline-flex items-center gap-1.5 rounded-full bg-purple-500/20 px-2 py-1 text-xs font-medium text-purple-300'>
+                v{__APP_VERSION__}
+              </span>
+            </div>
             <p className='mb-6 max-w-md text-gray-400'>
               {t.footer.description}
             </p>
