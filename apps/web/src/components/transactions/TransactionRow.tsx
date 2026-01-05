@@ -248,7 +248,7 @@ export const TransactionRow = memo(function TransactionRow({
     <div className='rounded-lg border' data-onboarding='transaction-row'>
       <div
         className={cn(
-          'group flex items-center justify-between rounded-lg p-4 transition-colors hover:bg-muted/50',
+          'group flex items-center justify-between rounded-lg px-0 py-4 transition-colors hover:bg-muted/50 sm:px-4',
           isRecurring && 'cursor-pointer'
         )}
         onClick={() => {

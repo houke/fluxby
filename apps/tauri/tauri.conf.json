@@ -75,15 +75,8 @@
   "plugins": {
     "fs": {
       "scope": {
-        "allow": [
-          "$APPLOCALDATA/**",
-          "$DOWNLOAD/**",
-          "$DOCUMENT/**"
-        ],
-        "deny": [
-          "$HOME/**",
-          "$APPCONFIG/**"
-        ]
+        "allow": ["$APPLOCALDATA/**", "$DOWNLOAD/**", "$DOCUMENT/**"],
+        "deny": ["$HOME/**", "$APPCONFIG/**"]
       }
     },
     "dialog": {

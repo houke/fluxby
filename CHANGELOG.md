@@ -105,4 +105,3 @@
 ### Build System
 
 - **deps:** bump esbuild in the npm_and_yarn group across 1 directory
-
