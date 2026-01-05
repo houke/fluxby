@@ -15,7 +15,7 @@ export default function DocsLayout() {
         isOpen={isMobileMenuOpen}
         onClose={() => setIsMobileMenuOpen(false)}
       />
-      <div className='flex flex-1 flex-col bg-gray-50 dark:bg-gray-900'>
+      <div className='flex flex-1 flex-col overflow-x-hidden bg-gray-50 dark:bg-gray-900'>
         {/* Top bar */}
         <header className='sticky top-0 z-10 flex items-center justify-between border-b border-gray-200 bg-white px-4 py-4 dark:border-gray-700 dark:bg-gray-800 lg:px-8'>
           <div className='flex items-center gap-4'>

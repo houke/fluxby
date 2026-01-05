@@ -2059,7 +2059,7 @@ export default function Transactions() {
                   />
                 </div>
                 <div
-                  className='flex gap-2'
+                  className='flex flex-col gap-2 sm:flex-row'
                   data-onboarding='transaction-filter-buttons'
                 >
                   {/* Transaction type filter - Optimized */}
@@ -2289,12 +2289,12 @@ export default function Transactions() {
                       return (
                         <div
                           key={tx.id}
-                          className='rounded-lg border'
+                          className='border-x-0 border-b-0 border-t sm:rounded-lg sm:border'
                           data-onboarding='transaction-row'
                         >
                           <div
                             className={cn(
-                              'group flex items-center justify-between rounded-lg p-4 transition-colors hover:bg-muted/50',
+                              'group flex items-center justify-between p-0 transition-colors hover:bg-muted/50 sm:rounded-lg sm:p-4',
                               recurring && 'cursor-pointer'
                             )}
                             onClick={() => {
@@ -2309,7 +2309,7 @@ export default function Transactions() {
                               }
                             }}
                           >
-                            <div className='flex min-w-0 flex-1 items-center gap-4'>
+                            <div className='flex min-w-0 flex-1 items-center gap-4 p-4 sm:p-0'>
                               <div
                                 className={cn(
                                   'flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full',

@@ -154,7 +154,7 @@ function mergeChanges(local, remote) {
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
         {t.docs.architecture.storageTitle}
       </h2>
-      <div className='mt-6 overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700'>
+      <div className='not-prose mt-6 overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700'>
         <table className='min-w-full'>
           <thead className='bg-gray-50 dark:bg-gray-800'>
             <tr>
@@ -242,7 +242,7 @@ function mergeChanges(local, remote) {
         {t.docs.architecture.apiVsWebIntro}
       </p>
 
-      <div className='mt-6 overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700'>
+      <div className='not-prose mt-6 overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700'>
         <table className='min-w-full'>
           <thead className='bg-gray-50 dark:bg-gray-800'>
             <tr>
