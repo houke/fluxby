@@ -49,26 +49,28 @@ export default function DocsErrors() {
             </tr>
           </thead>
           <tbody className='divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900'>
-            {t.docs.errors.statusCodes.map((status: { code: string; description: string }, idx: number) => (
-              <tr key={idx}>
-                <td className='whitespace-nowrap px-4 py-3'>
-                  <span
-                    className={`rounded px-2 py-1 text-sm font-medium ${
-                      status.code.startsWith('2')
-                        ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                        : status.code.startsWith('4')
-                          ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
-                          : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
-                    }`}
-                  >
-                    {status.code}
-                  </span>
-                </td>
-                <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                  {status.description}
-                </td>
-              </tr>
-            ))}
+            {t.docs.errors.statusCodes.map(
+              (status: { code: string; description: string }, idx: number) => (
+                <tr key={idx}>
+                  <td className='whitespace-nowrap px-4 py-3'>
+                    <span
+                      className={`rounded px-2 py-1 text-sm font-medium ${
+                        status.code.startsWith('2')
+                          ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                          : status.code.startsWith('4')
+                            ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
+                            : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+                      }`}
+                    >
+                      {status.code}
+                    </span>
+                  </td>
+                  <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
+                    {status.description}
+                  </td>
+                </tr>
+              )
+            )}
           </tbody>
         </table>
       </div>
