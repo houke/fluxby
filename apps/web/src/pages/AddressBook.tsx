@@ -2584,12 +2584,12 @@ export default function AddressBook() {
             className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'
             data-onboarding='contact-list'
           >
-            <CardHeader>
+            <CardHeader className='px-3 py-3 sm:px-6 sm:py-4'>
               <CardTitle className='text-base sm:text-lg'>
                 {t.addressBook?.contactsTitle || 'Contacts'}
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className='px-3 pb-3 pt-0 sm:px-6 sm:pb-6 sm:pt-0'>
               {isLoading ? (
                 <div className='space-y-3'>
                   {Array.from({ length: 5 }).map((_, i) => (
@@ -2627,7 +2627,7 @@ export default function AddressBook() {
                         <div
                           key={contact.id}
                           className={cn(
-                            'group flex items-center justify-between border-x-0 border-b-0 border-t bg-card p-4 sm:rounded-lg sm:border',
+                            'group flex items-center justify-between border-x-0 border-b-0 border-t bg-card px-3 py-4 sm:rounded-lg sm:border sm:p-4',
                             editingContactId !== contact.id &&
                               'cursor-pointer transition-colors hover:bg-muted/50'
                           )}

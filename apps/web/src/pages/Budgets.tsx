@@ -758,12 +758,12 @@ export default function Budgets() {
           className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'
           data-onboarding='budget-list'
         >
-          <CardHeader>
+          <CardHeader className='px-3 py-3 sm:px-6 sm:py-4'>
             <CardTitle className='text-base sm:text-lg'>
               {t.budgets.yourBudgets}
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className='px-3 pb-3 pt-0 sm:px-6 sm:pb-6 sm:pt-0'>
             {isLoading ? (
               <div className='space-y-4'>
                 {[...Array(3)].map((_, i) => (
@@ -781,7 +781,7 @@ export default function Budgets() {
                     <div
                       key={budget.id}
                       className={cn(
-                        'group border-x-0 border-b-0 border-t bg-card p-4 sm:rounded-lg sm:border',
+                        'group border-x-0 border-b-0 border-t bg-card px-0 py-4 sm:rounded-lg sm:border sm:p-4',
                         !isEditing &&
                           'cursor-pointer transition-colors hover:bg-muted/50'
                       )}
@@ -931,7 +931,7 @@ export default function Budgets() {
                       </div>
                       <Progress
                         value={Math.min(budget.percentage, 100)}
-                        className='mb-2 h-2'
+                        className='mb-2 h-2 px-3 sm:px-0'
                         data-onboarding='budget-progress-bar'
                         indicatorClassName={cn(
                           budget.percentage > 100
@@ -941,7 +941,7 @@ export default function Budgets() {
                               : 'bg-primary'
                         )}
                       />
-                      <div className='flex justify-between text-sm'>
+                      <div className='flex justify-between px-3 text-sm sm:px-0'>
                         <span className='text-muted-foreground'>
                           {t.budgets.spent}: {formatCurrency(budget.spent)}
                         </span>

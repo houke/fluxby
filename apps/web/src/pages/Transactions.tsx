@@ -2045,7 +2045,7 @@ export default function Transactions() {
             className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'
             data-onboarding='transaction-filters'
           >
-            <CardContent className='px-0 py-3 sm:p-4'>
+            <CardContent className='px-3 py-3 sm:p-4'>
               <div className='flex flex-wrap gap-4'>
                 <div
                   className='w-full min-w-[200px] sm:flex-1'
@@ -2309,7 +2309,7 @@ export default function Transactions() {
                               }
                             }}
                           >
-                            <div className='flex min-w-0 flex-1 items-center gap-4 px-0 py-4 sm:p-0'>
+                            <div className='flex min-w-0 flex-1 items-center gap-4 px-3 py-4 sm:p-0'>
                               <div
                                 className={cn(
                                   'flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full',
