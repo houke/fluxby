@@ -50,19 +50,17 @@ fetch('http://localhost:3001/api/accounts', {
   return (
     <article className='prose prose-gray dark:prose-invert max-w-none'>
       <h1 className='mb-4 text-4xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.docs?.accounts?.title || 'Rekeningen'}
+        {t.docs.accounts.title}
       </h1>
       <p className='text-xl text-gray-600 dark:text-gray-400'>
-        {t.docs?.accounts?.subtitle ||
-          'Beheer bankrekeningen en volg saldi over al je financiële rekeningen.'}
+        {t.docs.accounts.subtitle}
       </p>
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.docs?.accounts?.listTitle || 'Rekeningen ophalen'}
+        {t.docs.accounts.listTitle}
       </h2>
       <p className='text-gray-600 dark:text-gray-400'>
-        {t.docs?.accounts?.listText ||
-          'Haal alle rekeningen op voor het huidige profiel:'}
+        {t.docs.accounts.listText}
       </p>
 
       <div className='mt-6 overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800'>
@@ -86,10 +84,10 @@ fetch('http://localhost:3001/api/accounts', {
       </div>
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.docs?.accounts?.createTitle || 'Rekening aanmaken'}
+        {t.docs.accounts.createTitle}
       </h2>
       <p className='text-gray-600 dark:text-gray-400'>
-        {t.docs?.accounts?.createText || 'Voeg een nieuwe bankrekening toe:'}
+        {t.docs.accounts.createText}
       </p>
 
       <div className='mt-6 overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800'>
@@ -104,23 +102,23 @@ fetch('http://localhost:3001/api/accounts', {
       </div>
 
       <h3 className='mt-6 text-lg font-semibold text-gray-900 dark:text-gray-100'>
-        {t.docs?.accounts?.requestBody || 'Request body'}
+        {t.docs.accounts.requestBody}
       </h3>
-      <div className='mt-6 overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700'>
+      <div className='mt-6 overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700'>
         <table className='min-w-full'>
           <thead className='bg-gray-50 dark:bg-gray-800'>
             <tr>
               <th className='px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100'>
-                {t.docs?.accounts?.tableField || 'Veld'}
+                {t.docs.accounts.tableField}
               </th>
               <th className='px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100'>
-                {t.docs?.accounts?.tableType || 'Type'}
+                {t.docs.accounts.tableType}
               </th>
               <th className='px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100'>
-                {t.docs?.accounts?.tableRequired || 'Verplicht'}
+                {t.docs.accounts.tableRequired}
               </th>
               <th className='px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100'>
-                {t.docs?.accounts?.tableDescription || 'Beschrijving'}
+                {t.docs.accounts.tableDescription}
               </th>
             </tr>
           </thead>
@@ -134,11 +132,11 @@ fetch('http://localhost:3001/api/accounts', {
               </td>
               <td className='px-4 py-3'>
                 <span className='rounded bg-green-100 px-2 py-0.5 text-xs text-green-800 dark:bg-green-900/30 dark:text-green-400'>
-                  {t.docs?.common?.yes || 'Ja'}
+                  {t.docs.common.yes}
                 </span>
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                {t.docs?.accounts?.nameDesc || 'Weergavenaam voor de rekening'}
+                {t.docs.accounts.nameDesc}
               </td>
             </tr>
             <tr>
@@ -150,11 +148,11 @@ fetch('http://localhost:3001/api/accounts', {
               </td>
               <td className='px-4 py-3'>
                 <span className='rounded bg-green-100 px-2 py-0.5 text-xs text-green-800 dark:bg-green-900/30 dark:text-green-400'>
-                  {t.docs?.common?.yes || 'Ja'}
+                  {t.docs.common.yes}
                 </span>
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                {t.docs?.accounts?.typeDesc || 'checking, savings of credit'}
+                {t.docs.accounts.typeDesc}
               </td>
             </tr>
             <tr>
@@ -166,11 +164,11 @@ fetch('http://localhost:3001/api/accounts', {
               </td>
               <td className='px-4 py-3'>
                 <span className='rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-600 dark:bg-gray-700 dark:text-gray-400'>
-                  {t.docs?.common?.no || 'Nee'}
+                  {t.docs.common.no}
                 </span>
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                {t.docs?.accounts?.ibanDesc || 'IBAN van de rekening'}
+                {t.docs.accounts.ibanDesc}
               </td>
             </tr>
             <tr>
@@ -182,11 +180,11 @@ fetch('http://localhost:3001/api/accounts', {
               </td>
               <td className='px-4 py-3'>
                 <span className='rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-600 dark:bg-gray-700 dark:text-gray-400'>
-                  {t.docs?.common?.no || 'Nee'}
+                  {t.docs.common.no}
                 </span>
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                {t.docs?.accounts?.balanceDesc || 'Startsaldo (standaard: 0)'}
+                {t.docs.accounts.balanceDesc}
               </td>
             </tr>
           </tbody>
@@ -198,11 +196,10 @@ fetch('http://localhost:3001/api/accounts', {
       </div>
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.docs?.accounts?.deleteTitle || 'Rekening verwijderen'}
+        {t.docs.accounts.deleteTitle}
       </h2>
       <p className='text-gray-600 dark:text-gray-400'>
-        {t.docs?.accounts?.deleteText ||
-          'Verwijder een rekening. Transacties gekoppeld aan deze rekening blijven behouden maar worden ontkoppeld.'}
+        {t.docs.accounts.deleteText}
       </p>
 
       <div className='mt-6 overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800'>
@@ -217,11 +214,10 @@ fetch('http://localhost:3001/api/accounts', {
       </div>
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.docs?.accounts?.deleteAllTitle || 'Alle rekeningen verwijderen'}
+        {t.docs.accounts.deleteAllTitle}
       </h2>
       <p className='text-gray-600 dark:text-gray-400'>
-        {t.docs?.accounts?.deleteAllText ||
-          'Verwijder alle rekeningen voor het huidige profiel. Alle transacties blijven behouden maar worden ontkoppeld van hun rekeningen.'}
+        {t.docs.accounts.deleteAllText}
       </p>
 
       <div className='mt-6 overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800'>
@@ -238,11 +234,10 @@ fetch('http://localhost:3001/api/accounts', {
       <div className='mt-6 rounded-xl border border-amber-200 bg-amber-50 p-6 dark:border-amber-800 dark:bg-amber-950/30'>
         <h3 className='mb-2 mt-0 flex items-center gap-2 text-lg font-semibold text-amber-900 dark:text-amber-200'>
           <span>💡</span>
-          {t.docs?.accounts?.noteTitle || 'Let op'}
+          {t.docs.accounts.noteTitle}
         </h3>
         <p className='mb-0 text-amber-800 dark:text-amber-300'>
-          {t.docs?.accounts?.noteText ||
-            'Beide verwijder endpoints behouden transacties door hun account_id op NULL te zetten. Transacties blijven toegankelijk maar zijn niet langer gekoppeld aan een rekening.'}
+          {t.docs.accounts.noteText}
         </p>
       </div>
     </article>

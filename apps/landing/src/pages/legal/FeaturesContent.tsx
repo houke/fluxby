@@ -256,7 +256,9 @@ const FeaturesContent = () => {
 
       <div className='not-prose mt-12 rounded-2xl bg-gradient-to-br from-purple-600 to-pink-600 p-8 text-center'>
         <h2 className='mb-4 text-2xl font-bold text-white'>
-          {t.cta.title.part1} <span className='text-fluxby-light'>{t.cta.title.highlight}</span> {t.cta.title.part2}
+          {t.cta.title.part1}{' '}
+          <span className='text-fluxby-light'>{t.cta.title.highlight}</span>{' '}
+          {t.cta.title.part2}
         </h2>
         <p className='mb-6 text-white/90'>{t.cta.description}</p>
         <a

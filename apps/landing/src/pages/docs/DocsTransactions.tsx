@@ -75,19 +75,17 @@ fetch('http://localhost:3001/api/transactions/txn_123abc', {
   return (
     <article className='prose prose-gray dark:prose-invert max-w-none'>
       <h1 className='mb-4 text-4xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.docs?.transactions?.title || 'Transacties'}
+        {t.docs.transactions.title}
       </h1>
       <p className='text-xl text-gray-600 dark:text-gray-400'>
-        {t.docs?.transactions?.subtitle ||
-          'Zoek, filter en beheer je financiële transacties. Importeer vanuit bankexports of maak handmatig aan.'}
+        {t.docs.transactions.subtitle}
       </p>
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.docs?.transactions?.listTitle || 'Transacties ophalen'}
+        {t.docs.transactions.listTitle}
       </h2>
       <p className='text-gray-600 dark:text-gray-400'>
-        {t.docs?.transactions?.listText ||
-          'Haal transacties op met krachtige filteropties:'}
+        {t.docs.transactions.listText}
       </p>
 
       <div className='mt-6 overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800'>
@@ -102,20 +100,20 @@ fetch('http://localhost:3001/api/transactions/txn_123abc', {
       </div>
 
       <h3 className='mt-6 text-lg font-semibold text-gray-900 dark:text-gray-100'>
-        {t.docs?.transactions?.queryParams || 'Query parameters'}
+        {t.docs.transactions.queryParams}
       </h3>
-      <div className='mt-6 overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700'>
+      <div className='mt-6 overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700'>
         <table className='min-w-full'>
           <thead className='bg-gray-50 dark:bg-gray-800'>
             <tr>
               <th className='px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100'>
-                Parameter
+                {t.docs.common.tableField}
               </th>
               <th className='px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100'>
-                Type
+                {t.docs.common.tableType}
               </th>
               <th className='px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100'>
-                Beschrijving
+                {t.docs.common.tableDescription}
               </th>
             </tr>
           </thead>
@@ -128,8 +126,7 @@ fetch('http://localhost:3001/api/transactions/txn_123abc', {
                 string
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                {t.docs?.transactions?.startDateDesc ||
-                  'Filter vanaf deze datum (JJJJ-MM-DD)'}
+                {t.docs.transactions.startDateDesc}
               </td>
             </tr>
             <tr>
@@ -140,8 +137,7 @@ fetch('http://localhost:3001/api/transactions/txn_123abc', {
                 string
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                {t.docs?.transactions?.endDateDesc ||
-                  'Filter tot deze datum (JJJJ-MM-DD)'}
+                {t.docs.transactions.endDateDesc}
               </td>
             </tr>
             <tr>
@@ -152,8 +148,7 @@ fetch('http://localhost:3001/api/transactions/txn_123abc', {
                 string
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                {t.docs?.transactions?.categoryDesc ||
-                  'Filter op categorie ID of naam'}
+                {t.docs.transactions.categoryDesc}
               </td>
             </tr>
             <tr>
@@ -164,7 +159,7 @@ fetch('http://localhost:3001/api/transactions/txn_123abc', {
                 string
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                {t.docs?.transactions?.typeDesc || 'inkomsten of uitgaven'}
+                {t.docs.transactions.typeDesc}
               </td>
             </tr>
             <tr>
@@ -175,8 +170,7 @@ fetch('http://localhost:3001/api/transactions/txn_123abc', {
                 string
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                {t.docs?.transactions?.searchDesc ||
-                  'Zoek in omschrijving en tegenpartij'}
+                {t.docs.transactions.searchDesc}
               </td>
             </tr>
             <tr>
@@ -187,8 +181,7 @@ fetch('http://localhost:3001/api/transactions/txn_123abc', {
                 number
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                {t.docs?.transactions?.limitDesc ||
-                  'Aantal resultaten (standaard: 50, max: 500)'}
+                {t.docs.transactions.limitDesc}
               </td>
             </tr>
             <tr>
@@ -199,8 +192,7 @@ fetch('http://localhost:3001/api/transactions/txn_123abc', {
                 number
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                {t.docs?.transactions?.pageDesc ||
-                  'Paginanummer voor paginering'}
+                {t.docs.transactions.pageDesc}
               </td>
             </tr>
           </tbody>
@@ -217,11 +209,10 @@ fetch('http://localhost:3001/api/transactions/txn_123abc', {
       </div>
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.docs?.transactions?.updateTitle || 'Transactie bijwerken'}
+        {t.docs.transactions.updateTitle}
       </h2>
       <p className='text-gray-600 dark:text-gray-400'>
-        {t.docs?.transactions?.updateText ||
-          'Wijzig een transactie om de categorie te veranderen, notities toe te voegen of andere velden bij te werken:'}
+        {t.docs.transactions.updateText}
       </p>
 
       <div className='mt-6 overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800'>
@@ -240,11 +231,10 @@ fetch('http://localhost:3001/api/transactions/txn_123abc', {
       </div>
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.docs?.transactions?.importTitle || 'Importeren vanuit CSV'}
+        {t.docs.transactions.importTitle}
       </h2>
       <p className='text-gray-600 dark:text-gray-400'>
-        {t.docs?.transactions?.importText ||
-          'Bulk import transacties vanuit je bankexport:'}
+        {t.docs.transactions.importText}
       </p>
 
       <div className='mt-6 overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800'>

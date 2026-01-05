@@ -39,64 +39,47 @@ fetch('http://localhost:3001/api/profiles', {
   return (
     <article className='prose prose-gray dark:prose-invert max-w-none'>
       <h1 className='mb-4 text-4xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.docs?.profiles?.title || 'Profielen & multi-tenancy'}
+        {t.docs.profiles.title}
       </h1>
       <p className='text-xl text-gray-600 dark:text-gray-400'>
-        {t.docs?.profiles?.subtitle ||
-          'Beheer meerdere financiële profielen voor verschillende doeleinden - persoonlijk, zakelijk of project-gebaseerd.'}
+        {t.docs.profiles.subtitle}
       </p>
 
       <div className='mt-8 rounded-xl border border-amber-200 bg-amber-50 p-6 dark:border-amber-800 dark:bg-amber-950/30'>
         <h3 className='mb-2 mt-0 flex items-center gap-2 text-lg font-semibold text-amber-900 dark:text-amber-200'>
           <span>🎯</span>
-          {t.docs?.profiles?.useCaseTitle || 'Toepassingen'}
+          {t.docs.profiles.useCaseTitle}
         </h3>
         <ul className='mb-0 list-inside list-disc text-amber-800 dark:text-amber-300'>
-          <li>
-            {t.docs?.profiles?.useCase1 ||
-              'Scheid persoonlijke en zakelijke financiën'}
-          </li>
-          <li>
-            {t.docs?.profiles?.useCase2 ||
-              'Volg uitgaven voor specifieke projecten'}
-          </li>
-          <li>
-            {t.docs?.profiles?.useCase3 ||
-              'Beheer financiën voor meerdere gezinsleden'}
-          </li>
+          <li>{t.docs.profiles.useCase1}</li>
+          <li>{t.docs.profiles.useCase2}</li>
+          <li>{t.docs.profiles.useCase3}</li>
         </ul>
       </div>
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.docs?.profiles?.howItWorksTitle || 'Hoe multi-tenancy werkt'}
+        {t.docs.profiles.howItWorksTitle}
       </h2>
       <p className='text-gray-600 dark:text-gray-400'>
-        {t.docs?.profiles?.howItWorksText ||
-          'Elk profiel fungeert als een volledig geïsoleerde omgeving. Transacties, categorieën, budgetten en analyses zijn allemaal gekoppeld aan een specifiek profiel.'}
+        {t.docs.profiles.howItWorksText}
       </p>
 
       <div className='mt-6 grid gap-4 md:grid-cols-3'>
         {[
           {
             icon: '🔒',
-            title: t.docs?.profiles?.isolation || 'Data isolatie',
-            desc:
-              t.docs?.profiles?.isolationDesc ||
-              'Elk profiel heeft zijn eigen transacties, categorieën en budgetten.',
+            title: t.docs.profiles.isolation,
+            desc: t.docs.profiles.isolationDesc,
           },
           {
             icon: '🔄',
-            title: t.docs?.profiles?.switching || 'Eenvoudig wisselen',
-            desc:
-              t.docs?.profiles?.switchingDesc ||
-              'Wissel tussen profielen door de X-Profile-ID header te wijzigen.',
+            title: t.docs.profiles.switching,
+            desc: t.docs.profiles.switchingDesc,
           },
           {
             icon: '🏷️',
-            title: t.docs?.profiles?.customization || 'Volledige aanpassing',
-            desc:
-              t.docs?.profiles?.customizationDesc ||
-              'Elk profiel kan verschillende categorieën, budgetten en instellingen hebben.',
+            title: t.docs.profiles.customization,
+            desc: t.docs.profiles.customizationDesc,
           },
         ].map((item, idx) => (
           <div
@@ -115,11 +98,10 @@ fetch('http://localhost:3001/api/profiles', {
       </div>
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.docs?.profiles?.listProfilesTitle || 'Profielen ophalen'}
+        {t.docs.profiles.listProfilesTitle}
       </h2>
       <p className='text-gray-600 dark:text-gray-400'>
-        {t.docs?.profiles?.listProfilesText ||
-          'Haal alle profielen op om te zien wat beschikbaar is:'}
+        {t.docs.profiles.listProfilesText}
       </p>
       <div className='mt-6 space-y-4'>
         <CodeBlock
@@ -131,28 +113,27 @@ fetch('http://localhost:3001/api/profiles', {
       </div>
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.docs?.profiles?.createProfileTitle || 'Een profiel aanmaken'}
+        {t.docs.profiles.createProfileTitle}
       </h2>
       <p className='text-gray-600 dark:text-gray-400'>
-        {t.docs?.profiles?.createProfileText ||
-          'Maak een nieuw profiel aan met een naam en type (personal of business):'}
+        {t.docs.profiles.createProfileText}
       </p>
       <div className='mt-6'>
         <CodeBlock code={createProfileCode} language='javascript' />
       </div>
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.docs?.profiles?.profileTypesTitle || 'Profieltypes'}
+        {t.docs.profiles.profileTypesTitle}
       </h2>
-      <div className='mt-6 overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700'>
+      <div className='mt-6 overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700'>
         <table className='min-w-full'>
           <thead className='bg-gray-50 dark:bg-gray-800'>
             <tr>
               <th className='px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100'>
-                {t.docs?.profiles?.tableType || 'Type'}
+                {t.docs.profiles.tableType}
               </th>
               <th className='px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100'>
-                {t.docs?.profiles?.tableDescription || 'Beschrijving'}
+                {t.docs.profiles.tableDescription}
               </th>
             </tr>
           </thead>
@@ -164,8 +145,7 @@ fetch('http://localhost:3001/api/profiles', {
                 </code>
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                {t.docs?.profiles?.personalDesc ||
-                  'Voor het bijhouden van persoonlijke financiën, huishoudelijke uitgaven en spaardoelen.'}
+                {t.docs.profiles.personalDesc}
               </td>
             </tr>
             <tr>
@@ -175,8 +155,7 @@ fetch('http://localhost:3001/api/profiles', {
                 </code>
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                {t.docs?.profiles?.businessDesc ||
-                  'Voor freelance inkomsten, zakelijke uitgaven en project-gebaseerd bijhouden.'}
+                {t.docs.profiles.businessDesc}
               </td>
             </tr>
           </tbody>

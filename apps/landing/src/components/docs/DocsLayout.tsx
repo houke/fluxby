@@ -10,7 +10,7 @@ export default function DocsLayout() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
-    <div className='flex min-h-screen bg-gray-50 dark:bg-gray-900 overflow-x-hidden'>
+    <div className='flex min-h-screen overflow-x-hidden bg-gray-50 dark:bg-gray-900'>
       <DocsSidebar
         isOpen={isMobileMenuOpen}
         onClose={() => setIsMobileMenuOpen(false)}

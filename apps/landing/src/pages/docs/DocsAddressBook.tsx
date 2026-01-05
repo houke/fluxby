@@ -95,41 +95,39 @@ fetch('http://localhost:3001/api/addressbook/shared-ibans', {
   return (
     <article className='prose prose-gray dark:prose-invert max-w-none'>
       <h1 className='mb-4 text-4xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.docs?.addressBook?.title || 'Adresboek'}
+        {t.docs.addressBook.title}
       </h1>
       <p className='text-xl text-gray-600 dark:text-gray-400'>
-        {t.docs?.addressBook?.subtitle ||
-          'Beheer contacten en tegenpartijen uit je transacties. Koppel automatisch transacties aan contacten, schoon namen op en beheer gedeelde IBANs.'}
+        {t.docs.addressBook.subtitle}
       </p>
 
       {/* Overview */}
       <div className='mt-8 rounded-lg border border-purple-200 bg-purple-50 p-6 dark:border-purple-800 dark:bg-purple-950/30'>
         <h3 className='mt-0 text-lg font-semibold text-purple-900 dark:text-purple-200'>
-          {t.docs?.addressBook?.overviewTitle || '📒 Wat is het adresboek?'}
+          {t.docs.addressBook.overviewTitle}
         </h3>
         <p className='mb-0 text-purple-800 dark:text-purple-300'>
-          {t.docs?.addressBook?.overviewText ||
-            'Het adresboek haalt automatisch tegenpartijen uit je transacties op basis van IBAN en naam. Het helpt je bij het organiseren van contacten, opschonen van rommelige banknamen en bijhouden van uitgaven per handelaar.'}
+          {t.docs.addressBook.overviewText}
         </p>
       </div>
 
       {/* Core Endpoints */}
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.docs?.addressBook?.endpointsTitle || 'Adresboek endpoints'}
+        {t.docs.addressBook.endpointsTitle}
       </h2>
 
-      <div className='mt-6 overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700'>
+      <div className='mt-6 overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700'>
         <table className='min-w-full'>
           <thead className='bg-gray-50 dark:bg-gray-800'>
             <tr>
               <th className='px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100'>
-                {t.docs?.common?.method || 'Methode'}
+                {t.docs.common.method}
               </th>
               <th className='px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100'>
-                {t.docs?.common?.endpoint || 'Endpoint'}
+                {t.docs.common.endpoint}
               </th>
               <th className='px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100'>
-                {t.docs?.common?.description || 'Beschrijving'}
+                {t.docs.common.tableDescription}
               </th>
             </tr>
           </thead>
@@ -144,8 +142,7 @@ fetch('http://localhost:3001/api/addressbook/shared-ibans', {
                 <code className='text-sm'>/api/addressbook</code>
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                {t.docs?.addressBook?.endpoints?.list ||
-                  'Alle contacten ophalen met transactiestatistieken'}
+                {t.docs.addressBook.endpoints.list}
               </td>
             </tr>
             <tr>
@@ -158,8 +155,7 @@ fetch('http://localhost:3001/api/addressbook/shared-ibans', {
                 <code className='text-sm'>/api/addressbook</code>
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                {t.docs?.addressBook?.endpoints?.create ||
-                  'Nieuw contact aanmaken'}
+                {t.docs.addressBook.endpoints.create}
               </td>
             </tr>
             <tr>
@@ -172,7 +168,7 @@ fetch('http://localhost:3001/api/addressbook/shared-ibans', {
                 <code className='text-sm'>/api/addressbook/:id</code>
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                {t.docs?.addressBook?.endpoints?.get || 'Contact ophalen op ID'}
+                {t.docs.addressBook.endpoints.get}
               </td>
             </tr>
             <tr>
@@ -185,7 +181,7 @@ fetch('http://localhost:3001/api/addressbook/shared-ibans', {
                 <code className='text-sm'>/api/addressbook/:id</code>
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                {t.docs?.addressBook?.endpoints?.update || 'Contact bijwerken'}
+                {t.docs.addressBook.endpoints.update}
               </td>
             </tr>
             <tr>
@@ -198,8 +194,7 @@ fetch('http://localhost:3001/api/addressbook/shared-ibans', {
                 <code className='text-sm'>/api/addressbook/:id</code>
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                {t.docs?.addressBook?.endpoints?.delete ||
-                  'Contact verwijderen'}
+                {t.docs.addressBook.endpoints.delete}
               </td>
             </tr>
           </tbody>
@@ -208,28 +203,27 @@ fetch('http://localhost:3001/api/addressbook/shared-ibans', {
 
       {/* List Contacts */}
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.docs?.addressBook?.listTitle || 'Contacten ophalen'}
+        {t.docs.addressBook.listTitle}
       </h2>
       <p className='text-gray-600 dark:text-gray-400'>
-        {t.docs?.addressBook?.listText ||
-          'Haal alle contacten op met transactiestatistieken. Ondersteunt filteren en sorteren.'}
+        {t.docs.addressBook.listText}
       </p>
 
       <h3 className='mt-6 text-lg font-semibold text-gray-900 dark:text-gray-100'>
-        {t.docs?.common?.queryParams || 'Query parameters'}
+        {t.docs.common.queryParams}
       </h3>
-      <div className='mt-6 overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700'>
+      <div className='mt-6 overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700'>
         <table className='min-w-full'>
           <thead className='bg-gray-50 dark:bg-gray-800'>
             <tr>
               <th className='px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100'>
-                {t.docs?.common?.param || 'Parameter'}
+                {t.docs.common.tableField}
               </th>
               <th className='px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100'>
-                {t.docs?.common?.type || 'Type'}
+                {t.docs.common.tableType}
               </th>
               <th className='px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100'>
-                {t.docs?.common?.description || 'Beschrijving'}
+                {t.docs.common.tableDescription}
               </th>
             </tr>
           </thead>
@@ -242,8 +236,7 @@ fetch('http://localhost:3001/api/addressbook/shared-ibans', {
                 string
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                {t.docs?.addressBook?.params?.search ||
-                  'Zoeken op naam of IBAN'}
+                {t.docs.addressBook.params.search}
               </td>
             </tr>
             <tr>
@@ -254,8 +247,7 @@ fetch('http://localhost:3001/api/addressbook/shared-ibans', {
                 string
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                {t.docs?.addressBook?.params?.sortBy ||
-                  'Sorteerveld: name, transactionCount, totalExpenses, lastTransactionDate'}
+                {t.docs.addressBook.params.sortBy}
               </td>
             </tr>
             <tr>
@@ -266,8 +258,7 @@ fetch('http://localhost:3001/api/addressbook/shared-ibans', {
                 string
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                {t.docs?.addressBook?.params?.sortOrder ||
-                  'Sorteerrichting: asc of desc'}
+                {t.docs.addressBook.params.sortOrder}
               </td>
             </tr>
           </tbody>
@@ -289,11 +280,10 @@ fetch('http://localhost:3001/api/addressbook/shared-ibans', {
 
       {/* Create Contact */}
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.docs?.addressBook?.createTitle || 'Contact aanmaken'}
+        {t.docs.addressBook.createTitle}
       </h2>
       <p className='text-gray-600 dark:text-gray-400'>
-        {t.docs?.addressBook?.createText ||
-          'Handmatig een nieuw adresboekcontact aanmaken. Transacties worden automatisch gekoppeld.'}
+        {t.docs.addressBook.createText}
       </p>
 
       <div className='mt-6 overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800'>
@@ -317,25 +307,24 @@ fetch('http://localhost:3001/api/addressbook/shared-ibans', {
 
       {/* Cleanup Rules Section */}
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.docs?.addressBook?.cleanupRulesTitle || 'Naam opschoonregels'}
+        {t.docs.addressBook.cleanupRulesTitle}
       </h2>
       <p className='text-gray-600 dark:text-gray-400'>
-        {t.docs?.addressBook?.cleanupRulesText ||
-          'Maak regels om automatisch rommelige banknamen op te schonen. Regels kunnen letterlijke tekst of regex patronen gebruiken.'}
+        {t.docs.addressBook.cleanupRulesText}
       </p>
 
-      <div className='mt-6 overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700'>
+      <div className='mt-6 overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700'>
         <table className='min-w-full'>
           <thead className='bg-gray-50 dark:bg-gray-800'>
             <tr>
               <th className='px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100'>
-                {t.docs?.common?.method || 'Methode'}
+                {t.docs.common.method}
               </th>
               <th className='px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100'>
-                {t.docs?.common?.endpoint || 'Endpoint'}
+                {t.docs.common.endpoint}
               </th>
               <th className='px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100'>
-                {t.docs?.common?.description || 'Beschrijving'}
+                {t.docs.common.tableDescription}
               </th>
             </tr>
           </thead>
@@ -350,8 +339,7 @@ fetch('http://localhost:3001/api/addressbook/shared-ibans', {
                 <code className='text-sm'>/api/addressbook/cleanup-rules</code>
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                {t.docs?.addressBook?.cleanupEndpoints?.list ||
-                  'Alle opschoonregels ophalen'}
+                {t.docs.addressBook.cleanupEndpoints.list}
               </td>
             </tr>
             <tr>
@@ -364,8 +352,7 @@ fetch('http://localhost:3001/api/addressbook/shared-ibans', {
                 <code className='text-sm'>/api/addressbook/cleanup-rules</code>
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                {t.docs?.addressBook?.cleanupEndpoints?.create ||
-                  'Opschoonregel aanmaken'}
+                {t.docs.addressBook.cleanupEndpoints.create}
               </td>
             </tr>
             <tr>
@@ -380,8 +367,7 @@ fetch('http://localhost:3001/api/addressbook/shared-ibans', {
                 </code>
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                {t.docs?.addressBook?.cleanupEndpoints?.delete ||
-                  'Opschoonregel verwijderen'}
+                {t.docs.addressBook.cleanupEndpoints.delete}
               </td>
             </tr>
             <tr>
@@ -396,8 +382,7 @@ fetch('http://localhost:3001/api/addressbook/shared-ibans', {
                 </code>
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                {t.docs?.addressBook?.cleanupEndpoints?.apply ||
-                  'Alle regels toepassen op contacten'}
+                {t.docs.addressBook.cleanupEndpoints.apply}
               </td>
             </tr>
           </tbody>
@@ -414,36 +399,33 @@ fetch('http://localhost:3001/api/addressbook/shared-ibans', {
 
       {/* Shared IBANs Section */}
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.docs?.addressBook?.sharedIbansTitle ||
-          'Gedeelde IBANs (betalingsverwerkers)'}
+        {t.docs.addressBook.sharedIbansTitle}
       </h2>
       <p className='text-gray-600 dark:text-gray-400'>
-        {t.docs?.addressBook?.sharedIbansText ||
-          'Sommige IBANs worden gedeeld door meerdere handelaren (zoals iDEAL of PayPal). Markeer deze als gedeeld om contact-tracking op handelaarsniveau mogelijk te maken.'}
+        {t.docs.addressBook.sharedIbansText}
       </p>
 
       <div className='mt-8 rounded-lg border border-amber-200 bg-amber-50 p-6 dark:border-amber-800 dark:bg-amber-950/30'>
         <h3 className='mt-0 text-lg font-semibold text-amber-900 dark:text-amber-200'>
-          💡 {t.docs?.addressBook?.sharedIbansNote || 'Waarom gedeelde IBANs?'}
+          💡 {t.docs.addressBook.sharedIbansNote}
         </h3>
         <p className='mb-0 text-amber-800 dark:text-amber-300'>
-          {t.docs?.addressBook?.sharedIbansExplanation ||
-            'Betalingsverwerkers zoals iDEAL, Mollie en PayPal gebruiken één IBAN voor duizenden verschillende handelaren. Door deze als gedeeld te markeren, volgt Fluxby de werkelijke handelaarsnaam in plaats van alleen de IBAN.'}
+          {t.docs.addressBook.sharedIbansExplanation}
         </p>
       </div>
 
-      <div className='mt-6 overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700'>
+      <div className='mt-6 overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700'>
         <table className='min-w-full'>
           <thead className='bg-gray-50 dark:bg-gray-800'>
             <tr>
               <th className='px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100'>
-                {t.docs?.common?.method || 'Methode'}
+                {t.docs.common.method}
               </th>
               <th className='px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100'>
-                {t.docs?.common?.endpoint || 'Endpoint'}
+                {t.docs.common.endpoint}
               </th>
               <th className='px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100'>
-                {t.docs?.common?.description || 'Beschrijving'}
+                {t.docs.common.tableDescription}
               </th>
             </tr>
           </thead>
@@ -458,8 +440,7 @@ fetch('http://localhost:3001/api/addressbook/shared-ibans', {
                 <code className='text-sm'>/api/addressbook/shared-ibans</code>
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                {t.docs?.addressBook?.sharedEndpoints?.list ||
-                  'Alle gedeelde IBANs ophalen'}
+                {t.docs.addressBook.sharedEndpoints.list}
               </td>
             </tr>
             <tr>
@@ -472,8 +453,7 @@ fetch('http://localhost:3001/api/addressbook/shared-ibans', {
                 <code className='text-sm'>/api/addressbook/shared-ibans</code>
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                {t.docs?.addressBook?.sharedEndpoints?.create ||
-                  'Gedeelde IBAN toevoegen'}
+                {t.docs.addressBook.sharedEndpoints.create}
               </td>
             </tr>
             <tr>
@@ -488,8 +468,7 @@ fetch('http://localhost:3001/api/addressbook/shared-ibans', {
                 </code>
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                {t.docs?.addressBook?.sharedEndpoints?.delete ||
-                  'Gedeelde IBAN verwijderen'}
+                {t.docs.addressBook.sharedEndpoints.delete}
               </td>
             </tr>
             <tr>
@@ -502,8 +481,7 @@ fetch('http://localhost:3001/api/addressbook/shared-ibans', {
                 <code className='text-sm'>/api/addressbook/detect-shared</code>
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                {t.docs?.addressBook?.sharedEndpoints?.detect ||
-                  'Gedeelde IBANs auto-detecteren'}
+                {t.docs.addressBook.sharedEndpoints.detect}
               </td>
             </tr>
           </tbody>
@@ -520,25 +498,24 @@ fetch('http://localhost:3001/api/addressbook/shared-ibans', {
 
       {/* Merge & Split Section */}
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.docs?.addressBook?.mergeTitle || 'Contacten samenvoegen & splitsen'}
+        {t.docs.addressBook.mergeTitle}
       </h2>
       <p className='text-gray-600 dark:text-gray-400'>
-        {t.docs?.addressBook?.mergeText ||
-          'Combineer dubbele contacten of splits contacten die meerdere handelaren vertegenwoordigen.'}
+        {t.docs.addressBook.mergeText}
       </p>
 
-      <div className='mt-6 overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700'>
+      <div className='mt-6 overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700'>
         <table className='min-w-full'>
           <thead className='bg-gray-50 dark:bg-gray-800'>
             <tr>
               <th className='px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100'>
-                {t.docs?.common?.method || 'Methode'}
+                {t.docs.common.method}
               </th>
               <th className='px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100'>
-                {t.docs?.common?.endpoint || 'Endpoint'}
+                {t.docs.common.endpoint}
               </th>
               <th className='px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100'>
-                {t.docs?.common?.description || 'Beschrijving'}
+                {t.docs.common.tableDescription}
               </th>
             </tr>
           </thead>
@@ -553,8 +530,7 @@ fetch('http://localhost:3001/api/addressbook/shared-ibans', {
                 <code className='text-sm'>/api/addressbook/merge</code>
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                {t.docs?.addressBook?.mergeEndpoints?.merge ||
-                  'Contacten samenvoegen tot één'}
+                {t.docs.addressBook.mergeEndpoints.merge}
               </td>
             </tr>
             <tr>
@@ -569,8 +545,7 @@ fetch('http://localhost:3001/api/addressbook/shared-ibans', {
                 </code>
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                {t.docs?.addressBook?.mergeEndpoints?.duplicates ||
-                  'Duplicaten auto-detecteren en samenvoegen'}
+                {t.docs.addressBook.mergeEndpoints.duplicates}
               </td>
             </tr>
             <tr>
@@ -583,8 +558,7 @@ fetch('http://localhost:3001/api/addressbook/shared-ibans', {
                 <code className='text-sm'>/api/addressbook/split</code>
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                {t.docs?.addressBook?.mergeEndpoints?.split ||
-                  'Contact splitsen in meerdere'}
+                {t.docs.addressBook.mergeEndpoints.split}
               </td>
             </tr>
           </tbody>
@@ -601,25 +575,24 @@ fetch('http://localhost:3001/api/addressbook/shared-ibans', {
 
       {/* Multi-IBAN Contacts */}
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.docs?.addressBook?.multiIbanTitle || 'Multi-IBAN contacten'}
+        {t.docs.addressBook.multiIbanTitle}
       </h2>
       <p className='text-gray-600 dark:text-gray-400'>
-        {t.docs?.addressBook?.multiIbanText ||
-          'Sommige contacten (zoals grote bedrijven) kunnen meerdere IBANs hebben. Je kunt extra IBANs aan één contact koppelen.'}
+        {t.docs.addressBook.multiIbanText}
       </p>
 
-      <div className='mt-6 overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700'>
+      <div className='mt-6 overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700'>
         <table className='min-w-full'>
           <thead className='bg-gray-50 dark:bg-gray-800'>
             <tr>
               <th className='px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100'>
-                {t.docs?.common?.method || 'Methode'}
+                {t.docs.common.method}
               </th>
               <th className='px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100'>
-                {t.docs?.common?.endpoint || 'Endpoint'}
+                {t.docs.common.endpoint}
               </th>
               <th className='px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100'>
-                {t.docs?.common?.description || 'Beschrijving'}
+                {t.docs.common.tableDescription}
               </th>
             </tr>
           </thead>
@@ -634,8 +607,7 @@ fetch('http://localhost:3001/api/addressbook/shared-ibans', {
                 <code className='text-sm'>/api/addressbook/:id/ibans</code>
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                {t.docs?.addressBook?.ibanEndpoints?.list ||
-                  'IBANs van contact ophalen'}
+                {t.docs.addressBook.ibanEndpoints.list}
               </td>
             </tr>
             <tr>
@@ -648,8 +620,7 @@ fetch('http://localhost:3001/api/addressbook/shared-ibans', {
                 <code className='text-sm'>/api/addressbook/:id/ibans</code>
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                {t.docs?.addressBook?.ibanEndpoints?.add ||
-                  'IBAN toevoegen aan contact'}
+                {t.docs.addressBook.ibanEndpoints.add}
               </td>
             </tr>
             <tr>
@@ -664,8 +635,7 @@ fetch('http://localhost:3001/api/addressbook/shared-ibans', {
                 </code>
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                {t.docs?.addressBook?.ibanEndpoints?.remove ||
-                  'IBAN verwijderen van contact'}
+                {t.docs.addressBook.ibanEndpoints.remove}
               </td>
             </tr>
           </tbody>
@@ -674,21 +644,21 @@ fetch('http://localhost:3001/api/addressbook/shared-ibans', {
 
       {/* The Contact Object */}
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.docs?.addressBook?.objectTitle || 'Het contact object'}
+        {t.docs.addressBook.objectTitle}
       </h2>
 
-      <div className='mt-6 overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700'>
+      <div className='mt-6 overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700'>
         <table className='min-w-full'>
           <thead className='bg-gray-50 dark:bg-gray-800'>
             <tr>
               <th className='px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100'>
-                {t.docs?.common?.field || 'Veld'}
+                {t.docs.common.tableField}
               </th>
               <th className='px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100'>
-                {t.docs?.common?.type || 'Type'}
+                {t.docs.common.tableType}
               </th>
               <th className='px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100'>
-                {t.docs?.common?.description || 'Beschrijving'}
+                {t.docs.common.tableDescription}
               </th>
             </tr>
           </thead>
@@ -701,7 +671,7 @@ fetch('http://localhost:3001/api/addressbook/shared-ibans', {
                 number
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                {t.docs?.addressBook?.fields?.id || 'Unieke identificatie'}
+                {t.docs.addressBook.fields.id}
               </td>
             </tr>
             <tr>
@@ -712,7 +682,7 @@ fetch('http://localhost:3001/api/addressbook/shared-ibans', {
                 string
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                {t.docs?.addressBook?.fields?.iban || 'Primaire IBAN'}
+                {t.docs.addressBook.fields.iban}
               </td>
             </tr>
             <tr>
@@ -723,8 +693,7 @@ fetch('http://localhost:3001/api/addressbook/shared-ibans', {
                 string
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                {t.docs?.addressBook?.fields?.name ||
-                  'Weergavenaam (kan opgeschoond worden)'}
+                {t.docs.addressBook.fields.name}
               </td>
             </tr>
             <tr>
@@ -735,8 +704,7 @@ fetch('http://localhost:3001/api/addressbook/shared-ibans', {
                 string | null
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                {t.docs?.addressBook?.fields?.originalName ||
-                  'Originele banknaam (voor gedeelde IBANs)'}
+                {t.docs.addressBook.fields.originalName}
               </td>
             </tr>
             <tr>
@@ -747,8 +715,7 @@ fetch('http://localhost:3001/api/addressbook/shared-ibans', {
                 string | null
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                {t.docs?.addressBook?.fields?.description ||
-                  'Optionele omschrijving'}
+                {t.docs.addressBook.fields.description}
               </td>
             </tr>
             <tr>
@@ -759,7 +726,7 @@ fetch('http://localhost:3001/api/addressbook/shared-ibans', {
                 string | null
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                {t.docs?.addressBook?.fields?.notes || 'Gebruikersnotities'}
+                {t.docs.addressBook.fields.notes}
               </td>
             </tr>
             <tr>
@@ -770,8 +737,7 @@ fetch('http://localhost:3001/api/addressbook/shared-ibans', {
                 number
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                {t.docs?.addressBook?.fields?.transactionCount ||
-                  'Aantal gekoppelde transacties'}
+                {t.docs.addressBook.fields.transactionCount}
               </td>
             </tr>
             <tr>
@@ -782,8 +748,7 @@ fetch('http://localhost:3001/api/addressbook/shared-ibans', {
                 number
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                {t.docs?.addressBook?.fields?.totalIncome ||
-                  'Totale inkomsten van dit contact'}
+                {t.docs.addressBook.fields.totalIncome}
               </td>
             </tr>
             <tr>
@@ -794,8 +759,7 @@ fetch('http://localhost:3001/api/addressbook/shared-ibans', {
                 number
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                {t.docs?.addressBook?.fields?.totalExpenses ||
-                  'Totale uitgaven aan dit contact'}
+                {t.docs.addressBook.fields.totalExpenses}
               </td>
             </tr>
             <tr>
@@ -806,8 +770,7 @@ fetch('http://localhost:3001/api/addressbook/shared-ibans', {
                 number
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                {t.docs?.addressBook?.fields?.netAmount ||
-                  'Netto bedrag (inkomsten - uitgaven)'}
+                {t.docs.addressBook.fields.netAmount}
               </td>
             </tr>
             <tr>
@@ -818,8 +781,7 @@ fetch('http://localhost:3001/api/addressbook/shared-ibans', {
                 string | null
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                {t.docs?.addressBook?.fields?.lastTransactionDate ||
-                  'Datum van laatste transactie'}
+                {t.docs.addressBook.fields.lastTransactionDate}
               </td>
             </tr>
           </tbody>

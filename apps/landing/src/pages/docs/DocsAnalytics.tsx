@@ -70,19 +70,17 @@ fetch('http://localhost:3001/api/analytics/categories', {
   return (
     <article className='prose prose-gray dark:prose-invert max-w-none'>
       <h1 className='mb-4 text-4xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.docs?.analytics?.title || 'Analyses'}
+        {t.docs.analytics.title}
       </h1>
       <p className='text-xl text-gray-600 dark:text-gray-400'>
-        {t.docs?.analytics?.subtitle ||
-          'Krijg inzicht in je bestedingspatronen met uitgebreide analyse-endpoints.'}
+        {t.docs.analytics.subtitle}
       </p>
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.docs?.analytics?.dashboardTitle || 'Dashboard statistieken'}
+        {t.docs.analytics.dashboardTitle}
       </h2>
       <p className='text-gray-600 dark:text-gray-400'>
-        {t.docs?.analytics?.dashboardText ||
-          'Krijg een overzicht van je financiële gezondheid:'}
+        {t.docs.analytics.dashboardText}
       </p>
 
       <div className='mt-6 overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800'>
@@ -102,11 +100,10 @@ fetch('http://localhost:3001/api/analytics/categories', {
       </div>
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.docs?.analytics?.monthlyTitle || 'Maandelijkse data'}
+        {t.docs.analytics.monthlyTitle}
       </h2>
       <p className='text-gray-600 dark:text-gray-400'>
-        {t.docs?.analytics?.monthlyText ||
-          'Haal gedetailleerde maandstatistieken op met dagelijkse uitsplitsing:'}
+        {t.docs.analytics.monthlyText}
       </p>
 
       <div className='mt-6 overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800'>
@@ -121,20 +118,20 @@ fetch('http://localhost:3001/api/analytics/categories', {
       </div>
 
       <h3 className='mt-6 text-lg font-semibold text-gray-900 dark:text-gray-100'>
-        {t.docs?.analytics?.queryParams || 'Query parameters'}
+        {t.docs.analytics.queryParams}
       </h3>
-      <div className='mt-6 overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700'>
+      <div className='mt-6 overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700'>
         <table className='min-w-full'>
           <thead className='bg-gray-50 dark:bg-gray-800'>
             <tr>
               <th className='px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100'>
-                Parameter
+                {t.docs.common.tableField}
               </th>
               <th className='px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100'>
-                Type
+                {t.docs.common.tableType}
               </th>
               <th className='px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100'>
-                Beschrijving
+                {t.docs.common.tableDescription}
               </th>
             </tr>
           </thead>
@@ -147,7 +144,7 @@ fetch('http://localhost:3001/api/analytics/categories', {
                 number
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                {t.docs?.analytics?.yearDesc || 'Jaar (bijv. 2024)'}
+                {t.docs.analytics.yearDesc}
               </td>
             </tr>
             <tr>
@@ -158,7 +155,7 @@ fetch('http://localhost:3001/api/analytics/categories', {
                 number
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                {t.docs?.analytics?.monthDesc || 'Maand (1-12)'}
+                {t.docs.analytics.monthDesc}
               </td>
             </tr>
           </tbody>
@@ -171,11 +168,10 @@ fetch('http://localhost:3001/api/analytics/categories', {
       </div>
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.docs?.analytics?.categoriesTitle || 'Categorie uitsplitsing'}
+        {t.docs.analytics.categoriesTitle}
       </h2>
       <p className='text-gray-600 dark:text-gray-400'>
-        {t.docs?.analytics?.categoriesText ||
-          'Bekijk hoe uitgaven verdeeld zijn over categorieën:'}
+        {t.docs.analytics.categoriesText}
       </p>
 
       <div className='mt-6 overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800'>
@@ -200,11 +196,10 @@ fetch('http://localhost:3001/api/analytics/categories', {
       <div className='mt-8 rounded-xl border border-purple-200 bg-purple-50 p-6 dark:border-purple-800 dark:bg-purple-950/30'>
         <h3 className='mb-2 mt-0 flex items-center gap-2 text-lg font-semibold text-purple-900 dark:text-purple-200'>
           <span>💡</span>
-          {t.docs?.analytics?.tipTitle || 'Pro tip'}
+          {t.docs.analytics.tipTitle}
         </h3>
         <p className='mb-0 text-purple-800 dark:text-purple-300'>
-          {t.docs?.analytics?.tipText ||
-            'Combineer analyse-endpoints met transactiefilters om aangepaste rapporten te maken. Vergelijk bijvoorbeeld uitgaven tussen maanden of volg categorie trends over tijd.'}
+          {t.docs.analytics.tipText}
         </p>
       </div>
     </article>

@@ -108,19 +108,17 @@ fetch('http://localhost:3001/api/import/history', {
   return (
     <article className='prose prose-gray dark:prose-invert max-w-none'>
       <h1 className='mb-4 text-4xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.docs?.import?.title || 'Importeren'}
+        {t.docs.import.title}
       </h1>
       <p className='text-xl text-gray-600 dark:text-gray-400'>
-        {t.docs?.import?.subtitle ||
-          'Importeer banktransacties vanuit CSV bestanden. Ondersteunt momenteel ING bank formaat met automatische rekeningdetectie en duplicaatpreventie.'}
+        {t.docs.import.subtitle}
       </p>
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.docs?.import?.csvTitle || 'CSV importeren'}
+        {t.docs.import.csvTitle}
       </h2>
       <p className='text-gray-600 dark:text-gray-400'>
-        {t.docs?.import?.csvText ||
-          'Upload en importeer een CSV bestand met banktransacties. Het systeem detecteert automatisch rekeningen, voorkomt duplicaten, past categorieregels toe en schoont tegenpartijnamen op met je opschoonregels.'}
+        {t.docs.import.csvText}
       </p>
 
       <div className='mt-6 overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800'>
@@ -135,23 +133,23 @@ fetch('http://localhost:3001/api/import/history', {
       </div>
 
       <h3 className='mt-6 text-lg font-semibold text-gray-900 dark:text-gray-100'>
-        {t.docs?.import?.formData || 'Formulier data'}
+        {t.docs.import.formData}
       </h3>
-      <div className='mt-6 overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700'>
+      <div className='mt-6 overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700'>
         <table className='min-w-full'>
           <thead className='bg-gray-50 dark:bg-gray-800'>
             <tr>
               <th className='px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100'>
-                {t.docs?.common?.tableField || 'Veld'}
+                {t.docs.common.tableField}
               </th>
               <th className='px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100'>
-                {t.docs?.common?.tableType || 'Type'}
+                {t.docs.common.tableType}
               </th>
               <th className='px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100'>
-                {t.docs?.common?.tableRequired || 'Verplicht'}
+                {t.docs.common.tableRequired}
               </th>
               <th className='px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100'>
-                {t.docs?.common?.tableDescription || 'Beschrijving'}
+                {t.docs.common.tableDescription}
               </th>
             </tr>
           </thead>
@@ -165,11 +163,11 @@ fetch('http://localhost:3001/api/import/history', {
               </td>
               <td className='px-4 py-3'>
                 <span className='rounded bg-green-100 px-2 py-0.5 text-xs text-green-800 dark:bg-green-900/30 dark:text-green-400'>
-                  {t.docs?.common?.yes || 'Ja'}
+                  {t.docs.common.yes}
                 </span>
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                {t.docs?.import?.fileDesc || 'CSV bestand (max 10MB)'}
+                {t.docs.import.fileDesc}
               </td>
             </tr>
             <tr>
@@ -181,12 +179,11 @@ fetch('http://localhost:3001/api/import/history', {
               </td>
               <td className='px-4 py-3'>
                 <span className='rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-600 dark:bg-gray-700 dark:text-gray-400'>
-                  {t.docs?.common?.no || 'Nee'}
+                  {t.docs.common.no}
                 </span>
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                {t.docs?.import?.bankDesc ||
-                  "Banktype (standaard: 'ing'). Momenteel wordt alleen 'ing' ondersteund."}
+                {t.docs.import.bankDesc}
               </td>
             </tr>
           </tbody>
@@ -203,11 +200,10 @@ fetch('http://localhost:3001/api/import/history', {
       </div>
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.docs?.import?.previewTitle || 'CSV voorbeeld bekijken'}
+        {t.docs.import.previewTitle}
       </h2>
       <p className='text-gray-600 dark:text-gray-400'>
-        {t.docs?.import?.previewText ||
-          'Bekijk een CSV bestand voordat je importeert. Toont gedetecteerde rekeningen, datumbereik en voorbeeldtransacties.'}
+        {t.docs.import.previewText}
       </p>
 
       <div className='mt-6 overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800'>
@@ -231,11 +227,10 @@ fetch('http://localhost:3001/api/import/history', {
       </div>
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.docs?.import?.historyTitle || 'Import geschiedenis'}
+        {t.docs.import.historyTitle}
       </h2>
       <p className='text-gray-600 dark:text-gray-400'>
-        {t.docs?.import?.historyText ||
-          'Haal een lijst op van alle eerdere imports met hun status en transactie-aantallen.'}
+        {t.docs.import.historyText}
       </p>
 
       <div className='mt-6 overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800'>
@@ -261,11 +256,10 @@ fetch('http://localhost:3001/api/import/history', {
       <div className='mt-8 rounded-xl border border-blue-200 bg-blue-50 p-6 dark:border-blue-800 dark:bg-blue-950/30'>
         <h3 className='mb-2 mt-0 flex items-center gap-2 text-lg font-semibold text-blue-900 dark:text-blue-200'>
           <span>💡</span>
-          {t.docs?.import?.tipTitle || 'Tip'}
+          {t.docs.import.tipTitle}
         </h3>
         <p className='mb-0 text-blue-800 dark:text-blue-300'>
-          {t.docs?.import?.tipText ||
-            'Het importsysteem past automatisch je categorieregels toe om transacties te categoriseren, past naam-opschoonregels toe om tegenpartijnamen op te schonen, en voegt nieuwe contacten toe aan je adresboek.'}
+          {t.docs.import.tipText}
         </p>
       </div>
     </article>

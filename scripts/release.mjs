@@ -7,15 +7,21 @@
  *   npm run release:dry      # Dry run (no actual changes)
  *
  * This script:
- * 1. Parses conventional commits since last tag
- * 2. Determines version bump (major/minor/patch)
- * 3. Generates changelog
- * 4. Updates UpdatesContent.tsx with new release (smart bundling + icons)
- * 5. Updates translation files (nl.ts and en.ts)
- * 6. Updates package.json versions
- * 7. Commits changes
- * 8. Creates git tag
- * 9. Pushes to trigger release workflow
+ * 1. Checks git status (clean working directory required)
+ * 2. Parses conventional commits since last tag
+ * 3. Determines version bump (major/minor/patch)
+ * 4. Generates changelog
+ * 5. Updates package.json version
+ * 6. Updates UpdatesContent.tsx with smart feature bundling and icons
+ * 7. Updates translation files (nl.ts and en.ts) with new version strings
+ * 8. Updates CHANGELOG.md
+ * 9. Commits changes, creates git tag, and pushes
+ *
+ * Smart Features:
+ * - Bundles commits by scope (e.g., all "ui" changes together)
+ * - Selects appropriate icons based on scope/keywords
+ * - Generates Dutch and English translations automatically
+ * - Creates user-friendly feature descriptions
  */
 
 import { execSync } from 'child_process';
@@ -824,7 +830,10 @@ function updatePackageJsonVersion(newVersion) {
   tauriConf.version = newVersion;
   writeFileSync(tauriConfPath, JSON.stringify(tauriConf, null, 2) + '\n');
 
-  log(`✓ Updated versions to ${newVersion} in package.json, apps/tauri/package.json, and tauri.conf.json`, 'green');
+  log(
+    `✓ Updated versions to ${newVersion} in package.json, apps/tauri/package.json, and tauri.conf.json`,
+    'green'
+  );
 }
 
 /**

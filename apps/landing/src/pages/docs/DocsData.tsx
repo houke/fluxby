@@ -84,19 +84,17 @@ fetch('http://localhost:3001/api/data/reset', {
   return (
     <article className='prose prose-gray dark:prose-invert max-w-none'>
       <h1 className='mb-4 text-4xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.docs?.data?.title || 'Data beheer'}
+        {t.docs.data.title}
       </h1>
       <p className='text-xl text-gray-600 dark:text-gray-400'>
-        {t.docs?.data?.subtitle ||
-          'Exporteer en importeer volledige datasets voor backup doeleinden, of reset alle data naar de demo-status.'}
+        {t.docs.data.subtitle}
       </p>
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.docs?.data?.exportTitle || 'Data exporteren'}
+        {t.docs.data.exportTitle}
       </h2>
       <p className='text-gray-600 dark:text-gray-400'>
-        {t.docs?.data?.exportText ||
-          'Exporteer alle data als JSON bestand voor backup of migratie doeleinden.'}
+        {t.docs.data.exportText}
       </p>
 
       <div className='mt-6 overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800'>
@@ -120,11 +118,10 @@ fetch('http://localhost:3001/api/data/reset', {
       </div>
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.docs?.data?.importTitle || 'Data importeren'}
+        {t.docs.data.importTitle}
       </h2>
       <p className='text-gray-600 dark:text-gray-400'>
-        {t.docs?.data?.importText ||
-          'Importeer een volledige dataset uit een JSON backup. Let op: dit vervangt alle bestaande data.'}
+        {t.docs.data.importText}
       </p>
 
       <div className='mt-6 overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800'>
@@ -148,11 +145,10 @@ fetch('http://localhost:3001/api/data/reset', {
       </div>
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.docs?.data?.resetTitle || 'Data resetten'}
+        {t.docs.data.resetTitle}
       </h2>
       <p className='text-gray-600 dark:text-gray-400'>
-        {t.docs?.data?.resetText ||
-          'Reset alle data en herstel de demo-status. Dit verwijdert ALLE data over alle profielen en maakt een nieuw demo-profiel aan met standaard categorieën. Dit kan niet ongedaan gemaakt worden.'}
+        {t.docs.data.resetText}
       </p>
 
       <div className='mt-6 overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800'>
@@ -178,11 +174,10 @@ fetch('http://localhost:3001/api/data/reset', {
       <div className='mt-8 rounded-xl border border-red-200 bg-red-50 p-6 dark:border-red-800 dark:bg-red-950/30'>
         <h3 className='mb-2 mt-0 flex items-center gap-2 text-lg font-semibold text-red-900 dark:text-red-200'>
           <span>⚠️</span>
-          {t.docs?.data?.warningTitle || 'Let op'}
+          {t.docs.data.warningTitle}
         </h3>
         <p className='mb-0 text-red-800 dark:text-red-300'>
-          {t.docs?.data?.warningText ||
-            'De reset endpoint verwijdert ALLE data over ALLE profielen. Dit is bedoeld voor een volledige reset naar factory settings. Maak eerst een backup met de export functie als je je data wilt behouden.'}
+          {t.docs.data.warningText}
         </p>
       </div>
     </article>

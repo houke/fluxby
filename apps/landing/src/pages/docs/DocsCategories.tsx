@@ -58,19 +58,17 @@ fetch('http://localhost:3001/api/categories', {
   return (
     <article className='prose prose-gray dark:prose-invert max-w-none'>
       <h1 className='mb-4 text-4xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.docs?.categories?.title || 'Categorieën'}
+        {t.docs.categories.title}
       </h1>
       <p className='text-xl text-gray-600 dark:text-gray-400'>
-        {t.docs?.categories?.subtitle ||
-          'Organiseer je transacties met aangepaste categorieën. Stel kleuren, iconen en automatische categorisatieregels in.'}
+        {t.docs.categories.subtitle}
       </p>
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.docs?.categories?.listTitle || 'Categorieën ophalen'}
+        {t.docs.categories.listTitle}
       </h2>
       <p className='text-gray-600 dark:text-gray-400'>
-        {t.docs?.categories?.listText ||
-          'Haal alle categorieën op met transactie-aantallen:'}
+        {t.docs.categories.listText}
       </p>
 
       <div className='mt-6 overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800'>
@@ -94,11 +92,10 @@ fetch('http://localhost:3001/api/categories', {
       </div>
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.docs?.categories?.createTitle || 'Categorie aanmaken'}
+        {t.docs.categories.createTitle}
       </h2>
       <p className='text-gray-600 dark:text-gray-400'>
-        {t.docs?.categories?.createText ||
-          'Voeg een nieuwe categorie toe met aangepaste stijl:'}
+        {t.docs.categories.createText}
       </p>
 
       <div className='mt-6 overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800'>
@@ -113,23 +110,23 @@ fetch('http://localhost:3001/api/categories', {
       </div>
 
       <h3 className='mt-6 text-lg font-semibold text-gray-900 dark:text-gray-100'>
-        {t.docs?.categories?.requestBody || 'Request body'}
+        {t.docs.categories.requestBody}
       </h3>
-      <div className='mt-6 overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700'>
+      <div className='mt-6 overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700'>
         <table className='min-w-full'>
           <thead className='bg-gray-50 dark:bg-gray-800'>
             <tr>
               <th className='px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100'>
-                {t.docs?.common?.tableField || 'Veld'}
+                {t.docs.common.tableField}
               </th>
               <th className='px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100'>
-                {t.docs?.common?.tableType || 'Type'}
+                {t.docs.common.tableType}
               </th>
               <th className='px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100'>
-                {t.docs?.common?.tableRequired || 'Verplicht'}
+                {t.docs.common.tableRequired}
               </th>
               <th className='px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100'>
-                {t.docs?.common?.tableDescription || 'Beschrijving'}
+                {t.docs.common.tableDescription}
               </th>
             </tr>
           </thead>
@@ -143,12 +140,11 @@ fetch('http://localhost:3001/api/categories', {
               </td>
               <td className='px-4 py-3'>
                 <span className='rounded bg-green-100 px-2 py-0.5 text-xs text-green-800 dark:bg-green-900/30 dark:text-green-400'>
-                  {t.docs?.common?.yes || 'Ja'}
+                  {t.docs.common.yes}
                 </span>
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                {t.docs?.categories?.nameDesc ||
-                  'Weergavenaam van de categorie'}
+                {t.docs.categories.nameDesc}
               </td>
             </tr>
             <tr>
@@ -160,12 +156,11 @@ fetch('http://localhost:3001/api/categories', {
               </td>
               <td className='px-4 py-3'>
                 <span className='rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-600 dark:bg-gray-700 dark:text-gray-400'>
-                  {t.docs?.common?.no || 'Nee'}
+                  {t.docs.common.no}
                 </span>
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                {t.docs?.categories?.colorDesc ||
-                  'Hex kleurcode (bijv. #22c55e)'}
+                {t.docs.categories.colorDesc}
               </td>
             </tr>
             <tr>
@@ -177,12 +172,11 @@ fetch('http://localhost:3001/api/categories', {
               </td>
               <td className='px-4 py-3'>
                 <span className='rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-600 dark:bg-gray-700 dark:text-gray-400'>
-                  {t.docs?.common?.no || 'Nee'}
+                  {t.docs.common.no}
                 </span>
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                {t.docs?.categories?.iconDesc ||
-                  'Emoji icoon voor de categorie'}
+                {t.docs.categories.iconDesc}
               </td>
             </tr>
             <tr>
@@ -194,11 +188,11 @@ fetch('http://localhost:3001/api/categories', {
               </td>
               <td className='px-4 py-3'>
                 <span className='rounded bg-green-100 px-2 py-0.5 text-xs text-green-800 dark:bg-green-900/30 dark:text-green-400'>
-                  {t.docs?.common?.yes || 'Ja'}
+                  {t.docs.common.yes}
                 </span>
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                {t.docs?.categories?.typeDesc || 'inkomsten of uitgaven'}
+                {t.docs.categories.typeDesc}
               </td>
             </tr>
           </tbody>
@@ -210,10 +204,10 @@ fetch('http://localhost:3001/api/categories', {
       </div>
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.docs?.categories?.updateTitle || 'Categorie bijwerken'}
+        {t.docs.categories.updateTitle}
       </h2>
       <p className='text-gray-600 dark:text-gray-400'>
-        {t.docs?.categories?.updateText || 'Wijzig een bestaande categorie:'}
+        {t.docs.categories.updateText}
       </p>
 
       <div className='mt-6 overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800'>
@@ -228,11 +222,10 @@ fetch('http://localhost:3001/api/categories', {
       </div>
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.docs?.categories?.deleteTitle || 'Categorie verwijderen'}
+        {t.docs.categories.deleteTitle}
       </h2>
       <p className='text-gray-600 dark:text-gray-400'>
-        {t.docs?.categories?.deleteText ||
-          'Verwijder een categorie. Transacties worden ongecategoriseerd:'}
+        {t.docs.categories.deleteText}
       </p>
 
       <div className='mt-6 overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800'>

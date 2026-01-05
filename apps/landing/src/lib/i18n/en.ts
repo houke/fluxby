@@ -230,8 +230,7 @@ export const en: LandingTranslationKeys = {
       description: 'Standalone AppImage for all distributions.',
       label: 'Download',
     },
-    note:
-      "You don't need to install anything to use Fluxby — it runs fully in your browser. These downloads are provided for users who prefer a dedicated application on their system.",
+    note: "You don't need to install anything to use Fluxby — it runs fully in your browser. These downloads are provided for users who prefer a dedicated application on their system.",
   },
 
   // Footer
@@ -368,22 +367,23 @@ export const en: LandingTranslationKeys = {
     // Authentication page
     authentication: {
       title: 'Authentication',
-      subtitle:
-        'The Fluxby API uses a simple profile-based authentication system.',
-      howItWorksTitle: 'How it works',
-      howItWorksText:
-        'The Fluxby API uses profile-based authentication. Each request must include an X-Profile-ID header to specify which profile you want to access.',
-      headerTitle: 'The X-Profile-ID Header',
-      headerText:
-        "Include the X-Profile-ID header in all API requests. The value should be the numeric ID of the profile you want to access. You can find your Profile ID in the web app under Settings → Profiles → 'Manage Profiles' tab.",
-      exampleTitle: 'Example Request',
-      withoutHeaderTitle: 'Requests without Header',
-      withoutHeaderText:
-        'If you omit the X-Profile-ID header, the API will use the first available profile.',
-      bestPracticeTitle: 'Best Practice',
-      bestPracticeText:
-        'Always include the X-Profile-ID header to ensure consistent behavior, especially when working with multiple profiles.',
-      responseTitle: 'Response with missing Header',
+      subtitle: 'Learn how to authenticate your API requests with Fluxby.',
+      localNote: 'Local development',
+      localNoteText:
+        'Fluxby runs entirely on your local machine. No API keys or OAuth flows are needed - just add your Profile ID to requests.',
+      profileIdTitle: 'Using the Profile ID',
+      profileIdText:
+        'All API requests must include the X-Profile-ID header. This identifies which profile data you want to access.',
+      getProfileIdTitle: 'Getting your Profile ID',
+      option1Title: 'Option 1: From the App',
+      option1Text:
+        'Open Fluxby in your browser, go to Settings → Profile, and copy your Profile ID.',
+      option2Title: 'Option 2: API Call',
+      option2Text: 'List all profiles via the profiles endpoint:',
+      errorHandlingTitle: 'Missing Profile ID',
+      errorHandlingText:
+        'If you do not include the X-Profile-ID header, you will receive a 401 error:',
+      errorResponse: 'Error Response',
     },
 
     // Architecture page
@@ -545,7 +545,29 @@ export const en: LandingTranslationKeys = {
     accounts: {
       title: 'Accounts',
       subtitle:
-        'Manage your bank accounts. Each account tracks a balance and is linked to transactions.',
+        'Manage bank accounts and track balances across all your financial accounts.',
+      listTitle: 'Fetch accounts',
+      listText: 'Retrieve all accounts for the current profile:',
+      createTitle: 'Create account',
+      createText: 'Add a new bank account:',
+      requestBody: 'Request body',
+      tableField: 'Field',
+      tableType: 'Type',
+      tableRequired: 'Required',
+      tableDescription: 'Description',
+      nameDesc: 'Display name for the account',
+      typeDesc: 'checking, savings or credit',
+      ibanDesc: 'IBAN of the account',
+      balanceDesc: 'Starting balance (default: 0)',
+      deleteTitle: 'Delete account',
+      deleteText:
+        'Remove an account. Transactions linked to this account will be preserved but unlinked.',
+      deleteAllTitle: 'Delete all accounts',
+      deleteAllText:
+        'Remove all accounts for the current profile. All transactions will be preserved but unlinked from their accounts.',
+      noteTitle: 'Note',
+      noteText:
+        'Both delete endpoints preserve transactions by setting their account_id to NULL. Transactions remain accessible but are no longer linked to an account.',
       endpointsTitle: 'Account Endpoints',
       endpoints: {
         list: 'List all accounts',
@@ -575,18 +597,30 @@ export const en: LandingTranslationKeys = {
         { type: 'savings', description: 'Savings account' },
         { type: 'credit', description: 'Credit card account' },
       ],
-      deleteTitle: 'Delete Account',
-      deleteText:
-        'Remove an account. Transactions linked to this account will be preserved but unlinked.',
-      noteTitle: 'Note',
-      noteText:
-        'Deleting a single account preserves its transactions. To delete all accounts AND their transactions, use DELETE /api/accounts without an ID.',
     },
     // Transactions page
     transactions: {
       title: 'Transactions',
       subtitle:
-        'The heart of Fluxby. Transactions represent income and expenses linked to your accounts.',
+        'Search, filter and manage your financial transactions. Import from bank exports or create manually.',
+      listTitle: 'Fetch transactions',
+      listText: 'Retrieve transactions with powerful filtering options:',
+      queryParams: 'Query parameters',
+      startDateDesc: 'Filter from this date (YYYY-MM-DD)',
+      endDateDesc: 'Filter until this date (YYYY-MM-DD)',
+      categoryDesc: 'Filter by category ID or name',
+      typeDesc: 'income or expense',
+      searchDesc: 'Search in description and counterparty',
+      limitDesc: 'Number of results (default: 50, max: 500)',
+      pageDesc: 'Page number for pagination',
+      updateTitle: 'Update transaction',
+      updateText:
+        'Change a transaction to update its category, add notes, or update other fields:',
+      importTitle: 'Import from CSV',
+      importText: 'Bulk import transactions from your bank export:',
+      supportedBanks: 'Supported banks',
+      supportedBanksText:
+        'Currently ING bank CSV exports are supported. More banks will be added in future updates.',
       endpointsTitle: 'Transaction Endpoints',
       endpoints: {
         list: 'List transactions (with filters)',
@@ -625,15 +659,28 @@ export const en: LandingTranslationKeys = {
       exampleTitle: 'Example: Filtered Transactions',
       requestTitle: 'Request',
       responseTitle: 'Response',
-      updateTitle: 'Update a Transaction',
-      updateText:
-        'You can update the category, notes, and certain fields of a transaction:',
     },
     // Categories page
     categories: {
       title: 'Categories',
       subtitle:
-        'Organize transactions with custom categories. Set up automatic categorization rules to tag transactions automatically.',
+        'Organize your transactions with custom categories. Set colors, icons and automatic categorization rules.',
+      listTitle: 'Fetch categories',
+      listText: 'Retrieve all categories with transaction counts:',
+      createTitle: 'Create category',
+      createText: 'Add a new category with custom style:',
+      requestBody: 'Request body',
+      nameDesc: 'Display name of the category',
+      colorDesc: 'Hex color code (e.g., #22c55e)',
+      iconDesc: 'Emoji icon for the category',
+      typeDesc: 'income or expense',
+      updateTitle: 'Update category',
+      updateText: 'Modify an existing category:',
+      deleteTitle: 'Delete category',
+      deleteText: 'Remove a category. Transactions will become uncategorized:',
+      autoCategorizationTitle: 'Auto-categorization',
+      autoCategorizationText:
+        'Fluxby can automatically categorize transactions based on rules you define. Set up rules via the app under Categories → Rules, or use the API for custom automation.',
       endpointsTitle: 'Category Endpoints',
       endpoints: {
         list: 'List all categories',
@@ -654,9 +701,6 @@ export const en: LandingTranslationKeys = {
       createCategoryTitle: 'Create a Category',
       requestTitle: 'Request',
       responseTitle: 'Response',
-      autoCategorizationTitle: 'Auto-categorization Rules',
-      autoCategorizationText:
-        'Set up rules to automatically categorize transactions based on patterns:',
       ruleEndpoints: {
         list: 'List all rules',
         create: 'Create new rule',
@@ -672,7 +716,23 @@ export const en: LandingTranslationKeys = {
     budgets: {
       title: 'Budgets',
       subtitle:
-        'Set spending limits per category and track your progress. Budgets are automatically calculated based on transactions.',
+        'Set spending limits and track your progress. Receive notifications when you approach or exceed budget limits.',
+      listTitle: 'Fetch budgets',
+      listText: 'Retrieve all budgets with current spending progress:',
+      progressNote: 'Track progress',
+      progressNoteText:
+        'The API automatically calculates the spent amount, remaining budget and percentage for each budget period.',
+      createTitle: 'Create budget',
+      createText: 'Set a new budget with a spending limit:',
+      requestBody: 'Request body',
+      nameDesc: 'Display name of the budget',
+      amountDesc: 'Budget limit in euros',
+      categoryIdDesc: 'Link to a specific category',
+      periodDesc: 'weekly, monthly or yearly',
+      updateTitle: 'Update budget',
+      updateText: 'Modify a budget limit or settings:',
+      deleteTitle: 'Delete budget',
+      deleteText: 'Remove a budget:',
       endpointsTitle: 'Budget Endpoints',
       endpoints: {
         list: 'List all budgets with progress',
@@ -715,7 +775,19 @@ export const en: LandingTranslationKeys = {
     analytics: {
       title: 'Analytics',
       subtitle:
-        'Get insights into your financial data with pre-built analytics endpoints.',
+        'Get insights into your spending patterns with extensive analytics endpoints.',
+      dashboardTitle: 'Dashboard statistics',
+      dashboardText: 'Get an overview of your financial health:',
+      monthlyTitle: 'Monthly data',
+      monthlyText: 'Fetch detailed monthly stats with daily breakdown:',
+      queryParams: 'Query parameters',
+      yearDesc: 'Year (e.g., 2024)',
+      monthDesc: 'Month (1-12)',
+      categoriesTitle: 'Category breakdown',
+      categoriesText: 'See how spending is distributed across categories:',
+      tipTitle: 'Pro tip',
+      tipText:
+        'Combine analytics endpoints with transaction filters to create custom reports. For example, compare spending between months or track category trends over time.',
       endpointsTitle: 'Analytics Endpoints',
       endpoints: {
         dashboard: 'Dashboard statistics overview',
@@ -723,8 +795,6 @@ export const en: LandingTranslationKeys = {
         categories: 'Spending by category',
         trends: 'Income/expense trends',
       },
-      dashboardTitle: 'Dashboard Analytics',
-      dashboardText: 'Fetch a complete overview of financial status:',
       dashboardFieldsTitle: 'Response Fields',
       dashboardFields: {
         totalIncome: 'Total income in period',
@@ -733,8 +803,6 @@ export const en: LandingTranslationKeys = {
         transactionCount: 'Number of transactions',
         topCategories: 'Top spending categories',
       },
-      monthlyTitle: 'Monthly Breakdown',
-      monthlyText: 'Fetch month-by-month financial data for charts and trends:',
       categoryTitle: 'Category Analytics',
       categoryText: 'Analyze spending by category:',
     },
@@ -747,6 +815,28 @@ export const en: LandingTranslationKeys = {
       overviewText:
         'The Address Book automatically extracts counterparties from your transactions based on IBAN and name. It helps you organize contacts, clean up messy bank names, and track spending per merchant.',
       endpointsTitle: 'Address Book Endpoints',
+      listTitle: 'Fetch contacts',
+      listText:
+        'Retrieve all contacts with transaction statistics. Supports filtering and sorting.',
+      createTitle: 'Create contact',
+      createText:
+        'Manually create a new address book contact. Transactions will be automatically linked.',
+      cleanupRulesTitle: 'Name cleanup rules',
+      cleanupRulesText:
+        'Create rules to automatically clean up messy bank names. Rules can use literal text or regex patterns.',
+      sharedIbansTitle: 'Shared IBANs (payment processors)',
+      sharedIbansText:
+        'Some IBANs are shared by multiple merchants (like iDEAL or PayPal). Mark these as shared to enable merchant-level contact tracking.',
+      sharedIbansNote: 'Why shared IBANs?',
+      sharedIbansExplanation:
+        'Payment processors like iDEAL, Mollie and PayPal use one IBAN for thousands of different merchants. By marking these as shared, Fluxby tracks the actual merchant name instead of just the IBAN.',
+      mergeTitle: 'Merge & split contacts',
+      mergeText:
+        'Combine duplicate contacts or split contacts that represent multiple merchants.',
+      multiIbanTitle: 'Multi-IBAN contacts',
+      multiIbanText:
+        'Some contacts (like large companies) can have multiple IBANs. You can link extra IBANs to one contact.',
+      objectTitle: 'The contact object',
       endpoints: {
         list: 'List all contacts with transaction stats',
         create: 'Create a new contact',
@@ -754,56 +844,34 @@ export const en: LandingTranslationKeys = {
         update: 'Update contact',
         delete: 'Delete contact',
       },
-      listTitle: 'List Contacts',
-      listText:
-        'Retrieve all contacts with transaction statistics. Supports filtering and sorting.',
       params: {
         search: 'Search by name or IBAN',
         sortBy:
           'Sort field: name, transactionCount, totalExpenses, lastTransactionDate',
         sortOrder: 'Sort direction: asc or desc',
       },
-      createTitle: 'Create Contact',
-      createText:
-        'Manually create a new address book contact. Transactions will be automatically linked.',
-      cleanupRulesTitle: 'Name Cleanup Rules',
-      cleanupRulesText:
-        'Create rules to automatically clean up messy bank names. Rules can use literal strings or regex patterns.',
       cleanupEndpoints: {
         list: 'List all cleanup rules',
         create: 'Create cleanup rule',
         delete: 'Delete cleanup rule',
         apply: 'Apply all rules to contacts',
       },
-      sharedIbansTitle: 'Shared IBANs (Payment Processors)',
-      sharedIbansText:
-        'Some IBANs are shared by multiple merchants (like iDEAL or PayPal). Mark these as shared to enable merchant-level contact tracking.',
-      sharedIbansNote: 'Why Shared IBANs?',
-      sharedIbansExplanation:
-        'Payment processors like iDEAL, Mollie, and PayPal use a single IBAN for thousands of different merchants. By marking these as shared, Fluxby tracks the actual merchant name instead of just the IBAN.',
       sharedEndpoints: {
         list: 'List all shared IBANs',
         create: 'Add shared IBAN',
         delete: 'Remove shared IBAN',
         detect: 'Auto-detect shared IBANs',
       },
-      mergeTitle: 'Merge & Split Contacts',
-      mergeText:
-        'Combine duplicate contacts or split contacts that represent multiple merchants.',
       mergeEndpoints: {
         merge: 'Merge contacts into one',
         duplicates: 'Auto-detect and merge duplicates',
         split: 'Split contact into multiple',
       },
-      multiIbanTitle: 'Multi-IBAN Contacts',
-      multiIbanText:
-        'Some contacts (like large companies) may have multiple IBANs. You can link additional IBANs to a single contact.',
       ibanEndpoints: {
         list: 'List IBANs for contact',
         add: 'Add IBAN to contact',
         remove: 'Remove IBAN from contact',
       },
-      objectTitle: 'The Contact Object',
       fields: {
         id: 'Unique identifier',
         iban: 'Primary IBAN',

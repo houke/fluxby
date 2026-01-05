@@ -6,6 +6,27 @@ export interface LandingTranslationKeys {
     screenshots: string;
     getStarted: string;
   };
+  downloads: {
+    title: string;
+    description: string;
+    mac: {
+      name: string;
+      description: string;
+      aarchLabel: string;
+      x64Label: string;
+    };
+    windows: {
+      name: string;
+      description: string;
+      label: string;
+    };
+    linux: {
+      name: string;
+      description: string;
+      label: string;
+    };
+    note: string;
+  };
   common: {
     copied: string;
   };
@@ -164,27 +185,28 @@ export const nl: LandingTranslationKeys = {
     screenshots: 'Screenshots',
     getStarted: 'Aan de slag',
   },
-  downloads?: {
-    title: string;
-    description: string;
+  downloads: {
+    title: 'Download Fluxby',
+    description:
+      'Kies je platform en begin vandaag nog met het beheren van je financiën.',
     mac: {
-      name: string;
-      description: string;
-      aarchLabel: string;
-      x64Label: string;
-    };
+      name: 'macOS',
+      description: 'Voor Apple Silicon en Intel Macs',
+      aarchLabel: 'Apple Silicon (M1/M2/M3)',
+      x64Label: 'Intel Mac',
+    },
     windows: {
-      name: string;
-      description: string;
-      label: string;
-    };
+      name: 'Windows',
+      description: 'Voor Windows 10 en 11',
+      label: 'Download voor Windows',
+    },
     linux: {
-      name: string;
-      description: string;
-      label: string;
-    };
-    note: string;
-  };
+      name: 'Linux',
+      description: 'Voor alle grote Linux distributies',
+      label: 'Download .AppImage',
+    },
+    note: 'Fluxby is gratis en open source.',
+  },
   common: {
     copied: 'Gekopieerd!',
   },
@@ -478,14 +500,14 @@ export const nl: LandingTranslationKeys = {
     introduction: {
       title: 'Fluxby API Documentatie',
       subtitle:
-        'Bouw krachtige integraties met je financiële data. Krijg toegang tot transacties, categorieën, budgetten en analytics via onze RESTful API.',
-      quickStartTitle: 'Snel aan de slag',
+        'Bouw krachtige integraties met je financiële gegevens. Toegang tot transacties, categorieën, budgetten en analyses via onze RESTful API.',
+      quickStartTitle: 'Snelstart',
       quickStartText:
-        'Start binnen enkele minuten. Voor ontwikkeling, draai de API server lokaal op http://localhost:3001/api. De web app draait volledig in de browser zonder backend.',
+        'Ga binnen enkele minuten aan de slag. De API draait lokaal op http://localhost:3001/api zonder authenticatie voor lokale ontwikkeling.',
       whatCanYouBuildTitle: 'Wat kun je bouwen?',
       useCases: [
         {
-          title: 'Custom Dashboards',
+          title: 'Aangepaste dashboards',
           description:
             'Bouw gepersonaliseerde financiële dashboards met je favoriete visualisatie library.',
         },
@@ -495,14 +517,14 @@ export const nl: LandingTranslationKeys = {
             'Maak scripts die automatisch transacties categoriseren of rapporten genereren.',
         },
         {
-          title: 'Mobiele Apps',
+          title: 'Mobiele apps',
           description:
             'Bouw mobiele companion apps die synchroniseren met je Fluxby data.',
         },
         {
           title: 'Notificaties',
           description:
-            'Stel alerts in voor budgetlimieten, ongewone uitgaven of terugkerende betalingen.',
+            'Stel alerts in voor budgetlimieten, ongebruikelijke uitgaven of terugkerende betalingen.',
         },
       ],
       makeFirstRequest: 'Maak je eerste request',
@@ -725,7 +747,29 @@ export const nl: LandingTranslationKeys = {
     accounts: {
       title: 'Rekeningen',
       subtitle:
-        'Beheer je bankrekeningen. Elke rekening houdt een saldo bij en is gekoppeld aan transacties.',
+        'Beheer bankrekeningen en volg saldi over al je financiële rekeningen.',
+      listTitle: 'Rekeningen ophalen',
+      listText: 'Haal alle rekeningen op voor het huidige profiel:',
+      createTitle: 'Rekening aanmaken',
+      createText: 'Voeg een nieuwe bankrekening toe:',
+      requestBody: 'Request body',
+      tableField: 'Veld',
+      tableType: 'Type',
+      tableRequired: 'Verplicht',
+      tableDescription: 'Beschrijving',
+      nameDesc: 'Weergavenaam voor de rekening',
+      typeDesc: 'checking, savings of credit',
+      ibanDesc: 'IBAN van de rekening',
+      balanceDesc: 'Startsaldo (standaard: 0)',
+      deleteTitle: 'Rekening verwijderen',
+      deleteText:
+        'Verwijder een rekening. Transacties gekoppeld aan deze rekening blijven behouden maar worden ontkoppeld.',
+      deleteAllTitle: 'Alle rekeningen verwijderen',
+      deleteAllText:
+        'Verwijder alle rekeningen voor het huidige profiel. Alle transacties blijven behouden maar worden ontkoppeld van hun rekeningen.',
+      noteTitle: 'Let op',
+      noteText:
+        'Beide verwijder endpoints behouden transacties door hun account_id op NULL te zetten. Transacties blijven toegankelijk maar zijn niet langer gekoppeld aan een rekening.',
       endpointsTitle: 'Rekening Endpoints',
       endpoints: {
         list: 'Lijst alle rekeningen',
@@ -755,18 +799,30 @@ export const nl: LandingTranslationKeys = {
         { type: 'savings', description: 'Spaarrekening' },
         { type: 'credit', description: 'Creditcard rekening' },
       ],
-      deleteTitle: 'Verwijder rekening',
-      deleteText:
-        'Verwijder een rekening. Transacties gekoppeld aan deze rekening blijven behouden maar worden ontkoppeld.',
-      noteTitle: 'Opmerking',
-      noteText:
-        'Het verwijderen van een enkele rekening behoudt de transacties. Om alle rekeningen EN hun transacties te verwijderen, gebruik DELETE /api/accounts zonder ID.',
     },
     // Transactions page
     transactions: {
       title: 'Transacties',
       subtitle:
-        'Het hart van Fluxby. Transacties representeren inkomsten en uitgaven gekoppeld aan je rekeningen.',
+        'Zoek, filter en beheer je financiële transacties. Importeer vanuit bankexports of maak handmatig aan.',
+      listTitle: 'Transacties ophalen',
+      listText: 'Haal transacties op met krachtige filteropties:',
+      queryParams: 'Query parameters',
+      startDateDesc: 'Filter vanaf deze datum (JJJJ-MM-DD)',
+      endDateDesc: 'Filter tot deze datum (JJJJ-MM-DD)',
+      categoryDesc: 'Filter op categorie ID of naam',
+      typeDesc: 'inkomsten of uitgaven',
+      searchDesc: 'Zoek in omschrijving en tegenpartij',
+      limitDesc: 'Aantal resultaten (standaard: 50, max: 500)',
+      pageDesc: 'Paginanummer voor paginering',
+      updateTitle: 'Transactie bijwerken',
+      updateText:
+        'Wijzig een transactie om de categorie te veranderen, notities toe te voegen of andere velden bij te werken:',
+      importTitle: 'Importeren vanuit CSV',
+      importText: 'Bulk import transacties vanuit je bankexport:',
+      supportedBanks: 'Ondersteunde banken',
+      supportedBanksText:
+        'Momenteel worden ING bank CSV exports ondersteund. Meer banken worden toegevoegd in toekomstige updates.',
       endpointsTitle: 'Transactie Endpoints',
       endpoints: {
         list: 'Lijst transacties (met filters)',
@@ -805,15 +861,28 @@ export const nl: LandingTranslationKeys = {
       exampleTitle: 'Voorbeeld: Gefilterde Transacties',
       requestTitle: 'Request',
       responseTitle: 'Response',
-      updateTitle: 'Een Transactie Updaten',
-      updateText:
-        'Je kunt de categorie, notities en bepaalde velden van een transactie updaten:',
     },
     // Categories page
     categories: {
       title: 'Categorieën',
       subtitle:
-        'Organiseer transacties met aangepaste categorieën. Stel automatische categorisatie regels in om transacties automatisch te taggen.',
+        'Organiseer je transacties met aangepaste categorieën. Stel kleuren, iconen en automatische categorisatieregels in.',
+      listTitle: 'Categorieën ophalen',
+      listText: 'Haal alle categorieën op met transactie-aantallen:',
+      createTitle: 'Categorie aanmaken',
+      createText: 'Voeg een nieuwe categorie toe met aangepaste stijl:',
+      requestBody: 'Request body',
+      nameDesc: 'Weergavenaam van de categorie',
+      colorDesc: 'Hex kleurcode (bijv. #22c55e)',
+      iconDesc: 'Emoji icoon voor de categorie',
+      typeDesc: 'inkomsten of uitgaven',
+      updateTitle: 'Categorie bijwerken',
+      updateText: 'Wijzig een bestaande categorie:',
+      deleteTitle: 'Categorie verwijderen',
+      deleteText: 'Verwijder een categorie. Transacties worden ongecategoriseerd:',
+      autoCategorizationTitle: 'Auto-categorisatie',
+      autoCategorizationText:
+        'Fluxby kan transacties automatisch categoriseren op basis van regels die je definieert. Stel regels in via de app onder Categorieën → Regels, of gebruik de API voor aangepaste automatisering.',
       endpointsTitle: 'Categorie Endpoints',
       endpoints: {
         list: 'Lijst alle categorieën',
@@ -834,9 +903,6 @@ export const nl: LandingTranslationKeys = {
       createCategoryTitle: 'Maak een Categorie',
       requestTitle: 'Request',
       responseTitle: 'Response',
-      autoCategorizationTitle: 'Auto-categorisatie Regels',
-      autoCategorizationText:
-        'Stel regels in om transacties automatisch te categoriseren gebaseerd op patronen:',
       ruleEndpoints: {
         list: 'Lijst alle regels',
         create: 'Maak nieuwe regel',
@@ -852,21 +918,21 @@ export const nl: LandingTranslationKeys = {
     budgets: {
       title: 'Budgetten',
       subtitle:
-        'Stel uitgavenlimieten in per categorie en volg je voortgang. Budgetten worden automatisch berekend op basis van transacties.',
+        'Stel bestedingslimieten in en volg je voortgang. Ontvang meldingen wanneer je budgetlimieten nadert of overschrijdt.',
       listTitle: 'Budgetten ophalen',
-      listText: 'Haal alle budgetten op met huidige voortgang:',
-      progressNote: 'Voortgang Tracking',
+      listText: 'Haal alle budgetten op met huidige bestedingsvoortgang:',
+      progressNote: 'Voortgang bijhouden',
       progressNoteText:
-        'De API berekent automatisch het uitgegeven bedrag, het resterende budget en het percentage voor elke budgetperiode.',
+        'De API berekent automatisch het bestede bedrag, resterend budget en percentage voor elke budgetperiode.',
       createTitle: 'Budget aanmaken',
-      createText: 'Maak een nieuw budget met een uitgavenlimiet:',
-      requestBody: 'Request Body',
+      createText: 'Stel een nieuw budget in met een bestedingslimiet:',
+      requestBody: 'Request body',
       nameDesc: 'Weergavenaam van het budget',
-      amountDesc: 'Budget limiet in euros',
-      categoryIdDesc: 'Koppel aan een specifieke categorie',
-      periodDesc: 'weekly, monthly of yearly',
+      amountDesc: "Budgetlimiet in euro's",
+      categoryIdDesc: 'Koppeling aan een specifieke categorie',
+      periodDesc: 'wekelijks, maandelijks of jaarlijks',
       updateTitle: 'Budget bijwerken',
-      updateText: 'Wijzig een budget limiet of instellingen:',
+      updateText: 'Wijzig een budgetlimiet of instellingen:',
       deleteTitle: 'Budget verwijderen',
       deleteText: 'Verwijder een budget:',
       endpointsTitle: 'Budget Endpoints',
@@ -909,9 +975,22 @@ export const nl: LandingTranslationKeys = {
     },
     // Analytics page
     analytics: {
-      title: 'Analytics',
+      title: 'Analyses',
       subtitle:
-        'Krijg inzichten in je financiële data met voorgebouwde analytics endpoints.',
+        'Krijg inzicht in je bestedingspatronen met uitgebreide analyse-endpoints.',
+      dashboardTitle: 'Dashboard statistieken',
+      dashboardText: 'Krijg een overzicht van je financiële gezondheid:',
+      monthlyTitle: 'Maandelijkse data',
+      monthlyText:
+        'Haal gedetailleerde maandstatistieken op met dagelijkse uitsplitsing:',
+      queryParams: 'Query parameters',
+      yearDesc: 'Jaar (bijv. 2024)',
+      monthDesc: 'Maand (1-12)',
+      categoriesTitle: 'Categorie uitsplitsing',
+      categoriesText: 'Bekijk hoe uitgaven verdeeld zijn over categorieën:',
+      tipTitle: 'Pro tip',
+      tipText:
+        'Combineer analyse-endpoints met transactiefilters om aangepaste rapporten te maken. Vergelijk bijvoorbeeld uitgaven tussen maanden of volg categorie trends over tijd.',
       endpointsTitle: 'Analytics Endpoints',
       endpoints: {
         dashboard: 'Dashboard statistieken overzicht',
@@ -919,8 +998,6 @@ export const nl: LandingTranslationKeys = {
         categories: 'Uitgaven per categorie',
         trends: 'Inkomsten/uitgaven trends',
       },
-      dashboardTitle: 'Dashboard Analytics',
-      dashboardText: 'Haal een compleet overzicht op van de financiële status:',
       dashboardFieldsTitle: 'Response Velden',
       dashboardFields: {
         totalIncome: 'Totaal inkomsten in periode',
@@ -929,9 +1006,6 @@ export const nl: LandingTranslationKeys = {
         transactionCount: 'Aantal transacties',
         topCategories: 'Top uitgave categorieën',
       },
-      monthlyTitle: 'Maandelijkse Breakdown',
-      monthlyText:
-        'Haal maand-voor-maand financiële data op voor grafieken en trends:',
       categoryTitle: 'Categorie Analytics',
       categoryText: 'Analyseer uitgaven per categorie:',
     },
@@ -939,11 +1013,33 @@ export const nl: LandingTranslationKeys = {
     addressBook: {
       title: 'Adresboek',
       subtitle:
-        'Beheer contacten en tegenpartijen uit je transacties. Link automatisch transacties aan contacten, schoon namen op en beheer gedeelde IBANs.',
-      overviewTitle: '📒 Wat is het Adresboek?',
+        'Beheer contacten en tegenpartijen uit je transacties. Koppel automatisch transacties aan contacten, schoon namen op en beheer gedeelde IBANs.',
+      overviewTitle: '📒 Wat is het adresboek?',
       overviewText:
-        'Het Adresboek extraheert automatisch tegenpartijen uit je transacties op basis van IBAN en naam. Het helpt je contacten te organiseren, rommelige banknamen op te schonen en uitgaven per merchant te volgen.',
-      endpointsTitle: 'Adresboek Endpoints',
+        'Het adresboek haalt automatisch tegenpartijen uit je transacties op basis van IBAN en naam. Het helpt je bij het organiseren van contacten, opschonen van rommelige banknamen en bijhouden van uitgaven per handelaar.',
+      endpointsTitle: 'Adresboek endpoints',
+      listTitle: 'Contacten ophalen',
+      listText:
+        'Haal alle contacten op met transactiestatistieken. Ondersteunt filteren en sorteren.',
+      createTitle: 'Contact aanmaken',
+      createText:
+        'Handmatig een nieuw adresboekcontact aanmaken. Transacties worden automatisch gekoppeld.',
+      cleanupRulesTitle: 'Naam opschoonregels',
+      cleanupRulesText:
+        'Maak regels om automatisch rommelige banknamen op te schonen. Regels kunnen letterlijke tekst of regex patronen gebruiken.',
+      sharedIbansTitle: 'Gedeelde IBANs (betalingsverwerkers)',
+      sharedIbansText:
+        'Sommige IBANs worden gedeeld door meerdere handelaren (zoals iDEAL of PayPal). Markeer deze als gedeeld om contact-tracking op handelaarsniveau mogelijk te maken.',
+      sharedIbansNote: 'Waarom gedeelde IBANs?',
+      sharedIbansExplanation:
+        'Betalingsverwerkers zoals iDEAL, Mollie en PayPal gebruiken één IBAN voor duizenden verschillende handelaren. Door deze als gedeeld te markeren, volgt Fluxby de werkelijke handelaarsnaam in plaats van alleen de IBAN.',
+      mergeTitle: 'Contacten samenvoegen & splitsen',
+      mergeText:
+        'Combineer dubbele contacten of splits contacten die meerdere handelaren vertegenwoordigen.',
+      multiIbanTitle: 'Multi-IBAN contacten',
+      multiIbanText:
+        'Sommige contacten (zoals grote bedrijven) kunnen meerdere IBANs hebben. Je kunt extra IBANs aan één contact koppelen.',
+      objectTitle: 'Het contact object',
       endpoints: {
         list: 'Lijst alle contacten met transactie statistieken',
         create: 'Maak nieuw contact',
@@ -951,56 +1047,34 @@ export const nl: LandingTranslationKeys = {
         update: 'Update contact',
         delete: 'Contacten verwijderen',
       },
-      listTitle: 'Lijst Contacten',
-      listText:
-        'Haal alle contacten op met transactie statistieken. Ondersteunt filteren en sorteren.',
       params: {
         search: 'Zoek op naam of IBAN',
         sortBy:
           'Sorteer veld: name, transactionCount, totalExpenses, lastTransactionDate',
         sortOrder: 'Sorteer richting: asc of desc',
       },
-      createTitle: 'Maak Contact',
-      createText:
-        'Maak handmatig een nieuw adresboek contact. Transacties worden automatisch gekoppeld.',
-      cleanupRulesTitle: 'Naam Opschoon Regels',
-      cleanupRulesText:
-        'Maak regels om automatisch rommelige banknamen op te schonen. Regels kunnen letterlijke strings of regex patronen gebruiken.',
       cleanupEndpoints: {
         list: 'Lijst alle opschoon regels',
         create: 'Maak opschoon regel',
         delete: 'Verwijder opschoon regel',
         apply: 'Pas alle regels toe op contacten',
       },
-      sharedIbansTitle: 'Gedeelde IBANs (Betalingsverwerkers)',
-      sharedIbansText:
-        'Sommige IBANs worden gedeeld door meerdere merchants (zoals iDEAL of PayPal). Markeer deze als gedeeld om merchant-niveau contact tracking mogelijk te maken.',
-      sharedIbansNote: 'Waarom Gedeelde IBANs?',
-      sharedIbansExplanation:
-        'Betalingsverwerkers zoals iDEAL, Mollie en PayPal gebruiken één IBAN voor duizenden verschillende merchants. Door deze als gedeeld te markeren, volgt Fluxby de echte merchantnaam in plaats van alleen de IBAN.',
       sharedEndpoints: {
         list: 'Lijst alle gedeelde IBANs',
         create: 'Voeg gedeelde IBAN toe',
         delete: 'Verwijder gedeelde IBAN',
         detect: 'Auto-detecteer gedeelde IBANs',
       },
-      mergeTitle: 'Samenvoegen & Splitsen Contacten',
-      mergeText:
-        'Combineer dubbele contacten of splits contacten die meerdere merchants representeren.',
       mergeEndpoints: {
         merge: 'Voeg contacten samen tot één',
         duplicates: 'Auto-detecteer en voeg duplicaten samen',
         split: 'Splits contact in meerdere',
       },
-      multiIbanTitle: 'Multi-IBAN Contacten',
-      multiIbanText:
-        'Sommige contacten (zoals grote bedrijven) kunnen meerdere IBANs hebben. Je kunt extra IBANs koppelen aan één contact.',
       ibanEndpoints: {
         list: 'Lijst IBANs voor contact',
         add: 'Voeg IBAN toe aan contact',
         remove: 'Verwijder IBAN van contact',
       },
-      objectTitle: 'Het Contact Object',
       fields: {
         id: 'Unieke identifier',
         iban: 'Primaire IBAN',

@@ -29,59 +29,46 @@ fetch('${baseUrl}/analytics/dashboard', {
   return (
     <article className='prose prose-gray dark:prose-invert max-w-none'>
       <h1 className='mb-4 text-4xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.docs?.introduction?.title || 'Fluxby API Documentatie'}
+        {t.docs.introduction.title}
       </h1>
       <p className='text-xl text-gray-600 dark:text-gray-400'>
-        {t.docs?.introduction?.subtitle ||
-          'Bouw krachtige integraties met je financiële gegevens. Toegang tot transacties, categorieën, budgetten en analyses via onze RESTful API.'}
+        {t.docs.introduction.subtitle}
       </p>
 
       <div className='mt-8 rounded-xl border border-purple-200 bg-purple-50 p-6 dark:border-purple-800 dark:bg-purple-950/30'>
         <h3 className='mb-2 mt-0 flex items-center gap-2 text-lg font-semibold text-purple-900 dark:text-purple-200'>
           <span>🚀</span>
-          {t.docs?.introduction?.quickStartTitle || 'Snelstart'}
+          {t.docs.introduction.quickStartTitle}
         </h3>
         <p className='mb-0 text-purple-800 dark:text-purple-300'>
-          {t.docs?.introduction?.quickStartText ||
-            'Ga binnen enkele minuten aan de slag. De API draait lokaal op http://localhost:3001/api zonder authenticatie voor lokale ontwikkeling.'}
+          {t.docs.introduction.quickStartText}
         </p>
       </div>
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.docs?.introduction?.whatCanYouBuildTitle || 'Wat kun je bouwen?'}
+        {t.docs.introduction.whatCanYouBuildTitle}
       </h2>
       <div className='mt-6 grid gap-4 md:grid-cols-2'>
         {[
           {
             icon: '📊',
-            title:
-              t.docs?.introduction?.useCases?.[0]?.title ||
-              'Aangepaste dashboards',
-            desc:
-              t.docs?.introduction?.useCases?.[0]?.description ||
-              'Bouw gepersonaliseerde financiële dashboards met je favoriete visualisatie library.',
+            title: t.docs.introduction.useCases[0].title,
+            desc: t.docs.introduction.useCases[0].description,
           },
           {
             icon: '🤖',
-            title:
-              t.docs?.introduction?.useCases?.[1]?.title || 'Automatiseringen',
-            desc:
-              t.docs?.introduction?.useCases?.[1]?.description ||
-              'Maak scripts die automatisch transacties categoriseren of rapporten genereren.',
+            title: t.docs.introduction.useCases[1].title,
+            desc: t.docs.introduction.useCases[1].description,
           },
           {
             icon: '📱',
-            title: t.docs?.introduction?.useCases?.[2]?.title || 'Mobiele apps',
-            desc:
-              t.docs?.introduction?.useCases?.[2]?.description ||
-              'Bouw mobiele companion apps die synchroniseren met je Fluxby data.',
+            title: t.docs.introduction.useCases[2].title,
+            desc: t.docs.introduction.useCases[2].description,
           },
           {
             icon: '🔔',
-            title: t.docs?.introduction?.useCases?.[3]?.title || 'Notificaties',
-            desc:
-              t.docs?.introduction?.useCases?.[3]?.description ||
-              'Stel alerts in voor budgetlimieten, ongebruikelijke uitgaven of terugkerende betalingen.',
+            title: t.docs.introduction.useCases[3].title,
+            desc: t.docs.introduction.useCases[3].description,
           },
         ].map((item, idx) => (
           <div
@@ -100,11 +87,10 @@ fetch('${baseUrl}/analytics/dashboard', {
       </div>
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.docs?.introduction?.makeFirstRequest || 'Je eerste request maken'}
+        {t.docs.introduction.makeFirstRequest}
       </h2>
       <p className='text-gray-600 dark:text-gray-400'>
-        {t.docs?.introduction?.makeFirstRequestText ||
-          'Hier is een eenvoudig voorbeeld om je dashboard statistieken op te halen:'}
+        {t.docs.introduction.makeFirstRequestText}
       </p>
 
       <div className='mt-6 overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800'>
@@ -122,49 +108,43 @@ fetch('${baseUrl}/analytics/dashboard', {
         <CodeBlock
           code={exampleCode}
           language='javascript'
-          title={t.docs?.introduction?.requestTitle || 'Verzoek'}
+          title={t.docs.introduction.requestTitle}
         />
         <CodeBlock
           code={responseExample}
           language='json'
-          title={t.docs?.introduction?.responseTitle || 'Respons'}
+          title={t.docs.introduction.responseTitle}
         />
       </div>
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.docs?.introduction?.baseUrlTitle || 'Basis URL'}
+        {t.docs.introduction.baseUrlTitle}
       </h2>
       <p className='text-gray-600 dark:text-gray-400'>
-        {t.docs?.introduction?.baseUrlText ||
-          'Alle API endpoints zijn relatief ten opzichte van de basis URL:'}
+        {t.docs.introduction.baseUrlText}
       </p>
       <div className='mt-4 overflow-hidden rounded-lg border border-gray-200 bg-gray-900 p-4 dark:border-gray-700'>
         <code className='text-green-400'>{baseUrl}</code>
       </div>
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.docs?.introduction?.nextStepsTitle || 'Volgende stappen'}
+        {t.docs.introduction.nextStepsTitle}
       </h2>
       <div className='mt-4 space-y-3'>
         {[
           {
             emoji: '🔐',
-            text:
-              t.docs?.introduction?.nextSteps?.[0] || 'Leer over authenticatie',
+            text: t.docs.introduction.nextSteps[0],
             link: '/docs/authentication',
           },
           {
             emoji: '👥',
-            text:
-              t.docs?.introduction?.nextSteps?.[1] ||
-              'Begrijp profielen & multi-tenancy',
+            text: t.docs.introduction.nextSteps[1],
             link: '/docs/profiles',
           },
           {
             emoji: '💸',
-            text:
-              t.docs?.introduction?.nextSteps?.[2] ||
-              'Verken de Transacties API',
+            text: t.docs.introduction.nextSteps[2],
             link: '/docs/transactions',
           },
         ].map((item, idx) => (

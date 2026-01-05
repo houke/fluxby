@@ -66,19 +66,17 @@ fetch('http://localhost:3001/api/budgets', {
   return (
     <article className='prose prose-gray dark:prose-invert max-w-none'>
       <h1 className='mb-4 text-4xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.docs?.budgets?.title || 'Budgetten'}
+        {t.docs.budgets.title}
       </h1>
       <p className='text-xl text-gray-600 dark:text-gray-400'>
-        {t.docs?.budgets?.subtitle ||
-          'Stel bestedingslimieten in en volg je voortgang. Ontvang meldingen wanneer je budgetlimieten nadert of overschrijdt.'}
+        {t.docs.budgets.subtitle}
       </p>
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.docs?.budgets?.listTitle || 'Budgetten ophalen'}
+        {t.docs.budgets.listTitle}
       </h2>
       <p className='text-gray-600 dark:text-gray-400'>
-        {t.docs?.budgets?.listText ||
-          'Haal alle budgetten op met huidige bestedingsvoortgang:'}
+        {t.docs.budgets.listText}
       </p>
 
       <div className='mt-6 overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800'>
@@ -104,20 +102,18 @@ fetch('http://localhost:3001/api/budgets', {
       <div className='mt-6 rounded-xl border border-green-200 bg-green-50 p-6 dark:border-green-800 dark:bg-green-950/30'>
         <h3 className='mb-2 mt-0 flex items-center gap-2 text-lg font-semibold text-green-900 dark:text-green-200'>
           <span>📊</span>
-          {t.docs?.budgets?.progressNote || 'Voortgang bijhouden'}
+          {t.docs.budgets.progressNote}
         </h3>
         <p className='mb-0 text-green-800 dark:text-green-300'>
-          {t.docs?.budgets?.progressNoteText ||
-            'De API berekent automatisch het bestede bedrag, resterend budget en percentage voor elke budgetperiode.'}
+          {t.docs.budgets.progressNoteText}
         </p>
       </div>
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.docs?.budgets?.createTitle || 'Budget aanmaken'}
+        {t.docs.budgets.createTitle}
       </h2>
       <p className='text-gray-600 dark:text-gray-400'>
-        {t.docs?.budgets?.createText ||
-          'Stel een nieuw budget in met een bestedingslimiet:'}
+        {t.docs.budgets.createText}
       </p>
 
       <div className='mt-6 overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800'>
@@ -132,23 +128,23 @@ fetch('http://localhost:3001/api/budgets', {
       </div>
 
       <h3 className='mt-6 text-lg font-semibold text-gray-900 dark:text-gray-100'>
-        {t.docs?.budgets?.requestBody || 'Request body'}
+        {t.docs.budgets.requestBody}
       </h3>
-      <div className='mt-6 overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700'>
+      <div className='mt-6 overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700'>
         <table className='min-w-full'>
           <thead className='bg-gray-50 dark:bg-gray-800'>
             <tr>
               <th className='px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100'>
-                {t.docs?.common?.tableField || 'Veld'}
+                {t.docs.common.tableField}
               </th>
               <th className='px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100'>
-                {t.docs?.common?.tableType || 'Type'}
+                {t.docs.common.tableType}
               </th>
               <th className='px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100'>
-                {t.docs?.common?.tableRequired || 'Verplicht'}
+                {t.docs.common.tableRequired}
               </th>
               <th className='px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100'>
-                {t.docs?.common?.tableDescription || 'Beschrijving'}
+                {t.docs.common.tableDescription}
               </th>
             </tr>
           </thead>
@@ -162,11 +158,11 @@ fetch('http://localhost:3001/api/budgets', {
               </td>
               <td className='px-4 py-3'>
                 <span className='rounded bg-green-100 px-2 py-0.5 text-xs text-green-800 dark:bg-green-900/30 dark:text-green-400'>
-                  {t.docs?.common?.yes || 'Ja'}
+                  {t.docs.common.yes}
                 </span>
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                {t.docs?.budgets?.nameDesc || 'Weergavenaam van het budget'}
+                {t.docs.budgets.nameDesc}
               </td>
             </tr>
             <tr>
@@ -178,11 +174,11 @@ fetch('http://localhost:3001/api/budgets', {
               </td>
               <td className='px-4 py-3'>
                 <span className='rounded bg-green-100 px-2 py-0.5 text-xs text-green-800 dark:bg-green-900/30 dark:text-green-400'>
-                  {t.docs?.common?.yes || 'Ja'}
+                  {t.docs.common.yes}
                 </span>
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                {t.docs?.budgets?.amountDesc || "Budgetlimiet in euro's"}
+                {t.docs.budgets.amountDesc}
               </td>
             </tr>
             <tr>
@@ -194,12 +190,11 @@ fetch('http://localhost:3001/api/budgets', {
               </td>
               <td className='px-4 py-3'>
                 <span className='rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-600 dark:bg-gray-700 dark:text-gray-400'>
-                  {t.docs?.common?.no || 'Nee'}
+                  {t.docs.common.no}
                 </span>
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                {t.docs?.budgets?.categoryIdDesc ||
-                  'Koppeling aan een specifieke categorie'}
+                {t.docs.budgets.categoryIdDesc}
               </td>
             </tr>
             <tr>
@@ -211,12 +206,11 @@ fetch('http://localhost:3001/api/budgets', {
               </td>
               <td className='px-4 py-3'>
                 <span className='rounded bg-green-100 px-2 py-0.5 text-xs text-green-800 dark:bg-green-900/30 dark:text-green-400'>
-                  {t.docs?.common?.yes || 'Ja'}
+                  {t.docs.common.yes}
                 </span>
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                {t.docs?.budgets?.periodDesc ||
-                  'wekelijks, maandelijks of jaarlijks'}
+                {t.docs.budgets.periodDesc}
               </td>
             </tr>
           </tbody>
@@ -228,11 +222,10 @@ fetch('http://localhost:3001/api/budgets', {
       </div>
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.docs?.budgets?.updateTitle || 'Budget bijwerken'}
+        {t.docs.budgets.updateTitle}
       </h2>
       <p className='text-gray-600 dark:text-gray-400'>
-        {t.docs?.budgets?.updateText ||
-          'Wijzig een budgetlimiet of instellingen:'}
+        {t.docs.budgets.updateText}
       </p>
 
       <div className='mt-6 overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800'>
@@ -247,7 +240,7 @@ fetch('http://localhost:3001/api/budgets', {
       </div>
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.docs?.budgets?.deleteTitle || 'Budget verwijderen'}
+        {t.docs.budgets.deleteTitle}
       </h2>
       <p className='text-gray-600 dark:text-gray-400'>
         {t.docs?.budgets?.deleteText || 'Verwijder een budget:'}

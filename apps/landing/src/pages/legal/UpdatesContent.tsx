@@ -23,28 +23,25 @@ const UpdatesContent = () => {
   const updatesPage = t.legal?.updatesPage;
 
   const releases = [
-            {
+    {
       version: '1.0.4',
       date: updatesPage?.v104Date || '4 januari 2026',
       title: updatesPage?.v104Title || 'Release 1.0.4',
       description:
-        updatesPage?.v104Description ||
-        'Nieuwe verbeteringen en bugfixes.',
-      features: [
-
-      ],
+        updatesPage?.v104Description || 'Nieuwe verbeteringen en bugfixes.',
+      features: [],
     },
     {
       version: '1.0.3',
       date: updatesPage?.v103Date || '4 januari 2026',
       title: updatesPage?.v103Title || 'Release 1.0.3',
-      description:
-        updatesPage?.v103Description ||
-        '1 bugfix.',
+      description: updatesPage?.v103Description || '1 bugfix.',
       features: [
         {
           icon: Rocket,
-          title: updatesPage?.v103F1Title || 'Sync versions to tauri files and fix duplicate releases',
+          title:
+            updatesPage?.v103F1Title ||
+            'Sync versions to tauri files and fix duplicate releases',
           description: updatesPage?.v103F1Desc || 'Bug opgelost.',
         },
       ],
