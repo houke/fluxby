@@ -164,6 +164,27 @@ export const nl: LandingTranslationKeys = {
     screenshots: 'Screenshots',
     getStarted: 'Aan de slag',
   },
+  downloads?: {
+    title: string;
+    description: string;
+    mac: {
+      name: string;
+      description: string;
+      aarchLabel: string;
+      x64Label: string;
+    };
+    windows: {
+      name: string;
+      description: string;
+      label: string;
+    };
+    linux: {
+      name: string;
+      description: string;
+      label: string;
+    };
+    note: string;
+  };
   common: {
     copied: 'Gekopieerd!',
   },
@@ -1577,6 +1598,29 @@ export const nl: LandingTranslationKeys = {
       ctaDescription:
         'Download Fluxby en neem vandaag nog controle over je financiën.',
       ctaButton: 'Beginnen',
+    },
+    downloads: {
+      title: 'Download Fluxby',
+      description:
+        'Kies jouw platform en begin direct met het visualiseren van je financiën. Alles blijft 100% lokaal op je eigen apparaat.',
+      mac: {
+        name: 'macOS',
+        description: 'Native ervaring voor Apple Silicon & Intel Macs.',
+        aarchLabel: 'Apple Silicon',
+        x64Label: 'Intel',
+      },
+      windows: {
+        name: 'Windows',
+        description: 'Eenvoudige installatie voor Windows 10 & 11.',
+        label: 'Download',
+      },
+      linux: {
+        name: 'Linux',
+        description: 'Standalone AppImage voor alle distributies.',
+        label: 'Download',
+      },
+      note:
+        'Je hoeft niets te installeren om Fluxby te gebruiken; het werkt volledig in je browser. Deze downloads zijn beschikbaar voor wie de voorkeur geeft aan een dedicated applicatie op hun systeem.',
     },
     pricingTitle: 'Prijzen',
     pricingPage: {

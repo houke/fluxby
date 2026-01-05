@@ -210,6 +210,29 @@ export const en: LandingTranslationKeys = {
       'Join Fluxby today to track transactions, categorize expenses, and understand where your money is going — quick, private, and clear.',
     getStarted: 'Get started 🚀',
   },
+  downloads: {
+    title: 'Download Fluxby',
+    description:
+      'Choose your platform and start visualizing your finances immediately. Everything stays 100% local on your own device.',
+    mac: {
+      name: 'macOS',
+      description: 'Native experience for Apple Silicon & Intel Macs.',
+      aarchLabel: 'Apple Silicon',
+      x64Label: 'Intel',
+    },
+    windows: {
+      name: 'Windows',
+      description: 'Easy installer for Windows 10 & 11.',
+      label: 'Download',
+    },
+    linux: {
+      name: 'Linux',
+      description: 'Standalone AppImage for all distributions.',
+      label: 'Download',
+    },
+    note:
+      "You don't need to install anything to use Fluxby — it runs fully in your browser. These downloads are provided for users who prefer a dedicated application on their system.",
+  },
 
   // Footer
   footer: {

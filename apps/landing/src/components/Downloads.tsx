@@ -6,7 +6,7 @@ import { Download, Monitor, Apple, AppWindow } from 'lucide-react';
 declare const __APP_VERSION__: string;
 
 const Downloads = () => {
-  useLanguage();
+  const { t } = useLanguage();
   const downloadsRef = useRef<HTMLElement>(null);
 
   // Version from build-time injection (falls back for dev)
@@ -21,30 +21,30 @@ const Downloads = () => {
   const platforms = [
     {
       id: 'mac',
-      name: 'macOS',
+      name: t.downloads?.mac?.name || 'macOS',
       icon: Apple,
-      description: 'Native ervaring voor Apple Silicon & Intel Macs.',
+      description: t.downloads?.mac?.description || 'Native ervaring voor Apple Silicon & Intel Macs.',
       downloads: [
         {
-          label: 'Apple Silicon',
+          label: t.downloads?.mac?.aarchLabel || 'Apple Silicon',
           link: getDownloadLink(`Fluxby_${version}_aarch64.dmg`),
-          type: 'M1/M2/M3/M4',
+          type: t.downloads?.mac?.aarchLabel || 'M1/M2/M3/M4',
         },
         {
-          label: 'Intel',
+          label: t.downloads?.mac?.x64Label || 'Intel',
           link: getDownloadLink(`Fluxby_${version}_x64.dmg`),
-          type: 'x64',
+          type: t.downloads?.mac?.x64Label || 'x64',
         },
       ],
     },
     {
       id: 'windows',
-      name: 'Windows',
+      name: t.downloads?.windows?.name || 'Windows',
       icon: Monitor,
-      description: 'Eenvoudige installatie voor Windows 10 & 11.',
+      description: t.downloads?.windows?.description || 'Eenvoudige installatie voor Windows 10 & 11.',
       downloads: [
         {
-          label: 'Download',
+          label: t.downloads?.windows?.label || 'Download',
           link: getDownloadLink(`Fluxby_${version}_x64-setup.exe`),
           type: 'x64 EXE',
         },
@@ -52,12 +52,12 @@ const Downloads = () => {
     },
     {
       id: 'linux',
-      name: 'Linux',
+      name: t.downloads?.linux?.name || 'Linux',
       icon: AppWindow,
-      description: 'Standalone AppImage voor alle distributies.',
+      description: t.downloads?.linux?.description || 'Standalone AppImage voor alle distributies.',
       downloads: [
         {
-          label: 'Download',
+          label: t.downloads?.linux?.label || 'Download',
           link: getDownloadLink(`fluxby_${version}_amd64.AppImage`),
           type: 'AMD64 AppImage',
         },
@@ -74,11 +74,15 @@ const Downloads = () => {
       <div className='container mx-auto px-4'>
         <div className='mx-auto mb-12 max-w-3xl text-center md:mb-16'>
           <h2 className='mb-6 text-4xl font-black text-gray-900 dark:text-white md:text-5xl'>
-            Download <span className='text-fluxby-purple'>Fluxby</span>
+            {t.downloads?.title || (
+              <>
+                Download <span className='text-fluxby-purple'>Fluxby</span>
+              </>
+            )}
           </h2>
           <p className='text-xl text-gray-600 dark:text-gray-300'>
-            Kies jouw platform en begin direct met het visualiseren van je
-            financiën. Alles blijft 100% lokaal op je eigen apparaat.
+            {t.downloads?.description ||
+              'Kies jouw platform en begin direct met het visualiseren van je financiën. Alles blijft 100% lokaal op je eigen apparaat.'}
           </p>
         </div>
 
@@ -127,12 +131,16 @@ const Downloads = () => {
 
         <div className='mt-16 text-center text-sm text-gray-500 dark:text-gray-400'>
           <p className='mx-auto max-w-xl'>
-            Je hoeft niets te installeren om Fluxby te gebruiken; het werkt{' '}
-            <span className='text-fluxby-purple font-semibold'>
-              volledig in je browser
-            </span>
-            . Deze downloads zijn beschikbaar voor wie de voorkeur geeft aan een
-            dedicated applicatie op hun systeem.
+            {t.downloads?.note || (
+              <>
+                Je hoeft niets te installeren om Fluxby te gebruiken; het werkt{' '}
+                <span className='text-fluxby-purple font-semibold'>
+                  volledig in je browser
+                </span>
+                . Deze downloads zijn beschikbaar voor wie de voorkeur geeft aan een
+                dedicated applicatie op hun systeem.
+              </>
+            )}
           </p>
         </div>
       </div>
