@@ -70,11 +70,15 @@ export class SyncLogger {
     const defaultOnLog = (_entry: SyncLogEntry) => {
       // No-op by default
     };
+    // Check if running in browser with localhost
+    const isBrowser =
+      typeof globalThis !== 'undefined' && 'location' in globalThis;
+    const isLocalhost =
+      isBrowser &&
+      (globalThis as { location?: { hostname?: string } }).location
+        ?.hostname === 'localhost';
     this.options = {
-      consoleEnabled:
-        options.consoleEnabled ??
-        (typeof window !== 'undefined' &&
-          window.location.hostname === 'localhost'),
+      consoleEnabled: options.consoleEnabled ?? isLocalhost,
       maxEntries: options.maxEntries ?? 500,
       onLog: options.onLog ?? defaultOnLog,
       minLevel: options.minLevel ?? 'debug',
@@ -148,7 +152,7 @@ export class SyncLogger {
     const eventStr = `[${entry.event}]`;
     const peerStr = entry.peerId ? `[${entry.peerId.slice(0, 12)}...]` : '';
 
-    const logArgs = [
+    const logArgs: unknown[] = [
       `%c${prefix} %c${eventStr}%c ${peerStr} ${entry.message}`,
       'color: gray',
       this.getEventColor(entry.event),

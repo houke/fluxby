@@ -873,6 +873,21 @@ async function main() {
     process.exit(1);
   }
 
+  // Step 1.5: Run full build verification
+  if (!isDryRun) {
+    logStep('1.5/9', 'Running full build verification...');
+    try {
+      log('Building all packages and apps...', 'cyan');
+      exec('npm run build');
+      log('✓ Build verification passed', 'green');
+    } catch (error) {
+      log('\n❌ Build failed! Cannot proceed with release.', 'red');
+      process.exit(1);
+    }
+  } else {
+    logStep('1.5/9', 'Skipping build verification (dry run)');
+  }
+
   // Step 2: Get current version and commits
   logStep('2/9', 'Analyzing commits...');
   const pkg = JSON.parse(readFileSync(join(ROOT_DIR, 'package.json'), 'utf-8'));

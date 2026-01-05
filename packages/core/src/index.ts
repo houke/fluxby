@@ -23,6 +23,9 @@ export * from './sync-logger.js';
 // Sync protocol
 export * from './sync-protocol.js';
 
+// Sync service
+export * from './sync-service.js';
+
 // Peer-to-peer device pairing
 export * from './peer.js';
 

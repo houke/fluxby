@@ -123,7 +123,7 @@ export interface LandingTranslationKeys {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   helpSection?: Record<string, any>;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  docs?: Record<string, any>;
+  docs: any;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   helpCenter?: Record<string, any>;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

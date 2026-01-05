@@ -49,7 +49,7 @@ export default function DocsErrors() {
             </tr>
           </thead>
           <tbody className='divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900'>
-            {t.docs.errors.statusCodes.map((status, idx) => (
+            {t.docs.errors.statusCodes.map((status: { code: string; description: string }, idx: number) => (
               <tr key={idx}>
                 <td className='whitespace-nowrap px-4 py-3'>
                   <span
@@ -136,7 +136,7 @@ export default function DocsErrors() {
         {t.docs.errors.bestPracticesTitle}
       </h2>
       <ul className='mt-4 space-y-2 text-gray-600 dark:text-gray-400'>
-        {t.docs.errors.bestPractices.map((practice, idx) => (
+        {t.docs.errors.bestPractices.map((practice: string, idx: number) => (
           <li key={idx} className='flex items-start gap-2'>
             <span className='mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-purple-500' />
             {practice}

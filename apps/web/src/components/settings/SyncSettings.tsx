@@ -6,8 +6,6 @@ import { useState, useRef } from 'react';
 import {
   Smartphone,
   Laptop,
-  RefreshCw,
-  Copy,
   Check,
   Trash2,
   Wifi,
@@ -44,6 +42,7 @@ import { useSync } from '@/contexts/SyncContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
 import { SyncDebugPanel } from './SyncDebugPanel';
+import { QRPairingDialog } from './QRPairingDialog';
 
 export function SyncSettings() {
   const { t } = useLanguage();
@@ -52,8 +51,6 @@ export function SyncSettings() {
     deviceName,
     setDeviceName,
     isInitialized,
-    pairingCode,
-    generateNewPairingCode,
     connectWithPairingCode,
     pairedDevices,
     pendingPairingRequest,
@@ -67,7 +64,6 @@ export function SyncSettings() {
   const [pairingInput, setPairingInput] = useState('');
   const [isPairingDialogOpen, setIsPairingDialogOpen] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
-  const [copiedCode, setCopiedCode] = useState(false);
   const [connectionError, setConnectionError] = useState<string | null>(null);
   const [showDebugPanel, setShowDebugPanel] = useState(false);
 
@@ -98,15 +94,6 @@ export function SyncSettings() {
       setDeviceName(editedName.trim());
     }
     setIsEditing(false);
-  };
-
-  // Handle pairing code copy
-  const handleCopyCode = async () => {
-    if (pairingCode) {
-      await navigator.clipboard.writeText(pairingCode);
-      setCopiedCode(true);
-      setTimeout(() => setCopiedCode(false), 2000);
-    }
   };
 
   // Handle connect with code
@@ -176,6 +163,13 @@ export function SyncSettings() {
           </CardDescription>
         </CardHeader>
         <CardContent className='relative px-3 pb-3 pt-0 sm:px-6 sm:pb-6 sm:pt-0'>
+          {/* Debug Panel (hidden by default, triple-click title to show) */}
+          {showDebugPanel && (
+            <div className='mb-4'>
+              <SyncDebugPanel onClose={() => setShowDebugPanel(false)} />
+            </div>
+          )}
+
           {/* Coming Soon Overlay */}
           <div className='absolute inset-0 z-10 flex flex-col items-center justify-center rounded-b-lg bg-white/80 backdrop-blur-[1px] dark:bg-gray-950/80'>
             <Lock className='mb-2 h-8 w-8 text-muted-foreground' />
@@ -267,48 +261,16 @@ export function SyncSettings() {
                 {t.settings?.sync?.pairingCodeDescription ||
                   'Share this code with another device to connect.'}
               </p>
-              {pairingCode ? (
-                <div className='flex items-center gap-2'>
-                  <div className='flex-1 rounded-lg border bg-muted p-3 text-center font-mono text-2xl tracking-widest'>
-                    {pairingCode}
-                  </div>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant='outline'
-                          size='icon'
-                          onClick={handleCopyCode}
-                        >
-                          {copiedCode ? (
-                            <Check className='h-4 w-4' />
-                          ) : (
-                            <Copy className='h-4 w-4' />
-                          )}
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        {t.common?.copied || 'Copied!'}
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                  <Button
-                    variant='outline'
-                    size='icon'
-                    onClick={generateNewPairingCode}
-                  >
-                    <RefreshCw className='h-4 w-4' />
-                  </Button>
-                </div>
-              ) : (
-                <Button
-                  onClick={generateNewPairingCode}
-                  disabled={!isInitialized}
-                >
-                  <QrCode className='mr-2 h-4 w-4' />
-                  {t.settings?.sync?.generateCode || 'Generate pairing code'}
-                </Button>
-              )}
+              <div className='flex items-center gap-2'>
+                <QRPairingDialog
+                  trigger={
+                    <Button disabled={!isInitialized}>
+                      <QrCode className='mr-2 h-4 w-4' />
+                      {t.settings?.sync?.showQRCode || 'Show QR code'}
+                    </Button>
+                  }
+                />
+              </div>
             </div>
 
             {/* Connect to Device */}

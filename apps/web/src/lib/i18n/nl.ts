@@ -758,6 +758,12 @@ export interface TranslationKeys {
       neverSynced: string;
       removeDevice: string;
       pairingRequest: string;
+      showQRCode: string;
+      pairDevice: string;
+      qrCodeDescription: string;
+      orEnterManually: string;
+      newCode: string;
+      qrCodeExpiry: string;
       pairingRequestDescription: string;
       accept: string;
       ready: string;
@@ -1925,6 +1931,12 @@ export const nl: TranslationKeys = {
       neverSynced: 'Nog niet gesynchroniseerd',
       removeDevice: 'Apparaat verwijderen',
       pairingRequest: 'Koppelingsverzoek',
+      showQRCode: 'Toon QR-code',
+      pairDevice: 'Apparaat koppelen',
+      qrCodeDescription: 'Scan deze code met het andere apparaat',
+      orEnterManually: 'Of voer handmatig in',
+      newCode: 'Nieuwe code',
+      qrCodeExpiry: 'Code verloopt in',
       pairingRequestDescription: '{device} wil verbinden',
       accept: 'Accepteren',
       ready: 'Gereed',
