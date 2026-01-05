@@ -809,7 +809,7 @@ function generateTranslationEntriesEn(entry, versionKey, descriptionEn) {
 }
 
 /**
- * Update package.json version (root, tauri app, tauri.conf.json, and Cargo.toml)
+ * Update package.json version (all packages, tauri.conf.json, and Cargo.toml)
  */
 function updatePackageJsonVersion(newVersion) {
   // Update root package.json
@@ -833,11 +833,50 @@ function updatePackageJsonVersion(newVersion) {
   // Update apps/tauri/Cargo.toml
   const cargoTomlPath = join(ROOT_DIR, 'apps/tauri/Cargo.toml');
   let cargoToml = readFileSync(cargoTomlPath, 'utf-8');
-  cargoToml = cargoToml.replace(/^version = "[^"]*"$/m, `version = "${newVersion}"`);
+  cargoToml = cargoToml.replace(
+    /^version = "[^"]*"$/m,
+    `version = "${newVersion}"`
+  );
   writeFileSync(cargoTomlPath, cargoToml);
 
+  // Update packages/shared/package.json
+  const sharedPackagePath = join(ROOT_DIR, 'packages/shared/package.json');
+  const sharedPkg = JSON.parse(readFileSync(sharedPackagePath, 'utf-8'));
+  sharedPkg.version = newVersion;
+  writeFileSync(sharedPackagePath, JSON.stringify(sharedPkg, null, 2) + '\n');
+
+  // Update packages/database/package.json
+  const databasePackagePath = join(ROOT_DIR, 'packages/database/package.json');
+  const databasePkg = JSON.parse(readFileSync(databasePackagePath, 'utf-8'));
+  databasePkg.version = newVersion;
+  writeFileSync(databasePackagePath, JSON.stringify(databasePkg, null, 2) + '\n');
+
+  // Update packages/core/package.json
+  const corePackagePath = join(ROOT_DIR, 'packages/core/package.json');
+  const corePkg = JSON.parse(readFileSync(corePackagePath, 'utf-8'));
+  corePkg.version = newVersion;
+  writeFileSync(corePackagePath, JSON.stringify(corePkg, null, 2) + '\n');
+
+  // Update apps/api/package.json
+  const apiPackagePath = join(ROOT_DIR, 'apps/api/package.json');
+  const apiPkg = JSON.parse(readFileSync(apiPackagePath, 'utf-8'));
+  apiPkg.version = newVersion;
+  writeFileSync(apiPackagePath, JSON.stringify(apiPkg, null, 2) + '\n');
+
+  // Update apps/web/package.json
+  const webPackagePath = join(ROOT_DIR, 'apps/web/package.json');
+  const webPkg = JSON.parse(readFileSync(webPackagePath, 'utf-8'));
+  webPkg.version = newVersion;
+  writeFileSync(webPackagePath, JSON.stringify(webPkg, null, 2) + '\n');
+
+  // Update apps/landing/package.json
+  const landingPackagePath = join(ROOT_DIR, 'apps/landing/package.json');
+  const landingPkg = JSON.parse(readFileSync(landingPackagePath, 'utf-8'));
+  landingPkg.version = newVersion;
+  writeFileSync(landingPackagePath, JSON.stringify(landingPkg, null, 2) + '\n');
+
   log(
-    `✓ Updated versions to ${newVersion} in package.json, apps/tauri/package.json, tauri.conf.json, and Cargo.toml`,
+    `✓ Updated versions to ${newVersion} in all package.json files, tauri.conf.json, and Cargo.toml`,
     'green'
   );
 }

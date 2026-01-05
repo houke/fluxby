@@ -76,9 +76,7 @@
     "fs": {
       "requireLiteralLeadingDot": false
     },
-    "dialog": {
-      "all": true
-    },
+    "dialog": {},
     "shell": {
       "open": true
     }
