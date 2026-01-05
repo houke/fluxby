@@ -256,18 +256,15 @@ const FeaturesContent = () => {
 
       <div className='not-prose mt-12 rounded-2xl bg-gradient-to-br from-purple-600 to-pink-600 p-8 text-center'>
         <h2 className='mb-4 text-2xl font-bold text-white'>
-          {featuresPage?.ctaTitle || 'Klaar om te beginnen?'}
+          {t.cta.title.part1} <span className='text-fluxby-light'>{t.cta.title.highlight}</span> {t.cta.title.part2}
         </h2>
-        <p className='mb-6 text-white/90'>
-          {featuresPage?.ctaDescription ||
-            'Download Fluxby en neem vandaag nog controle over je financiën.'}
-        </p>
+        <p className='mb-6 text-white/90'>{t.cta.description}</p>
         <a
           href='/app'
           className='inline-flex items-center gap-2 rounded-full bg-white px-8 py-3 font-semibold text-purple-600 no-underline transition-all duration-300 hover:scale-105 hover:shadow-xl'
         >
           <Zap className='h-5 w-5' />
-          {featuresPage?.ctaButton || 'Beginnen'}
+          {t.cta.getStarted}
         </a>
       </div>
     </>
