@@ -30,6 +30,9 @@ export * from './session.js';
 // OPFS Settings Storage
 export * from './opfs-settings.js';
 
+// Sync adapter for peer-to-peer sync
+export * from './sync-adapter.js';
+
 // Factory function for creating database instance
 export {
   createDatabase,
