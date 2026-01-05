@@ -1130,6 +1130,39 @@ export const nl: LandingTranslationKeys = {
       warningText:
         'De reset endpoint verwijdert ALLE data over ALLE profielen. Dit is bedoeld voor een volledige reset naar factory settings. Maak eerst een backup met de export functie als je je data wilt behouden.',
     },
+    // OpenAPI specification page
+    openapi: {
+      title: 'OpenAPI Specificatie',
+      subtitle:
+        'Download de complete OpenAPI 3.0 specificatie voor de Fluxby API.',
+      download: 'Download JSON',
+      copy: 'Kopieer naar klembord',
+      openInSwagger: 'Open in Swagger UI',
+      howToUse: 'Hoe te gebruiken',
+      withSwagger: 'Met Swagger UI',
+      swaggerStep1: 'Ga naar /api/docs in je browser',
+      swaggerStep2: 'Bekijk alle beschikbare endpoints',
+      swaggerStep3: 'Test endpoints direct in de browser',
+      swaggerStep4: 'Bekijk request/response voorbeelden',
+      withPostman: 'Met Postman',
+      postmanStep1: 'Importeer de OpenAPI spec in Postman',
+      postmanStep2: 'Genereer een collectie van alle endpoints',
+      postmanStep3: 'Configureer environment variables',
+      postmanStep4: 'Test endpoints met automatisch gegenereerde requests',
+      withCode: 'In je code',
+      codeDescription:
+        'Gebruik de OpenAPI spec om client libraries te genereren voor je favoriete programmeertaal.',
+      withBruno: 'Met Bruno',
+      brunoDescription:
+        'Bruno is een open-source API client die perfect werkt met OpenAPI specs.',
+      brunoStep1: 'Importeer de OpenAPI spec in Bruno',
+      brunoStep2: 'Genereer een collectie van alle endpoints',
+      brunoStep3: 'Configureer environment variables',
+      brunoStep4: 'Test endpoints met automatisch gegenereerde requests',
+      downloadBruno: 'Download Bruno',
+      viewCollection: 'Bekijk Fluxby Collectie',
+      specPreview: 'OpenAPI Specificatie Voorvertoning',
+    },
     // Common docs strings
     common: {
       method: 'Methode',

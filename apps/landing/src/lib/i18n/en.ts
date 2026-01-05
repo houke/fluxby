@@ -926,6 +926,39 @@ export const en: LandingTranslationKeys = {
       warningText:
         'The reset endpoint deletes ALL data across ALL profiles. This is intended for a complete factory reset. First make a backup using the export function if you want to keep your data.',
     },
+    // OpenAPI specification page
+    openapi: {
+      title: 'OpenAPI Specification',
+      subtitle:
+        'Download the complete OpenAPI 3.0 specification for the Fluxby API.',
+      download: 'Download JSON',
+      copy: 'Copy to clipboard',
+      openInSwagger: 'Open in Swagger UI',
+      howToUse: 'How to use',
+      withSwagger: 'With Swagger UI',
+      swaggerStep1: 'Go to /api/docs in your browser',
+      swaggerStep2: 'Browse all available endpoints',
+      swaggerStep3: 'Test endpoints directly in the browser',
+      swaggerStep4: 'View request/response examples',
+      withPostman: 'With Postman',
+      postmanStep1: 'Import the OpenAPI spec into Postman',
+      postmanStep2: 'Generate a collection of all endpoints',
+      postmanStep3: 'Configure environment variables',
+      postmanStep4: 'Test endpoints with auto-generated requests',
+      withCode: 'In your code',
+      codeDescription:
+        'Use the OpenAPI spec to generate client libraries for your favorite programming language.',
+      withBruno: 'With Bruno',
+      brunoDescription:
+        'Bruno is an open-source API client that works perfectly with OpenAPI specs.',
+      brunoStep1: 'Import the OpenAPI spec into Bruno',
+      brunoStep2: 'Generate a collection of all endpoints',
+      brunoStep3: 'Configure environment variables',
+      brunoStep4: 'Test endpoints with auto-generated requests',
+      downloadBruno: 'Download Bruno',
+      viewCollection: 'View Fluxby Collection',
+      specPreview: 'OpenAPI Specification Preview',
+    },
     // Common docs strings
     common: {
       method: 'Method',
