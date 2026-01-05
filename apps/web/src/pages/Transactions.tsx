@@ -1956,7 +1956,7 @@ export default function Transactions() {
                   {formatCurrency(totals.income)}
                 </p>
               </div>
-              <div className='absolute -right-2 -top-2 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/30 sm:relative sm:inset-auto sm:top-auto sm:right-auto sm:ml-4 sm:flex-shrink-0'>
+              <div className='absolute -right-2 -top-2 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/30 sm:relative sm:inset-auto sm:right-auto sm:top-auto sm:ml-4 sm:flex-shrink-0'>
                 <ArrowUpRight className='h-5 w-5 text-emerald-600 sm:h-6 sm:w-6' />
               </div>
             </CardContent>
@@ -1971,7 +1971,7 @@ export default function Transactions() {
                   {formatCurrency(totals.expenses)}
                 </p>
               </div>
-              <div className='absolute -right-2 -top-2 flex h-12 w-12 items-center justify-center rounded-full bg-rose-100 dark:bg-rose-900/30 sm:relative sm:inset-auto sm:top-auto sm:right-auto sm:ml-4 sm:flex-shrink-0'>
+              <div className='absolute -right-2 -top-2 flex h-12 w-12 items-center justify-center rounded-full bg-rose-100 dark:bg-rose-900/30 sm:relative sm:inset-auto sm:right-auto sm:top-auto sm:ml-4 sm:flex-shrink-0'>
                 <ArrowDownRight className='h-5 w-5 text-rose-600 sm:h-6 sm:w-6' />
               </div>
             </CardContent>
@@ -1990,14 +1990,14 @@ export default function Transactions() {
                   {formatCurrency(totals.transferFromSavings)}
                 </p>
               </div>
-              <div className='absolute -right-2 -top-2 flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30 sm:relative sm:inset-auto sm:top-auto sm:right-auto sm:ml-4 sm:flex-shrink-0'>
+              <div className='absolute -right-2 -top-2 flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30 sm:relative sm:inset-auto sm:right-auto sm:top-auto sm:ml-4 sm:flex-shrink-0'>
                 <PiggyBank className='h-5 w-5 text-blue-600 sm:h-6 sm:w-6' />
               </div>
             </CardContent>
           </Card>
           <Card className='h-full rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'>
-            <CardContent className='relative flex h-full items-center justify-between overflow-hidden p-4 sm:p-6'>
-              <div className='flex-1'>
+            <CardContent className='relative flex h-full flex-col justify-between overflow-hidden p-4 sm:flex-row sm:items-center sm:justify-between sm:p-6'>
+              <div className='flex-1 sm:mr-4'>
                 <p className='text-xs text-muted-foreground sm:text-sm'>
                   {t.dashboard.netResult}
                 </p>
@@ -2016,7 +2016,7 @@ export default function Transactions() {
               </div>
               <div
                 className={cn(
-                  'ml-4 flex h-12 w-12 shrink-0 items-center justify-center rounded-full',
+                  'absolute -right-2 -top-2 flex h-12 w-12 items-center justify-center rounded-full sm:relative sm:inset-auto sm:right-auto sm:top-auto sm:ml-4 sm:flex-shrink-0',
                   totals.balance === 0
                     ? 'bg-gray-100 dark:bg-gray-900/30'
                     : totals.balance > 0

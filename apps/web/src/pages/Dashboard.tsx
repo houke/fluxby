@@ -1723,7 +1723,7 @@ function StatsCard({
           ) : null}
         </div>
         <div
-          className={`absolute -right-2 -top-2 h-12 w-12 rounded-full flex items-center justify-center sm:relative sm:inset-auto sm:top-auto sm:right-auto sm:ml-4 sm:flex-shrink-0 ${
+          className={`absolute -right-2 -top-2 flex h-12 w-12 items-center justify-center rounded-full sm:relative sm:inset-auto sm:right-auto sm:top-auto sm:ml-4 sm:flex-shrink-0 ${
             bgColor || getBgColor(iconColor)
           }`}
         >
