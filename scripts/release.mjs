@@ -294,83 +294,83 @@ function transformToUserFriendlyNl(message) {
   // Dictionary of technical terms to Dutch user-friendly translations
   const technicalToUserNl = {
     // Common technical actions
-    'add': 'toegevoegd',
-    'implement': 'geïmplementeerd',
-    'fix': 'opgelost',
-    'update': 'bijgewerkt',
-    'improve': 'verbeterd',
-    'refactor': 'verbeterd',
-    'enhance': 'verbeterd',
-    'remove': 'verwijderd',
-    'delete': 'verwijderd',
-    'optimize': 'geoptimaliseerd',
-    'support': 'ondersteuning toegevoegd voor',
-    
+    add: 'toegevoegd',
+    implement: 'geïmplementeerd',
+    fix: 'opgelost',
+    update: 'bijgewerkt',
+    improve: 'verbeterd',
+    refactor: 'verbeterd',
+    enhance: 'verbeterd',
+    remove: 'verwijderd',
+    delete: 'verwijderd',
+    optimize: 'geoptimaliseerd',
+    support: 'ondersteuning toegevoegd voor',
+
     // Technical terms to user-friendly Dutch
-    'sync': 'synchronisatie',
-    'database': 'database',
-    'api': 'API',
-    'ui': 'interface',
-    'ux': 'gebruikerservaring',
-    'csv': 'CSV',
-    'import': 'importeren',
-    'export': 'exporteren',
-    'filter': 'filter',
-    'search': 'zoeken',
-    'sort': 'sorteren',
-    'pagination': 'bladeren',
-    'validation': 'validatie',
-    'authentication': 'authenticatie',
-    'authorization': 'autorisatie',
-    'encryption': 'versleuteling',
-    'backup': 'backup',
-    'restore': 'herstel',
-    'settings': 'instellingen',
-    'preferences': 'voorkeuren',
-    'notification': 'melding',
-    'alert': 'waarschuwing',
-    'error': 'fout',
-    'warning': 'waarschuwing',
-    'success': 'succes',
-    'loading': 'laden',
-    'performance': 'prestaties',
-    'responsive': 'responsive',
-    'mobile': 'mobiel',
-    'desktop': 'desktop',
+    sync: 'synchronisatie',
+    database: 'database',
+    api: 'API',
+    ui: 'interface',
+    ux: 'gebruikerservaring',
+    csv: 'CSV',
+    import: 'importeren',
+    export: 'exporteren',
+    filter: 'filter',
+    search: 'zoeken',
+    sort: 'sorteren',
+    pagination: 'bladeren',
+    validation: 'validatie',
+    authentication: 'authenticatie',
+    authorization: 'autorisatie',
+    encryption: 'versleuteling',
+    backup: 'backup',
+    restore: 'herstel',
+    settings: 'instellingen',
+    preferences: 'voorkeuren',
+    notification: 'melding',
+    alert: 'waarschuwing',
+    error: 'fout',
+    warning: 'waarschuwing',
+    success: 'succes',
+    loading: 'laden',
+    performance: 'prestaties',
+    responsive: 'responsive',
+    mobile: 'mobiel',
+    desktop: 'desktop',
     'dark mode': 'donkere modus',
     'light mode': 'lichte modus',
-    'theme': 'thema',
-    'layout': 'layout',
-    'component': 'component',
-    'widget': 'widget',
-    'chart': 'grafiek',
-    'graph': 'grafiek',
-    'dashboard': 'dashboard',
-    'analytics': 'analyse',
-    'report': 'rapport',
-    'transaction': 'transactie',
-    'transactions': 'transacties',
-    'category': 'categorie',
-    'categories': 'categorieën',
-    'budget': 'budget',
-    'account': 'rekening',
-    'accounts': 'rekeningen',
-    'contact': 'contact',
-    'contacts': 'contacten',
+    theme: 'thema',
+    layout: 'layout',
+    component: 'component',
+    widget: 'widget',
+    chart: 'grafiek',
+    graph: 'grafiek',
+    dashboard: 'dashboard',
+    analytics: 'analyse',
+    report: 'rapport',
+    transaction: 'transactie',
+    transactions: 'transacties',
+    category: 'categorie',
+    categories: 'categorieën',
+    budget: 'budget',
+    account: 'rekening',
+    accounts: 'rekeningen',
+    contact: 'contact',
+    contacts: 'contacten',
     'address book': 'adresboek',
-    'profile': 'profiel',
-    'user': 'gebruiker',
-    'p2p': 'peer-to-peer',
-    'peer': 'apparaat',
-    'device': 'apparaat',
-    'browser': 'browser',
-    'pwa': 'web app',
-    'offline': 'offline',
-    'online': 'online',
+    profile: 'profiel',
+    user: 'gebruiker',
+    p2p: 'peer-to-peer',
+    peer: 'apparaat',
+    device: 'apparaat',
+    browser: 'browser',
+    pwa: 'web app',
+    offline: 'offline',
+    online: 'online',
   };
 
   let result = message.toLowerCase();
-  
+
   // Apply translations
   for (const [tech, user] of Object.entries(technicalToUserNl)) {
     const regex = new RegExp(`\\b${tech}\\b`, 'gi');
@@ -389,13 +389,16 @@ function transformToUserFriendlyNl(message) {
 function transformToUserFriendlyEn(message) {
   // Just capitalize and clean up for English (already user-friendly)
   let result = message;
-  
+
   // Remove common technical prefixes
-  result = result.replace(/^(implement|add|fix|update|improve|refactor|enhance)\s+/i, '');
-  
+  result = result.replace(
+    /^(implement|add|fix|update|improve|refactor|enhance)\s+/i,
+    ''
+  );
+
   // Capitalize first letter
   result = result.charAt(0).toUpperCase() + result.slice(1);
-  
+
   return result;
 }
 
@@ -405,35 +408,65 @@ function transformToUserFriendlyEn(message) {
 function generateScopeTitleNl(scope, commits) {
   // Get a sense of what was done
   const hasFeatures = commits.some((c) => c.type === 'feat');
-  
+
   // More creative scope titles based on what was changed
   const scopeTitlesCreativeNl = {
-    ui: hasFeatures 
-      ? ['Frisse nieuwe interface', 'Verbeterde gebruikerservaring', 'Interface upgrade'][Math.floor(Math.random() * 3)]
-      : ['Interface verfijningen', 'Visuele verbeteringen'][Math.floor(Math.random() * 2)],
+    ui: hasFeatures
+      ? [
+          'Frisse nieuwe interface',
+          'Verbeterde gebruikerservaring',
+          'Interface upgrade',
+        ][Math.floor(Math.random() * 3)]
+      : ['Interface verfijningen', 'Visuele verbeteringen'][
+          Math.floor(Math.random() * 2)
+        ],
     web: hasFeatures
-      ? ['Nieuwe web app mogelijkheden', 'Web app uitbreidingen'][Math.floor(Math.random() * 2)]
-      : ['Web app verbeteringen', 'Betere web ervaring'][Math.floor(Math.random() * 2)],
-    api: ['API verbeteringen', 'Backend updates'][Math.floor(Math.random() * 2)],
-    landing: ['Landingspagina verbeteringen', 'Website updates'][Math.floor(Math.random() * 2)],
+      ? ['Nieuwe web app mogelijkheden', 'Web app uitbreidingen'][
+          Math.floor(Math.random() * 2)
+        ]
+      : ['Web app verbeteringen', 'Betere web ervaring'][
+          Math.floor(Math.random() * 2)
+        ],
+    api: ['API verbeteringen', 'Backend updates'][
+      Math.floor(Math.random() * 2)
+    ],
+    landing: ['Landingspagina verbeteringen', 'Website updates'][
+      Math.floor(Math.random() * 2)
+    ],
     database: hasFeatures
-      ? ['Nieuwe data mogelijkheden', 'Uitgebreide data functionaliteit'][Math.floor(Math.random() * 2)]
-      : ['Database optimalisaties', 'Data verbeteringen'][Math.floor(Math.random() * 2)],
-    core: ['Kern verbeteringen', 'Onder de motorkap'][Math.floor(Math.random() * 2)],
+      ? ['Nieuwe data mogelijkheden', 'Uitgebreide data functionaliteit'][
+          Math.floor(Math.random() * 2)
+        ]
+      : ['Database optimalisaties', 'Data verbeteringen'][
+          Math.floor(Math.random() * 2)
+        ],
+    core: ['Kern verbeteringen', 'Onder de motorkap'][
+      Math.floor(Math.random() * 2)
+    ],
     shared: 'Gedeelde functionaliteit',
     tauri: hasFeatures
-      ? ['Nieuwe desktop functies', 'Desktop app uitbreidingen'][Math.floor(Math.random() * 2)]
+      ? ['Nieuwe desktop functies', 'Desktop app uitbreidingen'][
+          Math.floor(Math.random() * 2)
+        ]
       : ['Desktop app verbeteringen'][0],
     ci: 'Bouw & deployment verbeteringen',
     release: 'Release verbeteringen',
-    security: ['Beveiligingsupdate', 'Verbeterde beveiliging'][Math.floor(Math.random() * 2)],
+    security: ['Beveiligingsupdate', 'Verbeterde beveiliging'][
+      Math.floor(Math.random() * 2)
+    ],
     screenshots: 'Screenshot verbeteringen',
-    pwa: ['Progressive Web App updates', 'Installeerbare app verbeteringen'][Math.floor(Math.random() * 2)],
-    mobile: ['Mobiele verbeteringen', 'Beter op je telefoon'][Math.floor(Math.random() * 2)],
+    pwa: ['Progressive Web App updates', 'Installeerbare app verbeteringen'][
+      Math.floor(Math.random() * 2)
+    ],
+    mobile: ['Mobiele verbeteringen', 'Beter op je telefoon'][
+      Math.floor(Math.random() * 2)
+    ],
   };
-  
+
   const title = scopeTitlesCreativeNl[scope.toLowerCase()];
-  return (typeof title === 'string' ? title : title) || `${scope} verbeteringen`;
+  return (
+    (typeof title === 'string' ? title : title) || `${scope} verbeteringen`
+  );
 }
 
 /**
@@ -441,32 +474,58 @@ function generateScopeTitleNl(scope, commits) {
  */
 function generateScopeTitleEn(scope, commits) {
   const hasFeatures = commits.some((c) => c.type === 'feat');
-  
+
   const scopeTitlesCreativeEn = {
-    ui: hasFeatures 
-      ? ['Fresh new interface', 'Enhanced user experience', 'Interface upgrade'][Math.floor(Math.random() * 3)]
-      : ['Interface refinements', 'Visual improvements'][Math.floor(Math.random() * 2)],
+    ui: hasFeatures
+      ? [
+          'Fresh new interface',
+          'Enhanced user experience',
+          'Interface upgrade',
+        ][Math.floor(Math.random() * 3)]
+      : ['Interface refinements', 'Visual improvements'][
+          Math.floor(Math.random() * 2)
+        ],
     web: hasFeatures
-      ? ['New web app capabilities', 'Web app extensions'][Math.floor(Math.random() * 2)]
-      : ['Web app improvements', 'Better web experience'][Math.floor(Math.random() * 2)],
+      ? ['New web app capabilities', 'Web app extensions'][
+          Math.floor(Math.random() * 2)
+        ]
+      : ['Web app improvements', 'Better web experience'][
+          Math.floor(Math.random() * 2)
+        ],
     api: ['API improvements', 'Backend updates'][Math.floor(Math.random() * 2)],
-    landing: ['Landing page improvements', 'Website updates'][Math.floor(Math.random() * 2)],
+    landing: ['Landing page improvements', 'Website updates'][
+      Math.floor(Math.random() * 2)
+    ],
     database: hasFeatures
-      ? ['New data capabilities', 'Extended data functionality'][Math.floor(Math.random() * 2)]
-      : ['Database optimizations', 'Data improvements'][Math.floor(Math.random() * 2)],
-    core: ['Core improvements', 'Under the hood'][Math.floor(Math.random() * 2)],
+      ? ['New data capabilities', 'Extended data functionality'][
+          Math.floor(Math.random() * 2)
+        ]
+      : ['Database optimizations', 'Data improvements'][
+          Math.floor(Math.random() * 2)
+        ],
+    core: ['Core improvements', 'Under the hood'][
+      Math.floor(Math.random() * 2)
+    ],
     shared: 'Shared functionality',
     tauri: hasFeatures
-      ? ['New desktop features', 'Desktop app extensions'][Math.floor(Math.random() * 2)]
+      ? ['New desktop features', 'Desktop app extensions'][
+          Math.floor(Math.random() * 2)
+        ]
       : 'Desktop app improvements',
     ci: 'Build & deployment improvements',
     release: 'Release improvements',
-    security: ['Security update', 'Enhanced security'][Math.floor(Math.random() * 2)],
+    security: ['Security update', 'Enhanced security'][
+      Math.floor(Math.random() * 2)
+    ],
     screenshots: 'Screenshot improvements',
-    pwa: ['Progressive Web App updates', 'Installable app improvements'][Math.floor(Math.random() * 2)],
-    mobile: ['Mobile improvements', 'Better on your phone'][Math.floor(Math.random() * 2)],
+    pwa: ['Progressive Web App updates', 'Installable app improvements'][
+      Math.floor(Math.random() * 2)
+    ],
+    mobile: ['Mobile improvements', 'Better on your phone'][
+      Math.floor(Math.random() * 2)
+    ],
   };
-  
+
   const title = scopeTitlesCreativeEn[scope.toLowerCase()];
   return (typeof title === 'string' ? title : title) || `${scope} improvements`;
 }
@@ -523,10 +582,7 @@ const CREATIVE_DESCRIPTIONS_EN = {
     'Performance boost under the hood.',
     'Optimized for a smoother experience.',
   ],
-  refactor: [
-    'Improved under the hood.',
-    'Code cleaned up, app more reliable.',
-  ],
+  refactor: ['Improved under the hood.', 'Code cleaned up, app more reliable.'],
   default: [
     'Check the release notes on GitHub for all details.',
     'Small improvement, big impact.',
@@ -537,7 +593,8 @@ const CREATIVE_DESCRIPTIONS_EN = {
  * Generate a Dutch description for a single commit - more creative
  */
 function generateDescriptionNl(commit) {
-  const descriptions = CREATIVE_DESCRIPTIONS_NL[commit.type] || CREATIVE_DESCRIPTIONS_NL.default;
+  const descriptions =
+    CREATIVE_DESCRIPTIONS_NL[commit.type] || CREATIVE_DESCRIPTIONS_NL.default;
   return descriptions[Math.floor(Math.random() * descriptions.length)];
 }
 
@@ -545,7 +602,8 @@ function generateDescriptionNl(commit) {
  * Generate an English description for a single commit - more creative
  */
 function generateDescriptionEn(commit) {
-  const descriptions = CREATIVE_DESCRIPTIONS_EN[commit.type] || CREATIVE_DESCRIPTIONS_EN.default;
+  const descriptions =
+    CREATIVE_DESCRIPTIONS_EN[commit.type] || CREATIVE_DESCRIPTIONS_EN.default;
   return descriptions[Math.floor(Math.random() * descriptions.length)];
 }
 
@@ -556,7 +614,7 @@ function generateBundledDescriptionNl(commits) {
   const features = commits.filter((c) => c.type === 'feat');
   const fixes = commits.filter((c) => c.type === 'fix');
   const other = commits.filter((c) => c.type !== 'feat' && c.type !== 'fix');
-  
+
   // Creative bundled descriptions
   if (features.length > 3 && fixes.length > 0) {
     return `Een hele lading nieuwe functies (${features.length}!) en ${fixes.length} fixes. Check de release op GitHub!`;
@@ -847,24 +905,28 @@ function updateUpdatesContent(entry) {
   const requiredIcons = [...getRequiredIcons(entry.bundles), 'ExternalLink'];
 
   // Check which icons are already imported
-  const importMatch = content.match(/import \{([^}]+)\} from 'lucide-react';/);
+  // Use [\s\S] to match any character including newlines
+  const importMatch = content.match(/import \{([\s\S]+?)\} from 'lucide-react';/);
   if (importMatch) {
-    const existingIcons = importMatch[1]
+    // Extract icon names, handling multi-line imports properly
+    const iconText = importMatch[1];
+    const existingIcons = iconText
       .split(',')
       .map((s) => s.trim())
-      .filter((s) => s.length > 0); // Filter out empty strings
+      .filter((s) => s.length > 0 && /^[A-Z]/.test(s)); // Valid icon names start with uppercase
+    
     const missingIcons = requiredIcons.filter(
       (icon) => !existingIcons.includes(icon)
     );
 
     if (missingIcons.length > 0) {
-      // Add missing icons to import, ensuring no empty strings
+      // Add missing icons to import, ensuring no duplicates or empty strings
       const allIcons = [...new Set([...existingIcons, ...missingIcons])]
-        .filter((s) => s.length > 0)
+        .filter((s) => s.length > 0 && /^[A-Z]/.test(s))
         .sort();
       const newImport = `import {\n  ${allIcons.join(',\n  ')},\n} from 'lucide-react';`;
       content = content.replace(
-        /import \{[^}]+\} from 'lucide-react';/,
+        /import \{[\s\S]+?\} from 'lucide-react';/,
         newImport
       );
     }
