@@ -133,6 +133,14 @@ function SecurityGate({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+// Determine router basename based on environment
+// Tauri uses root path, web uses /app/
+const getRouterBasename = () => {
+  const isTauri = typeof window !== 'undefined' && '__TAURI__' in window;
+  if (isTauri) return '/';
+  return import.meta.env.BASE_URL || '/app/';
+};
+
 function App() {
   return (
     <ErrorBoundary>
@@ -144,9 +152,7 @@ function App() {
                 <FilterProvider>
                   <ToastProvider>
                     <ConfirmProvider>
-                      <BrowserRouter
-                        basename={import.meta.env.BASE_URL || '/app/'}
-                      >
+                      <BrowserRouter basename={getRouterBasename()}>
                         <OnboardingProvider>
                           <SecurityGate>
                             <AppContent />

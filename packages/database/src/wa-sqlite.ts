@@ -206,16 +206,25 @@ export class Database implements DatabaseConnection {
         return db;
       } catch (err) {
         wasmLog('Initialization failed:', err);
-        
+
         // If we get "file is not a database" error, try to recover by clearing IndexedDB
         const errorMessage = err instanceof Error ? err.message : String(err);
-        if (errorMessage.includes('file is not a database') && typeof indexedDB !== 'undefined') {
-          wasmLog('Attempting recovery by clearing corrupted IndexedDB data...');
+        if (
+          errorMessage.includes('file is not a database') &&
+          typeof indexedDB !== 'undefined'
+        ) {
+          wasmLog(
+            'Attempting recovery by clearing corrupted IndexedDB data...'
+          );
           try {
             // Clear all IndexedDB databases that might contain corrupted data
             const databases = await indexedDB.databases();
             for (const dbInfo of databases) {
-              if (dbInfo.name && (dbInfo.name.includes('idb-fluxby') || dbInfo.name.includes('fluxby'))) {
+              if (
+                dbInfo.name &&
+                (dbInfo.name.includes('idb-fluxby') ||
+                  dbInfo.name.includes('fluxby'))
+              ) {
                 wasmLog('Deleting IndexedDB:', dbInfo.name);
                 await new Promise<void>((resolve, reject) => {
                   const req = indexedDB.deleteDatabase(dbInfo.name!);
@@ -228,7 +237,7 @@ export class Database implements DatabaseConnection {
                 });
               }
             }
-            
+
             // Reset module state for clean retry
             cachedModule = null;
             cachedSqlite3 = null;
@@ -236,7 +245,7 @@ export class Database implements DatabaseConnection {
             cachedVfsName = null;
             vfsRegistered = false;
             migrationCompleted = false;
-            
+
             wasmLog('IndexedDB cleared, reloading page to retry...');
             // Reload the page to get a fresh start
             if (typeof window !== 'undefined') {
@@ -246,7 +255,7 @@ export class Database implements DatabaseConnection {
             wasmLog('Failed to clear IndexedDB:', clearErr);
           }
         }
-        
+
         globalInitPromise = null;
         globalDbInstance = null;
         throw err;

@@ -8,15 +8,18 @@ export default function NotFound() {
   const location = useLocation();
   const { language } = useLanguage();
 
+  // Check if running in Tauri (no landing page available)
+  const isTauri = typeof window !== 'undefined' && '__TAURI__' in window;
+
   // Check if user might be at wrong base URL
   const isAtRoot = location.pathname === '/' || location.pathname === '';
   const currentPath = location.pathname;
 
   // Check if this looks like a landing page route that ended up in the app
+  // Only relevant for web, not Tauri
   const landingRoutes = ['/docs', '/help', '/about', '/privacy', '/terms'];
-  const mightBeLandingRoute = landingRoutes.some((route) =>
-    currentPath.startsWith(route)
-  );
+  const mightBeLandingRoute =
+    !isTauri && landingRoutes.some((route) => currentPath.startsWith(route));
 
   // Navigate to dashboard using React Router (soft navigation)
   const goToDashboard = () => {
@@ -45,7 +48,7 @@ export default function NotFound() {
 
           {/* Description */}
           <p className='mb-6 text-muted-foreground'>
-            {isAtRoot ? (
+            {isAtRoot && !isTauri ? (
               language === 'nl' ? (
                 <>
                   Je bent op de app pagina. Ga naar het{' '}
@@ -137,27 +140,28 @@ export default function NotFound() {
               {language === 'nl' ? 'Naar dashboard' : 'Go to dashboard'}
             </Button>
 
-            {!isAtRoot && (
-              <Button
-                variant='outline'
-                onClick={() => navigate(-1)}
-                className='w-full'
-                size='lg'
-              >
-                <ArrowLeft className='mr-2 h-4 w-4' />
-                {language === 'nl' ? 'Ga terug' : 'Go back'}
-              </Button>
-            )}
-
             <Button
-              variant='ghost'
-              onClick={() => (window.location.href = '/')}
+              variant='outline'
+              onClick={() => navigate(-1)}
               className='w-full'
               size='lg'
             >
-              <ExternalLink className='mr-2 h-4 w-4' />
-              {language === 'nl' ? 'Naar startpagina' : 'Go to home page'}
+              <ArrowLeft className='mr-2 h-4 w-4' />
+              {language === 'nl' ? 'Ga terug' : 'Go back'}
             </Button>
+
+            {/* Only show home page link in web (landing page doesn't exist in Tauri) */}
+            {!isTauri && (
+              <Button
+                variant='ghost'
+                onClick={() => (window.location.href = '/')}
+                className='w-full'
+                size='lg'
+              >
+                <ExternalLink className='mr-2 h-4 w-4' />
+                {language === 'nl' ? 'Naar startpagina' : 'Go to home page'}
+              </Button>
+            )}
           </div>
         </div>
       </div>
