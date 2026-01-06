@@ -1,4 +1,5 @@
-import { defineConfig } from 'vite';
+import { defineConfig, type ViteDevServer } from 'vite';
+import type { IncomingMessage, ServerResponse } from 'http';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import path from 'path';
@@ -27,15 +28,21 @@ export default defineConfig({
       ? [
           {
             name: 'redirect-root-app',
-            configureServer(server) {
-              server.middlewares.use((req, res, next) => {
-                if (req.url === '/app') {
-                  res.writeHead(301, { Location: '/app/' });
-                  res.end();
-                  return;
+            configureServer(server: ViteDevServer) {
+              server.middlewares.use(
+                (
+                  req: IncomingMessage,
+                  res: ServerResponse,
+                  next: () => void
+                ) => {
+                  if (req.url === '/app') {
+                    res.writeHead(301, { Location: '/app/' });
+                    res.end();
+                    return;
+                  }
+                  next();
                 }
-                next();
-              });
+              );
             },
           },
         ]
