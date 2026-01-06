@@ -44,9 +44,13 @@ const checkRestartFlag = (): boolean => {
   const restartFlag = readFromOPFSSync<boolean>(RESTART_FLAG_KEY);
   if (restartFlag === true) {
     // Clear the flag immediately (async)
-    deleteFromOPFSWithCache(RESTART_FLAG_KEY).catch(() => {});
+    deleteFromOPFSWithCache(RESTART_FLAG_KEY).catch(() => {
+      /* ignore */
+    });
     // Also remove the switching overlay flag
-    deleteFromOPFSWithCache(SWITCHING_OVERLAY_KEY).catch(() => {});
+    deleteFromOPFSWithCache(SWITCHING_OVERLAY_KEY).catch(() => {
+      /* ignore */
+    });
     return true;
   }
   return false;
@@ -60,7 +64,9 @@ const loadState = (): OnboardingState => {
 
   if (shouldRestart) {
     // Clear the completed flag when restarting (async)
-    deleteFromOPFSWithCache(COMPLETED_FLAG_KEY).catch(() => {});
+    deleteFromOPFSWithCache(COMPLETED_FLAG_KEY).catch(() => {
+      /* ignore */
+    });
     // Start fresh onboarding
     return { ...defaultState, isActive: true };
   }
@@ -315,7 +321,9 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
         // If restarting, start from beginning
         if (restart) {
           // Also clear the completed flag in OPFS when restarting
-          deleteFromOPFSWithCache(COMPLETED_FLAG_KEY).catch(() => {});
+          deleteFromOPFSWithCache(COMPLETED_FLAG_KEY).catch(() => {
+            /* ignore */
+          });
           return {
             ...prev,
             isActive: true,

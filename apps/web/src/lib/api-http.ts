@@ -22,10 +22,14 @@ export function setApiBaseUrl(value: string): void {
   if (typeof window === 'undefined') return;
   const next = value.trim();
   if (!next) {
-    deleteFromOPFSWithCache(API_STORAGE_KEY).catch(() => {});
+    deleteFromOPFSWithCache(API_STORAGE_KEY).catch(() => {
+      /* ignore */
+    });
     return;
   }
-  writeToOPFSWithCache(API_STORAGE_KEY, next).catch(() => {});
+  writeToOPFSWithCache(API_STORAGE_KEY, next).catch(() => {
+    /* ignore */
+  });
 }
 
 // Helper to get active profile ID from OPFS cache
