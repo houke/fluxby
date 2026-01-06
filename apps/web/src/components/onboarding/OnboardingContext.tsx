@@ -161,9 +161,9 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
         currentChapterIndex: 0,
         currentStepIndex: 0,
       }));
-      // Defer navigation to avoid "Cannot update component while rendering" warning
-      // This ensures React completes its current render cycle first
-      setTimeout(() => navigate('/dashboard/'), 0);
+      // NOTE: Navigation is handled by React Router's Navigate component in App.tsx
+      // The index route automatically redirects to /dashboard
+      // We don't navigate here to avoid race conditions with query invalidation
     }
   }, [
     userData,
@@ -174,7 +174,6 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
     state.hasDismissedOnboarding,
     state.currentChapterIndex,
     state.currentStepIndex,
-    navigate,
   ]);
 
   // Get current chapter and step
@@ -361,7 +360,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
         const targetChapter = restart
           ? onboardingChapters[0]
           : onboardingChapters[state.currentChapterIndex];
-        setTimeout(() => navigate(targetChapter?.route || '/dashboard/'), 0);
+        setTimeout(() => navigate(targetChapter?.route || '/dashboard'), 0);
       }
     },
     [
