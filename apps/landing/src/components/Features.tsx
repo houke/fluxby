@@ -20,7 +20,7 @@ const Features = () => {
     >
       <div className='container mx-auto px-4'>
         <div className='mb-12 text-center md:mb-16'>
-          <h2 className='mb-6 text-2xl font-black text-gray-900 dark:text-white sm:text-4xl lg:text-6xl'>
+          <h2 className='mb-6 text-2xl font-black text-gray-900 sm:text-4xl lg:text-6xl dark:text-white'>
             {t.features.title}{' '}
             <span className='text-fluxby-purple'>
               {t.features.titleHighlight}
@@ -36,7 +36,7 @@ const Features = () => {
           {t.features.items.map((feature, index) => (
             <div
               key={index}
-              className='group flex transform flex-row items-center gap-4 rounded-3xl border border-gray-100 bg-gradient-to-br from-white to-gray-50 p-6 text-left shadow-lg transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl dark:border-gray-700 dark:from-gray-800 dark:to-gray-700 md:flex-col md:gap-0 md:p-8 md:text-center'
+              className='group flex transform flex-row items-center gap-4 rounded-3xl border border-gray-100 bg-gradient-to-br from-white to-gray-50 p-6 text-left shadow-lg transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl md:flex-col md:gap-0 md:p-8 md:text-center dark:border-gray-700 dark:from-gray-800 dark:to-gray-700'
             >
               <div
                 className={`flex h-12 w-12 min-w-[3rem] items-center justify-center rounded-2xl bg-gradient-to-r text-2xl shadow-lg transition-transform duration-300 group-hover:scale-110 md:mb-6 md:h-20 md:w-20 md:text-4xl ${featureColors[index]}`}
@@ -44,7 +44,7 @@ const Features = () => {
                 {featureIcons[index]}
               </div>
               <div className='flex-1 md:flex-none'>
-                <h3 className='group-hover:text-fluxby-purple mb-1 text-xl font-bold text-gray-900 transition-colors dark:text-white md:mb-4 md:text-2xl'>
+                <h3 className='group-hover:text-fluxby-purple mb-1 text-xl font-bold text-gray-900 transition-colors md:mb-4 md:text-2xl dark:text-white'>
                   {feature.title}
                 </h3>
                 <p className='leading-relaxed text-gray-600 dark:text-gray-300'>

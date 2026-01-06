@@ -490,7 +490,7 @@ export default function Budgets() {
                           <div key={group.parent.id}>
                             <div className='flex items-center gap-2 py-1.5'>
                               <div className='h-px flex-1 border-t border-dotted border-muted-foreground/30' />
-                              <span className='whitespace-nowrap text-xs text-muted-foreground'>
+                              <span className='text-xs whitespace-nowrap text-muted-foreground'>
                                 {group.parent.name}
                               </span>
                               <div className='h-px flex-1 border-t border-dotted border-muted-foreground/30' />
@@ -708,7 +708,7 @@ export default function Budgets() {
             <div className='flex flex-col gap-4'>
               {/* Search bar */}
               <div className='relative flex-1'>
-                <Search className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
+                <Search className='absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
                 <Input
                   placeholder='Search budgets...'
                   value={search}
@@ -736,7 +736,7 @@ export default function Budgets() {
                       key={option.key}
                       onClick={() => setSortBy(option.key)}
                       className={cn(
-                        'relative z-10 whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-medium transition-colors',
+                        'relative z-10 rounded-md px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-colors',
                         sortBy === option.key
                           ? 'text-white'
                           : 'text-muted-foreground hover:text-foreground'
@@ -763,7 +763,7 @@ export default function Budgets() {
               {t.budgets.yourBudgets}
             </CardTitle>
           </CardHeader>
-          <CardContent className='px-3 pb-3 pt-0 sm:px-6 sm:pb-6 sm:pt-0'>
+          <CardContent className='px-3 pt-0 pb-3 sm:px-6 sm:pt-0 sm:pb-6'>
             {isLoading ? (
               <div className='space-y-4'>
                 {[...Array(3)].map((_, i) => (
@@ -781,7 +781,7 @@ export default function Budgets() {
                     <div
                       key={budget.id}
                       className={cn(
-                        'group border-x-0 border-b-0 border-t bg-card px-0 py-4 sm:rounded-lg sm:border sm:p-4',
+                        'group border-x-0 border-t border-b-0 bg-card px-0 py-4 sm:rounded-lg sm:border sm:p-4',
                         !isEditing &&
                           'cursor-pointer transition-colors hover:bg-muted/50'
                       )}

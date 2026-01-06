@@ -46,7 +46,7 @@ function mergeChanges(local, remote) {
       </p>
 
       <div className='mt-8 rounded-xl border border-green-200 bg-green-50 p-6 dark:border-green-800 dark:bg-green-950/30'>
-        <h3 className='mb-2 mt-0 flex items-center gap-2 text-lg font-semibold text-green-900 dark:text-green-200'>
+        <h3 className='mt-0 mb-2 flex items-center gap-2 text-lg font-semibold text-green-900 dark:text-green-200'>
           <span>🔒</span>
           {t.docs.architecture.zeroKnowledgeTitle}
         </h3>
@@ -226,7 +226,7 @@ function mergeChanges(local, remote) {
       </ul>
 
       <div className='mt-8 rounded-xl border border-yellow-200 bg-yellow-50 p-6 dark:border-yellow-800 dark:bg-yellow-950/30'>
-        <h3 className='mb-2 mt-0 flex items-center gap-2 text-lg font-semibold text-yellow-900 dark:text-yellow-200'>
+        <h3 className='mt-0 mb-2 flex items-center gap-2 text-lg font-semibold text-yellow-900 dark:text-yellow-200'>
           <span>💡</span>
           {t.docs.architecture.tipTitle}
         </h3>
@@ -307,7 +307,7 @@ function mergeChanges(local, remote) {
       </div>
 
       <div className='mt-6 rounded-xl border border-orange-200 bg-orange-50 p-6 dark:border-orange-800 dark:bg-orange-950/30'>
-        <h3 className='mb-2 mt-0 flex items-center gap-2 text-lg font-semibold text-orange-900 dark:text-orange-200'>
+        <h3 className='mt-0 mb-2 flex items-center gap-2 text-lg font-semibold text-orange-900 dark:text-orange-200'>
           <span>⚠️</span>
           {t.docs.architecture.importantTitle}
         </h3>

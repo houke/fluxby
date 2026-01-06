@@ -100,7 +100,7 @@ fetch('http://localhost:3001/api/budgets', {
       </div>
 
       <div className='mt-6 rounded-xl border border-green-200 bg-green-50 p-6 dark:border-green-800 dark:bg-green-950/30'>
-        <h3 className='mb-2 mt-0 flex items-center gap-2 text-lg font-semibold text-green-900 dark:text-green-200'>
+        <h3 className='mt-0 mb-2 flex items-center gap-2 text-lg font-semibold text-green-900 dark:text-green-200'>
           <span>📊</span>
           {t.docs.budgets.progressNote}
         </h3>

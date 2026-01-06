@@ -149,7 +149,7 @@ export function SyncSettings() {
       <Card className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'>
         <CardHeader className='px-3 py-3 sm:px-6 sm:py-4'>
           <CardTitle
-            className='flex cursor-default select-none items-center gap-2 text-base sm:text-lg'
+            className='flex cursor-default items-center gap-2 text-base select-none sm:text-lg'
             onClick={handleTitleClick}
           >
             {t.settings?.sync?.title || 'Device sync'}
@@ -162,7 +162,7 @@ export function SyncSettings() {
               'Sync your data across devices using peer-to-peer connections. No server required.'}
           </CardDescription>
         </CardHeader>
-        <CardContent className='relative px-3 pb-3 pt-0 sm:px-6 sm:pb-6 sm:pt-0'>
+        <CardContent className='relative px-3 pt-0 pb-3 sm:px-6 sm:pt-0 sm:pb-6'>
           {/* Debug Panel (hidden by default, triple-click title to show) */}
           {showDebugPanel && (
             <div className='mb-4'>

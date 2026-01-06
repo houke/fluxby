@@ -35,10 +35,10 @@ export default function HelpCenter() {
       className='section-padding relative overflow-hidden bg-gradient-to-b from-purple-50 to-pink-50 dark:from-gray-800 dark:to-gray-900'
     >
       {/* Background decoration */}
-      <div className='absolute left-0 top-0 h-64 w-64 rounded-full bg-purple-200/30 blur-3xl dark:bg-purple-900/20' />
-      <div className='absolute bottom-0 right-0 h-64 w-64 rounded-full bg-pink-200/30 blur-3xl dark:bg-pink-900/20' />
+      <div className='absolute top-0 left-0 h-64 w-64 rounded-full bg-purple-200/30 blur-3xl dark:bg-purple-900/20' />
+      <div className='absolute right-0 bottom-0 h-64 w-64 rounded-full bg-pink-200/30 blur-3xl dark:bg-pink-900/20' />
 
-      <div className='container relative mx-auto px-4'>
+      <div className='relative container mx-auto px-4'>
         <div className='mb-8 text-center md:mb-12'>
           <div className='mb-4 inline-flex items-center gap-2 rounded-full bg-purple-100 px-4 py-2 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300'>
             <span className='text-lg'>❓</span>
@@ -46,7 +46,7 @@ export default function HelpCenter() {
               {t.helpSection?.badge || 'Help Center'}
             </span>
           </div>
-          <h2 className='mb-4 text-3xl font-bold text-gray-900 dark:text-gray-100 md:text-5xl'>
+          <h2 className='mb-4 text-3xl font-bold text-gray-900 md:text-5xl dark:text-gray-100'>
             {t.helpSection?.title || 'Need help?'}{' '}
             <span className='bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent'>
               {t.helpSection?.titleHighlight || "We've got you covered"}
@@ -64,7 +64,7 @@ export default function HelpCenter() {
             <div className='shrink-0'>
               <div className='relative'>
                 <FluxbyWebGL size={160} />
-                <div className='absolute -right-2 -top-2 rounded-full bg-purple-600 px-3 py-1 text-xs font-medium text-white shadow-lg'>
+                <div className='absolute -top-2 -right-2 rounded-full bg-purple-600 px-3 py-1 text-xs font-medium text-white shadow-lg'>
                   {t.helpSection?.avatarBadge || 'Here to help!'}
                 </div>
               </div>

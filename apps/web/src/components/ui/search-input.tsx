@@ -70,18 +70,18 @@ export const SearchInput = memo(function SearchInput({
 
   return (
     <div className={`relative ${className || ''}`}>
-      <Search className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
+      <Search className='absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
       <Input
         placeholder={placeholder}
         value={internalValue}
         onChange={(e) => setInternalValue(e.target.value)}
-        className='pl-10 pr-8'
+        className='pr-8 pl-10'
       />
       {internalValue && (
         <Button
           variant='ghost'
           size='icon'
-          className='absolute right-1 top-1/2 h-6 w-6 -translate-y-1/2 text-muted-foreground hover:bg-purple-600 hover:text-white'
+          className='absolute top-1/2 right-1 h-6 w-6 -translate-y-1/2 text-muted-foreground hover:bg-purple-600 hover:text-white'
           onClick={handleClear}
         >
           <X className='h-3 w-3' />

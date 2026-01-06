@@ -57,7 +57,7 @@ export default function Developer() {
         />
       </div>
 
-      <div className='container relative mx-auto px-4'>
+      <div className='relative container mx-auto px-4'>
         <div className='mb-12 text-center md:mb-16'>
           <div className='mb-4 inline-flex items-center gap-2 rounded-full bg-purple-500/20 px-4 py-2 text-purple-300'>
             <span className='text-lg'>🛠️</span>

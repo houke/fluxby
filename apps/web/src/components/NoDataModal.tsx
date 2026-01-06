@@ -176,7 +176,7 @@ export function NoDataModal() {
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleDismiss()}>
       <DialogContent className='p-0 sm:max-w-md'>
         <div className='overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl dark:border-gray-700 dark:bg-gray-900'>
-          <DialogHeader className='px-6 pb-4 pt-6 text-center'>
+          <DialogHeader className='px-6 pt-6 pb-4 text-center'>
             <div className='mx-auto flex h-24 w-24 items-center justify-center'>
               <FluxbyWebGL width={80} height={80} />
             </div>
@@ -193,13 +193,13 @@ export function NoDataModal() {
           <div className='flex gap-3 border-t border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/50'>
             <button
               onClick={handleDismiss}
-              className='flex-1 rounded-lg border-0 px-4 py-2.5 font-medium text-gray-700 transition-colors hover:bg-gray-100 hover:text-purple-600 focus:outline-none focus:ring-0 focus-visible:ring-0 dark:text-gray-300 dark:hover:bg-purple-900/10'
+              className='flex-1 rounded-lg border-0 px-4 py-2.5 font-medium text-gray-700 transition-colors hover:bg-gray-100 hover:text-purple-600 focus:ring-0 focus:outline-none focus-visible:ring-0 dark:text-gray-300 dark:hover:bg-purple-900/10'
             >
               {t.common?.dismiss || 'Dismiss'}
             </button>
             <button
               onClick={handleJumpToPeriod}
-              className='rounded-lg bg-purple-600 px-4 py-2.5 font-medium text-white transition-colors hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500'
+              className='rounded-lg bg-purple-600 px-4 py-2.5 font-medium text-white transition-colors hover:bg-purple-700 focus:ring-2 focus:ring-purple-500 focus:outline-none'
             >
               {(t.dashboard?.jumpToPeriod || 'Jump to {period}').replace(
                 '{period}',

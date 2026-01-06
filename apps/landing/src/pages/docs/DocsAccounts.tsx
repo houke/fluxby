@@ -232,7 +232,7 @@ fetch('http://localhost:3001/api/accounts', {
       </div>
 
       <div className='mt-6 rounded-xl border border-amber-200 bg-amber-50 p-6 dark:border-amber-800 dark:bg-amber-950/30'>
-        <h3 className='mb-2 mt-0 flex items-center gap-2 text-lg font-semibold text-amber-900 dark:text-amber-200'>
+        <h3 className='mt-0 mb-2 flex items-center gap-2 text-lg font-semibold text-amber-900 dark:text-amber-200'>
           <span>💡</span>
           {t.docs.accounts.noteTitle}
         </h3>

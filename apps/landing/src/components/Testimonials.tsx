@@ -34,7 +34,7 @@ const Testimonials = () => {
               </div>
 
               {/* Quote */}
-              <blockquote className='mb-6 text-lg italic leading-relaxed text-gray-700'>
+              <blockquote className='mb-6 text-lg leading-relaxed text-gray-700 italic'>
                 &ldquo;{testimonial.content}&rdquo;
               </blockquote>
 

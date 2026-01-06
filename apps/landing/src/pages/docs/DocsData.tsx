@@ -172,7 +172,7 @@ fetch('http://localhost:3001/api/data/reset', {
       </div>
 
       <div className='mt-8 rounded-xl border border-red-200 bg-red-50 p-6 dark:border-red-800 dark:bg-red-950/30'>
-        <h3 className='mb-2 mt-0 flex items-center gap-2 text-lg font-semibold text-red-900 dark:text-red-200'>
+        <h3 className='mt-0 mb-2 flex items-center gap-2 text-lg font-semibold text-red-900 dark:text-red-200'>
           <span>⚠️</span>
           {t.docs.data.warningTitle}
         </h3>

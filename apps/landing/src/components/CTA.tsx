@@ -61,9 +61,9 @@ const CTA = () => {
         />
       </div>
 
-      <div className='container relative z-10 mx-auto px-4 text-center'>
+      <div className='relative z-10 container mx-auto px-4 text-center'>
         <div className='mx-auto max-w-4xl'>
-          <h2 className='mb-6 text-3xl font-black leading-tight text-white sm:text-5xl md:mb-8 lg:text-7xl'>
+          <h2 className='mb-6 text-3xl leading-tight font-black text-white sm:text-5xl md:mb-8 lg:text-7xl'>
             {t.cta.title.part1}{' '}
             <span className='text-fluxby-light'>{t.cta.title.highlight}</span>{' '}
             {t.cta.title.part2}

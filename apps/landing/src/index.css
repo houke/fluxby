@@ -1,11 +1,45 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
 
-@layer base {
-  html {
-    scroll-behavior: smooth;
+/* Dark mode class-based toggle */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Tailwind v4 Theme Configuration */
+@theme {
+  /* Fluxby Brand Colors */
+  --color-fluxby-purple: #8b5cf6;
+  --color-fluxby-light: #c4b5fd;
+  --color-fluxby-dark: #7c3aed;
+
+  /* Animations */
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-bounce-slow: bounce 3s infinite;
+  --animate-bounce-gentle: bounce-gentle 2s ease-in-out infinite;
+  --animate-pulse-slow: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-20px);
+    }
   }
+
+  @keyframes bounce-gentle {
+    0%,
+    100% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 :root {
@@ -94,54 +128,53 @@
   opacity: 0.8;
 }
 
-@layer components {
-  .btn-primary {
-    @apply bg-fluxby-purple hover:bg-fluxby-dark transform rounded-full px-8 py-4 text-lg font-bold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl;
-  }
+/* Component styles */
+.btn-primary {
+  @apply bg-fluxby-purple hover:bg-fluxby-dark transform rounded-full px-8 py-4 text-lg font-bold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl;
+}
 
-  .section-padding {
-    @apply px-4 py-12 md:py-24;
-  }
+.section-padding {
+  @apply px-4 py-12 md:py-24;
+}
 
-  .gradient-bg {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  }
+.gradient-bg {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
 
-  .dark .gradient-bg {
-    background: linear-gradient(135deg, #4c1d95 0%, #581c87 100%);
-  }
+.dark .gradient-bg {
+  background: linear-gradient(135deg, #4c1d95 0%, #581c87 100%);
+}
 
-  .fluffy-shadow {
-    box-shadow: 0 20px 40px rgba(139, 92, 246, 0.3);
-  }
+.fluffy-shadow {
+  box-shadow: 0 20px 40px rgba(139, 92, 246, 0.3);
+}
 
-  .custom-h3-margin h3 {
-    margin-top: 0.5em;
-  }
+.custom-h3-margin h3 {
+  margin-top: 0.5em;
+}
 
-  @keyframes avatarBreathe {
-    0%,
-    100% {
-      transform: translateY(0px) scale(1);
-    }
-    50% {
-      transform: translateY(-6px) scale(1.02);
-    }
+@keyframes avatarBreathe {
+  0%,
+  100% {
+    transform: translateY(0px) scale(1);
   }
+  50% {
+    transform: translateY(-6px) scale(1.02);
+  }
+}
 
+.avatar-breathe {
+  animation: avatarBreathe 6s ease-in-out infinite;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
   .avatar-breathe {
-    animation: avatarBreathe 6s ease-in-out infinite;
-    will-change: transform;
+    animation: none !important;
   }
+}
 
-  @media (prefers-reduced-motion: reduce) {
-    .avatar-breathe {
-      animation: none !important;
-    }
-  }
-
-  /* Remove margins from tables in prose content */
-  .prose table {
-    margin: 0;
-  }
+/* Remove margins from tables in prose content */
+.prose table {
+  margin: 0;
 }

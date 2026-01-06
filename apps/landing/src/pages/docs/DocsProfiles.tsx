@@ -46,7 +46,7 @@ fetch('http://localhost:3001/api/profiles', {
       </p>
 
       <div className='mt-8 rounded-xl border border-amber-200 bg-amber-50 p-6 dark:border-amber-800 dark:bg-amber-950/30'>
-        <h3 className='mb-2 mt-0 flex items-center gap-2 text-lg font-semibold text-amber-900 dark:text-amber-200'>
+        <h3 className='mt-0 mb-2 flex items-center gap-2 text-lg font-semibold text-amber-900 dark:text-amber-200'>
           <span>🎯</span>
           {t.docs.profiles.useCaseTitle}
         </h3>
@@ -139,7 +139,7 @@ fetch('http://localhost:3001/api/profiles', {
           </thead>
           <tbody className='divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900'>
             <tr>
-              <td className='whitespace-nowrap px-4 py-3'>
+              <td className='px-4 py-3 whitespace-nowrap'>
                 <code className='rounded bg-gray-100 px-2 py-1 text-sm dark:bg-gray-800'>
                   personal
                 </code>
@@ -149,7 +149,7 @@ fetch('http://localhost:3001/api/profiles', {
               </td>
             </tr>
             <tr>
-              <td className='whitespace-nowrap px-4 py-3'>
+              <td className='px-4 py-3 whitespace-nowrap'>
                 <code className='rounded bg-gray-100 px-2 py-1 text-sm dark:bg-gray-800'>
                   business
                 </code>

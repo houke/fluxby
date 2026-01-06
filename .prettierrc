@@ -12,6 +12,6 @@
   "jsxSingleQuote": true,
   "quoteProps": "as-needed",
   "plugins": ["prettier-plugin-tailwindcss"],
-  "tailwindConfig": "./apps/web/tailwind.config.js",
+  "tailwindStylesheet": "./apps/web/src/index.css",
   "tailwindFunctions": ["cn", "clsx"]
 }

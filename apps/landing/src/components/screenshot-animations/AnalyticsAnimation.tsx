@@ -131,7 +131,7 @@ export default function AnalyticsAnimation({
       {/* Chart container */}
       <div className='relative flex-1 overflow-hidden'>
         {/* Left gradient */}
-        <div className='pointer-events-none absolute bottom-0 left-0 top-0 z-10 w-8 bg-gradient-to-r from-transparent to-transparent' />
+        <div className='pointer-events-none absolute top-0 bottom-0 left-0 z-10 w-8 bg-gradient-to-r from-transparent to-transparent' />
 
         {/* Scrolling bars */}
         <div
@@ -165,7 +165,7 @@ export default function AnalyticsAnimation({
         </div>
 
         {/* Right gradient */}
-        <div className='pointer-events-none absolute bottom-0 right-0 top-0 z-10 w-8 bg-gradient-to-l from-transparent to-transparent' />
+        <div className='pointer-events-none absolute top-0 right-0 bottom-0 z-10 w-8 bg-gradient-to-l from-transparent to-transparent' />
       </div>
     </div>
   );

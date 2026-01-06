@@ -141,7 +141,7 @@ export default function DocsSidebar({ isOpen, onClose }: DocsSidebarProps) {
 
       {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-30 w-64 shrink-0 transform overflow-y-auto border-r border-gray-200 bg-white transition-transform duration-300 ease-in-out dark:border-gray-700 dark:bg-gray-800 lg:static lg:h-screen lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-30 w-64 shrink-0 transform overflow-y-auto border-r border-gray-200 bg-white transition-transform duration-300 ease-in-out lg:static lg:h-screen lg:translate-x-0 dark:border-gray-700 dark:bg-gray-800 ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
@@ -162,7 +162,7 @@ export default function DocsSidebar({ isOpen, onClose }: DocsSidebarProps) {
         <nav className='px-4 pb-8'>
           {navigation.map((section, idx) => (
             <div key={idx} className='mb-6'>
-              <h3 className='mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400'>
+              <h3 className='mb-2 px-3 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400'>
                 {section.title}
               </h3>
               <ul className='space-y-1'>

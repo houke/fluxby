@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
 
@@ -22,7 +23,7 @@ const packagesPath = resolve(__dirname, '../../packages');
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [tailwindcss(), react()],
   resolve: {
     alias: {
       // In dev mode, resolve @fluxby/* packages to source files for hot-reload

@@ -15,7 +15,7 @@ export default function HelpTransactions() {
       </p>
 
       <div className='mt-8 rounded-xl border border-purple-200 bg-purple-50 p-6 dark:border-purple-800 dark:bg-purple-950/30'>
-        <h3 className='mb-2 mt-0 flex items-center gap-2 text-lg font-semibold text-purple-900 dark:text-purple-200'>
+        <h3 className='mt-0 mb-2 flex items-center gap-2 text-lg font-semibold text-purple-900 dark:text-purple-200'>
           <span>💡</span>
           {t.helpCenter?.transactions?.tipTitle || 'Snelle tip'}
         </h3>

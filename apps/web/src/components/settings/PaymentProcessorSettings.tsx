@@ -172,7 +172,7 @@ export function PaymentProcessorSettings() {
             </Button>
           </div>
         </CardHeader>
-        <CardContent className='px-3 pb-3 pt-0 sm:px-6 sm:pb-6 sm:pt-0'>
+        <CardContent className='px-3 pt-0 pb-3 sm:px-6 sm:pt-0 sm:pb-6'>
           <div className='space-y-4'>
             {/* Add new rule form */}
             <div className='flex gap-2'>

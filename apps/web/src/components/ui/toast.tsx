@@ -81,7 +81,7 @@ export function Toast({
   return (
     <div
       className={cn(
-        'fixed right-4 top-4 z-[100] flex max-w-[360px] items-start gap-3 break-words rounded-md border-l-4 px-4 py-3 shadow-lg animate-in slide-in-from-top-2',
+        'fixed top-4 right-4 z-[100] flex max-w-[360px] items-start gap-3 rounded-md border-l-4 px-4 py-3 break-words shadow-lg animate-in slide-in-from-top-2',
         toastStyles[type]
       )}
       role='alert'

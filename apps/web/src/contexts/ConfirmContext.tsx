@@ -122,7 +122,7 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
           <div className='relative z-10 mx-4 w-full max-w-md duration-200 animate-in fade-in zoom-in-95'>
             <div className='overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl dark:border-gray-700 dark:bg-gray-900'>
               {/* Header with Avatar */}
-              <div className='flex flex-col items-center px-6 pb-6 pt-6'>
+              <div className='flex flex-col items-center px-6 pt-6 pb-6'>
                 {/* Fluxby Avatar */}
                 <div className='relative'>
                   <FluxbyWebGL size={75} animated aria-hidden />
@@ -151,7 +151,7 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
                 <button
                   type='button'
                   onClick={handleCancel}
-                  className='flex-1 rounded-lg border-0 px-4 py-2.5 font-medium text-gray-700 transition-colors hover:bg-gray-100 hover:text-purple-600 focus:outline-none focus:ring-0 focus-visible:ring-0 dark:text-gray-300 dark:hover:bg-purple-900/10'
+                  className='flex-1 rounded-lg border-0 px-4 py-2.5 font-medium text-gray-700 transition-colors hover:bg-gray-100 hover:text-purple-600 focus:ring-0 focus:outline-none focus-visible:ring-0 dark:text-gray-300 dark:hover:bg-purple-900/10'
                   autoFocus={isDanger}
                 >
                   {options.cancelLabel || t.common.cancel}
@@ -162,7 +162,7 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
                   type='button'
                   onClick={handleConfirm}
                   className={cn(
-                    'flex-1 rounded-lg px-4 py-2.5 font-medium text-white transition-colors focus:outline-none focus:ring-2',
+                    'flex-1 rounded-lg px-4 py-2.5 font-medium text-white transition-colors focus:ring-2 focus:outline-none',
                     isDanger
                       ? 'bg-red-600 hover:bg-red-700 focus:ring-red-500'
                       : 'bg-purple-600 hover:bg-purple-700 focus:ring-purple-500'
