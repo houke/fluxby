@@ -15,6 +15,7 @@ import { isRunningInTauri } from './tauri-bridge';
 /**
  * Clear Tauri database files
  * Uses Tauri FS plugin to delete database from AppLocalData
+ * Also clears IndexedDB which is used by wa-sqlite in Tauri
  */
 async function clearTauriDatabase(): Promise<void> {
   try {
@@ -26,27 +27,58 @@ async function clearTauriDatabase(): Promise<void> {
 
     // Check if fluxby directory exists
     const dirExists = await fsModule.exists(fluxbyDir);
-    if (!dirExists) {
+    if (dirExists) {
+      // Delete the entire fluxby directory (contains database and any other files)
+      try {
+        await fsModule.remove(fluxbyDir, { recursive: true });
+        // eslint-disable-next-line no-console
+        console.log(`Deleted Tauri directory: ${fluxbyDir}`);
+      } catch (e) {
+        console.warn(`Failed to delete Tauri directory ${fluxbyDir}:`, e);
+        // Try to delete just the database file as fallback
+        try {
+          const dbPath = await pathModule.join(fluxbyDir, 'fluxby.db');
+          await fsModule.remove(dbPath);
+          // eslint-disable-next-line no-console
+          console.log(`Deleted Tauri database file: ${dbPath}`);
+        } catch (dbErr) {
+          console.warn('Failed to delete Tauri database file:', dbErr);
+        }
+      }
+    } else {
       // eslint-disable-next-line no-console
       console.log('Tauri fluxby directory does not exist, nothing to clear');
-      return;
     }
 
-    // Delete the entire fluxby directory (contains database and any other files)
-    try {
-      await fsModule.remove(fluxbyDir, { recursive: true });
-      // eslint-disable-next-line no-console
-      console.log(`Deleted Tauri directory: ${fluxbyDir}`);
-    } catch (e) {
-      console.warn(`Failed to delete Tauri directory ${fluxbyDir}:`, e);
-      // Try to delete just the database file as fallback
+    // IMPORTANT: Also clear IndexedDB - wa-sqlite uses IDBBatchAtomicVFS in Tauri
+    // This is where the actual SQLite data is stored!
+    if (typeof indexedDB !== 'undefined') {
       try {
-        const dbPath = await pathModule.join(fluxbyDir, 'fluxby.db');
-        await fsModule.remove(dbPath);
+        const dbs = await indexedDB.databases();
+        for (const db of dbs) {
+          if (
+            db.name &&
+            (db.name.includes('fluxby') ||
+              db.name.includes('sqlite') ||
+              db.name.includes('idb-'))
+          ) {
+            // eslint-disable-next-line no-console
+            console.log(`Deleting IndexedDB: ${db.name}`);
+            await new Promise<void>((resolve, reject) => {
+              const req = indexedDB.deleteDatabase(db.name!);
+              req.onsuccess = () => resolve();
+              req.onerror = () => reject(req.error);
+              req.onblocked = () => {
+                console.warn(`IndexedDB deletion blocked: ${db.name}`);
+                resolve(); // Continue anyway
+              };
+            });
+          }
+        }
         // eslint-disable-next-line no-console
-        console.log(`Deleted Tauri database file: ${dbPath}`);
-      } catch (dbErr) {
-        console.warn('Failed to delete Tauri database file:', dbErr);
+        console.log('Cleared all IndexedDB databases');
+      } catch (idbErr) {
+        console.warn('Failed to clear IndexedDB:', idbErr);
       }
     }
 
