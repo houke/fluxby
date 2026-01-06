@@ -253,6 +253,19 @@ export function DatabaseProvider({ children }: DatabaseProviderProps) {
   // Check if we're in Tauri
   const isTauri = typeof window !== 'undefined' && '__TAURI__' in window;
 
+  // Debug: log state changes in Tauri
+  if (isTauri) {
+    devLog('DatabaseProvider state:', {
+      isLoading,
+      isReady,
+      hasError: !!error,
+      hasDb: !!db,
+      isEncryptionEnabled,
+      isUnlocked,
+      isWaitingForUnlock: isEncryptionEnabled && !isUnlocked,
+    });
+  }
+
   // Show loading screen while database initializes
   if (isLoading) {
     return (
@@ -315,14 +328,33 @@ export function DatabaseProvider({ children }: DatabaseProviderProps) {
 
   // Show error screen if database failed to initialize
   if (error) {
-    // Only show technical error details in development mode
+    // Always show technical error details in Tauri for debugging
     const isDevelopment =
       typeof window !== 'undefined' &&
       (window.location.hostname === 'localhost' ||
-        window.location.hostname === '127.0.0.1');
+        window.location.hostname === '127.0.0.1' ||
+        '__TAURI__' in window);
 
     return (
       <DatabaseErrorScreen error={error} isDevelopment={isDevelopment} t={t} />
+    );
+  }
+
+  // Safety check: if not loading, no error, but also not ready, something went wrong
+  // EXCEPT if we're waiting for password unlock - that's a valid state where db is null
+  const isWaitingForUnlock = isEncryptionEnabled && !isUnlocked;
+  if (!isLoading && !error && !isReady && !db && !isWaitingForUnlock) {
+    devLog('WARNING: Database initialization completed but db is null');
+    return (
+      <DatabaseErrorScreen
+        error={
+          new Error(
+            'Database initialization completed but database is null. This may indicate a silent failure in the database layer.'
+          )
+        }
+        isDevelopment={true}
+        t={t}
+      />
     );
   }
 

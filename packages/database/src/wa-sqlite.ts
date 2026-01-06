@@ -41,6 +41,9 @@ let globalDbInstance: Database | null = null;
 // Debug logging for WASM initialization
 function isWasmDebugEnabled(): boolean {
   try {
+    // Always enable logging in Tauri for debugging
+    if (isTauri()) return true;
+
     // Only log when explicitly enabled by developers
     // (keeps production/dev console clean and reduces incidental overhead)
 

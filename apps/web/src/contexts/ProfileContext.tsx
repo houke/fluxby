@@ -67,6 +67,13 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
   const [isSwitching, setIsSwitching] = useState(false);
   const mountedRef = useRef(true);
 
+  // Debug logging in Tauri
+  const isTauri = typeof window !== 'undefined' && '__TAURI__' in window;
+  if (isTauri) {
+    // eslint-disable-next-line no-console
+    console.log('[ProfileProvider] Rendering, db:', !!db, 'isReady:', isReady);
+  }
+
   // Load from OPFS if cache wasn't initialized
   useEffect(() => {
     mountedRef.current = true;

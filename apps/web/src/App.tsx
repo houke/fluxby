@@ -71,6 +71,18 @@ function SecurityGate({ children }: { children: React.ReactNode }) {
     useOnboarding();
   const { t } = useLanguage();
 
+  // Debug logging for Tauri
+  const isTauri = typeof window !== 'undefined' && '__TAURI__' in window;
+  if (isTauri) {
+    // eslint-disable-next-line no-console
+    console.log('[SecurityGate] State:', {
+      isEncryptionEnabled,
+      isUnlocked,
+      needsSecuritySetup,
+      isLoadingUser,
+    });
+  }
+
   // 1. PRIORITY: If encryption is set up but locked, show lock screen immediately
   // We do this BEFORE loading user data to prevent querying encrypted DB
   if (isEncryptionEnabled && !isUnlocked) {
@@ -123,31 +135,33 @@ function SecurityGate({ children }: { children: React.ReactNode }) {
 
 function App() {
   return (
-    <LanguageProvider>
-      <EncryptionProvider>
-        <DatabaseProvider>
-          <ProfileProvider>
-            <SyncProvider>
-              <FilterProvider>
-                <ToastProvider>
-                  <ConfirmProvider>
-                    <BrowserRouter
-                      basename={import.meta.env.BASE_URL || '/app/'}
-                    >
-                      <OnboardingProvider>
-                        <SecurityGate>
-                          <AppContent />
-                        </SecurityGate>
-                      </OnboardingProvider>
-                    </BrowserRouter>
-                  </ConfirmProvider>
-                </ToastProvider>
-              </FilterProvider>
-            </SyncProvider>
-          </ProfileProvider>
-        </DatabaseProvider>
-      </EncryptionProvider>
-    </LanguageProvider>
+    <ErrorBoundary>
+      <LanguageProvider>
+        <EncryptionProvider>
+          <DatabaseProvider>
+            <ProfileProvider>
+              <SyncProvider>
+                <FilterProvider>
+                  <ToastProvider>
+                    <ConfirmProvider>
+                      <BrowserRouter
+                        basename={import.meta.env.BASE_URL || '/app/'}
+                      >
+                        <OnboardingProvider>
+                          <SecurityGate>
+                            <AppContent />
+                          </SecurityGate>
+                        </OnboardingProvider>
+                      </BrowserRouter>
+                    </ConfirmProvider>
+                  </ToastProvider>
+                </FilterProvider>
+              </SyncProvider>
+            </ProfileProvider>
+          </DatabaseProvider>
+        </EncryptionProvider>
+      </LanguageProvider>
+    </ErrorBoundary>
   );
 }
 
