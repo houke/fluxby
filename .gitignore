@@ -45,6 +45,9 @@ coverage/
 # Vite
 .vite/
 
+# Vite config compiled outputs (should use .ts source only)
+vite.config.js
+vite.config.d.ts
 
 # Rust
 target/

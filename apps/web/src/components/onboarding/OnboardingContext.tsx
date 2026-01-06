@@ -44,9 +44,13 @@ const checkRestartFlag = (): boolean => {
   const restartFlag = readFromOPFSSync<boolean>(RESTART_FLAG_KEY);
   if (restartFlag === true) {
     // Clear the flag immediately (async)
-    deleteFromOPFSWithCache(RESTART_FLAG_KEY).catch(() => {});
+    deleteFromOPFSWithCache(RESTART_FLAG_KEY).catch(() => {
+      /* ignore */
+    });
     // Also remove the switching overlay flag
-    deleteFromOPFSWithCache(SWITCHING_OVERLAY_KEY).catch(() => {});
+    deleteFromOPFSWithCache(SWITCHING_OVERLAY_KEY).catch(() => {
+      /* ignore */
+    });
     return true;
   }
   return false;
@@ -60,7 +64,9 @@ const loadState = (): OnboardingState => {
 
   if (shouldRestart) {
     // Clear the completed flag when restarting (async)
-    deleteFromOPFSWithCache(COMPLETED_FLAG_KEY).catch(() => {});
+    deleteFromOPFSWithCache(COMPLETED_FLAG_KEY).catch(() => {
+      /* ignore */
+    });
     // Start fresh onboarding
     return { ...defaultState, isActive: true };
   }
@@ -155,9 +161,9 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
         currentChapterIndex: 0,
         currentStepIndex: 0,
       }));
-      // Defer navigation to avoid "Cannot update component while rendering" warning
-      // This ensures React completes its current render cycle first
-      setTimeout(() => navigate('/dashboard/'), 0);
+      // NOTE: Navigation is handled by React Router's Navigate component in App.tsx
+      // The index route automatically redirects to /dashboard
+      // We don't navigate here to avoid race conditions with query invalidation
     }
   }, [
     userData,
@@ -168,7 +174,6 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
     state.hasDismissedOnboarding,
     state.currentChapterIndex,
     state.currentStepIndex,
-    navigate,
   ]);
 
   // Get current chapter and step
@@ -315,7 +320,9 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
         // If restarting, start from beginning
         if (restart) {
           // Also clear the completed flag in OPFS when restarting
-          deleteFromOPFSWithCache(COMPLETED_FLAG_KEY).catch(() => {});
+          deleteFromOPFSWithCache(COMPLETED_FLAG_KEY).catch(() => {
+            /* ignore */
+          });
           return {
             ...prev,
             isActive: true,
@@ -353,7 +360,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
         const targetChapter = restart
           ? onboardingChapters[0]
           : onboardingChapters[state.currentChapterIndex];
-        setTimeout(() => navigate(targetChapter?.route || '/dashboard/'), 0);
+        setTimeout(() => navigate(targetChapter?.route || '/dashboard'), 0);
       }
     },
     [

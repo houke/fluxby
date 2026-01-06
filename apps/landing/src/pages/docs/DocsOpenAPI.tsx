@@ -90,7 +90,7 @@ export default function DocsOpenAPI() {
 
       <div className='mt-6 space-y-6'>
         <div className='rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800'>
-          <h3 className='mb-2 mt-0 text-lg font-semibold text-gray-900 dark:text-gray-100'>
+          <h3 className='mt-0 mb-2 text-lg font-semibold text-gray-900 dark:text-gray-100'>
             {t.docs.openapi.withSwagger}
           </h3>
           <ol className='mb-0 list-decimal space-y-2 pl-5 text-gray-600 dark:text-gray-400'>
@@ -102,7 +102,7 @@ export default function DocsOpenAPI() {
         </div>
 
         <div className='rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800'>
-          <h3 className='mb-2 mt-0 text-lg font-semibold text-gray-900 dark:text-gray-100'>
+          <h3 className='mt-0 mb-2 text-lg font-semibold text-gray-900 dark:text-gray-100'>
             {t.docs.openapi.withPostman}
           </h3>
           <ol className='mb-0 list-decimal space-y-2 pl-5 text-gray-600 dark:text-gray-400'>
@@ -114,7 +114,7 @@ export default function DocsOpenAPI() {
         </div>
 
         <div className='rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800'>
-          <h3 className='mb-2 mt-0 text-lg font-semibold text-gray-900 dark:text-gray-100'>
+          <h3 className='mt-0 mb-2 text-lg font-semibold text-gray-900 dark:text-gray-100'>
             {t.docs.openapi.withCode}
           </h3>
           <p className='mb-4 text-gray-600 dark:text-gray-400'>
@@ -132,7 +132,7 @@ npx @openapitools/openapi-generator-cli generate \\
         </div>
 
         <div className='rounded-lg border border-purple-200 bg-purple-50 p-6 dark:border-purple-700 dark:bg-purple-900/20'>
-          <h3 className='mb-2 mt-0 flex items-center gap-2 text-lg font-semibold text-gray-900 dark:text-gray-100'>
+          <h3 className='mt-0 mb-2 flex items-center gap-2 text-lg font-semibold text-gray-900 dark:text-gray-100'>
             <FolderOpen className='h-5 w-5 text-purple-600' />
             {t.docs.openapi.withBruno}
           </h3>

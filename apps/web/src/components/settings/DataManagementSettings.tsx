@@ -46,11 +46,11 @@ export function DataManagementSettings() {
             {t.settings.dataManagement.description}
           </CardDescription>
         </CardHeader>
-        <CardContent className='px-3 pb-3 pt-0 sm:px-6 sm:pb-6 sm:pt-0'>
+        <CardContent className='px-3 pt-0 pb-3 sm:px-6 sm:pt-0 sm:pb-6'>
           <div className='space-y-4'>
             {dataNotice && (
               <div
-                className={`whitespace-pre-wrap rounded border px-3 py-2 text-sm ${
+                className={`rounded border px-3 py-2 text-sm whitespace-pre-wrap ${
                   dataNotice.type === 'success'
                     ? 'border-emerald-300 bg-emerald-50 text-emerald-800'
                     : dataNotice.type === 'warning'

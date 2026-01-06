@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite';
 import path from 'path';
 
 // For GitHub Pages: VITE_BASE_URL is set during CI
@@ -19,6 +20,7 @@ const packagesPath = path.resolve(__dirname, '../../packages');
 
 export default defineConfig({
   plugins: [
+    tailwindcss(),
     react(),
     {
       name: 'redirect-root-app',

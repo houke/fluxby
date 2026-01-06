@@ -62,7 +62,7 @@ const LegalModal = ({ isOpen, onClose, title, children }: LegalModalProps) => {
 
       {/* Full page card - slides up from bottom with top offset to show stacked effect */}
       <div
-        className={`absolute inset-x-0 bottom-0 top-6 overflow-hidden rounded-t-3xl bg-white shadow-2xl transition-transform duration-500 ease-out dark:bg-gray-900 md:top-10 lg:top-14 ${
+        className={`absolute inset-x-0 top-6 bottom-0 overflow-hidden rounded-t-3xl bg-white shadow-2xl transition-transform duration-500 ease-out md:top-10 lg:top-14 dark:bg-gray-900 ${
           isAnimating ? 'translate-y-0' : 'translate-y-full'
         }`}
       >
@@ -74,7 +74,7 @@ const LegalModal = ({ isOpen, onClose, title, children }: LegalModalProps) => {
         {/* Close button - sticky */}
         <button
           onClick={onClose}
-          className='absolute right-4 top-4 z-10 rounded-full bg-gray-100 p-2 text-gray-600 transition-all hover:bg-gray-200 hover:text-gray-900 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white md:right-6 md:top-6'
+          className='absolute top-4 right-4 z-10 rounded-full bg-gray-100 p-2 text-gray-600 transition-all hover:bg-gray-200 hover:text-gray-900 md:top-6 md:right-6 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white'
           aria-label='Sluiten'
         >
           <X className='h-5 w-5 md:h-6 md:w-6' />
@@ -86,7 +86,7 @@ const LegalModal = ({ isOpen, onClose, title, children }: LegalModalProps) => {
             {/* Header */}
             <div className='mb-8 border-b border-gray-200 pb-8 dark:border-gray-700'>
               <div className='flex items-center justify-between'>
-                <div className='text-fluxby-purple text-sm font-semibold uppercase tracking-wider'>
+                <div className='text-fluxby-purple text-sm font-semibold tracking-wider uppercase'>
                   Fluxby
                 </div>
                 {/* Toggles container */}
@@ -157,7 +157,7 @@ const LegalModal = ({ isOpen, onClose, title, children }: LegalModalProps) => {
                   </button>
                 </div>
               </div>
-              <h1 className='mt-2 text-3xl font-bold text-gray-900 dark:text-white md:text-4xl'>
+              <h1 className='mt-2 text-3xl font-bold text-gray-900 md:text-4xl dark:text-white'>
                 {title}
               </h1>
             </div>

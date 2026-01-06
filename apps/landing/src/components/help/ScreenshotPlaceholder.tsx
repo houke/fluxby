@@ -19,7 +19,7 @@ export default function ScreenshotPlaceholder({
         {title}
       </h4>
       <p className='mt-2 max-w-md text-sm text-gray-500 dark:text-gray-400'>
-        <span className='mb-1 block text-xs font-semibold uppercase tracking-wider text-red-500 dark:text-red-400'>
+        <span className='mb-1 block text-xs font-semibold tracking-wider text-red-500 uppercase dark:text-red-400'>
           Missing Asset
         </span>
         {instruction}

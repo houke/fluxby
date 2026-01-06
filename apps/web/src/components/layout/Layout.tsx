@@ -196,7 +196,7 @@ export default function Layout() {
           data-onboarding='sidebar'
         >
           {/* Mobile close button */}
-          <div className='absolute right-2 top-2 md:hidden'>
+          <div className='absolute top-2 right-2 md:hidden'>
             <Button
               variant='ghost'
               size='icon'
@@ -213,7 +213,7 @@ export default function Layout() {
               <Tooltip>
                 <TooltipTrigger asChild>
                   <button
-                    className='relative transition-opacity hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50'
+                    className='relative transition-opacity hover:opacity-80 focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50'
                     data-onboarding='fluxby-mascot'
                     onClick={() => {
                       if (!onboardingState.isActive) {
@@ -353,7 +353,7 @@ export default function Layout() {
         </div>
 
         {/* Mobile Bottom Navigation Bar */}
-        <nav className='fixed bottom-0 left-0 right-0 z-30 flex h-16 items-center justify-around border-t bg-card md:hidden'>
+        <nav className='fixed right-0 bottom-0 left-0 z-30 flex h-16 items-center justify-around border-t bg-card md:hidden'>
           {navItems.slice(0, 5).map((item) => (
             <NavLink
               key={item.to}

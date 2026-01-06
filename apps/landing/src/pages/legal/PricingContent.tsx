@@ -30,7 +30,7 @@ const PricingContent = () => {
             <div className='flex items-center gap-4'>
               <Gift className='h-12 w-12 flex-shrink-0 text-white' />
               <div className='flex flex-col gap-0'>
-                <h2 className='m-0 text-3xl font-black leading-tight text-white'>
+                <h2 className='m-0 text-3xl leading-tight font-black text-white'>
                   {pricingPage?.freeTitle || 'Gratis'}
                 </h2>
                 <p className='m-0 text-lg font-medium text-white'>

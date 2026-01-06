@@ -139,7 +139,7 @@ export function PWAInstallBanner() {
               </div>
             </div>
           </CardHeader>
-          <CardContent className='space-y-3 px-3 pb-3 pt-0 sm:px-6 sm:pb-6 sm:pt-0'>
+          <CardContent className='space-y-3 px-3 pt-0 pb-3 sm:px-6 sm:pt-0 sm:pb-6'>
             {instructions ? (
               <div className='rounded-md bg-muted/50 p-3'>
                 <div className='mb-2 flex items-center gap-2 text-sm font-medium'>
@@ -181,7 +181,7 @@ export function PWAInstallBanner() {
             </div>
           </CardHeader>
 
-          <CardContent className='px-3 pb-3 pt-0 sm:px-6 sm:pb-6 sm:pt-0'>
+          <CardContent className='px-3 pt-0 pb-3 sm:px-6 sm:pt-0 sm:pb-6'>
             {/* Primary manual instructions for the detected platform */}
             {instructions ? (
               <div className='mb-3 rounded-md bg-muted/50 p-3'>

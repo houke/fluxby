@@ -111,11 +111,11 @@ export default function CategoriesAnimation({
   return (
     <div className='relative h-full w-full overflow-hidden'>
       {/* Top gradient */}
-      <div className='pointer-events-none absolute left-0 right-0 top-0 z-10 h-8 bg-gradient-to-b from-purple-50 to-transparent dark:from-transparent' />
+      <div className='pointer-events-none absolute top-0 right-0 left-0 z-10 h-8 bg-gradient-to-b from-purple-50 to-transparent dark:from-transparent' />
 
       {/* Scrolling categories */}
       <div
-        className='absolute left-0 right-0 px-4'
+        className='absolute right-0 left-0 px-4'
         style={{ transform: `translateY(-${scrollY}px)` }}
       >
         {tripledCategories.map((category, idx) => (
@@ -160,7 +160,7 @@ export default function CategoriesAnimation({
       </div>
 
       {/* Bottom gradient */}
-      <div className='pointer-events-none absolute bottom-0 left-0 right-0 z-10 h-8 bg-gradient-to-t from-indigo-100 to-transparent dark:from-transparent' />
+      <div className='pointer-events-none absolute right-0 bottom-0 left-0 z-10 h-8 bg-gradient-to-t from-indigo-100 to-transparent dark:from-transparent' />
     </div>
   );
 }

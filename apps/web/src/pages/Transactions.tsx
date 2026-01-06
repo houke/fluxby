@@ -1952,11 +1952,11 @@ export default function Transactions() {
                 <p className='text-xs text-muted-foreground sm:text-sm'>
                   {t.dashboard.income}
                 </p>
-                <p className='mt-1 whitespace-nowrap text-lg font-bold sm:text-2xl'>
+                <p className='mt-1 text-lg font-bold whitespace-nowrap sm:text-2xl'>
                   {formatCurrency(totals.income)}
                 </p>
               </div>
-              <div className='absolute -right-2 -top-2 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/30 sm:relative sm:inset-auto sm:right-auto sm:top-auto sm:ml-4 sm:flex-shrink-0'>
+              <div className='absolute -top-2 -right-2 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 sm:relative sm:inset-auto sm:top-auto sm:right-auto sm:ml-4 sm:flex-shrink-0 dark:bg-emerald-900/30'>
                 <ArrowUpRight className='h-5 w-5 text-emerald-600 sm:h-6 sm:w-6' />
               </div>
             </CardContent>
@@ -1967,11 +1967,11 @@ export default function Transactions() {
                 <p className='text-xs text-muted-foreground sm:text-sm'>
                   {t.dashboard.expenses}
                 </p>
-                <p className='mt-1 whitespace-nowrap text-lg font-bold sm:text-2xl'>
+                <p className='mt-1 text-lg font-bold whitespace-nowrap sm:text-2xl'>
                   {formatCurrency(totals.expenses)}
                 </p>
               </div>
-              <div className='absolute -right-2 -top-2 flex h-12 w-12 items-center justify-center rounded-full bg-rose-100 dark:bg-rose-900/30 sm:relative sm:inset-auto sm:right-auto sm:top-auto sm:ml-4 sm:flex-shrink-0'>
+              <div className='absolute -top-2 -right-2 flex h-12 w-12 items-center justify-center rounded-full bg-rose-100 sm:relative sm:inset-auto sm:top-auto sm:right-auto sm:ml-4 sm:flex-shrink-0 dark:bg-rose-900/30'>
                 <ArrowDownRight className='h-5 w-5 text-rose-600 sm:h-6 sm:w-6' />
               </div>
             </CardContent>
@@ -1982,15 +1982,15 @@ export default function Transactions() {
                 <p className='text-xs text-muted-foreground sm:text-sm'>
                   {t.dashboard.toSavings}
                 </p>
-                <p className='mt-1 whitespace-nowrap text-lg font-bold sm:text-2xl'>
+                <p className='mt-1 text-lg font-bold whitespace-nowrap sm:text-2xl'>
                   {formatCurrency(totals.netSavingsTransfer)}
                 </p>
-                <p className='mt-1 whitespace-nowrap text-xs text-muted-foreground'>
+                <p className='mt-1 text-xs whitespace-nowrap text-muted-foreground'>
                   +{formatCurrency(totals.transferToSavings)} / -
                   {formatCurrency(totals.transferFromSavings)}
                 </p>
               </div>
-              <div className='absolute -right-2 -top-2 flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30 sm:relative sm:inset-auto sm:right-auto sm:top-auto sm:ml-4 sm:flex-shrink-0'>
+              <div className='absolute -top-2 -right-2 flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 sm:relative sm:inset-auto sm:top-auto sm:right-auto sm:ml-4 sm:flex-shrink-0 dark:bg-blue-900/30'>
                 <PiggyBank className='h-5 w-5 text-blue-600 sm:h-6 sm:w-6' />
               </div>
             </CardContent>
@@ -2003,7 +2003,7 @@ export default function Transactions() {
                 </p>
                 <p
                   className={cn(
-                    'mt-1 whitespace-nowrap text-lg font-bold sm:text-2xl',
+                    'mt-1 text-lg font-bold whitespace-nowrap sm:text-2xl',
                     totals.balance === 0
                       ? 'text-gray-900 dark:text-gray-100'
                       : totals.balance > 0
@@ -2016,7 +2016,7 @@ export default function Transactions() {
               </div>
               <div
                 className={cn(
-                  'absolute -right-2 -top-2 flex h-12 w-12 items-center justify-center rounded-full sm:relative sm:inset-auto sm:right-auto sm:top-auto sm:ml-4 sm:flex-shrink-0',
+                  'absolute -top-2 -right-2 flex h-12 w-12 items-center justify-center rounded-full sm:relative sm:inset-auto sm:top-auto sm:right-auto sm:ml-4 sm:flex-shrink-0',
                   totals.balance === 0
                     ? 'bg-gray-100 dark:bg-gray-900/30'
                     : totals.balance > 0
@@ -2245,7 +2245,7 @@ export default function Transactions() {
                 </div>
               </div>
             </CardHeader>
-            <CardContent className='px-0 pb-3 pt-0 sm:px-6 sm:pb-6 sm:pt-0'>
+            <CardContent className='px-0 pt-0 pb-3 sm:px-6 sm:pt-0 sm:pb-6'>
               {/* Show skeleton during:
                 1. Initial load (isLoading)
                 2. Fetching with no data yet
@@ -2289,7 +2289,7 @@ export default function Transactions() {
                       return (
                         <div
                           key={tx.id}
-                          className='border-x-0 border-b-0 border-t sm:rounded-lg sm:border'
+                          className='border-x-0 border-t border-b-0 sm:rounded-lg sm:border'
                           data-onboarding='transaction-row'
                         >
                           <div
@@ -2352,7 +2352,7 @@ export default function Transactions() {
                                                 <Button
                                                   size='sm'
                                                   variant='ghost'
-                                                  className='absolute right-1 top-1/2 h-6 w-6 -translate-y-1/2 rounded-md p-0 text-muted-foreground hover:bg-purple-600 hover:text-white'
+                                                  className='absolute top-1/2 right-1 h-6 w-6 -translate-y-1/2 rounded-md p-0 text-muted-foreground hover:bg-purple-600 hover:text-white'
                                                   onClick={() =>
                                                     setLabelDraft(
                                                       originalLabelValue
@@ -2439,7 +2439,7 @@ export default function Transactions() {
                                               <Info className='h-4 w-4' />
                                             </span>
                                           </TooltipTrigger>
-                                          <TooltipContent className='max-w-xs whitespace-normal break-words'>
+                                          <TooltipContent className='max-w-xs break-words whitespace-normal'>
                                             <div className='space-y-1 text-sm'>
                                               {tx.description && (
                                                 <p>
@@ -2509,7 +2509,7 @@ export default function Transactions() {
                                         <Tooltip>
                                           <TooltipTrigger asChild>
                                             <button
-                                              className='flex-shrink-0 rounded p-1 text-muted-foreground opacity-0 transition-colors hover:bg-muted focus:opacity-100 group-hover:opacity-100'
+                                              className='flex-shrink-0 rounded p-1 text-muted-foreground opacity-0 transition-colors group-hover:opacity-100 hover:bg-muted focus:opacity-100'
                                               onClick={(e) => {
                                                 e.stopPropagation();
                                                 startLabelEdit(tx);
@@ -3650,7 +3650,7 @@ export default function Transactions() {
                                   )?.name || '...'}
                                 </span>
                               ) : (
-                                <span className='text-xs italic text-muted-foreground'>
+                                <span className='text-xs text-muted-foreground italic'>
                                   {t.common?.none || 'Geen'}
                                 </span>
                               )}

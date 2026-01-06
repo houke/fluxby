@@ -52,7 +52,7 @@ export default function DocsErrors() {
             {t.docs.errors.statusCodes.map(
               (status: { code: string; description: string }, idx: number) => (
                 <tr key={idx}>
-                  <td className='whitespace-nowrap px-4 py-3'>
+                  <td className='px-4 py-3 whitespace-nowrap'>
                     <span
                       className={`rounded px-2 py-1 text-sm font-medium ${
                         status.code.startsWith('2')

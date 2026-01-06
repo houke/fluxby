@@ -183,7 +183,7 @@ export const TransactionHeader = memo(function TransactionHeader({
                 <p className='text-sm text-muted-foreground'>
                   {t.dashboard.income}
                 </p>
-                <p className='mt-1 whitespace-nowrap text-2xl font-bold'>
+                <p className='mt-1 text-2xl font-bold whitespace-nowrap'>
                   {formatCurrency(totals.income)}
                 </p>
               </div>
@@ -202,7 +202,7 @@ export const TransactionHeader = memo(function TransactionHeader({
                 <p className='text-sm text-muted-foreground'>
                   {t.dashboard.expenses}
                 </p>
-                <p className='mt-1 whitespace-nowrap text-2xl font-bold'>
+                <p className='mt-1 text-2xl font-bold whitespace-nowrap'>
                   {formatCurrency(totals.expenses)}
                 </p>
               </div>
@@ -221,10 +221,10 @@ export const TransactionHeader = memo(function TransactionHeader({
                 <p className='text-sm text-muted-foreground'>
                   {t.dashboard.toSavings}
                 </p>
-                <p className='mt-1 whitespace-nowrap text-2xl font-bold'>
+                <p className='mt-1 text-2xl font-bold whitespace-nowrap'>
                   {formatCurrency(totals.netSavingsTransfer)}
                 </p>
-                <p className='mt-1 whitespace-nowrap text-xs text-muted-foreground'>
+                <p className='mt-1 text-xs whitespace-nowrap text-muted-foreground'>
                   +{formatCurrency(totals.transferToSavings)} / -
                   {formatCurrency(totals.transferFromSavings)}
                 </p>
@@ -246,7 +246,7 @@ export const TransactionHeader = memo(function TransactionHeader({
                 </p>
                 <p
                   className={cn(
-                    'mt-1 whitespace-nowrap text-2xl font-bold',
+                    'mt-1 text-2xl font-bold whitespace-nowrap',
                     totals.balance >= 0 ? 'text-emerald-600' : 'text-rose-600'
                   )}
                 >

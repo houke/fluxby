@@ -326,7 +326,7 @@ export const CategoryFilter = memo(function CategoryFilter({
         {/* Sticky Search */}
         <div className='sticky top-0 z-10 border-b bg-popover p-2'>
           <div className='relative'>
-            <Search className='absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
+            <Search className='absolute top-1/2 left-2 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
             <Input
               placeholder={t.search}
               value={search}
@@ -572,7 +572,7 @@ export const AddressBookFilter = memo(function AddressBookFilter({
         {/* Sticky Search */}
         <div className='sticky top-0 z-10 border-b bg-popover p-2'>
           <div className='relative'>
-            <Search className='absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
+            <Search className='absolute top-1/2 left-2 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
             <Input
               placeholder={t.search}
               value={search}

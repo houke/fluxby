@@ -107,7 +107,7 @@ export function LockScreen({
   };
 
   return (
-    <div className='bg-app-gradient flex min-h-screen flex-col items-center justify-start p-4 pt-16 md:justify-center md:pt-0'>
+    <div className='flex min-h-screen flex-col items-center justify-start p-4 pt-16 bg-app-gradient md:justify-center md:pt-0'>
       <div className='w-full max-w-md duration-500 animate-in fade-in zoom-in'>
         <Card className='glass-morphism border-white/20 bg-white/70 shadow-2xl backdrop-blur-xl dark:bg-gray-900/80'>
           <CardHeader className='text-center'>
@@ -172,7 +172,7 @@ export function LockScreen({
                   <button
                     type='button'
                     onClick={() => setShowPassword(!showPassword)}
-                    className='absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground'
+                    className='absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground'
                   >
                     {showPassword ? (
                       <EyeOff className='h-5 w-5' />

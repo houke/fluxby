@@ -51,10 +51,10 @@ function Calendar({
         nav: 'flex items-center gap-1',
         // align the nav arrows with the month caption (top-aligned)
         button_previous: cn(
-          'absolute left-1 top-1 z-10 flex h-7 w-7 items-center justify-center rounded-md border bg-transparent p-0 opacity-50 hover:opacity-100'
+          'absolute top-1 left-1 z-10 flex h-7 w-7 items-center justify-center rounded-md border bg-transparent p-0 opacity-50 hover:opacity-100'
         ),
         button_next: cn(
-          'absolute right-1 top-1 z-10 flex h-7 w-7 items-center justify-center rounded-md border bg-transparent p-0 opacity-50 hover:opacity-100'
+          'absolute top-1 right-1 z-10 flex h-7 w-7 items-center justify-center rounded-md border bg-transparent p-0 opacity-50 hover:opacity-100'
         ),
         month_grid: 'w-full border-collapse',
         weekdays: 'flex',

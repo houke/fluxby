@@ -89,7 +89,7 @@ export function ProfileSwitcher() {
             <span className='text-sm font-medium transition-colors group-hover:text-purple-600'>
               {activeProfile.name}
             </span>
-            <span className='text-xs capitalize text-muted-foreground'>
+            <span className='text-xs text-muted-foreground capitalize'>
               {activeProfile.type}
             </span>
           </div>
@@ -124,7 +124,7 @@ export function ProfileSwitcher() {
           </div>
           <div className='flex flex-col'>
             <span className='font-medium'>{activeProfile.name}</span>
-            <span className='text-xs capitalize text-muted-foreground'>
+            <span className='text-xs text-muted-foreground capitalize'>
               {activeProfile.type}
             </span>
           </div>

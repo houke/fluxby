@@ -35,7 +35,7 @@ export default function CodeBlock({
         </pre>
         <button
           onClick={handleCopy}
-          className='absolute right-2 top-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 transition-colors hover:bg-gray-600'
+          className='absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 transition-colors hover:bg-gray-600'
         >
           {copied ? '✓ Copied!' : 'Copy'}
         </button>

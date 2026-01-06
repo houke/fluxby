@@ -267,10 +267,10 @@ const Hero = () => {
   };
 
   return (
-    <section className='gradient-bg relative flex min-h-screen items-center justify-center overflow-hidden pb-12 pt-24 lg:py-0'>
+    <section className='gradient-bg relative flex min-h-screen items-center justify-center overflow-hidden pt-32 pb-12'>
       {/* Header with language selector */}
-      <header className='absolute left-0 right-0 top-0 z-30 px-6 py-4'>
-        <div className='container mx-auto flex items-center justify-between'>
+      <header className='absolute top-0 right-0 left-0 z-30 py-4'>
+        <div className='container mx-auto flex items-center justify-between px-6'>
           <Link
             to='/'
             className='hover:text-fluxby-light text-2xl font-black text-white transition-colors'
@@ -438,7 +438,7 @@ const Hero = () => {
         />
         {/* Extra bokeh for depth */}
         <div
-          className='opacity-28 bokeh-blur-pulse absolute h-28 w-28 rounded-full'
+          className='bokeh-blur-pulse absolute h-28 w-28 rounded-full opacity-28'
           style={{
             background:
               'radial-gradient(circle, rgba(124,58,237,0.9) 0%, transparent 70%)',
@@ -535,11 +535,11 @@ const Hero = () => {
         />
       </div>
 
-      <div className='container relative z-10 mx-auto px-4 text-center'>
+      <div className='relative z-10 container mx-auto px-6 text-center'>
         <div className='flex flex-col items-center justify-between gap-12 lg:flex-row'>
           {/* Left side - Text content */}
           <div className='flex-1 text-left lg:text-left'>
-            <h1 className='mb-6 text-2xl font-black leading-tight text-white sm:text-4xl lg:text-6xl'>
+            <h1 className='mb-6 text-2xl leading-tight font-black text-white sm:text-4xl lg:text-6xl'>
               {t.hero.title} <span className='text-fluxby-light'>Fluxby</span>,{' '}
               <span className='text-white'>{t.hero.subtitle}</span>
             </h1>

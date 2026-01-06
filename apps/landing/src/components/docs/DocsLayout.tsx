@@ -17,12 +17,12 @@ export default function DocsLayout() {
       />
       <div className='flex flex-1 flex-col bg-gray-50 dark:bg-gray-900'>
         {/* Top bar */}
-        <header className='sticky top-0 z-10 flex items-center justify-between border-b border-gray-200 bg-white px-4 py-4 dark:border-gray-700 dark:bg-gray-800 lg:px-8'>
+        <header className='sticky top-0 z-10 flex items-center justify-between border-b border-gray-200 bg-white px-4 py-4 lg:px-8 dark:border-gray-700 dark:bg-gray-800'>
           <div className='flex items-center gap-4'>
             {/* Mobile menu button */}
             <button
               onClick={() => setIsMobileMenuOpen(true)}
-              className='mr-2 rounded-lg p-2 text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700 lg:hidden'
+              className='mr-2 rounded-lg p-2 text-gray-600 hover:bg-gray-100 lg:hidden dark:text-gray-400 dark:hover:bg-gray-700'
               aria-label='Open menu'
             >
               <svg

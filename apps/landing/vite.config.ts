@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
 
@@ -22,7 +23,7 @@ const packagesPath = resolve(__dirname, '../../packages');
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [tailwindcss(), react()],
   resolve: {
     alias: {
       // In dev mode, resolve @fluxby/* packages to source files for hot-reload
@@ -39,7 +40,9 @@ export default defineConfig({
       '/app': {
         target: 'http://localhost:5178',
         changeOrigin: true,
-        // Don't rewrite the path - the web app expects /app/ base
+        // Enable WebSocket proxy for Vite HMR (Hot Module Replacement)
+        // Without this, CSS updates via HMR won't work when accessing /app through the proxy
+        ws: true,
       },
       // Proxy API calls for developers building their own interfaces
       '/api': {

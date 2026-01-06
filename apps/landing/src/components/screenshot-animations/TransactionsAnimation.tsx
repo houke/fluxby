@@ -157,11 +157,11 @@ export default function TransactionsAnimation({
   return (
     <div className='relative h-full w-full overflow-hidden'>
       {/* Top gradient fade */}
-      <div className='pointer-events-none absolute left-0 right-0 top-0 z-10 h-12 bg-gradient-to-b from-purple-50 to-transparent dark:from-transparent' />
+      <div className='pointer-events-none absolute top-0 right-0 left-0 z-10 h-12 bg-gradient-to-b from-purple-50 to-transparent dark:from-transparent' />
 
       {/* Scrolling transactions */}
       <div
-        className='absolute left-0 right-0'
+        className='absolute right-0 left-0'
         style={{ transform: `translateY(-${scrollY}px)` }}
       >
         {doubledTransactions.map((tx, idx) => (
@@ -207,7 +207,7 @@ export default function TransactionsAnimation({
       </div>
 
       {/* Bottom gradient fade */}
-      <div className='pointer-events-none absolute bottom-0 left-0 right-0 z-10 h-12 bg-gradient-to-t from-indigo-100 to-transparent dark:from-transparent' />
+      <div className='pointer-events-none absolute right-0 bottom-0 left-0 z-10 h-12 bg-gradient-to-t from-indigo-100 to-transparent dark:from-transparent' />
     </div>
   );
 }

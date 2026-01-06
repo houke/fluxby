@@ -1196,7 +1196,7 @@ export default function Import() {
               {t.import.mapHeadersDescription}
             </CardDescription>
           </CardHeader>
-          <CardContent className='px-3 pb-3 pt-0 sm:px-6 sm:pb-6 sm:pt-0'>
+          <CardContent className='px-3 pt-0 pb-3 sm:px-6 sm:pt-0 sm:pb-6'>
             <div
               {...getRootProps()}
               className={`cursor-pointer rounded-xl border-2 border-dashed p-12 text-center transition-colors duration-200 ${
@@ -1268,7 +1268,7 @@ export default function Import() {
               {t.import.noHistory}
             </CardDescription>
           </CardHeader>
-          <CardContent className='px-3 pb-3 pt-0 sm:px-6 sm:pb-6 sm:pt-0'>
+          <CardContent className='px-3 pt-0 pb-3 sm:px-6 sm:pt-0 sm:pb-6'>
             {historyLoading ? (
               <div className='py-8 text-center text-muted-foreground'>
                 {t.common.loading}...

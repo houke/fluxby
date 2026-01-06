@@ -62,7 +62,7 @@ export default function Help() {
               {t.help.featuresDescription}
             </CardDescription>
           </CardHeader>
-          <CardContent className='px-3 pb-3 pt-0 sm:px-6 sm:pb-6 sm:pt-0'>
+          <CardContent className='px-3 pt-0 pb-3 sm:px-6 sm:pt-0 sm:pb-6'>
             <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
               {t.help.featureList.map((feature, index) => {
                 const Icon = featureIcons[index];
@@ -102,7 +102,7 @@ export default function Help() {
               {t.help.quickStartDescription}
             </CardDescription>
           </CardHeader>
-          <CardContent className='px-3 pb-3 pt-0 sm:px-6 sm:pb-6 sm:pt-0'>
+          <CardContent className='px-3 pt-0 pb-3 sm:px-6 sm:pt-0 sm:pb-6'>
             <div className='space-y-6'>
               {t.help.steps.map((step, index) => (
                 <div key={index} className='flex gap-4'>
@@ -131,7 +131,7 @@ export default function Help() {
           <CardHeader className='px-3 py-3 sm:px-6 sm:py-4'>
             <CardTitle className='text-base sm:text-lg'>{t.help.faq}</CardTitle>
           </CardHeader>
-          <CardContent className='px-3 pb-3 pt-0 sm:px-6 sm:pb-6 sm:pt-0'>
+          <CardContent className='px-3 pt-0 pb-3 sm:px-6 sm:pt-0 sm:pb-6'>
             <Accordion type='single' collapsible className='w-full'>
               {t.help.faqs.map((faq, index) => (
                 <AccordionItem key={index} value={`item-${index}`}>
@@ -162,7 +162,7 @@ export default function Help() {
               {t.help.externalLinksDescription}
             </CardDescription>
           </CardHeader>
-          <CardContent className='px-3 pb-3 pt-0 sm:px-6 sm:pb-6 sm:pt-0'>
+          <CardContent className='px-3 pt-0 pb-3 sm:px-6 sm:pt-0 sm:pb-6'>
             <div className='flex flex-col gap-3 sm:flex-row'>
               <a
                 href='/help'

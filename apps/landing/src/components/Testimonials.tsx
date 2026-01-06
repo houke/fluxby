@@ -5,7 +5,7 @@ const Testimonials = () => {
 
   return (
     <section className='section-padding bg-white'>
-      <div className='container mx-auto px-4'>
+      <div className='container mx-auto px-6'>
         <div className='mb-16 text-center'>
           <h2 className='mb-6 text-5xl font-black text-gray-900 lg:text-6xl'>
             {t.testimonials.title}{' '}
@@ -34,7 +34,7 @@ const Testimonials = () => {
               </div>
 
               {/* Quote */}
-              <blockquote className='mb-6 text-lg italic leading-relaxed text-gray-700'>
+              <blockquote className='mb-6 text-lg leading-relaxed text-gray-700 italic'>
                 &ldquo;{testimonial.content}&rdquo;
               </blockquote>
 

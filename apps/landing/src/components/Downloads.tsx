@@ -77,9 +77,9 @@ const Downloads = () => {
       id='downloads'
       className='section-padding bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800'
     >
-      <div className='container mx-auto px-4'>
+      <div className='container mx-auto px-6'>
         <div className='mx-auto mb-12 max-w-3xl text-center md:mb-16'>
-          <h2 className='mb-6 text-4xl font-black text-gray-900 dark:text-white md:text-5xl'>
+          <h2 className='mb-6 text-4xl font-black text-gray-900 md:text-5xl dark:text-white'>
             {t.downloads?.title || (
               <>
                 Download <span className='text-fluxby-purple'>Fluxby</span>
@@ -104,7 +104,7 @@ const Downloads = () => {
                   <div className='flex h-16 w-16 items-center justify-center rounded-2xl bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-300'>
                     <Icon className='h-8 w-8' />
                   </div>
-                  <span className='rounded-full bg-gray-100 px-3 py-1 text-xs font-bold uppercase tracking-wider text-gray-600 dark:bg-gray-700 dark:text-gray-400'>
+                  <span className='rounded-full bg-gray-100 px-3 py-1 text-xs font-bold tracking-wider text-gray-600 uppercase dark:bg-gray-700 dark:text-gray-400'>
                     {platform.downloads[0].type}
                   </span>
                 </div>

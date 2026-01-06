@@ -941,7 +941,7 @@ export const RuleModal = memo(function RuleModal({
                                 ?.name || '...'}
                             </span>
                           ) : (
-                            <span className='text-xs italic text-muted-foreground'>
+                            <span className='text-xs text-muted-foreground italic'>
                               {t.common?.none || 'Geen'}
                             </span>
                           )}

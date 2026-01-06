@@ -144,7 +144,7 @@ export default function ImportAnimation({ isVisible }: { isVisible: boolean }) {
 
         {/* Progress bar */}
         {phase === 'processing' && (
-          <div className='absolute bottom-4 left-4 right-4'>
+          <div className='absolute right-4 bottom-4 left-4'>
             <div className='mb-1 flex justify-between text-xs text-gray-500 dark:text-white/60'>
               <span>{anim?.processing || 'Processing...'}</span>
               <span>{Math.round(processProgress)}%</span>

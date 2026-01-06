@@ -158,7 +158,7 @@ export default function DashboardAnimation({
 
       {/* Active Amount Display */}
       <div
-        className='absolute right-3 top-3 rounded-lg px-3 py-1.5 transition-all duration-300'
+        className='absolute top-3 right-3 rounded-lg px-3 py-1.5 transition-all duration-300'
         style={{ backgroundColor: activeCat.color }}
       >
         <span className='text-sm font-semibold text-white'>

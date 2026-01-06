@@ -274,7 +274,7 @@ export const TransactionRowBadges = memo(function TransactionRowBadges({
                 <div key={parent.id}>
                   <div className='flex items-center gap-2 py-1.5'>
                     <div className='h-px flex-1 border-t border-dotted border-muted-foreground/30' />
-                    <span className='whitespace-nowrap text-xs text-muted-foreground'>
+                    <span className='text-xs whitespace-nowrap text-muted-foreground'>
                       {parent.name}
                     </span>
                     <div className='h-px flex-1 border-t border-dotted border-muted-foreground/30' />

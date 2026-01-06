@@ -301,7 +301,7 @@ export const TransactionRow = memo(function TransactionRow({
                             <Button
                               size='sm'
                               variant='ghost'
-                              className='absolute right-1 top-1/2 h-6 w-6 -translate-y-1/2 rounded-md p-0 text-muted-foreground hover:bg-purple-600 hover:text-white'
+                              className='absolute top-1/2 right-1 h-6 w-6 -translate-y-1/2 rounded-md p-0 text-muted-foreground hover:bg-purple-600 hover:text-white'
                               onClick={onResetLabel}
                             >
                               <RotateCcw className='h-3.5 w-3.5' />
@@ -373,7 +373,7 @@ export const TransactionRow = memo(function TransactionRow({
                           <Info className='h-4 w-4' />
                         </span>
                       </TooltipTrigger>
-                      <TooltipContent className='max-w-xs whitespace-normal break-words'>
+                      <TooltipContent className='max-w-xs break-words whitespace-normal'>
                         <div className='space-y-1 text-sm'>
                           {tx.description && (
                             <p>
@@ -429,7 +429,7 @@ export const TransactionRow = memo(function TransactionRow({
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <button
-                          className='flex-shrink-0 rounded p-1 text-muted-foreground opacity-0 transition-colors hover:bg-muted focus:opacity-100 group-hover:opacity-100'
+                          className='flex-shrink-0 rounded p-1 text-muted-foreground opacity-0 transition-colors group-hover:opacity-100 hover:bg-muted focus:opacity-100'
                           onClick={(e) => {
                             e.stopPropagation();
                             onStartLabelEdit(tx);
@@ -543,7 +543,7 @@ export const TransactionRow = memo(function TransactionRow({
                             <div key={parent.id}>
                               <div className='flex items-center gap-2 py-1.5'>
                                 <div className='h-px flex-1 border-t border-dotted border-muted-foreground/30' />
-                                <span className='whitespace-nowrap text-xs text-muted-foreground'>
+                                <span className='text-xs whitespace-nowrap text-muted-foreground'>
                                   {parent.name}
                                 </span>
                                 <div className='h-px flex-1 border-t border-dotted border-muted-foreground/30' />

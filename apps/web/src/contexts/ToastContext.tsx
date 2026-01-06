@@ -58,7 +58,7 @@ function ToastItem({
       aria-live={toast.variant === 'error' ? 'assertive' : 'polite'}
     >
       <Icon className={cn('mt-0.5 h-5 w-5 flex-shrink-0', iconColor)} />
-      <span className={cn('flex-1 break-words text-sm', textColor)}>
+      <span className={cn('flex-1 text-sm break-words', textColor)}>
         {toast.message}
       </span>
       <button
@@ -165,7 +165,7 @@ export function ToastProvider({ children }: ToastProviderProps) {
       {/* Toast Container - Fixed position in top-right */}
       {toasts.length > 0 && (
         <div
-          className='pointer-events-none fixed right-4 top-4 z-[100] flex flex-col gap-2'
+          className='pointer-events-none fixed top-4 right-4 z-[100] flex flex-col gap-2'
           aria-label='Notifications'
         >
           {toasts.map((toast) => (

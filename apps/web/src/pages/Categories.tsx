@@ -958,7 +958,7 @@ export default function Categories() {
                   <Button
                     variant='ghost'
                     size='icon'
-                    className='h-7 w-7 opacity-0 transition-opacity hover:bg-purple-600 hover:text-white group-hover:opacity-100'
+                    className='h-7 w-7 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-purple-600 hover:text-white'
                     onClick={() => startEditing(sub)}
                   >
                     <Pencil className='h-3.5 w-3.5' />
@@ -974,7 +974,7 @@ export default function Categories() {
                   <Button
                     variant='ghost'
                     size='icon'
-                    className='h-7 w-7 opacity-0 transition-opacity hover:bg-red-600 hover:text-white group-hover:opacity-100'
+                    className='h-7 w-7 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-red-600 hover:text-white'
                     onClick={async () => {
                       const isConfirmed = await confirm({
                         title: t.categories.deleteCategory || 'Delete category',
@@ -1409,7 +1409,7 @@ export default function Categories() {
           <CardContent className='p-4'>
             <div className='flex flex-col gap-4'>
               <div className='relative flex-1'>
-                <Search className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
+                <Search className='absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
                 <Input
                   placeholder={
                     t.categories.searchPlaceholder || 'Search categories...'
@@ -1444,7 +1444,7 @@ export default function Categories() {
                       key={option.key}
                       onClick={() => setSortBy(option.key)}
                       className={cn(
-                        'relative z-10 whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-medium transition-colors',
+                        'relative z-10 rounded-md px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-colors',
                         sortBy === option.key
                           ? 'text-white'
                           : 'text-muted-foreground hover:text-foreground'
@@ -1475,7 +1475,7 @@ export default function Categories() {
               <h3 className='text-lg font-medium text-muted-foreground'>
                 {t.categories.noCategories}
               </h3>
-              <p className='mb-6 mt-1 text-sm text-muted-foreground'>
+              <p className='mt-1 mb-6 text-sm text-muted-foreground'>
                 {t.categories.createFirst}
               </p>
               <Button

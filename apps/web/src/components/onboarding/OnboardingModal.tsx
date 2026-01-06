@@ -497,12 +497,12 @@ export function OnboardingModal({
         style={modalPosition.style}
       >
         {/* Header */}
-        <div className='relative flex flex-col items-center px-4 pb-1 pt-3'>
+        <div className='relative flex flex-col items-center px-4 pt-3 pb-1'>
           {/* Skip button - always show if onSkip is available (onboarding is always dismissable now) */}
           {!isLastGlobalStep && onSkip && (
             <button
               onClick={handleClose}
-              className='absolute right-2 top-2 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground'
+              className='absolute top-2 right-2 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground'
               title={language === 'nl' ? 'Overslaan' : 'Skip'}
             >
               <X className='h-4 w-4' />
@@ -547,7 +547,7 @@ export function OnboardingModal({
               </h2>
 
               {/* Step Content - Dynamic for next steps when only Demo profile */}
-              <p className='mt-4 whitespace-pre-line text-center text-muted-foreground'>
+              <p className='mt-4 text-center whitespace-pre-line text-muted-foreground'>
                 {currentStep.id === 'completion-next-steps' &&
                 hasOnlyDemoProfile
                   ? language === 'nl'
