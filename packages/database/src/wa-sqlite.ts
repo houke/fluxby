@@ -242,7 +242,7 @@ export class Database implements DatabaseConnection {
             cachedModule = null;
             cachedSqlite3 = null;
             cachedDbHandle = null;
-            cachedVfsName = null;
+            cachedVfsName = undefined;
             vfsRegistered = false;
             migrationCompleted = false;
 
