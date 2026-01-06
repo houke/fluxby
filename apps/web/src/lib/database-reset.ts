@@ -10,12 +10,65 @@ import {
   clearSettingsCache,
   writeToOPFSWithCache,
 } from '@fluxby/database';
+import { isRunningInTauri } from './tauri-bridge';
+
+/**
+ * Clear Tauri database files
+ * Uses Tauri FS plugin to delete database from AppLocalData
+ */
+async function clearTauriDatabase(): Promise<void> {
+  try {
+    const fsModule = await import('@tauri-apps/plugin-fs');
+    const pathModule = await import('@tauri-apps/api/path');
+
+    const appDir = await pathModule.appLocalDataDir();
+    const fluxbyDir = await pathModule.join(appDir, 'fluxby');
+
+    // Check if fluxby directory exists
+    const dirExists = await fsModule.exists(fluxbyDir);
+    if (!dirExists) {
+      // eslint-disable-next-line no-console
+      console.log('Tauri fluxby directory does not exist, nothing to clear');
+      return;
+    }
+
+    // Delete the entire fluxby directory (contains database and any other files)
+    try {
+      await fsModule.remove(fluxbyDir, { recursive: true });
+      // eslint-disable-next-line no-console
+      console.log(`Deleted Tauri directory: ${fluxbyDir}`);
+    } catch (e) {
+      console.warn(`Failed to delete Tauri directory ${fluxbyDir}:`, e);
+      // Try to delete just the database file as fallback
+      try {
+        const dbPath = await pathModule.join(fluxbyDir, 'fluxby.db');
+        await fsModule.remove(dbPath);
+        // eslint-disable-next-line no-console
+        console.log(`Deleted Tauri database file: ${dbPath}`);
+      } catch (dbErr) {
+        console.warn('Failed to delete Tauri database file:', dbErr);
+      }
+    }
+
+    // eslint-disable-next-line no-console
+    console.log('Tauri database cleared successfully');
+  } catch (error) {
+    console.error('Failed to clear Tauri database:', error);
+    throw error;
+  }
+}
 
 /**
  * Clear all OPFS database files
  * This will force a complete database re-initialization on next load
  */
 export async function clearOPFSDatabase(): Promise<void> {
+  // If running in Tauri, clear Tauri storage instead
+  if (isRunningInTauri()) {
+    await clearTauriDatabase();
+    return;
+  }
+
   if (typeof navigator === 'undefined' || !('storage' in navigator)) {
     throw new Error('OPFS not available in this environment');
   }

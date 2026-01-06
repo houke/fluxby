@@ -13,8 +13,6 @@ import {
   getDatabaseInstance,
   getDbPromise,
   resetDatabase,
-  clearAllOPFSSettings,
-  clearSettingsCache,
   type Database,
 } from '@fluxby/database';
 import { Loader2, RefreshCw, AlertCircle } from 'lucide-react';
@@ -105,72 +103,8 @@ export function DatabaseProvider({ children }: DatabaseProviderProps) {
     devLog('User requested database reset');
     setInitStatus('Resetting database...');
     try {
-      // Unregister service workers
-      if ('serviceWorker' in navigator) {
-        devLog('Unregistering service workers...');
-        const registrations = await navigator.serviceWorker.getRegistrations();
-        for (const registration of registrations) {
-          await registration.unregister();
-        }
-      }
-
-      // Clear caches
-      if ('caches' in window) {
-        devLog('Clearing caches...');
-        const cacheNames = await caches.keys();
-        for (const cacheName of cacheNames) {
-          await caches.delete(cacheName);
-        }
-      }
-
-      // Delete ALL OPFS data - enumerate and remove everything
-      if ('storage' in navigator && 'getDirectory' in navigator.storage) {
-        devLog('Deleting ALL OPFS data...');
-        try {
-          const root = await navigator.storage.getDirectory();
-          // Enumerate ALL entries in OPFS root and delete them
-          // This ensures we catch any VFS directories regardless of naming
-          const entries: string[] = [];
-          // @ts-expect-error - entries() is not in TypeScript types but exists in browsers
-          for await (const [name] of root.entries()) {
-            entries.push(name);
-          }
-          devLog(`Found ${entries.length} OPFS entries:`, entries);
-          for (const name of entries) {
-            try {
-              await root.removeEntry(name, { recursive: true });
-              devLog(`Deleted OPFS entry: ${name}`);
-            } catch (e) {
-              devLog(`Failed to delete OPFS entry ${name}:`, e);
-            }
-          }
-        } catch (e) {
-          devLog('OPFS deletion error:', e);
-        }
-      }
-
-      // Clear IndexedDB
-      devLog('Clearing IndexedDB...');
-      const databases = await indexedDB.databases();
-      for (const dbInfo of databases) {
-        if (dbInfo.name) {
-          indexedDB.deleteDatabase(dbInfo.name);
-          devLog(`Deleted IndexedDB: ${dbInfo.name}`);
-        }
-      }
-
-      // Clear localStorage and sessionStorage
-      devLog('Clearing localStorage and sessionStorage...');
-      localStorage.clear();
-      sessionStorage.clear();
-
-      // Clear OPFS settings
-      devLog('Clearing OPFS settings...');
-      await clearAllOPFSSettings();
-      clearSettingsCache();
-
-      devLog('Reset complete, reloading...');
-      window.location.reload();
+      // Use the shared reset function which handles both web and Tauri
+      await resetAppAndRestartOnboarding();
     } catch (e) {
       devLog('Reset error:', e);
       // Force reload anyway
