@@ -1,9 +1,11 @@
 import { useLanguage } from '../../contexts/LanguageContext';
 import {
+  ,
   BarChart3,
   BookOpen,
   Brain,
   Building2,
+  Database,
   Download,
   FileSpreadsheet,
   FileText,
@@ -25,6 +27,36 @@ const UpdatesContent = () => {
   const updatesPage = t.legal?.updatesPage;
 
   const releases = [
+        {
+      version: '1.2.0',
+      date: updatesPage?.v120Date || '6 januari 2026',
+      title: updatesPage?.v120Title || 'Release 1.2.0',
+      description:
+        updatesPage?.v120Description ||
+        '7 nieuwe features en 15 bugfixes.',
+      features: [
+        {
+          icon: Brain,
+          title: updatesPage?.v120F1Title || 'Diverse verbeteringen',
+          description: updatesPage?.v120F1Desc || '4 nieuwe features. Zie changelog voor details.',
+        },
+        {
+          icon: FileText,
+          title: updatesPage?.v120F2Title || 'Landingspagina verbeteringen',
+          description: updatesPage?.v120F2Desc || '2 nieuwe features. Zie changelog voor details.',
+        },
+        {
+          icon: Database,
+          title: updatesPage?.v120F3Title || 'Add sync database adapter for P2P synchronization',
+          description: updatesPage?.v120F3Desc || 'Nieuwe functionaliteit toegevoegd.',
+        },
+        {
+          icon: Wrench,
+          title: updatesPage?.v120F4Title || 'Bugfixes',
+          description: updatesPage?.v120F4Desc || '15 bugs opgelost. Zie changelog voor details.',
+        },
+      ],
+    },
     {
       version: '1.1.0',
       date: updatesPage?.v110Date || '5 januari 2026',

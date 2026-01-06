@@ -1,5 +1,60 @@
 # Changelog
 
+## v1.2.0
+
+**Release Date:** 2026-01-06
+
+### Features
+
+- migrate to Tailwind CSS v4 with Oxide engine
+- **landing:** add TypeScript declaration for __APP_VERSION__
+- **landing:** add version badge next to Fluxby in footer
+- sync all package.json versions with release tag
+- display app version in settings
+- update release script to sync Cargo.toml version
+- **database:** add sync database adapter for P2P synchronization
+
+### Bug Fixes
+
+- **web:** add TypeScript types to Vite config middleware
+- **database:** fix TypeScript error - use undefined instead of null
+- **tauri:** fix dev server URL and port configuration
+- **tauri:** fix routing and 404 page for Tauri environment
+- **database:** auto-recover from corrupted IndexedDB in Tauri
+- **tauri:** add debug logging and error boundary for blank screen issue
+- **web:** prevent redirect loop after initial setup by removing duplicate navigation
+- **tauri:** use localStorage fallback for settings in Tauri
+- **landing:** enable WebSocket proxy for Vite HMR and fix lint warnings
+- **landing:** fix sidebar height, notice styling, and missing EN translations
+- **database:** use IndexedDB VFS for Tauri instead of OPFS
+- **web:** add Tauri database reset support
+- **tauri:** add FS permissions via capabilities for Tauri 2
+- **tauri:** fix blank screen issue with relative base path
+- update Tauri version to 1.1.0
+
+### Documentation
+
+- add LLM contribution guidelines
+
+### Styles
+
+- format JSON files with multi-line arrays
+- **landing:** fix global section padding to align with header
+- **landing:** fix layout alignment and header overlap
+
+### Chores
+
+- **deps:** upgrade major dependencies
+- **dx:** enable zero-build dev mode for fresh clones
+- update all package.json versions to 1.1.0
+- update Tauri configuration and documentation
+- **release:** add build verification step and fix build errors
+
+### Other Changes
+
+- Fix Tauri 2 config: update plugins.fs and remove invalid plugin configs
+- Revert signingIdentity to null - requires user certificate
+
 ## v1.1.0
 
 **Release Date:** 2026-01-05

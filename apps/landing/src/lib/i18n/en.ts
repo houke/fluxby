@@ -1707,6 +1707,17 @@ export const en: LandingTranslationKeys = {
     updatesPage: {
       intro:
         "See what's new in Fluxby. Here you'll find all updates and new features.",
+      v120Date: 'January 6, 2026',
+      v120Title: 'Release 1.2.0',
+      v120Description: '7 new features and 15 bug fixes.',
+      v120F1Title: 'Various improvements',
+      v120F1Desc: '4 new features. See changelog for details.',
+      v120F2Title: 'Landing page improvements',
+      v120F2Desc: '2 new features. See changelog for details.',
+      v120F3Title: 'Add sync database adapter for P2P synchronization',
+      v120F3Desc: 'New functionality added.',
+      v120F4Title: 'Bug fixes',
+      v120F4Desc: '15 bugs fixed. See changelog for details.',
       v110Date: 'January 5, 2026',
       v110Title: 'Release 1.1.0',
       v110Description: '7 new features and 10 bug fixes.',
