@@ -4,9 +4,13 @@ import path from 'path';
 
 // For GitHub Pages: VITE_BASE_URL is set during CI
 // For local development: use '/app/'
-const base = process.env.VITE_BASE_URL
-  ? `${process.env.VITE_BASE_URL}app/`
-  : '/app/';
+// For Tauri: use relative paths
+const isTauri = process.env.TAURI_ENV_PLATFORM !== undefined;
+const base = isTauri
+  ? ''
+  : process.env.VITE_BASE_URL
+    ? `${process.env.VITE_BASE_URL}app/`
+    : '/app/';
 
 // In dev mode, resolve workspace packages to their source files
 // This allows hot-reload without needing to rebuild packages

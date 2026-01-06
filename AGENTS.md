@@ -47,12 +47,12 @@ npm run dev
 
 The monorepo has three internal packages (`@fluxby/shared`, `@fluxby/database`, `@fluxby/core`). These are resolved differently depending on the context:
 
-| Context | Resolution | Why |
-|---------|------------|-----|
-| `npm run dev` | Source files (`.ts`) | Vite aliases point to `packages/*/src/` |
-| `npm run test:run` | Source files (`.ts`) | Vitest aliases point to `packages/*/src/` |
-| `npm run build` | Compiled dist (`.js`) | Uses standard Node.js resolution |
-| `npm run typecheck` | Compiled dist (`.d.ts`) | TypeScript needs declaration files |
+| Context             | Resolution              | Why                                       |
+| ------------------- | ----------------------- | ----------------------------------------- |
+| `npm run dev`       | Source files (`.ts`)    | Vite aliases point to `packages/*/src/`   |
+| `npm run test:run`  | Source files (`.ts`)    | Vitest aliases point to `packages/*/src/` |
+| `npm run build`     | Compiled dist (`.js`)   | Uses standard Node.js resolution          |
+| `npm run typecheck` | Compiled dist (`.d.ts`) | TypeScript needs declaration files        |
 
 ### When to Build Packages
 
