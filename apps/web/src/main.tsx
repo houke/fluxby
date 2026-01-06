@@ -45,23 +45,55 @@ const queryClient = new QueryClient({
 
 const rootElement = document.getElementById('root');
 
+// Show error on screen for debugging (especially in Tauri where console isn't visible)
+function showErrorOnScreen(message: string, error: unknown) {
+  const errorDiv = document.createElement('div');
+  errorDiv.style.cssText =
+    'position:fixed;top:0;left:0;right:0;bottom:0;background:#1a1a2e;color:#fff;padding:40px;font-family:monospace;white-space:pre-wrap;overflow:auto;z-index:99999';
+  errorDiv.innerHTML = `<h1 style="color:#f87171">App Initialization Error</h1><p>${message}</p><pre style="background:#0f0f1a;padding:20px;border-radius:8px;margin-top:20px">${error instanceof Error ? error.stack || error.message : String(error)}</pre>`;
+  document.body.appendChild(errorDiv);
+}
+
 // Initialize OPFS settings cache before rendering
 // This allows synchronous access to settings during initial render
 async function initializeApp() {
   try {
+    // Log environment info
+    const isTauri = '__TAURI__' in window;
+    // eslint-disable-next-line no-console
+    console.log('[Init] Environment:', {
+      isTauri,
+      userAgent: navigator.userAgent,
+    });
+
     await initializeSettingsCache();
+    // eslint-disable-next-line no-console
+    console.log('[Init] Settings cache initialized');
   } catch (error) {
-    // OPFS might not be available (e.g., in some browsers)
+    // OPFS might not be available (e.g., in some browsers or Tauri)
     console.warn('Failed to initialize OPFS settings cache:', error);
+    // Don't show error - this is expected in Tauri
   }
 
   if (rootElement) {
-    createRoot(rootElement).render(
-      <StrictMode>
-        <QueryClientProvider client={queryClient}>
-          <App />
-        </QueryClientProvider>
-      </StrictMode>
+    try {
+      createRoot(rootElement).render(
+        <StrictMode>
+          <QueryClientProvider client={queryClient}>
+            <App />
+          </QueryClientProvider>
+        </StrictMode>
+      );
+      // eslint-disable-next-line no-console
+      console.log('[Init] React app rendered');
+    } catch (error) {
+      console.error('[Init] Failed to render React app:', error);
+      showErrorOnScreen('Failed to render React app', error);
+    }
+  } else {
+    showErrorOnScreen(
+      'Root element not found',
+      new Error('document.getElementById("root") returned null')
     );
   }
 }

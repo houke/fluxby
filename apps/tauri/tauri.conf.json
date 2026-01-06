@@ -6,7 +6,7 @@
   "build": {
     "frontendDist": "../web/dist",
     "devUrl": "http://localhost:5177/app/",
-    "beforeDevCommand": "npm run dev:web --prefix ../..",
+    "beforeDevCommand": "npm run dev --prefix ../..",
     "beforeBuildCommand": "npm run build:web --prefix ../.."
   },
   "app": {
@@ -22,7 +22,8 @@
         "resizable": true,
         "fullscreen": false,
         "decorations": true,
-        "transparent": false
+        "transparent": false,
+        "devtools": true
       }
     ],
     "security": {

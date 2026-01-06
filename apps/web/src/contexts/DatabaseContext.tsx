@@ -32,18 +32,17 @@ import {
 } from '@/components/ui/dialog';
 import { resetAppAndRestartOnboarding } from '@/lib/database-reset';
 
-// Check if we're in development mode
+// Check if we're in development mode OR Tauri (always log in Tauri for debugging)
 const isDev =
   typeof window !== 'undefined' &&
   (window.location.hostname === 'localhost' ||
-    window.location.hostname === '127.0.0.1');
+    window.location.hostname === '127.0.0.1' ||
+    '__TAURI__' in window);
 
-// Dev mode logger
+// Dev mode logger - always log in Tauri for debugging
 function devLog(message: string, ...args: unknown[]) {
-  if (isDev) {
-    // eslint-disable-next-line no-console
-    console.log(`[DB Init] ${message}`, ...args);
-  }
+  // eslint-disable-next-line no-console
+  console.log(`[DB Init] ${message}`, ...args);
 }
 
 interface DatabaseContextType {
@@ -251,6 +250,9 @@ export function DatabaseProvider({ children }: DatabaseProviderProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isEncryptionEnabled, isUnlocked]);
 
+  // Check if we're in Tauri
+  const isTauri = typeof window !== 'undefined' && '__TAURI__' in window;
+
   // Show loading screen while database initializes
   if (isLoading) {
     return (
@@ -272,10 +274,17 @@ export function DatabaseProvider({ children }: DatabaseProviderProps) {
               {t.common?.initializingDatabase || 'Initializing database...'}
             </p>
 
-            {/* Dev mode: Show init status */}
-            {isDev && (
+            {/* Always show init status in Tauri or dev mode */}
+            {(isDev || isTauri) && (
               <p className='mt-2 font-mono text-xs text-muted-foreground'>
                 {initStatus}
+              </p>
+            )}
+
+            {/* Show environment info in Tauri */}
+            {isTauri && (
+              <p className='mt-1 font-mono text-xs text-purple-500'>
+                Environment: Tauri
               </p>
             )}
 

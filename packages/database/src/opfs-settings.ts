@@ -10,11 +10,29 @@
 const SETTINGS_DIR = 'fluxby-settings';
 
 /**
+ * Check if we're running in Tauri
+ */
+function isTauriEnvironment(): boolean {
+  return typeof window !== 'undefined' && '__TAURI__' in window;
+}
+
+/**
+ * Check if OPFS is available
+ */
+function isOPFSAvailable(): boolean {
+  return (
+    typeof navigator !== 'undefined' &&
+    'storage' in navigator &&
+    typeof navigator.storage.getDirectory === 'function'
+  );
+}
+
+/**
  * Get the OPFS settings directory handle
  * Creates the directory if it doesn't exist
  */
 async function getSettingsDirectory(): Promise<FileSystemDirectoryHandle> {
-  if (typeof navigator === 'undefined' || !('storage' in navigator)) {
+  if (!isOPFSAvailable()) {
     throw new Error('OPFS not available in this environment');
   }
 
@@ -23,11 +41,22 @@ async function getSettingsDirectory(): Promise<FileSystemDirectoryHandle> {
 }
 
 /**
- * Write a value to OPFS settings storage
+ * Write a value to OPFS settings storage (or localStorage in Tauri)
  * @param key - The setting key (used as filename)
  * @param value - The value to store (will be JSON serialized)
  */
 export async function writeToOPFS<T>(key: string, value: T): Promise<void> {
+  // In Tauri or when OPFS is unavailable, use localStorage
+  if (isTauriEnvironment() || !isOPFSAvailable()) {
+    try {
+      localStorage.setItem(`opfs-${key}`, JSON.stringify(value));
+      return;
+    } catch (error) {
+      console.error(`Failed to write localStorage setting "${key}":`, error);
+      throw error;
+    }
+  }
+
   try {
     const dir = await getSettingsDirectory();
     const filename = `${key}.json`;
@@ -43,11 +72,22 @@ export async function writeToOPFS<T>(key: string, value: T): Promise<void> {
 }
 
 /**
- * Read a value from OPFS settings storage
+ * Read a value from OPFS settings storage (or localStorage in Tauri)
  * @param key - The setting key (used as filename)
  * @returns The stored value, or null if not found
  */
 export async function readFromOPFS<T>(key: string): Promise<T | null> {
+  // In Tauri or when OPFS is unavailable, use localStorage
+  if (isTauriEnvironment() || !isOPFSAvailable()) {
+    try {
+      const stored = localStorage.getItem(`opfs-${key}`);
+      return stored ? (JSON.parse(stored) as T) : null;
+    } catch (error) {
+      console.error(`Failed to read localStorage setting "${key}":`, error);
+      return null;
+    }
+  }
+
   try {
     const dir = await getSettingsDirectory();
     const filename = `${key}.json`;
@@ -70,10 +110,21 @@ export async function readFromOPFS<T>(key: string): Promise<T | null> {
 }
 
 /**
- * Delete a value from OPFS settings storage
+ * Delete a value from OPFS settings storage (or localStorage in Tauri)
  * @param key - The setting key (used as filename)
  */
 export async function deleteFromOPFS(key: string): Promise<void> {
+  // In Tauri or when OPFS is unavailable, use localStorage
+  if (isTauriEnvironment() || !isOPFSAvailable()) {
+    try {
+      localStorage.removeItem(`opfs-${key}`);
+      return;
+    } catch (error) {
+      console.error(`Failed to delete localStorage setting "${key}":`, error);
+      return;
+    }
+  }
+
   try {
     const dir = await getSettingsDirectory();
     const filename = `${key}.json`;
@@ -93,10 +144,15 @@ export async function deleteFromOPFS(key: string): Promise<void> {
 }
 
 /**
- * Check if a setting exists in OPFS storage
+ * Check if a setting exists in OPFS storage (or localStorage in Tauri)
  * @param key - The setting key (used as filename)
  */
 export async function existsInOPFS(key: string): Promise<boolean> {
+  // In Tauri or when OPFS is unavailable, use localStorage
+  if (isTauriEnvironment() || !isOPFSAvailable()) {
+    return localStorage.getItem(`opfs-${key}`) !== null;
+  }
+
   try {
     const dir = await getSettingsDirectory();
     const filename = `${key}.json`;
@@ -108,12 +164,27 @@ export async function existsInOPFS(key: string): Promise<boolean> {
 }
 
 /**
- * Clear all OPFS settings
+ * Clear all OPFS settings (or localStorage settings in Tauri)
  * Used during app reset/data clearing
  */
 export async function clearAllOPFSSettings(): Promise<void> {
+  // In Tauri or when OPFS is unavailable, clear localStorage items
+  if (isTauriEnvironment() || !isOPFSAvailable()) {
+    const keysToRemove: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key?.startsWith('opfs-')) {
+        keysToRemove.push(key);
+      }
+    }
+    keysToRemove.forEach((key) => localStorage.removeItem(key));
+    // eslint-disable-next-line no-console
+    console.log('Cleared all localStorage settings (Tauri mode)');
+    return;
+  }
+
   try {
-    if (typeof navigator === 'undefined' || !('storage' in navigator)) {
+    if (!isOPFSAvailable()) {
       return;
     }
 
@@ -141,10 +212,22 @@ export async function clearAllOPFSSettings(): Promise<void> {
 }
 
 /**
- * List all setting keys stored in OPFS
+ * List all setting keys stored in OPFS (or localStorage in Tauri)
  * Useful for debugging
  */
 export async function listOPFSSettings(): Promise<string[]> {
+  // In Tauri or when OPFS is unavailable, list localStorage keys
+  if (isTauriEnvironment() || !isOPFSAvailable()) {
+    const keys: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key?.startsWith('opfs-')) {
+        keys.push(key.replace('opfs-', ''));
+      }
+    }
+    return keys;
+  }
+
   try {
     const dir = await getSettingsDirectory();
     const keys: string[] = [];
