@@ -5,8 +5,8 @@
   "identifier": "com.fluxby.desktop",
   "build": {
     "frontendDist": "../web/dist",
-    "devUrl": "http://localhost:5177/app/",
-    "beforeDevCommand": "npm run dev --prefix ../..",
+    "devUrl": "http://localhost:5178/",
+    "beforeDevCommand": "npm run dev:web --prefix ../..",
     "beforeBuildCommand": "npm run build:web --prefix ../.."
   },
   "app": {

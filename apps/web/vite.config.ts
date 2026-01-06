@@ -22,19 +22,24 @@ export default defineConfig({
   plugins: [
     tailwindcss(),
     react(),
-    {
-      name: 'redirect-root-app',
-      configureServer(server) {
-        server.middlewares.use((req, res, next) => {
-          if (req.url === '/app') {
-            res.writeHead(301, { Location: '/app/' });
-            res.end();
-            return;
-          }
-          next();
-        });
-      },
-    },
+    // Only add redirect middleware when not in Tauri mode
+    ...(!isTauri
+      ? [
+          {
+            name: 'redirect-root-app',
+            configureServer(server) {
+              server.middlewares.use((req, res, next) => {
+                if (req.url === '/app') {
+                  res.writeHead(301, { Location: '/app/' });
+                  res.end();
+                  return;
+                }
+                next();
+              });
+            },
+          },
+        ]
+      : []),
   ],
   resolve: {
     alias: {
