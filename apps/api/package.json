@@ -15,7 +15,7 @@
     "@fluxby/shared": "*",
     "better-sqlite3": "^12.5.0",
     "cors": "^2.8.5",
-    "express": "^4.21.2",
+    "express": "^5.2.1",
     "multer": "^2.0.2",
     "papaparse": "^5.4.1",
     "swagger-jsdoc": "^6.2.1",

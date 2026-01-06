@@ -25,7 +25,7 @@ A modern, local-first application for visualizing and analyzing your bank data. 
 
 ```bash
 # Clone the repository
-git clone <repository-url>
+git clone https://github.com/houke/fluxby.git
 cd fluxby
 
 # Install dependencies
