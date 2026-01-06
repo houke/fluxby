@@ -6,6 +6,9 @@ name: Deploy to GitHub Pages
 #   Settings → Pages → Build and deployment → Source: "GitHub Actions"
 # Do NOT use "Deploy from a branch" as that would serve the repository root (including README.md)
 # during the deployment process.
+#
+# SAFETY: If the build fails, the currently deployed site remains unchanged.
+# GitHub Pages deployment is atomic - the new site is only deployed if ALL build steps succeed.
 
 on:
   push:
@@ -46,6 +49,17 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Build packages
+        run: npm run build:packages
+
+      - name: Lint check
+        run: npm run lint
+        continue-on-error: false
+
+      - name: Type check landing page
+        run: npm run typecheck -w apps/landing
+        continue-on-error: false
 
       - name: Build GitHub Pages site
         run: npm run build:pages

@@ -269,100 +269,304 @@ function bundleCommits(commits) {
 }
 
 /**
- * Generate a Dutch title for a commit
+ * Generate a Dutch title for a commit - makes it user-friendly
  */
 function generateTitleNl(commit) {
-  // Capitalize first letter
+  // Try to create a more user-friendly Dutch title from the description
   const desc = commit.description;
-  return desc.charAt(0).toUpperCase() + desc.slice(1);
+  const transformed = transformToUserFriendlyNl(desc);
+  return transformed.charAt(0).toUpperCase() + transformed.slice(1);
 }
 
 /**
- * Generate an English title for a commit
+ * Generate an English title for a commit - makes it user-friendly
  */
 function generateTitleEn(commit) {
   const desc = commit.description;
-  return desc.charAt(0).toUpperCase() + desc.slice(1);
+  const transformed = transformToUserFriendlyEn(desc);
+  return transformed.charAt(0).toUpperCase() + transformed.slice(1);
 }
 
 /**
- * Generate a Dutch scope-based title for bundled commits
+ * Transform a technical commit message to a user-friendly Dutch description
  */
-function generateScopeTitleNl(scope) {
-  const scopeNames = {
-    ui: 'UI verbeteringen',
-    web: 'Web app verbeteringen',
-    api: 'API verbeteringen',
-    landing: 'Landingspagina verbeteringen',
-    database: 'Database verbeteringen',
-    core: 'Core verbeteringen',
+function transformToUserFriendlyNl(message) {
+  // Dictionary of technical terms to Dutch user-friendly translations
+  const technicalToUserNl = {
+    // Common technical actions
+    'add': 'toegevoegd',
+    'implement': 'geïmplementeerd',
+    'fix': 'opgelost',
+    'update': 'bijgewerkt',
+    'improve': 'verbeterd',
+    'refactor': 'verbeterd',
+    'enhance': 'verbeterd',
+    'remove': 'verwijderd',
+    'delete': 'verwijderd',
+    'optimize': 'geoptimaliseerd',
+    'support': 'ondersteuning toegevoegd voor',
+    
+    // Technical terms to user-friendly Dutch
+    'sync': 'synchronisatie',
+    'database': 'database',
+    'api': 'API',
+    'ui': 'interface',
+    'ux': 'gebruikerservaring',
+    'csv': 'CSV',
+    'import': 'importeren',
+    'export': 'exporteren',
+    'filter': 'filter',
+    'search': 'zoeken',
+    'sort': 'sorteren',
+    'pagination': 'bladeren',
+    'validation': 'validatie',
+    'authentication': 'authenticatie',
+    'authorization': 'autorisatie',
+    'encryption': 'versleuteling',
+    'backup': 'backup',
+    'restore': 'herstel',
+    'settings': 'instellingen',
+    'preferences': 'voorkeuren',
+    'notification': 'melding',
+    'alert': 'waarschuwing',
+    'error': 'fout',
+    'warning': 'waarschuwing',
+    'success': 'succes',
+    'loading': 'laden',
+    'performance': 'prestaties',
+    'responsive': 'responsive',
+    'mobile': 'mobiel',
+    'desktop': 'desktop',
+    'dark mode': 'donkere modus',
+    'light mode': 'lichte modus',
+    'theme': 'thema',
+    'layout': 'layout',
+    'component': 'component',
+    'widget': 'widget',
+    'chart': 'grafiek',
+    'graph': 'grafiek',
+    'dashboard': 'dashboard',
+    'analytics': 'analyse',
+    'report': 'rapport',
+    'transaction': 'transactie',
+    'transactions': 'transacties',
+    'category': 'categorie',
+    'categories': 'categorieën',
+    'budget': 'budget',
+    'account': 'rekening',
+    'accounts': 'rekeningen',
+    'contact': 'contact',
+    'contacts': 'contacten',
+    'address book': 'adresboek',
+    'profile': 'profiel',
+    'user': 'gebruiker',
+    'p2p': 'peer-to-peer',
+    'peer': 'apparaat',
+    'device': 'apparaat',
+    'browser': 'browser',
+    'pwa': 'web app',
+    'offline': 'offline',
+    'online': 'online',
+  };
+
+  let result = message.toLowerCase();
+  
+  // Apply translations
+  for (const [tech, user] of Object.entries(technicalToUserNl)) {
+    const regex = new RegExp(`\\b${tech}\\b`, 'gi');
+    result = result.replace(regex, user);
+  }
+
+  // Capitalize first letter
+  result = result.charAt(0).toUpperCase() + result.slice(1);
+
+  return result;
+}
+
+/**
+ * Transform a technical commit message to a user-friendly English description
+ */
+function transformToUserFriendlyEn(message) {
+  // Just capitalize and clean up for English (already user-friendly)
+  let result = message;
+  
+  // Remove common technical prefixes
+  result = result.replace(/^(implement|add|fix|update|improve|refactor|enhance)\s+/i, '');
+  
+  // Capitalize first letter
+  result = result.charAt(0).toUpperCase() + result.slice(1);
+  
+  return result;
+}
+
+/**
+ * Generate a Dutch scope-based title for bundled commits - more creative
+ */
+function generateScopeTitleNl(scope, commits) {
+  // Get a sense of what was done
+  const hasFeatures = commits.some((c) => c.type === 'feat');
+  
+  // More creative scope titles based on what was changed
+  const scopeTitlesCreativeNl = {
+    ui: hasFeatures 
+      ? ['Frisse nieuwe interface', 'Verbeterde gebruikerservaring', 'Interface upgrade'][Math.floor(Math.random() * 3)]
+      : ['Interface verfijningen', 'Visuele verbeteringen'][Math.floor(Math.random() * 2)],
+    web: hasFeatures
+      ? ['Nieuwe web app mogelijkheden', 'Web app uitbreidingen'][Math.floor(Math.random() * 2)]
+      : ['Web app verbeteringen', 'Betere web ervaring'][Math.floor(Math.random() * 2)],
+    api: ['API verbeteringen', 'Backend updates'][Math.floor(Math.random() * 2)],
+    landing: ['Landingspagina verbeteringen', 'Website updates'][Math.floor(Math.random() * 2)],
+    database: hasFeatures
+      ? ['Nieuwe data mogelijkheden', 'Uitgebreide data functionaliteit'][Math.floor(Math.random() * 2)]
+      : ['Database optimalisaties', 'Data verbeteringen'][Math.floor(Math.random() * 2)],
+    core: ['Kern verbeteringen', 'Onder de motorkap'][Math.floor(Math.random() * 2)],
     shared: 'Gedeelde functionaliteit',
-    tauri: 'Desktop app verbeteringen',
-    ci: 'CI/CD verbeteringen',
+    tauri: hasFeatures
+      ? ['Nieuwe desktop functies', 'Desktop app uitbreidingen'][Math.floor(Math.random() * 2)]
+      : ['Desktop app verbeteringen'][0],
+    ci: 'Bouw & deployment verbeteringen',
     release: 'Release verbeteringen',
-    security: 'Beveiligingsverbeteringen',
+    security: ['Beveiligingsupdate', 'Verbeterde beveiliging'][Math.floor(Math.random() * 2)],
     screenshots: 'Screenshot verbeteringen',
-    pwa: 'PWA verbeteringen',
-    mobile: 'Mobiele verbeteringen',
+    pwa: ['Progressive Web App updates', 'Installeerbare app verbeteringen'][Math.floor(Math.random() * 2)],
+    mobile: ['Mobiele verbeteringen', 'Beter op je telefoon'][Math.floor(Math.random() * 2)],
   };
-  return scopeNames[scope.toLowerCase()] || `${scope} verbeteringen`;
+  
+  const title = scopeTitlesCreativeNl[scope.toLowerCase()];
+  return (typeof title === 'string' ? title : title) || `${scope} verbeteringen`;
 }
 
 /**
- * Generate an English scope-based title for bundled commits
+ * Generate an English scope-based title for bundled commits - more creative
  */
-function generateScopeTitleEn(scope) {
-  const scopeNames = {
-    ui: 'UI improvements',
-    web: 'Web app improvements',
-    api: 'API improvements',
-    landing: 'Landing page improvements',
-    database: 'Database improvements',
-    core: 'Core improvements',
+function generateScopeTitleEn(scope, commits) {
+  const hasFeatures = commits.some((c) => c.type === 'feat');
+  
+  const scopeTitlesCreativeEn = {
+    ui: hasFeatures 
+      ? ['Fresh new interface', 'Enhanced user experience', 'Interface upgrade'][Math.floor(Math.random() * 3)]
+      : ['Interface refinements', 'Visual improvements'][Math.floor(Math.random() * 2)],
+    web: hasFeatures
+      ? ['New web app capabilities', 'Web app extensions'][Math.floor(Math.random() * 2)]
+      : ['Web app improvements', 'Better web experience'][Math.floor(Math.random() * 2)],
+    api: ['API improvements', 'Backend updates'][Math.floor(Math.random() * 2)],
+    landing: ['Landing page improvements', 'Website updates'][Math.floor(Math.random() * 2)],
+    database: hasFeatures
+      ? ['New data capabilities', 'Extended data functionality'][Math.floor(Math.random() * 2)]
+      : ['Database optimizations', 'Data improvements'][Math.floor(Math.random() * 2)],
+    core: ['Core improvements', 'Under the hood'][Math.floor(Math.random() * 2)],
     shared: 'Shared functionality',
-    tauri: 'Desktop app improvements',
-    ci: 'CI/CD improvements',
+    tauri: hasFeatures
+      ? ['New desktop features', 'Desktop app extensions'][Math.floor(Math.random() * 2)]
+      : 'Desktop app improvements',
+    ci: 'Build & deployment improvements',
     release: 'Release improvements',
-    security: 'Security improvements',
+    security: ['Security update', 'Enhanced security'][Math.floor(Math.random() * 2)],
     screenshots: 'Screenshot improvements',
-    pwa: 'PWA improvements',
-    mobile: 'Mobile improvements',
+    pwa: ['Progressive Web App updates', 'Installable app improvements'][Math.floor(Math.random() * 2)],
+    mobile: ['Mobile improvements', 'Better on your phone'][Math.floor(Math.random() * 2)],
   };
-  return scopeNames[scope.toLowerCase()] || `${scope} improvements`;
+  
+  const title = scopeTitlesCreativeEn[scope.toLowerCase()];
+  return (typeof title === 'string' ? title : title) || `${scope} improvements`;
 }
 
 /**
- * Generate a Dutch description for a single commit
+ * Generate creative Dutch descriptions for single commits
+ */
+const CREATIVE_DESCRIPTIONS_NL = {
+  feat: [
+    'We hebben iets nieuws voor je! Bekijk de release notes voor alle details.',
+    'Nieuwe functionaliteit waar je iets aan hebt.',
+    'Er is weer wat bijgekomen. Ontdek het zelf!',
+    'Dit maakt Fluxby nog beter.',
+  ],
+  fix: [
+    'Een vervelend probleempje opgelost.',
+    'Dit had niet moeten gebeuren, maar nu is het gefixed!',
+    'Bugs gedood, app verbeterd.',
+    'Kleine fix, groot verschil.',
+  ],
+  perf: [
+    'Fluxby is nu nog sneller!',
+    'Performance boost onder de motorkap.',
+    'Geoptimaliseerd voor een soepelere ervaring.',
+  ],
+  refactor: [
+    'Onder de motorkap verbeterd.',
+    'Code opgeschoond, app nog betrouwbaarder.',
+  ],
+  default: [
+    'Bekijk de release notes op GitHub voor alle details.',
+    'Kleine verbetering, grote impact.',
+  ],
+};
+
+/**
+ * Generate creative English descriptions for single commits
+ */
+const CREATIVE_DESCRIPTIONS_EN = {
+  feat: [
+    "We've got something new for you! Check the release notes for all details.",
+    'New functionality that actually helps.',
+    "There's more to explore. Discover it yourself!",
+    'This makes Fluxby even better.',
+  ],
+  fix: [
+    'An annoying issue has been squashed.',
+    "This shouldn't have happened, but it's fixed now!",
+    'Bugs eliminated, app improved.',
+    'Small fix, big difference.',
+  ],
+  perf: [
+    'Fluxby is now even faster!',
+    'Performance boost under the hood.',
+    'Optimized for a smoother experience.',
+  ],
+  refactor: [
+    'Improved under the hood.',
+    'Code cleaned up, app more reliable.',
+  ],
+  default: [
+    'Check the release notes on GitHub for all details.',
+    'Small improvement, big impact.',
+  ],
+};
+
+/**
+ * Generate a Dutch description for a single commit - more creative
  */
 function generateDescriptionNl(commit) {
-  // For single commits, use the description as-is or a generic message
-  if (commit.type === 'feat') {
-    return `Nieuwe functionaliteit toegevoegd.`;
-  } else if (commit.type === 'fix') {
-    return `Bug opgelost.`;
-  }
-  return `Zie changelog voor details.`;
+  const descriptions = CREATIVE_DESCRIPTIONS_NL[commit.type] || CREATIVE_DESCRIPTIONS_NL.default;
+  return descriptions[Math.floor(Math.random() * descriptions.length)];
 }
 
 /**
- * Generate an English description for a single commit
+ * Generate an English description for a single commit - more creative
  */
 function generateDescriptionEn(commit) {
-  if (commit.type === 'feat') {
-    return `New functionality added.`;
-  } else if (commit.type === 'fix') {
-    return `Bug fixed.`;
-  }
-  return `See changelog for details.`;
+  const descriptions = CREATIVE_DESCRIPTIONS_EN[commit.type] || CREATIVE_DESCRIPTIONS_EN.default;
+  return descriptions[Math.floor(Math.random() * descriptions.length)];
 }
 
 /**
- * Generate a bundled Dutch description from multiple commits
+ * Generate a bundled Dutch description from multiple commits - more creative
  */
 function generateBundledDescriptionNl(commits) {
   const features = commits.filter((c) => c.type === 'feat');
   const fixes = commits.filter((c) => c.type === 'fix');
   const other = commits.filter((c) => c.type !== 'feat' && c.type !== 'fix');
+  
+  // Creative bundled descriptions
+  if (features.length > 3 && fixes.length > 0) {
+    return `Een hele lading nieuwe functies (${features.length}!) en ${fixes.length} fixes. Check de release op GitHub!`;
+  }
+  if (features.length > 3) {
+    return `${features.length} nieuwe mogelijkheden om te ontdekken. Bekijk de release notes!`;
+  }
+  if (fixes.length > 5) {
+    return `We hebben flink opgeruimd: ${fixes.length} bugs de deur uit. Bekijk de release voor details.`;
+  }
 
   const parts = [];
   if (features.length > 0) {
@@ -380,18 +584,29 @@ function generateBundledDescriptionNl(commits) {
   }
 
   if (parts.length === 0) {
-    return 'Zie changelog voor details.';
+    return 'Bekijk de release op GitHub voor alle details.';
   }
-  return parts.join(', ') + '. Zie changelog voor details.';
+  return parts.join(', ') + '. Bekijk de release op GitHub!';
 }
 
 /**
- * Generate a bundled English description from multiple commits
+ * Generate a bundled English description from multiple commits - more creative
  */
 function generateBundledDescriptionEn(commits) {
   const features = commits.filter((c) => c.type === 'feat');
   const fixes = commits.filter((c) => c.type === 'fix');
   const other = commits.filter((c) => c.type !== 'feat' && c.type !== 'fix');
+
+  // Creative bundled descriptions
+  if (features.length > 3 && fixes.length > 0) {
+    return `A whole bunch of new features (${features.length}!) and ${fixes.length} fixes. Check the release on GitHub!`;
+  }
+  if (features.length > 3) {
+    return `${features.length} new capabilities to discover. Check out the release notes!`;
+  }
+  if (fixes.length > 5) {
+    return `We did some spring cleaning: ${fixes.length} bugs squashed. See the release for details.`;
+  }
 
   const parts = [];
   if (features.length > 0) {
@@ -409,9 +624,9 @@ function generateBundledDescriptionEn(commits) {
   }
 
   if (parts.length === 0) {
-    return 'See changelog for details.';
+    return 'Check out the release on GitHub for all details.';
   }
-  return parts.join(', ') + '. See changelog for details.';
+  return parts.join(', ') + '. Check the release on GitHub!';
 }
 
 /**
@@ -628,20 +843,25 @@ function updateUpdatesContent(entry) {
 
   const versionKey = entry.version.replace(/\./g, '');
 
-  // Get all required icons
-  const requiredIcons = getRequiredIcons(entry.bundles);
+  // Get all required icons (always include ExternalLink for the release link)
+  const requiredIcons = [...getRequiredIcons(entry.bundles), 'ExternalLink'];
 
   // Check which icons are already imported
   const importMatch = content.match(/import \{([^}]+)\} from 'lucide-react';/);
   if (importMatch) {
-    const existingIcons = importMatch[1].split(',').map((s) => s.trim());
+    const existingIcons = importMatch[1]
+      .split(',')
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0); // Filter out empty strings
     const missingIcons = requiredIcons.filter(
       (icon) => !existingIcons.includes(icon)
     );
 
     if (missingIcons.length > 0) {
-      // Add missing icons to import
-      const allIcons = [...existingIcons, ...missingIcons].sort();
+      // Add missing icons to import, ensuring no empty strings
+      const allIcons = [...new Set([...existingIcons, ...missingIcons])]
+        .filter((s) => s.length > 0)
+        .sort();
       const newImport = `import {\n  ${allIcons.join(',\n  ')},\n} from 'lucide-react';`;
       content = content.replace(
         /import \{[^}]+\} from 'lucide-react';/,

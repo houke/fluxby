@@ -1,12 +1,12 @@
 import { useLanguage } from '../../contexts/LanguageContext';
 import {
-  ,
   BarChart3,
   BookOpen,
   Brain,
   Building2,
   Database,
   Download,
+  ExternalLink,
   FileSpreadsheet,
   FileText,
   Globe,
@@ -27,33 +27,41 @@ const UpdatesContent = () => {
   const updatesPage = t.legal?.updatesPage;
 
   const releases = [
-        {
+    {
       version: '1.2.0',
       date: updatesPage?.v120Date || '6 januari 2026',
       title: updatesPage?.v120Title || 'Release 1.2.0',
       description:
-        updatesPage?.v120Description ||
-        '7 nieuwe features en 15 bugfixes.',
+        updatesPage?.v120Description || '7 nieuwe features en 15 bugfixes.',
       features: [
         {
           icon: Brain,
           title: updatesPage?.v120F1Title || 'Diverse verbeteringen',
-          description: updatesPage?.v120F1Desc || '4 nieuwe features. Zie changelog voor details.',
+          description:
+            updatesPage?.v120F1Desc ||
+            '4 nieuwe features. Zie changelog voor details.',
         },
         {
           icon: FileText,
           title: updatesPage?.v120F2Title || 'Landingspagina verbeteringen',
-          description: updatesPage?.v120F2Desc || '2 nieuwe features. Zie changelog voor details.',
+          description:
+            updatesPage?.v120F2Desc ||
+            '2 nieuwe features. Zie changelog voor details.',
         },
         {
           icon: Database,
-          title: updatesPage?.v120F3Title || 'Add sync database adapter for P2P synchronization',
-          description: updatesPage?.v120F3Desc || 'Nieuwe functionaliteit toegevoegd.',
+          title:
+            updatesPage?.v120F3Title ||
+            'Add sync database adapter for P2P synchronization',
+          description:
+            updatesPage?.v120F3Desc || 'Nieuwe functionaliteit toegevoegd.',
         },
         {
           icon: Wrench,
           title: updatesPage?.v120F4Title || 'Bugfixes',
-          description: updatesPage?.v120F4Desc || '15 bugs opgelost. Zie changelog voor details.',
+          description:
+            updatesPage?.v120F4Desc ||
+            '15 bugs opgelost. Zie changelog voor details.',
         },
       ],
     },
@@ -266,6 +274,15 @@ const UpdatesContent = () => {
                     <span className='rounded-full bg-purple-100 px-3 py-1 text-sm font-semibold text-purple-700 dark:bg-purple-900/30 dark:text-purple-300'>
                       v{release.version}
                     </span>
+                    <a
+                      href={`https://github.com/houke/fluxby/releases/tag/v${release.version}`}
+                      target='_blank'
+                      rel='noopener noreferrer'
+                      className='flex items-center gap-1 text-sm text-purple-600 transition-colors hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-300'
+                    >
+                      {updatesPage?.viewRelease || 'Bekijk release'}
+                      <ExternalLink className='h-3 w-3' />
+                    </a>
                   </div>
                   <p className='text-gray-500 dark:text-gray-400'>
                     {release.date}

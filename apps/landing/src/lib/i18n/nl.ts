@@ -1761,6 +1761,7 @@ export const nl: LandingTranslationKeys = {
     updatesPage: {
       intro:
         'Bekijk wat er nieuw is in Fluxby. Hier vind je alle updates en nieuwe features.',
+      viewRelease: 'Bekijk release',
       v120Date: '6 januari 2026',
       v120Title: 'Release 1.2.0',
       v120Description: '7 nieuwe features en 15 bugfixes.',
