@@ -17,6 +17,7 @@ export default tseslint.config(
       '**/.git/**',
       '**/coverage/**',
       '**/*.d.ts',
+      '**/vite.config.js', // Ignore transpiled vite configs
     ],
   },
 
