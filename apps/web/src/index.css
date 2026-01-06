@@ -1,5 +1,5 @@
-@import "tailwindcss";
-@plugin "tailwindcss-animate";
+@import 'tailwindcss';
+@plugin 'tailwindcss-animate';
 
 /* Dark mode class-based toggle */
 @custom-variant dark (&:where(.dark, .dark *));
@@ -43,7 +43,7 @@
   --radius-sm: calc(var(--radius) - 4px);
 
   /* Font Family */
-  --font-sans: "Inter", system-ui, sans-serif;
+  --font-sans: 'Inter', system-ui, sans-serif;
 
   /* Animations */
   --animate-accordion-down: accordion-down 0.2s ease-out;
@@ -133,10 +133,10 @@
 }
 
 body {
-  @apply bg-app-gradient min-h-screen text-foreground antialiased;
+  @apply min-h-screen text-foreground antialiased bg-app-gradient;
   font-feature-settings:
-    "rlig" 1,
-    "calt" 1;
+    'rlig' 1,
+    'calt' 1;
 }
 
 /* Custom scrollbar */

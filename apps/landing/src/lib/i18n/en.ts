@@ -450,7 +450,35 @@ export const en: LandingTranslationKeys = {
     profiles: {
       title: 'Profiles & Multi-Tenancy',
       subtitle:
-        'Organize your financial data with profiles. Each profile is a completely isolated set of accounts, transactions, categories, and budgets.',
+        'Manage multiple financial profiles for different purposes - personal, business or project-based tracking.',
+      useCaseTitle: 'Use cases',
+      useCase1: 'Separate personal and business finances',
+      useCase2: 'Track expenses for specific projects',
+      useCase3: 'Manage finances for multiple family members',
+      howItWorksTitle: 'How Multi-Tenancy works',
+      howItWorksText:
+        'Each profile acts as a completely isolated environment. Transactions, categories, budgets and analytics are all tied to a specific profile.',
+      isolation: 'Data Isolation',
+      isolationDesc:
+        'Each profile has its own transactions, categories and budgets.',
+      switching: 'Easy Switching',
+      switchingDesc:
+        'Switch between profiles by adjusting the X-Profile-ID header.',
+      customization: 'Full Customization',
+      customizationDesc:
+        'Each profile can have different categories, budgets and settings.',
+      listProfilesTitle: 'Fetch Profiles',
+      listProfilesText: 'Fetch all profiles to see what is available:',
+      createProfileTitle: 'Create Profile',
+      createProfileText:
+        'Create a new profile with a name and type (personal or business):',
+      profileTypesTitle: 'Profile Types',
+      tableType: 'Type',
+      tableDescription: 'Description',
+      personalDesc:
+        'For tracking personal finances, household expenses and savings goals.',
+      businessDesc:
+        'For freelance income, business expenses and project-based tracking.',
       whatIsProfileTitle: 'What is a Profile?',
       whatIsProfileText:
         'A profile in Fluxby acts as a completely isolated financial environment. You can use profiles to:',
@@ -459,7 +487,6 @@ export const en: LandingTranslationKeys = {
         'Manage finances for different family members',
         'Test hypothetical budgets or planning scenarios',
       ],
-      profileTypesTitle: 'Profile Types',
       profileTypes: [
         { type: 'personal', description: 'Personal finances', emoji: '👤' },
         {
@@ -1157,6 +1184,155 @@ export const en: LandingTranslationKeys = {
       fullDocsDesc: 'Complete reference for all endpoints',
       swaggerTitle: 'Swagger UI',
       swaggerDesc: 'Interactive API explorer',
+    },
+    // Help pages - Transactions
+    transactions: {
+      title: 'Managing transactions',
+      subtitle:
+        'View, search, filter and categorize your imported transactions.',
+      tipTitle: 'Quick tip',
+      tipText:
+        'Use the search bar and filters to quickly find specific transactions. You can filter by date, category, amount and more.',
+      viewingTitle: 'Viewing transactions',
+      viewingText:
+        'The Transactions page shows all your imported transactions in a clear, sortable table. Each transaction shows:',
+      field1: 'Date of the transaction',
+      field2: 'Description/counterparty name',
+      field3: 'Category (if assigned)',
+      field4: 'Amount (income in green, expenses in red)',
+      filteringTitle: 'Filtering transactions',
+      filteringText: 'Use the filter panel to refine your transactions:',
+      dateFilter: 'Date range',
+      dateFilterDesc: 'Filter by specific month, year or custom date range.',
+      categoryFilter: 'Category',
+      categoryFilterDesc: 'Show only transactions from specific categories.',
+      typeFilter: 'Transaction type',
+      typeFilterDesc: 'Filter by income, expenses or all transactions.',
+      searchFilter: 'Search',
+      searchFilterDesc: 'Search by description, counterparty name or notes.',
+      categorizingTitle: 'Categorizing transactions',
+      categorizingText:
+        'Click on a transaction to assign or change its category. Fluxby learns from your choices and will auto-categorize similar transactions in the future.',
+      bulkTitle: 'Bulk operations',
+      bulkText:
+        'Select multiple transactions to apply bulk actions like categorizing or deleting.',
+    },
+    // Help pages - Categories
+    categories: {
+      title: 'Managing categories',
+      subtitle:
+        'Organize your transactions with custom categories and auto-categorization rules.',
+      whatAreTitle: 'What are categories?',
+      whatAreText:
+        'Categories help you organize your transactions into meaningful groups like Groceries, Transport, Entertainment, etc. This makes it easier to understand your spending patterns and create budgets.',
+      defaultTitle: 'Default categories',
+      defaultText:
+        'Fluxby comes with a set of pre-configured categories to get you started:',
+      createTitle: 'Creating a category',
+      createText: 'To create a new category:',
+      createStep1: 'Go to Categories page from the sidebar',
+      createStep2: 'Click "New Category"',
+      createStep3: 'Choose a name, icon and color',
+      createStep4: 'Click Save to create your category',
+      rulesTitle: 'Auto-categorization rules',
+      rulesText:
+        'Set up rules to automatically categorize transactions based on keywords. For example, you can create a rule that automatically categorizes any transaction containing "Albert Heijn" as Groceries.',
+      rulesTip: 'Pro tip',
+      rulesTipText:
+        'The more specific your rules, the more accurate the auto-categorization. Use merchant names or specific keywords that appear in your bank transactions.',
+    },
+    // Help pages - Accounts
+    accounts: {
+      title: 'Managing accounts',
+      subtitle: 'Track multiple bank accounts and view consolidated balances.',
+      overviewTitle: 'Accounts overview',
+      overviewText:
+        'The Accounts page shows all your linked bank accounts with their current balances. You can see at a glance how much money you have across all your accounts.',
+      addTitle: 'Adding an account',
+      addText:
+        'When you import a CSV file from your bank, Fluxby automatically detects the account (IBAN) and creates it if needed. You can also manually add an account:',
+      addStep1: 'Go to Settings > Accounts',
+      addStep2: 'Click "Add Account"',
+      addStep3: 'Enter the account name and IBAN',
+      addStep4: 'Click Save to add the account',
+      filterTitle: 'Filtering by account',
+      filterText:
+        'Throughout Fluxby, you can filter transactions by account. Use the account filter dropdown in the header to see transactions from a specific account, or select "All accounts" to see everything combined.',
+      noteTitle: 'Note',
+      noteText:
+        'If you have multiple accounts, import CSV files from all of them to get a complete picture of your finances.',
+      balanceTitle: 'Understanding balances',
+      balanceText:
+        'Account balances are calculated based on your imported transactions. The displayed balance is the sum of all transactions for that account. For the most accurate balance, import all your transactions regularly.',
+      deleteTitle: 'Deleting an account',
+      deleteText:
+        'Deleting an account also removes all transactions associated with that account. This action cannot be undone. Make sure you really want to remove all data for this account before proceeding.',
+      warningTitle: 'Warning',
+      warningText:
+        'Deleting an account permanently removes all its transactions. Consider exporting your data first if you might need it later.',
+    },
+    // Help pages - Address Book
+    addressBook: {
+      title: 'Managing address book',
+      subtitle:
+        'Organize your contacts and improve transaction categorization with automatic name cleanup.',
+      tipTitle: 'Quick tip',
+      tipText:
+        'The address book is automatically populated when you import transactions. Use name cleanup rules to clean up confusing bank names.',
+      whatAreTitle: 'What is the address book?',
+      whatAreText:
+        'The address book automatically stores counterparties from your transactions based on IBAN and name. It helps you organize contacts, clean up messy bank names, and track spending per merchant.',
+      featuresTitle: 'Key features',
+      autoExtractionTitle: 'Automatic extraction',
+      autoExtractionText:
+        'When you import CSV files, Fluxby automatically detects unique counterparties and adds them to your address book. This happens based on IBAN numbers and names.',
+      nameCleanupTitle: 'Name cleanup',
+      nameCleanupText:
+        'Many banks add technical information to transaction names (like "via Mollie" or "via Buckaroo"). The address book helps you create automatic rules that remove this information for cleaner names.',
+      sharedIbansTitle: 'Shared IBANs',
+      sharedIbansText:
+        'Some payment providers use shared IBANs for multiple merchants. The address book helps you decide whether to merge these as the same merchant or keep them separate as different businesses.',
+      managingTitle: 'Managing contacts',
+      managingText:
+        'You can manually add contacts, edit existing contacts, or configure name cleanup rules:',
+      manage1: 'Click on a contact to view details',
+      manage2: 'Use the search bar to find contacts',
+      manage3: 'Create name cleanup rules for better categorization',
+      manage4: 'View transaction history per contact',
+    },
+    // Help pages - Analytics
+    analytics: {
+      title: 'Analytics & insights',
+      subtitle:
+        'Understand your spending patterns with powerful analytics and visualizations.',
+      dashboardTitle: 'Dashboard overview',
+      dashboardText:
+        'The dashboard gives you a quick overview of your finances. View your total balance, monthly spending and recent transactions at a glance.',
+      categoriesTitle: 'Category breakdown',
+      categoriesText:
+        'The category breakdown shows how your spending is distributed across different categories. Use the pie chart to quickly see where most of your money is going.',
+      pieChartTitle: 'Pie chart',
+      pieChartText:
+        'Visual breakdown of spending per category. Click on a segment to see transactions in that category.',
+      barChartTitle: 'Bar chart',
+      barChartText:
+        'Compare spending amounts per category. Ideal for identifying your biggest spending areas.',
+      trendsTitle: 'Monthly trends',
+      trendsText:
+        'Track how your spending changes over time with monthly trend charts. Compare income to expenses per month to understand your financial development.',
+      filtersTitle: 'Using filters',
+      filtersText:
+        'All analytics can be filtered by date range and account. Use the filter options to focus on specific periods or accounts.',
+      filter1:
+        'Select a date range: This month, Last 3 months, This year or custom range',
+      filter2: 'Filter by account to see analytics for a specific bank account',
+      filter3: 'Combine filters to get exactly the view you need',
+      tipTitle: 'Pro tip',
+      tipText:
+        'Compare the same month across different years to account for seasonal spending patterns like holidays or vacations.',
+      exportTitle: 'Exporting data',
+      exportText:
+        'Export your analytics data for use in other applications or for record keeping.',
     },
     placeholders: {
       bankExport: 'Bank Export Screen',

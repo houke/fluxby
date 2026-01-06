@@ -1,5 +1,5 @@
-@import "tailwindcss";
-@plugin "@tailwindcss/typography";
+@import 'tailwindcss';
+@plugin '@tailwindcss/typography';
 
 /* Dark mode class-based toggle */
 @custom-variant dark (&:where(.dark, .dark *));
@@ -177,4 +177,10 @@ html {
 /* Remove margins from tables in prose content */
 .prose table {
   margin: 0;
+}
+
+/* Prevent typography plugin from overriding explicit m-0 on h3 elements */
+h3.m-0 {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
 }

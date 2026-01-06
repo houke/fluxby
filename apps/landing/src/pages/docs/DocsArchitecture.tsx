@@ -109,9 +109,13 @@ function mergeChanges(local, remote) {
       <p className='text-gray-600 dark:text-gray-400'>
         {t.docs.architecture.securityText}
       </p>
-      <div className='mt-4 rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-950/30'>
-        <p className='mb-0 text-sm text-amber-800 dark:text-amber-300'>
-          <strong>ℹ️</strong> {t.docs.architecture.privacyNote}
+      <div className='mt-4 mb-6 rounded-xl border border-amber-200 bg-amber-50 p-6 dark:border-amber-800 dark:bg-amber-950/30'>
+        <h3 className='mt-0 mb-2 flex items-center gap-2 text-lg font-semibold text-amber-900 dark:text-amber-200'>
+          <span>ℹ️</span>
+          Note
+        </h3>
+        <p className='mb-0 text-amber-800 dark:text-amber-300'>
+          {t.docs.architecture.privacyNote}
         </p>
       </div>
       <CodeBlock code={securityExample} language='text' />
