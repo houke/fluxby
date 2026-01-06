@@ -5,7 +5,7 @@ const Testimonials = () => {
 
   return (
     <section className='section-padding bg-white'>
-      <div className='container mx-auto px-4'>
+      <div className='container mx-auto px-6'>
         <div className='mb-16 text-center'>
           <h2 className='mb-6 text-5xl font-black text-gray-900 lg:text-6xl'>
             {t.testimonials.title}{' '}

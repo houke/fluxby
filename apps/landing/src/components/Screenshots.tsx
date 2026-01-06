@@ -66,7 +66,7 @@ const Screenshots = () => {
       id='screenshots'
       className='section-padding bg-gradient-to-br from-purple-50 to-pink-50 dark:from-gray-900 dark:to-gray-800'
     >
-      <div className='container mx-auto px-4'>
+      <div className='container mx-auto px-6'>
         <div className='mb-12 text-center md:mb-16'>
           <h2 className='mb-6 text-3xl font-black text-gray-900 sm:text-5xl lg:text-6xl dark:text-white'>
             {t.screenshots.title}{' '}

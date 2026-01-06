@@ -38,7 +38,7 @@ export default function HelpCenter() {
       <div className='absolute top-0 left-0 h-64 w-64 rounded-full bg-purple-200/30 blur-3xl dark:bg-purple-900/20' />
       <div className='absolute right-0 bottom-0 h-64 w-64 rounded-full bg-pink-200/30 blur-3xl dark:bg-pink-900/20' />
 
-      <div className='relative container mx-auto px-4'>
+      <div className='relative container mx-auto px-6'>
         <div className='mb-8 text-center md:mb-12'>
           <div className='mb-4 inline-flex items-center gap-2 rounded-full bg-purple-100 px-4 py-2 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300'>
             <span className='text-lg'>❓</span>

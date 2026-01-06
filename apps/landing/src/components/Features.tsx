@@ -18,7 +18,7 @@ const Features = () => {
       id='features'
       className='section-padding bg-white dark:bg-gray-900'
     >
-      <div className='container mx-auto px-4'>
+      <div className='container mx-auto px-6'>
         <div className='mb-12 text-center md:mb-16'>
           <h2 className='mb-6 text-2xl font-black text-gray-900 sm:text-4xl lg:text-6xl dark:text-white'>
             {t.features.title}{' '}
