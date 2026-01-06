@@ -13,6 +13,7 @@ Fluxby - A local-first financial dashboard for visualizing bank transactions. Mo
 - Start full local dev: `npm run dev:all` (starts API + web app + landing concurrently)
 - Start Tauri dev: `npm run dev:tauri`
 - Build: `npm run build`
+- Build packages only: `npm run build:packages`
 - Build Tauri: `npm run build:tauri`
 - Lint: `npm run lint`
 - Lint with auto-fix: `npm run lint:fix`
@@ -28,6 +29,54 @@ Fluxby - A local-first financial dashboard for visualizing bank transactions. Mo
 
 - Node: `>=22.0.0` (see `package.json` engines)
 - npm: `>=10.0.0`
+
+## Development Workflow
+
+### Fresh Clone Quick Start
+
+On a fresh clone, you can immediately start development:
+
+```bash
+npm install
+npm run dev
+```
+
+**No build step required** - Vite resolves workspace packages directly from source files in dev mode.
+
+### How Package Resolution Works
+
+The monorepo has three internal packages (`@fluxby/shared`, `@fluxby/database`, `@fluxby/core`). These are resolved differently depending on the context:
+
+| Context | Resolution | Why |
+|---------|------------|-----|
+| `npm run dev` | Source files (`.ts`) | Vite aliases point to `packages/*/src/` |
+| `npm run test:run` | Source files (`.ts`) | Vitest aliases point to `packages/*/src/` |
+| `npm run build` | Compiled dist (`.js`) | Uses standard Node.js resolution |
+| `npm run typecheck` | Compiled dist (`.d.ts`) | TypeScript needs declaration files |
+
+### When to Build Packages
+
+- **Development**: Never needed - `npm run dev` works without building
+- **Testing**: Never needed - `npm run test:run` works without building
+- **Type checking**: Automatically handled - `npm run typecheck` includes `build:packages`
+- **Production builds**: Automatically handled - `npm run build` includes package builds
+- **CI/Release**: Automatically handled - build scripts include dependencies
+
+### Making Changes to Packages
+
+When you modify files in `packages/*`:
+
+1. **Dev mode**: Changes are picked up immediately via Vite HMR
+2. **Tests**: Changes are picked up immediately when running tests
+3. **TypeScript errors**: Run `npm run build:packages` then `npm run typecheck`
+
+### Manual Package Build
+
+If you need to manually rebuild packages (e.g., for IDE type resolution):
+
+```bash
+npm run build:packages
+```
 
 ## Workflow Requirements
 

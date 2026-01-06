@@ -8,20 +8,25 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+      "development": "./src/index.ts",
+      "default": "./dist/index.js"
     },
     "./web": {
       "types": "./dist/adapters/web.d.ts",
-      "import": "./dist/adapters/web.js"
+      "development": "./src/adapters/web.ts",
+      "default": "./dist/adapters/web.js"
     },
     "./tauri": {
       "types": "./dist/adapters/tauri.d.ts",
-      "import": "./dist/adapters/tauri.js"
+      "development": "./src/adapters/tauri.ts",
+      "default": "./dist/adapters/tauri.js"
     },
     "./node": {
       "types": "./dist/adapters/node.d.ts",
-      "import": "./dist/adapters/node.js"
-    }
+      "development": "./src/adapters/node.ts",
+      "default": "./dist/adapters/node.js"
+    },
+    "./src/*": "./src/*"
   },
   "scripts": {
     "build": "tsc",

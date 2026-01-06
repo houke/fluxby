@@ -1,6 +1,8 @@
 import { defineConfig } from 'vitest/config';
 import path from 'path';
 
+const packagesPath = path.resolve(__dirname, './packages');
+
 export default defineConfig({
   test: {
     globals: true,
@@ -30,6 +32,22 @@ export default defineConfig({
       '@': path.resolve(__dirname, './apps/web/src'),
       '@api': path.resolve(__dirname, './apps/api/src'),
       '@shared': path.resolve(__dirname, './packages/shared/src'),
+      // Resolve workspace packages to source files for testing
+      '@fluxby/shared': path.resolve(packagesPath, 'shared/src/index.ts'),
+      '@fluxby/database': path.resolve(packagesPath, 'database/src/index.ts'),
+      '@fluxby/database/web': path.resolve(
+        packagesPath,
+        'database/src/adapters/web.ts'
+      ),
+      '@fluxby/database/tauri': path.resolve(
+        packagesPath,
+        'database/src/adapters/tauri.ts'
+      ),
+      '@fluxby/database/node': path.resolve(
+        packagesPath,
+        'database/src/adapters/node.ts'
+      ),
+      '@fluxby/core': path.resolve(packagesPath, 'core/src/index.ts'),
     },
   },
 });

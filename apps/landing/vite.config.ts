@@ -15,9 +15,22 @@ const base = process.env.VITE_BASE_URL
     : `${process.env.VITE_BASE_URL}/`
   : '/';
 
+// In dev mode, resolve workspace packages to their source files
+// This allows hot-reload without needing to rebuild packages
+const isDev = process.env.NODE_ENV !== 'production';
+const packagesPath = resolve(__dirname, '../../packages');
+
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
+  resolve: {
+    alias: {
+      // In dev mode, resolve @fluxby/* packages to source files for hot-reload
+      ...(isDev && {
+        '@fluxby/shared': resolve(packagesPath, 'shared/src/index.ts'),
+      }),
+    },
+  },
   server: {
     port: 5177, // Landing page port
     proxy: {

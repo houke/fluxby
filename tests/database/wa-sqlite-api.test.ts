@@ -89,29 +89,29 @@ describe('wa-sqlite API', () => {
   });
 
   describe('compiled output verification', () => {
-    it('should not contain prepare_v2 in compiled JS', async () => {
-      const compiledCode = fs.readFileSync(
-        path.join(
-          import.meta.dirname,
-          '../../packages/database/dist/wa-sqlite.js'
-        ),
-        'utf-8'
-      );
+    const distPath = path.join(
+      import.meta.dirname,
+      '../../packages/database/dist/wa-sqlite.js'
+    );
+    const distExists = fs.existsSync(distPath);
 
-      expect(compiledCode).not.toContain('prepare_v2');
-    });
+    it.skipIf(!distExists)(
+      'should not contain prepare_v2 in compiled JS',
+      async () => {
+        const compiledCode = fs.readFileSync(distPath, 'utf-8');
 
-    it('should contain statements method calls in compiled JS', async () => {
-      const compiledCode = fs.readFileSync(
-        path.join(
-          import.meta.dirname,
-          '../../packages/database/dist/wa-sqlite.js'
-        ),
-        'utf-8'
-      );
+        expect(compiledCode).not.toContain('prepare_v2');
+      }
+    );
 
-      expect(compiledCode).toContain('.statements(');
-    });
+    it.skipIf(!distExists)(
+      'should contain statements method calls in compiled JS',
+      async () => {
+        const compiledCode = fs.readFileSync(distPath, 'utf-8');
+
+        expect(compiledCode).toContain('.statements(');
+      }
+    );
   });
 });
 

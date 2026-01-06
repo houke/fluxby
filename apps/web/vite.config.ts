@@ -8,6 +8,11 @@ const base = process.env.VITE_BASE_URL
   ? `${process.env.VITE_BASE_URL}app/`
   : '/app/';
 
+// In dev mode, resolve workspace packages to their source files
+// This allows hot-reload without needing to rebuild packages
+const isDev = process.env.NODE_ENV !== 'production';
+const packagesPath = path.resolve(__dirname, '../../packages');
+
 export default defineConfig({
   plugins: [
     react(),
@@ -28,6 +33,24 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      // In dev mode, resolve @fluxby/* packages to source files for hot-reload
+      ...(isDev && {
+        '@fluxby/shared': path.resolve(packagesPath, 'shared/src/index.ts'),
+        '@fluxby/database': path.resolve(packagesPath, 'database/src/index.ts'),
+        '@fluxby/database/web': path.resolve(
+          packagesPath,
+          'database/src/adapters/web.ts'
+        ),
+        '@fluxby/database/tauri': path.resolve(
+          packagesPath,
+          'database/src/adapters/tauri.ts'
+        ),
+        '@fluxby/database/node': path.resolve(
+          packagesPath,
+          'database/src/adapters/node.ts'
+        ),
+        '@fluxby/core': path.resolve(packagesPath, 'core/src/index.ts'),
+      }),
     },
   },
   optimizeDeps: {
