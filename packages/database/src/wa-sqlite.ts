@@ -14,7 +14,7 @@ import type {
 } from './types.js';
 import { SCHEMA_SQL, getSeedSQL, SCHEMA_VERSION } from './schema.js';
 import { EncryptionVFS } from './encryption-vfs.js';
-import { getDeviceId } from './environment.js';
+import { getDeviceId, isTauri } from './environment.js';
 
 // SQLite constants
 const SQLITE_OK = 0;
@@ -315,11 +315,14 @@ export class Database implements DatabaseConnection {
       }
 
       // Try to use OPFS VFS if available (browser with OPFS support)
-      if (
+      // Skip OPFS for Tauri - use IndexedDB instead for better compatibility
+      const shouldUseOPFS =
+        !isTauri() &&
         typeof navigator !== 'undefined' &&
         'storage' in navigator &&
-        'getDirectory' in navigator.storage
-      ) {
+        'getDirectory' in navigator.storage;
+
+      if (shouldUseOPFS) {
         try {
           // Import OPFS VFS for browser - use the Any Context VFS for broader compatibility
 
@@ -416,6 +419,47 @@ export class Database implements DatabaseConnection {
             );
             vfsRegistered = true; // Mark as done even without VFS
           }
+        }
+      } else if (typeof indexedDB !== 'undefined') {
+        // For Tauri or environments without OPFS, try IndexedDB VFS
+        wasmLog('Using IndexedDB VFS (Tauri or no OPFS)');
+        try {
+          const vfsModule: any =
+            await import('@journeyapps/wa-sqlite/src/examples/IDBBatchAtomicVFS.js');
+
+          // Use unique VFS name to prevent Asyncify state corruption on reinit
+          const idbBaseVfsName = `idb-fluxby-base-${vfsCounter}`;
+          vfsCounter++;
+
+          let vfs = await vfsModule.IDBBatchAtomicVFS.create(
+            idbBaseVfsName,
+            cachedModule
+          );
+
+          // Wrap with encryption VFS if key is provided
+          if (encryptionKey) {
+            wasmLog('Wrapping IndexedDB VFS with EncryptionVFS');
+            const idbEncVfsName = `idb-fluxby-${vfsCounter++}`;
+            const encVfs = new EncryptionVFS(
+              idbEncVfsName,
+              cachedModule,
+              vfs,
+              encryptionKey
+            );
+            await encVfs.initialize();
+            vfs = encVfs;
+          }
+
+          this.sqlite3.vfs_register(vfs, true);
+          cachedVfsName = (vfs as any).name;
+          vfsRegistered = true;
+          wasmLog('IndexedDB VFS registered:', cachedVfsName);
+        } catch (idbErr) {
+          console.warn(
+            'IndexedDB VFS not available, using in-memory storage',
+            idbErr
+          );
+          vfsRegistered = true; // Mark as done even without VFS
         }
       } else {
         vfsRegistered = true; // No VFS needed for non-browser environments
