@@ -120,7 +120,7 @@ export default function DocsLayout() {
         </header>
 
         {/* Main content */}
-        <main className='flex-1 overflow-y-auto overflow-x-hidden px-4 py-8 lg:px-8 lg:py-12'>
+        <main className='flex-1 overflow-x-hidden overflow-y-auto px-4 py-8 lg:px-8 lg:py-12'>
           <div className='mx-auto max-w-4xl'>
             <Outlet />
           </div>
