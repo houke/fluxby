@@ -179,6 +179,22 @@ html {
   margin: 0;
 }
 
+/* Make prose text larger on mobile for better readability */
+@media (max-width: 640px) {
+  .prose {
+    font-size: 1.0625rem; /* 17px - slightly larger than default 16px */
+  }
+  .prose h1 {
+    font-size: 2rem;
+  }
+  .prose h2 {
+    font-size: 1.5rem;
+  }
+  .prose h3 {
+    font-size: 1.25rem;
+  }
+}
+
 /* Prevent typography plugin from overriding explicit m-0 on h3 elements */
 h3.m-0 {
   margin-top: 0 !important;
