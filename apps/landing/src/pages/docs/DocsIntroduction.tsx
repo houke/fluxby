@@ -104,7 +104,7 @@ fetch('${baseUrl}/analytics/dashboard', {
         </div>
       </div>
 
-      <div className='mt-6 space-y-4'>
+      <div className='not-prose mt-6 space-y-4'>
         <CodeBlock
           code={exampleCode}
           language='javascript'

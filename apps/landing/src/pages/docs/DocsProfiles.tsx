@@ -103,7 +103,7 @@ fetch('http://localhost:3001/api/profiles', {
       <p className='text-gray-600 dark:text-gray-400'>
         {t.docs.profiles.listProfilesText}
       </p>
-      <div className='mt-6 space-y-4'>
+      <div className='not-prose mt-6 space-y-4'>
         <CodeBlock
           code={listProfilesCode}
           language='javascript'
@@ -118,7 +118,7 @@ fetch('http://localhost:3001/api/profiles', {
       <p className='text-gray-600 dark:text-gray-400'>
         {t.docs.profiles.createProfileText}
       </p>
-      <div className='mt-6'>
+      <div className='not-prose mt-6'>
         <CodeBlock code={createProfileCode} language='javascript' />
       </div>
 

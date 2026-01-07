@@ -19,7 +19,7 @@ export default function DocsErrors() {
       <p className='text-gray-600 dark:text-gray-400'>
         {t.docs.errors.errorResponseText}
       </p>
-      <div className='mt-6'>
+      <div className='not-prose mt-6'>
         <CodeBlock
           code={`{
   "error": "Error type or title",
@@ -85,7 +85,7 @@ export default function DocsErrors() {
       <p className='text-gray-600 dark:text-gray-400'>
         {t.docs.errors.invalidProfileText}
       </p>
-      <div className='mt-4'>
+      <div className='not-prose mt-4'>
         <CodeBlock
           code={`// Status: 404 Not Found
 {
@@ -102,7 +102,7 @@ export default function DocsErrors() {
       <p className='text-gray-600 dark:text-gray-400'>
         {t.docs.errors.missingFieldsText}
       </p>
-      <div className='mt-4'>
+      <div className='not-prose mt-4'>
         <CodeBlock
           code={`// Status: 400 Bad Request
 {

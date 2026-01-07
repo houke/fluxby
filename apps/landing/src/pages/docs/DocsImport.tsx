@@ -190,7 +190,7 @@ fetch('http://localhost:3001/api/import/history', {
         </table>
       </div>
 
-      <div className='mt-6 space-y-4'>
+      <div className='not-prose mt-6 space-y-4'>
         <CodeBlock code={importCSVCode} language='javascript' title='Request' />
         <CodeBlock
           code={importResponseExample}
@@ -217,7 +217,7 @@ fetch('http://localhost:3001/api/import/history', {
         </div>
       </div>
 
-      <div className='mt-6 space-y-4'>
+      <div className='not-prose mt-6 space-y-4'>
         <CodeBlock code={previewCode} language='javascript' title='Request' />
         <CodeBlock
           code={previewResponseExample}
@@ -244,7 +244,7 @@ fetch('http://localhost:3001/api/import/history', {
         </div>
       </div>
 
-      <div className='mt-6 space-y-4'>
+      <div className='not-prose mt-6 space-y-4'>
         <CodeBlock code={historyCode} language='javascript' title='Request' />
         <CodeBlock
           code={historyResponseExample}

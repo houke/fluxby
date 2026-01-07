@@ -94,7 +94,7 @@ fetch('http://localhost:3001/api/analytics/categories', {
         </div>
       </div>
 
-      <div className='mt-6 space-y-4'>
+      <div className='not-prose mt-6 space-y-4'>
         <CodeBlock code={dashboardCode} language='javascript' title='Request' />
         <CodeBlock code={dashboardResponse} language='json' title='Response' />
       </div>
@@ -162,7 +162,7 @@ fetch('http://localhost:3001/api/analytics/categories', {
         </table>
       </div>
 
-      <div className='mt-6 space-y-4'>
+      <div className='not-prose mt-6 space-y-4'>
         <CodeBlock code={monthlyCode} language='javascript' title='Request' />
         <CodeBlock code={monthlyResponse} language='json' title='Response' />
       </div>

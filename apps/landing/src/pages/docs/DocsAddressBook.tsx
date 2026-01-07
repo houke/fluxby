@@ -265,7 +265,7 @@ fetch('http://localhost:3001/api/addressbook/shared-ibans', {
         </table>
       </div>
 
-      <div className='mt-6 space-y-4'>
+      <div className='not-prose mt-6 space-y-4'>
         <CodeBlock
           code={listContactsCode}
           language='javascript'
@@ -297,7 +297,7 @@ fetch('http://localhost:3001/api/addressbook/shared-ibans', {
         </div>
       </div>
 
-      <div className='mt-6'>
+      <div className='not-prose mt-6'>
         <CodeBlock
           code={createContactCode}
           language='javascript'
@@ -389,7 +389,7 @@ fetch('http://localhost:3001/api/addressbook/shared-ibans', {
         </table>
       </div>
 
-      <div className='mt-6'>
+      <div className='not-prose mt-6'>
         <CodeBlock
           code={cleanupRulesCode}
           language='javascript'
@@ -488,7 +488,7 @@ fetch('http://localhost:3001/api/addressbook/shared-ibans', {
         </table>
       </div>
 
-      <div className='mt-6'>
+      <div className='not-prose mt-6'>
         <CodeBlock
           code={sharedIbanCode}
           language='javascript'
@@ -565,7 +565,7 @@ fetch('http://localhost:3001/api/addressbook/shared-ibans', {
         </table>
       </div>
 
-      <div className='mt-6'>
+      <div className='not-prose mt-6'>
         <CodeBlock
           code={mergeContactsCode}
           language='javascript'

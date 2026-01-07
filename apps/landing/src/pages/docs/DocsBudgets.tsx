@@ -90,7 +90,7 @@ fetch('http://localhost:3001/api/budgets', {
         </div>
       </div>
 
-      <div className='mt-6 space-y-4'>
+      <div className='not-prose mt-6 space-y-4'>
         <CodeBlock
           code={listBudgetsCode}
           language='javascript'
@@ -217,7 +217,7 @@ fetch('http://localhost:3001/api/budgets', {
         </table>
       </div>
 
-      <div className='mt-6'>
+      <div className='not-prose mt-6'>
         <CodeBlock code={createBudgetCode} language='javascript' />
       </div>
 

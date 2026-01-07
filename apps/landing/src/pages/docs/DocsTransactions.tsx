@@ -199,7 +199,7 @@ fetch('http://localhost:3001/api/transactions/txn_123abc', {
         </table>
       </div>
 
-      <div className='mt-6 space-y-4'>
+      <div className='not-prose mt-6 space-y-4'>
         <CodeBlock
           code={listTransactionsCode}
           language='javascript'

@@ -108,7 +108,7 @@ fetch('http://localhost:3001/api/data/reset', {
         </div>
       </div>
 
-      <div className='mt-6 space-y-4'>
+      <div className='not-prose mt-6 space-y-4'>
         <CodeBlock code={exportCode} language='javascript' title='Request' />
         <CodeBlock
           code={exportResponseExample}
@@ -135,7 +135,7 @@ fetch('http://localhost:3001/api/data/reset', {
         </div>
       </div>
 
-      <div className='mt-6 space-y-4'>
+      <div className='not-prose mt-6 space-y-4'>
         <CodeBlock code={importCode} language='javascript' title='Request' />
         <CodeBlock
           code={importResponseExample}
@@ -162,7 +162,7 @@ fetch('http://localhost:3001/api/data/reset', {
         </div>
       </div>
 
-      <div className='mt-6 space-y-4'>
+      <div className='not-prose mt-6 space-y-4'>
         <CodeBlock code={resetCode} language='javascript' title='Request' />
         <CodeBlock
           code={resetResponseExample}

@@ -118,7 +118,9 @@ function mergeChanges(local, remote) {
           {t.docs.architecture.privacyNote}
         </p>
       </div>
-      <CodeBlock code={securityExample} language='text' />
+      <div className='not-prose'>
+        <CodeBlock code={securityExample} language='text' />
+      </div>
 
       <h3 className='mt-8 text-xl font-bold text-gray-900 dark:text-gray-100'>
         {t.docs.architecture.autoLockTitle}
@@ -145,7 +147,9 @@ function mergeChanges(local, remote) {
       <h3 className='mt-8 text-xl font-bold text-gray-900 dark:text-gray-100'>
         {t.docs.architecture.syncSchemaTitle}
       </h3>
-      <CodeBlock code={schemaExample} language='sql' />
+      <div className='not-prose'>
+        <CodeBlock code={schemaExample} language='sql' />
+      </div>
 
       <h3 className='mt-8 text-xl font-bold text-gray-900 dark:text-gray-100'>
         {t.docs.architecture.conflictTitle}
@@ -153,7 +157,9 @@ function mergeChanges(local, remote) {
       <p className='text-gray-600 dark:text-gray-400'>
         {t.docs.architecture.conflictText}
       </p>
-      <CodeBlock code={syncExample} language='javascript' />
+      <div className='not-prose'>
+        <CodeBlock code={syncExample} language='javascript' />
+      </div>
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
         {t.docs.architecture.storageTitle}

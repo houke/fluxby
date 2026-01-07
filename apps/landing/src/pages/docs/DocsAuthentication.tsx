@@ -42,7 +42,7 @@ fetch('http://localhost:3001/api/transactions', {
         {t.docs.authentication.profileIdText}
       </p>
 
-      <div className='mt-6 space-y-4'>
+      <div className='not-prose mt-6 space-y-4'>
         <CodeBlock
           code={headerExample}
           language='javascript'
@@ -89,7 +89,7 @@ fetch('http://localhost:3001/api/transactions', {
       <p className='text-gray-600 dark:text-gray-400'>
         {t.docs.authentication.errorHandlingText}
       </p>
-      <div className='mt-6'>
+      <div className='not-prose mt-6'>
         <CodeBlock
           code={`{
   "error": "Profile ID is required",
