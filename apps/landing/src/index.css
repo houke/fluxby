@@ -195,6 +195,17 @@ html {
   }
 }
 
+/* Ensure code blocks have proper overflow on mobile */
+.prose pre {
+  overflow-x: auto !important;
+  max-width: 100%;
+}
+
+.prose code {
+  white-space: pre !important;
+  word-wrap: normal !important;
+}
+
 /* Prevent typography plugin from overriding explicit m-0 on h3 elements */
 h3.m-0 {
   margin-top: 0 !important;
