@@ -10,12 +10,12 @@ export default function DocsLayout() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
-    <div className='flex min-h-screen bg-gray-50 dark:bg-gray-900'>
+    <div className='flex min-h-screen overflow-hidden bg-gray-50 dark:bg-gray-900'>
       <DocsSidebar
         isOpen={isMobileMenuOpen}
         onClose={() => setIsMobileMenuOpen(false)}
       />
-      <div className='flex flex-1 flex-col bg-gray-50 dark:bg-gray-900'>
+      <div className='flex min-w-0 flex-1 flex-col overflow-hidden bg-gray-50 dark:bg-gray-900'>
         {/* Top bar */}
         <header className='sticky top-0 z-10 flex items-center justify-between border-b border-gray-200 bg-white px-4 py-4 lg:px-8 dark:border-gray-700 dark:bg-gray-800'>
           <div className='flex items-center gap-4'>
@@ -120,7 +120,7 @@ export default function DocsLayout() {
         </header>
 
         {/* Main content */}
-        <main className='min-w-0 flex-1 overflow-x-auto px-4 py-8 lg:px-8 lg:py-12'>
+        <main className='flex-1 overflow-y-auto overflow-x-hidden px-4 py-8 lg:px-8 lg:py-12'>
           <div className='mx-auto max-w-4xl'>
             <Outlet />
           </div>
