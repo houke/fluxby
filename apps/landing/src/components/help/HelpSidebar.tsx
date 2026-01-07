@@ -1,7 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
 import { FluxbyWebGL } from '@fluxby/shared';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 interface NavItem {
   title: string;
@@ -27,10 +27,15 @@ const scrollToTop = () => {
 export default function HelpSidebar({ isOpen, onClose }: HelpSidebarProps) {
   const location = useLocation();
   const { t } = useLanguage();
+  const prevPathRef = useRef(location.pathname);
 
   // Close sidebar on route change (mobile)
+  // Only close when pathname actually changes, not on initial render or onClose reference changes
   useEffect(() => {
-    onClose();
+    if (prevPathRef.current !== location.pathname) {
+      prevPathRef.current = location.pathname;
+      onClose();
+    }
   }, [location.pathname, onClose]);
 
   // User Guide navigation

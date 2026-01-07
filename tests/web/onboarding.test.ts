@@ -18,7 +18,7 @@ describe('Onboarding Data', () => {
         (ch) => ch.id === 'dashboard'
       );
       expect(dashboardChapter).toBeDefined();
-      expect(dashboardChapter?.route).toBe('/');
+      expect(dashboardChapter?.route).toBe('/dashboard');
     });
 
     it('should have unique chapter ids', () => {
@@ -44,7 +44,7 @@ describe('Onboarding Data', () => {
 
     it('should have valid routes for all chapters', () => {
       const validRoutes = [
-        '/',
+        '/dashboard',
         '/transactions',
         '/budgets',
         '/import',
@@ -226,8 +226,8 @@ describe('Onboarding State Logic', () => {
   });
 
   describe('Finding dashboard chapter', () => {
-    it('should find dashboard chapter for route /', () => {
-      const currentPath = '/';
+    it('should find dashboard chapter for route /dashboard', () => {
+      const currentPath = '/dashboard';
       const lastIndex = onboardingChapters.length - 1;
 
       // Find all chapters matching this route (excluding welcome and completion)

@@ -125,7 +125,7 @@ export default function HelpLayout() {
         </header>
 
         {/* Main content */}
-        <main className='flex-1 px-4 py-8 lg:px-8 lg:py-12'>
+        <main className='min-w-0 flex-1 overflow-x-auto px-4 py-8 lg:px-8 lg:py-12'>
           <div className='mx-auto max-w-4xl'>
             <Outlet />
           </div>

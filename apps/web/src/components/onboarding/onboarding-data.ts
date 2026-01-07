@@ -11,7 +11,7 @@ export const onboardingChapters: OnboardingChapter[] = [
   {
     id: 'welcome',
     menuItem: 'welcome',
-    route: '/',
+    route: '/dashboard',
     icon: 'Sparkles',
     title: {
       nl: 'Welkom',
@@ -39,7 +39,7 @@ export const onboardingChapters: OnboardingChapter[] = [
   {
     id: 'navigation',
     menuItem: 'navigation',
-    route: '/',
+    route: '/dashboard',
     icon: 'Menu',
     title: {
       nl: 'Navigatie',
@@ -107,7 +107,7 @@ export const onboardingChapters: OnboardingChapter[] = [
   {
     id: 'dashboard',
     menuItem: 'dashboard',
-    route: '/',
+    route: '/dashboard',
     icon: 'LayoutDashboard',
     title: {
       nl: 'Dashboard',
@@ -1387,7 +1387,7 @@ export const onboardingChapters: OnboardingChapter[] = [
   {
     id: 'completion',
     menuItem: 'completion',
-    route: '/',
+    route: '/dashboard',
     icon: 'CheckCircle',
     title: {
       nl: 'Klaar!',
