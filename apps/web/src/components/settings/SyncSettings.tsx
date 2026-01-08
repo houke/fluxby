@@ -47,7 +47,7 @@ import { SyncDebugPanel } from './SyncDebugPanel';
 import { QRPairingDialog } from './QRPairingDialog';
 
 export function SyncSettings() {
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
   const {
     deviceId,
     deviceName,
@@ -61,7 +61,6 @@ export function SyncSettings() {
     retryInitialization,
     syncStatus,
     forceSync,
-    formatLastSynced,
     autoSyncEnabled,
     setAutoSyncEnabled,
   } = useSync();
@@ -156,32 +155,25 @@ export function SyncSettings() {
     <div className='-mx-3 sm:mx-0'>
       <Card className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'>
         <CardHeader className='px-3 py-3 sm:px-6 sm:py-4'>
-          <CardTitle
-            className='flex cursor-default items-center gap-2 text-base select-none sm:text-lg'
-            onClick={handleTitleClick}
-          >
-            {t.settings?.sync?.title || 'Device sync'}
-          </CardTitle>
-          <CardDescription className='text-xs sm:text-sm'>
-            {t.settings?.sync?.description ||
-              'Sync your data across devices using peer-to-peer connections. No server required.'}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className='relative px-3 pt-0 pb-3 sm:px-6 sm:pt-0 sm:pb-6'>
-          {/* Debug Panel (hidden by default, triple-click title to show) */}
-          {showDebugPanel && (
-            <div className='mb-4'>
-              <SyncDebugPanel onClose={() => setShowDebugPanel(false)} />
+          <div className='flex items-start justify-between gap-4'>
+            <div>
+              <CardTitle
+                className='flex cursor-default items-center gap-2 text-base select-none sm:text-lg'
+                onClick={handleTitleClick}
+              >
+                {t.settings?.sync?.title || 'Device sync'}
+              </CardTitle>
+              <CardDescription className='text-xs sm:text-sm'>
+                {t.settings?.sync?.description ||
+                  'Sync your data across devices using peer-to-peer connections. No server required.'}
+              </CardDescription>
             </div>
-          )}
-
-          <div className='space-y-6'>
-            {/* Sync Status & Controls */}
-            <div className='flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-muted/30 p-3'>
-              <div className='flex items-center gap-3'>
+            {/* Sync Status & Controls - Compact */}
+            <div className='flex flex-col items-end gap-2'>
+              <div className='flex items-center gap-2'>
                 <div
                   className={cn(
-                    'flex h-10 w-10 items-center justify-center rounded-full',
+                    'flex h-8 w-8 items-center justify-center rounded-full',
                     syncStatus.state === 'idle' && syncStatus.connectedPeers > 0
                       ? 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400'
                       : syncStatus.state === 'syncing'
@@ -192,32 +184,18 @@ export function SyncSettings() {
                   )}
                 >
                   {syncStatus.isSyncing ? (
-                    <RefreshCw className='h-5 w-5 animate-spin' />
+                    <RefreshCw className='h-4 w-4 animate-spin' />
                   ) : (
-                    <Wifi className='h-5 w-5' />
+                    <Wifi className='h-4 w-4' />
                   )}
                 </div>
-                <div>
-                  <p className='text-sm font-medium'>
-                    {syncStatus.state === 'syncing'
-                      ? t.settings?.sync?.syncing || 'Syncing...'
-                      : syncStatus.connectedPeers > 0
-                        ? t.settings?.sync?.connected || 'Connected'
-                        : t.settings?.sync?.notConnected || 'Not connected'}
-                  </p>
-                  <p className='text-xs text-muted-foreground'>
-                    {t.settings?.sync?.lastSync || 'Last sync'}:{' '}
-                    {formatLastSynced(language === 'nl' ? 'nl' : 'en')}
-                  </p>
-                </div>
-              </div>
-              <div className='flex items-center gap-2'>
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button
-                        variant='outline'
-                        size='sm'
+                        variant='ghost'
+                        size='icon'
+                        className='h-8 w-8'
                         onClick={async () => {
                           setIsSyncingManual(true);
                           try {
@@ -231,7 +209,6 @@ export function SyncSettings() {
                           syncStatus.connectedPeers === 0 ||
                           isSyncingManual
                         }
-                        className='gap-2'
                       >
                         <RefreshCw
                           className={cn(
@@ -240,43 +217,54 @@ export function SyncSettings() {
                               'animate-spin'
                           )}
                         />
-                        {t.settings?.sync?.syncNow || 'Sync now'}
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>
-                      {t.settings?.sync?.syncNowTooltip ||
-                        'Force sync with all connected devices'}
+                      {t.settings?.sync?.syncNow || 'Sync now'}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant='ghost'
+                        size='icon'
+                        className='h-8 w-8'
+                        onClick={() => setAutoSyncEnabled(!autoSyncEnabled)}
+                      >
+                        {autoSyncEnabled ? (
+                          <ToggleRight className='h-5 w-5 text-purple-600 dark:text-purple-400' />
+                        ) : (
+                          <ToggleLeft className='h-5 w-5 text-muted-foreground' />
+                        )}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {t.settings?.sync?.autoSync || 'Auto-sync'}
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
               </div>
+              <p className='text-right text-xs text-muted-foreground'>
+                {syncStatus.state === 'syncing'
+                  ? t.settings?.sync?.syncing || 'Syncing...'
+                  : syncStatus.connectedPeers > 0
+                    ? t.settings?.sync?.connected || 'Connected'
+                    : t.settings?.sync?.notConnected || 'Not connected'}
+              </p>
             </div>
-
-            {/* Auto-Sync Toggle */}
-            <div className='flex items-center justify-between rounded-lg border p-3'>
-              <div>
-                <p className='text-sm font-medium'>
-                  {t.settings?.sync?.autoSync || 'Auto-sync'}
-                </p>
-                <p className='text-xs text-muted-foreground'>
-                  {t.settings?.sync?.autoSyncDescription ||
-                    'Automatically sync changes as you make them'}
-                </p>
-              </div>
-              <Button
-                variant='ghost'
-                size='sm'
-                onClick={() => setAutoSyncEnabled(!autoSyncEnabled)}
-                className='gap-2'
-              >
-                {autoSyncEnabled ? (
-                  <ToggleRight className='h-6 w-6 text-purple-600 dark:text-purple-400' />
-                ) : (
-                  <ToggleLeft className='h-6 w-6 text-muted-foreground' />
-                )}
-              </Button>
+          </div>
+        </CardHeader>
+        <CardContent className='relative px-3 pt-0 pb-3 sm:px-6 sm:pt-0 sm:pb-6'>
+          {/* Debug Panel (hidden by default, triple-click title to show) */}
+          {showDebugPanel && (
+            <div className='mb-4'>
+              <SyncDebugPanel onClose={() => setShowDebugPanel(false)} />
             </div>
+          )}
 
+          <div className='space-y-6'>
             {/* This Device */}
             <div className='space-y-2'>
               <h4 className='text-sm font-medium'>
@@ -350,40 +338,47 @@ export function SyncSettings() {
               </div>
             </div>
 
-            {/* Pairing Code */}
+            {/* Pairing Code & Connect to Device - 2 rows */}
             <div className='space-y-2'>
-              <h4 className='text-sm font-medium'>
-                {t.settings?.sync?.pairingCode || 'Pairing code'}
-              </h4>
-              <p className='text-sm text-muted-foreground'>
-                {t.settings?.sync?.pairingCodeDescription ||
-                  'Share this code with another device to connect.'}
-              </p>
-              <div className='flex items-center gap-2'>
+              <div className='flex items-center justify-between rounded-lg border p-3'>
+                <div className='flex-1'>
+                  <p className='text-sm font-medium'>
+                    {t.settings?.sync?.pairingCode || 'Pairing code'}
+                  </p>
+                  <p className='text-xs text-muted-foreground'>
+                    {t.settings?.sync?.pairingCodeDescription ||
+                      'Share this code with another device to connect.'}
+                  </p>
+                </div>
                 <QRPairingDialog
                   trigger={
-                    <Button disabled={!isInitialized}>
+                    <Button disabled={!isInitialized} size='sm'>
                       <QrCode className='mr-2 h-4 w-4' />
                       {t.settings?.sync?.showQRCode || 'Show QR code'}
                     </Button>
                   }
                 />
               </div>
-            </div>
-
-            {/* Connect to Device */}
-            <div className='space-y-2'>
-              <h4 className='text-sm font-medium'>
-                {t.settings?.sync?.connectToDevice || 'Connect to device'}
-              </h4>
-              <Button
-                variant='outline'
-                onClick={() => setIsPairingDialogOpen(true)}
-                disabled={!isInitialized}
-              >
-                <Link className='mr-2 h-4 w-4' />
-                {t.settings?.sync?.enterCode || 'Enter pairing code'}
-              </Button>
+              <div className='flex items-center justify-between rounded-lg border p-3'>
+                <div className='flex-1'>
+                  <p className='text-sm font-medium'>
+                    {t.settings?.sync?.connectToDevice || 'Connect to device'}
+                  </p>
+                  <p className='text-xs text-muted-foreground'>
+                    {t.settings?.sync?.enterCodeDescription ||
+                      'Enter the pairing code shown on the other device.'}
+                  </p>
+                </div>
+                <Button
+                  variant='outline'
+                  size='sm'
+                  onClick={() => setIsPairingDialogOpen(true)}
+                  disabled={!isInitialized}
+                >
+                  <Link className='mr-2 h-4 w-4' />
+                  {t.settings?.sync?.enterCode || 'Enter pairing code'}
+                </Button>
+              </div>
             </div>
 
             {/* Paired Devices */}
