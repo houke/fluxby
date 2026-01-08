@@ -1260,16 +1260,19 @@ export const api = {
     id: string,
     rule: { name?: string; patterns?: string[] }
   ) => {
-    // For now, just update by deleting and recreating
+    // Update the existing rule atomically; avoid delete-and-recreate which
+    // caused issues when only updating patterns. Use simple UPDATE statement.
     const ds = getDataService();
-    await ds.deletePaymentProviderRule(id);
-    if (rule.name && rule.patterns) {
-      return ds.createPaymentProviderRule({
-        name: rule.name,
-        patterns: rule.patterns.join(','),
-      });
-    }
-    return { success: true };
+
+    // Delegate to DataService update helper so the database is updated correctly
+    const updates: { name?: string; patterns?: string } = {};
+    if (typeof rule.name !== 'undefined') updates.name = rule.name;
+    if (typeof rule.patterns !== 'undefined')
+      updates.patterns = rule.patterns.join(',');
+
+    if (Object.keys(updates).length === 0) return { success: true };
+
+    return ds.updatePaymentProviderRule(id, updates);
   },
 
   // ============= Data Management =============

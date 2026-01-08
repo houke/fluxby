@@ -3050,6 +3050,38 @@ export function createDataService(db: Database) {
       );
     },
 
+    async updatePaymentProviderRule(
+      id: string,
+      updates: { name?: string; patterns?: string }
+    ) {
+      const pid = profileId();
+      if (!pid) throw new Error('No active profile');
+
+      const fields: string[] = [];
+      const params: any[] = [];
+
+      if (typeof updates.name !== 'undefined') {
+        fields.push('name = ?');
+        params.push(updates.name);
+      }
+      if (typeof updates.patterns !== 'undefined') {
+        fields.push('patterns = ?');
+        params.push(updates.patterns);
+      }
+
+      if (fields.length === 0) {
+        return { success: true };
+      }
+
+      params.push(Date.now(), id, pid);
+      await db.runAsync(
+        `UPDATE payment_provider_rules SET ${fields.join(', ')}, updated_at = ? WHERE id = ? AND profile_id = ?`,
+        params
+      );
+
+      return { success: true };
+    },
+
     async applyPaymentProviderRulesToTransactions(): Promise<{
       updated: number;
     }> {
