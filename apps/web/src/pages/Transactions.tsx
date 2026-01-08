@@ -10,6 +10,8 @@ import {
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { format } from 'date-fns';
+import { nl, enUS } from 'date-fns/locale';
 import {
   Search,
   ArrowUpRight,
@@ -145,7 +147,7 @@ interface Account {
 }
 
 export default function Transactions() {
-  const { t, language: _language } = useLanguage();
+  const { t, language } = useLanguage();
   const { activeProfileId } = useProfile();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -540,6 +542,77 @@ export default function Transactions() {
       >,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
+
+  // Get min/max dates to determine if there's data in other periods
+  const { data: minMaxDates } = useQuery<{
+    minDate: string;
+    maxDate: string;
+  } | null>({
+    queryKey: ['min-max-dates', activeProfileId],
+    queryFn: () =>
+      api.getMinMaxDates() as Promise<{
+        minDate: string;
+        maxDate: string;
+      } | null>,
+    enabled: !!activeProfileId,
+  });
+
+  // Determine suggested period based on available data (for empty state)
+  const getSuggestedPeriod = (): {
+    start: Date;
+    end: Date;
+    label: string;
+  } | null => {
+    if (!minMaxDates) return null;
+
+    const maxDate = new Date(minMaxDates.maxDate);
+    const locale = language === 'nl' ? nl : enUS;
+
+    // Suggest the month containing the most recent transaction
+    const suggestedStart = new Date(
+      maxDate.getFullYear(),
+      maxDate.getMonth(),
+      1
+    );
+    const suggestedEnd = new Date(
+      maxDate.getFullYear(),
+      maxDate.getMonth() + 1,
+      0
+    );
+    const monthLabel = format(suggestedStart, 'MMMM yyyy', { locale });
+
+    return {
+      start: suggestedStart,
+      end: suggestedEnd,
+      label: monthLabel,
+    };
+  };
+
+  const suggestedPeriod = getSuggestedPeriod();
+
+  // Check if we're already viewing the suggested period
+  const isViewingSuggestedPeriod = useMemo(() => {
+    if (!suggestedPeriod || !startDate || !endDate) return false;
+
+    const currentStart = new Date(startDate);
+    const currentEnd = new Date(endDate);
+
+    return (
+      currentStart.getFullYear() === suggestedPeriod.start.getFullYear() &&
+      currentStart.getMonth() === suggestedPeriod.start.getMonth() &&
+      currentStart.getDate() === suggestedPeriod.start.getDate() &&
+      currentEnd.getFullYear() === suggestedPeriod.end.getFullYear() &&
+      currentEnd.getMonth() === suggestedPeriod.end.getMonth() &&
+      currentEnd.getDate() === suggestedPeriod.end.getDate()
+    );
+  }, [suggestedPeriod, startDate, endDate]);
+
+  // Handler for jumping to period with data
+  const handleJumpToPeriod = () => {
+    if (suggestedPeriod) {
+      setDateRange(suggestedPeriod.start, suggestedPeriod.end);
+    }
+  };
 
   // Optimized category grouping: O(n) single pass instead of O(n²)
   const groupedCategories = useMemo(() => {
@@ -2849,13 +2922,27 @@ export default function Transactions() {
                     {t.transactions.importTransactions ||
                       'Importeer je eerste transacties om te beginnen.'}
                   </p>
-                  <Button
-                    onClick={() => navigate('/import/')}
-                    variant='link'
-                    className='mt-2 text-primary hover:underline'
-                  >
-                    {t.transactions.goToImport || 'Ga naar importeren'}
-                  </Button>
+                  <div className='mt-3 flex flex-wrap items-center justify-center gap-x-2'>
+                    <button
+                      onClick={() => navigate('/import/')}
+                      className='text-sm text-primary hover:underline'
+                    >
+                      {t.transactions.goToImport || 'Ga naar importeren'}
+                    </button>
+                    {suggestedPeriod && !isViewingSuggestedPeriod && (
+                      <>
+                        <span className='text-muted-foreground'>&middot;</span>
+                        <button
+                          onClick={handleJumpToPeriod}
+                          className='text-sm text-primary hover:underline'
+                        >
+                          {(
+                            t.dashboard?.jumpToPeriod || 'Jump to {period}'
+                          ).replace('{period}', suggestedPeriod.label)}
+                        </button>
+                      </>
+                    )}
+                  </div>
                 </div>
               )}
             </CardContent>

@@ -325,6 +325,23 @@ export default function Dashboard() {
 
   const suggestedPeriod = getSuggestedPeriod();
 
+  // Check if we're already viewing the suggested period
+  const isViewingSuggestedPeriod = useMemo(() => {
+    if (!suggestedPeriod || !startDate || !endDate) return false;
+
+    const currentStart = new Date(startDate);
+    const currentEnd = new Date(endDate);
+
+    return (
+      currentStart.getFullYear() === suggestedPeriod.start.getFullYear() &&
+      currentStart.getMonth() === suggestedPeriod.start.getMonth() &&
+      currentStart.getDate() === suggestedPeriod.start.getDate() &&
+      currentEnd.getFullYear() === suggestedPeriod.end.getFullYear() &&
+      currentEnd.getMonth() === suggestedPeriod.end.getMonth() &&
+      currentEnd.getDate() === suggestedPeriod.end.getDate()
+    );
+  }, [suggestedPeriod, startDate, endDate]);
+
   // Handler for jumping to period with data
   const handleJumpToPeriod = () => {
     if (suggestedPeriod) {
@@ -715,7 +732,7 @@ export default function Dashboard() {
                     >
                       {t.dashboard.goToImport}
                     </button>
-                    {suggestedPeriod && (
+                    {suggestedPeriod && !isViewingSuggestedPeriod && (
                       <>
                         <span className='text-muted-foreground'>&middot;</span>
                         <button
@@ -914,7 +931,7 @@ export default function Dashboard() {
                       >
                         {t.dashboard.goToImport}
                       </button>
-                      {suggestedPeriod && (
+                      {suggestedPeriod && !isViewingSuggestedPeriod && (
                         <>
                           <span className='text-muted-foreground'>
                             &middot;
@@ -1245,7 +1262,7 @@ export default function Dashboard() {
                         >
                           {t.dashboard.goToImport}
                         </button>
-                        {suggestedPeriod && (
+                        {suggestedPeriod && !isViewingSuggestedPeriod && (
                           <>
                             <span className='text-muted-foreground'>
                               &middot;
@@ -1566,7 +1583,7 @@ export default function Dashboard() {
                     >
                       {t.dashboard.goToImport}
                     </button>
-                    {suggestedPeriod && (
+                    {suggestedPeriod && !isViewingSuggestedPeriod && (
                       <>
                         <span className='text-muted-foreground'>&middot;</span>
                         <button
@@ -1680,7 +1697,7 @@ export default function Dashboard() {
                     >
                       {t.dashboard.goToImport}
                     </button>
-                    {suggestedPeriod && (
+                    {suggestedPeriod && !isViewingSuggestedPeriod && (
                       <>
                         <span className='text-muted-foreground'>&middot;</span>
                         <button
@@ -1780,7 +1797,7 @@ export default function Dashboard() {
                     >
                       {t.dashboard?.goToAddressBook || 'Ga naar adresboek'}
                     </button>
-                    {suggestedPeriod && (
+                    {suggestedPeriod && !isViewingSuggestedPeriod && (
                       <>
                         <span className='text-muted-foreground'>&middot;</span>
                         <button
