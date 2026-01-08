@@ -545,7 +545,9 @@ export function SyncSettings() {
               </DialogHeader>
               <div className='py-4'>
                 <Input
-                  placeholder='ABC123'
+                  placeholder={
+                    t.settings?.sync?.pairingPlaceholder || 'fluxby-ABC123'
+                  }
                   value={pairingInput}
                   onChange={(e) =>
                     setPairingInput(e.target.value.toUpperCase())

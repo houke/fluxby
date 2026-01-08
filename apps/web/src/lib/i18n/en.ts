@@ -868,6 +868,9 @@ export const en: TranslationKeys = {
       orEnterManually: 'Or enter manually',
       newCode: 'New code',
       qrCodeExpiry: 'Code expires in',
+      qrCodeValid:
+        'This code is valid until you generate a new one or close this dialog.',
+      pairingPlaceholder: 'fluxby-ABC123',
       pairingRequestDescription: '{device} wants to connect',
       accept: 'Accept',
       ready: 'Ready',

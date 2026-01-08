@@ -765,6 +765,8 @@ export interface TranslationKeys {
       orEnterManually: string;
       newCode: string;
       qrCodeExpiry: string;
+      qrCodeValid: string;
+      pairingPlaceholder: string;
       pairingRequestDescription: string;
       accept: string;
       ready: string;
@@ -1947,6 +1949,9 @@ export const nl: TranslationKeys = {
       orEnterManually: 'Of voer handmatig in',
       newCode: 'Nieuwe code',
       qrCodeExpiry: 'Code verloopt in',
+      qrCodeValid:
+        'Deze code is geldig totdat je een nieuwe genereert of deze dialoog sluit.',
+      pairingPlaceholder: 'fluxby-ABC123',
       pairingRequestDescription: '{device} wil verbinden',
       accept: 'Accepteren',
       ready: 'Gereed',
