@@ -220,6 +220,13 @@ export function SyncSettings() {
                       size='icon'
                       className='h-8 w-8 rounded-md hover:bg-purple-600 hover:text-white'
                       onClick={async () => {
+                        if (
+                          !isInitialized ||
+                          syncStatus.connectedPeers === 0 ||
+                          isSyncingManual
+                        ) {
+                          return;
+                        }
                         setIsSyncingManual(true);
                         try {
                           await forceSync();
@@ -227,11 +234,6 @@ export function SyncSettings() {
                           setIsSyncingManual(false);
                         }
                       }}
-                      disabled={
-                        !isInitialized ||
-                        syncStatus.connectedPeers === 0 ||
-                        isSyncingManual
-                      }
                     >
                       <RefreshCw
                         className={cn(
@@ -371,11 +373,9 @@ export function SyncSettings() {
             </div>
 
             {/* Connection settings */}
-            <div className='space-y-2'>
-              <h4 className='text-sm font-medium'>
-                {t.settings?.sync?.connectionSettings || 'Connection settings'}
-              </h4>
-            </div>
+            <h4 className='text-sm font-medium'>
+              {t.settings?.sync?.connectionSettings || 'Connection settings'}
+            </h4>
 
             {/* Pairing Code & Connect to Device - 2 rows */}
             <div className='space-y-2'>

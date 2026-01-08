@@ -251,15 +251,19 @@ export function PaymentProcessorSettings() {
                             variant='ghost'
                             className='h-7 w-7 rounded-full hover:bg-purple-600 hover:text-white'
                             onClick={() => {
+                              if (updateRuleMutation.isPending) return;
                               updateRuleMutation.mutate({
                                 id: rule.id,
                                 name: editRuleName,
                                 patterns: editRulePatterns,
                               });
                             }}
-                            disabled={updateRuleMutation.isPending}
                           >
-                            <Check className='h-4 w-4' />
+                            {updateRuleMutation.isPending ? (
+                              <Loader2 className='h-4 w-4 animate-spin' />
+                            ) : (
+                              <Check className='h-4 w-4' />
+                            )}
                           </Button>
                           <Button
                             size='icon'
