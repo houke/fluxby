@@ -250,8 +250,10 @@ export function SyncSettings() {
                         {t.settings?.sync?.syncNow || 'Sync now'}
                       </p>
                       <p className='text-xs text-muted-foreground'>
-                        {t.settings?.sync?.syncNowTooltip ||
-                          'Force sync with all connected devices'}
+                        {syncStatus.connectedPeers === 0
+                          ? 'Connect to a device to sync'
+                          : t.settings?.sync?.syncNowTooltip ||
+                            'Force sync with all connected devices'}
                       </p>
                     </div>
                   </TooltipContent>
@@ -263,13 +265,13 @@ export function SyncSettings() {
                     <Button
                       variant='ghost'
                       size='icon'
-                      className='h-8 w-8 rounded-md hover:bg-purple-600 hover:text-white'
+                      className='group h-8 w-8 rounded-md hover:bg-purple-600 hover:text-white'
                       onClick={() => setAutoSyncEnabled(!autoSyncEnabled)}
                     >
                       {autoSyncEnabled ? (
-                        <ToggleRight className='h-5 w-5 text-purple-600 dark:text-purple-400' />
+                        <ToggleRight className='h-5 w-5 text-purple-600 group-hover:text-white dark:text-purple-400' />
                       ) : (
-                        <ToggleLeft className='h-5 w-5 text-muted-foreground' />
+                        <ToggleLeft className='h-5 w-5 text-muted-foreground group-hover:text-white' />
                       )}
                     </Button>
                   </TooltipTrigger>
