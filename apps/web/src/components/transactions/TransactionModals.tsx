@@ -930,7 +930,7 @@ export const RuleModal = memo(function RuleModal({
                           </div>
                         </td>
                         <td
-                          className={`py-2 text-right ${rt.amount > 0 ? 'text-emerald-600' : 'text-rose-600'}`}
+                          className={`py-2 pr-4 text-right ${rt.amount > 0 ? 'text-emerald-600' : 'text-rose-600'}`}
                         >
                           {formatCurrency(rt.amount)}
                         </td>

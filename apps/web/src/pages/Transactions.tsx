@@ -2250,9 +2250,11 @@ export default function Transactions() {
                 1. Initial load (isLoading)
                 2. Fetching with no data yet
                 3. Actively fetching after filter changes (prevents "flash of empty state")
+                4. Fetching with active filters (prevents showing "no results" while still loading)
                 Note: We check isPending (from useTransition) OR isFetching to catch filter changes */}
               {isLoading ||
-              (isFetching && (!transactions?.length || isPending)) ? (
+              (isFetching && (!transactions?.length || isPending)) ||
+              (isFetching && hasActiveFilters) ? (
                 <div className='space-y-4'>
                   {[...Array(5)].map((_, i) => (
                     <Skeleton key={i} className='h-16' />

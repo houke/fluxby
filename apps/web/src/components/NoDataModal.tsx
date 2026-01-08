@@ -4,6 +4,7 @@
  */
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useLocation } from 'react-router-dom';
 import {
   Dialog,
   DialogContent,
@@ -20,6 +21,7 @@ import { format } from 'date-fns';
 import { nl, enUS } from 'date-fns/locale';
 
 export function NoDataModal() {
+  const location = useLocation();
   const { t, language } = useLanguage();
   const { filters, setDateRange } = useFilters();
   const { activeProfileId } = useProfile();
@@ -121,6 +123,12 @@ export function NoDataModal() {
   useEffect(() => {
     if (isLoadingMinMax || isLoadingCount) return;
 
+    // Don't show on import page (user just finished importing)
+    if (location.pathname.includes('/import')) {
+      setIsOpen(false);
+      return;
+    }
+
     // Don't show if there's no data at all (user should import first)
     if (!minMaxDates) {
       setIsOpen(false);
@@ -155,6 +163,7 @@ export function NoDataModal() {
     dismissedForPeriod,
     currentPeriodKey,
     suggestedPeriod,
+    location.pathname,
   ]);
 
   const handleJumpToPeriod = () => {

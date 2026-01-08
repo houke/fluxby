@@ -2,6 +2,8 @@ import { useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
+import { format } from 'date-fns';
+import { nl, enUS } from 'date-fns/locale';
 import {
   TrendingUp,
   TrendingDown,
@@ -114,7 +116,7 @@ export default function Dashboard() {
   const [accountScrollIndex, setAccountScrollIndex] = useState(0);
   const navigate = useNavigate();
   const { startDate, endDate } = useFilterParams();
-  const { resetFilters } = useFilters();
+  const { resetFilters, setDateRange } = useFilters();
 
   const { data: stats, isLoading } = useQuery<DashboardStats>({
     queryKey: ['dashboard', activeProfileId, startDate, endDate],
@@ -234,6 +236,20 @@ export default function Dashboard() {
       }>,
   });
 
+  // Get min/max dates to determine if there's data in other periods
+  const { data: minMaxDates } = useQuery<{
+    minDate: string;
+    maxDate: string;
+  } | null>({
+    queryKey: ['min-max-dates', activeProfileId],
+    queryFn: () =>
+      api.getMinMaxDates() as Promise<{
+        minDate: string;
+        maxDate: string;
+      } | null>,
+    enabled: !!activeProfileId,
+  });
+
   const monthlyData = useMemo(
     () => stats?.monthlyData || [],
     [stats?.monthlyData]
@@ -275,6 +291,46 @@ export default function Dashboard() {
   // Use balance forecast from API
   const hasEnoughData =
     balanceForecast !== null && balanceForecast !== undefined;
+
+  // Determine suggested period based on available data (for empty states)
+  const getSuggestedPeriod = (): {
+    start: Date;
+    end: Date;
+    label: string;
+  } | null => {
+    if (!minMaxDates) return null;
+
+    const maxDate = new Date(minMaxDates.maxDate);
+    const locale = language === 'nl' ? nl : enUS;
+
+    // Suggest the month containing the most recent transaction
+    const suggestedStart = new Date(
+      maxDate.getFullYear(),
+      maxDate.getMonth(),
+      1
+    );
+    const suggestedEnd = new Date(
+      maxDate.getFullYear(),
+      maxDate.getMonth() + 1,
+      0
+    );
+    const monthLabel = format(suggestedStart, 'MMMM yyyy', { locale });
+
+    return {
+      start: suggestedStart,
+      end: suggestedEnd,
+      label: monthLabel,
+    };
+  };
+
+  const suggestedPeriod = getSuggestedPeriod();
+
+  // Handler for jumping to period with data
+  const handleJumpToPeriod = () => {
+    if (suggestedPeriod) {
+      setDateRange(suggestedPeriod.start, suggestedPeriod.end);
+    }
+  };
 
   const dailyScrollRef = useRef<HTMLDivElement>(null);
   const monthlyIncomeScrollRef = useRef<HTMLDivElement>(null);
@@ -652,13 +708,18 @@ export default function Dashboard() {
                   <p className='mt-1 text-sm text-muted-foreground'>
                     {t.dashboard.importTransactions}
                   </p>
-                  <Button
-                    onClick={() => navigate('/import/')}
-                    variant='link'
-                    className='mt-2'
-                  >
-                    {t.dashboard.goToImport}
-                  </Button>
+                  <div className='mt-2 flex flex-wrap justify-center gap-2'>
+                    <Button onClick={() => navigate('/import/')} variant='link'>
+                      {t.dashboard.goToImport}
+                    </Button>
+                    {suggestedPeriod && (
+                      <Button onClick={handleJumpToPeriod} variant='link'>
+                        {(
+                          t.dashboard?.jumpToPeriod || 'Jump to {period}'
+                        ).replace('{period}', suggestedPeriod.label)}
+                      </Button>
+                    )}
+                  </div>
                 </div>
               )}
             </CardContent>
@@ -837,12 +898,24 @@ export default function Dashboard() {
                     <p className='mt-1 text-sm text-muted-foreground'>
                       {t.dashboard.importTransactions}
                     </p>
-                    <button
-                      onClick={() => navigate('/import/')}
-                      className='mt-3 text-sm text-primary hover:underline'
-                    >
-                      {t.dashboard.goToImport}
-                    </button>
+                    <div className='mt-3 flex flex-wrap justify-center gap-2'>
+                      <button
+                        onClick={() => navigate('/import/')}
+                        className='text-sm text-primary hover:underline'
+                      >
+                        {t.dashboard.goToImport}
+                      </button>
+                      {suggestedPeriod && (
+                        <button
+                          onClick={handleJumpToPeriod}
+                          className='text-sm text-primary hover:underline'
+                        >
+                          {(
+                            t.dashboard?.jumpToPeriod || 'Jump to {period}'
+                          ).replace('{period}', suggestedPeriod.label)}
+                        </button>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
@@ -1151,12 +1224,24 @@ export default function Dashboard() {
                       <p className='mt-1 text-sm text-muted-foreground'>
                         {t.dashboard.importTransactions}
                       </p>
-                      <button
-                        onClick={() => navigate('/import/')}
-                        className='mt-3 text-sm text-primary hover:underline'
-                      >
-                        {t.dashboard.goToImport}
-                      </button>
+                      <div className='mt-3 flex flex-wrap justify-center gap-2'>
+                        <button
+                          onClick={() => navigate('/import/')}
+                          className='text-sm text-primary hover:underline'
+                        >
+                          {t.dashboard.goToImport}
+                        </button>
+                        {suggestedPeriod && (
+                          <button
+                            onClick={handleJumpToPeriod}
+                            className='text-sm text-primary hover:underline'
+                          >
+                            {(
+                              t.dashboard?.jumpToPeriod || 'Jump to {period}'
+                            ).replace('{period}', suggestedPeriod.label)}
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 )}
@@ -1455,12 +1540,24 @@ export default function Dashboard() {
                   <p className='mt-1 text-sm text-muted-foreground'>
                     {t.dashboard.importTransactions}
                   </p>
-                  <button
-                    onClick={() => navigate('/import/')}
-                    className='mt-3 text-sm text-primary hover:underline'
-                  >
-                    {t.dashboard.goToImport}
-                  </button>
+                  <div className='mt-3 flex flex-wrap justify-center gap-2'>
+                    <button
+                      onClick={() => navigate('/import/')}
+                      className='text-sm text-primary hover:underline'
+                    >
+                      {t.dashboard.goToImport}
+                    </button>
+                    {suggestedPeriod && (
+                      <button
+                        onClick={handleJumpToPeriod}
+                        className='text-sm text-primary hover:underline'
+                      >
+                        {(
+                          t.dashboard?.jumpToPeriod || 'Jump to {period}'
+                        ).replace('{period}', suggestedPeriod.label)}
+                      </button>
+                    )}
+                  </div>
                 </div>
               )}
             </CardContent>
@@ -1554,13 +1651,18 @@ export default function Dashboard() {
                   <p className='mt-1 text-sm text-muted-foreground'>
                     {t.dashboard.importTransactions}
                   </p>
-                  <Button
-                    onClick={() => navigate('/import/')}
-                    variant='link'
-                    className='mt-2'
-                  >
-                    {t.dashboard.goToImport}
-                  </Button>
+                  <div className='mt-2 flex flex-wrap justify-center gap-2'>
+                    <Button onClick={() => navigate('/import/')} variant='link'>
+                      {t.dashboard.goToImport}
+                    </Button>
+                    {suggestedPeriod && (
+                      <Button onClick={handleJumpToPeriod} variant='link'>
+                        {(
+                          t.dashboard?.jumpToPeriod || 'Jump to {period}'
+                        ).replace('{period}', suggestedPeriod.label)}
+                      </Button>
+                    )}
+                  </div>
                 </div>
               )}
             </CardContent>
@@ -1640,13 +1742,21 @@ export default function Dashboard() {
                     {t.dashboard?.addContactsToAddressBook ||
                       'Voeg contacten toe aan je adresboek'}
                   </p>
-                  <Button
-                    onClick={() => navigate('/addressbook/')}
-                    variant='link'
-                    className='mt-2'
-                  >
-                    {t.dashboard?.goToAddressBook || 'Ga naar adresboek'}
-                  </Button>
+                  <div className='mt-2 flex flex-wrap justify-center gap-2'>
+                    <Button
+                      onClick={() => navigate('/addressbook/')}
+                      variant='link'
+                    >
+                      {t.dashboard?.goToAddressBook || 'Ga naar adresboek'}
+                    </Button>
+                    {suggestedPeriod && (
+                      <Button onClick={handleJumpToPeriod} variant='link'>
+                        {(
+                          t.dashboard?.jumpToPeriod || 'Jump to {period}'
+                        ).replace('{period}', suggestedPeriod.label)}
+                      </Button>
+                    )}
+                  </div>
                 </div>
               )}
             </CardContent>

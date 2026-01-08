@@ -191,6 +191,14 @@ export async function processASNRow(
     type = 'transfer';
   }
 
+  // Check if description contains 'ASN Sparen' (internal savings transfer)
+  if (
+    description.toLowerCase().includes('asn sparen') ||
+    omschrijving.toLowerCase().includes('asn sparen')
+  ) {
+    type = 'transfer';
+  }
+
   // Get own IBAN for hash generation
   const account = await db.queryOneAsync<{ iban: string }>(
     'SELECT iban FROM accounts WHERE id = ? AND profile_id = ?',

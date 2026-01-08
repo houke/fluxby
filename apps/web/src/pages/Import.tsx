@@ -1098,7 +1098,12 @@ export default function Import() {
                   <div className='text-muted-foreground'>
                     {t.import.filename}
                   </div>
-                  <div className='font-medium'>{importResults.filename}</div>
+                  <div
+                    className='truncate font-medium'
+                    title={importResults.filename}
+                  >
+                    {importResults.filename}
+                  </div>
                 </div>
                 <div className='rounded-lg bg-muted/50 p-3'>
                   <div className='text-muted-foreground'>
