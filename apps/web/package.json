@@ -41,7 +41,7 @@
     "react-day-picker": "^9.12.0",
     "react-dom": "^19.0.0",
     "react-dropzone": "^14.3.5",
-    "react-router-dom": "^7.1.0",
+    "react-router-dom": "^7.12.0",
     "react-window": "^2.2.3",
     "recharts": "^3.6.0",
     "tailwind-merge": "^3.4.0",
@@ -53,6 +53,6 @@
     "@types/react-dom": "^19.0.1",
     "@vitejs/plugin-react": "^5.1.2",
     "typescript": "^5.7.2",
-    "vite": "^7.3.0"
+    "vite": "^7.3.1"
   }
 }
