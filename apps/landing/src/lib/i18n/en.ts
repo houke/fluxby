@@ -128,11 +128,21 @@ export const en: LandingTranslationKeys = {
       {
         title: 'Easy CSV import',
         description:
-          'Import your bank transactions in seconds. Simply drag and drop your ING CSV export and Fluxby handles the rest.',
+          'Import your bank transactions in seconds. Simply drag and drop your CSV export and Fluxby handles the rest.',
         features: [
           'Drag & drop upload',
-          'ING bank support',
+          'Multiple bank support',
           'Duplicate detection',
+        ],
+      },
+      {
+        title: 'Device sync',
+        description:
+          'Keep your data in sync across all your devices. Peer-to-peer sync means your data travels directly between devices - no cloud required.',
+        features: [
+          'Direct device-to-device sync',
+          'End-to-end encrypted',
+          'Works on local network',
         ],
       },
     ],
@@ -2020,6 +2030,17 @@ export const en: LandingTranslationKeys = {
       done: 'Import complete!',
       transactionsImported: 'transactions imported',
       dragHint: 'Drag your ING CSV file here',
+    },
+    sync: {
+      discovering: 'Discovering devices...',
+      connecting: 'Connecting...',
+      syncing: 'Syncing data...',
+      complete: 'Sync complete!',
+      device1: 'Laptop',
+      device2: 'Phone',
+      transactions: 'transactions',
+      categories: 'categories',
+      p2pEncrypted: 'Peer-to-peer encrypted',
     },
   },
 };

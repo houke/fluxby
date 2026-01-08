@@ -7,6 +7,7 @@ import {
   AnalyticsAnimation,
   CategoriesAnimation,
   ImportAnimation,
+  SyncAnimation,
 } from './screenshot-animations';
 
 // Map animation components to screenshot indices
@@ -17,6 +18,7 @@ const AnimationComponents = [
   AnalyticsAnimation, // 3: Analytics
   CategoriesAnimation, // 4: Categories
   ImportAnimation, // 5: Import
+  SyncAnimation, // 6: Device Sync
 ];
 
 const Screenshots = () => {
