@@ -103,11 +103,33 @@ const FeaturesContent = () => {
       title: featuresPage?.bankImport?.title || 'Bank CSV import',
       description:
         featuresPage?.bankImport?.description ||
-        'Exporteer eenvoudig transacties van je bank en importeer ze in Fluxby. Werkt met ING en meer banken komen binnenkort.',
+        'Exporteer eenvoudig transacties van je bank en importeer ze in Fluxby. Werkt met meerdere banken.',
       highlights: featuresPage?.bankImport?.highlights || [
-        'ING ondersteuning',
+        'Meerdere banken ondersteuning',
         'Drag & drop upload',
         'Duplicaat detectie',
+      ],
+    },
+    {
+      title: featuresPage?.peer2peer?.title || 'Peer-to-peer sync',
+      description:
+        featuresPage?.peer2peer?.description ||
+        'Synchroniseer je data veilig tussen apparaten zonder cloud server. Je apparaten praten direct met elkaar.',
+      highlights: featuresPage?.peer2peer?.highlights || [
+        'End-to-end encryptie',
+        'Geen centrale server',
+        'Sync tussen apparaten',
+      ],
+    },
+    {
+      title: featuresPage?.multiProfile?.title || 'Meerdere profielen',
+      description:
+        featuresPage?.multiProfile?.description ||
+        'Maak aparte profielen voor persoonlijk, zakelijk of gezinsfinanciën. Houd alles georganiseerd maar gescheiden.',
+      highlights: featuresPage?.multiProfile?.highlights || [
+        'Aparte werkruimtes',
+        'Vlot wisselen',
+        'Gescheiden data',
       ],
     },
     {
