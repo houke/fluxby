@@ -173,6 +173,19 @@ const BANK_PRESETS: Record<
       notes: ['Mededelingen'],
     },
   },
+  asn: {
+    name: 'ASN Bank',
+    mapping: {
+      date: ['Datum'],
+      amount: ['Bedrag bij / af'],
+      description: ['Omschrijving'],
+      iban: ['Je rekening'],
+      counterparty: ['Van / naar'],
+      balance: ['Saldo voor boeking'],
+      paymentMethod: ['Type'],
+      notes: ['Betalingskenmerk'],
+    },
+  },
   rabobank: {
     name: 'Rabobank',
     mapping: {
@@ -461,6 +474,15 @@ export default function Import() {
   // Detect bank from headers
   const detectBank = useCallback((headers: string[]): string => {
     const headersLower = headers.map((h) => h.toLowerCase());
+
+    // ASN Bank specific headers - check for both signature columns
+    // ASN uses: "Saldo voor boeking" and "Bedrag bij / af"
+    if (
+      headersLower.includes('saldo voor boeking') &&
+      headersLower.includes('bedrag bij / af')
+    ) {
+      return 'asn';
+    }
 
     // ING specific headers
     if (

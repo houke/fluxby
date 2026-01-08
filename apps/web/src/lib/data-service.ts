@@ -28,6 +28,7 @@ import {
   DEFAULT_PAYMENT_PROVIDER_RULES,
 } from '@fluxby/shared';
 import { processINGRow } from './importers/ing-importer';
+import { processASNRow } from './importers/asn-importer';
 
 /**
  * Get the active profile ID from OPFS settings
@@ -3374,6 +3375,73 @@ export function createDataService(db: Database) {
                   direction: directionColumn,
                   notes: mapping.notes,
                   paymentMethod: mapping.paymentMethod,
+                },
+                ownAccountIbans,
+              },
+              {
+                parseDate: (val) => this._parseFlexibleDate(val),
+                parseAmount: (val) => this._parseFlexibleAmount(val),
+                applyCleanupRules: (name) =>
+                  this._applyCleanupRulesToName(name, cleanupRules),
+                generateHash: (date, amount, desc, iban) =>
+                  this._generateHash(date, amount, desc, iban),
+              }
+            );
+
+            if ('error' in result && result.error) {
+              const errorMsg = result.error;
+              skippedRows.push({
+                rowIndex: i + 1,
+                date: row[mapping.date] || null,
+                amount: this._parseFlexibleAmount(row[mapping.amount]),
+                description: row[mapping.description] || '',
+                reason: errorMsg.includes('date')
+                  ? 'invalidDate'
+                  : errorMsg.includes('amount')
+                    ? 'invalidAmount'
+                    : 'parseError',
+              });
+              errors.push(`Row ${i + 1}: ${errorMsg}`);
+              continue;
+            }
+
+            // Type guard: if there's no error, we have success result
+            if (
+              !('transaction' in result) ||
+              !result.transaction ||
+              !result.hash
+            ) {
+              skippedRows.push({
+                rowIndex: i + 1,
+                date: row[mapping.date] || null,
+                amount: this._parseFlexibleAmount(row[mapping.amount]),
+                description: row[mapping.description] || '',
+                reason: 'parseError',
+              });
+              errors.push(`Row ${i + 1}: Failed to process row`);
+              continue;
+            }
+
+            transactionData = result.transaction;
+            hash = result.hash;
+            opposingIban = result.opposingIban ?? null;
+            merchantName = result.merchantName ?? '';
+          } else if (options.bank?.toLowerCase() === 'asn') {
+            const result = await processASNRow(
+              db,
+              row,
+              {
+                accountId: options.accountId,
+                profileId: pid,
+                mapping: {
+                  date: mapping.date,
+                  amount: mapping.amount,
+                  description: mapping.description,
+                  iban: mapping.iban,
+                  counterparty: mapping.counterparty,
+                  balance: mapping.balance,
+                  notes: mapping.notes,
+                  type: mapping.paymentMethod, // ASN uses "Type" for payment method
                 },
                 ownAccountIbans,
               },
