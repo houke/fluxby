@@ -1,4 +1,4 @@
-export * from './types.js';
+export * from './types/index.js';
 export * from './utils.js';
 export * from './seed-data.js';
 export * from './gh-pages-redirect.js';

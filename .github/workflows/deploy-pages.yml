@@ -1,11 +1,22 @@
 name: Deploy to GitHub Pages
 # Builds and deploys the Fluxby web and landing apps to GitHub Pages on every push to main.
 #
-# IMPORTANT: To prevent the README from showing during deployments, ensure your repository's
-# GitHub Pages settings are configured as follows:
-#   Settings → Pages → Build and deployment → Source: "GitHub Actions"
-# Do NOT use "Deploy from a branch" as that would serve the repository root (including README.md)
-# during the deployment process.
+# ============================================================================
+# IMPORTANT: GitHub Pages Source Configuration
+# ============================================================================
+# To prevent the README from showing when deployments fail, your repository's
+# GitHub Pages settings MUST be configured as:
+#
+#   Repository → Settings → Pages → Build and deployment → Source: "GitHub Actions"
+#
+# ⚠️  Do NOT use "Deploy from a branch" - this causes GitHub to serve the
+#     repository root (including README.md) as a fallback when no deployment exists.
+#
+# With "GitHub Actions" as the source:
+# - Only successful workflow deployments update the live site
+# - Failed builds leave the previous deployment intact
+# - There is no fallback to repository content
+# ============================================================================
 #
 # SAFETY: If the build fails, the currently deployed site remains unchanged.
 # GitHub Pages deployment is atomic - the new site is only deployed if ALL build steps succeed.

@@ -175,6 +175,17 @@ export interface LandingTranslationKeys {
       transactionsImported: string;
       dragHint: string;
     };
+    sync?: {
+      discovering: string;
+      connecting: string;
+      syncing: string;
+      complete: string;
+      device1: string;
+      device2: string;
+      transactions: string;
+      categories: string;
+      p2pEncrypted: string;
+    };
   };
 }
 

@@ -50,17 +50,7 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { Toast, ToastType } from '@/components/ui/toast';
 
-interface Category {
-  id: string;
-  name: string;
-  parentId: string | null;
-  icon: string | null;
-  color: string | null;
-  description?: string | null;
-  budgetId?: string | null;
-  transactionCount?: number;
-  totalExpenses?: number;
-}
+import type { Category } from '@fluxby/shared';
 
 interface CategoryRule {
   id: string;

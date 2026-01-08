@@ -31,39 +31,14 @@ import {
 import { formatCurrency, formatDate, cn } from '@/lib/utils';
 
 // Types
-export interface Transaction {
-  id: number;
-  date: string;
-  amount: number;
-  type: 'income' | 'expense' | 'transfer';
-  description: string;
-  merchantName: string | null;
-  categoryId: number | null;
-  paymentMethod: string | null;
-  notes: string | null;
-  opposingAccountIban: string | null;
-  opposingAccountName: string | null;
-  paymentProvider: string | null;
-  addressBookId: number | null;
-}
+import type {
+  Transaction,
+  Category,
+  AddressBookEntry,
+  PaymentProviderRule,
+} from '@fluxby/shared';
 
-export interface Category {
-  id: number;
-  name: string;
-  icon: string | null;
-  color: string | null;
-  parentId: number | null;
-}
-
-export interface AddressBookEntry {
-  id: number;
-  iban: string;
-  name: string;
-  description: string | null;
-  originalName?: string | null;
-  originalNames?: string[];
-  ibans?: string[];
-}
+// Types
 
 export interface PaymentMethodInfo {
   icon: React.ReactNode;
@@ -78,11 +53,6 @@ export interface PaymentMethod {
   color: string;
 }
 
-export interface PaymentProviderRule {
-  id: number;
-  name: string;
-  patterns: string;
-}
 
 export interface TranslationKeys {
   transactions: {
@@ -138,14 +108,14 @@ interface TransactionRowProps {
   paymentMethods: PaymentMethod[];
   t: TranslationKeys;
   // State
-  editingLabelId: number | null;
+  editingLabelId: string | null;
   labelDraft: string;
   originalLabelValue: string;
   expandedMerchant: string | null;
-  openCategoryPopover: number | null;
-  openAddressBookPopover: number | null;
-  openPaymentMethodPopover: number | null;
-  openPaymentProcessorPopover: number | null;
+  openCategoryPopover: string | null;
+  openAddressBookPopover: string | null;
+  openPaymentMethodPopover: string | null;
+  openPaymentProcessorPopover: string | null;
   categoryPopoverSearch: string;
   addressBookPopoverSearch: string;
   // Computed values
@@ -158,24 +128,24 @@ interface TransactionRowProps {
   onLabelDraftChange: (value: string) => void;
   onStartLabelEdit: (tx: Transaction) => void;
   onCancelLabelEdit: () => void;
-  onSaveLabel: (txId: number) => void;
+  onSaveLabel: (txId: string) => void;
   onResetLabel: () => void;
   onExpandMerchant: (key: string | null) => void;
-  onCategoryPopoverOpen: (id: number | null) => void;
-  onAddressBookPopoverOpen: (id: number | null) => void;
-  onPaymentMethodPopoverOpen: (id: number | null) => void;
-  onPaymentProcessorPopoverOpen: (id: number | null) => void;
+  onCategoryPopoverOpen: (id: string | null) => void;
+  onAddressBookPopoverOpen: (id: string | null) => void;
+  onPaymentMethodPopoverOpen: (id: string | null) => void;
+  onPaymentProcessorPopoverOpen: (id: string | null) => void;
   onCategoryPopoverSearch: (value: string) => void;
   onAddressBookPopoverSearch: (value: string) => void;
-  onCategorySelect: (tx: Transaction, categoryId: number) => void;
+  onCategorySelect: (tx: Transaction, categoryId: string) => void;
   onAddressBookSelect: (tx: Transaction, contact: AddressBookEntry) => void;
   onPaymentMethodSelect: (tx: Transaction, method: string | null) => void;
   onPaymentProcessorSelect: (tx: Transaction, provider: string | null) => void;
   onAddToAddressBook: (tx: Transaction) => void;
   onTransferToggle: (tx: Transaction) => void;
   // Utility functions
-  getCategoryName: (categoryId: number | null) => string;
-  getCategoryColor: (categoryId: number | null) => string;
+  getCategoryName: (categoryId: string | null) => string;
+  getCategoryColor: (categoryId: string | null) => string;
   getPaymentMethodInfo: (method: string | null) => PaymentMethodInfo;
 }
 

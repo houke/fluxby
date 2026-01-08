@@ -91,59 +91,17 @@ import {
 
 // Filters on this page are intentionally local to the Transactions view.
 // This prevents Dashboard/Analytics filters (global) from affecting Transactions and vice versa.
+import type { Transaction, Account, Category, AddressBookEntry } from '@fluxby/shared';
+
 type TransactionTypeFilter = 'all' | 'income' | 'expense' | 'transfer';
 import { useFilterParams, useFilters } from '@/contexts/FilterContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useProfile } from '@/contexts/ProfileContext';
 
-interface Transaction {
-  id: string;
-  date: string;
-  amount: number;
-  type: 'income' | 'expense' | 'transfer';
-  description: string;
-  merchantName: string | null;
-  categoryId: string | null;
-  paymentMethod: string | null;
-  notes: string | null;
-  opposingAccountIban: string | null;
-  opposingAccountName: string | null;
-  paymentProvider: string | null;
-  addressBookId: string | null;
-}
-
-interface Category {
-  id: string;
-  name: string;
-  icon: string | null;
-  color: string | null;
-  parentId: string | null;
-}
-
 interface CategorySuggestion {
   categoryId: string | null;
   categoryName: string | null;
   confidence: number;
-}
-
-interface AddressBookEntry {
-  id: string;
-  iban: string;
-  name: string;
-  description: string | null;
-  originalName?: string | null; // Original name from transaction (for shared IBAN merchants)
-  originalNames?: string[]; // Legacy: array of original names
-  ibans?: string[]; // All IBANs associated with this contact
-}
-
-interface Account {
-  id: string;
-  iban: string;
-  name: string;
-  type: 'checking' | 'savings' | 'credit';
-  bank: string;
-  currentBalance: number;
-  balance?: number;
 }
 
 export default function Transactions() {
@@ -3701,7 +3659,7 @@ export default function Transactions() {
                                 checked={selectedRelatedIds.has(rt.id)}
                                 onChange={(e) => {
                                   const target = e.target as HTMLInputElement;
-                                  const newSet = new Set(selectedRelatedIds);
+                                  const newSet: Set<string> = new Set(selectedRelatedIds);
                                   if (target.checked) {
                                     newSet.add(rt.id);
                                   } else {

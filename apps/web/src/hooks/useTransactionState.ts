@@ -10,86 +10,17 @@ import { findSimilarNameGroups } from '@/lib/utils';
 // Types
 // ============================================================================
 
-export interface Transaction {
-  id: string;
-  date: string;
-  amount: number;
-  type: 'income' | 'expense' | 'transfer';
-  description: string;
-  merchantName: string | null;
-  categoryId: string | null;
-  categoryName?: string | null;
-  categoryIcon?: string | null;
-  paymentMethod: string | null;
-  notes: string | null;
-  opposingAccountIban: string | null;
-  opposingAccountName: string | null;
-  paymentProvider: string | null;
-  addressBookId: string | null;
-}
-
-export interface Category {
-  id: string;
-  name: string;
-  icon: string | null;
-  color: string | null;
-  parentId: string | null;
-}
-
-export interface CategorySuggestion {
-  categoryId: string;
-  categoryName: string;
-  categoryIcon: string;
-  source: 'rule' | 'history';
-}
-
-export interface AddressBookEntry {
-  id: string;
-  iban: string;
-  name: string;
-  description: string | null;
-  originalName?: string | null;
-  originalNames?: string[];
-  ibans?: string[];
-}
-
-export interface Account {
-  id: string;
-  iban: string;
-  name: string;
-  type: 'checking' | 'savings' | 'credit';
-  bank: string;
-  currentBalance: number;
-  balance?: number;
-}
-
-export interface SharedIban {
-  iban: string;
-  merchantCount: number;
-  merchants: Array<{ name: string; transactionCount: number }>;
-  inAddressBook: boolean;
-  isMarkedShared: boolean;
-  isPartiallyResolved: boolean;
-  providerName: string | null;
-  isKnownProvider: boolean;
-  knownProviderName: string | null;
-}
-
-export interface CategoryRule {
-  id: string;
-  pattern: string;
-  categoryId: string;
-  priority: number;
-}
-
-export type TransactionTypeFilter = 'all' | 'income' | 'expense' | 'transfer';
-
-export interface SharedIbanGroup {
-  id: string;
-  entries: Array<{ name: string; transactionCount: number }>;
-  editedName: string;
-  isSplit: boolean;
-}
+import type {
+  Transaction,
+  Category,
+  CategorySuggestion,
+  AddressBookEntry,
+  Account,
+  SharedIban,
+  SharedIbanGroup,
+  CategoryRule,
+  TransactionTypeFilter,
+} from '@fluxby/shared';
 
 // ============================================================================
 // Search State Hook
@@ -340,17 +271,17 @@ export function useFilterState() {
 // ============================================================================
 
 export function usePopoverState() {
-  const [openCategoryPopover, setOpenCategoryPopover] = useState<number | null>(
+  const [openCategoryPopover, setOpenCategoryPopover] = useState<string | null>(
     null
   );
   const [openAddressBookPopover, setOpenAddressBookPopover] = useState<
-    number | null
+    string | null
   >(null);
   const [openPaymentMethodPopover, setOpenPaymentMethodPopover] = useState<
-    number | null
+    string | null
   >(null);
   const [openPaymentProcessorPopover, setOpenPaymentProcessorPopover] =
-    useState<number | null>(null);
+    useState<string | null>(null);
 
   // Search states for inline popovers
   const [addressBookPopoverSearch, setAddressBookPopoverSearch] = useState('');
@@ -385,15 +316,15 @@ export function usePopoverState() {
 // ============================================================================
 
 export function useEditingState() {
-  const [editingLabelId, setEditingLabelId] = useState<number | null>(null);
+  const [editingLabelId, setEditingLabelId] = useState<string | null>(null);
   const [labelDraft, setLabelDraft] = useState('');
   const [originalLabelValue, setOriginalLabelValue] = useState('');
   const [expandedMerchant, setExpandedMerchant] = useState<string | null>(null);
   const [suggestions, setSuggestions] = useState<
-    Record<number, CategorySuggestion>
+    Record<string, CategorySuggestion>
   >({});
 
-  const startEditing = useCallback((id: number, currentValue: string) => {
+  const startEditing = useCallback((id: string, currentValue: string) => {
     setEditingLabelId(id);
     setLabelDraft(currentValue);
     setOriginalLabelValue(currentValue);
@@ -459,13 +390,13 @@ export function useModalState() {
   const [rulePattern, setRulePattern] = useState('');
   const [pendingRuleTransaction, setPendingRuleTransaction] = useState<{
     tx: Transaction;
-    categoryId: number;
+    categoryId: string;
   } | null>(null);
   const [applyToRelated, setApplyToRelated] = useState(true);
   const [relatedTransactions, setRelatedTransactions] = useState<Transaction[]>(
     []
   );
-  const [selectedRelatedIds, setSelectedRelatedIds] = useState<Set<number>>(
+  const [selectedRelatedIds, setSelectedRelatedIds] = useState<Set<string>>(
     new Set()
   );
 
@@ -476,7 +407,7 @@ export function useModalState() {
   const [transferRelatedTransactions, setTransferRelatedTransactions] =
     useState<Transaction[]>([]);
   const [selectedTransferRelatedIds, setSelectedTransferRelatedIds] = useState<
-    Set<number>
+    Set<string>
   >(new Set());
   const [isMarkingAsTransfer, setIsMarkingAsTransfer] = useState(true);
 
@@ -571,7 +502,7 @@ export function useModalState() {
 
   // Open rule modal
   const openRuleModal = useCallback(
-    (transaction: Transaction, categoryId: number, pattern: string) => {
+    (transaction: Transaction, categoryId: string, pattern: string) => {
       setPendingRuleTransaction({ tx: transaction, categoryId });
       setRulePattern(pattern);
       setApplyToRelated(true);

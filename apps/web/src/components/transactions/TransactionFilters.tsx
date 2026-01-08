@@ -25,27 +25,11 @@ import { cn } from '@/lib/utils';
 // Types
 export type TransactionTypeFilter = 'all' | 'income' | 'expense' | 'transfer';
 
-export interface Category {
-  id: number;
-  name: string;
-  icon: string | null;
-  color: string | null;
-  parentId: number | null;
-  isChild?: boolean;
-}
-
-export interface AddressBookEntry {
-  id: number;
-  iban: string;
-  name: string;
-  description: string | null;
-}
-
-export interface PaymentProviderRule {
-  id: number;
-  name: string;
-  patterns: string;
-}
+import type {
+  Category,
+  AddressBookEntry,
+  PaymentProviderRule,
+} from '@fluxby/shared';
 
 export interface TransactionFiltersProps {
   // Search
@@ -58,20 +42,20 @@ export interface TransactionFiltersProps {
   onTypeFilterOpenChange: (open: boolean) => void;
   // Category filter
   categories: Category[] | undefined;
-  selectedCategoryIds: number[];
-  onCategoryToggle: (categoryId: number) => void;
+  selectedCategoryIds: string[];
+  onCategoryToggle: (categoryId: string) => void;
   onClearCategories: () => void;
   categoryFilterOpen: boolean;
   onCategoryFilterOpenChange: (open: boolean) => void;
   categorySearch: string;
   onCategorySearchChange: (value: string) => void;
-  filteredGroupedCategories: Category[];
+  filteredGroupedCategories: (Category & { isChild?: boolean })[];
   // Address book filter
   addressBook: AddressBookEntry[] | undefined;
   addressBookLoading: boolean;
   selectedIbans: string[];
   selectedAccountName: string | null;
-  selectedAddressBookId: number | null;
+  selectedAddressBookId: string | null;
   onAddressBookSelect: (entry: AddressBookEntry | null) => void;
   addressBookFilterOpen: boolean;
   onAddressBookFilterOpenChange: (open: boolean) => void;
@@ -306,7 +290,7 @@ export const TransactionFilters = memo(function TransactionFilters({
                     {selectedCategoryIds.length > 0 ? (
                       <div className='flex items-center gap-1'>
                         {selectedCategoryIds.slice(0, 2).map((catId) => {
-                          if (catId === 0) {
+                          if (catId === 'uncategorized') {
                             return (
                               <span
                                 key={catId}
@@ -363,10 +347,11 @@ export const TransactionFilters = memo(function TransactionFilters({
                         .toLowerCase()
                         .includes(categorySearch.toLowerCase())) && (
                       <button
-                        onClick={() => onCategoryToggle(0)}
+                        onClick={() => onCategoryToggle('uncategorized')}
                         className={cn(
                           'flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm transition-colors hover:bg-muted',
-                          selectedCategoryIds.includes(0) && 'bg-primary/10'
+                          selectedCategoryIds.includes('uncategorized') &&
+                            'bg-primary/10'
                         )}
                       >
                         <span className='flex h-6 w-6 items-center justify-center rounded-lg bg-gray-200 text-sm dark:bg-gray-700'>
@@ -375,7 +360,7 @@ export const TransactionFilters = memo(function TransactionFilters({
                         <span className='flex-1 truncate'>
                           {t.transactions.noCategory}
                         </span>
-                        {selectedCategoryIds.includes(0) && (
+                        {selectedCategoryIds.includes('uncategorized') && (
                           <Check className='h-4 w-4 text-primary' />
                         )}
                       </button>

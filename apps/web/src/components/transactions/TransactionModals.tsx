@@ -33,53 +33,13 @@ import {
 import { formatCurrency, formatDate, cn } from '@/lib/utils';
 
 // Types
-export interface Transaction {
-  id: number;
-  date: string;
-  amount: number;
-  type: 'income' | 'expense' | 'transfer';
-  description: string;
-  merchantName: string | null;
-  categoryId: number | null;
-  paymentMethod: string | null;
-  notes: string | null;
-  opposingAccountIban: string | null;
-  opposingAccountName: string | null;
-  paymentProvider: string | null;
-  addressBookId: number | null;
-}
-
-export interface Category {
-  id: number;
-  name: string;
-  icon: string | null;
-  color: string | null;
-  parentId: number | null;
-}
-
-export interface AddressBookEntry {
-  id: number;
-  iban: string;
-  name: string;
-  description: string | null;
-  originalName?: string | null;
-  originalNames?: string[];
-  ibans?: string[];
-}
-
-export interface CategoryRule {
-  id: number;
-  pattern: string;
-  categoryId: number;
-  priority: number;
-}
-
-export interface SharedIbanGroup {
-  id: number;
-  entries: Array<{ name: string; transactionCount: number }>;
-  editedName: string;
-  isSplit: boolean;
-}
+import type {
+  Transaction,
+  Category,
+  AddressBookEntry,
+  CategoryRule,
+  SharedIbanGroup,
+} from '@fluxby/shared';
 
 // ============= Create Contact Modal =============
 export interface CreateContactModalProps {
@@ -246,7 +206,7 @@ export interface SharedIbanModalProps {
     iban: string;
     name: string;
     originalNames: string[];
-    contactId?: number;
+    contactId?: string;
   }) => void;
   isResolving: boolean;
   isAddingIban: boolean;
@@ -769,8 +729,8 @@ export interface RuleModalProps {
   rulePattern: string;
   onRulePatternChange: (pattern: string) => void;
   relatedTransactions: Transaction[];
-  selectedRelatedIds: Set<number>;
-  onSelectedRelatedIdsChange: (ids: Set<number>) => void;
+  selectedRelatedIds: Set<string>;
+  onSelectedRelatedIdsChange: (ids: Set<string>) => void;
   categories: Category[] | undefined;
   existingRule: CategoryRule | null;
   onCreateRule: () => void;
@@ -909,7 +869,7 @@ export const RuleModal = memo(function RuleModal({
                             checked={selectedRelatedIds.has(rt.id)}
                             onChange={(e) => {
                               const target = e.target as HTMLInputElement;
-                              const newSet = new Set(selectedRelatedIds);
+                              const newSet: Set<string> = new Set(selectedRelatedIds);
                               if (target.checked) {
                                 newSet.add(rt.id);
                               } else {
@@ -1017,8 +977,8 @@ export interface TransferModalProps {
   onOpenChange: (open: boolean) => void;
   pendingTransaction: Transaction | null;
   relatedTransactions: Transaction[];
-  selectedRelatedIds: Set<number>;
-  onSelectedRelatedIdsChange: (ids: Set<number>) => void;
+  selectedRelatedIds: Set<string>;
+  onSelectedRelatedIdsChange: (ids: Set<string>) => void;
   isMarkingAsTransfer: boolean;
   onApply: () => void;
   onDetectAll: () => void;
@@ -1193,7 +1153,7 @@ export const TransferModal = memo(function TransferModal({
                           checked={selectedRelatedIds.has(rt.id)}
                           onChange={(e) => {
                             const target = e.target as HTMLInputElement;
-                            const newSet = new Set(selectedRelatedIds);
+                            const newSet: Set<string> = new Set(selectedRelatedIds);
                             if (target.checked) {
                               newSet.add(rt.id);
                             } else {

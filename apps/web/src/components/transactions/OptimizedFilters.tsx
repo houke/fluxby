@@ -137,13 +137,11 @@ export const TypeFilter = memo(function TypeFilter({
 // Category Filter
 // ============================================================================
 
-interface Category {
-  id: string;
-  name: string;
-  icon: string | null;
-  color: string | null;
-  parentId: string | null;
-}
+import type {
+  Category,
+  AddressBookEntry,
+  PaymentProviderRule,
+} from '@fluxby/shared';
 
 interface CategoryFilterProps {
   categories: Category[] | undefined;
@@ -422,13 +420,6 @@ export const CategoryFilter = memo(function CategoryFilter({
 // ============================================================================
 // Address Book Filter
 // ============================================================================
-
-interface AddressBookEntry {
-  id: string;
-  iban: string;
-  name: string;
-  description: string | null;
-}
 
 interface AddressBookFilterProps {
   addressBook: AddressBookEntry[] | undefined;
@@ -779,7 +770,7 @@ export const PaymentMethodFilter = memo(function PaymentMethodFilter({
 // ============================================================================
 
 interface PaymentProcessorFilterProps {
-  processors: Array<{ id: string; name: string; patterns: string }>;
+  processors: PaymentProviderRule[];
   selectedProcessors: string[];
   onChange: (processors: string[]) => void;
   translations: {

@@ -34,43 +34,18 @@ import {
 } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 
+import type {
+  Transaction,
+  Category,
+  AddressBookEntry,
+  PaymentProviderRule,
+} from '@fluxby/shared';
+
 // Type definitions for the badges component
-// These match the API response structures but avoid importing from shared
-// to prevent type conflicts with different field requirements
-interface TransactionBadgesTransaction {
-  id: string;
-  type: 'income' | 'expense' | 'transfer';
-  categoryId: string | null;
-  paymentMethod: string | null;
-  paymentProvider: string | null;
-  merchantName: string | null;
-  opposingAccountName: string | null;
-  opposingAccountIban: string | null;
-}
-
-interface Category {
-  id: string;
-  name: string;
-  icon: string | null;
-  color: string | null;
-  parentId: string | null;
-}
-
-interface AddressBookEntry {
-  id: string;
-  iban: string;
-  name: string;
-  description: string | null;
-}
-
-interface PaymentProviderRule {
-  id: string;
-  name: string;
-  patterns: string;
-}
+// Using shared types to ensure consistency
 
 interface TransactionRowBadgesProps {
-  transaction: TransactionBadgesTransaction;
+  transaction: Transaction;
   categories: Category[] | undefined;
   categoryName: string;
   categoryColor: string;
@@ -90,17 +65,12 @@ interface TransactionRowBadgesProps {
   addressBookEntry: AddressBookEntry | null | undefined;
   isInAddressBook: boolean;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  onCategorySelect: (tx: any, categoryId: string) => void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  onPaymentMethodSelect: (tx: any, method: string | null) => void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  onPaymentProcessorSelect: (tx: any, processor: string | null) => void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  onAddressBookSelect: (tx: any, contact: AddressBookEntry) => void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  onAddToAddressBook: (tx: any) => void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  onTransferToggle: (tx: any) => void;
+  onCategorySelect: (tx: Transaction, categoryId: string) => void;
+  onPaymentMethodSelect: (tx: Transaction, method: string | null) => void;
+  onPaymentProcessorSelect: (tx: Transaction, processor: string | null) => void;
+  onAddressBookSelect: (tx: Transaction, contact: AddressBookEntry) => void | Promise<void>;
+  onAddToAddressBook: (tx: Transaction) => void;
+  onTransferToggle: (tx: Transaction) => void;
   isUpdatePending: boolean;
   translations: {
     searchCategories: string;

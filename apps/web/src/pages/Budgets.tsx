@@ -51,26 +51,8 @@ import { formatCurrency, cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useProfile } from '@/contexts/ProfileContext';
 
-interface Budget {
-  id: string;
-  categoryId: string | null;
-  amount: number;
-  period: 'monthly' | 'yearly';
-  spent: number;
-  remaining: number;
-  percentage: number;
-  categoryName: string | null;
-  categoryColor: string | null;
-  categoryIcon?: string | null;
-}
+import type { BudgetWithStats as Budget, Category } from '@fluxby/shared';
 
-interface Category {
-  id: string;
-  name: string;
-  icon: string | null;
-  color: string | null;
-  parentId?: string | null;
-}
 
 type SortOption = 'name' | 'spent' | 'percentage' | 'amount';
 
