@@ -1,6 +1,4 @@
-import { useLanguage } from '../../contexts/LanguageContext';
 import {
-  BarChart3,
   BookOpen,
   Brain,
   Building2,
@@ -11,6 +9,7 @@ import {
   FileText,
   Globe,
   Palette,
+  RefreshCw,
   Rocket,
   Settings,
   Shield,
@@ -27,6 +26,41 @@ const UpdatesContent = () => {
   const updatesPage = t.legal?.updatesPage;
 
   const releases = [
+        {
+      version: '1.3.0',
+      date: updatesPage?.v130Date || '8 januari 2026',
+      title: updatesPage?.v130Title || 'Release 1.3.0',
+      description:
+        updatesPage?.v130Description ||
+        '10 nieuwe features en 15 bugfixes.',
+      features: [
+        {
+          icon: Globe,
+          title: updatesPage?.v130F1Title || 'Web app uitbreidingen',
+          description: updatesPage?.v130F1Desc || '7 nieuwe mogelijkheden om te ontdekken. Bekijk de release notes!',
+        },
+        {
+          icon: Database,
+          title: updatesPage?.v130F2Title || 'Geïmplementeerd file-based migration system and centralized logger',
+          description: updatesPage?.v130F2Desc || 'Nieuwe functionaliteit waar je iets aan hebt.',
+        },
+        {
+          icon: FileText,
+          title: updatesPage?.v130F3Title || 'Toegevoegd apparaat synchronisatie screenshot section with animation',
+          description: updatesPage?.v130F3Desc || 'Er is weer wat bijgekomen. Ontdek het zelf!',
+        },
+        {
+          icon: RefreshCw,
+          title: updatesPage?.v130F4Title || 'Finalize apparaat-to-apparaat synchronisatie implementation with documentation',
+          description: updatesPage?.v130F4Desc || 'Dit maakt Fluxby nog beter.',
+        },
+        {
+          icon: Wrench,
+          title: updatesPage?.v130F5Title || 'Bugfixes',
+          description: updatesPage?.v130F5Desc || '15 bugs opgelost. Zie changelog voor details.',
+        },
+      ],
+    },
     {
       version: '1.2.0',
       date: updatesPage?.v120Date || '6 januari 2026',

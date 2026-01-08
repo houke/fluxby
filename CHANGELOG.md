@@ -1,5 +1,63 @@
 # Changelog
 
+## v1.3.0
+
+**Release Date:** 2026-01-08
+
+### Features
+
+- **web:** i18n for QR validity and pairing placeholder
+- **web:** enhance Privacy Mode with chart axis blurring and onboarding step
+- **web:** implementation of Privacy Mode for sensitive data protection
+- **web:** improve device sync UI layout
+- **database:** implement file-based migration system and centralized logger
+- **web:** hide "Jump to" button when already viewing suggested period
+- **landing:** add device sync screenshot section with animation
+- **sync:** finalize P2P sync implementation with documentation
+- **web:** enable ASN Bank in import UI
+- **web:** add ASN Bank CSV import support
+
+### Bug Fixes
+
+- **web:** enable editing of payment provider patterns
+- **web:** reduce spacing between Data Management cards
+- **web:** QR pairing modal & data management cards
+- **web:** improve sync button tooltips and toggle hover effect
+- **web:** improve settings UI interaction and spacing
+- **web:** improve UX across import, transactions, and dashboard
+- **landing:** add overflow constraints to DocsLayout for mobile code blocks
+- **landing:** properly constrain docs page overflow on mobile
+- **landing:** wrap all CodeBlocks with not-prose for proper overflow
+- **landing:** ensure code blocks maintain horizontal scroll in prose
+- **landing:** increase prose font size on mobile for docs pages
+- **web,landing:** resolve onboarding routing loop and mobile menu issues
+- **ci:** add typecheck script and ignore transpiled vite configs
+- **release:** properly handle multi-line lucide-react imports
+- **release:** improve release messages and fix GitHub Pages deployment
+
+### Tests
+
+- **api:** add integration test ensuring payment processor patterns can be updated
+
+### Chores
+
+- **ci:** remove GitHub Pages configuration comments from workflow
+- **workspace:** commit current modified files
+- update dependencies to latest versions
+
+### Code Refactoring
+
+- **shared:** centralize types and ensure type safety in web app
+
+### Other Changes
+
+- **features:** add peer-to-peer & multiple profiles; update bank CSV copy to 'multiple banks' (en/nl)
+- **translation:** add peer-to-peer and multi-profile features; update bank CSV copy to multiple banks
+
+### Styles
+
+- **web:** unify dashboard empty state button styling with middot separator
+
 ## v1.2.0
 
 **Release Date:** 2026-01-06
