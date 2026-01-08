@@ -163,7 +163,7 @@ export default function ImportAnimation({ isVisible }: { isVisible: boolean }) {
       <div className='mt-4 text-center'>
         {phase === 'drop' && (
           <span className='text-xs text-gray-500 dark:text-white/60'>
-            {anim?.dragHint || 'Drag your ING CSV file here'}
+            {anim?.dragHint || 'Drag your CSV file here'}
           </span>
         )}
         {phase === 'processing' && (

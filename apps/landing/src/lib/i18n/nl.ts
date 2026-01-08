@@ -249,6 +249,11 @@ export const nl: LandingTranslationKeys = {
           'Je financiële data verlaat nooit je apparaat. Geen cloud, geen servers, geen tracking - alles blijft op je computer waar het thuishoort.',
       },
       {
+        title: 'Apparaat synchronisatie',
+        description:
+          'Synchroniseer je data tussen apparaten op hetzelfde netwerk. Peer-to-peer sync betekent dat je data direct tussen je apparaten reist - geen cloud nodig.',
+      },
+      {
         title: 'Bank CSV import',
         description:
           'Exporteer eenvoudig transacties van je bank en importeer ze in Fluxby. Werkt met ING en meer banken komen binnenkort.',
@@ -322,11 +327,21 @@ export const nl: LandingTranslationKeys = {
       {
         title: 'Eenvoudige CSV import',
         description:
-          'Importeer je banktransacties in seconden. Sleep je ING CSV-export en Fluxby doet de rest.',
+          'Importeer je banktransacties in seconden. Sleep je CSV-export en Fluxby doet de rest.',
         features: [
           'Drag & drop upload',
-          'ING bank ondersteuning',
+          'Meerdere bank ondersteuning',
           'Duplicaat detectie',
+        ],
+      },
+      {
+        title: 'Apparaat synchronisatie',
+        description:
+          'Houd je data gesynchroniseerd op al je apparaten. Peer-to-peer sync betekent dat je data direct tussen apparaten reist - geen cloud nodig.',
+        features: [
+          'Directe apparaat-naar-apparaat sync',
+          'End-to-end versleuteld',
+          'Werkt op lokaal netwerk',
         ],
       },
     ],
@@ -1202,6 +1217,7 @@ export const nl: LandingTranslationKeys = {
       createBudget: 'Budget maken',
       understandAnalytics: 'Analytics begrijpen',
       security: 'Beveiliging & Privacy',
+      sync: 'Apparaat synchronisatie',
       dataPrivacy: 'Je data & privacy',
     },
     devNav: {
@@ -2067,7 +2083,18 @@ export const nl: LandingTranslationKeys = {
       importing: 'Importeren',
       done: 'Import voltooid!',
       transactionsImported: 'transacties geïmporteerd',
-      dragHint: 'Sleep je ING CSV bestand hierheen',
+      dragHint: 'Sleep je CSV bestand hierheen',
+    },
+    sync: {
+      discovering: 'Apparaten zoeken...',
+      connecting: 'Verbinden...',
+      syncing: 'Data synchroniseren...',
+      complete: 'Synchronisatie voltooid!',
+      device1: 'Laptop',
+      device2: 'Telefoon',
+      transactions: 'transacties',
+      categories: 'categorieën',
+      p2pEncrypted: 'Peer-to-peer versleuteld',
     },
   },
 };

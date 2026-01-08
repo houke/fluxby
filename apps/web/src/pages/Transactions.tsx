@@ -2322,9 +2322,11 @@ export default function Transactions() {
               {/* Show skeleton during:
                 1. Initial load (isLoading)
                 2. Any time data is being fetched (isFetching)
+                3. When deferred value is stale (isStale) - matches purple dot indicator
+                4. When a transition is pending (isPending) - matches purple dot indicator
                 This ensures we never show "no transactions found" while data is loading,
                 preventing the flash of empty state when filters change */}
-              {isLoading || isFetching ? (
+              {isLoading || isFetching || isStale || isPending ? (
                 <div className='space-y-4'>
                   {[...Array(5)].map((_, i) => (
                     <Skeleton key={i} className='h-16' />

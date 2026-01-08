@@ -26,6 +26,9 @@ export * from './sync-protocol.js';
 // Sync service
 export * from './sync-service.js';
 
+// Sync engine (auto-sync, debouncing, status tracking)
+export * from './sync-engine.js';
+
 // Peer-to-peer device pairing
 export * from './peer.js';
 

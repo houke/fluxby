@@ -107,6 +107,11 @@ export default function HelpSidebar({ isOpen, onClose }: HelpSidebarProps) {
       title: t.helpCenter?.userNav?.security || 'Security & Privacy',
       items: [
         {
+          title: t.helpCenter?.userNav?.sync || 'Device sync',
+          path: '/help/sync',
+          icon: '🔄',
+        },
+        {
           title: t.helpCenter?.userNav?.dataPrivacy || 'Your data & privacy',
           path: '/help/privacy',
           icon: '🔒',

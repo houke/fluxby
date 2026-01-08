@@ -841,7 +841,6 @@ export const en: TranslationKeys = {
     },
     sync: {
       title: 'Device sync',
-      inDevelopment: 'In development',
       description:
         'Sync your data across devices using peer-to-peer connections. No server required.',
       thisDevice: 'This device',
@@ -871,6 +870,13 @@ export const en: TranslationKeys = {
       accept: 'Accept',
       ready: 'Ready',
       initializing: 'Initializing...',
+      syncing: 'Syncing...',
+      connected: 'Connected',
+      notConnected: 'Not connected',
+      syncNow: 'Sync now',
+      syncNowTooltip: 'Force sync with all connected devices',
+      autoSync: 'Auto-sync',
+      autoSyncDescription: 'Automatically sync changes as you make them',
     },
   },
   help: {

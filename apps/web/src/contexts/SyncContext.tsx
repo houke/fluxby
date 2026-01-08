@@ -1,7 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 /**
  * Sync Context
- * Manages peer-to-peer device syncing via WebRTC
+ * Manages peer-to-peer device syncing via WebRTC with auto-sync and status tracking
  */
 import {
   createContext,
@@ -19,6 +19,10 @@ import {
   type PeerDevice,
   type SyncChange,
   type SyncableRow,
+  createSyncEngine,
+  type SyncEngine,
+  type SyncStatus,
+  formatRelativeTime,
 } from '@fluxby/core';
 import {
   readFromOPFSSync,
@@ -30,6 +34,17 @@ import {
 const DEVICE_ID_KEY = 'fluxby.deviceId';
 const DEVICE_NAME_KEY = 'fluxby.deviceName';
 const PAIRED_DEVICES_KEY = 'fluxby.pairedDevices';
+const AUTO_SYNC_KEY = 'fluxby.autoSyncEnabled';
+
+// Default sync status
+const defaultSyncStatus: SyncStatus = {
+  state: 'idle',
+  lastSyncedAt: null,
+  lastError: null,
+  pendingChanges: 0,
+  connectedPeers: 0,
+  isSyncing: false,
+};
 
 interface SyncContextType {
   /** This device's unique ID */
@@ -64,6 +79,20 @@ interface SyncContextType {
   lastError: Error | null;
   /** Retry initialization */
   retryInitialization: () => void;
+  /** Sync status (state, lastSyncedAt, pendingChanges, etc.) */
+  syncStatus: SyncStatus;
+  /** Force a full sync with all connected peers */
+  forceSync: () => Promise<void>;
+  /** Queue a change for auto-sync */
+  queueChange: (change: SyncChange<SyncableRow>) => void;
+  /** Queue multiple changes for auto-sync */
+  queueChanges: (changes: SyncChange<SyncableRow>[]) => void;
+  /** Format last synced time as relative string */
+  formatLastSynced: (locale?: 'en' | 'nl') => string;
+  /** Whether auto-sync is enabled */
+  autoSyncEnabled: boolean;
+  /** Toggle auto-sync */
+  setAutoSyncEnabled: (enabled: boolean) => void;
 }
 
 const SyncContext = createContext<SyncContextType | null>(null);
@@ -144,6 +173,16 @@ function savePairedDevices(devices: PeerDevice[]): void {
   );
 }
 
+// Get auto-sync setting from OPFS
+function getAutoSyncEnabled(): boolean {
+  if (typeof window === 'undefined') return true;
+  if (isSettingsCacheInitialized()) {
+    const stored = readFromOPFSSync<boolean>(AUTO_SYNC_KEY);
+    if (stored !== null && stored !== undefined) return stored;
+  }
+  return true; // Default to enabled
+}
+
 export function SyncProvider({ children, onSyncReceived }: SyncProviderProps) {
   const [deviceId] = useState(getOrCreateDeviceId);
   const [deviceName, setDeviceNameState] = useState(getDeviceName);
@@ -159,10 +198,14 @@ export function SyncProvider({ children, onSyncReceived }: SyncProviderProps) {
   } | null>(null);
   const [lastError, setLastError] = useState<Error | null>(null);
   const [peerSync, setPeerSync] = useState<PeerSync | null>(null);
+  const [syncStatus, setSyncStatus] = useState<SyncStatus>(defaultSyncStatus);
+  const [autoSyncEnabled, setAutoSyncEnabledState] =
+    useState(getAutoSyncEnabled);
 
   // Ref to track if we've already initialized (prevents StrictMode double-init issues)
   const initRef = useRef(false);
   const syncRef = useRef<PeerSync | null>(null);
+  const syncEngineRef = useRef<SyncEngine | null>(null);
 
   // Retry initialization (exported via context but currently internal)
   const _retryInitialization = useCallback(() => {
@@ -184,6 +227,37 @@ export function SyncProvider({ children, onSyncReceived }: SyncProviderProps) {
 
   const [initVersion, setInitVersion] = useState(0);
 
+  // Initialize SyncEngine
+  useEffect(() => {
+    if (syncEngineRef.current) return;
+
+    const engine = createSyncEngine({
+      autoSync: autoSyncEnabled,
+      debounceDelay: 500,
+      maxBatchSize: 100,
+    });
+
+    // Subscribe to status changes
+    const unsubscribe = engine.subscribeStatus((status) => {
+      setSyncStatus(status);
+    });
+
+    syncEngineRef.current = engine;
+
+    return () => {
+      unsubscribe();
+      engine.destroy();
+      syncEngineRef.current = null;
+    };
+  }, [autoSyncEnabled]);
+
+  // Update sync engine connected peer count when pairedDevices change
+  useEffect(() => {
+    if (!syncEngineRef.current) return;
+    const connectedCount = pairedDevices.filter((d) => d.isConnected).length;
+    syncEngineRef.current.setConnectedPeers(connectedCount);
+  }, [pairedDevices]);
+
   useEffect(() => {
     if (initRef.current && syncRef.current) return;
 
@@ -202,11 +276,27 @@ export function SyncProvider({ children, onSyncReceived }: SyncProviderProps) {
         setPairedDevices((prev) => {
           const updated = [...prev.filter((d) => d.id !== device.id), device];
           savePairedDevices(updated);
+          // Update sync engine connected peers using the updated list
+          if (syncEngineRef.current) {
+            const connectedCount = updated.filter((d) => d.isConnected).length;
+            syncEngineRef.current.setConnectedPeers(connectedCount);
+          }
           return updated;
         });
         setPendingPairingRequest(null);
       },
-      onSyncReceived,
+      onSyncReceived: (changes) => {
+        // Notify the sync engine about incoming changes
+        if (syncEngineRef.current) {
+          syncEngineRef.current.shouldApplyIncomingChanges(changes);
+        }
+        // Call the original handler
+        onSyncReceived?.(changes);
+        // Mark sync complete
+        if (syncEngineRef.current) {
+          syncEngineRef.current.markIncomingSyncComplete();
+        }
+      },
       onConnectionChange: (peerId, connected) => {
         if (!active) return;
         setPairedDevices((prev) => {
@@ -214,6 +304,11 @@ export function SyncProvider({ children, onSyncReceived }: SyncProviderProps) {
             d.peerId === peerId ? { ...d, isConnected: connected } : d
           );
           savePairedDevices(updated);
+          // Update sync engine connected peers
+          if (syncEngineRef.current) {
+            const connectedCount = updated.filter((d) => d.isConnected).length;
+            syncEngineRef.current.setConnectedPeers(connectedCount);
+          }
           return updated;
         });
       },
@@ -337,6 +432,84 @@ export function SyncProvider({ children, onSyncReceived }: SyncProviderProps) {
     [peerSync]
   );
 
+  // Force sync with all connected peers
+  const forceSync = useCallback(async () => {
+    if (!syncEngineRef.current) return;
+
+    // Set up push handler to broadcast to all connected devices
+    syncEngineRef.current.setPushHandler((changes) => {
+      if (peerSync) {
+        peerSync.broadcastChanges(changes);
+      }
+    });
+
+    // Set up force sync handler to request from all peers
+    syncEngineRef.current.setForceSyncHandler(async (sinceTimestamp) => {
+      if (peerSync) {
+        const devices = peerSync.getPairedDevices();
+        for (const device of devices) {
+          if (device.isConnected) {
+            peerSync.requestSync(device.id, sinceTimestamp);
+          }
+        }
+      }
+    });
+
+    await syncEngineRef.current.forceSync();
+  }, [peerSync]);
+
+  // Queue a change for auto-sync
+  const queueChange = useCallback(
+    (change: SyncChange<SyncableRow>) => {
+      if (!syncEngineRef.current) return;
+
+      // Set up push handler
+      syncEngineRef.current.setPushHandler((changes) => {
+        if (peerSync) {
+          peerSync.broadcastChanges(changes);
+        }
+      });
+
+      syncEngineRef.current.queueChange(change);
+    },
+    [peerSync]
+  );
+
+  // Queue multiple changes for auto-sync
+  const queueChanges = useCallback(
+    (changes: SyncChange<SyncableRow>[]) => {
+      if (!syncEngineRef.current) return;
+
+      // Set up push handler
+      syncEngineRef.current.setPushHandler((changesArray) => {
+        if (peerSync) {
+          peerSync.broadcastChanges(changesArray);
+        }
+      });
+
+      syncEngineRef.current.queueChanges(changes);
+    },
+    [peerSync]
+  );
+
+  // Format last synced time
+  const formatLastSynced = useCallback(
+    (locale: 'en' | 'nl' = 'en'): string => {
+      return formatRelativeTime(syncStatus.lastSyncedAt, locale);
+    },
+    [syncStatus.lastSyncedAt]
+  );
+
+  // Toggle auto-sync
+  const setAutoSyncEnabled = useCallback((enabled: boolean) => {
+    setAutoSyncEnabledState(enabled);
+    if (typeof window !== 'undefined') {
+      writeToOPFSWithCache(AUTO_SYNC_KEY, enabled).catch((err) =>
+        console.warn('Failed to save auto-sync setting to OPFS:', err)
+      );
+    }
+  }, []);
+
   const value = useMemo(
     () => ({
       deviceId,
@@ -353,6 +526,13 @@ export function SyncProvider({ children, onSyncReceived }: SyncProviderProps) {
       disconnectDevice,
       lastError,
       retryInitialization: retryInit,
+      syncStatus,
+      forceSync,
+      queueChange,
+      queueChanges,
+      formatLastSynced,
+      autoSyncEnabled,
+      setAutoSyncEnabled,
     }),
     [
       deviceId,
@@ -369,6 +549,13 @@ export function SyncProvider({ children, onSyncReceived }: SyncProviderProps) {
       disconnectDevice,
       lastError,
       retryInit,
+      syncStatus,
+      forceSync,
+      queueChange,
+      queueChanges,
+      formatLastSynced,
+      autoSyncEnabled,
+      setAutoSyncEnabled,
     ]
   );
 

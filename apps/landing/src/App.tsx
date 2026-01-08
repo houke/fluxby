@@ -44,6 +44,7 @@ import HelpCategories from './pages/help/HelpCategories';
 import HelpAccounts from './pages/help/HelpAccounts';
 import HelpAnalytics from './pages/help/HelpAnalytics';
 import HelpAddressBook from './pages/help/HelpAddressBook';
+import HelpSync from './pages/help/HelpSync';
 import { HeadManager } from './components/HeadManager';
 import ScrollToTop from './components/ScrollToTop';
 
@@ -170,6 +171,7 @@ function App() {
                 <Route path='address-book' element={<HelpAddressBook />} />
                 <Route path='budgeting' element={<HelpBudgeting />} />
                 <Route path='analytics' element={<HelpAnalytics />} />
+                <Route path='sync' element={<HelpSync />} />
                 <Route path='privacy' element={<HelpPrivacy />} />
               </Route>
               <Route path='*' element={<NotFound />} />
