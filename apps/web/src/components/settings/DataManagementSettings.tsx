@@ -62,12 +62,12 @@ export function DataManagementSettings() {
               </div>
             )}
 
-            <div className='flex items-center justify-between py-3'>
-              <div>
-                <p className='font-medium'>
+            <div className='flex items-center justify-between rounded-lg border p-3'>
+              <div className='flex-1'>
+                <p className='text-sm font-medium'>
                   {t.settings.dataManagement.exportTitle}
                 </p>
-                <p className='text-sm text-muted-foreground'>
+                <p className='text-xs text-muted-foreground'>
                   {t.settings.dataManagement.exportDescription}
                 </p>
               </div>
@@ -110,12 +110,12 @@ export function DataManagementSettings() {
               </Button>
             </div>
 
-            <div className='flex items-center justify-between border-t py-3'>
-              <div>
-                <p className='font-medium'>
+            <div className='flex items-center justify-between rounded-lg border p-3'>
+              <div className='flex-1'>
+                <p className='text-sm font-medium'>
                   {t.settings.dataManagement.importTitle}
                 </p>
-                <p className='text-sm text-muted-foreground'>
+                <p className='text-xs text-muted-foreground'>
                   {t.settings.dataManagement.importDescription}
                 </p>
               </div>
@@ -194,12 +194,12 @@ export function DataManagementSettings() {
                 {t.settings.dataManagement.importButton}
               </Button>
             </div>
-            <div className='flex items-center justify-between border-t py-3'>
-              <div>
-                <p className='font-medium text-destructive'>
+            <div className='flex items-center justify-between rounded-lg border p-3'>
+              <div className='flex-1'>
+                <p className='text-sm font-medium text-destructive'>
                   {t.settings.dataManagement.deleteAllTitle}
                 </p>
-                <p className='text-sm text-muted-foreground'>
+                <p className='text-xs text-muted-foreground'>
                   {t.settings.dataManagement.deleteAllDescription}
                 </p>
               </div>

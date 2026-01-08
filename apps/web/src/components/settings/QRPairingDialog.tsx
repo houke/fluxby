@@ -143,8 +143,9 @@ export function QRPairingDialog({ trigger }: QRPairingDialogProps) {
 
           {/* Help Text */}
           <p className='text-center text-xs text-muted-foreground'>
-            {t.settings?.sync?.qrCodeExpiry ||
-              'This code is valid until you generate a new one or close this dialog.'}
+            {
+              'This code is valid until you generate a new one or close this dialog.'
+            }
           </p>
         </div>
       </DialogContent>
