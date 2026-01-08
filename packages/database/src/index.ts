@@ -14,6 +14,8 @@ export * from './schema.js';
 
 // Environment detection
 export * from './environment.js';
+export * from './migrations/index.js';
+export * from './migrations/runner.js';
 
 // Error handling
 export * from './errors.js';

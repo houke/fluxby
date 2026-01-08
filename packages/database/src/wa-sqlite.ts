@@ -12,9 +12,11 @@ import type {
   PreparedStatement,
   DatabaseOptions,
 } from './types.js';
-import { SCHEMA_SQL, getSeedSQL, SCHEMA_VERSION } from './schema.js';
+import { getSeedSQL } from './schema.js';
+import { runMigrations } from './migrations/runner.js';
 import { EncryptionVFS } from './encryption-vfs.js';
 import { getDeviceId, isTauri } from './environment.js';
+import { dbLog } from './logger.js';
 
 // SQLite constants
 const SQLITE_OK = 0;
@@ -38,27 +40,8 @@ let vfsCounter = 0;
 let globalInitPromise: Promise<Database> | null = null;
 let globalDbInstance: Database | null = null;
 
-// Debug logging for WASM initialization
-function isWasmDebugEnabled(): boolean {
-  try {
-    // Always enable logging in Tauri for debugging
-    if (isTauri()) return true;
-
-    // Only log when explicitly enabled by developers
-    // (keeps production/dev console clean and reduces incidental overhead)
-
-    const ls = (globalThis as any)?.localStorage as Storage | undefined;
-    return ls?.getItem('fluxby.wasmDebug') === 'true';
-  } catch {
-    return false;
-  }
-}
-
-function wasmLog(message: string, ...args: unknown[]) {
-  if (!isWasmDebugEnabled()) return;
-  // eslint-disable-next-line no-console
-  console.log(`[wa-sqlite] ${message}`, ...args);
-}
+// Debug logging uses the shared logger
+const wasmLog = dbLog;
 
 function isFatalWasmError(err: unknown): boolean {
   const message = err instanceof Error ? err.message : String(err);
@@ -561,163 +544,26 @@ export class Database implements DatabaseConnection {
 
     wasmLog('Running migrations...');
 
-    // Check current schema version using exec (more reliable than parameterized query)
-    // This avoids potential finalize issues with the statements generator
-    let currentVersion = 0;
     try {
-      await this.sqlite3.exec(
-        this.db,
-        'SELECT version FROM schema_version ORDER BY version DESC LIMIT 1',
-        (row) => {
-          if (row && row[0] !== undefined) {
-            currentVersion = Number(row[0]);
-          }
-        }
-      );
-      wasmLog('Current schema version:', currentVersion);
-    } catch {
-      // Table doesn't exist or other error - need to create schema
-      wasmLog('No schema_version table found, will create schema');
-    }
-
-    // Already up to date
-    if (currentVersion >= SCHEMA_VERSION) {
-      wasmLog('Schema up to date');
-      migrationCompleted = true;
-      return;
-    }
-
-    wasmLog('Applying schema...');
-
-    // Apply schema in smaller chunks to avoid memory issues
-    // Split schema by semicolons and execute separately
-    const schemaStatements = SCHEMA_SQL.split(';')
-      .map((s) => s.trim())
-      .filter((s) => s.length > 0);
-
-    wasmLog(`Executing ${schemaStatements.length} schema statements`);
-    for (const statement of schemaStatements) {
-      try {
-        await this.execAsync(statement + ';');
-      } catch (err) {
-        // Ignore "table already exists" errors
-        if (err instanceof Error && !err.message.includes('already exists')) {
-          console.error(
-            'Error executing schema statement:',
-            statement.substring(0, 100),
-            err
-          );
-          // Continue with other statements
-        }
-      }
-    }
-
-    wasmLog('Schema statements executed');
-
-    // --- STRUCTURAL MIGRATIONS ---
-    // These handle changes to existing tables that simple CREATE TABLE IF NOT EXISTS doesn't
-
-    // Migration from v3/v4 to v5: Ensure all columns exist in transactions
-    if (currentVersion > 0 && currentVersion < 5) {
-      wasmLog('Ensuring transactions table has all v5 columns...');
-      try {
-        await this.execAsync(
-          'ALTER TABLE transactions ADD COLUMN payment_provider TEXT;'
-        );
-      } catch (err) {
-        if (
-          err instanceof Error &&
-          (err.message.includes('duplicate column') ||
-            err.message.includes('already exists'))
-        ) {
-          wasmLog('payment_provider already exists');
-        }
-      }
-      try {
-        await this.execAsync(
-          'ALTER TABLE transactions ADD COLUMN address_book_id TEXT;'
-        );
-      } catch (err) {
-        if (
-          err instanceof Error &&
-          (err.message.includes('duplicate column') ||
-            err.message.includes('already exists'))
-        ) {
-          wasmLog('address_book_id already exists');
-        }
-      }
-      wasmLog('Transactions table check completed for v5');
-    }
-
-    // Migration to v6: Add is_hidden column to profiles
-    if (currentVersion > 0 && currentVersion < 6) {
-      wasmLog('Ensuring profiles table has is_hidden column (v6)...');
-      try {
-        await this.execAsync(
-          'ALTER TABLE profiles ADD COLUMN is_hidden INTEGER NOT NULL DEFAULT 0;'
-        );
-      } catch (err) {
-        if (
-          err instanceof Error &&
-          (err.message.includes('duplicate column') ||
-            err.message.includes('already exists'))
-        ) {
-          wasmLog('is_hidden already exists');
-        }
-      }
-    }
-
-    // Migration to v7: Add profile_id to rules tables
-    if (currentVersion > 0 && currentVersion < 7) {
-      wasmLog('Ensuring rules tables have profile_id column (v7)...');
-      try {
-        await this.execAsync(
-          'ALTER TABLE name_cleanup_rules ADD COLUMN profile_id TEXT REFERENCES profiles(id) ON DELETE CASCADE;'
-        );
-      } catch (err) {
-        if (
-          err instanceof Error &&
-          (err.message.includes('duplicate column') ||
-            err.message.includes('already exists'))
-        ) {
-          wasmLog('profile_id already exists in name_cleanup_rules');
-        }
-      }
-      try {
-        await this.execAsync(
-          'ALTER TABLE payment_provider_rules ADD COLUMN profile_id TEXT REFERENCES profiles(id) ON DELETE CASCADE;'
-        );
-      } catch (err) {
-        if (
-          err instanceof Error &&
-          (err.message.includes('duplicate column') ||
-            err.message.includes('already exists'))
-        ) {
-          wasmLog('profile_id already exists in payment_provider_rules');
-        }
-      }
+      await runMigrations(this);
+    } catch (err) {
+      console.error('Migration failed:', err);
+      // Determine if we should throw or continue?
+      // For now throw, as inconsistent DB is bad.
+      throw err;
     }
 
     // --- SEEDING ---
     // Seed default data (only categories with NULL profile_id)
     const deviceId = getDeviceId();
     wasmLog('Running seed SQL...');
-    await this.execAsync(getSeedSQL(deviceId));
-
-    // Record schema version using exec (avoid statements API which can cause finalize issues)
-    wasmLog('Recording schema version...');
     try {
-      // Use exec for both check and insert to avoid statements API
-      await this.sqlite3.exec(
-        this.db,
-        `INSERT OR REPLACE INTO schema_version (version, applied_at) VALUES (${SCHEMA_VERSION}, ${Date.now()})`
-      );
+      await this.execAsync(getSeedSQL(deviceId));
     } catch (err) {
-      console.warn('Error recording schema version:', err);
-      // Continue anyway - not critical
+      console.warn('Seeding failed (non-critical):', err);
     }
 
-    wasmLog('Migration completed');
+    wasmLog('Migration & Seeding completed');
     // Mark migration as completed
     migrationCompleted = true;
   }
@@ -725,7 +571,7 @@ export class Database implements DatabaseConnection {
   /**
    * Execute raw SQL (async version for migrations)
    */
-  private async execAsync(sql: string): Promise<void> {
+  public async execAsync(sql: string): Promise<void> {
     this.ensureOpen();
     if (!this.sqlite3 || this.db === null) {
       throw new Error('Database not initialized');

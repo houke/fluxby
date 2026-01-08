@@ -1,25 +1,7 @@
-/**
- * Database schema with sync support
- * All tables include UUID, updated_at, and is_deleted for LWW sync
- */
 
-/**
- * Schema version for migrations - DEPRECATED
- * Version tracking is now handled by the migration system (migrations/runner.ts)
- */
-// export const SCHEMA_VERSION = 7; // Removed
+import type { Migration, MigrationContext } from './index.js';
 
-
-/**
- * SQL schema with sync metadata columns
- */
-export const SCHEMA_SQL = `
--- Schema version tracking
-CREATE TABLE IF NOT EXISTS schema_version (
-    version INTEGER PRIMARY KEY,
-    applied_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now') * 1000)
-);
-
+const SCHEMA_SQL = `
 -- Device registration for sync
 CREATE TABLE IF NOT EXISTS devices (
     id TEXT PRIMARY KEY,
@@ -291,229 +273,27 @@ CREATE INDEX IF NOT EXISTS idx_payment_provider_rules_updated_at ON payment_prov
 CREATE INDEX IF NOT EXISTS idx_shared_iban_merchants_lookup ON shared_iban_merchants(iban, original_name);
 `;
 
-/**
- * Default categories (Dutch)
- */
-export const DEFAULT_CATEGORIES = [
-  {
-    id: '00000000-0000-0000-0000-000000000001',
-    name: 'Boodschappen',
-    icon: '🛒',
-    color: '#86EFAC',
-  },
-  {
-    id: '00000000-0000-0000-0000-000000000002',
-    name: 'Uit eten',
-    icon: '🍽️',
-    color: '#FCD34D',
-  },
-  {
-    id: '00000000-0000-0000-0000-000000000003',
-    name: 'Vervoer',
-    icon: '🚗',
-    color: '#93C5FD',
-  },
-  {
-    id: '00000000-0000-0000-0000-000000000004',
-    name: 'Winkelen',
-    icon: '🛍️',
-    color: '#C4B5FD',
-  },
-  {
-    id: '00000000-0000-0000-0000-000000000005',
-    name: 'Entertainment',
-    icon: '🎬',
-    color: '#F9A8D4',
-  },
-  {
-    id: '00000000-0000-0000-0000-000000000006',
-    name: 'Gezondheid',
-    icon: '💊',
-    color: '#FCA5A5',
-  },
-  {
-    id: '00000000-0000-0000-0000-000000000007',
-    name: 'Rekeningen',
-    icon: '📄',
-    color: '#D1D5DB',
-  },
-  {
-    id: '00000000-0000-0000-0000-000000000008',
-    name: 'Huur/Hypotheek',
-    icon: '🏠',
-    color: '#9CA3AF',
-  },
-  {
-    id: '00000000-0000-0000-0000-000000000009',
-    name: 'Salaris',
-    icon: '💰',
-    color: '#6EE7B7',
-  },
-  {
-    id: '00000000-0000-0000-0000-00000000000a',
-    name: 'Overboekingen',
-    icon: '↔️',
-    color: '#A5B4FC',
-  },
-  {
-    id: '00000000-0000-0000-0000-00000000000b',
-    name: 'Abonnementen',
-    icon: '📱',
-    color: '#DDD6FE',
-  },
-  {
-    id: '00000000-0000-0000-0000-00000000000c',
-    name: 'Overig',
-    icon: '📦',
-    color: '#E5E7EB',
-  },
-  {
-    id: '00000000-0000-0000-0000-00000000000d',
-    name: 'Thuisbezorgd',
-    icon: '🛵',
-    color: '#FDBA74',
-  },
-  {
-    id: '00000000-0000-0000-0000-00000000000e',
-    name: "Kado's",
-    icon: '🎁',
-    color: '#FDA4AF',
-  },
-  {
-    id: '00000000-0000-0000-0000-000000000015',
-    name: 'Huisdieren',
-    icon: '🐾',
-    color: '#A78BFA',
-  },
-  {
-    id: '00000000-0000-0000-0000-000000000016',
-    name: 'Goede doelen',
-    icon: '🙏',
-    color: '#F59E0B',
-  },
-  {
-    id: '00000000-0000-0000-0000-000000000017',
-    name: 'Sparen',
-    icon: '🏦',
-    color: '#E5F4CE',
-  },
-  {
-    id: '00000000-0000-0000-0000-000000000018',
-    name: 'Toeslagen',
-    icon: '📥',
-    color: '#DCE7FF',
-  },
-];
+export const migration001: Migration = {
+  version: 1,
+  name: 'initial_schema',
+  up: async (db: MigrationContext) => {
+    // Split schema by semicolons and execute separately
+    const schemaStatements = SCHEMA_SQL.split(';')
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0);
 
-/**
- * Seed SQL for default data
- * Creates a default user and global categories.
- * User is needed for profile creation.
- * Categories are seeded without a profile_id (NULL) so they're available globally.
- */
-export function getSeedSQL(deviceId: string): string {
-  const now = Date.now();
-  const defaultUserId = '00000000-0000-0000-0000-000000000001';
-
-  let sql = `
--- Create default user (needed for profiles)
-INSERT OR IGNORE INTO users (id, name, updated_at, device_id, created_at)
-VALUES ('${defaultUserId}', 'Gebruiker', ${now}, '${deviceId}', ${now});
-
--- Default categories are seeded globally (profile_id = NULL)
--- They will be copied to user's profile when onboarding completes
-`;
-
-  for (const cat of DEFAULT_CATEGORIES) {
-    // Escape single quotes in names for SQL safety
-    const escapedName = cat.name.replace(/'/g, "''");
-    sql += `INSERT OR IGNORE INTO categories (id, name, icon, color, profile_id, updated_at, device_id)
-VALUES ('${cat.id}', '${escapedName}', '${cat.icon}', '${cat.color}', NULL, ${now}, '${deviceId}');
-`;
+    for (const statement of schemaStatements) {
+      try {
+        await db.execAsync(statement + ';');
+      } catch (err) {
+        // Ignore "table already exists" errors - standard for IF NOT EXISTS but good to be safe
+        if (err instanceof Error && !err.message.includes('already exists')) {
+          console.error('Error executing schema statement:', statement.substring(0, 100), err);
+        }
+      }
+    }
+  },
+  down: async (db: MigrationContext) => {
+    // We generally don't implement down for the initial schema in this context
   }
-
-  // Default name cleanup rules (global)
-  const defaultCleanupRules = [
-    { id: '00000000-0000-0000-0000-000000000201', pattern: 'by Buckaroo' },
-    { id: '00000000-0000-0000-0000-000000000202', pattern: 'SumUp *' },
-    { id: '00000000-0000-0000-0000-000000000203', pattern: 'BCK*' },
-    { id: '00000000-0000-0000-0000-000000000204', pattern: 'CCV*' },
-    {
-      id: '00000000-0000-0000-0000-000000000205',
-      pattern: '/\\s*via\\s+[^,]+$/gi',
-    },
-  ];
-
-  sql += `\n-- Default name cleanup rules are seeded globally\n`;
-  for (const rule of defaultCleanupRules) {
-    const escaped = rule.pattern.replace(/'/g, "''");
-    sql += `INSERT OR IGNORE INTO name_cleanup_rules (id, pattern, is_active, created_at, updated_at, device_id)
-VALUES ('${rule.id}', '${escaped}', 1, ${now}, ${now}, '${deviceId}');
-`;
-  }
-
-  // Default payment provider rules (global)
-  const defaultPaymentProviderRules = [
-    {
-      id: '00000000-0000-0000-0000-000000000211',
-      name: 'PayPal',
-      patterns: 'paypal, paypal *, via paypal',
-    },
-    {
-      id: '00000000-0000-0000-0000-000000000212',
-      name: 'Tikkie',
-      patterns: 'tikkie, tikkie *',
-    },
-    {
-      id: '00000000-0000-0000-0000-000000000213',
-      name: 'Bunq',
-      patterns: 'bunq, bunq *',
-    },
-    {
-      id: '00000000-0000-0000-0000-000000000214',
-      name: 'Adyen',
-      patterns: 'adyen, via adyen',
-    },
-    {
-      id: '00000000-0000-0000-0000-000000000215',
-      name: 'Mollie',
-      patterns: 'mollie, via mollie',
-    },
-    {
-      id: '00000000-0000-0000-0000-000000000216',
-      name: 'iDEAL',
-      patterns: 'ideal, via ideal',
-    },
-    {
-      id: '00000000-0000-0000-0000-000000000217',
-      name: 'Buckaroo',
-      patterns: 'buckaroo, via buckaroo',
-    },
-    {
-      id: '00000000-0000-0000-0000-000000000218',
-      name: 'Pay.nl',
-      patterns: 'pay.nl, via pay.nl',
-    },
-    {
-      id: '00000000-0000-0000-0000-000000000219',
-      name: 'Klarna',
-      patterns: 'klarna, via klarna',
-    },
-    {
-      id: '00000000-0000-0000-0000-000000000220',
-      name: 'Afterpay',
-      patterns: 'afterpay, via afterpay',
-    },
-  ];
-
-  sql += `\n-- Default payment provider rules are seeded globally\n`;
-  for (const rule of defaultPaymentProviderRules) {
-    const escapedName = rule.name.replace(/'/g, "''");
-    const escapedPatterns = rule.patterns.replace(/'/g, "''");
-    sql += `INSERT OR IGNORE INTO payment_provider_rules (id, name, patterns, created_at, updated_at, device_id)
-VALUES ('${rule.id}', '${escapedName}', '${escapedPatterns}', ${now}, ${now}, '${deviceId}');
-`;
-  }
-
-  return sql;
-}
+};
