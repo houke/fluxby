@@ -256,12 +256,7 @@ export const nl: LandingTranslationKeys = {
       {
         title: 'Bank CSV import',
         description:
-          'Exporteer eenvoudig transacties van je bank en importeer ze in Fluxby. Werkt met ING en meer banken komen binnenkort.',
-      },
-      {
-        title: 'Persoonlijke ervaring',
-        description:
-          "Pas Fluxby aan met verschillende thema's, avatars en meldingen. Maak financieel beheer uniek van jou.",
+          'Exporteer eenvoudig transacties van je bank en importeer ze in Fluxby. Werkt met meerdere banken.',
       },
     ],
   },
@@ -1629,9 +1624,9 @@ export const nl: LandingTranslationKeys = {
       bankImport: {
         title: 'Bank CSV import',
         description:
-          'Exporteer eenvoudig transacties van je bank en importeer ze in Fluxby. Werkt met ING en meer banken komen binnenkort.',
+          'Exporteer eenvoudig transacties van je bank en importeer ze in Fluxby. Werkt met meerdere banken.',
         highlights: [
-          'ING ondersteuning',
+          'Meerdere banken ondersteuning',
           'Drag & drop upload',
           'Duplicaat detectie',
         ],
@@ -1644,6 +1639,26 @@ export const nl: LandingTranslationKeys = {
           'Donkere modus',
           'Aanpasbare categorieën',
           'Eigen kleuren & iconen',
+        ],
+      },
+      peer2peer: {
+        title: 'Peer-to-peer sync',
+        description:
+          'Synchroniseer je data veilig tussen apparaten zonder cloud server. Je apparaten praten direct met elkaar.',
+        highlights: [
+          'End-to-end encryptie',
+          'Geen centrale server',
+          'Sync tussen apparaten',
+        ],
+      },
+      multiProfile: {
+        title: 'Meerdere profielen',
+        description:
+          'Maak aparte profielen voor persoonlijk, zakelijk of gezinsfinanciën. Houd alles georganiseerd maar gescheiden.',
+        highlights: [
+          'Aparte werkruimtes',
+          'Vlot wisselen',
+          'Gescheiden data',
         ],
       },
       realtime: {

@@ -57,12 +57,7 @@ export const en: LandingTranslationKeys = {
       {
         title: 'Bank CSV import',
         description:
-          'Simply export transactions from your bank and import them into Fluxby. Works with ING and more banks coming soon.',
-      },
-      {
-        title: 'Personalized experience',
-        description:
-          'Customize Fluxby with different themes, avatars, and notifications. Make finance management uniquely yours.',
+          'Simply export transactions from your bank and import them into Fluxby. Works with multiple banks.',
       },
     ],
   },
@@ -1597,9 +1592,9 @@ export const en: LandingTranslationKeys = {
       bankImport: {
         title: 'Bank CSV import',
         description:
-          'Easily export transactions from your bank and import them into Fluxby. Works with ING and more banks coming soon.',
+          'Easily export transactions from your bank and import them into Fluxby. Works with multiple banks.',
         highlights: [
-          'ING support',
+          'Multiple banks support',
           'Drag & drop upload',
           'Duplicate detection',
         ],
@@ -1612,6 +1607,26 @@ export const en: LandingTranslationKeys = {
           'Dark mode',
           'Customizable categories',
           'Custom colors & icons',
+        ],
+      },
+      peer2peer: {
+        title: 'Peer-to-peer sync',
+        description:
+          'Sync your data securely between devices without a cloud server. Your devices talk directly to each other.',
+        highlights: [
+          'End-to-end encryption',
+          'No central server',
+          'Sync across devices',
+        ],
+      },
+      multiProfile: {
+        title: 'Multiple profiles',
+        description:
+          'Create separate profiles for personal, business, or family finances. Keep everything organized but separate.',
+        highlights: [
+          'Separate workspaces',
+          'Easy switching',
+          'Isolated data',
         ],
       },
       realtime: {
