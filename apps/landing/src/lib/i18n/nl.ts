@@ -822,7 +822,7 @@ export const nl: LandingTranslationKeys = {
       importText: 'Bulk import transacties vanuit je bankexport:',
       supportedBanks: 'Ondersteunde banken',
       supportedBanksText:
-        'Momenteel worden ING bank CSV exports ondersteund. Meer banken worden toegevoegd in toekomstige updates.',
+        'Momenteel worden ING en ASN Bank CSV exports ondersteund. Meer banken worden toegevoegd in toekomstige updates.',
       endpointsTitle: 'Transactie Endpoints',
       endpoints: {
         list: 'Lijst transacties (met filters)',

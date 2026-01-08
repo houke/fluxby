@@ -280,7 +280,7 @@ fetch('http://localhost:3001/api/import/csv', {
         </h3>
         <p className='mb-0 text-blue-800 dark:text-blue-300'>
           {t.docs?.transactions?.supportedBanksText ||
-            'Momenteel worden ING bank CSV exports ondersteund. Meer banken worden toegevoegd in toekomstige updates.'}
+            'Momenteel worden ING en ASN Bank CSV exports ondersteund. Meer banken worden toegevoegd in toekomstige updates.'}
         </p>
       </div>
     </article>

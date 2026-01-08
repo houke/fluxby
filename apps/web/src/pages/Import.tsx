@@ -141,8 +141,8 @@ const MAPPING_FIELDS = [
 // Bank presets for column mapping
 const DUTCH_BANKS = [
   { id: 'ing', name: 'ING', enabled: true, icon: '🦁' },
+  { id: 'asn', name: 'ASN Bank', enabled: true, icon: '🌱' },
   { id: 'rabobank', name: 'Rabobank', enabled: false, icon: null },
-  { id: 'asn', name: 'ASN Bank', enabled: false, icon: null },
   { id: 'knab', name: 'Knab', enabled: false, icon: null },
   { id: 'generic', name: 'Anders / Handmatig', enabled: true, icon: null },
 ] as const;

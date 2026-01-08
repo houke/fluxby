@@ -647,7 +647,7 @@ export const en: LandingTranslationKeys = {
       importText: 'Bulk import transactions from your bank export:',
       supportedBanks: 'Supported banks',
       supportedBanksText:
-        'Currently ING bank CSV exports are supported. More banks will be added in future updates.',
+        'Currently ING and ASN Bank CSV exports are supported. More banks will be added in future updates.',
       endpointsTitle: 'Transaction Endpoints',
       endpoints: {
         list: 'List transactions (with filters)',
