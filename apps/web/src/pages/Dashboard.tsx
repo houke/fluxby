@@ -708,16 +708,25 @@ export default function Dashboard() {
                   <p className='mt-1 text-sm text-muted-foreground'>
                     {t.dashboard.importTransactions}
                   </p>
-                  <div className='mt-2 flex flex-wrap justify-center gap-2'>
-                    <Button onClick={() => navigate('/import/')} variant='link'>
+                  <div className='mt-3 flex flex-wrap items-center justify-center gap-x-2'>
+                    <button
+                      onClick={() => navigate('/import/')}
+                      className='text-sm text-primary hover:underline'
+                    >
                       {t.dashboard.goToImport}
-                    </Button>
+                    </button>
                     {suggestedPeriod && (
-                      <Button onClick={handleJumpToPeriod} variant='link'>
-                        {(
-                          t.dashboard?.jumpToPeriod || 'Jump to {period}'
-                        ).replace('{period}', suggestedPeriod.label)}
-                      </Button>
+                      <>
+                        <span className='text-muted-foreground'>&middot;</span>
+                        <button
+                          onClick={handleJumpToPeriod}
+                          className='text-sm text-primary hover:underline'
+                        >
+                          {(
+                            t.dashboard?.jumpToPeriod || 'Jump to {period}'
+                          ).replace('{period}', suggestedPeriod.label)}
+                        </button>
+                      </>
                     )}
                   </div>
                 </div>
@@ -898,7 +907,7 @@ export default function Dashboard() {
                     <p className='mt-1 text-sm text-muted-foreground'>
                       {t.dashboard.importTransactions}
                     </p>
-                    <div className='mt-3 flex flex-wrap justify-center gap-2'>
+                    <div className='mt-3 flex flex-wrap items-center justify-center gap-x-2'>
                       <button
                         onClick={() => navigate('/import/')}
                         className='text-sm text-primary hover:underline'
@@ -906,14 +915,19 @@ export default function Dashboard() {
                         {t.dashboard.goToImport}
                       </button>
                       {suggestedPeriod && (
-                        <button
-                          onClick={handleJumpToPeriod}
-                          className='text-sm text-primary hover:underline'
-                        >
-                          {(
-                            t.dashboard?.jumpToPeriod || 'Jump to {period}'
-                          ).replace('{period}', suggestedPeriod.label)}
-                        </button>
+                        <>
+                          <span className='text-muted-foreground'>
+                            &middot;
+                          </span>
+                          <button
+                            onClick={handleJumpToPeriod}
+                            className='text-sm text-primary hover:underline'
+                          >
+                            {(
+                              t.dashboard?.jumpToPeriod || 'Jump to {period}'
+                            ).replace('{period}', suggestedPeriod.label)}
+                          </button>
+                        </>
                       )}
                     </div>
                   </div>
@@ -1224,7 +1238,7 @@ export default function Dashboard() {
                       <p className='mt-1 text-sm text-muted-foreground'>
                         {t.dashboard.importTransactions}
                       </p>
-                      <div className='mt-3 flex flex-wrap justify-center gap-2'>
+                      <div className='mt-3 flex flex-wrap items-center justify-center gap-x-2'>
                         <button
                           onClick={() => navigate('/import/')}
                           className='text-sm text-primary hover:underline'
@@ -1232,14 +1246,19 @@ export default function Dashboard() {
                           {t.dashboard.goToImport}
                         </button>
                         {suggestedPeriod && (
-                          <button
-                            onClick={handleJumpToPeriod}
-                            className='text-sm text-primary hover:underline'
-                          >
-                            {(
-                              t.dashboard?.jumpToPeriod || 'Jump to {period}'
-                            ).replace('{period}', suggestedPeriod.label)}
-                          </button>
+                          <>
+                            <span className='text-muted-foreground'>
+                              &middot;
+                            </span>
+                            <button
+                              onClick={handleJumpToPeriod}
+                              className='text-sm text-primary hover:underline'
+                            >
+                              {(
+                                t.dashboard?.jumpToPeriod || 'Jump to {period}'
+                              ).replace('{period}', suggestedPeriod.label)}
+                            </button>
+                          </>
                         )}
                       </div>
                     </div>
@@ -1540,7 +1559,7 @@ export default function Dashboard() {
                   <p className='mt-1 text-sm text-muted-foreground'>
                     {t.dashboard.importTransactions}
                   </p>
-                  <div className='mt-3 flex flex-wrap justify-center gap-2'>
+                  <div className='mt-3 flex flex-wrap items-center justify-center gap-x-2'>
                     <button
                       onClick={() => navigate('/import/')}
                       className='text-sm text-primary hover:underline'
@@ -1548,14 +1567,17 @@ export default function Dashboard() {
                       {t.dashboard.goToImport}
                     </button>
                     {suggestedPeriod && (
-                      <button
-                        onClick={handleJumpToPeriod}
-                        className='text-sm text-primary hover:underline'
-                      >
-                        {(
-                          t.dashboard?.jumpToPeriod || 'Jump to {period}'
-                        ).replace('{period}', suggestedPeriod.label)}
-                      </button>
+                      <>
+                        <span className='text-muted-foreground'>&middot;</span>
+                        <button
+                          onClick={handleJumpToPeriod}
+                          className='text-sm text-primary hover:underline'
+                        >
+                          {(
+                            t.dashboard?.jumpToPeriod || 'Jump to {period}'
+                          ).replace('{period}', suggestedPeriod.label)}
+                        </button>
+                      </>
                     )}
                   </div>
                 </div>
@@ -1651,16 +1673,25 @@ export default function Dashboard() {
                   <p className='mt-1 text-sm text-muted-foreground'>
                     {t.dashboard.importTransactions}
                   </p>
-                  <div className='mt-2 flex flex-wrap justify-center gap-2'>
-                    <Button onClick={() => navigate('/import/')} variant='link'>
+                  <div className='mt-3 flex flex-wrap items-center justify-center gap-x-2'>
+                    <button
+                      onClick={() => navigate('/import/')}
+                      className='text-sm text-primary hover:underline'
+                    >
                       {t.dashboard.goToImport}
-                    </Button>
+                    </button>
                     {suggestedPeriod && (
-                      <Button onClick={handleJumpToPeriod} variant='link'>
-                        {(
-                          t.dashboard?.jumpToPeriod || 'Jump to {period}'
-                        ).replace('{period}', suggestedPeriod.label)}
-                      </Button>
+                      <>
+                        <span className='text-muted-foreground'>&middot;</span>
+                        <button
+                          onClick={handleJumpToPeriod}
+                          className='text-sm text-primary hover:underline'
+                        >
+                          {(
+                            t.dashboard?.jumpToPeriod || 'Jump to {period}'
+                          ).replace('{period}', suggestedPeriod.label)}
+                        </button>
+                      </>
                     )}
                   </div>
                 </div>
@@ -1742,19 +1773,25 @@ export default function Dashboard() {
                     {t.dashboard?.addContactsToAddressBook ||
                       'Voeg contacten toe aan je adresboek'}
                   </p>
-                  <div className='mt-2 flex flex-wrap justify-center gap-2'>
-                    <Button
+                  <div className='mt-3 flex flex-wrap items-center justify-center gap-x-2'>
+                    <button
                       onClick={() => navigate('/addressbook/')}
-                      variant='link'
+                      className='text-sm text-primary hover:underline'
                     >
                       {t.dashboard?.goToAddressBook || 'Ga naar adresboek'}
-                    </Button>
+                    </button>
                     {suggestedPeriod && (
-                      <Button onClick={handleJumpToPeriod} variant='link'>
-                        {(
-                          t.dashboard?.jumpToPeriod || 'Jump to {period}'
-                        ).replace('{period}', suggestedPeriod.label)}
-                      </Button>
+                      <>
+                        <span className='text-muted-foreground'>&middot;</span>
+                        <button
+                          onClick={handleJumpToPeriod}
+                          className='text-sm text-primary hover:underline'
+                        >
+                          {(
+                            t.dashboard?.jumpToPeriod || 'Jump to {period}'
+                          ).replace('{period}', suggestedPeriod.label)}
+                        </button>
+                      </>
                     )}
                   </div>
                 </div>
