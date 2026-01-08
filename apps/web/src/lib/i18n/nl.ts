@@ -742,7 +742,6 @@ export interface TranslationKeys {
     };
     sync: {
       title: string;
-      inDevelopment: string;
       description: string;
       thisDevice: string;
       pairingCode: string;
@@ -770,6 +769,13 @@ export interface TranslationKeys {
       initializing: string;
       cannotConnectToSelf: string;
       peerUnavailable: string;
+      syncing: string;
+      connected: string;
+      notConnected: string;
+      syncNow: string;
+      syncNowTooltip: string;
+      autoSync: string;
+      autoSyncDescription: string;
     };
   };
   help: {
@@ -1909,7 +1915,6 @@ export const nl: TranslationKeys = {
     },
     sync: {
       title: 'Apparaten synchroniseren',
-      inDevelopment: 'In ontwikkeling',
       description:
         'Synchroniseer je gegevens tussen apparaten via peer-to-peer verbindingen. Geen server nodig.',
       thisDevice: 'Dit apparaat',
@@ -1941,6 +1946,13 @@ export const nl: TranslationKeys = {
       accept: 'Accepteren',
       ready: 'Gereed',
       initializing: 'Initialiseren...',
+      syncing: 'Synchroniseren...',
+      connected: 'Verbonden',
+      notConnected: 'Niet verbonden',
+      syncNow: 'Nu synchroniseren',
+      syncNowTooltip: 'Forceer synchronisatie met alle verbonden apparaten',
+      autoSync: 'Automatisch synchroniseren',
+      autoSyncDescription: 'Wijzigingen automatisch synchroniseren',
     },
   },
   help: {

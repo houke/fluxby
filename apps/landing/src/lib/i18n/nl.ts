@@ -249,6 +249,11 @@ export const nl: LandingTranslationKeys = {
           'Je financiële data verlaat nooit je apparaat. Geen cloud, geen servers, geen tracking - alles blijft op je computer waar het thuishoort.',
       },
       {
+        title: 'Apparaat synchronisatie',
+        description:
+          'Synchroniseer je data tussen apparaten op hetzelfde netwerk. Peer-to-peer sync betekent dat je data direct tussen je apparaten reist - geen cloud nodig.',
+      },
+      {
         title: 'Bank CSV import',
         description:
           'Exporteer eenvoudig transacties van je bank en importeer ze in Fluxby. Werkt met ING en meer banken komen binnenkort.',
@@ -1202,6 +1207,7 @@ export const nl: LandingTranslationKeys = {
       createBudget: 'Budget maken',
       understandAnalytics: 'Analytics begrijpen',
       security: 'Beveiliging & Privacy',
+      sync: 'Apparaat synchronisatie',
       dataPrivacy: 'Je data & privacy',
     },
     devNav: {

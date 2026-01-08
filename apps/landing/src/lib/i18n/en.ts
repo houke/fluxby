@@ -50,6 +50,11 @@ export const en: LandingTranslationKeys = {
           'Your financial data never leaves your device. No cloud, no servers, no tracking - everything stays on your computer where it belongs.',
       },
       {
+        title: 'Device sync',
+        description:
+          'Sync your data across devices on the same network. Peer-to-peer sync means your data travels directly between your devices - no cloud required.',
+      },
+      {
         title: 'Bank CSV import',
         description:
           'Simply export transactions from your bank and import them into Fluxby. Works with ING and more banks coming soon.',
@@ -1025,6 +1030,7 @@ export const en: LandingTranslationKeys = {
       createBudget: 'Creating a budget',
       understandAnalytics: 'Understanding analytics',
       security: 'Security & Privacy',
+      sync: 'Device sync',
       dataPrivacy: 'Your data & privacy',
     },
     devNav: {
