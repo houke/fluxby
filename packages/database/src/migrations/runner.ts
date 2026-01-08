@@ -1,4 +1,3 @@
-
 import { MigrationContext, migrations, Migration } from './index.js';
 import { dbLog, dbError } from '../logger.js';
 
@@ -38,11 +37,15 @@ export async function runMigrations(db: MigrationContext): Promise<void> {
     return;
   }
 
-  dbLog(`[MigrationRunner] Found ${pendingMigrations.length} pending migrations`);
+  dbLog(
+    `[MigrationRunner] Found ${pendingMigrations.length} pending migrations`
+  );
 
   for (const migration of pendingMigrations) {
-    dbLog(`[MigrationRunner] Running migration ${migration.version}: ${migration.name}`);
-    
+    dbLog(
+      `[MigrationRunner] Running migration ${migration.version}: ${migration.name}`
+    );
+
     try {
       await migration.up(db);
 
@@ -50,14 +53,13 @@ export async function runMigrations(db: MigrationContext): Promise<void> {
       await db.execAsync(
         `INSERT OR REPLACE INTO schema_version (version, applied_at) VALUES (${migration.version}, ${Date.now()})`
       );
-      
+
       dbLog(`[MigrationRunner] Migration ${migration.version} completed`);
     } catch (err) {
       dbError(`[MigrationRunner] Migration ${migration.version} failed:`, err);
       throw err; // Stop migration process on error
     }
   }
-  
+
   dbLog('[MigrationRunner] All migrations completed successfully');
 }
-

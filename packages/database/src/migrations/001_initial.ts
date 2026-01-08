@@ -1,4 +1,3 @@
-
 import type { Migration, MigrationContext } from './index.js';
 
 const SCHEMA_SQL = `
@@ -288,12 +287,16 @@ export const migration001: Migration = {
       } catch (err) {
         // Ignore "table already exists" errors - standard for IF NOT EXISTS but good to be safe
         if (err instanceof Error && !err.message.includes('already exists')) {
-          console.error('Error executing schema statement:', statement.substring(0, 100), err);
+          console.error(
+            'Error executing schema statement:',
+            statement.substring(0, 100),
+            err
+          );
         }
       }
     }
   },
   down: async (db: MigrationContext) => {
     // We generally don't implement down for the initial schema in this context
-  }
+  },
 };

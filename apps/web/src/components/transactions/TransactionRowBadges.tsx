@@ -64,11 +64,14 @@ interface TransactionRowBadgesProps {
   addressBook: AddressBookEntry[] | undefined;
   addressBookEntry: AddressBookEntry | null | undefined;
   isInAddressBook: boolean;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   onCategorySelect: (tx: Transaction, categoryId: string) => void;
   onPaymentMethodSelect: (tx: Transaction, method: string | null) => void;
   onPaymentProcessorSelect: (tx: Transaction, processor: string | null) => void;
-  onAddressBookSelect: (tx: Transaction, contact: AddressBookEntry) => void | Promise<void>;
+  onAddressBookSelect: (
+    tx: Transaction,
+    contact: AddressBookEntry
+  ) => void | Promise<void>;
   onAddToAddressBook: (tx: Transaction) => void;
   onTransferToggle: (tx: Transaction) => void;
   isUpdatePending: boolean;

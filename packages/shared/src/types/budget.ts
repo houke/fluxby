@@ -25,4 +25,3 @@ export interface BudgetWithStats extends Budget {
   categoryColor: string | null;
   categoryIcon?: string | null;
 }
-

@@ -14,7 +14,10 @@ import {
   BookUser,
   Menu,
   X,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
+import { usePrivacy } from '@/contexts/PrivacyContext';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
@@ -46,6 +49,7 @@ export default function Layout() {
   const { t } = useLanguage();
   const { isSwitching } = useProfile();
   const { startOnboarding, state: onboardingState } = useOnboarding();
+  const { isPrivacyMode, togglePrivacyMode } = usePrivacy();
   const dataService = useDataService();
   const location = useLocation();
 
@@ -328,11 +332,32 @@ export default function Layout() {
             >
               <HeaderFilters />
             </div>
-            <div
-              className='flex items-center gap-2'
-              data-onboarding='profile-switcher'
-            >
-              <ProfileSwitcher />
+            <div className='flex items-center gap-2'>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant='ghost'
+                    size='icon'
+                    onClick={togglePrivacyMode}
+                    className='h-9 w-9 text-muted-foreground'
+                  >
+                    {isPrivacyMode ? (
+                      <EyeOff className='h-5 w-5' />
+                    ) : (
+                      <Eye className='h-5 w-5' />
+                    )}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {isPrivacyMode
+                    ? t.common?.disablePrivacy || 'Show sensitive data'
+                    : t.common?.enablePrivacy || 'Hide sensitive data'}
+                </TooltipContent>
+              </Tooltip>
+
+              <div data-onboarding='profile-switcher'>
+                <ProfileSwitcher />
+              </div>
             </div>
           </header>
 

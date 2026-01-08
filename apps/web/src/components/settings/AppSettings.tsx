@@ -182,14 +182,14 @@ export function AppSettings() {
             </div>
           </CardHeader>
           <CardContent className='px-3 pt-0 pb-3 sm:px-6 sm:pt-0 sm:pb-6'>
-            <div className='space-y-4'>
+            <div className='space-y-2'>
               {/* User Name */}
-              <div className='flex items-center justify-between py-3'>
-                <div>
-                  <p className='font-medium'>
+              <div className='flex items-center justify-between rounded-lg border p-3'>
+                <div className='flex-1'>
+                  <p className='text-sm font-medium'>
                     {t.settings?.appNameLabel || 'Your name'}
                   </p>
-                  <p className='text-sm text-muted-foreground'>
+                  <p className='text-xs text-muted-foreground'>
                     {t.settings?.appNameDescription || 'Used in the greeting'}
                   </p>
                 </div>
@@ -199,7 +199,7 @@ export function AppSettings() {
                       <Input
                         value={editedName}
                         onChange={(e) => setEditedName(e.target.value)}
-                        className='w-40'
+                        className='h-8 w-32'
                         placeholder={
                           t.settings?.appNamePlaceholder || 'Your name...'
                         }
@@ -213,10 +213,10 @@ export function AppSettings() {
                         autoFocus
                       />
                       <Button
-                        size='icon'
+                        size='sm'
                         onClick={handleSaveName}
                         disabled={updateUserMutation.isPending}
-                        className='rounded-md hover:bg-purple-600 hover:text-white'
+                        className='h-8 rounded-md hover:bg-purple-600 hover:text-white'
                       >
                         <Check className='h-4 w-4' />
                       </Button>
@@ -233,7 +233,7 @@ export function AppSettings() {
                               variant='ghost'
                               size='icon'
                               onClick={() => setIsEditingName(true)}
-                              className='rounded-md hover:bg-purple-600 hover:text-white'
+                              className='h-8 w-8 rounded-md hover:bg-purple-600 hover:text-white'
                             >
                               <Pencil className='h-4 w-4' />
                             </Button>
@@ -249,17 +249,15 @@ export function AppSettings() {
               </div>
 
               {/* Master Password */}
-              <div className='flex items-center justify-between border-t py-3'>
-                <div className='flex items-start gap-3'>
-                  <div>
-                    <p className='font-medium'>
-                      {t.settings?.masterPasswordTitle || 'Master password'}
-                    </p>
-                    <p className='text-sm text-muted-foreground'>
-                      {t.settings?.masterPasswordDescription ||
-                        'Encrypts all your financial data locally'}
-                    </p>
-                  </div>
+              <div className='flex items-center justify-between rounded-lg border p-3'>
+                <div className='flex-1'>
+                  <p className='text-sm font-medium'>
+                    {t.settings?.masterPasswordTitle || 'Master password'}
+                  </p>
+                  <p className='text-xs text-muted-foreground'>
+                    {t.settings?.masterPasswordDescription ||
+                      'Encrypts all your financial data locally'}
+                  </p>
                 </div>
                 <Dialog
                   open={isPasswordDialogOpen}
@@ -401,10 +399,10 @@ export function AppSettings() {
               </div>
 
               {/* Language */}
-              <div className='flex items-center justify-between border-t py-3'>
-                <div>
-                  <p className='font-medium'>{t.settings.language}</p>
-                  <p className='text-sm text-muted-foreground'>
+              <div className='flex items-center justify-between rounded-lg border p-3'>
+                <div className='flex-1'>
+                  <p className='text-sm font-medium'>{t.settings.language}</p>
+                  <p className='text-xs text-muted-foreground'>
                     {t.settings.languageDescription}
                   </p>
                 </div>
@@ -426,10 +424,10 @@ export function AppSettings() {
               </div>
 
               {/* Currency */}
-              <div className='flex items-center justify-between border-t py-3'>
-                <div>
-                  <p className='font-medium'>{t.settings.currency}</p>
-                  <p className='text-sm text-muted-foreground'>
+              <div className='flex items-center justify-between rounded-lg border p-3'>
+                <div className='flex-1'>
+                  <p className='text-sm font-medium'>{t.settings.currency}</p>
+                  <p className='text-xs text-muted-foreground'>
                     {t.settings.currencyDescription}
                   </p>
                 </div>
@@ -437,10 +435,10 @@ export function AppSettings() {
               </div>
 
               {/* Theme */}
-              <div className='flex items-center justify-between border-t py-3'>
-                <div>
-                  <p className='font-medium'>{t.settings.theme}</p>
-                  <p className='text-sm text-muted-foreground'>
+              <div className='flex items-center justify-between rounded-lg border p-3'>
+                <div className='flex-1'>
+                  <p className='text-sm font-medium'>{t.settings.theme}</p>
+                  <p className='text-xs text-muted-foreground'>
                     {t.settings.themeDescription}
                   </p>
                 </div>

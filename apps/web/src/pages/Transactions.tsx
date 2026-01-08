@@ -81,6 +81,7 @@ import {
   PaymentProcessorFilter,
 } from '@/components/transactions/OptimizedFilters';
 import { TransactionRowBadges } from '@/components/transactions/TransactionRowBadges';
+import { Currency } from '@/components/ui/currency';
 import { api } from '@/lib/api';
 import {
   formatCurrency,
@@ -91,7 +92,12 @@ import {
 
 // Filters on this page are intentionally local to the Transactions view.
 // This prevents Dashboard/Analytics filters (global) from affecting Transactions and vice versa.
-import type { Transaction, Account, Category, AddressBookEntry } from '@fluxby/shared';
+import type {
+  Transaction,
+  Account,
+  Category,
+  AddressBookEntry,
+} from '@fluxby/shared';
 
 type TransactionTypeFilter = 'all' | 'income' | 'expense' | 'transfer';
 import { useFilterParams, useFilters } from '@/contexts/FilterContext';
@@ -1945,7 +1951,10 @@ export default function Transactions() {
                             {account.name}
                           </p>
                           <p className='font-semibold'>
-                            {formatCurrency(balance)}
+                            <Currency
+                              amount={balance}
+                              className='font-semibold'
+                            />
                           </p>
                         </div>
                       </div>
@@ -1984,7 +1993,7 @@ export default function Transactions() {
                   {t.dashboard.income}
                 </p>
                 <p className='mt-1 text-lg font-bold whitespace-nowrap sm:text-2xl'>
-                  {formatCurrency(totals.income)}
+                  <Currency amount={totals.income} />
                 </p>
               </div>
               <div className='absolute -top-2 -right-2 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 sm:relative sm:inset-auto sm:top-auto sm:right-auto sm:ml-4 sm:flex-shrink-0 dark:bg-emerald-900/30'>
@@ -1999,7 +2008,7 @@ export default function Transactions() {
                   {t.dashboard.expenses}
                 </p>
                 <p className='mt-1 text-lg font-bold whitespace-nowrap sm:text-2xl'>
-                  {formatCurrency(totals.expenses)}
+                  <Currency amount={totals.expenses} />
                 </p>
               </div>
               <div className='absolute -top-2 -right-2 flex h-12 w-12 items-center justify-center rounded-full bg-rose-100 sm:relative sm:inset-auto sm:top-auto sm:right-auto sm:ml-4 sm:flex-shrink-0 dark:bg-rose-900/30'>
@@ -2014,11 +2023,11 @@ export default function Transactions() {
                   {t.dashboard.toSavings}
                 </p>
                 <p className='mt-1 text-lg font-bold whitespace-nowrap sm:text-2xl'>
-                  {formatCurrency(totals.netSavingsTransfer)}
+                  <Currency amount={totals.netSavingsTransfer} />
                 </p>
                 <p className='mt-1 text-xs whitespace-nowrap text-muted-foreground'>
-                  +{formatCurrency(totals.transferToSavings)} / -
-                  {formatCurrency(totals.transferFromSavings)}
+                  +<Currency amount={totals.transferToSavings} /> / -
+                  <Currency amount={totals.transferFromSavings} />
                 </p>
               </div>
               <div className='absolute -top-2 -right-2 flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 sm:relative sm:inset-auto sm:top-auto sm:right-auto sm:ml-4 sm:flex-shrink-0 dark:bg-blue-900/30'>
@@ -2042,7 +2051,7 @@ export default function Transactions() {
                         : 'text-rose-600'
                   )}
                 >
-                  {formatCurrency(totals.balance)}
+                  <Currency amount={totals.balance} />
                 </p>
               </div>
               <div
@@ -2663,7 +2672,7 @@ export default function Transactions() {
                                   : tx.amount > 0
                                     ? '+'
                                     : ''}
-                                {formatCurrency(tx.amount)}
+                                <Currency amount={tx.amount} />
                               </p>
                               {recurring && (
                                 <span
@@ -2690,7 +2699,7 @@ export default function Transactions() {
                                     {t.transactions.totalThisPeriod}:
                                   </span>{' '}
                                   <span className='font-bold'>
-                                    {formatCurrency(historyTotal)}
+                                    <Currency amount={historyTotal} />
                                   </span>
                                 </div>
                               </div>
@@ -2718,7 +2727,7 @@ export default function Transactions() {
                                           {formatDate(h.date)}
                                         </span>
                                         <span className='font-medium'>
-                                          {formatCurrency(h.amount)}
+                                          <Currency amount={h.amount} />
                                         </span>
                                       </div>
                                     ));
@@ -2790,7 +2799,7 @@ export default function Transactions() {
                                             {formatDate(h.date)}
                                           </span>
                                           <span className='font-medium'>
-                                            {formatCurrency(h.amount)}
+                                            <Currency amount={h.amount} />
                                           </span>
                                         </div>
                                       ))}
@@ -2955,7 +2964,7 @@ export default function Transactions() {
                             : 'text-rose-600'
                         )}
                       >
-                        {formatCurrency(createContactTransaction.amount)}
+                        <Currency amount={createContactTransaction.amount} />
                       </span>
                     </div>
                     <div className='flex justify-between gap-2'>
@@ -3659,7 +3668,9 @@ export default function Transactions() {
                                 checked={selectedRelatedIds.has(rt.id)}
                                 onChange={(e) => {
                                   const target = e.target as HTMLInputElement;
-                                  const newSet: Set<string> = new Set(selectedRelatedIds);
+                                  const newSet: Set<string> = new Set(
+                                    selectedRelatedIds
+                                  );
                                   if (target.checked) {
                                     newSet.add(rt.id);
                                   } else {
@@ -3686,7 +3697,7 @@ export default function Transactions() {
                                   : 'text-rose-600'
                               }`}
                             >
-                              {formatCurrency(rt.amount)}
+                              <Currency amount={rt.amount} />
                             </td>
                             <td className='py-2'>
                               {rt.categoryId ? (
@@ -3890,7 +3901,9 @@ export default function Transactions() {
                                   : 'text-rose-600'
                             }`}
                           >
-                            {formatCurrency(pendingTransferTransaction.amount)}
+                            <Currency
+                              amount={pendingTransferTransaction.amount}
+                            />
                           </td>
                           <td className='py-2'>
                             <span
@@ -3950,7 +3963,7 @@ export default function Transactions() {
                                   : 'text-rose-600'
                             }`}
                           >
-                            {formatCurrency(rt.amount)}
+                            <Currency amount={rt.amount} />
                           </td>
                           <td className='py-2'>
                             <span

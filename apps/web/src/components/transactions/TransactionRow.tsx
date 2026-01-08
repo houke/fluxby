@@ -28,7 +28,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { formatCurrency, formatDate, cn } from '@/lib/utils';
+import { formatDate, cn } from '@/lib/utils';
+import { Currency } from '@/components/ui/currency';
 
 // Types
 import type {
@@ -52,7 +53,6 @@ export interface PaymentMethod {
   icon: React.ReactNode;
   color: string;
 }
-
 
 export interface TranslationKeys {
   transactions: {
@@ -848,7 +848,7 @@ export const TransactionRow = memo(function TransactionRow({
             )}
           >
             {tx.type === 'transfer' ? '' : tx.amount > 0 ? '+' : ''}
-            {formatCurrency(tx.amount)}
+            <Currency amount={tx.amount} />
           </p>
           {isRecurring && (
             <span
@@ -874,7 +874,9 @@ export const TransactionRow = memo(function TransactionRow({
               <span className='text-muted-foreground'>
                 {t.transactions.totalThisPeriod}:
               </span>{' '}
-              <span className='font-bold'>{formatCurrency(historyTotal)}</span>
+              <span className='font-bold'>
+                <Currency amount={historyTotal} />
+              </span>
             </div>
           </div>
           <div className='grid gap-2'>
@@ -898,7 +900,7 @@ export const TransactionRow = memo(function TransactionRow({
                       {formatDate(h.date)}
                     </span>
                     <span className='font-medium'>
-                      {formatCurrency(h.amount)}
+                      <Currency amount={h.amount} />
                     </span>
                   </div>
                 ));
@@ -951,7 +953,7 @@ export const TransactionRow = memo(function TransactionRow({
                         {formatDate(h.date)}
                       </span>
                       <span className='font-medium'>
-                        {formatCurrency(h.amount)}
+                        <Currency amount={h.amount} />
                       </span>
                     </div>
                   ))}

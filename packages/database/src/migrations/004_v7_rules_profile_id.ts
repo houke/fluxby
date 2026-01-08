@@ -1,4 +1,3 @@
-
 import type { Migration, MigrationContext } from './index.js';
 
 export const migration004: Migration = {
@@ -15,7 +14,7 @@ export const migration004: Migration = {
         (err.message.includes('duplicate column') ||
           err.message.includes('already exists'))
       ) {
-         // Already exists
+        // Already exists
       } else {
         throw err;
       }
@@ -31,7 +30,7 @@ export const migration004: Migration = {
         (err.message.includes('duplicate column') ||
           err.message.includes('already exists'))
       ) {
-         // Already exists
+        // Already exists
       } else {
         throw err;
       }
@@ -39,5 +38,5 @@ export const migration004: Migration = {
   },
   down: async (db: MigrationContext) => {
     // No-op
-  }
+  },
 };

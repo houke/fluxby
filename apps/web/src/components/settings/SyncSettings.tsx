@@ -169,90 +169,122 @@ export function SyncSettings() {
               </CardDescription>
             </div>
             {/* Sync Status & Controls - Compact */}
-            <div className='flex flex-col items-end gap-2'>
-              <div className='flex items-center gap-2'>
-                <div
-                  className={cn(
-                    'flex h-8 w-8 items-center justify-center rounded-full',
-                    syncStatus.state === 'idle' && syncStatus.connectedPeers > 0
-                      ? 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400'
-                      : syncStatus.state === 'syncing'
-                        ? 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400'
-                        : syncStatus.state === 'error'
-                          ? 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'
-                          : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
-                  )}
-                >
-                  {syncStatus.isSyncing ? (
-                    <RefreshCw className='h-4 w-4 animate-spin' />
-                  ) : (
-                    <Wifi className='h-4 w-4' />
-                  )}
-                </div>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant='ghost'
-                        size='icon'
-                        className='h-8 w-8'
-                        onClick={async () => {
-                          setIsSyncingManual(true);
-                          try {
-                            await forceSync();
-                          } finally {
-                            setIsSyncingManual(false);
-                          }
-                        }}
-                        disabled={
-                          !isInitialized ||
-                          syncStatus.connectedPeers === 0 ||
-                          isSyncingManual
+            <div className='flex items-center gap-2'>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div
+                      className={cn(
+                        'flex h-8 w-8 items-center justify-center rounded-full',
+                        syncStatus.state === 'idle' &&
+                          syncStatus.connectedPeers > 0
+                          ? 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400'
+                          : syncStatus.state === 'syncing'
+                            ? 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400'
+                            : syncStatus.state === 'error'
+                              ? 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'
+                              : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
+                      )}
+                    >
+                      {syncStatus.isSyncing ? (
+                        <RefreshCw className='h-4 w-4 animate-spin' />
+                      ) : syncStatus.connectedPeers > 0 ? (
+                        <Wifi className='h-4 w-4' />
+                      ) : (
+                        <WifiOff className='h-4 w-4' />
+                      )}
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <div className='text-center'>
+                      <p className='font-medium'>
+                        {syncStatus.state === 'syncing'
+                          ? t.settings?.sync?.syncing || 'Syncing...'
+                          : syncStatus.connectedPeers > 0
+                            ? t.settings?.sync?.connected || 'Connected'
+                            : t.settings?.sync?.notConnected || 'Not connected'}
+                      </p>
+                      <p className='text-xs text-muted-foreground'>
+                        {syncStatus.connectedPeers}{' '}
+                        {syncStatus.connectedPeers === 1 ? 'device' : 'devices'}
+                      </p>
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant='ghost'
+                      size='icon'
+                      className='h-8 w-8 rounded-md hover:bg-purple-600 hover:text-white'
+                      onClick={async () => {
+                        setIsSyncingManual(true);
+                        try {
+                          await forceSync();
+                        } finally {
+                          setIsSyncingManual(false);
                         }
-                      >
-                        <RefreshCw
-                          className={cn(
-                            'h-4 w-4',
-                            (isSyncingManual || syncStatus.isSyncing) &&
-                              'animate-spin'
-                          )}
-                        />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      {t.settings?.sync?.syncNow || 'Sync now'}
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant='ghost'
-                        size='icon'
-                        className='h-8 w-8'
-                        onClick={() => setAutoSyncEnabled(!autoSyncEnabled)}
-                      >
-                        {autoSyncEnabled ? (
-                          <ToggleRight className='h-5 w-5 text-purple-600 dark:text-purple-400' />
-                        ) : (
-                          <ToggleLeft className='h-5 w-5 text-muted-foreground' />
+                      }}
+                      disabled={
+                        !isInitialized ||
+                        syncStatus.connectedPeers === 0 ||
+                        isSyncingManual
+                      }
+                    >
+                      <RefreshCw
+                        className={cn(
+                          'h-4 w-4',
+                          (isSyncingManual || syncStatus.isSyncing) &&
+                            'animate-spin'
                         )}
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      {t.settings?.sync?.autoSync || 'Auto-sync'}
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
-              <p className='text-right text-xs text-muted-foreground'>
-                {syncStatus.state === 'syncing'
-                  ? t.settings?.sync?.syncing || 'Syncing...'
-                  : syncStatus.connectedPeers > 0
-                    ? t.settings?.sync?.connected || 'Connected'
-                    : t.settings?.sync?.notConnected || 'Not connected'}
-              </p>
+                      />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <div className='text-center'>
+                      <p className='font-medium'>
+                        {t.settings?.sync?.syncNow || 'Sync now'}
+                      </p>
+                      <p className='text-xs text-muted-foreground'>
+                        {t.settings?.sync?.syncNowTooltip ||
+                          'Force sync with all connected devices'}
+                      </p>
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant='ghost'
+                      size='icon'
+                      className='h-8 w-8 rounded-md hover:bg-purple-600 hover:text-white'
+                      onClick={() => setAutoSyncEnabled(!autoSyncEnabled)}
+                    >
+                      {autoSyncEnabled ? (
+                        <ToggleRight className='h-5 w-5 text-purple-600 dark:text-purple-400' />
+                      ) : (
+                        <ToggleLeft className='h-5 w-5 text-muted-foreground' />
+                      )}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <div className='text-center'>
+                      <p className='font-medium'>
+                        {t.settings?.sync?.autoSync || 'Auto-sync'}
+                      </p>
+                      <p className='text-xs text-muted-foreground'>
+                        {autoSyncEnabled
+                          ? 'Changes sync automatically'
+                          : 'Manual sync only'}
+                      </p>
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
           </div>
         </CardHeader>
@@ -336,6 +368,13 @@ export function SyncSettings() {
                   )}
                 </div>
               </div>
+            </div>
+
+            {/* Connection settings */}
+            <div className='space-y-2'>
+              <h4 className='text-sm font-medium'>
+                {t.settings?.sync?.connectionSettings || 'Connection settings'}
+              </h4>
             </div>
 
             {/* Pairing Code & Connect to Device - 2 rows */}

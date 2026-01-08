@@ -27,7 +27,8 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useProfile } from '@/contexts/ProfileContext';
 import { useFilters } from '@/contexts/FilterContext';
 import { useToast } from '@/contexts/ToastContext';
-import { formatCurrency, cn, findSimilarNameGroups } from '@/lib/utils';
+import { cn, findSimilarNameGroups } from '@/lib/utils';
+import { Currency } from '@/components/ui/currency';
 import {
   Card,
   CardContent,
@@ -2337,7 +2338,7 @@ export default function AddressBook() {
                         )}
                       >
                         {account.netAmount >= 0 ? '+' : ''}
-                        {formatCurrency(account.netAmount)}
+                        <Currency amount={account.netAmount} />
                       </span>
                       <Popover
                         open={suggestedContactPopover === account.iban}
@@ -3001,17 +3002,17 @@ export default function AddressBook() {
                                     {(contact.totalIncome || 0) > 0 && (
                                       <span className='flex items-center text-emerald-600'>
                                         <ArrowDownRight className='mr-0.5 h-3 w-3' />
-                                        {formatCurrency(
-                                          contact.totalIncome || 0
-                                        )}
+                                        <Currency
+                                          amount={contact.totalIncome || 0}
+                                        />
                                       </span>
                                     )}
                                     {(contact.totalExpenses || 0) > 0 && (
                                       <span className='flex items-center text-red-600'>
                                         <ArrowUpRight className='mr-0.5 h-3 w-3' />
-                                        {formatCurrency(
-                                          contact.totalExpenses || 0
-                                        )}
+                                        <Currency
+                                          amount={contact.totalExpenses || 0}
+                                        />
                                       </span>
                                     )}
                                   </div>

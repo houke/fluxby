@@ -10,7 +10,8 @@ import {
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { formatCurrency, cn } from '@/lib/utils';
+import { cn } from '@/lib/utils';
+import { Currency } from '@/components/ui/currency';
 
 export interface Account {
   id: number;
@@ -143,7 +144,7 @@ export const TransactionHeader = memo(function TransactionHeader({
                           {account.name}
                         </p>
                         <p className='font-semibold'>
-                          {formatCurrency(balance)}
+                          <Currency amount={balance} />
                         </p>
                       </div>
                     </div>
@@ -184,7 +185,7 @@ export const TransactionHeader = memo(function TransactionHeader({
                   {t.dashboard.income}
                 </p>
                 <p className='mt-1 text-2xl font-bold whitespace-nowrap'>
-                  {formatCurrency(totals.income)}
+                  <Currency amount={totals.income} />
                 </p>
               </div>
               <div className='flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/30'>
@@ -203,7 +204,7 @@ export const TransactionHeader = memo(function TransactionHeader({
                   {t.dashboard.expenses}
                 </p>
                 <p className='mt-1 text-2xl font-bold whitespace-nowrap'>
-                  {formatCurrency(totals.expenses)}
+                  <Currency amount={totals.expenses} />
                 </p>
               </div>
               <div className='flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-rose-100 dark:bg-rose-900/30'>
@@ -222,11 +223,11 @@ export const TransactionHeader = memo(function TransactionHeader({
                   {t.dashboard.toSavings}
                 </p>
                 <p className='mt-1 text-2xl font-bold whitespace-nowrap'>
-                  {formatCurrency(totals.netSavingsTransfer)}
+                  <Currency amount={totals.netSavingsTransfer} />
                 </p>
                 <p className='mt-1 text-xs whitespace-nowrap text-muted-foreground'>
-                  +{formatCurrency(totals.transferToSavings)} / -
-                  {formatCurrency(totals.transferFromSavings)}
+                  +<Currency amount={totals.transferToSavings} /> / -
+                  <Currency amount={totals.transferFromSavings} />
                 </p>
               </div>
               <div className='flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30'>
@@ -250,7 +251,7 @@ export const TransactionHeader = memo(function TransactionHeader({
                     totals.balance >= 0 ? 'text-emerald-600' : 'text-rose-600'
                   )}
                 >
-                  {formatCurrency(totals.balance)}
+                  <Currency amount={totals.balance} />
                 </p>
               </div>
               <div

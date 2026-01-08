@@ -1623,11 +1623,7 @@ export const en: LandingTranslationKeys = {
         title: 'Multiple profiles',
         description:
           'Create separate profiles for personal, business, or family finances. Keep everything organized but separate.',
-        highlights: [
-          'Separate workspaces',
-          'Easy switching',
-          'Isolated data',
-        ],
+        highlights: ['Separate workspaces', 'Easy switching', 'Isolated data'],
       },
       realtime: {
         title: 'Realtime updates',

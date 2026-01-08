@@ -1666,11 +1666,7 @@ export const nl: LandingTranslationKeys = {
         title: 'Meerdere profielen',
         description:
           'Maak aparte profielen voor persoonlijk, zakelijk of gezinsfinanciën. Houd alles georganiseerd maar gescheiden.',
-        highlights: [
-          'Aparte werkruimtes',
-          'Vlot wisselen',
-          'Gescheiden data',
-        ],
+        highlights: ['Aparte werkruimtes', 'Vlot wisselen', 'Gescheiden data'],
       },
       realtime: {
         title: 'Realtime updates',

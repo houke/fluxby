@@ -57,7 +57,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { useProfile } from '@/contexts/ProfileContext';
-import { formatCurrency } from '@/lib/utils';
+import { Currency } from '@/components/ui/currency';
 import type { TranslationKeys } from '@/lib/i18n';
 
 // Types
@@ -87,7 +87,6 @@ interface SortableAccountItemProps {
   deleteMutation: { mutate: (id: string) => void; isPending: boolean };
   getAccountIcon: (type: string, balance?: number) => React.ReactElement;
   getAccountTypeLabel: (type: string) => string;
-  formatCurrency: (value: number) => string;
   confirm: (options: ConfirmOptions) => Promise<boolean>;
   t: {
     settings: {
@@ -129,7 +128,6 @@ const SortableAccountItem = React.memo(function SortableAccountItem({
   deleteMutation,
   getAccountIcon,
   getAccountTypeLabel,
-  formatCurrency,
   confirm,
   t,
   ACCOUNT_TYPES,
@@ -258,7 +256,7 @@ const SortableAccountItem = React.memo(function SortableAccountItem({
           <div className='flex w-full items-center justify-between gap-4 sm:w-auto'>
             <div className='text-left sm:text-right'>
               <p className='text-lg font-semibold'>
-                {formatCurrency(account.currentBalance)}
+                <Currency amount={account.currentBalance} />
               </p>
               <p className='text-xs text-muted-foreground'>
                 {t.settings.accounts.currentBalance}
@@ -616,7 +614,6 @@ export function AccountSettings() {
                             deleteMutation={deleteMutation}
                             getAccountIcon={getAccountIcon}
                             getAccountTypeLabel={getAccountTypeLabel}
-                            formatCurrency={formatCurrency}
                             confirm={confirm}
                             t={t}
                             ACCOUNT_TYPES={ACCOUNT_TYPES}

@@ -36,7 +36,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useDataService } from '@/contexts/DatabaseContext';
-import { formatCurrency, cn } from '@/lib/utils';
+import { cn } from '@/lib/utils';
+import { Currency } from '@/components/ui/currency';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useProfile } from '@/contexts/ProfileContext';
 import { useFilters } from '@/contexts/FilterContext';
@@ -858,7 +859,7 @@ export default function Categories() {
                 </Tooltip>
               </TooltipProvider>
               <span className='ml-auto text-xs text-muted-foreground'>
-                {formatCurrency(sub.totalExpenses || 0)}
+                <Currency amount={sub.totalExpenses || 0} />
                 {' · '}
                 {sub.transactionCount || 0} {t.categories.transactions}
               </span>
@@ -1114,7 +1115,9 @@ export default function Categories() {
                   </p>
                 )}
                 <div className='mt-1 flex items-center gap-2 text-xs text-muted-foreground'>
-                  <span>{formatCurrency(totals.amount)}</span>
+                  <span>
+                    <Currency amount={totals.amount} />
+                  </span>
                   <span aria-hidden='true'>•</span>
                   <span>
                     {totals.count} {t.categories.transactions}

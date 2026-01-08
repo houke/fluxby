@@ -37,7 +37,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { api } from '@/lib/api';
-import { formatDate, formatCurrency } from '@/lib/utils';
+import { formatDate } from '@/lib/utils';
+import { Currency } from '@/components/ui/currency';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useProfile } from '@/contexts/ProfileContext';
 
@@ -316,9 +317,7 @@ function HistoryCard({
                   </span>
                   <div className='flex items-center gap-2'>
                     <span className='font-medium'>
-                      {row.amount !== null && row.amount !== undefined
-                        ? formatCurrency(row.amount)
-                        : '-'}
+                      <Currency amount={row.amount} />
                     </span>
                     <span
                       className={`rounded px-1.5 py-0.5 text-xs ${getReasonBadgeStyle(row.reason || row.error || '')}`}
@@ -984,7 +983,9 @@ export default function Import() {
                                     : 'text-green-600'
                                 }`}
                               >
-                                {row.amount}
+                                <span className='privacy-blur'>
+                                  {row.amount}
+                                </span>
                               </td>
                               <td className='max-w-xs truncate px-4 py-2'>
                                 {row.description}
@@ -1001,7 +1002,9 @@ export default function Import() {
                               )}
                               {columnMapping.balance && (
                                 <td className='px-4 py-2 text-right font-mono'>
-                                  {row.balance}
+                                  <span className='privacy-blur'>
+                                    {row.balance}
+                                  </span>
                                 </td>
                               )}
                             </tr>
@@ -1180,9 +1183,11 @@ export default function Import() {
                                     {row.date || '-'}
                                   </td>
                                   <td className='px-4 py-2'>
-                                    {row.amount
-                                      ? formatCurrency(row.amount)
-                                      : '-'}
+                                    {row.amount ? (
+                                      <Currency amount={row.amount} />
+                                    ) : (
+                                      '-'
+                                    )}
                                   </td>
                                   <td className='px-4 py-2'>
                                     <span className='rounded bg-destructive/10 px-2 py-0.5 text-xs text-destructive'>

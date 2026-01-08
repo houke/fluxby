@@ -18,7 +18,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { useDataService } from '@/contexts/DatabaseContext';
-import { formatCurrency } from '@/lib/utils';
+import { Currency } from '@/components/ui/currency';
 import { useFilters } from '@/contexts/FilterContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useProfile } from '@/contexts/ProfileContext';
@@ -290,7 +290,8 @@ export default function Analytics() {
                                   color: value >= 0 ? '#10B981' : '#F43F5E',
                                 }}
                               >
-                                {formatCurrency(value)}
+                                {value >= 0 ? '+' : ''}
+                                <Currency amount={value} />
                               </p>
                             </div>
                           );
@@ -438,7 +439,7 @@ export default function Analytics() {
                                   {entry.dataKey === 'income'
                                     ? t.dashboard.income
                                     : t.dashboard.expenses}
-                                  : {formatCurrency(entry.value as number)}
+                                  : <Currency amount={entry.value as number} />
                                 </p>
                               ))}
                             </div>
@@ -518,9 +519,13 @@ export default function Analytics() {
               >
                 {activeExpenseIndex !== null &&
                 expenseCategories &&
-                expenseCategories[activeExpenseIndex]
-                  ? formatCurrency(expenseCategories[activeExpenseIndex].amount)
-                  : '\u00A0'}
+                expenseCategories[activeExpenseIndex] ? (
+                  <Currency
+                    amount={expenseCategories[activeExpenseIndex].amount}
+                  />
+                ) : (
+                  '\u00A0'
+                )}
               </span>
             </CardHeader>
             <CardContent>
@@ -596,7 +601,9 @@ export default function Analytics() {
                         ))}
                       </Pie>
                       <Tooltip
-                        formatter={(value) => formatCurrency(value as number)}
+                        formatter={(value: number | undefined) => (
+                          <Currency amount={value || 0} />
+                        )}
                         contentStyle={{
                           backgroundColor: 'hsl(var(--card))',
                           border: '1px solid hsl(var(--border))',
@@ -698,9 +705,13 @@ export default function Analytics() {
               >
                 {activeIncomeIndex !== null &&
                 incomeCategories &&
-                incomeCategories[activeIncomeIndex]
-                  ? formatCurrency(incomeCategories[activeIncomeIndex].amount)
-                  : '\u00A0'}
+                incomeCategories[activeIncomeIndex] ? (
+                  <Currency
+                    amount={incomeCategories[activeIncomeIndex].amount}
+                  />
+                ) : (
+                  '\u00A0'
+                )}
               </span>
             </CardHeader>
             <CardContent>
@@ -776,7 +787,9 @@ export default function Analytics() {
                         ))}
                       </Pie>
                       <Tooltip
-                        formatter={(value) => formatCurrency(value as number)}
+                        formatter={(value: number | undefined) => (
+                          <Currency amount={value || 0} />
+                        )}
                         contentStyle={{
                           backgroundColor: 'hsl(var(--card))',
                           border: '1px solid hsl(var(--border))',
@@ -919,7 +932,7 @@ export default function Analytics() {
                       {/* Amount and percentage */}
                       <div className='flex-shrink-0 text-right'>
                         <div className='font-semibold tabular-nums'>
-                          {formatCurrency(cat.amount)}
+                          <Currency amount={cat.amount} />
                         </div>
                         <div className='text-sm text-muted-foreground'>
                           {cat.percentage.toFixed(1)}%
@@ -996,7 +1009,7 @@ export default function Analytics() {
                       {/* Amount and percentage */}
                       <div className='flex-shrink-0 text-right'>
                         <div className='font-semibold tabular-nums'>
-                          {formatCurrency(cat.amount)}
+                          <Currency amount={cat.amount} />
                         </div>
                         <div className='text-sm text-muted-foreground'>
                           {cat.percentage.toFixed(1)}%

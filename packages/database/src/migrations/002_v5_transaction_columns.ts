@@ -1,4 +1,3 @@
-
 import type { Migration, MigrationContext } from './index.js';
 
 export const migration002: Migration = {
@@ -41,5 +40,5 @@ export const migration002: Migration = {
   },
   down: async (db: MigrationContext) => {
     // No-op
-  }
+  },
 };

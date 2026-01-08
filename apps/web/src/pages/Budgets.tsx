@@ -47,12 +47,12 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { api } from '@/lib/api';
-import { formatCurrency, cn } from '@/lib/utils';
+import { cn } from '@/lib/utils';
+import { Currency } from '@/components/ui/currency';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useProfile } from '@/contexts/ProfileContext';
 
 import type { BudgetWithStats as Budget, Category } from '@fluxby/shared';
-
 
 type SortOption = 'name' | 'spent' | 'percentage' | 'amount';
 
@@ -588,15 +588,15 @@ export default function Budgets() {
                       <p className='font-medium'>{proposal.categoryName}</p>
                       <p className='text-xs text-muted-foreground'>
                         {t.budgets.avgSpent}:{' '}
-                        {formatCurrency(proposal.avgMonthlySpent)}/mnd (
-                        {proposal.basedOnMonths} mnd)
+                        <Currency amount={proposal.avgMonthlySpent} />
+                        /mnd ({proposal.basedOnMonths} mnd)
                       </p>
                     </div>
                   </div>
                 </div>
                 <div className='text-right'>
                   <p className='text-lg font-bold'>
-                    {formatCurrency(proposal.proposedAmount)}
+                    <Currency amount={proposal.proposedAmount} />
                   </p>
                   <p className='text-xs text-muted-foreground'>
                     {t.budgets.perMonth}
@@ -649,10 +649,10 @@ export default function Budgets() {
             <div className='space-y-4'>
               <div className='flex items-center justify-between'>
                 <span className='text-2xl font-bold'>
-                  {formatCurrency(totalSpent)}
+                  <Currency amount={totalSpent} />
                 </span>
                 <span className='text-muted-foreground'>
-                  {t.common.of} {formatCurrency(totalBudget)}
+                  {t.common.of} <Currency amount={totalBudget} />
                 </span>
               </div>
               <Progress
@@ -667,13 +667,17 @@ export default function Budgets() {
                 )}
               />
               <p className='text-sm text-muted-foreground'>
-                {overallPercentage > 100
-                  ? `${formatCurrency(totalSpent - totalBudget)} ${
-                      t.budgets.overBudget
-                    }`
-                  : `${formatCurrency(totalBudget - totalSpent)} ${
-                      t.budgets.remaining
-                    }`}
+                {overallPercentage > 100 ? (
+                  <>
+                    <Currency amount={totalSpent - totalBudget} />{' '}
+                    {t.budgets.overBudget}
+                  </>
+                ) : (
+                  <>
+                    <Currency amount={totalBudget - totalSpent} />{' '}
+                    {t.budgets.remaining}
+                  </>
+                )}
               </p>
             </div>
           </CardContent>
@@ -925,7 +929,7 @@ export default function Budgets() {
                       />
                       <div className='flex justify-between px-3 text-sm sm:px-0'>
                         <span className='text-muted-foreground'>
-                          {t.budgets.spent}: {formatCurrency(budget.spent)}
+                          {t.budgets.spent}: <Currency amount={budget.spent} />
                         </span>
                         <span
                           className={cn(
@@ -934,16 +938,21 @@ export default function Budgets() {
                               : 'text-muted-foreground'
                           )}
                         >
-                          {budget.remaining >= 0
-                            ? `${t.budgets.remaining}: ${formatCurrency(
-                                budget.remaining
-                              )}`
-                            : `${t.budgets.over}: ${formatCurrency(
-                                Math.abs(budget.remaining)
-                              )}`}
+                          {budget.remaining >= 0 ? (
+                            <>
+                              {t.budgets.remaining}:{' '}
+                              <Currency amount={budget.remaining} />
+                            </>
+                          ) : (
+                            <>
+                              {t.budgets.over}:{' '}
+                              <Currency amount={Math.abs(budget.remaining)} />
+                            </>
+                          )}
                         </span>
                         <span className='font-medium'>
-                          {t.budgets.budget}: {formatCurrency(budget.amount)}
+                          {t.budgets.budget}:{' '}
+                          <Currency amount={budget.amount} />
                         </span>
                       </div>
                     </div>

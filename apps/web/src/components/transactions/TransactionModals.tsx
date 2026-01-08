@@ -30,7 +30,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { formatCurrency, formatDate, cn } from '@/lib/utils';
+import { formatDate, cn } from '@/lib/utils';
+import { Currency } from '@/components/ui/currency';
 
 // Types
 import type {
@@ -127,7 +128,7 @@ export const CreateContactModal = memo(function CreateContactModal({
                         : 'text-rose-600'
                     )}
                   >
-                    {formatCurrency(transaction.amount)}
+                    <Currency amount={transaction.amount} />
                   </span>
                 </div>
                 <div className='flex justify-between gap-2'>
@@ -869,7 +870,9 @@ export const RuleModal = memo(function RuleModal({
                             checked={selectedRelatedIds.has(rt.id)}
                             onChange={(e) => {
                               const target = e.target as HTMLInputElement;
-                              const newSet: Set<string> = new Set(selectedRelatedIds);
+                              const newSet: Set<string> = new Set(
+                                selectedRelatedIds
+                              );
                               if (target.checked) {
                                 newSet.add(rt.id);
                               } else {
@@ -892,7 +895,7 @@ export const RuleModal = memo(function RuleModal({
                         <td
                           className={`py-2 pr-4 text-right ${rt.amount > 0 ? 'text-emerald-600' : 'text-rose-600'}`}
                         >
-                          {formatCurrency(rt.amount)}
+                          <Currency amount={rt.amount} />
                         </td>
                         <td className='py-2'>
                           {rt.categoryId ? (
@@ -1124,7 +1127,7 @@ export const TransferModal = memo(function TransferModal({
                               : 'text-rose-600'
                         }`}
                       >
-                        {formatCurrency(pendingTransaction.amount)}
+                        <Currency amount={pendingTransaction.amount} />
                       </td>
                       <td className='py-2'>
                         <span
@@ -1153,7 +1156,9 @@ export const TransferModal = memo(function TransferModal({
                           checked={selectedRelatedIds.has(rt.id)}
                           onChange={(e) => {
                             const target = e.target as HTMLInputElement;
-                            const newSet: Set<string> = new Set(selectedRelatedIds);
+                            const newSet: Set<string> = new Set(
+                              selectedRelatedIds
+                            );
                             if (target.checked) {
                               newSet.add(rt.id);
                             } else {
@@ -1182,7 +1187,7 @@ export const TransferModal = memo(function TransferModal({
                               : 'text-rose-600'
                         }`}
                       >
-                        {formatCurrency(rt.amount)}
+                        <Currency amount={rt.amount} />
                       </td>
                       <td className='py-2'>
                         <span

@@ -9,7 +9,6 @@
  */
 // export const SCHEMA_VERSION = 7; // Removed
 
-
 /**
  * SQL schema with sync metadata columns
  */

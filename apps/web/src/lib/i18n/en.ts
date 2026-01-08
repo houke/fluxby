@@ -93,6 +93,8 @@ export const en: TranslationKeys = {
     backToHomepage: 'Back to homepage',
     loadingUserData: 'Loading user data...',
     prepareDashboard: 'Please wait while we prepare your dashboard',
+    enablePrivacy: 'Hide sensitive data',
+    disablePrivacy: 'Show sensitive data',
   },
   errors: {
     databaseError: 'Database error',
@@ -877,6 +879,7 @@ export const en: TranslationKeys = {
       syncNowTooltip: 'Force sync with all connected devices',
       autoSync: 'Auto-sync',
       autoSyncDescription: 'Automatically sync changes as you make them',
+      connectionSettings: 'Connection settings',
     },
   },
   help: {

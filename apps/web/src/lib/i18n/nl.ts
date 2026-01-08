@@ -65,6 +65,8 @@ export interface TranslationKeys {
     backToHomepage: string;
     loadingUserData: string;
     prepareDashboard: string;
+    enablePrivacy: string;
+    disablePrivacy: string;
   };
   errors: {
     databaseError: string;
@@ -776,6 +778,7 @@ export interface TranslationKeys {
       syncNowTooltip: string;
       autoSync: string;
       autoSyncDescription: string;
+      connectionSettings: string;
     };
   };
   help: {
@@ -1161,6 +1164,8 @@ export const nl: TranslationKeys = {
     backToHomepage: 'Terug naar homepage',
     loadingUserData: 'Gebruikersgegevens laden...',
     prepareDashboard: 'Even geduld terwijl we je dashboard voorbereiden',
+    enablePrivacy: 'Verberg gevoelige data',
+    disablePrivacy: 'Toon gevoelige data',
   },
   errors: {
     databaseError: 'Database fout',
@@ -1953,6 +1958,7 @@ export const nl: TranslationKeys = {
       syncNowTooltip: 'Forceer synchronisatie met alle verbonden apparaten',
       autoSync: 'Automatisch synchroniseren',
       autoSyncDescription: 'Wijzigingen automatisch synchroniseren',
+      connectionSettings: 'Verbindingsinstellingen',
     },
   },
   help: {

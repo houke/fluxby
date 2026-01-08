@@ -21,7 +21,8 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { formatCurrency, formatDateShort } from '@/lib/utils';
+import { formatDateShort } from '@/lib/utils';
+import { Currency } from '@/components/ui/currency';
 import { api } from '@/lib/api';
 import { useFilterParams, useFilters } from '@/contexts/FilterContext';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -513,7 +514,7 @@ export default function Dashboard() {
                           {account.name}
                         </p>
                         <p className='font-semibold'>
-                          {formatCurrency(balance)}
+                          <Currency amount={balance} />
                         </p>
                       </div>
                     </div>
@@ -548,7 +549,7 @@ export default function Dashboard() {
         <div data-onboarding='stat-income' className='h-full'>
           <StatsCard
             title={t.dashboard.income}
-            value={formatCurrency(stats?.totalIncome || 0)}
+            value={<Currency amount={stats?.totalIncome || 0} />}
             icon={ArrowUpRight}
             iconColor='text-emerald-600'
             trend={0}
@@ -557,7 +558,7 @@ export default function Dashboard() {
         <div data-onboarding='stat-expenses' className='h-full'>
           <StatsCard
             title={t.dashboard.expenses}
-            value={formatCurrency(stats?.totalExpenses || 0)}
+            value={<Currency amount={stats?.totalExpenses || 0} />}
             icon={ArrowDownRight}
             iconColor='text-rose-600'
             trend={0}
@@ -566,19 +567,22 @@ export default function Dashboard() {
         <div data-onboarding='stat-savings' className='h-full'>
           <StatsCard
             title={t.dashboard.toSavings}
-            value={formatCurrency(stats?.netSavingsTransfer || 0)}
+            value={<Currency amount={stats?.netSavingsTransfer || 0} />}
             icon={PiggyBank}
             iconColor='text-blue-600'
             trend={0}
-            trendLabel={`+${formatCurrency(
-              stats?.transferToSavings || 0
-            )} / -${formatCurrency(stats?.transferFromSavings || 0)}`}
+            trendLabel={
+              <>
+                +<Currency amount={stats?.transferToSavings || 0} /> / -
+                <Currency amount={stats?.transferFromSavings || 0} />
+              </>
+            }
           />
         </div>
         <div data-onboarding='stat-net-result' className='h-full'>
           <StatsCard
             title={t.dashboard.netResult}
-            value={formatCurrency(stats?.totalBalance || 0)}
+            value={<Currency amount={stats?.totalBalance || 0} />}
             icon={Wallet}
             iconColor={
               stats?.totalBalance === 0 || !stats?.totalBalance
@@ -686,7 +690,7 @@ export default function Dashboard() {
                         />
                         <Tooltip
                           formatter={(value) => [
-                            formatCurrency(value as number),
+                            <Currency key='amount' amount={value as number} />,
                             t.dashboard.income,
                           ]}
                           labelFormatter={(label) => {
@@ -775,9 +779,11 @@ export default function Dashboard() {
                 }}
               >
                 {activeCategoryIndex !== null &&
-                categoryData[activeCategoryIndex]
-                  ? formatCurrency(categoryData[activeCategoryIndex].amount)
-                  : '\u00A0'}
+                categoryData[activeCategoryIndex] ? (
+                  <Currency amount={categoryData[activeCategoryIndex].amount} />
+                ) : (
+                  '\u00A0'
+                )}
               </span>
             </CardHeader>
             <CardContent>
@@ -857,7 +863,9 @@ export default function Dashboard() {
                         ))}
                       </Pie>
                       <Tooltip
-                        formatter={(value) => formatCurrency(value as number)}
+                        formatter={(value) => (
+                          <Currency amount={value as number} />
+                        )}
                         contentStyle={{
                           backgroundColor: 'hsl(var(--card))',
                           border: '1px solid hsl(var(--border))',
@@ -1049,11 +1057,12 @@ export default function Dashboard() {
                                   {t.common.months[parseInt(month) - 1]} {year}
                                 </p>
                                 <p className='text-emerald-600'>
-                                  {t.dashboard.income}: {formatCurrency(income)}
+                                  {t.dashboard.income}:{' '}
+                                  <Currency amount={income} />
                                 </p>
                                 <p className='text-rose-600'>
                                   {t.dashboard.expenses}:{' '}
-                                  {formatCurrency(expenses)}
+                                  <Currency amount={expenses} />
                                 </p>
                                 <p
                                   className={`mt-1 border-t pt-1 font-semibold ${
@@ -1062,7 +1071,8 @@ export default function Dashboard() {
                                       : 'text-rose-600'
                                   }`}
                                 >
-                                  {t.common.total}: {formatCurrency(balance)}
+                                  {t.common.total}:{' '}
+                                  <Currency amount={balance} />
                                 </p>
                               </div>
                             );
@@ -1216,7 +1226,7 @@ export default function Dashboard() {
                         />
                         <Tooltip
                           formatter={(value) => [
-                            formatCurrency(value as number),
+                            <Currency key='amount' amount={value as number} />,
                             t.dashboard.expenses,
                           ]}
                           labelFormatter={(label) => {
@@ -1313,7 +1323,7 @@ export default function Dashboard() {
                       {t.dashboard.totalBudget}
                     </span>
                     <span className='font-semibold'>
-                      {formatCurrency(totalBudget)}
+                      <Currency amount={totalBudget} />
                     </span>
                   </div>
                   <div className='flex items-center justify-between'>
@@ -1321,7 +1331,7 @@ export default function Dashboard() {
                       {t.dashboard.spent}
                     </span>
                     <span className='font-semibold'>
-                      {formatCurrency(totalSpent)}
+                      <Currency amount={totalSpent} />
                     </span>
                   </div>
                   <div className='flex items-center justify-between'>
@@ -1335,7 +1345,7 @@ export default function Dashboard() {
                           : 'text-rose-600'
                       }`}
                     >
-                      {formatCurrency(totalBudget - totalSpent)}
+                      <Currency amount={totalBudget - totalSpent} />
                     </span>
                   </div>
                   {/* Progress bar at the bottom */}
@@ -1479,7 +1489,7 @@ export default function Dashboard() {
                       {t.dashboard.totalIncome}
                     </span>
                     <span className='font-semibold text-emerald-600'>
-                      {formatCurrency(balanceForecast.currentMonthIncome)}
+                      <Currency amount={balanceForecast.currentMonthIncome} />
                     </span>
                   </div>
                   <div className='flex items-center justify-between'>
@@ -1487,7 +1497,7 @@ export default function Dashboard() {
                       {t.dashboard.totalExpenses}
                     </span>
                     <span className='font-semibold text-rose-600'>
-                      {formatCurrency(balanceForecast.currentMonthExpenses)}
+                      <Currency amount={balanceForecast.currentMonthExpenses} />
                     </span>
                   </div>
                   <div className='flex items-center justify-between border-t pt-2'>
@@ -1501,7 +1511,7 @@ export default function Dashboard() {
                           : 'text-rose-600'
                       }`}
                     >
-                      {formatCurrency(balanceForecast.expectedEndBalance)}
+                      <Currency amount={balanceForecast.expectedEndBalance} />
                     </span>
                   </div>
                 </div>
@@ -1513,7 +1523,7 @@ export default function Dashboard() {
                       {t.dashboard.currentIncome}
                     </span>
                     <span className='font-semibold text-emerald-600'>
-                      {formatCurrency(balanceForecast.currentMonthIncome)}
+                      <Currency amount={balanceForecast.currentMonthIncome} />
                     </span>
                   </div>
                   <div className='flex items-center justify-between'>
@@ -1521,7 +1531,7 @@ export default function Dashboard() {
                       {t.dashboard.expectedIncome}
                     </span>
                     <span className='font-semibold text-emerald-600'>
-                      {formatCurrency(balanceForecast.expectedIncome)}
+                      <Currency amount={balanceForecast.expectedIncome} />
                     </span>
                   </div>
                   <div className='flex items-center justify-between'>
@@ -1529,7 +1539,7 @@ export default function Dashboard() {
                       {t.dashboard.currentExpenses}
                     </span>
                     <span className='font-semibold text-rose-600'>
-                      {formatCurrency(balanceForecast.currentMonthExpenses)}
+                      <Currency amount={balanceForecast.currentMonthExpenses} />
                     </span>
                   </div>
                   <div className='flex items-center justify-between'>
@@ -1537,7 +1547,7 @@ export default function Dashboard() {
                       {t.dashboard.expectedExpenses}
                     </span>
                     <span className='font-semibold text-rose-600'>
-                      {formatCurrency(balanceForecast.expectedExpenses)}
+                      <Currency amount={balanceForecast.expectedExpenses} />
                     </span>
                   </div>
                   <div className='flex items-center justify-between border-t pt-2'>
@@ -1551,7 +1561,7 @@ export default function Dashboard() {
                           : 'text-rose-600'
                       }`}
                     >
-                      {formatCurrency(balanceForecast.expectedEndBalance)}
+                      <Currency amount={balanceForecast.expectedEndBalance} />
                     </span>
                   </div>
                 </div>
@@ -1665,7 +1675,7 @@ export default function Dashboard() {
                         }`}
                       >
                         {tx.amount > 0 ? '+' : ''}
-                        {formatCurrency(tx.amount)}
+                        <Currency amount={tx.amount} />
                       </span>
                     </div>
                   ))}
@@ -1763,7 +1773,7 @@ export default function Dashboard() {
                         }`}
                       >
                         {account.netAmount > 0 ? '+' : ''}
-                        {formatCurrency(account.netAmount)}
+                        <Currency amount={account.netAmount} />
                       </span>
                     </div>
                   ))}
@@ -1823,13 +1833,13 @@ export default function Dashboard() {
 
 interface StatsCardProps {
   title: string;
-  value: string;
+  value: string | React.ReactNode;
   icon: React.ComponentType<{ className?: string }>;
   iconColor?: string;
   valueColor?: string;
   bgColor?: string;
   trend?: number;
-  trendLabel?: string;
+  trendLabel?: string | React.ReactNode;
 }
 
 function StatsCard({

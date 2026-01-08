@@ -1,4 +1,3 @@
-
 import { isTauri } from './environment.js';
 
 /**
@@ -15,7 +14,7 @@ export function isDebugEnabled(): boolean {
       const ls = (globalThis as any)?.localStorage as Storage | undefined;
       return ls?.getItem('fluxby.wasmDebug') === 'true';
     }
-    
+
     return false;
   } catch {
     return false;
@@ -35,6 +34,5 @@ export function dbLog(message: string, ...args: unknown[]) {
  * Log error message (always logged)
  */
 export function dbError(message: string, ...args: unknown[]) {
-  // eslint-disable-next-line no-console
   console.error(`[database] ERROR: ${message}`, ...args);
 }

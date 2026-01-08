@@ -1,4 +1,3 @@
-
 export interface MigrationContext {
   execAsync(sql: string): Promise<void>;
   queryAsync<T = unknown>(sql: string, params?: unknown[]): Promise<T[]>;

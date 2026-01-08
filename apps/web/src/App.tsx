@@ -18,6 +18,7 @@ import { ProfileProvider } from './contexts/ProfileContext';
 import { SyncProvider } from './contexts/SyncContext';
 import { ToastProvider } from './contexts/ToastContext';
 import { ConfirmProvider } from './contexts/ConfirmContext';
+import { PrivacyProvider } from './contexts/PrivacyContext';
 import {
   EncryptionProvider,
   useEncryption,
@@ -148,21 +149,23 @@ function App() {
         <EncryptionProvider>
           <DatabaseProvider>
             <ProfileProvider>
-              <SyncProvider>
-                <FilterProvider>
-                  <ToastProvider>
-                    <ConfirmProvider>
-                      <BrowserRouter basename={getRouterBasename()}>
-                        <OnboardingProvider>
-                          <SecurityGate>
-                            <AppContent />
-                          </SecurityGate>
-                        </OnboardingProvider>
-                      </BrowserRouter>
-                    </ConfirmProvider>
-                  </ToastProvider>
-                </FilterProvider>
-              </SyncProvider>
+              <PrivacyProvider>
+                <SyncProvider>
+                  <FilterProvider>
+                    <ToastProvider>
+                      <ConfirmProvider>
+                        <BrowserRouter basename={getRouterBasename()}>
+                          <OnboardingProvider>
+                            <SecurityGate>
+                              <AppContent />
+                            </SecurityGate>
+                          </OnboardingProvider>
+                        </BrowserRouter>
+                      </ConfirmProvider>
+                    </ToastProvider>
+                  </FilterProvider>
+                </SyncProvider>
+              </PrivacyProvider>
             </ProfileProvider>
           </DatabaseProvider>
         </EncryptionProvider>
