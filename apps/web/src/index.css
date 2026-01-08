@@ -221,7 +221,12 @@ body {
 }
 
 /* Privacy Mode */
-.privacy-mode .privacy-blur {
+.privacy-mode .privacy-blur,
+.privacy-mode .recharts-text,
+.privacy-mode .recharts-cartesian-axis-tick-value,
+.privacy-mode .recharts-pie-label-text,
+.privacy-mode .recharts-legend-item-text,
+.privacy-mode .recharts-label-list text {
   filter: blur(5px);
   user-select: none;
   transition: filter 0.2s ease-in-out;

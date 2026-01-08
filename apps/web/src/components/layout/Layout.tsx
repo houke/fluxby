@@ -340,6 +340,7 @@ export default function Layout() {
                     size='icon'
                     onClick={togglePrivacyMode}
                     className='h-9 w-9 text-muted-foreground'
+                    data-onboarding='header-privacy-mode'
                   >
                     {isPrivacyMode ? (
                       <EyeOff className='h-5 w-5' />

@@ -73,6 +73,19 @@ export const onboardingChapters: OnboardingChapter[] = [
         placement: 'bottom',
       },
       {
+        id: 'nav-privacy-mode',
+        title: {
+          nl: 'Privacy Modus',
+          en: 'Privacy Mode',
+        },
+        content: {
+          nl: 'Verberg gevoelige informatie met één klik of gebruik de sneltoets Cmd/Ctrl+Shift+P. Ideaal voor gebruik in het openbaar.',
+          en: 'Hide sensitive information with a single click or use the shortcut Cmd/Ctrl+Shift+P. Perfect for use in public.',
+        },
+        selector: '[data-onboarding="header-privacy-mode"]',
+        placement: 'bottom',
+      },
+      {
         id: 'nav-profile-switcher',
         title: {
           nl: 'Profiel wisselen',
