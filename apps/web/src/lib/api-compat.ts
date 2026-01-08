@@ -972,12 +972,13 @@ export const api = {
     bank?: string;
   }) => {
     const ds = getDataService();
-    // Set the profile context temporarily for the operation
+    // Pass profileId to createAccount so it's created for the correct profile
     const result = await ds.createAccount({
       name: data.name,
       iban: data.iban,
       type: data.type || 'checking',
       bank: data.bank,
+      profileId: data.profileId,
     });
     return result;
   },

@@ -2321,13 +2321,10 @@ export default function Transactions() {
             <CardContent className='px-0 pt-0 pb-3 sm:px-6 sm:pt-0 sm:pb-6'>
               {/* Show skeleton during:
                 1. Initial load (isLoading)
-                2. Fetching with no data yet
-                3. Actively fetching after filter changes (prevents "flash of empty state")
-                4. Fetching with active filters (prevents showing "no results" while still loading)
-                Note: We check isPending (from useTransition) OR isFetching to catch filter changes */}
-              {isLoading ||
-              (isFetching && (!transactions?.length || isPending)) ||
-              (isFetching && hasActiveFilters) ? (
+                2. Any time data is being fetched (isFetching)
+                This ensures we never show "no transactions found" while data is loading,
+                preventing the flash of empty state when filters change */}
+              {isLoading || isFetching ? (
                 <div className='space-y-4'>
                   {[...Array(5)].map((_, i) => (
                     <Skeleton key={i} className='h-16' />

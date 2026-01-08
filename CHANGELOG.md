@@ -7,7 +7,7 @@
 ### Features
 
 - migrate to Tailwind CSS v4 with Oxide engine
-- **landing:** add TypeScript declaration for __APP_VERSION__
+- **landing:** add TypeScript declaration for **APP_VERSION**
 - **landing:** add version badge next to Fluxby in footer
 - sync all package.json versions with release tag
 - display app version in settings

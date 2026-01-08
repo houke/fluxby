@@ -370,8 +370,10 @@ export function createDataService(db: Database) {
       type: string;
       bank?: string;
       currentBalance?: number;
+      profileId?: string;
     }): Promise<Account> {
-      const pid = profileId();
+      // Use provided profileId or fall back to active profile
+      const pid = data.profileId || profileId();
       if (!pid) throw new Error('No active profile');
 
       const id = crypto.randomUUID();

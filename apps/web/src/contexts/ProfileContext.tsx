@@ -210,7 +210,22 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
 
       // If deleted the active profile, switch to another
       if (id === activeProfileId && remaining.length > 0) {
-        switchProfile(remaining[0].id);
+        // Prefer first visible (non-hidden) profile
+        const firstVisible = remaining.find((p) => !p.isHidden);
+        if (firstVisible) {
+          switchProfile(firstVisible.id);
+        } else {
+          // All remaining profiles are hidden - unhide the first one and switch to it
+          const profileToUnhide = remaining[0];
+          await dataService.setProfileHidden(profileToUnhide.id, false);
+          // Update local state
+          setProfiles((prev) =>
+            prev.map((p) =>
+              p.id === profileToUnhide.id ? { ...p, isHidden: false } : p
+            )
+          );
+          switchProfile(profileToUnhide.id);
+        }
       }
     },
     [activeProfileId, dataService, profiles, switchProfile]

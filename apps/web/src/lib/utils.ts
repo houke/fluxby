@@ -1,27 +1,16 @@
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import {
+  formatCurrency,
+  formatDate,
+  formatPercentage,
+  getMonthName,
+} from '@fluxby/shared';
+
+export { formatCurrency, formatDate, formatPercentage, getMonthName };
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
-}
-
-export function formatCurrency(
-  amount: number,
-  currency: string = 'EUR'
-): string {
-  return new Intl.NumberFormat('nl-NL', {
-    style: 'currency',
-    currency,
-  }).format(amount);
-}
-
-export function formatDate(date: Date | string): string {
-  const d = typeof date === 'string' ? new Date(date) : date;
-  return new Intl.DateTimeFormat('nl-NL', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  }).format(d);
 }
 
 export function formatDateShort(date: Date | string): string {
@@ -29,20 +18,6 @@ export function formatDateShort(date: Date | string): string {
   return new Intl.DateTimeFormat('en-US', {
     month: 'short',
     day: 'numeric',
-  }).format(d);
-}
-
-export function formatPercentage(value: number, decimals: number = 1): string {
-  return `${value >= 0 ? '+' : ''}${value.toFixed(decimals)}%`;
-}
-
-export function getMonthName(
-  date: Date | string,
-  short: boolean = false
-): string {
-  const d = typeof date === 'string' ? new Date(date) : date;
-  return new Intl.DateTimeFormat('en-US', {
-    month: short ? 'short' : 'long',
   }).format(d);
 }
 
