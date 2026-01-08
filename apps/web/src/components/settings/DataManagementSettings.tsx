@@ -47,7 +47,7 @@ export function DataManagementSettings() {
           </CardDescription>
         </CardHeader>
         <CardContent className='px-3 pt-0 pb-3 sm:px-6 sm:pt-0 sm:pb-6'>
-          <div className='space-y-4'>
+          <div className='space-y-2'>
             {dataNotice && (
               <div
                 className={`rounded border px-3 py-2 text-sm whitespace-pre-wrap ${
