@@ -136,7 +136,7 @@ export function SpotlightDialog() {
                   <command.icon className='mr-2 h-4 w-4' />
                   <span>{command.title}</span>
                   {command.subtitle && (
-                    <span className='ml-2 text-xs text-muted-foreground group-hover:text-purple-400'>
+                    <span className='ml-2 text-xs text-muted-foreground group-hover:text-purple-200'>
                       {command.subtitle}
                     </span>
                   )}
@@ -161,7 +161,7 @@ export function SpotlightDialog() {
                     <div className='flex flex-1 flex-col'>
                       <span>{command.title}</span>
                       {command.subtitle && (
-                        <span className='text-xs text-muted-foreground group-hover:text-purple-400'>
+                        <span className='text-xs text-muted-foreground group-hover:text-purple-200'>
                           {command.subtitle}
                         </span>
                       )}
@@ -197,7 +197,7 @@ export function SpotlightDialog() {
                       {command.subtitle && (
                         <span
                           className={cn(
-                            'privacy-blur text-xs text-muted-foreground group-hover:text-purple-400'
+                            'privacy-blur text-xs text-muted-foreground group-hover:text-purple-200'
                           )}
                         >
                           {command.subtitle}
@@ -230,7 +230,7 @@ export function SpotlightDialog() {
                       {command.subtitle && (
                         <span
                           className={cn(
-                            'privacy-blur text-xs text-muted-foreground group-hover:text-purple-400'
+                            'privacy-blur text-xs text-muted-foreground group-hover:text-purple-200'
                           )}
                         >
                           {command.subtitle}
