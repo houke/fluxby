@@ -906,7 +906,9 @@ function updateUpdatesContent(entry) {
 
   // Check which icons are already imported
   // Use [\s\S] to match any character including newlines
-  const importMatch = content.match(/import \{([\s\S]+?)\} from 'lucide-react';/);
+  const importMatch = content.match(
+    /import \{([\s\S]+?)\} from 'lucide-react';/
+  );
   if (importMatch) {
     // Extract icon names, handling multi-line imports properly
     const iconText = importMatch[1];
@@ -914,7 +916,7 @@ function updateUpdatesContent(entry) {
       .split(',')
       .map((s) => s.trim())
       .filter((s) => s.length > 0 && /^[A-Z]/.test(s)); // Valid icon names start with uppercase
-    
+
     const missingIcons = requiredIcons.filter(
       (icon) => !existingIcons.includes(icon)
     );
@@ -928,14 +930,6 @@ function updateUpdatesContent(entry) {
       content = content.replace(
         /import \{[\s\S]+?\} from 'lucide-react';/,
         newImport
-      );
-    }
-
-    // Ensure `useLanguage` import exists when content uses it
-    if (content.includes('useLanguage(') && !content.includes("import { useLanguage }")) {
-      content = content.replace(
-        /import \{[\s\S]+?\} from 'lucide-react';/,
-        `import { useLanguage } from '../../contexts/LanguageContext';\n$&`
       );
     }
   }
