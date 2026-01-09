@@ -96,6 +96,23 @@ export function SpotlightProvider({ children }: SpotlightProviderProps) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [toggle]);
 
+  // Keyboard shortcut: Cmd+Shift+T (Mac) / Ctrl+Shift+T (Windows/Linux) for theme toggle
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (
+        (e.metaKey || e.ctrlKey) &&
+        e.shiftKey &&
+        e.key.toLowerCase() === 't'
+      ) {
+        e.preventDefault();
+        toggleTheme();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [toggleTheme]);
+
   // Close spotlight on navigation
   useEffect(() => {
     close();
@@ -200,6 +217,7 @@ export function SpotlightProvider({ children }: SpotlightProviderProps) {
       icon: isDarkMode() ? Sun : Moon,
       group: 'actions',
       keywords: ['dark', 'light', 'theme', 'mode', 'thema'],
+      shortcut: '⇧⌘T',
       onSelect: toggleTheme,
     },
     {
