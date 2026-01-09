@@ -275,7 +275,9 @@ export function SpotlightProvider({ children }: SpotlightProviderProps) {
         // Navigate to transactions with filter for this transaction
         setOpposingAccountName(tx.opposingAccountName || tx.description);
         setDateRange(new Date(tx.date), new Date(tx.date));
-        navigate('/transactions');
+        // Pass the search query to the transactions page
+        const searchQuery = tx.opposingAccountName || tx.description;
+        navigate(`/transactions?search=${encodeURIComponent(searchQuery)}`);
       },
     })
   );

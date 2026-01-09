@@ -351,7 +351,9 @@ export default function Layout() {
                 </TooltipTrigger>
                 <TooltipContent>
                   <div className='flex items-center gap-2'>
-                    <span>{t.spotlight?.openSearch || 'Search'}</span>
+                    <span>
+                      {t.spotlight?.openSearch || 'Search'}
+                    </span>
                     <kbd className='rounded border bg-muted px-1.5 py-0.5 font-mono text-[10px]'>
                       ⌘K
                     </kbd>
@@ -376,9 +378,16 @@ export default function Layout() {
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
-                  {isPrivacyMode
-                    ? t.common?.disablePrivacy || 'Show sensitive data'
-                    : t.common?.enablePrivacy || 'Hide sensitive data'}
+                  <div className='text-center'>
+                    <p className='font-medium'>
+                      {isPrivacyMode
+                        ? t.common?.disablePrivacy || 'Show sensitive data'
+                        : t.common?.enablePrivacy || 'Hide sensitive data'}
+                    </p>
+                    <p className='text-xs text-muted-foreground'>
+                      {t.spotlight?.togglePrivacyTooltip || 'Press ⇧⌘P'}
+                    </p>
+                  </div>
                 </TooltipContent>
               </Tooltip>
 

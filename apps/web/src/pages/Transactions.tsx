@@ -129,6 +129,19 @@ export default function Transactions() {
     clearOpposingAccountFilters: _clearOpposingAccountFilters,
   } = useFilters();
 
+  // Initialize search from URL params (e.g., from Spotlight navigation)
+  useEffect(() => {
+    const searchParam = searchParams.get('search');
+    if (searchParam) {
+      setSearch(searchParam);
+      setDebouncedSearch(searchParam);
+      // Clear the search param from URL after applying
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete('search');
+      setSearchParams(newParams, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
+
   // Debounce search input to avoid excessive re-renders/queries
   useEffect(() => {
     const timer = setTimeout(() => {
