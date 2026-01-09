@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.3.1
+
+**Release Date:** 2026-01-09
+
+### Bug Fixes
+
+- **release:** run `npm run build` before running release script
+- **release:** remove automatic `useLanguage` insertion from release script
+- **landing:** restore `useLanguage` import and add `BarChart3` icon
+
 ## v1.3.0
 
 **Release Date:** 2026-01-08

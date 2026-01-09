@@ -1799,6 +1799,13 @@ export const nl: LandingTranslationKeys = {
     updatesPage: {
       intro:
         'Bekijk wat er nieuw is in Fluxby. Hier vind je alle updates en nieuwe features.',
+      v131Date: '9 januari 2026',
+      v131Title: 'Release 1.3.1',
+      v131Description: '3 bugfixes.',
+      v131F1Title: 'Release verbeteringen',
+      v131F1Desc: '2 bugfixes. Bekijk de release op GitHub!',
+      v131F2Title: 'Herstel `uselanguage` importeren and toegevoegd `barchart3` icon',
+      v131F2Desc: 'Bugs gedood, app verbeterd.',
       v130Date: '8 januari 2026',
       v130Title: 'Release 1.3.0',
       v130Description: '10 nieuwe features en 15 bugfixes.',

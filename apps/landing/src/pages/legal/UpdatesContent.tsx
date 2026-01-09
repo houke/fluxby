@@ -28,7 +28,27 @@ const UpdatesContent = () => {
   const updatesPage = t.legal?.updatesPage;
 
   const releases = [
+            {
+      version: '1.3.1',
+      date: updatesPage?.v131Date || '9 januari 2026',
+      title: updatesPage?.v131Title || 'Release 1.3.1',
+      description:
+        updatesPage?.v131Description ||
+        '3 bugfixes.',
+      features: [
         {
+          icon: Rocket,
+          title: updatesPage?.v131F1Title || 'Release verbeteringen',
+          description: updatesPage?.v131F1Desc || '2 bugfixes. Bekijk de release op GitHub!',
+        },
+        {
+          icon: FileText,
+          title: updatesPage?.v131F2Title || 'Herstel `uselanguage` importeren and toegevoegd `barchart3` icon',
+          description: updatesPage?.v131F2Desc || 'Bugs gedood, app verbeterd.',
+        },
+      ],
+    },
+    {
       version: '1.3.0',
       date: updatesPage?.v130Date || '8 januari 2026',
       title: updatesPage?.v130Title || 'Release 1.3.0',
