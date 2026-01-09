@@ -30,7 +30,7 @@
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
     "start": "npm run start -w apps/api",
-    "release": "node scripts/release.mjs",
+    "release": "npm run build && node scripts/release.mjs",
     "release:dry": "node scripts/release.mjs --dry-run"
   },
   "workspaces": [
