@@ -1347,5 +1347,6 @@ export const en: TranslationKeys = {
     openSearch: 'Open search',
     openSearchTooltip: 'Press ⌘K',
     togglePrivacyTooltip: 'Press ⇧⌘P',
+    toggleDarkModeTooltip: 'Press ⇧⌘D',
   },
 };

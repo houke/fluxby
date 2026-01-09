@@ -1138,6 +1138,7 @@ export interface TranslationKeys {
     openSearch: string;
     openSearchTooltip: string;
     togglePrivacyTooltip: string;
+    toggleDarkModeTooltip: string;
   };
 }
 
@@ -2455,5 +2456,6 @@ export const nl: TranslationKeys = {
     openSearch: 'Openen zoeken',
     openSearchTooltip: 'Druk op ⌘K',
     togglePrivacyTooltip: 'Druk op ⇧⌘P',
+    toggleDarkModeTooltip: 'Druk op ⇧⌘D',
   },
 };

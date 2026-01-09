@@ -18,6 +18,8 @@ import {
   Eye,
   EyeOff,
   Search,
+  Sun,
+  Moon,
 } from 'lucide-react';
 import { usePrivacy } from '@/contexts/PrivacyContext';
 import { useSpotlight } from '@/contexts/SpotlightContext';
@@ -56,6 +58,20 @@ export default function Layout() {
   const { open: openSpotlight } = useSpotlight();
   const dataService = useDataService();
   const location = useLocation();
+
+  // Theme toggle functions
+  const toggleTheme = () => {
+    const isDark = document.documentElement.classList.contains('dark');
+    if (isDark) {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    } else {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    }
+  };
+
+  const isDarkMode = () => document.documentElement.classList.contains('dark');
 
   // Mobile sidebar state
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = React.useState(false);
@@ -358,13 +374,11 @@ export default function Layout() {
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <div className='text-center'>
-                    <p className='font-medium'>
-                      {t.spotlight?.openSearch || 'Search'}
-                    </p>
-                    <p className='text-xs text-muted-foreground'>
-                      {t.spotlight?.openSearchTooltip || 'Press ⌘K'}
-                    </p>
+                  <div className='flex items-center gap-2'>
+                    <span>{t.spotlight?.openSearch || 'Search'}</span>
+                    <kbd className='rounded border bg-muted px-1.5 py-0.5 font-mono text-[10px]'>
+                      ⌘K
+                    </kbd>
                   </div>
                 </TooltipContent>
               </Tooltip>
@@ -394,6 +408,35 @@ export default function Layout() {
                     </p>
                     <p className='text-xs text-muted-foreground'>
                       {t.spotlight?.togglePrivacyTooltip || 'Press ⇧⌘P'}
+                    </p>
+                  </div>
+                </TooltipContent>
+              </Tooltip>
+
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant='ghost'
+                    size='icon'
+                    onClick={toggleTheme}
+                    className='h-9 w-9 text-muted-foreground'
+                  >
+                    {isDarkMode() ? (
+                      <Sun className='h-5 w-5' />
+                    ) : (
+                      <Moon className='h-5 w-5' />
+                    )}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <div className='text-center'>
+                    <p className='font-medium'>
+                      {isDarkMode()
+                        ? t.spotlight?.switchToLight || 'Switch to light mode'
+                        : t.spotlight?.switchToDark || 'Switch to dark mode'}
+                    </p>
+                    <p className='text-xs text-muted-foreground'>
+                      {t.spotlight?.toggleDarkModeTooltip || 'Press ⇧⌘D'}
                     </p>
                   </div>
                 </TooltipContent>

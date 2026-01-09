@@ -83,6 +83,20 @@ export function SpotlightProvider({ children }: SpotlightProviderProps) {
   const close = useCallback(() => setIsOpen(false), []);
   const toggle = useCallback(() => setIsOpen((prev) => !prev), []);
 
+  // Theme toggle helper
+  const toggleTheme = useCallback(() => {
+    const isDark = document.documentElement.classList.contains('dark');
+    if (isDark) {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    } else {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    }
+  }, []);
+
+  const isDarkMode = () => document.documentElement.classList.contains('dark');
+
   // Keyboard shortcut: Cmd+K (Mac) / Ctrl+K (Windows/Linux)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -96,13 +110,13 @@ export function SpotlightProvider({ children }: SpotlightProviderProps) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [toggle]);
 
-  // Keyboard shortcut: Cmd+Shift+T (Mac) / Ctrl+Shift+T (Windows/Linux) for theme toggle
+  // Keyboard shortcut: Cmd+Shift+D (Mac) / Ctrl+Shift+D (Windows/Linux) for theme toggle
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (
         (e.metaKey || e.ctrlKey) &&
         e.shiftKey &&
-        e.key.toLowerCase() === 't'
+        e.key.toLowerCase() === 'd'
       ) {
         e.preventDefault();
         toggleTheme();
@@ -117,20 +131,6 @@ export function SpotlightProvider({ children }: SpotlightProviderProps) {
   useEffect(() => {
     close();
   }, [location.pathname, close]);
-
-  // Theme toggle helper
-  const toggleTheme = useCallback(() => {
-    const isDark = document.documentElement.classList.contains('dark');
-    if (isDark) {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-    } else {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-    }
-  }, []);
-
-  const isDarkMode = () => document.documentElement.classList.contains('dark');
 
   // ============= Static Commands =============
   const commands: SpotlightCommand[] = [
@@ -217,7 +217,7 @@ export function SpotlightProvider({ children }: SpotlightProviderProps) {
       icon: isDarkMode() ? Sun : Moon,
       group: 'actions',
       keywords: ['dark', 'light', 'theme', 'mode', 'thema'],
-      shortcut: '⇧⌘T',
+      shortcut: '⇧⌘D',
       onSelect: toggleTheme,
     },
     {
