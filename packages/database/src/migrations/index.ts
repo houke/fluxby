@@ -14,10 +14,12 @@ import { migration001 } from './001_initial.js';
 import { migration002 } from './002_v5_transaction_columns.js';
 import { migration003 } from './003_v6_profiles_hidden.js';
 import { migration004 } from './004_v7_rules_profile_id.js';
+import { migration005 } from './005_recurring_patterns.js';
 
 export const migrations: Migration[] = [
   migration001,
   migration002,
   migration003,
   migration004,
+  migration005,
 ];
