@@ -2,6 +2,7 @@ import { useState, useCallback, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useDropzone } from 'react-dropzone';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
+import { useImportWorker } from '@/hooks/useImportWorker';
 import {
   Upload,
   FileText,
@@ -36,6 +37,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Progress } from '@/components/ui/progress';
 import { api } from '@/lib/api';
 import { formatDate } from '@/lib/utils';
 import { Currency } from '@/components/ui/currency';
@@ -354,6 +356,16 @@ export default function Import() {
   const queryClient = useQueryClient();
   const [uploadError, setUploadError] = useState<string | null>(null);
 
+  // Web Worker for CSV parsing (prevents UI blocking on large files)
+  const {
+    parseCSV: workerParseCSV,
+    progress: parseProgress,
+    stage: parseStage,
+    isProcessing: isWorkerProcessing,
+    error: workerError,
+    reset: resetWorker,
+  } = useImportWorker();
+
   // Generic CSV state
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [showMappingDialog, setShowMappingDialog] = useState(false);
@@ -511,26 +523,37 @@ export default function Import() {
     return 'generic';
   }, []);
 
-  // Generic CSV parse mutation
-  const parseGenericMutation = useMutation({
-    mutationFn: (file: File) =>
-      api.parseGenericCSV(file) as Promise<GenericCSVParseResult>,
-    onSuccess: (data, file) => {
-      setCsvParseResult(data);
-      setPendingFile(file);
-      setModalError(null);
+  // Handle CSV parsing using Web Worker
+  // This replaces the old parseGenericMutation to prevent UI blocking on large files
+  const handleParseCSV = useCallback(
+    async (file: File) => {
+      try {
+        resetWorker();
+        const csvContent = await file.text();
+        const data = await workerParseCSV(csvContent);
 
-      // Detect bank and apply preset
-      const detectedBank = detectBank(data.headers);
-      setSelectedBank(detectedBank);
-      const autoMapping = applyBankPreset(detectedBank, data.headers);
-      setColumnMapping(autoMapping);
-      setShowMappingDialog(true);
+        setCsvParseResult({
+          headers: data.headers,
+          sampleRows: data.sampleRows,
+          totalRows: data.totalRows,
+        });
+        setPendingFile(file);
+        setModalError(null);
+
+        // Detect bank and apply preset
+        const detectedBank = detectBank(data.headers);
+        setSelectedBank(detectedBank);
+        const autoMapping = applyBankPreset(detectedBank, data.headers);
+        setColumnMapping(autoMapping);
+        setShowMappingDialog(true);
+      } catch (error) {
+        setUploadError(
+          error instanceof Error ? error.message : 'Failed to parse CSV'
+        );
+      }
     },
-    onError: (error: Error) => {
-      setUploadError(error.message);
-    },
-  });
+    [workerParseCSV, resetWorker, detectBank, applyBankPreset]
+  );
 
   // Generic CSV import mutation
   const importGenericMutation = useMutation({
@@ -634,10 +657,10 @@ export default function Import() {
       if (file) {
         setUploadError(null);
         setImportResults(null);
-        parseGenericMutation.mutate(file);
+        handleParseCSV(file);
       }
     },
-    [parseGenericMutation]
+    [handleParseCSV]
   );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -723,7 +746,7 @@ export default function Import() {
     previewMutation.isPending ||
     uploadMutation.isPending ||
     createAccountsMutation.isPending ||
-    parseGenericMutation.isPending ||
+    isWorkerProcessing ||
     importGenericMutation.isPending;
 
   const getFieldLabel = (key: string) => {
@@ -1239,7 +1262,20 @@ export default function Import() {
             >
               <input {...getInputProps()} />
               <div className='flex flex-col items-center gap-4'>
-                {isProcessing ? (
+                {isWorkerProcessing ? (
+                  <>
+                    <Loader2 className='h-12 w-12 animate-spin text-primary' />
+                    <div className='w-full max-w-xs'>
+                      <p className='mb-2 text-lg font-medium'>
+                        {t.import.processingFile}
+                      </p>
+                      <Progress value={parseProgress} className='h-2' />
+                      <p className='mt-2 text-sm text-muted-foreground'>
+                        {parseStage || t.import.processingDescription}
+                      </p>
+                    </div>
+                  </>
+                ) : isProcessing ? (
                   <>
                     <Loader2 className='h-12 w-12 animate-spin text-primary' />
                     <div>
@@ -1269,7 +1305,7 @@ export default function Import() {
             </div>
 
             {/* Upload Error */}
-            {uploadError && (
+            {(uploadError || workerError) && (
               <div className='mt-6 rounded-lg border border-destructive/20 bg-destructive/10 p-4'>
                 <div className='flex items-start gap-3'>
                   <AlertCircle className='mt-0.5 h-5 w-5 text-destructive' />
@@ -1277,7 +1313,7 @@ export default function Import() {
                     <p className='font-medium text-destructive'>
                       {t.import.importError}
                     </p>
-                    <p className='mt-1 text-sm'>{uploadError}</p>
+                    <p className='mt-1 text-sm'>{uploadError || workerError}</p>
                   </div>
                 </div>
               </div>
