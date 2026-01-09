@@ -1,7 +1,9 @@
+import { useLanguage } from '../../contexts/LanguageContext';
 import {
   BookOpen,
   Brain,
   Building2,
+  BarChart3,
   Database,
   Download,
   ExternalLink,

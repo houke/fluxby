@@ -930,6 +930,14 @@ function updateUpdatesContent(entry) {
         newImport
       );
     }
+
+    // Ensure `useLanguage` import exists when content uses it
+    if (content.includes('useLanguage(') && !content.includes("import { useLanguage }")) {
+      content = content.replace(
+        /import \{[\s\S]+?\} from 'lucide-react';/,
+        `import { useLanguage } from '../../contexts/LanguageContext';\n$&`
+      );
+    }
   }
 
   // Generate features code for each bundle
