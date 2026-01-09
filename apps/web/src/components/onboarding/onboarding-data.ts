@@ -790,7 +790,139 @@ export const onboardingChapters: OnboardingChapter[] = [
   },
 
   // ==========================================================================
-  // CHAPTER 5: Address Book
+  // CHAPTER 5: Subscriptions
+  // ==========================================================================
+  {
+    id: 'subscriptions',
+    menuItem: 'subscriptions',
+    route: '/subscriptions',
+    icon: 'CalendarClock',
+    title: {
+      nl: 'Abonnementen',
+      en: 'Subscriptions',
+    },
+    steps: [
+      {
+        id: 'subscriptions-overview',
+        title: {
+          nl: 'Abonnementenbeheer',
+          en: 'Subscription management',
+        },
+        content: {
+          nl: 'Fluxby detecteert automatisch terugkerende betalingen zoals abonnementen, vaste lasten en rekeningen. Hier zie je al je herhalende kosten op één plek.',
+          en: 'Fluxby automatically detects recurring payments like subscriptions, fixed costs, and bills. Here you can see all your recurring expenses in one place.',
+        },
+        selector: '[data-onboarding="nav-subscriptions"]',
+        placement: 'right',
+      },
+      {
+        id: 'subscriptions-stats',
+        title: {
+          nl: 'Overzicht statistieken',
+          en: 'Overview statistics',
+        },
+        content: {
+          nl: 'Bovenaan zie je het totale aantal gedetecteerde patronen, hoeveel er bevestigd zijn, en een schatting van je maandelijkse terugkerende kosten.',
+          en: 'At the top, you can see the total number of detected patterns, how many are confirmed, and an estimate of your monthly recurring costs.',
+        },
+        selector: '[data-onboarding="subscriptions-stats"]',
+        placement: 'bottom',
+      },
+      {
+        id: 'subscriptions-detect',
+        title: {
+          nl: 'Patronen detecteren',
+          en: 'Detect patterns',
+        },
+        content: {
+          nl: 'Klik op "Detecteer patronen" om je transacties te analyseren en nieuwe terugkerende betalingen te vinden. Dit gebeurt ook automatisch na elke import.',
+          en: 'Click "Detect patterns" to analyze your transactions and find new recurring payments. This also happens automatically after each import.',
+        },
+        selector: '[data-onboarding="detect-patterns-button"]',
+        placement: 'bottom',
+      },
+      {
+        id: 'subscriptions-alerts',
+        title: {
+          nl: 'Aandachtspunten',
+          en: 'Attention needed',
+        },
+        content: {
+          nl: 'Hier zie je abonnementen die je aandacht nodig hebben: nieuwe detecties die wachten op bevestiging, of onverwachte bedragswijzigingen.',
+          en: 'Here you can see subscriptions that need your attention: new detections waiting for confirmation, or unexpected amount changes.',
+        },
+        selector: '[data-onboarding="subscriptions-alerts"]',
+        placement: 'bottom',
+      },
+      {
+        id: 'subscriptions-pending',
+        title: {
+          nl: 'Wachtend op bevestiging',
+          en: 'Pending confirmation',
+        },
+        content: {
+          nl: 'Nieuwe gedetecteerde patronen verschijnen hier. Bevestig ze om ze als abonnement te markeren, of negeer ze als het geen echte abonnementen zijn.',
+          en: 'Newly detected patterns appear here. Confirm them to mark as subscriptions, or dismiss them if they are not real subscriptions.',
+        },
+        selector: '[data-onboarding="subscriptions-pending"]',
+        placement: 'top',
+      },
+      {
+        id: 'subscriptions-confirmed',
+        title: {
+          nl: 'Bevestigde abonnementen',
+          en: 'Confirmed subscriptions',
+        },
+        content: {
+          nl: 'Je bevestigde abonnementen staan hier. Je kunt altijd de status wijzigen of een abonnement verwijderen.',
+          en: 'Your confirmed subscriptions are listed here. You can always change the status or delete a subscription.',
+        },
+        selector: '[data-onboarding="subscriptions-confirmed"]',
+        placement: 'top',
+      },
+      {
+        id: 'subscriptions-actions',
+        title: {
+          nl: 'Abonnement acties',
+          en: 'Subscription actions',
+        },
+        content: {
+          nl: 'Gebruik de knoppen om een abonnement te bevestigen (✓), te negeren (🚫), of te verwijderen (🗑️).',
+          en: 'Use the buttons to confirm (✓), dismiss (🚫), or delete (🗑️) a subscription.',
+        },
+        selector: '[data-onboarding="subscription-actions"]',
+        placement: 'left',
+      },
+      {
+        id: 'subscriptions-calendar-view',
+        title: {
+          nl: 'Kalenderweergave',
+          en: 'Calendar view',
+        },
+        content: {
+          nl: 'Schakel naar de kalenderweergave om te zien wanneer je abonnementen worden afgeschreven. Zo kun je je cashflow beter plannen.',
+          en: 'Switch to the calendar view to see when your subscriptions will be charged. This helps you better plan your cash flow.',
+        },
+        selector: '[data-onboarding="subscriptions-calendar-toggle"]',
+        placement: 'bottom',
+      },
+      {
+        id: 'subscriptions-frequency',
+        title: {
+          nl: 'Frequenties',
+          en: 'Frequencies',
+        },
+        content: {
+          nl: 'Fluxby herkent verschillende frequenties: wekelijks, tweewekelijks, maandelijks, per kwartaal en jaarlijks.',
+          en: 'Fluxby recognizes different frequencies: weekly, biweekly, monthly, quarterly, and yearly.',
+        },
+        placement: 'center',
+      },
+    ],
+  },
+
+  // ==========================================================================
+  // CHAPTER 6: Address Book
   // ==========================================================================
   {
     id: 'addressbook',
@@ -950,7 +1082,7 @@ export const onboardingChapters: OnboardingChapter[] = [
   },
 
   // ==========================================================================
-  // CHAPTER 6: Categories
+  // CHAPTER 7: Categories
   // ==========================================================================
   {
     id: 'categories',
@@ -1084,7 +1216,7 @@ export const onboardingChapters: OnboardingChapter[] = [
   },
 
   // ==========================================================================
-  // CHAPTER 7: Import
+  // CHAPTER 8: Import
   // ==========================================================================
   {
     id: 'import',
@@ -1165,7 +1297,7 @@ export const onboardingChapters: OnboardingChapter[] = [
   },
 
   // ==========================================================================
-  // CHAPTER 8: Settings
+  // CHAPTER 9: Settings
   // ==========================================================================
   {
     id: 'settings',

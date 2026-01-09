@@ -28,22 +28,24 @@ const UpdatesContent = () => {
   const updatesPage = t.legal?.updatesPage;
 
   const releases = [
-            {
+    {
       version: '1.3.1',
       date: updatesPage?.v131Date || '9 januari 2026',
       title: updatesPage?.v131Title || 'Release 1.3.1',
-      description:
-        updatesPage?.v131Description ||
-        '3 bugfixes.',
+      description: updatesPage?.v131Description || '3 bugfixes.',
       features: [
         {
           icon: Rocket,
           title: updatesPage?.v131F1Title || 'Release verbeteringen',
-          description: updatesPage?.v131F1Desc || '2 bugfixes. Bekijk de release op GitHub!',
+          description:
+            updatesPage?.v131F1Desc ||
+            '2 bugfixes. Bekijk de release op GitHub!',
         },
         {
           icon: FileText,
-          title: updatesPage?.v131F2Title || 'Herstel `uselanguage` importeren and toegevoegd `barchart3` icon',
+          title:
+            updatesPage?.v131F2Title ||
+            'Herstel `uselanguage` importeren and toegevoegd `barchart3` icon',
           description: updatesPage?.v131F2Desc || 'Bugs gedood, app verbeterd.',
         },
       ],
@@ -53,33 +55,46 @@ const UpdatesContent = () => {
       date: updatesPage?.v130Date || '8 januari 2026',
       title: updatesPage?.v130Title || 'Release 1.3.0',
       description:
-        updatesPage?.v130Description ||
-        '10 nieuwe features en 15 bugfixes.',
+        updatesPage?.v130Description || '10 nieuwe features en 15 bugfixes.',
       features: [
         {
           icon: Globe,
           title: updatesPage?.v130F1Title || 'Web app uitbreidingen',
-          description: updatesPage?.v130F1Desc || '7 nieuwe mogelijkheden om te ontdekken. Bekijk de release notes!',
+          description:
+            updatesPage?.v130F1Desc ||
+            '7 nieuwe mogelijkheden om te ontdekken. Bekijk de release notes!',
         },
         {
           icon: Database,
-          title: updatesPage?.v130F2Title || 'Geïmplementeerd file-based migration system and centralized logger',
-          description: updatesPage?.v130F2Desc || 'Nieuwe functionaliteit waar je iets aan hebt.',
+          title:
+            updatesPage?.v130F2Title ||
+            'Geïmplementeerd file-based migration system and centralized logger',
+          description:
+            updatesPage?.v130F2Desc ||
+            'Nieuwe functionaliteit waar je iets aan hebt.',
         },
         {
           icon: FileText,
-          title: updatesPage?.v130F3Title || 'Toegevoegd apparaat synchronisatie screenshot section with animation',
-          description: updatesPage?.v130F3Desc || 'Er is weer wat bijgekomen. Ontdek het zelf!',
+          title:
+            updatesPage?.v130F3Title ||
+            'Toegevoegd apparaat synchronisatie screenshot section with animation',
+          description:
+            updatesPage?.v130F3Desc ||
+            'Er is weer wat bijgekomen. Ontdek het zelf!',
         },
         {
           icon: RefreshCw,
-          title: updatesPage?.v130F4Title || 'Finalize apparaat-to-apparaat synchronisatie implementation with documentation',
+          title:
+            updatesPage?.v130F4Title ||
+            'Finalize apparaat-to-apparaat synchronisatie implementation with documentation',
           description: updatesPage?.v130F4Desc || 'Dit maakt Fluxby nog beter.',
         },
         {
           icon: Wrench,
           title: updatesPage?.v130F5Title || 'Bugfixes',
-          description: updatesPage?.v130F5Desc || '15 bugs opgelost. Zie changelog voor details.',
+          description:
+            updatesPage?.v130F5Desc ||
+            '15 bugs opgelost. Zie changelog voor details.',
         },
       ],
     },

@@ -1804,18 +1804,23 @@ export const nl: LandingTranslationKeys = {
       v131Description: '3 bugfixes.',
       v131F1Title: 'Release verbeteringen',
       v131F1Desc: '2 bugfixes. Bekijk de release op GitHub!',
-      v131F2Title: 'Herstel `uselanguage` importeren and toegevoegd `barchart3` icon',
+      v131F2Title:
+        'Herstel `uselanguage` importeren and toegevoegd `barchart3` icon',
       v131F2Desc: 'Bugs gedood, app verbeterd.',
       v130Date: '8 januari 2026',
       v130Title: 'Release 1.3.0',
       v130Description: '10 nieuwe features en 15 bugfixes.',
       v130F1Title: 'Web app uitbreidingen',
-      v130F1Desc: '7 nieuwe mogelijkheden om te ontdekken. Bekijk de release notes!',
-      v130F2Title: 'Geïmplementeerd file-based migration system and centralized logger',
+      v130F1Desc:
+        '7 nieuwe mogelijkheden om te ontdekken. Bekijk de release notes!',
+      v130F2Title:
+        'Geïmplementeerd file-based migration system and centralized logger',
       v130F2Desc: 'Nieuwe functionaliteit waar je iets aan hebt.',
-      v130F3Title: 'Toegevoegd apparaat synchronisatie screenshot section with animation',
+      v130F3Title:
+        'Toegevoegd apparaat synchronisatie screenshot section with animation',
       v130F3Desc: 'Er is weer wat bijgekomen. Ontdek het zelf!',
-      v130F4Title: 'Finalize apparaat-to-apparaat synchronisatie implementation with documentation',
+      v130F4Title:
+        'Finalize apparaat-to-apparaat synchronisatie implementation with documentation',
       v130F4Desc: 'Dit maakt Fluxby nog beter.',
       v130F5Title: 'Bugfixes',
       v130F5Desc: '15 bugs opgelost. Zie changelog voor details.',

@@ -374,11 +374,13 @@ export default function Layout() {
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <div className='flex items-center gap-2'>
-                    <span>{t.spotlight?.openSearch || 'Search'}</span>
-                    <kbd className='rounded border bg-muted px-1.5 py-0.5 font-mono text-[10px]'>
-                      ⌘K
-                    </kbd>
+                  <div className='text-center'>
+                    <p className='font-medium'>
+                      {t.spotlight?.openSearch || 'Search'}
+                    </p>
+                    <p className='text-xs text-muted-foreground'>
+                      {t.spotlight?.openSearchTooltip || 'Press ⌘K'}
+                    </p>
                   </div>
                 </TooltipContent>
               </Tooltip>
@@ -422,9 +424,9 @@ export default function Layout() {
                     className='h-9 w-9 text-muted-foreground'
                   >
                     {isDarkMode() ? (
-                      <Sun className='h-5 w-5' />
-                    ) : (
                       <Moon className='h-5 w-5' />
+                    ) : (
+                      <Sun className='h-5 w-5' />
                     )}
                   </Button>
                 </TooltipTrigger>

@@ -1229,6 +1229,128 @@ router.post('/:id/seed-demo', (req, res) => {
       }
     }
 
+    // 7. Create recurring patterns for demo subscriptions
+    // Clear existing recurring patterns for this profile
+    run('DELETE FROM recurring_patterns WHERE profile_id = ?', [profileId]);
+
+    // Add demo recurring patterns based on the subscription merchants
+    const patternDate = new Date();
+    const demoRecurringPatterns = [
+      {
+        opposingIban: DEMO_MERCHANTS.subscriptions[0].iban, // Netflix
+        merchantName: 'Netflix',
+        patternType: 'monthly',
+        avgAmount: -12.99,
+        lastAmount: -12.99,
+        isConfirmed: true,
+        transactionCount: 18,
+      },
+      {
+        opposingIban: DEMO_MERCHANTS.subscriptions[1].iban, // Spotify
+        merchantName: 'Spotify',
+        patternType: 'monthly',
+        avgAmount: -9.99,
+        lastAmount: -9.99,
+        isConfirmed: true,
+        transactionCount: 18,
+      },
+      {
+        opposingIban: DEMO_MERCHANTS.subscriptions[2].iban, // Disney+
+        merchantName: 'Disney+',
+        patternType: 'monthly',
+        avgAmount: -8.99,
+        lastAmount: -8.99,
+        isConfirmed: false, // Pending confirmation
+        transactionCount: 12,
+      },
+      {
+        opposingIban: DEMO_MERCHANTS.subscriptions[3].iban, // KPN
+        merchantName: 'KPN',
+        patternType: 'monthly',
+        avgAmount: -52.0,
+        lastAmount: -52.0,
+        isConfirmed: true,
+        transactionCount: 18,
+      },
+      {
+        opposingIban: DEMO_MERCHANTS.utilities[0].iban, // Vattenfall
+        merchantName: 'Vattenfall',
+        patternType: 'monthly',
+        avgAmount: -120.0,
+        lastAmount: -125.0,
+        isConfirmed: true,
+        isVariable: true,
+        transactionCount: 18,
+      },
+      {
+        opposingIban: DEMO_MERCHANTS.utilities[2].iban, // Ziggo
+        merchantName: 'Ziggo',
+        patternType: 'monthly',
+        avgAmount: -55.0,
+        lastAmount: -55.0,
+        isConfirmed: true,
+        transactionCount: 18,
+      },
+      {
+        opposingIban: DEMO_MERCHANTS.housing[0].iban, // Woonstad
+        merchantName: 'Woonstad Rotterdam',
+        patternType: 'monthly',
+        avgAmount: -850.0,
+        lastAmount: -850.0,
+        isConfirmed: true,
+        transactionCount: 18,
+      },
+      {
+        opposingIban: DEMO_MERCHANTS.leisure[2].iban, // Basic-Fit
+        merchantName: 'Basic-Fit',
+        patternType: 'monthly',
+        avgAmount: -29.99,
+        lastAmount: -29.99,
+        isConfirmed: false, // Pending confirmation
+        transactionCount: 6,
+      },
+      {
+        opposingIban: INCOME_SOURCES[0].iban, // Salary
+        merchantName: 'Werkgever BV',
+        patternType: 'monthly',
+        avgAmount: 2800.0,
+        lastAmount: 2850.0,
+        isConfirmed: true,
+        isVariable: true,
+        transactionCount: 18,
+      },
+    ];
+
+    for (const pattern of demoRecurringPatterns) {
+      const id = `demo_${profileId}_${pattern.merchantName.replace(/\s+/g, '_').toLowerCase()}_${Date.now()}`;
+      const lastDate = new Date(patternDate);
+      lastDate.setDate(3); // Most subscriptions on the 3rd
+      lastDate.setMonth(lastDate.getMonth() - 1);
+
+      const nextDate = new Date(lastDate);
+      nextDate.setMonth(nextDate.getMonth() + 1);
+
+      run(
+        `INSERT INTO recurring_patterns 
+         (id, opposing_iban, merchant_name, pattern_type, avg_amount, last_amount, last_date, next_expected_date, is_active, is_confirmed, is_variable, transaction_count, profile_id, is_deleted) 
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, 0)`,
+        [
+          id,
+          pattern.opposingIban,
+          pattern.merchantName,
+          pattern.patternType,
+          pattern.avgAmount,
+          pattern.lastAmount,
+          lastDate.toISOString().split('T')[0],
+          nextDate.toISOString().split('T')[0],
+          pattern.isConfirmed ? 1 : 0,
+          pattern.isVariable ? 1 : 0,
+          pattern.transactionCount,
+          profileId,
+        ]
+      );
+    }
+
     res.json({
       success: true,
       data: {
@@ -1237,6 +1359,7 @@ router.post('/:id/seed-demo', (req, res) => {
         transactions: transactions.length,
         addressBookEntries: uniqueIbans.size - 2, // Exclude own accounts
         budgets: budgetCategories.length,
+        recurringPatterns: demoRecurringPatterns.length,
       },
     });
   } catch (error) {

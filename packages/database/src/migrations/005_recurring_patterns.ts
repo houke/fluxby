@@ -6,7 +6,7 @@ export const migration005: Migration = {
   up: async (db: MigrationContext) => {
     // Determine if table exists first (SQLite doesn't support IF NOT EXISTS in all contexts cleanly in migrations sometimes, but standard SQL does)
     // We'll just run the CREATE TABLE IF NOT EXISTS
-    
+
     await db.execAsync(`
       CREATE TABLE IF NOT EXISTS recurring_patterns (
           id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
@@ -33,11 +33,11 @@ export const migration005: Migration = {
     await db.execAsync(`
       CREATE INDEX IF NOT EXISTS idx_recurring_patterns_profile ON recurring_patterns(profile_id);
     `);
-    
+
     await db.execAsync(`
       CREATE INDEX IF NOT EXISTS idx_recurring_patterns_updated_at ON recurring_patterns(updated_at);
     `);
-    
+
     await db.execAsync(`
       CREATE INDEX IF NOT EXISTS idx_recurring_patterns_merchant ON recurring_patterns(opposing_iban, merchant_name);
     `);

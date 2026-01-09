@@ -306,7 +306,10 @@ export default function Subscriptions() {
         </div>
         <div className='flex items-center gap-2'>
           {/* View toggle */}
-          <div className='flex rounded-md border'>
+          <div
+            className='flex rounded-md border'
+            data-onboarding='subscriptions-calendar-toggle'
+          >
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -347,6 +350,7 @@ export default function Subscriptions() {
           <Button
             onClick={() => detectMutation.mutate()}
             disabled={detectMutation.isPending}
+            data-onboarding='detect-patterns-button'
           >
             <RefreshCw
               className={cn(
@@ -362,7 +366,10 @@ export default function Subscriptions() {
       </div>
 
       {/* Stats Cards */}
-      <div className='grid gap-4 md:grid-cols-4'>
+      <div
+        className='grid gap-4 md:grid-cols-4'
+        data-onboarding='subscriptions-stats'
+      >
         <Card>
           <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
             <CardTitle className='text-sm font-medium'>
@@ -438,7 +445,7 @@ export default function Subscriptions() {
 
       {/* Alerts */}
       {alerts.length > 0 && (
-        <Card>
+        <Card data-onboarding='subscriptions-alerts'>
           <CardHeader>
             <CardTitle className='flex items-center gap-2'>
               <AlertTriangle className='h-5 w-5 text-orange-500' />
@@ -516,7 +523,7 @@ export default function Subscriptions() {
         <div className='space-y-6'>
           {/* Pending confirmation */}
           {pendingPatterns.length > 0 && (
-            <Card>
+            <Card data-onboarding='subscriptions-pending'>
               <CardHeader>
                 <CardTitle className='flex items-center gap-2'>
                   <Sparkles className='h-5 w-5 text-purple-500' />
@@ -547,7 +554,7 @@ export default function Subscriptions() {
 
           {/* Confirmed subscriptions */}
           {confirmedPatterns.length > 0 && (
-            <Card>
+            <Card data-onboarding='subscriptions-confirmed'>
               <CardHeader>
                 <CardTitle className='flex items-center gap-2'>
                   <Check className='h-5 w-5 text-green-500' />
@@ -690,7 +697,10 @@ function SubscriptionCard({
         )}
       </div>
 
-      <div className='flex items-center gap-2'>
+      <div
+        className='flex items-center gap-2'
+        data-onboarding='subscription-actions'
+      >
         <p className='mr-4 text-lg font-semibold'>
           <Currency amount={pattern.lastAmount} />
         </p>
