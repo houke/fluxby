@@ -1,0 +1,70 @@
+meta {
+  name: Detect Recurring Patterns
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/api/recurring/detect
+  body: none
+  auth: none
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+docs {
+  # Detect Recurring Patterns
+  
+  Run the pattern detection algorithm to find recurring transactions. This analyzes all transactions and identifies patterns based on:
+  
+  - Same opposing IBAN and merchant name
+  - Consistent intervals between transactions (±3 days tolerance)
+  - Similar amounts (within 10% variance)
+  - Minimum 3 transactions required for pattern detection
+  
+  ## Endpoint
+  `POST /api/recurring/detect`
+  
+  ## Pattern Types
+  
+  The algorithm detects these pattern types based on interval:
+  
+  - `weekly`: 5-9 days
+  - `biweekly`: 12-16 days
+  - `monthly`: 27-34 days
+  - `quarterly`: 85-95 days
+  - `yearly`: 360-370 days
+  
+  ## Response
+  
+  ```json
+  {
+    "success": true,
+    "data": {
+      "detected": 15,
+      "new": 3,
+      "updated": 2,
+      "patterns": [
+        {
+          "id": "uuid",
+          "opposingIban": "NL01BANK1234567890",
+          "merchantName": "Netflix",
+          "patternType": "monthly",
+          "avgAmount": -12.99,
+          "lastAmount": -12.99,
+          "lastDate": "2024-01-15",
+          "nextExpectedDate": "2024-02-15",
+          "isActive": true,
+          "isConfirmed": false,
+          "isVariable": false,
+          "transactionCount": 6,
+          "profileId": "1",
+          "createdAt": "2024-01-01T00:00:00.000Z"
+        }
+      ]
+    }
+  }
+  ```
+}

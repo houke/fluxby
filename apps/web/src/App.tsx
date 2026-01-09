@@ -4,6 +4,7 @@ import Dashboard from './pages/Dashboard';
 import Transactions from './pages/Transactions';
 import Analytics from './pages/Analytics';
 import Budgets from './pages/Budgets';
+import Subscriptions from './pages/Subscriptions';
 import Categories from './pages/Categories';
 import AddressBook from './pages/AddressBook';
 import Import from './pages/Import';
@@ -54,6 +55,7 @@ function AppContent() {
           <Route path='transactions' element={<Transactions />} />
           <Route path='analytics' element={<Analytics />} />
           <Route path='budgets' element={<Budgets />} />
+          <Route path='subscriptions' element={<Subscriptions />} />
           <Route path='addressbook' element={<AddressBook />} />
           <Route path='categories' element={<Categories />} />
           <Route path='import' element={<Import />} />

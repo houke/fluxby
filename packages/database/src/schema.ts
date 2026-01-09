@@ -264,6 +264,31 @@ CREATE TABLE IF NOT EXISTS sync_error_log (
     timestamp INTEGER NOT NULL DEFAULT (strftime('%s', 'now') * 1000)
 );
 
+-- Recurring patterns for subscription detection
+CREATE TABLE IF NOT EXISTS recurring_patterns (
+    id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+    opposing_iban TEXT,
+    merchant_name TEXT,
+    pattern_type TEXT CHECK(pattern_type IN ('weekly', 'biweekly', 'monthly', 'quarterly', 'yearly')),
+    avg_amount REAL,
+    last_amount REAL,
+    last_date TEXT,
+    next_expected_date TEXT,
+    is_active INTEGER DEFAULT 1,
+    is_confirmed INTEGER DEFAULT 0,
+    is_variable INTEGER DEFAULT 0,
+    transaction_count INTEGER DEFAULT 0,
+    profile_id TEXT REFERENCES profiles(id) ON DELETE CASCADE,
+    updated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now') * 1000),
+    is_deleted INTEGER NOT NULL DEFAULT 0,
+    device_id TEXT,
+    created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now') * 1000)
+);
+
+CREATE INDEX IF NOT EXISTS idx_recurring_patterns_profile ON recurring_patterns(profile_id);
+CREATE INDEX IF NOT EXISTS idx_recurring_patterns_updated_at ON recurring_patterns(updated_at);
+CREATE INDEX IF NOT EXISTS idx_recurring_patterns_merchant ON recurring_patterns(opposing_iban, merchant_name);
+
 -- Indexes for performance
 CREATE INDEX IF NOT EXISTS idx_transactions_date ON transactions(date);
 CREATE INDEX IF NOT EXISTS idx_transactions_category ON transactions(category_id);

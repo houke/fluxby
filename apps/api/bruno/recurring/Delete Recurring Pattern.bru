@@ -1,0 +1,44 @@
+meta {
+  name: Delete Recurring Pattern
+  type: http
+  seq: 7
+}
+
+delete {
+  url: {{baseUrl}}/api/recurring/:id
+  body: none
+  auth: none
+}
+
+params:path {
+  id: 
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+docs {
+  # Delete Recurring Pattern
+  
+  Soft-delete a recurring pattern. This marks the pattern as deleted so it won't be returned in queries.
+  
+  ## Endpoint
+  `DELETE /api/recurring/:id`
+  
+  ## Path Parameters
+  
+  - `id` (string, required): The UUID of the recurring pattern to delete
+  
+  ## Response
+  
+  ```json
+  {
+    "success": true
+  }
+  ```
+  
+  ## Errors
+  
+  - `404`: Recurring pattern not found
+}

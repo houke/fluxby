@@ -313,6 +313,42 @@ export const api = {
     return ds.deleteAllAddressBook();
   },
 
+  // ============= Recurring Patterns (Subscriptions) =============
+  getRecurringPatterns: async () => {
+    const ds = getDataService();
+    return ds.getRecurringPatterns();
+  },
+
+  getRecurringStats: async () => {
+    const ds = getDataService();
+    return ds.getRecurringStats();
+  },
+
+  getRecurringCalendar: async (startDate: string, endDate: string) => {
+    const ds = getDataService();
+    return ds.getRecurringCalendar(startDate, endDate);
+  },
+
+  detectRecurringPatterns: async () => {
+    const ds = getDataService();
+    return ds.detectRecurringPatterns();
+  },
+
+  confirmRecurringPattern: async (id: string) => {
+    const ds = getDataService();
+    await ds.confirmRecurringPattern(id);
+  },
+
+  dismissRecurringPattern: async (id: string) => {
+    const ds = getDataService();
+    await ds.dismissRecurringPattern(id);
+  },
+
+  deleteRecurringPattern: async (id: string) => {
+    const ds = getDataService();
+    await ds.deleteRecurringPattern(id);
+  },
+
   // ============= Analytics =============
   getDashboardStats: async (
     startDate?: string,

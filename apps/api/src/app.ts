@@ -17,6 +17,7 @@ import userRouter from './routes/user.js';
 import dataRouter from './routes/data.js';
 import addressbookRouter from './routes/addressbook.js';
 import profilesRouter from './routes/profiles.js';
+import recurringRouter from './routes/recurring.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -90,6 +91,7 @@ app.use('/api/analytics', analyticsRouter);
 app.use('/api/user', userRouter);
 app.use('/api/data', dataRouter);
 app.use('/api/addressbook', addressbookRouter);
+app.use('/api/recurring', recurringRouter);
 
 // Health check
 app.get('/api/health', (req, res) => {

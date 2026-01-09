@@ -22,6 +22,13 @@ import {
   type Account,
   type Budget,
   type ProfileType,
+  type RecurringPattern,
+  type RecurringCalendarEntry,
+  type RecurringStats,
+  type PatternType,
+  PATTERN_INTERVALS,
+  MIN_TRANSACTIONS_FOR_PATTERN,
+  AMOUNT_VARIANCE_THRESHOLD,
   flattenCategoriesForDB,
   SEED_CATEGORIES,
   DEFAULT_NAME_CLEANUP_RULES,
@@ -4063,6 +4070,401 @@ export function createDataService(db: Database) {
       );
 
       return true;
+    },
+
+    // ============= Recurring Patterns (Subscriptions) =============
+
+    /**
+     * Detect recurring patterns from transactions
+     * Groups transactions by opposing IBAN + normalized merchant name,
+     * then analyzes intervals to classify patterns
+     */
+    async detectRecurringPatterns(): Promise<{
+      detected: number;
+      updated: number;
+    }> {
+      const pid = profileId();
+      if (!pid) return { detected: 0, updated: 0 };
+
+      const now = Date.now();
+
+      // Get all transactions grouped by opposing_account_iban + merchant_name
+      const groups = await db.queryAsync<{
+        opposing_iban: string | null;
+        merchant_name: string | null;
+        dates: string;
+        amounts: string;
+        tx_count: number;
+      }>(
+        `SELECT 
+          opposing_account_iban as opposing_iban,
+          COALESCE(merchant_name, opposing_account_name) as merchant_name,
+          GROUP_CONCAT(date, ',') as dates,
+          GROUP_CONCAT(amount, ',') as amounts,
+          COUNT(*) as tx_count
+         FROM transactions t
+         JOIN accounts a ON t.account_id = a.id
+         WHERE a.profile_id = ? 
+           AND t.is_deleted = 0
+           AND t.type = 'expense'
+         GROUP BY opposing_account_iban, COALESCE(merchant_name, opposing_account_name)
+         HAVING tx_count >= ?
+         ORDER BY tx_count DESC`,
+        [pid, MIN_TRANSACTIONS_FOR_PATTERN]
+      );
+
+      let detected = 0;
+      let updated = 0;
+
+      await db.transactionAsync(async () => {
+        for (const group of groups) {
+          if (!group.dates || !group.amounts) continue;
+
+          // Parse dates and amounts
+          const dates = group.dates
+            .split(',')
+            .map((d) => new Date(d))
+            .sort((a, b) => a.getTime() - b.getTime());
+
+          const amounts = group.amounts
+            .split(',')
+            .map((a) => Math.abs(parseFloat(a)));
+
+          if (dates.length < MIN_TRANSACTIONS_FOR_PATTERN) continue;
+
+          // Calculate intervals between consecutive transactions
+          const intervals: number[] = [];
+          for (let i = 1; i < dates.length; i++) {
+            const daysDiff = Math.round(
+              (dates[i].getTime() - dates[i - 1].getTime()) /
+                (1000 * 60 * 60 * 24)
+            );
+            intervals.push(daysDiff);
+          }
+
+          // Classify pattern based on average interval
+          const avgInterval =
+            intervals.reduce((sum, i) => sum + i, 0) / intervals.length;
+          let patternType: PatternType | null = null;
+
+          for (const [type, range] of Object.entries(PATTERN_INTERVALS)) {
+            if (avgInterval >= range.min && avgInterval <= range.max) {
+              patternType = type as PatternType;
+              break;
+            }
+          }
+
+          if (!patternType) continue;
+
+          // Check interval consistency (±3 day tolerance)
+          const isConsistent = intervals.every(
+            (interval) => Math.abs(interval - avgInterval) <= 3
+          );
+
+          if (!isConsistent) continue;
+
+          // Calculate amount statistics
+          const avgAmount =
+            amounts.reduce((sum, a) => sum + a, 0) / amounts.length;
+          const lastAmount = amounts[amounts.length - 1];
+          const lastDate = dates[dates.length - 1].toISOString().split('T')[0];
+
+          // Check if amount is variable (>10% variance)
+          const isVariable = amounts.some(
+            (a) =>
+              Math.abs(a - avgAmount) / avgAmount > AMOUNT_VARIANCE_THRESHOLD
+          );
+
+          // Calculate next expected date
+          const nextExpected = new Date(dates[dates.length - 1]);
+          nextExpected.setDate(
+            nextExpected.getDate() + Math.round(avgInterval)
+          );
+          const nextExpectedDate = nextExpected.toISOString().split('T')[0];
+
+          // Check if pattern already exists
+          const existing = await db.queryOneAsync<{ id: string }>(
+            `SELECT id FROM recurring_patterns 
+             WHERE profile_id = ? 
+               AND opposing_iban = ? 
+               AND merchant_name = ?
+               AND is_deleted = 0`,
+            [pid, group.opposing_iban, group.merchant_name]
+          );
+
+          if (existing) {
+            // Update existing pattern
+            await db.runAsync(
+              `UPDATE recurring_patterns SET
+                pattern_type = ?,
+                avg_amount = ?,
+                last_amount = ?,
+                last_date = ?,
+                next_expected_date = ?,
+                is_variable = ?,
+                transaction_count = ?,
+                updated_at = ?
+               WHERE id = ?`,
+              [
+                patternType,
+                avgAmount,
+                lastAmount,
+                lastDate,
+                nextExpectedDate,
+                isVariable ? 1 : 0,
+                dates.length,
+                now,
+                existing.id,
+              ]
+            );
+            updated++;
+          } else {
+            // Create new pattern
+            const id = crypto.randomUUID();
+            await db.runAsync(
+              `INSERT INTO recurring_patterns (
+                id, opposing_iban, merchant_name, pattern_type, 
+                avg_amount, last_amount, last_date, next_expected_date,
+                is_active, is_confirmed, is_variable, transaction_count,
+                profile_id, created_at, updated_at
+              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, 0, ?, ?, ?, ?, ?)`,
+              [
+                id,
+                group.opposing_iban,
+                group.merchant_name,
+                patternType,
+                avgAmount,
+                lastAmount,
+                lastDate,
+                nextExpectedDate,
+                isVariable ? 1 : 0,
+                dates.length,
+                pid,
+                now,
+                now,
+              ]
+            );
+            detected++;
+          }
+        }
+      });
+
+      return { detected, updated };
+    },
+
+    /**
+     * Get all recurring patterns for the current profile
+     */
+    async getRecurringPatterns(): Promise<RecurringPattern[]> {
+      const pid = profileId();
+      if (!pid) return [];
+
+      const rows = await db.queryAsync<{
+        id: string;
+        opposing_iban: string | null;
+        merchant_name: string | null;
+        pattern_type: PatternType;
+        avg_amount: number;
+        last_amount: number;
+        last_date: string;
+        next_expected_date: string | null;
+        is_active: number;
+        is_confirmed: number;
+        is_variable: number;
+        transaction_count: number;
+        profile_id: string;
+        created_at: number;
+      }>(
+        `SELECT * FROM recurring_patterns
+         WHERE profile_id = ? AND is_deleted = 0
+         ORDER BY next_expected_date ASC`,
+        [pid]
+      );
+
+      return rows.map((row) => ({
+        id: row.id,
+        opposingIban: row.opposing_iban,
+        merchantName: row.merchant_name,
+        patternType: row.pattern_type,
+        avgAmount: row.avg_amount,
+        lastAmount: row.last_amount,
+        lastDate: row.last_date,
+        nextExpectedDate: row.next_expected_date,
+        isActive: row.is_active === 1,
+        isConfirmed: row.is_confirmed === 1,
+        isVariable: row.is_variable === 1,
+        transactionCount: row.transaction_count,
+        profileId: row.profile_id,
+        createdAt: new Date(Number(row.created_at)).toISOString(),
+      }));
+    },
+
+    /**
+     * Get recurring pattern stats (total monthly spend, counts, etc)
+     */
+    async getRecurringStats(): Promise<RecurringStats> {
+      const pid = profileId();
+      if (!pid) {
+        return {
+          totalMonthlySpend: 0,
+          activeSubscriptions: 0,
+          confirmedSubscriptions: 0,
+          pendingConfirmation: 0,
+        };
+      }
+
+      const rows = await db.queryAsync<{
+        pattern_type: PatternType;
+        avg_amount: number;
+        is_active: number;
+        is_confirmed: number;
+      }>(
+        `SELECT pattern_type, avg_amount, is_active, is_confirmed
+         FROM recurring_patterns
+         WHERE profile_id = ? AND is_deleted = 0 AND is_active = 1`,
+        [pid]
+      );
+
+      // Calculate monthly equivalent for each pattern
+      const multipliers: Record<PatternType, number> = {
+        weekly: 4.33, // ~4.33 weeks per month
+        biweekly: 2.17,
+        monthly: 1,
+        quarterly: 0.33,
+        yearly: 0.083, // 1/12
+      };
+
+      let totalMonthlySpend = 0;
+      let activeSubscriptions = 0;
+      let confirmedSubscriptions = 0;
+      let pendingConfirmation = 0;
+
+      for (const row of rows) {
+        const multiplier = multipliers[row.pattern_type] || 1;
+        totalMonthlySpend += row.avg_amount * multiplier;
+        activeSubscriptions++;
+
+        if (row.is_confirmed === 1) {
+          confirmedSubscriptions++;
+        } else {
+          pendingConfirmation++;
+        }
+      }
+
+      return {
+        totalMonthlySpend,
+        activeSubscriptions,
+        confirmedSubscriptions,
+        pendingConfirmation,
+      };
+    },
+
+    /**
+     * Get calendar entries for recurring patterns in a date range
+     */
+    async getRecurringCalendar(
+      startDate: string,
+      endDate: string
+    ): Promise<RecurringCalendarEntry[]> {
+      const pid = profileId();
+      if (!pid) return [];
+
+      const patterns = await db.queryAsync<{
+        id: string;
+        merchant_name: string | null;
+        pattern_type: PatternType;
+        avg_amount: number;
+        last_date: string;
+        is_confirmed: number;
+      }>(
+        `SELECT id, merchant_name, pattern_type, avg_amount, last_date, is_confirmed
+         FROM recurring_patterns
+         WHERE profile_id = ? AND is_deleted = 0 AND is_active = 1`,
+        [pid]
+      );
+
+      const entries: RecurringCalendarEntry[] = [];
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+
+      // Interval in days for each pattern type
+      const intervalDays: Record<PatternType, number> = {
+        weekly: 7,
+        biweekly: 14,
+        monthly: 30,
+        quarterly: 91,
+        yearly: 365,
+      };
+
+      for (const pattern of patterns) {
+        const nextDate = new Date(pattern.last_date);
+        const interval = intervalDays[pattern.pattern_type];
+
+        // Project forward from last date
+        while (nextDate <= end) {
+          nextDate.setDate(nextDate.getDate() + interval);
+
+          if (nextDate >= start && nextDate <= end) {
+            entries.push({
+              id: pattern.id,
+              date: nextDate.toISOString().split('T')[0],
+              merchantName: pattern.merchant_name,
+              expectedAmount: pattern.avg_amount,
+              patternType: pattern.pattern_type,
+              isConfirmed: pattern.is_confirmed === 1,
+            });
+          }
+        }
+      }
+
+      // Sort by date
+      entries.sort(
+        (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+      );
+
+      return entries;
+    },
+
+    /**
+     * Confirm a recurring pattern (user verified it's a real subscription)
+     */
+    async confirmRecurringPattern(id: string): Promise<void> {
+      const pid = profileId();
+      if (!pid) throw new Error('No active profile');
+
+      await db.runAsync(
+        `UPDATE recurring_patterns SET is_confirmed = 1, updated_at = ?
+         WHERE id = ? AND profile_id = ?`,
+        [Date.now(), id, pid]
+      );
+    },
+
+    /**
+     * Dismiss a recurring pattern (user says it's a false positive)
+     */
+    async dismissRecurringPattern(id: string): Promise<void> {
+      const pid = profileId();
+      if (!pid) throw new Error('No active profile');
+
+      await db.runAsync(
+        `UPDATE recurring_patterns SET is_active = 0, updated_at = ?
+         WHERE id = ? AND profile_id = ?`,
+        [Date.now(), id, pid]
+      );
+    },
+
+    /**
+     * Delete a recurring pattern
+     */
+    async deleteRecurringPattern(id: string): Promise<void> {
+      const pid = profileId();
+      if (!pid) throw new Error('No active profile');
+
+      await db.runAsync(
+        `UPDATE recurring_patterns SET is_deleted = 1, updated_at = ?
+         WHERE id = ? AND profile_id = ?`,
+        [Date.now(), id, pid]
+      );
     },
 
     // Helper to link transactions to address book entries

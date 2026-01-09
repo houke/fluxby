@@ -154,6 +154,29 @@ CREATE TABLE IF NOT EXISTS shared_iban_merchants (
 
 CREATE INDEX IF NOT EXISTS idx_shared_iban_merchants_lookup ON shared_iban_merchants(iban, original_name);
 
+-- Recurring patterns for subscription detection
+CREATE TABLE IF NOT EXISTS recurring_patterns (
+    id TEXT PRIMARY KEY,
+    opposing_iban TEXT,
+    merchant_name TEXT,
+    pattern_type TEXT CHECK(pattern_type IN ('weekly', 'biweekly', 'monthly', 'quarterly', 'yearly')),
+    avg_amount DECIMAL(10,2),
+    last_amount DECIMAL(10,2),
+    last_date DATE,
+    next_expected_date DATE,
+    is_active INTEGER DEFAULT 1,
+    is_confirmed INTEGER DEFAULT 0,
+    is_variable INTEGER DEFAULT 0,
+    transaction_count INTEGER DEFAULT 0,
+    profile_id INTEGER DEFAULT 1 REFERENCES profiles(id) ON DELETE CASCADE,
+    is_deleted INTEGER DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_recurring_patterns_profile ON recurring_patterns(profile_id);
+CREATE INDEX IF NOT EXISTS idx_recurring_patterns_merchant ON recurring_patterns(opposing_iban, merchant_name);
+
 -- Indexes for performance
 CREATE INDEX IF NOT EXISTS idx_transactions_date ON transactions(date);
 CREATE INDEX IF NOT EXISTS idx_transactions_category ON transactions(category_id);

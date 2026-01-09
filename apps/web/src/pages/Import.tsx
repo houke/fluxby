@@ -598,6 +598,20 @@ export default function Import() {
       queryClient.invalidateQueries({
         queryKey: ['available-years', activeProfileId],
       });
+      // Detect recurring patterns after import
+      api
+        .detectRecurringPatterns()
+        .then(() => {
+          queryClient.invalidateQueries({
+            queryKey: ['recurring-patterns', activeProfileId],
+          });
+          queryClient.invalidateQueries({
+            queryKey: ['recurring-stats', activeProfileId],
+          });
+        })
+        .catch((err) =>
+          console.error('Failed to detect recurring patterns:', err)
+        );
     },
     onError: (error: Error) => {
       console.error('Import error:', error);
@@ -631,6 +645,20 @@ export default function Import() {
       queryClient.invalidateQueries({
         queryKey: ['accounts', activeProfileId],
       });
+      // Detect recurring patterns after import
+      api
+        .detectRecurringPatterns()
+        .then(() => {
+          queryClient.invalidateQueries({
+            queryKey: ['recurring-patterns', activeProfileId],
+          });
+          queryClient.invalidateQueries({
+            queryKey: ['recurring-stats', activeProfileId],
+          });
+        })
+        .catch((err) =>
+          console.error('Failed to detect recurring patterns:', err)
+        );
     },
     onError: (error: Error) => {
       setUploadError(error.message);

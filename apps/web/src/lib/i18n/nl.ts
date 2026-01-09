@@ -115,6 +115,7 @@ export interface TranslationKeys {
     transactions: string;
     analytics: string;
     budgets: string;
+    subscriptions: string;
     addressBook: string;
     categories: string;
     import: string;
@@ -351,6 +352,55 @@ export interface TranslationKeys {
     avgSpent: string;
     perMonth: string;
     createSelected: string;
+  };
+  subscriptions: {
+    title: string;
+    subtitle: string;
+    noSubscriptions: string;
+    noSubscriptionsDescription: string;
+    detectPatterns: string;
+    detecting: string;
+    detected: string;
+    updated: string;
+    totalMonthlySpend: string;
+    activeSubscriptions: string;
+    confirmedSubscriptions: string;
+    pendingConfirmation: string;
+    confirm: string;
+    dismiss: string;
+    delete: string;
+    confirmed: string;
+    dismissed: string;
+    deleted: string;
+    nextPayment: string;
+    lastPayment: string;
+    avgAmount: string;
+    frequency: string;
+    weekly: string;
+    biweekly: string;
+    monthly: string;
+    quarterly: string;
+    yearly: string;
+    variable: string;
+    variableAmount: string;
+    priceIncrease: string;
+    priceIncreaseDescription: string;
+    missedPayment: string;
+    missedPaymentDescription: string;
+    newDetected: string;
+    newDetectedDescription: string;
+    listView: string;
+    calendarView: string;
+    expectedPayments: string;
+    confirmPattern: string;
+    confirmPatternDescription: string;
+    dismissPattern: string;
+    dismissPatternDescription: string;
+    transactionsCount: string;
+    upcomingThisMonth: string;
+    paidThisMonth: string;
+    alerts: string;
+    noAlerts: string;
   };
   categories: {
     title: string;
@@ -1086,6 +1136,8 @@ export interface TranslationKeys {
     togglePrivacy: string;
     addBudget: string;
     openSearch: string;
+    openSearchTooltip: string;
+    togglePrivacyTooltip: string;
   };
 }
 
@@ -1236,6 +1288,7 @@ export const nl: TranslationKeys = {
     transactions: 'Transacties',
     analytics: 'Analyse',
     budgets: 'Budgetten',
+    subscriptions: 'Abonnementen',
     addressBook: 'Adresboek',
     categories: 'Categorieën',
     import: 'Importeren',
@@ -1485,6 +1538,57 @@ export const nl: TranslationKeys = {
     avgSpent: 'Gem. uitgegeven',
     perMonth: 'per maand',
     createSelected: 'Aanmaken',
+  },
+  subscriptions: {
+    title: 'Abonnementen',
+    subtitle: 'Beheer je terugkerende betalingen',
+    noSubscriptions: 'Nog geen abonnementen gedetecteerd',
+    noSubscriptionsDescription:
+      'Importeer transacties om terugkerende betalingen automatisch te herkennen',
+    detectPatterns: 'Patronen detecteren',
+    detecting: 'Bezig met detecteren...',
+    detected: 'nieuwe patronen gedetecteerd',
+    updated: 'patronen bijgewerkt',
+    totalMonthlySpend: 'Totaal per maand',
+    activeSubscriptions: 'Actieve abonnementen',
+    confirmedSubscriptions: 'Bevestigd',
+    pendingConfirmation: 'Te bevestigen',
+    confirm: 'Bevestigen',
+    dismiss: 'Negeren',
+    delete: 'Verwijderen',
+    confirmed: 'Abonnement bevestigd',
+    dismissed: 'Abonnement genegeerd',
+    deleted: 'Abonnement verwijderd',
+    nextPayment: 'Volgende betaling',
+    lastPayment: 'Laatste betaling',
+    avgAmount: 'Gem. bedrag',
+    frequency: 'Frequentie',
+    weekly: 'Wekelijks',
+    biweekly: 'Tweewekelijks',
+    monthly: 'Maandelijks',
+    quarterly: 'Per kwartaal',
+    yearly: 'Jaarlijks',
+    variable: 'Variabel',
+    variableAmount: 'Bedrag varieert',
+    priceIncrease: 'Prijsverhoging',
+    priceIncreaseDescription: 'Laatste bedrag is hoger dan gemiddelde',
+    missedPayment: 'Gemiste betaling',
+    missedPaymentDescription: 'Verwachte datum is verstreken',
+    newDetected: 'Nieuw gedetecteerd',
+    newDetectedDescription: 'Bevestig of dit een abonnement is',
+    listView: 'Lijstweergave',
+    calendarView: 'Kalenderweergave',
+    expectedPayments: 'Verwachte betalingen',
+    confirmPattern: 'Abonnement bevestigen',
+    confirmPatternDescription:
+      'Bevestig dat dit een terugkerende betaling is die je wilt volgen',
+    dismissPattern: 'Patroon negeren',
+    dismissPatternDescription: 'Dit is geen abonnement, verberg dit patroon',
+    transactionsCount: '{count} transacties',
+    upcomingThisMonth: 'Verwacht deze maand',
+    paidThisMonth: 'Betaald deze maand',
+    alerts: 'Meldingen',
+    noAlerts: 'Geen meldingen',
   },
   categories: {
     title: 'Categorieën',
@@ -2349,5 +2453,7 @@ export const nl: TranslationKeys = {
     togglePrivacy: 'Privacy modus wisselen',
     addBudget: 'Budget toevoegen',
     openSearch: 'Openen zoeken',
+    openSearchTooltip: 'Druk op ⌘K',
+    togglePrivacyTooltip: 'Druk op ⇧⌘P',
   },
 };

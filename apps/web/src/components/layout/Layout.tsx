@@ -6,6 +6,7 @@ import {
   ArrowLeftRight,
   BarChart3,
   Wallet,
+  CalendarClock,
   Tags,
   Upload,
   Settings,
@@ -92,6 +93,13 @@ export default function Layout() {
       label: t.nav.budgets,
       onboarding: 'nav-budgets',
       menuKey: 'budgets',
+    },
+    {
+      to: '/subscriptions',
+      icon: CalendarClock,
+      label: t.nav.subscriptions || 'Subscriptions',
+      onboarding: 'nav-subscriptions',
+      menuKey: 'subscriptions',
     },
     {
       to: '/addressbook',
@@ -351,9 +359,7 @@ export default function Layout() {
                 </TooltipTrigger>
                 <TooltipContent>
                   <div className='flex items-center gap-2'>
-                    <span>
-                      {t.spotlight?.openSearch || 'Search'}
-                    </span>
+                    <span>{t.spotlight?.openSearch || 'Search'}</span>
                     <kbd className='rounded border bg-muted px-1.5 py-0.5 font-mono text-[10px]'>
                       ⌘K
                     </kbd>

@@ -1,0 +1,65 @@
+meta {
+  name: Get Recurring Calendar
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/recurring/calendar
+  body: none
+  auth: none
+}
+
+params:query {
+  ~year: 2024
+  ~month: 1
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+docs {
+  # Get Recurring Calendar
+  
+  Get calendar entries for a specific month showing expected recurring payments.
+  
+  ## Endpoint
+  `GET /api/recurring/calendar`
+  
+  ## Query Parameters
+  
+  - `year` (integer, optional): Year to get calendar for. Default: current year
+  - `month` (integer, optional): Month to get calendar for (1-12). Default: current month
+  
+  ## Response
+  
+  ```json
+  {
+    "success": true,
+    "data": [
+      {
+        "date": "2024-01-15",
+        "patterns": [
+          {
+            "id": "uuid",
+            "opposingIban": "NL01BANK1234567890",
+            "merchantName": "Netflix",
+            "patternType": "monthly",
+            "avgAmount": -12.99,
+            "lastAmount": -12.99,
+            "lastDate": "2023-12-15",
+            "nextExpectedDate": "2024-01-15",
+            "isActive": true,
+            "isConfirmed": true,
+            "isVariable": false,
+            "transactionCount": 6,
+            "profileId": "1",
+            "createdAt": "2024-01-01T00:00:00.000Z"
+          }
+        ]
+      }
+    ]
+  }
+  ```
+}
