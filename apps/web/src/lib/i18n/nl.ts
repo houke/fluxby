@@ -1072,6 +1072,21 @@ export interface TranslationKeys {
       alertMessage?: string;
     };
   };
+  spotlight?: {
+    searchPlaceholder: string;
+    noResults: string;
+    pages: string;
+    actions: string;
+    transactions: string;
+    contacts: string;
+    hint: string;
+    toggleDarkMode: string;
+    switchToLight: string;
+    switchToDark: string;
+    togglePrivacy: string;
+    addBudget: string;
+    openSearch: string;
+  };
 }
 
 export const nl: TranslationKeys = {
@@ -2319,5 +2334,20 @@ export const nl: TranslationKeys = {
     ibanRemovedFromContact: 'IBAN verwijderd van contact',
     allCategoriesDeleted: 'Alle categorieën verwijderd',
     allBudgetsDeleted: 'Alle budgetten verwijderd',
+  },
+  spotlight: {
+    searchPlaceholder: 'Zoeken...',
+    noResults: 'Geen resultaten gevonden.',
+    pages: "Pagina's",
+    actions: 'Acties',
+    transactions: 'Transacties',
+    contacts: 'Contacten',
+    hint: 'Typ om te zoeken, gebruik pijltjestoetsen om te navigeren',
+    toggleDarkMode: 'Donkere modus wisselen',
+    switchToLight: 'Schakel naar lichte modus',
+    switchToDark: 'Schakel naar donkere modus',
+    togglePrivacy: 'Privacy modus wisselen',
+    addBudget: 'Budget toevoegen',
+    openSearch: 'Openen zoeken',
   },
 };

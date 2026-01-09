@@ -16,8 +16,10 @@ import {
   X,
   Eye,
   EyeOff,
+  Search,
 } from 'lucide-react';
 import { usePrivacy } from '@/contexts/PrivacyContext';
+import { useSpotlight } from '@/contexts/SpotlightContext';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
@@ -50,6 +52,7 @@ export default function Layout() {
   const { isSwitching } = useProfile();
   const { startOnboarding, state: onboardingState } = useOnboarding();
   const { isPrivacyMode, togglePrivacyMode } = usePrivacy();
+  const { open: openSpotlight } = useSpotlight();
   const dataService = useDataService();
   const location = useLocation();
 
@@ -333,6 +336,29 @@ export default function Layout() {
               <HeaderFilters />
             </div>
             <div className='flex items-center gap-2'>
+              {/* Search / Spotlight button */}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant='ghost'
+                    size='icon'
+                    onClick={openSpotlight}
+                    className='h-9 w-9 text-muted-foreground'
+                    data-onboarding='header-search'
+                  >
+                    <Search className='h-5 w-5' />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <div className='flex items-center gap-2'>
+                    <span>{t.spotlight?.openSearch || 'Search'}</span>
+                    <kbd className='rounded border bg-muted px-1.5 py-0.5 font-mono text-[10px]'>
+                      ⌘K
+                    </kbd>
+                  </div>
+                </TooltipContent>
+              </Tooltip>
+
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button

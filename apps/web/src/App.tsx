@@ -30,6 +30,7 @@ import {
   Onboarding,
   useOnboarding,
 } from './components/onboarding';
+import { SpotlightProvider } from './contexts/SpotlightContext';
 
 // Inner component that can access onboarding context
 function AppContent() {
@@ -156,9 +157,11 @@ function App() {
                       <ConfirmProvider>
                         <BrowserRouter basename={getRouterBasename()}>
                           <OnboardingProvider>
-                            <SecurityGate>
-                              <AppContent />
-                            </SecurityGate>
+                            <SpotlightProvider>
+                              <SecurityGate>
+                                <AppContent />
+                              </SecurityGate>
+                            </SpotlightProvider>
                           </OnboardingProvider>
                         </BrowserRouter>
                       </ConfirmProvider>
