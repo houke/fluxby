@@ -33,6 +33,7 @@
   "bundle": {
     "active": true,
     "targets": ["app", "dmg", "nsis", "appimage", "deb"],
+    "createUpdaterArtifacts": true,
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
@@ -76,6 +77,15 @@
   "plugins": {
     "fs": {
       "requireLiteralLeadingDot": false
+    },
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDYxRkJFNkUxQzYyM0U3NTIKUldSUzV5UEc0ZWI3WWROOFpXa3dWVkM4NjA4WEc2MHdGeVY4QlVZS3ZyaDA4ZG9oeWFGMmUyYnIK",
+      "endpoints": [
+        "https://github.com/houke/fluxby/releases/latest/download/latest.json"
+      ],
+      "windows": {
+        "installMode": "passive"
+      }
     }
   }
 }

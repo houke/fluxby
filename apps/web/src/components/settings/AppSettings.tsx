@@ -34,6 +34,7 @@ import {
   getStoredDbVersion,
   getLatestMigrationVersion,
 } from '@fluxby/database';
+import { UpdateChecker } from './UpdateChecker';
 
 export function AppSettings() {
   const { t, language, setLanguage, languages } = useLanguage();
@@ -531,6 +532,9 @@ export function AppSettings() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Update Checker - Only shown in Tauri */}
+        <UpdateChecker />
       </div>
 
       {toast && (

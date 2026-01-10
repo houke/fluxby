@@ -128,6 +128,24 @@ export interface TranslationKeys {
     resetDatabase: string;
     passwordChangedSuccess: string;
   };
+  updater: {
+    title: string;
+    description: string;
+    checking: string;
+    upToDate: string;
+    newVersionAvailable: string;
+    downloading: string;
+    readyToRestart: string;
+    checkNow: string;
+    installUpdate: string;
+    viewReleaseNotes: string;
+    releaseNotesTitle: string;
+    checkFailed: string;
+    installFailed: string;
+    installComplete: string;
+    errorOccurred: string;
+    clickToCheck: string;
+  };
   nav: {
     dashboard: string;
     transactions: string;
@@ -1383,6 +1401,24 @@ export const nl: TranslationKeys = {
     forgotPasswordDialogWarning: 'Deze actie kan niet ongedaan worden gemaakt.',
     resetDatabase: 'Reset database',
     passwordChangedSuccess: 'Je master wachtwoord is succesvol gewijzigd.',
+  },
+  updater: {
+    title: 'Software updates',
+    description: 'Controleer en installeer app updates',
+    checking: 'Controleren op updates...',
+    upToDate: 'Je hebt de nieuwste versie',
+    newVersionAvailable: 'Versie {version} is beschikbaar',
+    downloading: 'Update downloaden...',
+    readyToRestart: 'Update klaar. Herstarten...',
+    checkNow: 'Nu controleren',
+    installUpdate: 'Update installeren',
+    viewReleaseNotes: 'Bekijk release notes',
+    releaseNotesTitle: 'Release notes voor {version}',
+    checkFailed: 'Controleren op updates mislukt',
+    installFailed: 'Update installeren mislukt',
+    installComplete: 'Update geïnstalleerd! Herstarten...',
+    errorOccurred: 'Er is een fout opgetreden',
+    clickToCheck: 'Klik om te controleren op updates',
   },
   nav: {
     dashboard: 'Dashboard',

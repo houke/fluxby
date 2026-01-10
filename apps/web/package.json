@@ -46,7 +46,9 @@
     "recharts": "^3.6.0",
     "tailwind-merge": "^3.4.0",
     "tailwindcss": "^4.1.18",
-    "tailwindcss-animate": "^1.0.7"
+    "tailwindcss-animate": "^1.0.7",
+    "@tauri-apps/plugin-updater": "^2.0.0",
+    "@tauri-apps/plugin-process": "^2.0.0"
   },
   "devDependencies": {
     "@types/react": "^19.0.1",
