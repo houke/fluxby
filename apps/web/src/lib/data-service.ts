@@ -1206,6 +1206,7 @@ export function createDataService(db: Database) {
         return {
           success: true,
           merged: true,
+          mergeReason: 'name', // Merged because contact with same name exists
           data: {
             id: existingContactId,
             iban: normalizedIban,
@@ -1244,6 +1245,7 @@ export function createDataService(db: Database) {
         return {
           success: true,
           merged: true,
+          mergeReason: 'iban', // Merged because IBAN already exists as primary
           data: {
             id: existingContactId,
             iban: normalizedIban,
@@ -1281,6 +1283,7 @@ export function createDataService(db: Database) {
         return {
           success: true,
           merged: true,
+          mergeReason: 'iban', // Merged because IBAN already exists in contact_ibans
           data: {
             id: existingContactId,
             iban: normalizedIban,

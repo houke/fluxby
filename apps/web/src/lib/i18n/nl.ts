@@ -78,6 +78,7 @@ export interface TranslationKeys {
     updateRequired: string;
     updateDescription: string;
     updateDescriptionAction: string;
+    newMigrationsDescription: string;
     staleCodeDescription: string;
     refreshNow: string;
     applyUpdate: string;
@@ -941,6 +942,7 @@ export interface TranslationKeys {
     errorSplitting: string;
     // Toast messages
     ibanAddedToExisting: string;
+    ibanAddedToMatchingName: string;
     contactsMerged: string;
     contactMovedToAddressBook: string;
     sharedIbansDetected: string;
@@ -1155,6 +1157,21 @@ export interface TranslationKeys {
     openSearchTooltip: string;
     togglePrivacyTooltip: string;
     toggleDarkModeTooltip: string;
+    keywords: {
+      dashboard: string[];
+      transactions: string[];
+      analytics: string[];
+      budgets: string[];
+      addressBook: string[];
+      categories: string[];
+      import: string[];
+      settings: string[];
+      help: string[];
+      subscriptions: string[];
+      theme: string[];
+      privacy: string[];
+      budget: string[];
+    };
   };
 }
 
@@ -1266,6 +1283,8 @@ export const nl: TranslationKeys = {
       'Er is een nieuwe versie van Fluxby beschikbaar. Vernieuw de pagina om de update toe te passen.',
     updateDescriptionAction:
       'Er is een nieuwe versie van Fluxby beschikbaar. Klik op "Update toepassen" om de nieuwste functies en verbeteringen te installeren.',
+    newMigrationsDescription:
+      'Er is een database-update vereist. Klik op "Update toepassen" om je database bij te werken en nieuwe functies in te schakelen.',
     staleCodeDescription:
       'Er is een nieuwere versie van Fluxby geïnstalleerd. De pagina wordt automatisch ververst om de nieuwste versie te laden...',
     refreshNow: 'Nu vernieuwen',
@@ -2301,6 +2320,7 @@ export const nl: TranslationKeys = {
     errorSplitting: 'Fout bij splitsen contact',
     // Toast messages
     ibanAddedToExisting: 'IBAN toegevoegd aan bestaand contact',
+    ibanAddedToMatchingName: 'IBAN toegevoegd aan contact met dezelfde naam',
     contactsMerged: 'Contacten samengevoegd',
     contactMovedToAddressBook: 'Contact verplaatst naar adresboek',
     sharedIbansDetected:

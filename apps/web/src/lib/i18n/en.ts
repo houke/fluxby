@@ -109,6 +109,8 @@ export const en: TranslationKeys = {
       'A new version of Fluxby is available. Please refresh the page to apply updates.',
     updateDescriptionAction:
       'A new version of Fluxby is available. Click "Apply update" to install the latest features and improvements.',
+    newMigrationsDescription:
+      'A database update is required. Click "Apply update" to update your database and enable new features.',
     staleCodeDescription:
       'A newer version of Fluxby has been installed. Refreshing automatically to load the latest version...',
     refreshNow: 'Refresh now',
@@ -1135,6 +1137,7 @@ export const en: TranslationKeys = {
     errorSplitting: 'Error splitting contact',
     // Toast messages
     ibanAddedToExisting: 'IBAN added to existing contact',
+    ibanAddedToMatchingName: 'IBAN added to contact with matching name',
     contactsMerged: 'Contacts merged',
     contactMovedToAddressBook: 'Contact moved to address book',
     sharedIbansDetected: '{added} shared IBANs added ({detected} detected)',
@@ -1369,5 +1372,20 @@ export const en: TranslationKeys = {
     openSearchTooltip: 'Press ⌘K',
     togglePrivacyTooltip: 'Press ⇧⌘P',
     toggleDarkModeTooltip: 'Press ⇧⌘D',
+    keywords: {
+      dashboard: ['home', 'overview', 'main'],
+      transactions: ['payments', 'history', 'betalingen'],
+      analytics: ['charts', 'reports', 'statistics', 'grafieken'],
+      budgets: ['spending', 'limits', 'budget'],
+      addressBook: ['contacts', 'people', 'accounts', 'contacten'],
+      categories: ['labels', 'tags', 'categorieën'],
+      import: ['csv', 'upload', 'importeren'],
+      settings: ['preferences', 'options', 'instellingen'],
+      help: ['support', 'faq', 'docs', 'hulp'],
+      subscriptions: ['recurring', 'patterns', 'abonnementen', 'herhalend'],
+      theme: ['dark', 'light', 'theme', 'mode', 'thema'],
+      privacy: ['privacy', 'blur', 'hide', 'show'],
+      budget: ['new', 'create', 'budget', 'toevoegen'],
+    },
   },
 };

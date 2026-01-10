@@ -231,27 +231,48 @@ export default function AddressBook() {
   // Mutations
   const createContactMutation = useMutation({
     mutationFn: api.createAddressBookEntry,
-    onSuccess: (result) => {
-      queryClient.invalidateQueries({
-        queryKey: ['addressbook', activeProfileId],
-      });
-      // Use exact: false to match all topAccounts queries regardless of the type parameter
-      queryClient.invalidateQueries({
-        queryKey: ['topAccounts', activeProfileId],
-        exact: false,
-      });
-      queryClient.invalidateQueries({
-        queryKey: ['transactions', activeProfileId],
-      });
+    onSuccess: async (result) => {
+      // Await all query invalidations to ensure UI updates before we show toast
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: ['addressbook', activeProfileId],
+        }),
+        // Use exact: false to match all topAccounts queries regardless of the type parameter
+        queryClient.invalidateQueries({
+          queryKey: ['topAccounts', activeProfileId],
+          exact: false,
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ['transactions', activeProfileId],
+        }),
+      ]);
       // Clear form but keep card open for quick entry
       setNewContactIban('');
       setNewContactName('');
       setNewContactDescription('');
-      const mergedResult = result as { merged?: boolean } | undefined;
+      // Close suggested contact popover if open (entry was added from there)
+      setSuggestedContactPopover(null);
+      const mergedResult = result as
+        | {
+            merged?: boolean;
+            mergeReason?: 'name' | 'iban';
+          }
+        | undefined;
       if (mergedResult?.merged) {
-        toast.info(
-          t.addressBook?.ibanAddedToExisting || 'IBAN added to existing contact'
-        );
+        if (mergedResult.mergeReason === 'name') {
+          // Merged because a contact with the same name already exists
+          toast.info(
+            t.addressBook?.ibanAddedToMatchingName ||
+              'IBAN added to contact with matching name'
+          );
+        } else {
+          // Merged because IBAN already exists - shouldn't happen from suggested contacts
+          // as these IBANs should not be in the address book
+          toast.info(
+            t.addressBook?.ibanAddedToExisting ||
+              'IBAN added to existing contact'
+          );
+        }
       } else {
         toast.success(t.addressBook?.contactAdded || 'Contact added');
       }
@@ -563,20 +584,26 @@ export default function AddressBook() {
   const addIbanToContactMutation = useMutation({
     mutationFn: ({ contactId, iban }: { contactId: string; iban: string }) =>
       api.addContactIban(contactId, iban),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['addressbook', activeProfileId],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ['topAccounts', activeProfileId],
-        exact: false,
-      });
-      queryClient.invalidateQueries({
-        queryKey: ['sharedIbans', activeProfileId],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ['transactions', activeProfileId],
-      });
+    onSuccess: async () => {
+      // Await all query invalidations to ensure UI updates before we show toast
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: ['addressbook', activeProfileId],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ['topAccounts', activeProfileId],
+          exact: false,
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ['sharedIbans', activeProfileId],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ['transactions', activeProfileId],
+        }),
+      ]);
+      // Close suggested contact popover and assign popover if open
+      setSuggestedContactPopover(null);
+      setAssignPopoverOpen(null);
       toast.success(
         t.addressBook?.ibanAddedToExisting || 'IBAN added to existing contact'
       );
@@ -2389,17 +2416,10 @@ export default function AddressBook() {
                                   size='sm'
                                   className='h-8 px-3'
                                   onClick={() => {
-                                    createContactMutation.mutate(
-                                      {
-                                        iban: account.iban,
-                                        name: suggestedContactEditName.trim(),
-                                      },
-                                      {
-                                        onSuccess: () => {
-                                          setSuggestedContactPopover(null);
-                                        },
-                                      }
-                                    );
+                                    createContactMutation.mutate({
+                                      iban: account.iban,
+                                      name: suggestedContactEditName.trim(),
+                                    });
                                   }}
                                   disabled={
                                     createContactMutation.isPending ||
@@ -2467,19 +2487,10 @@ export default function AddressBook() {
                                           className='flex w-full items-center justify-between rounded px-2 py-1.5 text-left text-sm transition-colors hover:bg-muted'
                                           onClick={() => {
                                             // Add the IBAN to the existing contact
-                                            addIbanToContactMutation.mutate(
-                                              {
-                                                contactId: contact.id,
-                                                iban: account.iban,
-                                              },
-                                              {
-                                                onSuccess: () => {
-                                                  setSuggestedContactPopover(
-                                                    null
-                                                  );
-                                                },
-                                              }
-                                            );
+                                            addIbanToContactMutation.mutate({
+                                              contactId: contact.id,
+                                              iban: account.iban,
+                                            });
                                           }}
                                         >
                                           <div className='min-w-0'>
