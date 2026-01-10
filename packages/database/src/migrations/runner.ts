@@ -100,7 +100,7 @@ export function updateCodeVersionInStorage(): void {
         );
       }
     }
-  } catch (error) {
+  } catch {
     // Ignore localStorage errors
   }
 }
@@ -118,7 +118,7 @@ export async function getCurrentVersion(db: MigrationContext): Promise<number> {
       return rows[0].version;
     }
     return 0;
-  } catch (error) {
+  } catch {
     // Table doesn't exist or other error, assume version 0
     return 0;
   }
@@ -197,7 +197,7 @@ export async function runMigrations(db: MigrationContext): Promise<void> {
       const newVersion = Math.max(...migrations.map((m) => m.version));
       localStorage.setItem(STORAGE_KEY_DB_VERSION, String(newVersion));
     }
-  } catch (error) {
+  } catch {
     // Ignore localStorage errors (e.g., in private browsing mode)
   }
 
@@ -252,7 +252,7 @@ export function isStaleCode(): boolean {
     }
 
     return false;
-  } catch (error) {
+  } catch {
     return false;
   }
 }
@@ -288,7 +288,7 @@ export function hasNewMigrations(): boolean {
     }
 
     return false;
-  } catch (error) {
+  } catch {
     return false;
   }
 }

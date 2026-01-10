@@ -296,7 +296,7 @@ export const migration001: Migration = {
       }
     }
   },
-  down: async (db: MigrationContext) => {
+  down: async (_db: MigrationContext) => {
     // We generally don't implement down for the initial schema in this context
   },
 };

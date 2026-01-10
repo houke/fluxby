@@ -281,7 +281,7 @@ describe('Migration System', () => {
     });
 
     it('should return missing columns in table.column format', async () => {
-      const db = createMockDb();
+      const _db = createMockDb();
       // Don't add is_dismissed column
     });
   });

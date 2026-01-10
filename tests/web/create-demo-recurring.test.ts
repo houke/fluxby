@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 
 // Lightweight test that verifies insertDemoRecurringPatterns uses the latest tx when present
 import { insertDemoRecurringPatterns } from '../../apps/web/src/lib/data-service';

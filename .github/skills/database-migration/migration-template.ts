@@ -2,7 +2,7 @@ import type { Migration, MigrationContext } from './index.js';
 
 /**
  * Template for creating new migrations
- * 
+ *
  * Usage:
  * 1. Copy this file to packages/database/src/migrations/00X_feature_name.ts
  * 2. Update the version number, name, and implementation
@@ -13,12 +13,11 @@ import type { Migration, MigrationContext } from './index.js';
 export const migration00X: Migration = {
   version: X, // Replace X with the next sequential number
   name: 'Brief description of what this migration does',
-  
+
   up: async (db: MigrationContext) => {
     // Forward migration
     // IMPORTANT: Wrap in transaction for OPFS performance
     await db.transactionAsync(async () => {
-      
       // Example: Create a new table
       await db.execAsync(`
         CREATE TABLE IF NOT EXISTS new_table (
@@ -84,10 +83,10 @@ export const migration00X: Migration = {
   down: async (db: MigrationContext) => {
     // Rollback migration (optional but recommended)
     // SQLite doesn't support DROP COLUMN easily, so consider alternatives
-    
+
     // Drop tables
     await db.execAsync('DROP TABLE IF EXISTS new_table');
-    
+
     // Note: Cannot easily drop columns in SQLite
     // Consider creating a new table without the column and copying data
   },

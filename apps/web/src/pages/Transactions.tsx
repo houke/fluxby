@@ -83,12 +83,7 @@ import {
 import { TransactionRowBadges } from '@/components/transactions/TransactionRowBadges';
 import { Currency } from '@/components/ui/currency';
 import { api } from '@/lib/api';
-import {
-  formatCurrency,
-  formatDate,
-  cn,
-  findSimilarNameGroups,
-} from '@/lib/utils';
+import { formatDate, cn, findSimilarNameGroups } from '@/lib/utils';
 
 // Filters on this page are intentionally local to the Transactions view.
 // This prevents Dashboard/Analytics filters (global) from affecting Transactions and vice versa.

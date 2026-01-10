@@ -33,7 +33,6 @@ import {
   SEED_CATEGORIES,
   DEFAULT_NAME_CLEANUP_RULES,
   DEFAULT_PAYMENT_PROVIDER_RULES,
-  DEMO_RECURRING_PATTERNS,
 } from '@fluxby/shared';
 import { processINGRow } from './importers/ing-importer';
 import { processASNRow } from './importers/asn-importer';
@@ -6390,11 +6389,11 @@ export async function insertDemoRecurringPatterns(
   try {
     const pkg = await import('@fluxby/shared');
     DEMO_RECURRING_PATTERNS = pkg.DEMO_RECURRING_PATTERNS;
-  } catch (e) {
+  } catch {
     try {
       const local = await import('../../../../packages/shared/src/seed-data');
       DEMO_RECURRING_PATTERNS = local.DEMO_RECURRING_PATTERNS;
-    } catch (e2) {
+    } catch {
       DEMO_RECURRING_PATTERNS = [];
     }
   }

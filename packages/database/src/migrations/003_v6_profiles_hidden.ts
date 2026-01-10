@@ -20,7 +20,7 @@ export const migration003: Migration = {
       }
     }
   },
-  down: async (db: MigrationContext) => {
+  down: async (_db: MigrationContext) => {
     // No-op
   },
 };
