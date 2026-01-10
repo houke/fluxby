@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -59,19 +59,38 @@ export default function Layout() {
   const dataService = useDataService();
   const location = useLocation();
 
+  // Theme state
+  const [isDark, setIsDark] = useState(() =>
+    document.documentElement.classList.contains('dark')
+  );
+
+  // Listen for theme changes from outside this component
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      setIsDark(document.documentElement.classList.contains('dark'));
+    });
+
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class'],
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
   // Theme toggle functions
   const toggleTheme = () => {
-    const isDark = document.documentElement.classList.contains('dark');
-    if (isDark) {
+    const currentlyDark = document.documentElement.classList.contains('dark');
+    if (currentlyDark) {
       document.documentElement.classList.remove('dark');
       localStorage.setItem('theme', 'light');
+      setIsDark(false);
     } else {
       document.documentElement.classList.add('dark');
       localStorage.setItem('theme', 'dark');
+      setIsDark(true);
     }
   };
-
-  const isDarkMode = () => document.documentElement.classList.contains('dark');
 
   // Mobile sidebar state
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = React.useState(false);
@@ -423,7 +442,7 @@ export default function Layout() {
                     onClick={toggleTheme}
                     className='h-9 w-9 text-muted-foreground'
                   >
-                    {isDarkMode() ? (
+                    {isDark ? (
                       <Sun className='h-5 w-5' />
                     ) : (
                       <Moon className='h-5 w-5' />
@@ -433,7 +452,7 @@ export default function Layout() {
                 <TooltipContent>
                   <div className='text-center'>
                     <p className='font-medium'>
-                      {isDarkMode()
+                      {isDark
                         ? t.spotlight?.switchToLight || 'Switch to light mode'
                         : t.spotlight?.switchToDark || 'Switch to dark mode'}
                     </p>

@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useMigrationCheck } from '@/hooks/useMigrationCheck';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { useDatabase } from '@/contexts/DatabaseContext';
 import { RefreshCw, AlertCircle, Loader2, CheckCircle } from 'lucide-react';
 
 type MigrationState = 'pending' | 'running' | 'completed' | 'error';
@@ -12,7 +11,6 @@ type MigrationState = 'pending' | 'running' | 'completed' | 'error';
  */
 export function MigrationPrompt() {
   const { pendingCount, isChecking } = useMigrationCheck();
-  const { db } = useDatabase();
   const { t } = useLanguage();
   const [showPrompt, setShowPrompt] = useState(false);
   const [migrationState, setMigrationState] =
@@ -30,20 +28,16 @@ export function MigrationPrompt() {
   }
 
   const handleApplyMigrations = async () => {
-    if (!db) {
-      setError('Database not available');
-      setMigrationState('error');
-      return;
-    }
-
     setMigrationState('running');
     setError(null);
 
     try {
-      // Run migrations through the database connection
-      // The runMigrations is already called during initialization,
-      // but we need to force a page reload to pick up the new schema
-      // After a brief delay to show progress
+      // Clear the flag so we don't show prompt again after refresh
+      localStorage.removeItem('fluxby-migrations-applied');
+
+      // Migrations have already been applied during database initialization
+      // We just need to force a page reload to pick up the new code/schema
+      // Show a brief delay for UX
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
       setMigrationState('completed');

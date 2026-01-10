@@ -76,4 +76,14 @@ export async function runMigrations(db: MigrationContext): Promise<void> {
   }
 
   dbLog('[MigrationRunner] All migrations completed successfully');
+
+  // Set flag in localStorage to signal that migrations were applied
+  // This will trigger the migration prompt to show on next page load
+  try {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('fluxby-migrations-applied', 'true');
+    }
+  } catch (error) {
+    // Ignore localStorage errors (e.g., in private browsing mode)
+  }
 }

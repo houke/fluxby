@@ -1,12 +1,10 @@
 import { useEffect, useState } from 'react';
-import { useDatabase } from '@/contexts/DatabaseContext';
 
 /**
- * Hook to check for pending migrations on app mount
- * Returns the count of pending migrations
+ * Hook to check if migrations were just applied
+ * Checks localStorage flag set during database initialization
  */
 export function useMigrationCheck() {
-  const { db } = useDatabase();
   const [pendingCount, setPendingCount] = useState<number>(0);
   const [isChecking, setIsChecking] = useState(true);
 
@@ -14,20 +12,29 @@ export function useMigrationCheck() {
     let mounted = true;
 
     async function checkMigrations() {
-      if (!db) {
-        setIsChecking(false);
-        return;
-      }
-
       try {
-        const count = await db.checkPendingMigrations();
-        if (mounted) {
-          setPendingCount(count);
-          setIsChecking(false);
+        // Check if migrations were just applied (flag set during db init)
+        const migrationsApplied = localStorage.getItem(
+          'fluxby-migrations-applied'
+        );
+
+        if (migrationsApplied === 'true') {
+          // Migrations were applied, show prompt
+          if (mounted) {
+            setPendingCount(1); // Signal that we need to refresh
+            setIsChecking(false);
+          }
+        } else {
+          // No migrations applied
+          if (mounted) {
+            setPendingCount(0);
+            setIsChecking(false);
+          }
         }
       } catch (error) {
         console.error('Failed to check migrations:', error);
         if (mounted) {
+          setPendingCount(0);
           setIsChecking(false);
         }
       }
@@ -38,7 +45,7 @@ export function useMigrationCheck() {
     return () => {
       mounted = false;
     };
-  }, [db]);
+  }, []);
 
   return { pendingCount, isChecking };
 }
