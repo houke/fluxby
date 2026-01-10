@@ -13,6 +13,7 @@ import {
   DEMO_PROFILE_ID,
   type Profile,
   type ProfileCreate,
+  type PatternType,
 } from '@fluxby/shared';
 import { readFromOPFSSync, isSettingsCacheInitialized } from '@fluxby/database';
 
@@ -352,6 +353,24 @@ export const api = {
   deleteRecurringPattern: async (id: string) => {
     const ds = getDataService();
     await ds.deleteRecurringPattern(id);
+  },
+
+  updateRecurringPattern: async (
+    id: string,
+    updates: { merchantName?: string; patternType?: PatternType }
+  ) => {
+    const ds = getDataService();
+    await ds.updateRecurringPattern(id, updates);
+  },
+
+  getTransactionsForPattern: async (patternId: string) => {
+    const ds = getDataService();
+    return ds.getTransactionsForPattern(patternId);
+  },
+
+  deleteAllRecurringPatterns: async () => {
+    const ds = getDataService();
+    await ds.deleteAllRecurringPatterns();
   },
 
   // ============= Analytics =============

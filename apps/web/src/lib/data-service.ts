@@ -4550,6 +4550,136 @@ export function createDataService(db: Database) {
     },
 
     /**
+     * Update a recurring pattern (edit name, frequency, etc.)
+     */
+    async updateRecurringPattern(
+      id: string,
+      updates: {
+        merchantName?: string;
+        patternType?: PatternType;
+      }
+    ): Promise<void> {
+      const pid = profileId();
+      if (!pid) throw new Error('No active profile');
+
+      const setClauses: string[] = ['updated_at = ?'];
+      const params: unknown[] = [Date.now()];
+
+      if (updates.merchantName !== undefined) {
+        setClauses.push('merchant_name = ?');
+        params.push(updates.merchantName);
+      }
+      if (updates.patternType !== undefined) {
+        setClauses.push('pattern_type = ?');
+        params.push(updates.patternType);
+      }
+
+      params.push(id, pid);
+
+      await db.runAsync(
+        `UPDATE recurring_patterns SET ${setClauses.join(', ')}
+         WHERE id = ? AND profile_id = ?`,
+        params
+      );
+    },
+
+    /**
+     * Get transactions matching a recurring pattern
+     */
+    async getTransactionsForPattern(patternId: string): Promise<Transaction[]> {
+      const pid = profileId();
+      if (!pid) return [];
+
+      // First get the pattern to know what to match
+      const patterns = await db.queryAsync<{
+        opposing_iban: string | null;
+        merchant_name: string | null;
+      }>(
+        `SELECT opposing_iban, merchant_name FROM recurring_patterns
+         WHERE id = ? AND profile_id = ?`,
+        [patternId, pid]
+      );
+
+      if (patterns.length === 0) return [];
+      const pattern = patterns[0];
+
+      let whereClause = '';
+      const queryParams: unknown[] = [pid];
+
+      if (pattern.opposing_iban) {
+        whereClause = 'AND opposing_iban = ?';
+        queryParams.push(pattern.opposing_iban);
+      } else if (pattern.merchant_name) {
+        whereClause = 'AND LOWER(merchant_name) = LOWER(?)';
+        queryParams.push(pattern.merchant_name);
+      } else {
+        return [];
+      }
+
+      const rows = await db.queryAsync<{
+        id: string;
+        date: string;
+        amount: number;
+        description: string;
+        merchant_name: string | null;
+        opposing_account_name: string | null;
+        opposing_iban: string | null;
+        category_id: string | null;
+        type: string;
+        account_id: string;
+        notes: string | null;
+        payment_method: string | null;
+        raw_data: string | null;
+        import_hash: string;
+        payment_provider: string | null;
+        address_book_id: string | null;
+        created_at: string;
+      }>(
+        `SELECT id, date, amount, description, merchant_name, opposing_account_name,
+                opposing_iban, category_id, type, account_id, notes, payment_method,
+                raw_data, import_hash, payment_provider, address_book_id, created_at
+         FROM transactions
+         WHERE profile_id = ? AND is_deleted = 0 ${whereClause}
+         ORDER BY date DESC`,
+        queryParams
+      );
+
+      return rows.map((row) => ({
+        id: row.id,
+        date: row.date,
+        amount: row.amount,
+        description: row.description,
+        merchantName: row.merchant_name,
+        opposingAccountName: row.opposing_account_name,
+        opposingAccountIban: row.opposing_iban,
+        categoryId: row.category_id,
+        type: (row.type || 'expense') as 'income' | 'expense' | 'transfer',
+        accountId: row.account_id || '',
+        notes: row.notes,
+        paymentMethod: row.payment_method,
+        rawData: row.raw_data,
+        importHash: row.import_hash || '',
+        paymentProvider: row.payment_provider,
+        addressBookId: row.address_book_id,
+        createdAt: row.created_at || '',
+      }));
+    },
+
+    /**
+     * Delete all recurring patterns for the current profile
+     */
+    async deleteAllRecurringPatterns(): Promise<void> {
+      const pid = profileId();
+      if (!pid) throw new Error('No active profile');
+
+      await db.runAsync(
+        `UPDATE recurring_patterns SET is_deleted = 1, updated_at = ?
+         WHERE profile_id = ?`,
+        [Date.now(), pid]
+      );
+    },
+
+    /**
      * Dismiss a recurring pattern (user says it's a false positive)
      * This permanently marks it as dismissed so it won't be suggested again
      */

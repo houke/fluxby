@@ -2353,13 +2353,11 @@ export default function Transactions() {
                             )}
                             onClick={() => {
                               if (recurring) {
-                                startTransition(() => {
-                                  setExpandedMerchant(
-                                    isExpanded
-                                      ? null
-                                      : `${merchantKey}-${tx.id}`
-                                  );
-                                });
+                                // Don't use startTransition here - it causes the skeleton to flash
+                                // because isPending becomes true during the transition
+                                setExpandedMerchant(
+                                  isExpanded ? null : `${merchantKey}-${tx.id}`
+                                );
                               }
                             }}
                           >

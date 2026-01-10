@@ -11,8 +11,20 @@ import {
   Clock,
   CreditCard,
   Sparkles,
+  Pencil,
+  ChevronDown,
+  ChevronUp,
+  Loader2,
 } from 'lucide-react';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import {
   Card,
@@ -191,10 +203,59 @@ export default function Subscriptions() {
     },
   });
 
+  const updateMutation = useMutation({
+    mutationFn: ({
+      id,
+      updates,
+    }: {
+      id: string;
+      updates: { merchantName?: string; patternType?: PatternType };
+    }) => api.updateRecurringPattern(id, updates),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['recurring-patterns', activeProfileId],
+      });
+      toast.success(t.subscriptions?.updated || 'Subscription updated');
+    },
+    onError: (error) => {
+      toast.error(error);
+    },
+  });
+
+  // State for expanded patterns and their transactions
+  const [expandedPatternId, setExpandedPatternId] = useState<string | null>(
+    null
+  );
+
+  // Query for transactions when a pattern is expanded
+  const { data: patternTransactions, isLoading: loadingPatternTransactions } =
+    useQuery({
+      queryKey: ['pattern-transactions', expandedPatternId],
+      queryFn: () =>
+        expandedPatternId
+          ? api.getTransactionsForPattern(expandedPatternId)
+          : null,
+      enabled: !!expandedPatternId,
+    });
+
   // Handlers
   const handleConfirm = (id: string) => {
     confirmMutation.mutate(id);
   };
+
+  const handleEdit = useCallback(
+    (
+      id: string,
+      updates: { merchantName?: string; patternType?: PatternType }
+    ) => {
+      updateMutation.mutate({ id, updates });
+    },
+    [updateMutation]
+  );
+
+  const handleToggleExpand = useCallback((id: string) => {
+    setExpandedPatternId((prev) => (prev === id ? null : id));
+  }, []);
 
   const handleDismiss = async (id: string) => {
     const confirmed = await confirm({
@@ -235,12 +296,14 @@ export default function Subscriptions() {
     if (!patterns) return [];
     const alertList: Array<{
       id: string;
-      type: 'price_increase' | 'missed_payment';
+      type: 'price_increase' | 'missed_payment' | 'stale';
       pattern: RecurringPattern;
       message: string;
     }> = [];
 
     const today = new Date().toISOString().split('T')[0];
+    const twoMonthsAgo = new Date();
+    twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
 
     for (const pattern of patterns) {
       // Only check confirmed subscriptions for alerts
@@ -267,6 +330,18 @@ export default function Subscriptions() {
           message:
             t.subscriptions?.missedPaymentDescription ||
             'Expected date has passed',
+        });
+      }
+
+      // Stale subscription alert (no transactions in 2+ months)
+      if (pattern.lastDate && new Date(pattern.lastDate) < twoMonthsAgo) {
+        alertList.push({
+          id: `stale-${pattern.id}`,
+          type: 'stale',
+          pattern,
+          message:
+            t.subscriptions?.staleDescription ||
+            'No transactions in 2+ months. Consider removing.',
         });
       }
     }
@@ -450,6 +525,9 @@ export default function Subscriptions() {
                     {alert.type === 'missed_payment' && (
                       <Clock className='h-5 w-5 text-red-500' />
                     )}
+                    {alert.type === 'stale' && (
+                      <AlertTriangle className='h-5 w-5 text-amber-500' />
+                    )}
                     <div>
                       <p className='font-medium'>
                         {alert.pattern.merchantName || 'Unknown'}
@@ -459,6 +537,26 @@ export default function Subscriptions() {
                       </p>
                     </div>
                   </div>
+                  {alert.type === 'stale' && (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            size='sm'
+                            variant='outline'
+                            className='text-red-600 hover:bg-red-600 hover:text-white'
+                            onClick={() => handleDelete(alert.pattern.id)}
+                          >
+                            <Trash2 className='h-4 w-4' />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          {t.subscriptions?.removeStale ||
+                            'Remove inactive subscription'}
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  )}
                 </div>
               ))}
             </div>
@@ -516,6 +614,17 @@ export default function Subscriptions() {
                       t={t}
                       onConfirm={() => handleConfirm(pattern.id)}
                       onDismiss={() => handleDismiss(pattern.id)}
+                      isExpanded={expandedPatternId === pattern.id}
+                      onToggleExpand={() => handleToggleExpand(pattern.id)}
+                      transactions={
+                        expandedPatternId === pattern.id
+                          ? patternTransactions || undefined
+                          : undefined
+                      }
+                      isLoadingTransactions={
+                        expandedPatternId === pattern.id &&
+                        loadingPatternTransactions
+                      }
                     />
                   ))}
                 </div>
@@ -527,8 +636,7 @@ export default function Subscriptions() {
           {confirmedPatterns.length > 0 && (
             <Card data-onboarding='subscriptions-confirmed'>
               <CardHeader>
-                <CardTitle className='flex items-center gap-2'>
-                  <Check className='h-5 w-5 text-green-500' />
+                <CardTitle>
                   {t.subscriptions?.activeSubscriptions ||
                     'Active subscriptions'}
                 </CardTitle>
@@ -541,6 +649,18 @@ export default function Subscriptions() {
                       pattern={pattern}
                       t={t}
                       onDelete={() => handleDelete(pattern.id)}
+                      onEdit={(updates) => handleEdit(pattern.id, updates)}
+                      isExpanded={expandedPatternId === pattern.id}
+                      onToggleExpand={() => handleToggleExpand(pattern.id)}
+                      transactions={
+                        expandedPatternId === pattern.id
+                          ? patternTransactions || undefined
+                          : undefined
+                      }
+                      isLoadingTransactions={
+                        expandedPatternId === pattern.id &&
+                        loadingPatternTransactions
+                      }
                     />
                   ))}
                 </div>
@@ -613,6 +733,22 @@ export default function Subscriptions() {
   );
 }
 
+// Helper to check if a subscription is stale (no transactions in 2+ months)
+function isStaleSubscription(pattern: RecurringPattern): boolean {
+  if (!pattern.lastDate) return false;
+  const lastDate = new Date(pattern.lastDate);
+  const twoMonthsAgo = new Date();
+  twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
+  return lastDate < twoMonthsAgo;
+}
+
+// Helper to check if next payment is in the past
+function isNextPaymentOverdue(pattern: RecurringPattern): boolean {
+  if (!pattern.nextExpectedDate) return false;
+  const today = new Date().toISOString().split('T')[0];
+  return pattern.nextExpectedDate < today;
+}
+
 // Subscription card component
 function SubscriptionCard({
   pattern,
@@ -620,123 +756,367 @@ function SubscriptionCard({
   onConfirm,
   onDismiss,
   onDelete,
+  onEdit,
+  isExpanded,
+  onToggleExpand,
+  transactions,
+  isLoadingTransactions,
 }: {
   pattern: RecurringPattern;
   t: ReturnType<typeof useLanguage>['t'];
   onConfirm?: () => void;
   onDismiss?: () => void;
   onDelete?: () => void;
+  onEdit?: (updates: {
+    merchantName?: string;
+    patternType?: PatternType;
+  }) => void;
+  isExpanded?: boolean;
+  onToggleExpand?: () => void;
+  transactions?: Array<{
+    id: string;
+    date: string;
+    amount: number;
+    description: string;
+  }>;
+  isLoadingTransactions?: boolean;
 }) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editName, setEditName] = useState(pattern.merchantName || '');
+  const [editFrequency, setEditFrequency] = useState<PatternType>(
+    pattern.patternType
+  );
+
+  const handleSaveEdit = () => {
+    if (onEdit) {
+      onEdit({
+        merchantName: editName.trim() || undefined,
+        patternType: editFrequency,
+      });
+    }
+    setIsEditing(false);
+  };
+
+  const handleCancelEdit = () => {
+    setEditName(pattern.merchantName || '');
+    setEditFrequency(pattern.patternType);
+    setIsEditing(false);
+  };
+
+  const stale = isStaleSubscription(pattern);
+  const overdue = isNextPaymentOverdue(pattern);
+
   return (
-    <div className='flex items-center justify-between rounded-lg border p-4'>
-      <div className='flex-1'>
-        <div className='flex items-center gap-2'>
-          <p className='font-medium'>{pattern.merchantName || 'Unknown'}</p>
-          {pattern.isVariable && (
-            <Badge variant='outline' className='text-xs'>
-              {t.subscriptions?.variable || 'Variable'}
-            </Badge>
-          )}
-          {pattern.isConfirmed && (
-            <Badge variant='secondary' className='text-xs'>
-              <Check className='mr-1 h-3 w-3' />
-            </Badge>
+    <div className='rounded-lg border'>
+      <div className='flex items-center justify-between p-4'>
+        <div className='flex-1'>
+          <div className='flex items-center gap-2'>
+            {isEditing ? (
+              <Input
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                className='h-8 w-48'
+                placeholder={t.subscriptions?.merchantName || 'Merchant name'}
+                autoFocus
+              />
+            ) : (
+              <p className='font-medium'>{pattern.merchantName || 'Unknown'}</p>
+            )}
+            {pattern.isVariable && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Badge variant='outline' className='cursor-help text-xs'>
+                      {t.subscriptions?.variable || 'Variable'}
+                    </Badge>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    {t.subscriptions?.variableTooltip ||
+                      'Amount varies between payments'}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+            {stale && pattern.isConfirmed && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Badge
+                      variant='destructive'
+                      className='cursor-help text-xs'
+                    >
+                      <AlertTriangle className='mr-1 h-3 w-3' />
+                      {t.subscriptions?.stale || 'Inactive'}
+                    </Badge>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    {t.subscriptions?.staleTooltip ||
+                      'No transactions in 2+ months. Consider removing.'}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+          </div>
+          <div className='mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground'>
+            {isEditing ? (
+              <Select
+                value={editFrequency}
+                onValueChange={(v) => setEditFrequency(v as PatternType)}
+              >
+                <SelectTrigger className='h-7 w-32'>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value='weekly'>
+                    {t.subscriptions?.weekly || 'Weekly'}
+                  </SelectItem>
+                  <SelectItem value='biweekly'>
+                    {t.subscriptions?.biweekly || 'Bi-weekly'}
+                  </SelectItem>
+                  <SelectItem value='monthly'>
+                    {t.subscriptions?.monthly || 'Monthly'}
+                  </SelectItem>
+                  <SelectItem value='quarterly'>
+                    {t.subscriptions?.quarterly || 'Quarterly'}
+                  </SelectItem>
+                  <SelectItem value='yearly'>
+                    {t.subscriptions?.yearly || 'Yearly'}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            ) : (
+              <span>{getFrequencyLabel(pattern.patternType, t)}</span>
+            )}
+            <span>•</span>
+            <span>
+              {t.subscriptions?.avgAmount || 'Avg.'}:{' '}
+              <Currency amount={pattern.avgAmount} />
+            </span>
+            <span>•</span>
+            <button
+              type='button'
+              className='cursor-pointer underline-offset-2 hover:underline'
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleExpand?.();
+              }}
+            >
+              {(
+                t.subscriptions?.transactionsCount || '{count} transactions'
+              ).replace('{count}', String(pattern.transactionCount))}
+            </button>
+          </div>
+          {pattern.nextExpectedDate && (
+            <p className='mt-1 text-sm'>
+              <span className='text-muted-foreground'>
+                {t.subscriptions?.nextPayment || 'Next payment'}:{' '}
+              </span>
+              <span className={cn('font-medium', overdue && 'text-red-600')}>
+                {formatDate(pattern.nextExpectedDate)}
+                {overdue && (
+                  <span className='ml-1 text-xs'>
+                    ({t.subscriptions?.overdue || 'overdue'})
+                  </span>
+                )}
+              </span>
+            </p>
           )}
         </div>
-        <div className='mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground'>
-          <span>{getFrequencyLabel(pattern.patternType, t)}</span>
-          <span>•</span>
-          <span>
-            {t.subscriptions?.avgAmount || 'Avg.'}:{' '}
-            <Currency amount={pattern.avgAmount} />
-          </span>
-          <span>•</span>
-          <span>
-            {(
-              t.subscriptions?.transactionsCount || '{count} transactions'
-            ).replace('{count}', String(pattern.transactionCount))}
-          </span>
-        </div>
-        {pattern.nextExpectedDate && (
-          <p className='mt-1 text-sm'>
-            <span className='text-muted-foreground'>
-              {t.subscriptions?.nextPayment || 'Next payment'}:{' '}
-            </span>
-            <span className='font-medium'>
-              {formatDate(pattern.nextExpectedDate)}
-            </span>
+
+        <div
+          className='flex items-center gap-2'
+          data-onboarding='subscription-actions'
+        >
+          <p className='mr-4 text-lg font-semibold'>
+            <Currency amount={pattern.lastAmount} />
           </p>
-        )}
+
+          {isEditing ? (
+            <>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      size='icon'
+                      variant='ghost'
+                      className='h-8 w-8 rounded-md hover:bg-green-600 hover:text-white'
+                      onClick={handleSaveEdit}
+                    >
+                      <Check className='h-4 w-4' />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>{t.common?.save || 'Save'}</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      size='icon'
+                      variant='ghost'
+                      className='h-8 w-8 rounded-md hover:bg-gray-600 hover:text-white'
+                      onClick={handleCancelEdit}
+                    >
+                      <X className='h-4 w-4' />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    {t.common?.cancel || 'Cancel'}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </>
+          ) : (
+            <>
+              {!pattern.isConfirmed && onConfirm && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        size='icon'
+                        variant='ghost'
+                        className='h-8 w-8 rounded-md hover:bg-green-600 hover:text-white'
+                        onClick={onConfirm}
+                      >
+                        <Check className='h-4 w-4' />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {t.subscriptions?.confirm || 'Confirm'}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+
+              {!pattern.isConfirmed && onDismiss && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        size='icon'
+                        variant='ghost'
+                        className='h-8 w-8 rounded-md hover:bg-orange-600 hover:text-white'
+                        onClick={onDismiss}
+                      >
+                        <X className='h-4 w-4' />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {t.subscriptions?.dismiss || 'Dismiss'}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+
+              {pattern.isConfirmed && onEdit && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        size='icon'
+                        variant='ghost'
+                        className='h-8 w-8 rounded-md hover:bg-purple-600 hover:text-white'
+                        onClick={() => setIsEditing(true)}
+                      >
+                        <Pencil className='h-4 w-4' />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>{t.common?.edit || 'Edit'}</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+
+              {onDelete && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        size='icon'
+                        variant='ghost'
+                        className='h-8 w-8 rounded-md hover:bg-red-600 hover:text-white'
+                        onClick={onDelete}
+                      >
+                        <Trash2 className='h-4 w-4' />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {t.subscriptions?.delete || 'Delete'}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+
+              {onToggleExpand && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        size='icon'
+                        variant='ghost'
+                        className='h-8 w-8 rounded-md'
+                        onClick={onToggleExpand}
+                      >
+                        {isExpanded ? (
+                          <ChevronUp className='h-4 w-4' />
+                        ) : (
+                          <ChevronDown className='h-4 w-4' />
+                        )}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {isExpanded
+                        ? t.common?.collapse || 'Collapse'
+                        : t.subscriptions?.showTransactions ||
+                          'Show transactions'}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+            </>
+          )}
+        </div>
       </div>
 
-      <div
-        className='flex items-center gap-2'
-        data-onboarding='subscription-actions'
-      >
-        <p className='mr-4 text-lg font-semibold'>
-          <Currency amount={pattern.lastAmount} />
-        </p>
-
-        {!pattern.isConfirmed && onConfirm && (
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  size='icon'
-                  variant='ghost'
-                  className='h-8 w-8 rounded-md hover:bg-green-600 hover:text-white'
-                  onClick={onConfirm}
-                >
-                  <Check className='h-4 w-4' />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                {t.subscriptions?.confirm || 'Confirm'}
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        )}
-
-        {!pattern.isConfirmed && onDismiss && (
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  size='icon'
-                  variant='ghost'
-                  className='h-8 w-8 rounded-md hover:bg-orange-600 hover:text-white'
-                  onClick={onDismiss}
-                >
-                  <X className='h-4 w-4' />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                {t.subscriptions?.dismiss || 'Dismiss'}
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        )}
-
-        {onDelete && (
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  size='icon'
-                  variant='ghost'
-                  className='h-8 w-8 rounded-md hover:bg-red-600 hover:text-white'
-                  onClick={onDelete}
-                >
-                  <Trash2 className='h-4 w-4' />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                {t.subscriptions?.delete || 'Delete'}
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        )}
-      </div>
+      {/* Expanded transactions table */}
+      {isExpanded && (
+        <div className='border-t bg-muted/30 p-4'>
+          {isLoadingTransactions ? (
+            <div className='flex items-center justify-center py-4'>
+              <Loader2 className='h-5 w-5 animate-spin text-muted-foreground' />
+            </div>
+          ) : transactions && transactions.length > 0 ? (
+            <div className='space-y-1'>
+              <h4 className='mb-2 text-sm font-medium'>
+                {t.subscriptions?.transactionHistory || 'Transaction history'}
+              </h4>
+              <div className='max-h-64 overflow-y-auto'>
+                {transactions.map((tx) => (
+                  <div
+                    key={tx.id}
+                    className='flex items-center justify-between border-b border-dashed py-2 text-sm last:border-0'
+                  >
+                    <div className='flex items-center gap-3'>
+                      <span className='text-muted-foreground'>
+                        {formatDate(tx.date)}
+                      </span>
+                      <span className='max-w-xs truncate text-muted-foreground'>
+                        {tx.description}
+                      </span>
+                    </div>
+                    <span className='font-medium'>
+                      <Currency amount={tx.amount} />
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <p className='text-center text-sm text-muted-foreground'>
+              {t.subscriptions?.noTransactionsFound || 'No transactions found'}
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 }

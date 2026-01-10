@@ -95,6 +95,7 @@ export const en: TranslationKeys = {
     prepareDashboard: 'Please wait while we prepare your dashboard',
     enablePrivacy: 'Hide sensitive data',
     disablePrivacy: 'Show sensitive data',
+    collapse: 'Collapse',
   },
   errors: {
     databaseError: 'Database error',
@@ -468,6 +469,8 @@ export const en: TranslationKeys = {
     yearly: 'Yearly',
     variable: 'Variable',
     variableAmount: 'Amount varies',
+    variableTooltip:
+      'This subscription has varying amounts per payment, e.g. based on usage',
     priceIncrease: 'Price increase',
     priceIncreaseDescription: 'Latest amount is higher than average',
     missedPayment: 'Missed payment',
@@ -487,6 +490,16 @@ export const en: TranslationKeys = {
     paidThisMonth: 'Paid this month',
     alerts: 'Alerts',
     noAlerts: 'No alerts',
+    stale: 'Inactive',
+    staleTooltip: 'No transactions for more than 2 months',
+    staleDescription:
+      'This subscription appears to be inactive. Would you like to remove it?',
+    removeStale: 'Remove',
+    merchantName: 'Name',
+    transactionHistory: 'Transaction history',
+    noTransactionsFound: 'No transactions found',
+    showTransactions: 'Show transactions',
+    overdue: 'overdue',
   },
   categories: {
     title: 'Categories',
@@ -932,6 +945,15 @@ export const en: TranslationKeys = {
       deleteImportHistorySuccess: 'Import history has been deleted',
       deleteImportHistoryError:
         'An error occurred while deleting import history',
+      deleteSubscriptionsTitle: 'Delete subscriptions',
+      deleteSubscriptionsDescription:
+        'Delete all detected recurring payment patterns',
+      deleteSubscriptionsButton: 'Delete subscriptions',
+      deleteSubscriptionsConfirm:
+        'Are you sure you want to delete all subscriptions? You can detect them again later.',
+      deleteSubscriptionsSuccess: 'All subscriptions have been deleted',
+      deleteSubscriptionsError:
+        'An error occurred while deleting subscriptions',
     },
     sync: {
       title: 'Device sync',

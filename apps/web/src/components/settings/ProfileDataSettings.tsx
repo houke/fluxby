@@ -145,6 +145,22 @@ export function ProfileDataSettings() {
       fallbackError: 'Failed to delete import history',
       fallbackButton: 'Delete import history',
     },
+    {
+      titleKey: 'deleteSubscriptionsTitle',
+      descKey: 'deleteSubscriptionsDescription',
+      confirmKey: 'deleteSubscriptionsConfirm',
+      successKey: 'deleteSubscriptionsSuccess',
+      errorKey: 'deleteSubscriptionsError',
+      buttonKey: 'deleteSubscriptionsButton',
+      action: api.deleteAllRecurringPatterns,
+      fallbackTitle: 'Delete subscriptions',
+      fallbackDesc: 'Delete all detected recurring payment patterns',
+      fallbackConfirm:
+        'Are you sure you want to delete all subscriptions? You can detect them again later.',
+      fallbackSuccess: 'All subscriptions deleted',
+      fallbackError: 'Failed to delete subscriptions',
+      fallbackButton: 'Delete subscriptions',
+    },
   ];
 
   // Helper to get translation with fallback

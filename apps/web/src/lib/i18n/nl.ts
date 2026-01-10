@@ -67,6 +67,7 @@ export interface TranslationKeys {
     prepareDashboard: string;
     enablePrivacy: string;
     disablePrivacy: string;
+    collapse: string;
   };
   errors: {
     databaseError: string;
@@ -413,6 +414,7 @@ export interface TranslationKeys {
     yearly: string;
     variable: string;
     variableAmount: string;
+    variableTooltip: string;
     priceIncrease: string;
     priceIncreaseDescription: string;
     missedPayment: string;
@@ -431,6 +433,15 @@ export interface TranslationKeys {
     paidThisMonth: string;
     alerts: string;
     noAlerts: string;
+    stale: string;
+    staleTooltip: string;
+    staleDescription: string;
+    removeStale: string;
+    merchantName: string;
+    transactionHistory: string;
+    noTransactionsFound: string;
+    showTransactions: string;
+    overdue: string;
   };
   categories: {
     title: string;
@@ -823,6 +834,12 @@ export interface TranslationKeys {
       deleteImportHistoryConfirm: string;
       deleteImportHistorySuccess: string;
       deleteImportHistoryError: string;
+      deleteSubscriptionsTitle: string;
+      deleteSubscriptionsDescription: string;
+      deleteSubscriptionsButton: string;
+      deleteSubscriptionsConfirm: string;
+      deleteSubscriptionsSuccess: string;
+      deleteSubscriptionsError: string;
     };
     sync: {
       title: string;
@@ -1168,6 +1185,8 @@ export interface TranslationKeys {
     switchToDark: string;
     togglePrivacy: string;
     addBudget: string;
+    addCategory: string;
+    addContact: string;
     openSearch: string;
     openSearchTooltip: string;
     togglePrivacyTooltip: string;
@@ -1186,6 +1205,8 @@ export interface TranslationKeys {
       theme: string[];
       privacy: string[];
       budget: string[];
+      category: string[];
+      contact: string[];
     };
   };
 }
@@ -1284,6 +1305,7 @@ export const nl: TranslationKeys = {
     prepareDashboard: 'Even geduld terwijl we je dashboard voorbereiden',
     enablePrivacy: 'Verberg gevoelige data',
     disablePrivacy: 'Toon gevoelige data',
+    collapse: 'Inklappen',
   },
   errors: {
     databaseError: 'Database fout',
@@ -1658,6 +1680,8 @@ export const nl: TranslationKeys = {
     yearly: 'Jaarlijks',
     variable: 'Variabel',
     variableAmount: 'Bedrag varieert',
+    variableTooltip:
+      'Dit abonnement heeft wisselende bedragen per betaling, bijvoorbeeld op basis van gebruik',
     priceIncrease: 'Prijsverhoging',
     priceIncreaseDescription: 'Laatste bedrag is hoger dan gemiddelde',
     missedPayment: 'Gemiste betaling',
@@ -1677,6 +1701,16 @@ export const nl: TranslationKeys = {
     paidThisMonth: 'Betaald deze maand',
     alerts: 'Meldingen',
     noAlerts: 'Geen meldingen',
+    stale: 'Inactief',
+    staleTooltip: 'Geen transacties meer dan 2 maanden',
+    staleDescription:
+      'Dit abonnement lijkt niet meer actief. Wil je het verwijderen?',
+    removeStale: 'Verwijderen',
+    merchantName: 'Naam',
+    transactionHistory: 'Transactiegeschiedenis',
+    noTransactionsFound: 'Geen transacties gevonden',
+    showTransactions: 'Toon transacties',
+    overdue: 'te laat',
   },
   categories: {
     title: 'Categorieën',
@@ -2128,6 +2162,15 @@ export const nl: TranslationKeys = {
       deleteImportHistorySuccess: 'Importgeschiedenis is verwijderd',
       deleteImportHistoryError:
         'Er is een fout opgetreden bij het verwijderen van de importgeschiedenis',
+      deleteSubscriptionsTitle: 'Abonnementen verwijderen',
+      deleteSubscriptionsDescription:
+        'Verwijder alle gedetecteerde terugkerende betalingspatronen',
+      deleteSubscriptionsButton: 'Abonnementen verwijderen',
+      deleteSubscriptionsConfirm:
+        'Weet je zeker dat je alle abonnementen wilt verwijderen? Je kunt ze later opnieuw detecteren.',
+      deleteSubscriptionsSuccess: 'Alle abonnementen zijn verwijderd',
+      deleteSubscriptionsError:
+        'Er is een fout opgetreden bij het verwijderen van abonnementen',
     },
     sync: {
       title: 'Apparaten synchroniseren',
