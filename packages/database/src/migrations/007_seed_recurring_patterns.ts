@@ -1,5 +1,5 @@
 import type { Migration, MigrationContext } from './index.js';
-import { DEMO_PROFILE_ID } from '@fluxby/shared';
+import { DEMO_PROFILE_ID, DEMO_RECURRING_PATTERNS } from '@fluxby/shared';
 
 export const migration007: Migration = {
   version: 7,
@@ -14,30 +14,23 @@ export const migration007: Migration = {
     if (!rows || rows.length === 0) return; // No demo profile present
 
     const patternDate = new Date();
+    const now = Date.now();
 
-    const patterns = [
-      { merchant: 'Netflix', avg: -12.99, last: -12.99 },
-      { merchant: 'Spotify', avg: -9.99, last: -9.99 },
-      { merchant: 'Disney+', avg: -8.99, last: -8.99 },
-      { merchant: 'KPN', avg: -52.0, last: -52.0 },
-      { merchant: 'Vattenfall', avg: -120.0, last: -125.0 },
-      { merchant: 'Ziggo', avg: -55.0, last: -55.0 },
-      { merchant: 'Woonstad Rotterdam', avg: -850.0, last: -850.0 },
-      { merchant: 'Basic-Fit', avg: -29.99, last: -29.99 },
-      { merchant: 'Werkgever B.V.', avg: 2800.0, last: 2850.0 },
-    ];
-
-    for (const p of patterns) {
-      const id = `demo_${DEMO_PROFILE_ID}_${p.merchant
+    for (const p of DEMO_RECURRING_PATTERNS) {
+      const id = `demo_${DEMO_PROFILE_ID}_${p.merchantName
         .replace(/\s+/g, '_')
-        .toLowerCase()}_${Date.now()}`;
+        .toLowerCase()}_${now}`;
+
       const lastDate = new Date(patternDate);
       lastDate.setDate(3);
       lastDate.setMonth(lastDate.getMonth() - 1);
+      const lastDateStr = lastDate.toISOString().split('T')[0];
+
       const nextDate = new Date(lastDate);
       nextDate.setMonth(nextDate.getMonth() + 1);
+      const nextDateStr = nextDate.toISOString().split('T')[0];
 
-      await db.execAsync(
+      await db.runAsync(
         `INSERT OR IGNORE INTO recurring_patterns (
           id,
           opposing_iban,
@@ -53,43 +46,34 @@ export const migration007: Migration = {
           transaction_count,
           profile_id,
           updated_at
-        ) VALUES (
-          '${id}',
-          NULL,
-          '${p.merchant.replace("'", "''")}',
-          'monthly',
-          ${p.avg},
-          ${p.last},
-          '${lastDate.toISOString().split('T')[0]}',
-          '${nextDate.toISOString().split('T')[0]}',
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          id,
+          null,
+          p.merchantName,
+          p.patternType,
+          p.avgAmount,
+          p.lastAmount,
+          lastDateStr,
+          nextDateStr,
           1,
-          1,
-          0,
-          12,
-          '${DEMO_PROFILE_ID}',
-          ${Date.now()}
-        )`
+          p.isConfirmed ? 1 : 0,
+          p.isVariable ? 1 : 0,
+          p.transactionCount,
+          DEMO_PROFILE_ID,
+          now,
+        ]
       );
     }
   },
 
   down: async (db: MigrationContext) => {
-    const merchants = [
-      'Netflix',
-      'Spotify',
-      'Disney+',
-      'KPN',
-      'Vattenfall',
-      'Ziggo',
-      'Woonstad Rotterdam',
-      'Basic-Fit',
-      'Werkgever B.V.',
-    ];
+    const merchants = DEMO_RECURRING_PATTERNS.map((p) => p.merchantName);
+    const placeholders = merchants.map(() => '?').join(',');
 
-    const inList = merchants.map((m) => `'${m.replace("'", "''")}'`).join(',');
-
-    await db.execAsync(
-      `DELETE FROM recurring_patterns WHERE profile_id = '${DEMO_PROFILE_ID}' AND merchant_name IN (${inList})`
+    await db.runAsync(
+      `DELETE FROM recurring_patterns WHERE profile_id = ? AND merchant_name IN (${placeholders})`,
+      [DEMO_PROFILE_ID, ...merchants]
     );
   },
 };

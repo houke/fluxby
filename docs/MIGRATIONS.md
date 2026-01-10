@@ -10,7 +10,7 @@ Fluxby uses a versioned migration system to manage database schema changes. The 
 | ----------------------------- | -------------------------------------------- | ------------------------------------------ |
 | `runner.ts`                   | `packages/database/src/migrations/runner.ts` | Core migration execution and verification  |
 | `index.ts`                    | `packages/database/src/migrations/index.ts`  | Migration definitions and version constant |
-| `001_initial.ts` - `006_*.ts` | `packages/database/src/migrations/`          | Individual migration scripts               |
+| `001_initial.ts` - `007_*.ts` | `packages/database/src/migrations/`          | Individual migration scripts               |
 | `MigrationGate.tsx`           | `apps/web/src/components/MigrationGate.tsx`  | React component to show migration prompt   |
 | `useMigrationCheck.ts`        | `apps/web/src/hooks/useMigrationCheck.ts`    | Hook to check migration status             |
 
@@ -28,10 +28,10 @@ Fluxby uses a versioned migration system to manage database schema changes. The 
 
 | Scenario              | localStorage | DB schema_version | Code Version | Behavior               |
 | --------------------- | ------------ | ----------------- | ------------ | ---------------------- |
-| Fresh install         | null         | 0                 | 6            | Run all migrations 1-6 |
-| Up to date            | 6            | 6                 | 6            | No action needed       |
-| Normal upgrade        | 5            | 5                 | 6            | Run migration 6        |
-| Multi-version upgrade | 3            | 3                 | 6            | Run migrations 4, 5, 6 |
+| Fresh install         | null         | 0                 | 7            | Run all migrations 1-7 |
+| Up to date            | 7            | 7                 | 7            | No action needed       |
+| Normal upgrade        | 6            | 6                 | 7            | Run migration 7        |
+| Multi-version upgrade | 3            | 3                 | 7            | Run migrations 4-7     |
 
 ### Edge Cases
 
@@ -58,6 +58,14 @@ Fluxby uses a versioned migration system to manage database schema changes. The 
 1. Added `CRITICAL_COLUMNS_BY_VERSION` to verify columns exist
 2. `verifyAndRepairMigrations()` now checks columns, not just tables
 3. If `is_dismissed` column is missing but version says 6, rolls back to version 5 and re-runs migration 6
+
+## Performance
+
+To ensure good performance on OPFS (Origin Private File System), the migration runner follows these rules:
+
+1. **Transaction Wrapping**: The `runMigrations` function wraps the entire set of pending migrations in a single database transaction. This reduces the number of disk syncs to exactly one for the entire migration process.
+2. **Parameterized Queries**: Migrations use `runAsync` with parameters instead of string concatenation to avoid SQL parsing overhead and improve security.
+3. **Bulk Operations**: Large data changes (like seeding) use chunked inserts or single bulk statements.
 
 ## Verification System
 

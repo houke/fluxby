@@ -1,6 +1,11 @@
 export interface MigrationContext {
   execAsync(sql: string): Promise<void>;
   queryAsync<T = unknown>(sql: string, params?: unknown[]): Promise<T[]>;
+  runAsync(
+    sql: string,
+    params?: unknown[]
+  ): Promise<{ changes: number; lastInsertRowId: number }>;
+  transactionAsync<T>(fn: () => Promise<T>): Promise<T>;
 }
 
 export interface Migration {

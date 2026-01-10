@@ -118,6 +118,14 @@ function createMockDb() {
         }
       }
     }),
+    runAsync: vi.fn(async (_sql: string, _params?: unknown[]) => {
+      // Simplistic mock for runAsync
+      return { changes: 1, lastInsertRowId: 1 };
+    }),
+    transactionAsync: vi.fn(async (fn: () => Promise<any>) => {
+      // Transactions just execute the inner function in our mock
+      return await fn();
+    }),
     queryAsync: vi.fn(
       async <T>(sql: string, params?: unknown[]): Promise<T[]> => {
         if (sql.includes('SELECT version FROM schema_version')) {
@@ -290,8 +298,8 @@ describe('Migration System', () => {
       // Run the migration up
       await (mig as any).up(db as any);
 
-      // Ensure execAsync was called with an INSERT into recurring_patterns
-      const calls = (db.execAsync as any).mock.calls.flat().join(' ');
+      // Ensure runAsync was called with an INSERT into recurring_patterns
+      const calls = (db.runAsync as any).mock.calls.flat().join(' ');
       expect(calls).toMatch(/INSERT OR IGNORE INTO recurring_patterns/);
     });
   });
