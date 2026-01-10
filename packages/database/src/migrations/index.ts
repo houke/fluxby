@@ -25,3 +25,9 @@ export const migrations: Migration[] = [
   migration005,
   migration006,
 ];
+
+/**
+ * The highest migration version this code knows about.
+ * Used to detect stale code (when database has higher version than code knows).
+ */
+export const LATEST_MIGRATION_VERSION = 6;

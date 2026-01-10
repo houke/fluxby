@@ -75,8 +75,10 @@ export interface TranslationKeys {
   };
   migrations: {
     updateAvailable: string;
+    updateRequired: string;
     updateDescription: string;
     updateDescriptionAction: string;
+    staleCodeDescription: string;
     refreshNow: string;
     applyUpdate: string;
     applyingUpdate: string;
@@ -1259,10 +1261,13 @@ export const nl: TranslationKeys = {
   },
   migrations: {
     updateAvailable: 'Update beschikbaar',
+    updateRequired: 'Update vereist',
     updateDescription:
       'Er is een nieuwe versie van Fluxby beschikbaar. Vernieuw de pagina om de update toe te passen.',
     updateDescriptionAction:
       'Er is een nieuwe versie van Fluxby beschikbaar. Klik op "Update toepassen" om de nieuwste functies en verbeteringen te installeren.',
+    staleCodeDescription:
+      'Er is een nieuwere versie van Fluxby geïnstalleerd. De pagina wordt automatisch ververst om de nieuwste versie te laden...',
     refreshNow: 'Nu vernieuwen',
     applyUpdate: 'Update toepassen',
     applyingUpdate: 'Update toepassen...',

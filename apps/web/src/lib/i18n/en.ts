@@ -104,10 +104,13 @@ export const en: TranslationKeys = {
   },
   migrations: {
     updateAvailable: 'Update available',
+    updateRequired: 'Update required',
     updateDescription:
       'A new version of Fluxby is available. Please refresh the page to apply updates.',
     updateDescriptionAction:
       'A new version of Fluxby is available. Click "Apply update" to install the latest features and improvements.',
+    staleCodeDescription:
+      'A newer version of Fluxby has been installed. Refreshing automatically to load the latest version...',
     refreshNow: 'Refresh now',
     applyUpdate: 'Apply update',
     applyingUpdate: 'Applying update...',

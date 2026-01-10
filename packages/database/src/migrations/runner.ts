@@ -1,5 +1,14 @@
-import { MigrationContext, migrations, Migration } from './index.js';
+import {
+  MigrationContext,
+  migrations,
+  Migration,
+  LATEST_MIGRATION_VERSION,
+} from './index.js';
 import { dbLog, dbError } from '../logger.js';
+
+const STORAGE_KEY_DB_VERSION = 'fluxby-db-schema-version';
+const STORAGE_KEY_CODE_VERSION = 'fluxby-code-migration-version';
+const STORAGE_KEY_MIGRATIONS_APPLIED = 'fluxby-migrations-applied';
 
 /**
  * Get the current schema version from the database
@@ -77,13 +86,58 @@ export async function runMigrations(db: MigrationContext): Promise<void> {
 
   dbLog('[MigrationRunner] All migrations completed successfully');
 
-  // Set flag in localStorage to signal that migrations were applied
-  // This will trigger the migration prompt to show on next page load
+  // Set flags in localStorage to signal that migrations were applied
+  // and track version information for stale code detection
   try {
     if (typeof localStorage !== 'undefined') {
-      localStorage.setItem('fluxby-migrations-applied', 'true');
+      localStorage.setItem(STORAGE_KEY_MIGRATIONS_APPLIED, 'true');
+      // Store the new database schema version
+      const newVersion = Math.max(...migrations.map((m) => m.version));
+      localStorage.setItem(STORAGE_KEY_DB_VERSION, String(newVersion));
+      // Store the code's migration version
+      localStorage.setItem(
+        STORAGE_KEY_CODE_VERSION,
+        String(LATEST_MIGRATION_VERSION)
+      );
     }
   } catch (error) {
     // Ignore localStorage errors (e.g., in private browsing mode)
   }
+}
+
+/**
+ * Check if we're running stale code.
+ * Returns true if the database has been migrated to a version
+ * higher than what this code knows about.
+ */
+export function isStaleCode(): boolean {
+  try {
+    if (typeof localStorage === 'undefined') return false;
+
+    const storedDbVersion = localStorage.getItem(STORAGE_KEY_DB_VERSION);
+    if (!storedDbVersion) return false;
+
+    const dbVersion = parseInt(storedDbVersion, 10);
+    if (isNaN(dbVersion)) return false;
+
+    // If the stored DB version is higher than what this code knows about,
+    // we're running stale/cached code
+    if (dbVersion > LATEST_MIGRATION_VERSION) {
+      dbLog(
+        `[MigrationRunner] Stale code detected! DB version: ${dbVersion}, Code knows: ${LATEST_MIGRATION_VERSION}`
+      );
+      return true;
+    }
+
+    return false;
+  } catch (error) {
+    return false;
+  }
+}
+
+/**
+ * Get the latest migration version this code knows about.
+ */
+export function getLatestMigrationVersion(): number {
+  return LATEST_MIGRATION_VERSION;
 }

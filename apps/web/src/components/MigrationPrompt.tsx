@@ -6,11 +6,16 @@ import { RefreshCw, AlertCircle, Loader2, CheckCircle } from 'lucide-react';
 type MigrationState = 'pending' | 'running' | 'completed' | 'error';
 
 /**
- * Component that checks for pending migrations and automatically executes them
- * Shows progress to the user and forces a hard refresh after completion
+ * Component that checks for pending migrations OR stale code and shows update prompt.
+ *
+ * Two scenarios:
+ * 1. Migrations were applied (new code ran) - need to refresh to load new UI
+ * 2. Stale code detected (old cached code) - need to force refresh to get new code
+ *
+ * In both cases, we show a non-dismissible prompt and force a hard refresh.
  */
 export function MigrationPrompt() {
-  const { pendingCount, isChecking } = useMigrationCheck();
+  const { pendingCount, isChecking, isStale } = useMigrationCheck();
   const { t } = useLanguage();
   const [showPrompt, setShowPrompt] = useState(false);
   const [migrationState, setMigrationState] =
@@ -23,6 +28,17 @@ export function MigrationPrompt() {
     }
   }, [isChecking, pendingCount]);
 
+  // If we detected stale code, automatically start the refresh process
+  useEffect(() => {
+    if (isStale && showPrompt) {
+      // Small delay to show the prompt, then auto-refresh
+      const timer = setTimeout(() => {
+        handleApplyMigrations();
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [isStale, showPrompt]);
+
   if (!showPrompt) {
     return null;
   }
@@ -32,11 +48,9 @@ export function MigrationPrompt() {
     setError(null);
 
     try {
-      // Clear the flag so we don't show prompt again after refresh
+      // Clear the migration flags
       localStorage.removeItem('fluxby-migrations-applied');
 
-      // Migrations have already been applied during database initialization
-      // We just need to force a page reload to pick up the new code/schema
       // Show a brief delay for UX
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
@@ -46,6 +60,14 @@ export function MigrationPrompt() {
       await new Promise((resolve) => setTimeout(resolve, 500));
 
       // Force a hard refresh to reload the app with new code/schema
+      // Using cache-busting approach
+      if ('caches' in window) {
+        // Clear all caches to ensure fresh code is loaded
+        const cacheNames = await caches.keys();
+        await Promise.all(cacheNames.map((name) => caches.delete(name)));
+      }
+
+      // Reload with cache bypass
       window.location.reload();
     } catch (err) {
       console.error('Migration failed:', err);
@@ -79,6 +101,10 @@ export function MigrationPrompt() {
   const getStateTitle = () => {
     switch (migrationState) {
       case 'pending':
+        // Different message for stale code vs migrations applied
+        if (isStale) {
+          return t.migrations?.updateRequired || 'Update required';
+        }
         return t.migrations?.updateAvailable || 'Update available';
       case 'running':
         return t.migrations?.applyingUpdate || 'Applying update...';
@@ -92,6 +118,12 @@ export function MigrationPrompt() {
   const getStateDescription = () => {
     switch (migrationState) {
       case 'pending':
+        if (isStale) {
+          return (
+            t.migrations?.staleCodeDescription ||
+            'A newer version of Fluxby has been installed. Refreshing automatically to load the latest version...'
+          );
+        }
         return (
           t.migrations?.updateDescriptionAction ||
           'A new version of Fluxby is available. Click "Apply update" to install the latest features and improvements.'
