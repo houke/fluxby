@@ -106,7 +106,19 @@ export const en: TranslationKeys = {
     updateAvailable: 'Update available',
     updateDescription:
       'A new version of Fluxby is available. Please refresh the page to apply updates.',
+    updateDescriptionAction:
+      'A new version of Fluxby is available. Click "Apply update" to install the latest features and improvements.',
     refreshNow: 'Refresh now',
+    applyUpdate: 'Apply update',
+    applyingUpdate: 'Applying update...',
+    applyingDescription:
+      'Please wait while we update your database. This will only take a moment...',
+    updateComplete: 'Update complete',
+    completedDescription:
+      'Update successfully applied. Reloading application...',
+    updateFailed: 'Update failed',
+    errorDescription: 'An error occurred during the update.',
+    retry: 'Retry',
   },
   security: {
     setupTitle: 'Set up master password',

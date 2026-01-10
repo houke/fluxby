@@ -76,7 +76,16 @@ export interface TranslationKeys {
   migrations: {
     updateAvailable: string;
     updateDescription: string;
+    updateDescriptionAction: string;
     refreshNow: string;
+    applyUpdate: string;
+    applyingUpdate: string;
+    applyingDescription: string;
+    updateComplete: string;
+    completedDescription: string;
+    updateFailed: string;
+    errorDescription: string;
+    retry: string;
   };
   security: {
     setupTitle: string;
@@ -1252,7 +1261,19 @@ export const nl: TranslationKeys = {
     updateAvailable: 'Update beschikbaar',
     updateDescription:
       'Er is een nieuwe versie van Fluxby beschikbaar. Vernieuw de pagina om de update toe te passen.',
+    updateDescriptionAction:
+      'Er is een nieuwe versie van Fluxby beschikbaar. Klik op "Update toepassen" om de nieuwste functies en verbeteringen te installeren.',
     refreshNow: 'Nu vernieuwen',
+    applyUpdate: 'Update toepassen',
+    applyingUpdate: 'Update toepassen...',
+    applyingDescription:
+      'Even geduld terwijl we je database updaten. Dit duurt slechts een moment...',
+    updateComplete: 'Update voltooid',
+    completedDescription:
+      'Update succesvol toegepast. Applicatie wordt opnieuw geladen...',
+    updateFailed: 'Update mislukt',
+    errorDescription: 'Er is een fout opgetreden tijdens de update.',
+    retry: 'Opnieuw proberen',
   },
   security: {
     setupTitle: 'Hoofdwachtwoord instellen',
