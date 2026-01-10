@@ -1208,7 +1208,7 @@ export const DEMO_RECURRING_PATTERNS = [
     transactionCount: 6,
   },
   {
-    merchantName: 'Werkgever BV',
+    merchantName: 'Werkgever B.V.',
     patternType: 'monthly' as const,
     avgAmount: 2800.0,
     lastAmount: 2850.0,

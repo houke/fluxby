@@ -504,7 +504,8 @@ export const en: TranslationKeys = {
     expectedThisPeriod: 'Expected this period',
     deleteStaleDescription:
       'This subscription appears to be no longer active and will be removed from your profile.',
-    deleteConfirmDescription: 'Are you sure you want to delete this subscription?',
+    deleteConfirmDescription:
+      'Are you sure you want to delete this subscription?',
   },
   categories: {
     title: 'Categories',
@@ -1209,6 +1210,9 @@ export const en: TranslationKeys = {
     moreIbans: '+{count} more',
     splitIntoSeparate: 'Split account into separate contacts',
     viewTransactions: 'View transactions',
+    showTransactions: 'Show transactions',
+    transactionHistory: 'Transaction history',
+    noTransactionsFound: 'No transactions found',
     // Create new contact
     createNewContact: 'Create new contact',
     createNewContactWithIban: 'Create new contact with IBAN',

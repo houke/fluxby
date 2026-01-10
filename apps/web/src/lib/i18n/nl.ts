@@ -1004,6 +1004,9 @@ export interface TranslationKeys {
     moreIbans: string;
     splitIntoSeparate: string;
     viewTransactions: string;
+    showTransactions: string;
+    transactionHistory: string;
+    noTransactionsFound: string;
     // Create new contact
     createNewContact: string;
     createNewContactWithIban: string;
@@ -1719,7 +1722,8 @@ export const nl: TranslationKeys = {
     expectedThisPeriod: 'Verwacht deze periode',
     deleteStaleDescription:
       'Dit abonnement lijkt niet meer actief te zijn en wordt verwijderd uit je profiel.',
-    deleteConfirmDescription: 'Weet je zeker dat je dit abonnement wilt verwijderen?',
+    deleteConfirmDescription:
+      'Weet je zeker dat je dit abonnement wilt verwijderen?',
   },
   categories: {
     title: 'Categorieën',
@@ -2434,6 +2438,9 @@ export const nl: TranslationKeys = {
     moreIbans: '+{count} meer',
     splitIntoSeparate: 'Split in losse contacten',
     viewTransactions: 'Bekijk transacties',
+    showTransactions: 'Toon transacties',
+    transactionHistory: 'Transactiegeschiedenis',
+    noTransactionsFound: 'Geen transacties gevonden',
     // Create new contact
     createNewContact: 'Nieuw contact aanmaken',
     createNewContactWithIban: 'Nieuw contact aanmaken met IBAN',

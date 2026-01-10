@@ -24,7 +24,7 @@ export const migration007: Migration = {
       { merchant: 'Ziggo', avg: -55.0, last: -55.0 },
       { merchant: 'Woonstad Rotterdam', avg: -850.0, last: -850.0 },
       { merchant: 'Basic-Fit', avg: -29.99, last: -29.99 },
-      { merchant: 'Werkgever BV', avg: 2800.0, last: 2850.0 },
+      { merchant: 'Werkgever B.V.', avg: 2800.0, last: 2850.0 },
     ];
 
     for (const p of patterns) {
@@ -83,7 +83,7 @@ export const migration007: Migration = {
       'Ziggo',
       'Woonstad Rotterdam',
       'Basic-Fit',
-      'Werkgever BV',
+      'Werkgever B.V.',
     ];
 
     const inList = merchants.map((m) => `'${m.replace("'", "''")}'`).join(',');

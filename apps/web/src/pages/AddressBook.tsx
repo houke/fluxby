@@ -1,4 +1,11 @@
-import { useEffect, useRef, useState, useLayoutEffect, useMemo } from 'react';
+import {
+  useEffect,
+  useRef,
+  useState,
+  useLayoutEffect,
+  useMemo,
+  useCallback,
+} from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -21,6 +28,7 @@ import {
   Scissors,
   Merge,
   UserPlus,
+  Loader2,
 } from 'lucide-react';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -185,6 +193,11 @@ export default function AddressBook() {
   );
   const [splitNameWarning, setSplitNameWarning] = useState<string | null>(null);
 
+  // Expanded contact state for showing transactions
+  const [expandedContactId, setExpandedContactId] = useState<string | null>(
+    null
+  );
+
   // Toast (global context)
   const toast = useToast();
 
@@ -227,6 +240,22 @@ export default function AddressBook() {
       api.getTopAccounts(100, 'all') as Promise<{ accounts: TopAccount[] }>,
     enabled: !!activeProfileId,
   });
+
+  // Query for transactions when a contact is expanded
+  const { data: contactTransactions, isLoading: loadingContactTransactions } =
+    useQuery({
+      queryKey: ['contact-transactions', expandedContactId],
+      queryFn: () =>
+        expandedContactId
+          ? api.getTransactionsForContact(expandedContactId)
+          : null,
+      enabled: !!expandedContactId,
+    });
+
+  // Toggle contact expansion handler
+  const handleToggleExpand = useCallback((id: string) => {
+    setExpandedContactId((prev) => (prev === id ? null : id));
+  }, []);
 
   // Mutations
   const createContactMutation = useMutation({
@@ -2638,11 +2667,7 @@ export default function AddressBook() {
                       return (
                         <div
                           key={contact.id}
-                          className={cn(
-                            'group flex items-center justify-between border-x-0 border-t border-b-0 bg-card px-3 py-4 sm:rounded-lg sm:border sm:p-4',
-                            editingContactId !== contact.id &&
-                              'cursor-pointer transition-colors hover:bg-muted/50'
-                          )}
+                          className='overflow-hidden border-x-0 border-t border-b-0 sm:rounded-lg sm:border'
                           {...(contactIndex === 0
                             ? { 'data-onboarding': 'addressbook-contact' }
                             : isFirstMerged
@@ -2651,439 +2676,535 @@ export default function AddressBook() {
                                     'addressbook-merged-contact',
                                 }
                               : {})}
-                          onClick={(e) => {
-                            // Only navigate if not editing and click wasn't on a button
-                            if (
-                              editingContactId !== contact.id &&
-                              !(e.target as HTMLElement).closest('button')
-                            ) {
-                              // Clear other filters and set address book ID for filtering
-                              // Using addressBookId is more reliable than name matching
-                              // as it directly links to the address book entry
-                              // Keep the current date range - don't reset it
-                              setCategories([]);
-                              setTransactionType('all');
-                              setOpposingAccountIbans([]);
-                              setOpposingAccountName(null);
-                              setAddressBookId(contact.id);
-                              navigate('/transactions/');
-                            }
-                          }}
                         >
-                          {editingContactId === contact.id ? (
-                            <div className='flex flex-1 items-center gap-3'>
-                              <Input
-                                value={editContactName}
-                                onChange={(e) =>
-                                  setEditContactName(e.target.value)
-                                }
-                                placeholder={
-                                  t.settings.addressBook.namePlaceholder
-                                }
-                                className='flex-1'
-                              />
-                              <Input
-                                value={editContactDescription}
-                                onChange={(e) =>
-                                  setEditContactDescription(e.target.value)
-                                }
-                                placeholder={
-                                  t.settings.addressBook
-                                    .descriptionPlaceholder || 'Omschrijving'
-                                }
-                                className='flex-1'
-                              />
-                              {/* Assign to existing contact button */}
-                              <Popover
-                                open={
-                                  assignPopoverOpen === `edit-${contact.id}`
-                                }
-                                onOpenChange={(open) => {
-                                  setAssignPopoverOpen(
-                                    open ? `edit-${contact.id}` : null
-                                  );
-                                  if (!open) setAssignSearchTerm('');
-                                }}
-                              >
+                          <div
+                            className={cn(
+                              'group flex items-center justify-between bg-card px-3 py-4 sm:p-4',
+                              editingContactId !== contact.id &&
+                                'cursor-pointer transition-colors hover:bg-muted/50'
+                            )}
+                            onClick={(e) => {
+                              // Only navigate if not editing and click wasn't on a button
+                              if (
+                                editingContactId !== contact.id &&
+                                !(e.target as HTMLElement).closest('button')
+                              ) {
+                                // Clear other filters and set address book ID for filtering
+                                // Using addressBookId is more reliable than name matching
+                                // as it directly links to the address book entry
+                                // Keep the current date range - don't reset it
+                                setCategories([]);
+                                setTransactionType('all');
+                                setOpposingAccountIbans([]);
+                                setOpposingAccountName(null);
+                                setAddressBookId(contact.id);
+                                navigate('/transactions/');
+                              }
+                            }}
+                          >
+                            {editingContactId === contact.id ? (
+                              <div className='flex flex-1 items-center gap-3'>
+                                <Input
+                                  value={editContactName}
+                                  onChange={(e) =>
+                                    setEditContactName(e.target.value)
+                                  }
+                                  placeholder={
+                                    t.settings.addressBook.namePlaceholder
+                                  }
+                                  className='flex-1'
+                                />
+                                <Input
+                                  value={editContactDescription}
+                                  onChange={(e) =>
+                                    setEditContactDescription(e.target.value)
+                                  }
+                                  placeholder={
+                                    t.settings.addressBook
+                                      .descriptionPlaceholder || 'Omschrijving'
+                                  }
+                                  className='flex-1'
+                                />
+                                {/* Assign to existing contact button */}
+                                <Popover
+                                  open={
+                                    assignPopoverOpen === `edit-${contact.id}`
+                                  }
+                                  onOpenChange={(open) => {
+                                    setAssignPopoverOpen(
+                                      open ? `edit-${contact.id}` : null
+                                    );
+                                    if (!open) setAssignSearchTerm('');
+                                  }}
+                                >
+                                  <TooltipProvider delayDuration={100}>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <PopoverTrigger asChild>
+                                          <Button
+                                            size='sm'
+                                            variant='ghost'
+                                            className='h-8 w-8 rounded-full p-0 hover:border-purple-600 hover:bg-purple-600 hover:text-white'
+                                            disabled={
+                                              mergeContactsMutation.isPending
+                                            }
+                                          >
+                                            <UserPlus className='h-4 w-4' />
+                                          </Button>
+                                        </PopoverTrigger>
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        {t.addressBook?.assignToExisting ||
+                                          'Assign to existing contact'}
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                  <PopoverContent
+                                    className='w-64 p-2'
+                                    align='end'
+                                    collisionBoundary={modalContentElement}
+                                    onWheel={(e) => e.stopPropagation()}
+                                  >
+                                    <div className='space-y-2'>
+                                      <Input
+                                        placeholder={
+                                          t.addressBook?.searchContacts ||
+                                          'Search contacts...'
+                                        }
+                                        value={assignSearchTerm}
+                                        onChange={(e) =>
+                                          setAssignSearchTerm(e.target.value)
+                                        }
+                                        className='h-8 text-sm'
+                                        autoFocus
+                                      />
+                                      <div
+                                        className='max-h-48 overflow-y-auto overscroll-contain'
+                                        onWheel={(e) => e.stopPropagation()}
+                                      >
+                                        <div className='space-y-1'>
+                                          {(() => {
+                                            const searchLower =
+                                              assignSearchTerm.toLowerCase();
+                                            const filtered = addressBook
+                                              ?.filter(
+                                                (c) =>
+                                                  (c.name
+                                                    .toLowerCase()
+                                                    .includes(searchLower) ||
+                                                    c.iban
+                                                      ?.toLowerCase()
+                                                      .includes(searchLower) ||
+                                                    c.ibans?.some((i) =>
+                                                      i
+                                                        .toLowerCase()
+                                                        .includes(searchLower)
+                                                    )) &&
+                                                  c.id !== contact.id // Exclude current contact
+                                              )
+                                              .sort((a, b) =>
+                                                a.name.localeCompare(b.name)
+                                              );
+                                            return filtered?.length ? (
+                                              filtered.map((targetContact) => (
+                                                <button
+                                                  key={targetContact.id}
+                                                  className='w-full rounded px-2 py-1.5 text-left text-sm transition-colors hover:bg-muted'
+                                                  onClick={() => {
+                                                    // Merge current contact into target contact
+                                                    mergeContactsMutation.mutate(
+                                                      {
+                                                        contactIds: [
+                                                          contact.id,
+                                                          targetContact.id,
+                                                        ],
+                                                        name: targetContact.name, // Keep target contact's name
+                                                      },
+                                                      {
+                                                        onSuccess: () => {
+                                                          setAssignPopoverOpen(
+                                                            null
+                                                          );
+                                                          setAssignSearchTerm(
+                                                            ''
+                                                          );
+                                                        },
+                                                      }
+                                                    );
+                                                  }}
+                                                >
+                                                  <div className='font-medium'>
+                                                    {targetContact.name}
+                                                  </div>
+                                                  <div className='truncate text-xs text-muted-foreground'>
+                                                    {targetContact.iban}
+                                                  </div>
+                                                </button>
+                                              ))
+                                            ) : (
+                                              <div className='py-4 text-center text-sm text-muted-foreground'>
+                                                {t.addressBook
+                                                  ?.noContactsFound ||
+                                                  'No contacts found'}
+                                              </div>
+                                            );
+                                          })()}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </PopoverContent>
+                                </Popover>
                                 <TooltipProvider delayDuration={100}>
                                   <Tooltip>
                                     <TooltipTrigger asChild>
-                                      <PopoverTrigger asChild>
-                                        <Button
-                                          size='sm'
-                                          variant='ghost'
-                                          className='h-8 w-8 rounded-full p-0 hover:border-purple-600 hover:bg-purple-600 hover:text-white'
-                                          disabled={
-                                            mergeContactsMutation.isPending
-                                          }
-                                        >
-                                          <UserPlus className='h-4 w-4' />
-                                        </Button>
-                                      </PopoverTrigger>
+                                      <Button
+                                        size='sm'
+                                        variant='ghost'
+                                        className='h-8 w-8 rounded-full hover:bg-purple-600 hover:text-white'
+                                        onClick={handleUpdateContact}
+                                      >
+                                        <Check className='h-4 w-4' />
+                                      </Button>
                                     </TooltipTrigger>
                                     <TooltipContent>
-                                      {t.addressBook?.assignToExisting ||
-                                        'Assign to existing contact'}
+                                      <p>{t.common.save}</p>
                                     </TooltipContent>
                                   </Tooltip>
                                 </TooltipProvider>
-                                <PopoverContent
-                                  className='w-64 p-2'
-                                  align='end'
-                                  collisionBoundary={modalContentElement}
-                                  onWheel={(e) => e.stopPropagation()}
-                                >
-                                  <div className='space-y-2'>
-                                    <Input
-                                      placeholder={
-                                        t.addressBook?.searchContacts ||
-                                        'Search contacts...'
-                                      }
-                                      value={assignSearchTerm}
-                                      onChange={(e) =>
-                                        setAssignSearchTerm(e.target.value)
-                                      }
-                                      className='h-8 text-sm'
-                                      autoFocus
-                                    />
-                                    <div
-                                      className='max-h-48 overflow-y-auto overscroll-contain'
-                                      onWheel={(e) => e.stopPropagation()}
-                                    >
-                                      <div className='space-y-1'>
-                                        {(() => {
-                                          const searchLower =
-                                            assignSearchTerm.toLowerCase();
-                                          const filtered = addressBook
-                                            ?.filter(
-                                              (c) =>
-                                                (c.name
-                                                  .toLowerCase()
-                                                  .includes(searchLower) ||
-                                                  c.iban
-                                                    ?.toLowerCase()
-                                                    .includes(searchLower) ||
-                                                  c.ibans?.some((i) =>
-                                                    i
-                                                      .toLowerCase()
-                                                      .includes(searchLower)
-                                                  )) &&
-                                                c.id !== contact.id // Exclude current contact
-                                            )
-                                            .sort((a, b) =>
-                                              a.name.localeCompare(b.name)
-                                            );
-                                          return filtered?.length ? (
-                                            filtered.map((targetContact) => (
-                                              <button
-                                                key={targetContact.id}
-                                                className='w-full rounded px-2 py-1.5 text-left text-sm transition-colors hover:bg-muted'
-                                                onClick={() => {
-                                                  // Merge current contact into target contact
-                                                  mergeContactsMutation.mutate(
-                                                    {
-                                                      contactIds: [
-                                                        contact.id,
-                                                        targetContact.id,
-                                                      ],
-                                                      name: targetContact.name, // Keep target contact's name
-                                                    },
-                                                    {
-                                                      onSuccess: () => {
-                                                        setAssignPopoverOpen(
-                                                          null
-                                                        );
-                                                        setAssignSearchTerm('');
-                                                      },
-                                                    }
-                                                  );
-                                                }}
-                                              >
-                                                <div className='font-medium'>
-                                                  {targetContact.name}
-                                                </div>
-                                                <div className='truncate text-xs text-muted-foreground'>
-                                                  {targetContact.iban}
-                                                </div>
-                                              </button>
-                                            ))
-                                          ) : (
-                                            <div className='py-4 text-center text-sm text-muted-foreground'>
-                                              {t.addressBook?.noContactsFound ||
-                                                'No contacts found'}
-                                            </div>
-                                          );
-                                        })()}
-                                      </div>
-                                    </div>
+                                <TooltipProvider delayDuration={100}>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button
+                                        size='sm'
+                                        variant='ghost'
+                                        className='h-8 w-8 rounded-full hover:bg-purple-600 hover:text-white'
+                                        onClick={() =>
+                                          setEditingContactId(null)
+                                        }
+                                      >
+                                        <X className='h-4 w-4' />
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p>{t.common.cancel}</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              </div>
+                            ) : (
+                              <>
+                                <div className='flex items-center gap-3'>
+                                  <div
+                                    className={cn(
+                                      'flex h-10 w-10 items-center justify-center rounded-full font-medium',
+                                      contact.isMerged &&
+                                        contact.ibans &&
+                                        contact.ibans.length > 1
+                                        ? 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400'
+                                        : 'bg-muted text-muted-foreground'
+                                    )}
+                                  >
+                                    {(contact.name || '')
+                                      .charAt(0)
+                                      .toUpperCase()}
                                   </div>
-                                </PopoverContent>
-                              </Popover>
-                              <TooltipProvider delayDuration={100}>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button
-                                      size='sm'
-                                      variant='ghost'
-                                      className='h-8 w-8 rounded-full hover:bg-purple-600 hover:text-white'
-                                      onClick={handleUpdateContact}
-                                    >
-                                      <Check className='h-4 w-4' />
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    <p>{t.common.save}</p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-                              <TooltipProvider delayDuration={100}>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button
-                                      size='sm'
-                                      variant='ghost'
-                                      className='h-8 w-8 rounded-full hover:bg-purple-600 hover:text-white'
-                                      onClick={() => setEditingContactId(null)}
-                                    >
-                                      <X className='h-4 w-4' />
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    <p>{t.common.cancel}</p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-                            </div>
-                          ) : (
-                            <>
-                              <div className='flex items-center gap-3'>
-                                <div
-                                  className={cn(
-                                    'flex h-10 w-10 items-center justify-center rounded-full font-medium',
-                                    contact.isMerged &&
-                                      contact.ibans &&
-                                      contact.ibans.length > 1
-                                      ? 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400'
-                                      : 'bg-muted text-muted-foreground'
-                                  )}
-                                >
-                                  {(contact.name || '').charAt(0).toUpperCase()}
-                                </div>
-                                <div>
-                                  <div className='flex items-center gap-2'>
-                                    <p className='font-medium'>
-                                      {contact.name}
-                                    </p>
-                                    {contact.isMerged &&
-                                      contact.ibans &&
-                                      contact.ibans.length > 1 && (
-                                        <TooltipProvider>
-                                          <Tooltip>
-                                            <TooltipTrigger asChild>
-                                              <Button
-                                                size='icon'
-                                                variant='ghost'
-                                                className='h-6 w-6 rounded-md text-purple-600 hover:bg-purple-600 hover:text-white'
-                                                onClick={(e) => {
-                                                  e.stopPropagation();
-                                                  setSplitContact(contact);
-                                                  // Pre-fill mappings with current IBANs and default names
-                                                  const init: Record<
-                                                    string,
-                                                    string
-                                                  > = {};
-                                                  (contact.ibans || []).forEach(
-                                                    (i) => {
+                                  <div>
+                                    <div className='flex items-center gap-2'>
+                                      <p className='font-medium'>
+                                        {contact.name}
+                                      </p>
+                                      {contact.isMerged &&
+                                        contact.ibans &&
+                                        contact.ibans.length > 1 && (
+                                          <TooltipProvider>
+                                            <Tooltip>
+                                              <TooltipTrigger asChild>
+                                                <Button
+                                                  size='icon'
+                                                  variant='ghost'
+                                                  className='h-6 w-6 rounded-md text-purple-600 hover:bg-purple-600 hover:text-white'
+                                                  onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setSplitContact(contact);
+                                                    // Pre-fill mappings with current IBANs and default names
+                                                    const init: Record<
+                                                      string,
+                                                      string
+                                                    > = {};
+                                                    (
+                                                      contact.ibans || []
+                                                    ).forEach((i) => {
                                                       init[i] =
                                                         contact.name + '';
-                                                    }
-                                                  );
-                                                  setSplitIbanNames(init);
-                                                  setSplitModalOpen(true);
-                                                }}
-                                              >
-                                                <Scissors className='h-3 w-3' />
-                                              </Button>
-                                            </TooltipTrigger>
-                                            <TooltipContent>
-                                              <p>
-                                                {t.addressBook
-                                                  ?.splitIntoSeparate ||
-                                                  'Split account into separate contacts'}
-                                              </p>
-                                            </TooltipContent>
-                                          </Tooltip>
-                                        </TooltipProvider>
+                                                    });
+                                                    setSplitIbanNames(init);
+                                                    setSplitModalOpen(true);
+                                                  }}
+                                                >
+                                                  <Scissors className='h-3 w-3' />
+                                                </Button>
+                                              </TooltipTrigger>
+                                              <TooltipContent>
+                                                <p>
+                                                  {t.addressBook
+                                                    ?.splitIntoSeparate ||
+                                                    'Split account into separate contacts'}
+                                                </p>
+                                              </TooltipContent>
+                                            </Tooltip>
+                                          </TooltipProvider>
+                                        )}
+                                      {/* Navigate icon - appears on hover */}
+                                      <TooltipProvider delayDuration={100}>
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <span className='inline-flex'>
+                                              <ExternalLink className='h-4 w-4 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100' />
+                                            </span>
+                                          </TooltipTrigger>
+                                          <TooltipContent>
+                                            {t.addressBook?.viewTransactions ||
+                                              'View transactions'}
+                                          </TooltipContent>
+                                        </Tooltip>
+                                      </TooltipProvider>
+                                    </div>
+                                    {contact.description && (
+                                      <p className='text-sm text-muted-foreground'>
+                                        {contact.description}
+                                      </p>
+                                    )}
+                                    <p className='text-sm text-muted-foreground'>
+                                      {contact.iban}
+                                      {contact.isMerged &&
+                                        contact.ibans &&
+                                        contact.ibans.length > 1 && (
+                                          <span className='ml-1 font-medium text-purple-500'>
+                                            {(
+                                              t.addressBook?.moreIbans ||
+                                              '+{count} more'
+                                            ).replace(
+                                              '{count}',
+                                              String(contact.ibans.length - 1)
+                                            )}
+                                          </span>
+                                        )}
+                                    </p>
+                                    {/* Badges below IBAN */}
+                                    {(contact.isMerged ||
+                                      hasSharedIban(contact)) && (
+                                      <div className='mt-1 flex items-center gap-2'>
+                                        {contact.isMerged && (
+                                          <TooltipProvider>
+                                            <Tooltip>
+                                              <TooltipTrigger asChild>
+                                                <span className='rounded bg-purple-100 px-1.5 py-0.5 text-xs font-medium text-purple-700 dark:bg-purple-900/30 dark:text-purple-400'>
+                                                  {t.addressBook?.mergedBadge ||
+                                                    'Samengevoegd'}
+                                                </span>
+                                              </TooltipTrigger>
+                                              <TooltipContent>
+                                                <p>
+                                                  {(
+                                                    t.addressBook
+                                                      ?.mergedContact ||
+                                                    'Merged contact ({count} IBANs)'
+                                                  ).replace(
+                                                    '{count}',
+                                                    String(
+                                                      contact.ibans?.length
+                                                    )
+                                                  )}
+                                                </p>
+                                              </TooltipContent>
+                                            </Tooltip>
+                                          </TooltipProvider>
+                                        )}
+                                        {hasSharedIban(contact) && (
+                                          <TooltipProvider>
+                                            <Tooltip>
+                                              <TooltipTrigger asChild>
+                                                <span className='rounded bg-amber-100 px-1.5 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'>
+                                                  {t.addressBook?.sharedIban ||
+                                                    'Gedeelde IBAN'}
+                                                </span>
+                                              </TooltipTrigger>
+                                              <TooltipContent className='max-w-xs'>
+                                                <p>
+                                                  {t.addressBook
+                                                    ?.sharedIbanTooltip ||
+                                                    'Deze IBAN wordt door meerdere contacten gebruikt, waarschijnlijk via een payment provider zoals Adyen of Mollie'}
+                                                </p>
+                                              </TooltipContent>
+                                            </Tooltip>
+                                          </TooltipProvider>
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className='flex items-center gap-4'>
+                                  {/* Transaction stats */}
+                                  <div className='hidden text-right sm:block'>
+                                    <p className='font-medium'>
+                                      {contact.transactionCount || 0}{' '}
+                                      {t.settings.addressBook.transactions}
+                                    </p>
+                                    <div className='flex items-center justify-end gap-2 text-xs'>
+                                      {(contact.totalIncome || 0) > 0 && (
+                                        <span className='flex items-center text-emerald-600'>
+                                          <ArrowDownRight className='mr-0.5 h-3 w-3' />
+                                          <Currency
+                                            amount={contact.totalIncome || 0}
+                                          />
+                                        </span>
                                       )}
-                                    {/* Navigate icon - appears on hover */}
-                                    <TooltipProvider delayDuration={100}>
+                                      {(contact.totalExpenses || 0) > 0 && (
+                                        <span className='flex items-center text-red-600'>
+                                          <ArrowUpRight className='mr-0.5 h-3 w-3' />
+                                          <Currency
+                                            amount={contact.totalExpenses || 0}
+                                          />
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <div className='flex gap-1'>
+                                    <TooltipProvider>
                                       <Tooltip>
                                         <TooltipTrigger asChild>
-                                          <span className='inline-flex'>
-                                            <ExternalLink className='h-4 w-4 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100' />
-                                          </span>
+                                          <Button
+                                            size='icon'
+                                            variant='ghost'
+                                            className='rounded-md transition-colors hover:bg-purple-600 hover:text-white'
+                                            onClick={() =>
+                                              startEditingContact(contact)
+                                            }
+                                          >
+                                            <Edit2 className='h-4 w-4' />
+                                          </Button>
                                         </TooltipTrigger>
                                         <TooltipContent>
-                                          {t.addressBook?.viewTransactions ||
-                                            'View transactions'}
+                                          <p>{t.common.edit}</p>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
+                                    <TooltipProvider>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <Button
+                                            size='icon'
+                                            variant='ghost'
+                                            className='rounded-md text-destructive transition-colors hover:bg-red-600 hover:text-white dark:hover:bg-red-700'
+                                            onClick={async () => {
+                                              const isConfirmed = await confirm(
+                                                {
+                                                  title:
+                                                    t.addressBook
+                                                      ?.deleteContactTitle ||
+                                                    'Delete contact',
+                                                  message:
+                                                    t.settings.addressBook
+                                                      .deleteConfirm,
+                                                  variant: 'danger',
+                                                }
+                                              );
+                                              if (isConfirmed) {
+                                                deleteContactMutation.mutate(
+                                                  contact.id
+                                                );
+                                              }
+                                            }}
+                                          >
+                                            <Trash2 className='h-4 w-4' />
+                                          </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                          <p>{t.common.delete}</p>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
+                                    <TooltipProvider>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <Button
+                                            size='icon'
+                                            variant='ghost'
+                                            className='rounded-md transition-colors'
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              handleToggleExpand(contact.id);
+                                            }}
+                                          >
+                                            {expandedContactId ===
+                                            contact.id ? (
+                                              <ChevronUp className='h-4 w-4' />
+                                            ) : (
+                                              <ChevronDown className='h-4 w-4' />
+                                            )}
+                                          </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                          {expandedContactId === contact.id
+                                            ? t.common?.collapse || 'Collapse'
+                                            : t.addressBook?.showTransactions ||
+                                              'Show transactions'}
                                         </TooltipContent>
                                       </Tooltip>
                                     </TooltipProvider>
                                   </div>
-                                  {contact.description && (
-                                    <p className='text-sm text-muted-foreground'>
-                                      {contact.description}
-                                    </p>
-                                  )}
-                                  <p className='text-sm text-muted-foreground'>
-                                    {contact.iban}
-                                    {contact.isMerged &&
-                                      contact.ibans &&
-                                      contact.ibans.length > 1 && (
-                                        <span className='ml-1 font-medium text-purple-500'>
-                                          {(
-                                            t.addressBook?.moreIbans ||
-                                            '+{count} more'
-                                          ).replace(
-                                            '{count}',
-                                            String(contact.ibans.length - 1)
-                                          )}
-                                        </span>
-                                      )}
-                                  </p>
-                                  {/* Badges below IBAN */}
-                                  {(contact.isMerged ||
-                                    hasSharedIban(contact)) && (
-                                    <div className='mt-1 flex items-center gap-2'>
-                                      {contact.isMerged && (
-                                        <TooltipProvider>
-                                          <Tooltip>
-                                            <TooltipTrigger asChild>
-                                              <span className='rounded bg-purple-100 px-1.5 py-0.5 text-xs font-medium text-purple-700 dark:bg-purple-900/30 dark:text-purple-400'>
-                                                {t.addressBook?.mergedBadge ||
-                                                  'Samengevoegd'}
-                                              </span>
-                                            </TooltipTrigger>
-                                            <TooltipContent>
-                                              <p>
-                                                {(
-                                                  t.addressBook
-                                                    ?.mergedContact ||
-                                                  'Merged contact ({count} IBANs)'
-                                                ).replace(
-                                                  '{count}',
-                                                  String(contact.ibans?.length)
-                                                )}
-                                              </p>
-                                            </TooltipContent>
-                                          </Tooltip>
-                                        </TooltipProvider>
-                                      )}
-                                      {hasSharedIban(contact) && (
-                                        <TooltipProvider>
-                                          <Tooltip>
-                                            <TooltipTrigger asChild>
-                                              <span className='rounded bg-amber-100 px-1.5 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'>
-                                                {t.addressBook?.sharedIban ||
-                                                  'Gedeelde IBAN'}
-                                              </span>
-                                            </TooltipTrigger>
-                                            <TooltipContent className='max-w-xs'>
-                                              <p>
-                                                {t.addressBook
-                                                  ?.sharedIbanTooltip ||
-                                                  'Deze IBAN wordt door meerdere contacten gebruikt, waarschijnlijk via een payment provider zoals Adyen of Mollie'}
-                                              </p>
-                                            </TooltipContent>
-                                          </Tooltip>
-                                        </TooltipProvider>
-                                      )}
-                                    </div>
-                                  )}
                                 </div>
-                              </div>
-                              <div className='flex items-center gap-4'>
-                                {/* Transaction stats */}
-                                <div className='hidden text-right sm:block'>
-                                  <p className='font-medium'>
-                                    {contact.transactionCount || 0}{' '}
-                                    {t.settings.addressBook.transactions}
-                                  </p>
-                                  <div className='flex items-center justify-end gap-2 text-xs'>
-                                    {(contact.totalIncome || 0) > 0 && (
-                                      <span className='flex items-center text-emerald-600'>
-                                        <ArrowDownRight className='mr-0.5 h-3 w-3' />
-                                        <Currency
-                                          amount={contact.totalIncome || 0}
-                                        />
-                                      </span>
-                                    )}
-                                    {(contact.totalExpenses || 0) > 0 && (
-                                      <span className='flex items-center text-red-600'>
-                                        <ArrowUpRight className='mr-0.5 h-3 w-3' />
-                                        <Currency
-                                          amount={contact.totalExpenses || 0}
-                                        />
-                                      </span>
-                                    )}
+                              </>
+                            )}
+                          </div>
+                          {/* Expanded transactions section */}
+                          {expandedContactId === contact.id && (
+                            <div className='border-t bg-muted/30 px-3 py-4 sm:px-4'>
+                              {loadingContactTransactions ? (
+                                <div className='flex items-center justify-center py-4'>
+                                  <Loader2 className='h-5 w-5 animate-spin text-muted-foreground' />
+                                </div>
+                              ) : contactTransactions &&
+                                contactTransactions.length > 0 ? (
+                                <div className='space-y-1'>
+                                  <h4 className='mb-2 text-sm font-medium'>
+                                    {t.addressBook?.transactionHistory ||
+                                      'Transaction history'}
+                                  </h4>
+                                  <div className='max-h-64 overflow-y-auto'>
+                                    {contactTransactions.map((tx) => (
+                                      <div
+                                        key={tx.id}
+                                        className='flex items-center justify-between border-b border-dashed py-2 text-sm last:border-0'
+                                      >
+                                        <div className='flex items-center gap-3'>
+                                          <span className='text-muted-foreground'>
+                                            {new Date(
+                                              tx.date
+                                            ).toLocaleDateString('nl-NL', {
+                                              day: 'numeric',
+                                              month: 'short',
+                                              year: 'numeric',
+                                            })}
+                                          </span>
+                                          <span className='max-w-xs truncate text-muted-foreground'>
+                                            {tx.description}
+                                          </span>
+                                        </div>
+                                        <span className='font-medium'>
+                                          <Currency amount={tx.amount} />
+                                        </span>
+                                      </div>
+                                    ))}
                                   </div>
                                 </div>
-                                <div className='flex gap-1'>
-                                  <TooltipProvider>
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <Button
-                                          size='icon'
-                                          variant='ghost'
-                                          className='rounded-md transition-colors hover:bg-purple-600 hover:text-white'
-                                          onClick={() =>
-                                            startEditingContact(contact)
-                                          }
-                                        >
-                                          <Edit2 className='h-4 w-4' />
-                                        </Button>
-                                      </TooltipTrigger>
-                                      <TooltipContent>
-                                        <p>{t.common.edit}</p>
-                                      </TooltipContent>
-                                    </Tooltip>
-                                  </TooltipProvider>
-                                  <TooltipProvider>
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <Button
-                                          size='icon'
-                                          variant='ghost'
-                                          className='rounded-md text-destructive transition-colors hover:bg-red-600 hover:text-white dark:hover:bg-red-700'
-                                          onClick={async () => {
-                                            const isConfirmed = await confirm({
-                                              title:
-                                                t.addressBook
-                                                  ?.deleteContactTitle ||
-                                                'Delete contact',
-                                              message:
-                                                t.settings.addressBook
-                                                  .deleteConfirm,
-                                              variant: 'danger',
-                                            });
-                                            if (isConfirmed) {
-                                              deleteContactMutation.mutate(
-                                                contact.id
-                                              );
-                                            }
-                                          }}
-                                        >
-                                          <Trash2 className='h-4 w-4' />
-                                        </Button>
-                                      </TooltipTrigger>
-                                      <TooltipContent>
-                                        <p>{t.common.delete}</p>
-                                      </TooltipContent>
-                                    </Tooltip>
-                                  </TooltipProvider>
-                                </div>
-                              </div>
-                            </>
+                              ) : (
+                                <p className='text-center text-sm text-muted-foreground'>
+                                  {t.addressBook?.noTransactionsFound ||
+                                    'No transactions found'}
+                                </p>
+                              )}
+                            </div>
                           )}
                         </div>
                       );

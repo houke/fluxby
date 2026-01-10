@@ -563,6 +563,11 @@ export const api = {
     await ds.deleteAddressBookEntry(id);
   },
 
+  getTransactionsForContact: async (contactId: string, limit = 50) => {
+    const ds = getDataService();
+    return ds.getTransactionsForContact(contactId, limit);
+  },
+
   mergeContacts: async (ids: string[], targetName?: string) => {
     const ds = getDataService();
     return ds.mergeContacts(ids, targetName);

@@ -33,6 +33,7 @@ import {
   SEED_CATEGORIES,
   DEFAULT_NAME_CLEANUP_RULES,
   DEFAULT_PAYMENT_PROVIDER_RULES,
+  DEMO_RECURRING_PATTERNS,
 } from '@fluxby/shared';
 import { processINGRow } from './importers/ing-importer';
 import { processASNRow } from './importers/asn-importer';
@@ -1381,6 +1382,54 @@ export function createDataService(db: Database) {
         'UPDATE address_book SET is_deleted = 1, updated_at = ? WHERE id = ? AND profile_id = ?',
         [Date.now(), id, pid]
       );
+    },
+
+    /**
+     * Get transactions for a specific address book contact
+     */
+    async getTransactionsForContact(
+      contactId: string,
+      limit = 50
+    ): Promise<
+      Array<{
+        id: string;
+        date: string;
+        amount: number;
+        description: string;
+      }>
+    > {
+      const pid = profileId();
+      if (!pid) return [];
+
+      // Get the contact's IBANs from contact_ibans table
+      const ibans = await db.queryAsync<{ iban: string }>(
+        `SELECT iban FROM contact_ibans WHERE contact_id = ?
+         UNION
+         SELECT iban FROM address_book WHERE id = ? AND profile_id = ? AND is_deleted = 0`,
+        [contactId, contactId, pid]
+      );
+
+      if (ibans.length === 0) return [];
+
+      const ibanList = ibans.map((r) => r.iban);
+      const placeholders = ibanList.map(() => '?').join(', ');
+
+      const rows = await db.queryAsync<{
+        id: string;
+        date: string;
+        amount: number;
+        description: string;
+      }>(
+        `SELECT id, date, amount, description
+         FROM transactions
+         WHERE profile_id = ? AND is_deleted = 0
+           AND (address_book_id = ? OR opposing_account_iban IN (${placeholders}))
+         ORDER BY date DESC
+         LIMIT ?`,
+        [pid, contactId, ...ibanList, limit]
+      );
+
+      return rows;
     },
 
     /**
@@ -5702,43 +5751,8 @@ export function createDataService(db: Database) {
           transactionCount: number;
         }>;
 
-        for (const pattern of DEMO_RECURRING_PATTERNS) {
-          // Try to find the latest transaction for this merchant in the seeded transactions
-          const txRow = await db.queryOneAsync<{ date: string; amount: number }>(
-            `SELECT date, amount FROM transactions WHERE profile_id = ? AND (merchant_name LIKE ? OR opposing_account_name LIKE ?) ORDER BY date DESC LIMIT 1`,
-            [targetProfileId, `%${pattern.merchantName}%`, `%${pattern.merchantName}%`]
-          );
-
-          let lastDateStr: string;
-          let lastAmountVal: number;
-
-          if (txRow && txRow.date) {
-            lastDateStr = txRow.date;
-            lastAmountVal = txRow.amount;
-          } else {
-            const lastDate = new Date(patternDate);
-            lastDate.setDate(3); // Most subscriptions on the 3rd
-            lastDate.setMonth(lastDate.getMonth() - 1);
-            lastDateStr = lastDate.toISOString().split('T')[0];
-            lastAmountVal = pattern.lastAmount;
-          }
-
-          const nextDate = new Date(lastDateStr);
-          nextDate.setMonth(nextDate.getMonth() + 1);
-
-          patternsToInsert.push({
-            id: crypto.randomUUID(),
-            merchantName: pattern.merchantName,
-            patternType: pattern.patternType,
-            avgAmount: pattern.avgAmount,
-            lastAmount: lastAmountVal,
-            lastDate: lastDateStr,
-            nextExpectedDate: nextDate.toISOString().split('T')[0],
-            isConfirmed: pattern.isConfirmed ? 1 : 0,
-            isVariable: pattern.isVariable ? 1 : 0,
-            transactionCount: pattern.transactionCount,
-          });
-        }
+        // Delegate recurring pattern insertion to helper function
+        await insertDemoRecurringPatterns(db, targetProfileId, patternDate);
 
         if (patternsToInsert.length > 0) {
           const placeholders = patternsToInsert
@@ -6347,3 +6361,59 @@ export function createDataService(db: Database) {
 }
 
 export type DataService = ReturnType<typeof createDataService>;
+
+export async function insertDemoRecurringPatterns(
+  db: Database,
+  targetProfileId: string,
+  patternDate: Date
+) {
+  async function importSharedHelper() {
+    try {
+      // Use dynamic import for the package
+      const pkg = await import('@fluxby/shared');
+      return pkg.buildRecurringPatternFromTemplate;
+    } catch {
+      try {
+        return (await import('@fluxby/shared'))
+          .buildRecurringPatternFromTemplate;
+      } catch {
+        return (await import('../../../../packages/shared/src/recurring-seed'))
+          .buildRecurringPatternFromTemplate;
+      }
+    }
+  }
+
+  const buildHelper = await importSharedHelper();
+
+  for (const pattern of DEMO_RECURRING_PATTERNS) {
+    const txRow = await db.queryOneAsync<{ date: string; amount: number }>(
+      `SELECT date, amount FROM transactions WHERE profile_id = ? AND (merchant_name LIKE ? OR opposing_account_name LIKE ?) ORDER BY date DESC LIMIT 1`,
+      [
+        targetProfileId,
+        `%${pattern.merchantName}%`,
+        `%${pattern.merchantName}%`,
+      ]
+    );
+
+    const built = buildHelper(pattern as any, txRow || undefined, patternDate);
+
+    await db.runAsync(
+      `INSERT INTO recurring_patterns (id, opposing_iban, merchant_name, pattern_type, avg_amount, last_amount, last_date, next_expected_date, is_active, is_confirmed, is_variable, transaction_count, profile_id, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?)`,
+      [
+        crypto.randomUUID(),
+        null,
+        built.merchantName,
+        built.patternType,
+        built.avgAmount,
+        built.lastAmount,
+        built.lastDate,
+        built.nextExpectedDate,
+        built.isConfirmed,
+        built.isVariable,
+        built.transactionCount,
+        targetProfileId,
+        Date.now(),
+      ]
+    );
+  }
+}
