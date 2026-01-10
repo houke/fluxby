@@ -202,6 +202,10 @@ export const en: TranslationKeys = {
     settings: 'Settings',
     help: 'Help',
   },
+  bottomNav: {
+    more: 'More',
+    moreOptions: 'More options',
+  },
   dashboard: {
     title: 'Dashboard',
     subtitle: 'Your financial overview',
@@ -711,6 +715,8 @@ export const en: TranslationKeys = {
     },
     appSettings: 'App Settings',
     appSettingsDescription: 'Manage language, currency and theme',
+    versions: 'Versions & Updates',
+    versionsDescription: 'App versions and software updates',
     language: 'Language',
     languageDescription: 'Choose the interface language',
     currency: 'Currency',

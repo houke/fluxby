@@ -162,6 +162,10 @@ export interface TranslationKeys {
     settings: string;
     help: string;
   };
+  bottomNav: {
+    more: string;
+    moreOptions: string;
+  };
   dashboard: {
     title: string;
     subtitle: string;
@@ -635,6 +639,8 @@ export interface TranslationKeys {
     };
     appSettings: string;
     appSettingsDescription: string;
+    versions: string;
+    versionsDescription: string;
     language: string;
     languageDescription: string;
     currency: string;
@@ -1441,6 +1447,10 @@ export const nl: TranslationKeys = {
     settings: 'Instellingen',
     help: 'Help',
   },
+  bottomNav: {
+    more: 'Meer',
+    moreOptions: 'Meer opties',
+  },
   dashboard: {
     title: 'Dashboard',
     subtitle: 'Je financiële overzicht',
@@ -1954,6 +1964,8 @@ export const nl: TranslationKeys = {
     },
     appSettings: 'App Instellingen',
     appSettingsDescription: 'Beheer taal, valuta en thema',
+    versions: 'Versies & Updates',
+    versionsDescription: 'App versies en software updates',
     language: 'Taal',
     languageDescription: 'Kies de taal van de interface',
     currency: 'Valuta',

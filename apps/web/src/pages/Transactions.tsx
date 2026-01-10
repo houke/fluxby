@@ -81,9 +81,11 @@ import {
   PaymentProcessorFilter,
 } from '@/components/transactions/OptimizedFilters';
 import { TransactionRowBadges } from '@/components/transactions/TransactionRowBadges';
+import { TransactionCard } from '@/components/transactions/TransactionCard';
 import { Currency } from '@/components/ui/currency';
 import { api } from '@/lib/api';
 import { formatDate, cn, findSimilarNameGroups } from '@/lib/utils';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 
 // Filters on this page are intentionally local to the Transactions view.
 // This prevents Dashboard/Analytics filters (global) from affecting Transactions and vice versa.
@@ -111,6 +113,7 @@ export default function Transactions() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   useDocumentTitle(t.nav.transactions);
+  const isMobile = useIsMobile();
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const {
@@ -2335,6 +2338,28 @@ export default function Transactions() {
                         0
                       );
 
+                      // Mobile card view
+                      if (isMobile) {
+                        return (
+                          <TransactionCard
+                            key={tx.id}
+                            tx={tx}
+                            categoryName={getCategoryName(tx.categoryId)}
+                            categoryColor={getCategoryColor(tx.categoryId)}
+                            addressBookEntry={addressBookEntry}
+                            isRecurring={recurring}
+                            onClick={() => {
+                              if (recurring) {
+                                setExpandedMerchant(
+                                  isExpanded ? null : `${merchantKey}-${tx.id}`
+                                );
+                              }
+                            }}
+                          />
+                        );
+                      }
+
+                      // Desktop row view
                       return (
                         <div
                           key={tx.id}

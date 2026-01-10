@@ -35,6 +35,7 @@ import {
 } from '@/components/ui/tooltip';
 import { HeaderFilters } from './HeaderFilters';
 import { ProfileSwitcher } from './ProfileSwitcher';
+import { BottomNav } from './BottomNav';
 import { useDataService } from '@/contexts/DatabaseContext';
 import { FluxbyWebGL } from '@fluxby/shared';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -485,24 +486,8 @@ export default function Layout() {
           </main>
         </div>
 
-        {/* Mobile Bottom Navigation Bar */}
-        <nav className='fixed right-0 bottom-0 left-0 z-30 flex h-16 items-center justify-around border-t bg-card md:hidden'>
-          {navItems.slice(0, 5).map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              className={({ isActive }) =>
-                cn(
-                  'flex flex-col items-center justify-center gap-1 px-2 py-1',
-                  isActive ? 'text-primary' : 'text-muted-foreground'
-                )
-              }
-            >
-              <item.icon className='h-5 w-5' />
-              <span className='text-[10px] font-medium'>{item.label}</span>
-            </NavLink>
-          ))}
-        </nav>
+        {/* Mobile Bottom Navigation with "More" sheet */}
+        <BottomNav />
 
         {/* No Data Modal */}
         <NoDataModal />
