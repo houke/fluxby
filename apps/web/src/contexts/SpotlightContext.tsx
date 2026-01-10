@@ -141,7 +141,11 @@ export function SpotlightProvider({ children }: SpotlightProviderProps) {
       title: t.nav.dashboard,
       icon: LayoutDashboard,
       group: 'pages',
-      keywords: ['home', 'overview', 'main'],
+      keywords: t.spotlight?.keywords?.dashboard || [
+        'home',
+        'overview',
+        'main',
+      ],
       onSelect: () => navigate('/dashboard'),
     },
     {
@@ -149,7 +153,11 @@ export function SpotlightProvider({ children }: SpotlightProviderProps) {
       title: t.nav.transactions,
       icon: ArrowLeftRight,
       group: 'pages',
-      keywords: ['payments', 'history', 'betalingen'],
+      keywords: t.spotlight?.keywords?.transactions || [
+        'payments',
+        'history',
+        'betalingen',
+      ],
       onSelect: () => navigate('/transactions'),
     },
     {
@@ -157,7 +165,12 @@ export function SpotlightProvider({ children }: SpotlightProviderProps) {
       title: t.nav.analytics,
       icon: BarChart3,
       group: 'pages',
-      keywords: ['charts', 'reports', 'statistics', 'grafieken'],
+      keywords: t.spotlight?.keywords?.analytics || [
+        'charts',
+        'reports',
+        'statistics',
+        'grafieken',
+      ],
       onSelect: () => navigate('/analytics'),
     },
     {
@@ -165,7 +178,11 @@ export function SpotlightProvider({ children }: SpotlightProviderProps) {
       title: t.nav.budgets,
       icon: Wallet,
       group: 'pages',
-      keywords: ['spending', 'limits', 'budget'],
+      keywords: t.spotlight?.keywords?.budgets || [
+        'spending',
+        'limits',
+        'budget',
+      ],
       onSelect: () => navigate('/budgets'),
     },
     {
@@ -173,7 +190,12 @@ export function SpotlightProvider({ children }: SpotlightProviderProps) {
       title: t.nav.subscriptions || 'Subscriptions',
       icon: CalendarClock,
       group: 'pages',
-      keywords: ['recurring', 'patterns', 'abonnementen', 'herhalend'],
+      keywords: t.spotlight?.keywords?.subscriptions || [
+        'recurring',
+        'patterns',
+        'abonnementen',
+        'herhalend',
+      ],
       onSelect: () => navigate('/subscriptions'),
     },
     {
@@ -181,7 +203,12 @@ export function SpotlightProvider({ children }: SpotlightProviderProps) {
       title: t.nav.addressBook || 'Address Book',
       icon: BookUser,
       group: 'pages',
-      keywords: ['contacts', 'people', 'accounts', 'contacten'],
+      keywords: t.spotlight?.keywords?.addressBook || [
+        'contacts',
+        'people',
+        'accounts',
+        'contacten',
+      ],
       onSelect: () => navigate('/addressbook'),
     },
     {
@@ -189,7 +216,11 @@ export function SpotlightProvider({ children }: SpotlightProviderProps) {
       title: t.nav.categories,
       icon: Tags,
       group: 'pages',
-      keywords: ['labels', 'tags', 'categorieën'],
+      keywords: t.spotlight?.keywords?.categories || [
+        'labels',
+        'tags',
+        'categorieën',
+      ],
       onSelect: () => navigate('/categories'),
     },
     {
@@ -197,7 +228,11 @@ export function SpotlightProvider({ children }: SpotlightProviderProps) {
       title: t.nav.import,
       icon: Upload,
       group: 'pages',
-      keywords: ['csv', 'upload', 'importeren'],
+      keywords: t.spotlight?.keywords?.import || [
+        'csv',
+        'upload',
+        'importeren',
+      ],
       onSelect: () => navigate('/import'),
     },
     {
@@ -205,7 +240,11 @@ export function SpotlightProvider({ children }: SpotlightProviderProps) {
       title: t.nav.settings,
       icon: Settings,
       group: 'pages',
-      keywords: ['preferences', 'options', 'instellingen'],
+      keywords: t.spotlight?.keywords?.settings || [
+        'preferences',
+        'options',
+        'instellingen',
+      ],
       onSelect: () => navigate('/settings'),
     },
     {
@@ -213,7 +252,12 @@ export function SpotlightProvider({ children }: SpotlightProviderProps) {
       title: t.nav.help,
       icon: HelpCircle,
       group: 'pages',
-      keywords: ['support', 'faq', 'docs', 'hulp'],
+      keywords: t.spotlight?.keywords?.help || [
+        'support',
+        'faq',
+        'docs',
+        'hulp',
+      ],
       onSelect: () => navigate('/help'),
     },
     // Actions
@@ -225,7 +269,13 @@ export function SpotlightProvider({ children }: SpotlightProviderProps) {
         : t.spotlight?.switchToDark || 'Switch to dark mode',
       icon: isDarkMode() ? Sun : Moon,
       group: 'actions',
-      keywords: ['dark', 'light', 'theme', 'mode', 'thema'],
+      keywords: t.spotlight?.keywords?.theme || [
+        'dark',
+        'light',
+        'theme',
+        'mode',
+        'thema',
+      ],
       shortcut: '⇧⌘D',
       onSelect: toggleTheme,
     },
@@ -237,7 +287,12 @@ export function SpotlightProvider({ children }: SpotlightProviderProps) {
         : t.common?.enablePrivacy || 'Hide sensitive data',
       icon: isPrivacyMode ? Eye : EyeOff,
       group: 'actions',
-      keywords: ['privacy', 'blur', 'hide', 'show'],
+      keywords: t.spotlight?.keywords?.privacy || [
+        'privacy',
+        'blur',
+        'hide',
+        'show',
+      ],
       shortcut: '⇧⌘P',
       onSelect: togglePrivacyMode,
     },
@@ -246,7 +301,12 @@ export function SpotlightProvider({ children }: SpotlightProviderProps) {
       title: t.spotlight?.addBudget || 'Add budget',
       icon: Plus,
       group: 'actions',
-      keywords: ['new', 'create', 'budget', 'toevoegen'],
+      keywords: t.spotlight?.keywords?.budget || [
+        'new',
+        'create',
+        'budget',
+        'toevoegen',
+      ],
       onSelect: () => navigate('/budgets?action=add'),
     },
   ];
