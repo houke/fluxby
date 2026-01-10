@@ -246,7 +246,11 @@ export default function Subscriptions() {
   const handleEdit = useCallback(
     (
       id: string,
-      updates: { merchantName?: string; patternType?: PatternType }
+      updates: {
+        merchantName?: string;
+        patternType?: PatternType;
+        avgAmount?: number;
+      }
     ) => {
       updateMutation.mutate({ id, updates });
     },
@@ -269,12 +273,14 @@ export default function Subscriptions() {
     }
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: string, isStale = false) => {
     const confirmed = await confirm({
       title: t.subscriptions?.delete || 'Delete',
-      message:
-        t.subscriptions?.dismissPatternDescription ||
-        'Are you sure you want to delete this subscription?',
+      message: isStale
+        ? t.subscriptions?.deleteStaleDescription ||
+          'This subscription appears to be no longer active and will be removed from your profile.'
+        : t.subscriptions?.deleteConfirmDescription ||
+          'Are you sure you want to delete this subscription?',
       variant: 'danger',
     });
     if (confirmed) {
@@ -545,7 +551,7 @@ export default function Subscriptions() {
                             size='sm'
                             variant='outline'
                             className='text-red-600 hover:bg-red-600 hover:text-white'
-                            onClick={() => handleDelete(alert.pattern.id)}
+                            onClick={() => handleDelete(alert.pattern.id, true)}
                           >
                             <Trash2 className='h-4 w-4' />
                           </Button>
@@ -749,6 +755,17 @@ function isNextPaymentOverdue(pattern: RecurringPattern): boolean {
   return pattern.nextExpectedDate < today;
 }
 
+// Helper to check if last transaction is in current month
+function hasTransactionThisMonth(pattern: RecurringPattern): boolean {
+  if (!pattern.lastDate) return false;
+  const lastDate = new Date(pattern.lastDate);
+  const now = new Date();
+  return (
+    lastDate.getFullYear() === now.getFullYear() &&
+    lastDate.getMonth() === now.getMonth()
+  );
+}
+
 // Subscription card component
 function SubscriptionCard({
   pattern,
@@ -770,6 +787,7 @@ function SubscriptionCard({
   onEdit?: (updates: {
     merchantName?: string;
     patternType?: PatternType;
+    avgAmount?: number;
   }) => void;
   isExpanded?: boolean;
   onToggleExpand?: () => void;
@@ -786,12 +804,17 @@ function SubscriptionCard({
   const [editFrequency, setEditFrequency] = useState<PatternType>(
     pattern.patternType
   );
+  const [editAmount, setEditAmount] = useState(
+    Math.abs(pattern.avgAmount).toString()
+  );
 
   const handleSaveEdit = () => {
     if (onEdit) {
+      const parsedAmount = parseFloat(editAmount);
       onEdit({
         merchantName: editName.trim() || undefined,
         patternType: editFrequency,
+        avgAmount: !isNaN(parsedAmount) ? parsedAmount : undefined,
       });
     }
     setIsEditing(false);
@@ -800,11 +823,15 @@ function SubscriptionCard({
   const handleCancelEdit = () => {
     setEditName(pattern.merchantName || '');
     setEditFrequency(pattern.patternType);
+    setEditAmount(Math.abs(pattern.avgAmount).toString());
     setIsEditing(false);
   };
 
   const stale = isStaleSubscription(pattern);
   const overdue = isNextPaymentOverdue(pattern);
+  const hasThisMonthTransaction = hasTransactionThisMonth(pattern);
+  // Show 'awaiting' instead of 'overdue' if we don't have a transaction this month yet
+  const showAwaiting = overdue && !hasThisMonthTransaction && !stale;
 
   return (
     <div className='rounded-lg border'>
@@ -857,7 +884,7 @@ function SubscriptionCard({
               </TooltipProvider>
             )}
           </div>
-          <div className='mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground'>
+          <div className='mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground'>
             {isEditing ? (
               <Select
                 value={editFrequency}
@@ -887,12 +914,25 @@ function SubscriptionCard({
             ) : (
               <span>{getFrequencyLabel(pattern.patternType, t)}</span>
             )}
-            <span>•</span>
-            <span>
-              {t.subscriptions?.avgAmount || 'Avg.'}:{' '}
-              <Currency amount={pattern.avgAmount} />
-            </span>
-            <span>•</span>
+            <span className='text-muted-foreground/60'>•</span>
+            {isEditing ? (
+              <span className='flex items-center gap-1'>
+                <span>{t.subscriptions?.avgAmount || 'Avg.'}:</span>
+                <Input
+                  type='number'
+                  step='0.01'
+                  value={editAmount}
+                  onChange={(e) => setEditAmount(e.target.value)}
+                  className='h-7 w-20'
+                />
+              </span>
+            ) : (
+              <span>
+                {t.subscriptions?.avgAmount || 'Avg.'}:{' '}
+                <Currency amount={pattern.avgAmount} />
+              </span>
+            )}
+            <span className='text-muted-foreground/60'>•</span>
             <button
               type='button'
               className='cursor-pointer underline-offset-2 hover:underline'
@@ -911,12 +951,24 @@ function SubscriptionCard({
               <span className='text-muted-foreground'>
                 {t.subscriptions?.nextPayment || 'Next payment'}:{' '}
               </span>
-              <span className={cn('font-medium', overdue && 'text-red-600')}>
+              <span
+                className={cn(
+                  'font-medium',
+                  overdue && !showAwaiting && 'text-red-600',
+                  showAwaiting && 'text-amber-600'
+                )}
+              >
                 {formatDate(pattern.nextExpectedDate)}
-                {overdue && (
+                {showAwaiting ? (
                   <span className='ml-1 text-xs'>
-                    ({t.subscriptions?.overdue || 'overdue'})
+                    ({t.subscriptions?.awaitingTransaction || 'awaiting'})
                   </span>
+                ) : (
+                  overdue && (
+                    <span className='ml-1 text-xs'>
+                      ({t.subscriptions?.overdue || 'overdue'})
+                    </span>
+                  )
                 )}
               </span>
             </p>

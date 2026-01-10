@@ -892,7 +892,7 @@ export default function Analytics() {
             </CardHeader>
             <CardContent>
               {expenseCategories && expenseCategories.length > 0 ? (
-                <div className='space-y-2'>
+                <div className='max-h-96 space-y-2 overflow-y-auto'>
                   {expenseCategories.map((cat, index) => (
                     <button
                       key={cat.categoryId}
@@ -972,7 +972,7 @@ export default function Analytics() {
             </CardHeader>
             <CardContent>
               {incomeCategories && incomeCategories.length > 0 ? (
-                <div className='space-y-2'>
+                <div className='max-h-96 space-y-2 overflow-y-auto'>
                   {incomeCategories.map((cat) => (
                     <button
                       key={cat.categoryId}

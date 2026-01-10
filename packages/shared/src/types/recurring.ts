@@ -53,6 +53,8 @@ export interface RecurringStats {
   activeSubscriptions: number;
   confirmedSubscriptions: number;
   pendingConfirmation: number;
+  /** Expected subscription expenses for a specific period (if queried with date range) */
+  expectedPeriodExpenses?: number;
 }
 
 /**

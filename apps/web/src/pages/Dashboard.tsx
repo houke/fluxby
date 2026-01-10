@@ -242,8 +242,9 @@ export default function Dashboard() {
   });
 
   const { data: recurringStats } = useQuery<RecurringStats>({
-    queryKey: ['recurring-stats', activeProfileId],
-    queryFn: () => api.getRecurringStats() as Promise<RecurringStats>,
+    queryKey: ['recurring-stats', activeProfileId, startDate, endDate],
+    queryFn: () =>
+      api.getRecurringStats(startDate, endDate) as Promise<RecurringStats>,
     enabled: !!activeProfileId,
   });
 
@@ -298,6 +299,29 @@ export default function Dashboard() {
   const periodProgress = totalDays > 0 ? daysPassed / totalDays : 0;
   const expectedSpent = totalBudget * periodProgress;
   const _burnRate = expectedSpent > 0 ? (totalSpent / expectedSpent) * 100 : 0;
+
+  // Create period label for cards
+  const locale = language === 'nl' ? nl : enUS;
+  const periodLabel = useMemo(() => {
+    const startMonth = format(periodStart, 'MMM', { locale });
+    const endMonth = format(periodEnd, 'MMM', { locale });
+    const startYear = periodStart.getFullYear();
+    const endYear = periodEnd.getFullYear();
+
+    // Same month and year
+    if (
+      periodStart.getMonth() === periodEnd.getMonth() &&
+      startYear === endYear
+    ) {
+      return format(periodStart, 'MMMM yyyy', { locale });
+    }
+    // Same year, different months
+    if (startYear === endYear) {
+      return `${startMonth} - ${endMonth} ${startYear}`;
+    }
+    // Different years
+    return `${startMonth} ${startYear} - ${endMonth} ${endYear}`;
+  }, [periodStart, periodEnd, locale]);
 
   // Use balance forecast from API
   const hasEnoughData =
@@ -1484,10 +1508,15 @@ export default function Dashboard() {
             data-onboarding='balance-forecast'
           >
             <CardHeader>
-              <CardTitle className='text-base sm:text-lg'>
-                {hasEnoughData && balanceForecast?.isPastPeriod
-                  ? t.dashboard.periodSummary
-                  : t.dashboard.forecast}
+              <CardTitle className='flex items-center justify-between text-base sm:text-lg'>
+                <span>
+                  {hasEnoughData && balanceForecast?.isPastPeriod
+                    ? t.dashboard.periodSummary
+                    : t.dashboard.forecast}
+                </span>
+                <span className='text-sm font-normal text-muted-foreground'>
+                  {periodLabel}
+                </span>
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -1628,8 +1657,11 @@ export default function Dashboard() {
             data-onboarding='subscriptions-summary'
           >
             <CardHeader>
-              <CardTitle className='text-base sm:text-lg'>
-                {t.subscriptions?.title || 'Subscriptions'}
+              <CardTitle className='flex items-center justify-between text-base sm:text-lg'>
+                <span>{t.subscriptions?.title || 'Subscriptions'}</span>
+                <span className='text-sm font-normal text-muted-foreground'>
+                  {periodLabel}
+                </span>
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -1637,6 +1669,20 @@ export default function Dashboard() {
               (recurringStats.activeSubscriptions > 0 ||
                 recurringStats.pendingConfirmation > 0) ? (
                 <div className='space-y-4'>
+                  {recurringStats.expectedPeriodExpenses !== undefined &&
+                    recurringStats.expectedPeriodExpenses > 0 && (
+                      <div className='flex items-center justify-between'>
+                        <span className='text-sm text-muted-foreground'>
+                          {t.subscriptions?.expectedThisPeriod ||
+                            'Expected this period'}
+                        </span>
+                        <span className='font-semibold'>
+                          <Currency
+                            amount={-recurringStats.expectedPeriodExpenses}
+                          />
+                        </span>
+                      </div>
+                    )}
                   <div className='flex items-center justify-between'>
                     <span className='text-sm text-muted-foreground'>
                       {t.subscriptions?.totalMonthlySpend ||

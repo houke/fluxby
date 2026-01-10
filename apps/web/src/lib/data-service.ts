@@ -4370,7 +4370,7 @@ export function createDataService(db: Database) {
           const txRows = await db.queryAsync<{ date: string; amount: number }>(
             `SELECT date, ABS(amount) as amount FROM transactions
              WHERE profile_id = ? AND is_deleted = 0
-             AND opposing_iban = ?
+             AND opposing_account_iban = ?
              ORDER BY date ASC`,
             [pid, row.opposing_iban]
           );
@@ -4379,9 +4379,9 @@ export function createDataService(db: Database) {
           const txRows = await db.queryAsync<{ date: string; amount: number }>(
             `SELECT date, ABS(amount) as amount FROM transactions
              WHERE profile_id = ? AND is_deleted = 0
-             AND (merchant_name = ? OR opposing_name LIKE ?)
+             AND LOWER(COALESCE(merchant_name, opposing_account_name)) = LOWER(?)
              ORDER BY date ASC`,
-            [pid, row.merchant_name, `%${row.merchant_name}%`]
+            [pid, row.merchant_name]
           );
           priceHistory = txRows;
         }
@@ -4411,8 +4411,13 @@ export function createDataService(db: Database) {
 
     /**
      * Get recurring pattern stats (total monthly spend, counts, etc)
+     * @param startDate Optional start date to calculate expected expenses for a period
+     * @param endDate Optional end date to calculate expected expenses for a period
      */
-    async getRecurringStats(): Promise<RecurringStats> {
+    async getRecurringStats(
+      startDate?: string,
+      endDate?: string
+    ): Promise<RecurringStats> {
       const pid = profileId();
       if (!pid) {
         return {
@@ -4424,12 +4429,14 @@ export function createDataService(db: Database) {
       }
 
       const rows = await db.queryAsync<{
+        id: string;
         pattern_type: PatternType;
         avg_amount: number;
+        last_date: string;
         is_active: number;
         is_confirmed: number;
       }>(
-        `SELECT pattern_type, avg_amount, is_active, is_confirmed
+        `SELECT id, pattern_type, avg_amount, last_date, is_active, is_confirmed
          FROM recurring_patterns
          WHERE profile_id = ? AND is_deleted = 0 AND is_dismissed = 0 AND is_active = 1`,
         [pid]
@@ -4461,11 +4468,44 @@ export function createDataService(db: Database) {
         }
       }
 
+      // Calculate expected expenses for the period if dates provided
+      let expectedPeriodExpenses: number | undefined;
+      if (startDate && endDate) {
+        const intervalDays: Record<PatternType, number> = {
+          weekly: 7,
+          biweekly: 14,
+          monthly: 30,
+          quarterly: 91,
+          yearly: 365,
+        };
+
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        let total = 0;
+
+        for (const pattern of rows) {
+          const nextDate = new Date(pattern.last_date);
+          const interval = intervalDays[pattern.pattern_type];
+
+          // Project forward from last date
+          while (nextDate <= end) {
+            nextDate.setDate(nextDate.getDate() + interval);
+
+            if (nextDate >= start && nextDate <= end) {
+              total += Math.abs(pattern.avg_amount);
+            }
+          }
+        }
+
+        expectedPeriodExpenses = total;
+      }
+
       return {
         totalMonthlySpend,
         activeSubscriptions,
         confirmedSubscriptions,
         pendingConfirmation,
+        expectedPeriodExpenses,
       };
     },
 
@@ -4550,13 +4590,14 @@ export function createDataService(db: Database) {
     },
 
     /**
-     * Update a recurring pattern (edit name, frequency, etc.)
+     * Update a recurring pattern (edit name, frequency, amount, etc.)
      */
     async updateRecurringPattern(
       id: string,
       updates: {
         merchantName?: string;
         patternType?: PatternType;
+        avgAmount?: number;
       }
     ): Promise<void> {
       const pid = profileId();
@@ -4572,6 +4613,10 @@ export function createDataService(db: Database) {
       if (updates.patternType !== undefined) {
         setClauses.push('pattern_type = ?');
         params.push(updates.patternType);
+      }
+      if (updates.avgAmount !== undefined) {
+        setClauses.push('avg_amount = ?');
+        params.push(updates.avgAmount);
       }
 
       params.push(id, pid);

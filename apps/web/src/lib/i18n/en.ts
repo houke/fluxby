@@ -500,6 +500,11 @@ export const en: TranslationKeys = {
     noTransactionsFound: 'No transactions found',
     showTransactions: 'Show transactions',
     overdue: 'overdue',
+    awaitingTransaction: 'awaiting',
+    expectedThisPeriod: 'Expected this period',
+    deleteStaleDescription:
+      'This subscription appears to be no longer active and will be removed from your profile.',
+    deleteConfirmDescription: 'Are you sure you want to delete this subscription?',
   },
   categories: {
     title: 'Categories',

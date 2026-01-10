@@ -442,6 +442,10 @@ export interface TranslationKeys {
     noTransactionsFound: string;
     showTransactions: string;
     overdue: string;
+    awaitingTransaction: string;
+    expectedThisPeriod: string;
+    deleteStaleDescription: string;
+    deleteConfirmDescription: string;
   };
   categories: {
     title: string;
@@ -1711,6 +1715,11 @@ export const nl: TranslationKeys = {
     noTransactionsFound: 'Geen transacties gevonden',
     showTransactions: 'Toon transacties',
     overdue: 'te laat',
+    awaitingTransaction: 'nog verwacht',
+    expectedThisPeriod: 'Verwacht deze periode',
+    deleteStaleDescription:
+      'Dit abonnement lijkt niet meer actief te zijn en wordt verwijderd uit je profiel.',
+    deleteConfirmDescription: 'Weet je zeker dat je dit abonnement wilt verwijderen?',
   },
   categories: {
     title: 'Categorieën',
