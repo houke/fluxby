@@ -131,13 +131,17 @@ export interface TranslationKeys {
   updater: {
     title: string;
     description: string;
+    webDescription: string;
     checking: string;
     upToDate: string;
     newVersionAvailable: string;
+    webUpdateAvailable: string;
+    newVersion: string;
     downloading: string;
     readyToRestart: string;
     checkNow: string;
     installUpdate: string;
+    refreshNow: string;
     viewReleaseNotes: string;
     releaseNotesTitle: string;
     checkFailed: string;
@@ -655,6 +659,7 @@ export interface TranslationKeys {
     masterPasswordChange: string;
     masterPasswordChanging: string;
     masterPasswordMustDiffer: string;
+    appVersion: string;
     schemaVersion: string;
     versionMismatch: string;
     profileManager: {
@@ -1405,13 +1410,17 @@ export const nl: TranslationKeys = {
   updater: {
     title: 'Software updates',
     description: 'Controleer en installeer app updates',
+    webDescription: 'Controleer op app updates',
     checking: 'Controleren op updates...',
     upToDate: 'Je hebt de nieuwste versie',
     newVersionAvailable: 'Versie {version} is beschikbaar',
+    webUpdateAvailable: 'Een nieuwe versie is beschikbaar',
+    newVersion: 'Nieuwe versie',
     downloading: 'Update downloaden...',
     readyToRestart: 'Update klaar. Herstarten...',
     checkNow: 'Nu controleren',
     installUpdate: 'Update installeren',
+    refreshNow: 'Nu vernieuwen',
     viewReleaseNotes: 'Bekijk release notes',
     releaseNotesTitle: 'Release notes voor {version}',
     checkFailed: 'Controleren op updates mislukt',
@@ -1972,6 +1981,7 @@ export const nl: TranslationKeys = {
     masterPasswordChanging: 'Wijzigen...',
     masterPasswordMustDiffer:
       'Nieuw wachtwoord moet anders zijn dan het huidige',
+    appVersion: 'App versie',
     schemaVersion: 'Database schema / Code versie',
     versionMismatch: 'Schema versie mismatch. Klik om te repareren.',
     profile: {

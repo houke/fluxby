@@ -203,9 +203,18 @@ export function AppSettings() {
                 </CardDescription>
               </div>
               <div className='flex items-center gap-2'>
-                <div className='rounded-md bg-muted px-2 py-1 text-xs text-muted-foreground'>
-                  v{version}
-                </div>
+                <TooltipProvider delayDuration={200}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className='cursor-default rounded-md bg-muted px-2 py-1 text-xs text-muted-foreground'>
+                        v{version}
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {t.settings?.appVersion || 'App version'}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
                 <TooltipProvider delayDuration={200}>
                   <Tooltip>
                     <TooltipTrigger asChild>

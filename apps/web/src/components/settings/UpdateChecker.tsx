@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Download,
   RefreshCw,
@@ -29,6 +29,12 @@ import { useToast } from '@/contexts/ToastContext';
 // Check if running in Tauri
 const isTauri = typeof window !== 'undefined' && '__TAURI__' in window;
 
+// Get current app version from Vite env
+const currentAppVersion =
+  typeof import.meta !== 'undefined'
+    ? (import.meta.env?.VITE_APP_VERSION as string | undefined)
+    : undefined;
+
 interface UpdateInfo {
   version: string;
   currentVersion: string;
@@ -40,6 +46,9 @@ interface DownloadProgress {
   downloaded: number;
   total: number;
 }
+
+// Store SW registration for update checks
+let swRegistration: ServiceWorkerRegistration | null = null;
 
 type UpdateStatus =
   | 'idle'
@@ -60,110 +69,230 @@ export function UpdateChecker() {
     useState<DownloadProgress | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showReleaseNotes, setShowReleaseNotes] = useState(false);
+  const [webUpdateAvailable, setWebUpdateAvailable] = useState(false);
+
+  // For web: detect service worker updates
+  useEffect(() => {
+    if (isTauri || !('serviceWorker' in navigator)) return;
+
+    // Get the existing registration
+    navigator.serviceWorker.getRegistration().then((registration) => {
+      if (registration) {
+        swRegistration = registration;
+
+        // Listen for new service worker
+        registration.addEventListener('updatefound', () => {
+          const newWorker = registration.installing;
+          if (newWorker) {
+            newWorker.addEventListener('statechange', () => {
+              if (
+                newWorker.state === 'installed' &&
+                navigator.serviceWorker.controller
+              ) {
+                // New version available
+                setWebUpdateAvailable(true);
+                setStatus('available');
+                setUpdateInfo({
+                  version: t.updater?.newVersion || 'New version',
+                  currentVersion: currentAppVersion || '?',
+                });
+              }
+            });
+          }
+        });
+
+        // Check if there's already a waiting worker
+        if (registration.waiting && navigator.serviceWorker.controller) {
+          setWebUpdateAvailable(true);
+          setStatus('available');
+          setUpdateInfo({
+            version: t.updater?.newVersion || 'New version',
+            currentVersion: currentAppVersion || '?',
+          });
+        }
+      }
+    });
+
+    // Handle controller change (SW update activated)
+    const handleControllerChange = () => {
+      window.location.reload();
+    };
+    navigator.serviceWorker.addEventListener(
+      'controllerchange',
+      handleControllerChange
+    );
+
+    return () => {
+      navigator.serviceWorker.removeEventListener(
+        'controllerchange',
+        handleControllerChange
+      );
+    };
+  }, [t]);
 
   const checkForUpdates = useCallback(async () => {
-    if (!isTauri) return;
-
     setStatus('checking');
     setError(null);
-    setUpdateInfo(null);
 
-    try {
-      const { check } = await import('@tauri-apps/plugin-updater');
-      const update = await check();
+    if (isTauri) {
+      // Tauri: Check via plugin-updater
+      setUpdateInfo(null);
 
-      if (update) {
-        setUpdateInfo({
-          version: update.version,
-          currentVersion: update.currentVersion,
-          date: update.date ?? undefined,
-          body: update.body ?? undefined,
-        });
-        setStatus('available');
-      } else {
-        setStatus('up-to-date');
-        toast.success(
-          t.updater?.upToDate || 'You are running the latest version'
-        );
+      try {
+        const { check } = await import('@tauri-apps/plugin-updater');
+        const update = await check();
+
+        if (update) {
+          setUpdateInfo({
+            version: update.version,
+            currentVersion: update.currentVersion,
+            date: update.date ?? undefined,
+            body: update.body ?? undefined,
+          });
+          setStatus('available');
+        } else {
+          setStatus('up-to-date');
+          toast.success(
+            t.updater?.upToDate || 'You are running the latest version'
+          );
+        }
+      } catch (err) {
+        console.error('Update check failed:', err);
+        setError(err instanceof Error ? err.message : String(err));
+        setStatus('error');
+        toast.error(t.updater?.checkFailed || 'Failed to check for updates');
       }
-    } catch (err) {
-      console.error('Update check failed:', err);
-      setError(err instanceof Error ? err.message : String(err));
-      setStatus('error');
-      toast.error(t.updater?.checkFailed || 'Failed to check for updates');
+    } else if ('serviceWorker' in navigator) {
+      // Web: Check for service worker updates
+      try {
+        const registration = await navigator.serviceWorker.getRegistration();
+        if (registration) {
+          swRegistration = registration;
+          await registration.update();
+
+          // Check if there's a waiting worker after update check
+          if (registration.waiting && navigator.serviceWorker.controller) {
+            setWebUpdateAvailable(true);
+            setStatus('available');
+            setUpdateInfo({
+              version: t.updater?.newVersion || 'New version',
+              currentVersion: currentAppVersion || '?',
+            });
+          } else if (registration.installing) {
+            // Wait for install to complete
+            const newWorker = registration.installing;
+            newWorker.addEventListener('statechange', () => {
+              if (
+                newWorker.state === 'installed' &&
+                navigator.serviceWorker.controller
+              ) {
+                setWebUpdateAvailable(true);
+                setStatus('available');
+                setUpdateInfo({
+                  version: t.updater?.newVersion || 'New version',
+                  currentVersion: currentAppVersion || '?',
+                });
+              }
+            });
+            // Keep checking status - will be resolved by statechange listener
+            setTimeout(() => {
+              if (status === 'checking') {
+                setStatus('up-to-date');
+                toast.success(
+                  t.updater?.upToDate || 'You are running the latest version'
+                );
+              }
+            }, 3000);
+          } else {
+            setStatus('up-to-date');
+            toast.success(
+              t.updater?.upToDate || 'You are running the latest version'
+            );
+          }
+        } else {
+          setStatus('up-to-date');
+        }
+      } catch (err) {
+        console.error('SW update check failed:', err);
+        setError(err instanceof Error ? err.message : String(err));
+        setStatus('error');
+      }
+    } else {
+      setStatus('up-to-date');
     }
-  }, [t, toast]);
+  }, [t, toast, status]);
 
   const downloadAndInstall = useCallback(async () => {
-    if (!isTauri || !updateInfo) return;
-
-    setStatus('downloading');
-    setDownloadProgress({ downloaded: 0, total: 0 });
-
-    try {
-      const { check } = await import('@tauri-apps/plugin-updater');
-      const { relaunch } = await import('@tauri-apps/plugin-process');
-
-      const update = await check();
-      if (!update) {
-        setStatus('error');
-        setError('Update no longer available');
-        return;
-      }
-
-      await update.downloadAndInstall((event) => {
-        switch (event.event) {
-          case 'Started':
-            setDownloadProgress({
-              downloaded: 0,
-              total: event.data.contentLength ?? 0,
-            });
-            break;
-          case 'Progress':
-            setDownloadProgress((prev) => ({
-              downloaded:
-                (prev?.downloaded ?? 0) + (event.data.chunkLength ?? 0),
-              total: prev?.total ?? 0,
-            }));
-            break;
-          case 'Finished':
-            setStatus('ready');
-            break;
-        }
-      });
-
-      // Prompt to relaunch
-      toast.success(
-        t.updater?.installComplete || 'Update installed! Restarting...'
-      );
-
-      // Small delay to show the success message
-      setTimeout(async () => {
-        await relaunch();
-      }, 1500);
-    } catch (err) {
-      console.error('Update download/install failed:', err);
-      setError(err instanceof Error ? err.message : String(err));
-      setStatus('error');
-      toast.error(t.updater?.installFailed || 'Failed to install update');
-    }
-  }, [updateInfo, t, toast]);
-
-  // Auto-check for updates on mount (only in Tauri)
-  useEffect(() => {
     if (isTauri) {
-      // Check after a short delay to not block initial render
-      const timer = setTimeout(() => {
-        checkForUpdates();
-      }, 2000);
-      return () => clearTimeout(timer);
-    }
-  }, [checkForUpdates]);
+      // Tauri: Download and install via plugin
+      if (!updateInfo) return;
 
-  // Don't render if not in Tauri
-  if (!isTauri) {
-    return null;
-  }
+      setStatus('downloading');
+      setDownloadProgress({ downloaded: 0, total: 0 });
+
+      try {
+        const { check } = await import('@tauri-apps/plugin-updater');
+        const { relaunch } = await import('@tauri-apps/plugin-process');
+
+        const update = await check();
+        if (!update) {
+          setStatus('error');
+          setError('Update no longer available');
+          return;
+        }
+
+        await update.downloadAndInstall((event) => {
+          switch (event.event) {
+            case 'Started':
+              setDownloadProgress({
+                downloaded: 0,
+                total: event.data.contentLength ?? 0,
+              });
+              break;
+            case 'Progress':
+              setDownloadProgress((prev) => ({
+                downloaded:
+                  (prev?.downloaded ?? 0) + (event.data.chunkLength ?? 0),
+                total: prev?.total ?? 0,
+              }));
+              break;
+            case 'Finished':
+              setStatus('ready');
+              break;
+          }
+        });
+
+        // Prompt to relaunch
+        toast.success(
+          t.updater?.installComplete || 'Update installed! Restarting...'
+        );
+
+        // Small delay to show the success message
+        setTimeout(async () => {
+          await relaunch();
+        }, 1500);
+      } catch (err) {
+        console.error('Update download/install failed:', err);
+        setError(err instanceof Error ? err.message : String(err));
+        setStatus('error');
+        toast.error(t.updater?.installFailed || 'Failed to install update');
+      }
+    } else if (webUpdateAvailable && swRegistration?.waiting) {
+      // Web: Tell SW to skip waiting and activate
+      setStatus('ready');
+      swRegistration.waiting.postMessage('skipWaiting');
+      // Page will reload via controllerchange listener
+    }
+  }, [updateInfo, t, toast, webUpdateAvailable]);
+
+  // Auto-check for updates on mount
+  useEffect(() => {
+    // Check after a short delay to not block initial render
+    const timer = setTimeout(() => {
+      checkForUpdates();
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, [checkForUpdates]);
 
   const progressPercentage =
     downloadProgress && downloadProgress.total > 0
@@ -178,6 +307,15 @@ export function UpdateChecker() {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
   };
 
+  // For web: customize labels
+  const isWeb = !isTauri;
+  const installButtonLabel = isWeb
+    ? t.updater?.refreshNow || 'Refresh now'
+    : t.updater?.installUpdate || 'Install update';
+  const descriptionText = isWeb
+    ? t.updater?.webDescription || 'Check for app updates'
+    : t.updater?.description || 'Check for and install app updates';
+
   return (
     <>
       <Card className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'>
@@ -188,7 +326,7 @@ export function UpdateChecker() {
                 {t.updater?.title || 'Software updates'}
               </CardTitle>
               <CardDescription className='text-xs sm:text-sm'>
-                {t.updater?.description || 'Check for and install app updates'}
+                {descriptionText}
               </CardDescription>
             </div>
           </div>
@@ -228,12 +366,15 @@ export function UpdateChecker() {
                     <Download className='h-5 w-5 text-purple-600' />
                     <div>
                       <span className='text-sm font-medium'>
-                        {(
-                          t.updater?.newVersionAvailable ||
-                          'Version {version} is available'
-                        ).replace('{version}', updateInfo.version)}
+                        {isWeb
+                          ? t.updater?.webUpdateAvailable ||
+                            'A new version is available'
+                          : (
+                              t.updater?.newVersionAvailable ||
+                              'Version {version} is available'
+                            ).replace('{version}', updateInfo.version)}
                       </span>
-                      {updateInfo.body && (
+                      {!isWeb && updateInfo.body && (
                         <button
                           onClick={() => setShowReleaseNotes(true)}
                           className='ml-2 text-xs text-purple-600 hover:underline'
@@ -304,8 +445,12 @@ export function UpdateChecker() {
                     onClick={downloadAndInstall}
                     className='bg-purple-600 hover:bg-purple-700'
                   >
-                    <Download className='mr-2 h-4 w-4' />
-                    {t.updater?.installUpdate || 'Install update'}
+                    {isWeb ? (
+                      <RefreshCw className='mr-2 h-4 w-4' />
+                    ) : (
+                      <Download className='mr-2 h-4 w-4' />
+                    )}
+                    {installButtonLabel}
                   </Button>
                 )}
               </div>
@@ -350,8 +495,12 @@ export function UpdateChecker() {
               }}
               className='bg-purple-600 hover:bg-purple-700'
             >
-              <Download className='mr-2 h-4 w-4' />
-              {t.updater?.installUpdate || 'Install update'}
+              {isWeb ? (
+                <RefreshCw className='mr-2 h-4 w-4' />
+              ) : (
+                <Download className='mr-2 h-4 w-4' />
+              )}
+              {installButtonLabel}
             </Button>
           </DialogFooter>
         </DialogContent>
