@@ -622,6 +622,8 @@ export interface TranslationKeys {
     masterPasswordChange: string;
     masterPasswordChanging: string;
     masterPasswordMustDiffer: string;
+    schemaVersion: string;
+    versionMismatch: string;
     profileManager: {
       title: string;
       description: string;
@@ -1887,6 +1889,8 @@ export const nl: TranslationKeys = {
     masterPasswordChanging: 'Wijzigen...',
     masterPasswordMustDiffer:
       'Nieuw wachtwoord moet anders zijn dan het huidige',
+    schemaVersion: 'Database schema / Code versie',
+    versionMismatch: 'Schema versie mismatch. Klik om te repareren.',
     profile: {
       title: 'Profiel',
       description:
@@ -2560,7 +2564,14 @@ export const nl: TranslationKeys = {
       privacy: ['privacy', 'vervagen', 'verbergen', 'tonen'],
       budget: ['nieuw', 'aanmaken', 'budget', 'toevoegen'],
       category: ['nieuw', 'aanmaken', 'categorie', 'label', 'toevoegen'],
-      contact: ['nieuw', 'aanmaken', 'contact', 'adres', 'adresboek', 'toevoegen'],
+      contact: [
+        'nieuw',
+        'aanmaken',
+        'contact',
+        'adres',
+        'adresboek',
+        'toevoegen',
+      ],
     },
   },
 };

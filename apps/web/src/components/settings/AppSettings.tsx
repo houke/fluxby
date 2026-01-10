@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Check, Pencil, AlertTriangle } from 'lucide-react';
+import { Check, Pencil, AlertTriangle, Database, Code } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -30,6 +30,10 @@ import { api } from '@/lib/api';
 import { useEncryption } from '@/contexts/EncryptionContext';
 import { Toast, type ToastType } from '@/components/ui/toast';
 import { version } from '../../../package.json';
+import {
+  getStoredDbVersion,
+  getLatestMigrationVersion,
+} from '@fluxby/database';
 
 export function AppSettings() {
   const { t, language, setLanguage, languages } = useLanguage();
@@ -159,6 +163,27 @@ export function AppSettings() {
     document.documentElement.classList.contains('dark') ? 'dark' : 'light'
   );
 
+  // Database version state
+  const [dbVersion, setDbVersion] = useState<number | null>(null);
+  const codeVersion = getLatestMigrationVersion();
+  const hasVersionMismatch = dbVersion !== null && dbVersion !== codeVersion;
+
+  useEffect(() => {
+    // Get the stored database version
+    const storedVersion = getStoredDbVersion();
+    setDbVersion(storedVersion);
+  }, []);
+
+  // Handle migration trigger from version badge
+  const handleMigrationTrigger = () => {
+    if (hasVersionMismatch) {
+      // Clear localStorage version to trigger migration on next load
+      localStorage.removeItem('fluxby-db-schema-version');
+      sessionStorage.removeItem('fluxby-migrations-complete-session');
+      window.location.reload();
+    }
+  };
+
   return (
     <div className='space-y-0 sm:space-y-6'>
       <div className='-mx-3 sm:mx-0'>
@@ -176,8 +201,44 @@ export function AppSettings() {
                   {t.settings.appSettingsDescription}
                 </CardDescription>
               </div>
-              <div className='rounded-md bg-muted px-2 py-1 text-xs text-muted-foreground'>
-                v{version}
+              <div className='flex items-center gap-2'>
+                <div className='rounded-md bg-muted px-2 py-1 text-xs text-muted-foreground'>
+                  v{version}
+                </div>
+                <TooltipProvider delayDuration={200}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={
+                          hasVersionMismatch
+                            ? handleMigrationTrigger
+                            : undefined
+                        }
+                        className={`flex items-center gap-1 rounded-md px-2 py-1 text-xs ${
+                          hasVersionMismatch
+                            ? 'cursor-pointer bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50'
+                            : 'cursor-default bg-muted text-muted-foreground'
+                        }`}
+                      >
+                        <Database className='h-3 w-3' />
+                        <span>{dbVersion ?? '?'}</span>
+                        <span className='text-muted-foreground/50'>/</span>
+                        <Code className='h-3 w-3' />
+                        <span>{codeVersion}</span>
+                        {hasVersionMismatch && (
+                          <AlertTriangle className='ml-0.5 h-3 w-3' />
+                        )}
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {hasVersionMismatch
+                        ? t.settings?.versionMismatch ||
+                          'Schema version mismatch. Click to repair.'
+                        : t.settings?.schemaVersion ||
+                          'Database schema / Code version'}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </div>
             </div>
           </CardHeader>

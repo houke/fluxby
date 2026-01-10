@@ -696,6 +696,8 @@ export const en: TranslationKeys = {
     masterPasswordChange: 'Change password',
     masterPasswordChanging: 'Changing...',
     masterPasswordMustDiffer: 'New password must be different from current',
+    schemaVersion: 'Database schema / Code version',
+    versionMismatch: 'Schema version mismatch. Click to repair.',
     profile: {
       title: 'Profile',
       description:
@@ -1404,7 +1406,14 @@ export const en: TranslationKeys = {
       privacy: ['privacy', 'blur', 'hide', 'show'],
       budget: ['new', 'create', 'budget', 'toevoegen'],
       category: ['new', 'create', 'category', 'categorie', 'toevoegen'],
-      contact: ['new', 'create', 'contact', 'address', 'adresboek', 'toevoegen'],
+      contact: [
+        'new',
+        'create',
+        'contact',
+        'address',
+        'adresboek',
+        'toevoegen',
+      ],
     },
   },
 };

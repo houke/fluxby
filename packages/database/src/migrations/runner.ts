@@ -14,6 +14,32 @@ const SESSION_KEY_MIGRATIONS_COMPLETE = 'fluxby-migrations-complete-session';
 let migrationsCompletedThisSession = false;
 
 /**
+ * Get the stored database schema version from localStorage.
+ * Returns null if not set.
+ */
+export function getStoredDbVersion(): number | null {
+  try {
+    if (typeof localStorage === 'undefined') return null;
+    const stored = localStorage.getItem(STORAGE_KEY_DB_VERSION);
+    if (!stored) return null;
+    const version = parseInt(stored, 10);
+    return isNaN(version) ? null : version;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Check if the database version matches the code's expected version.
+ * Returns true if versions match, false if there's a mismatch.
+ */
+export function isVersionMismatch(): boolean {
+  const storedVersion = getStoredDbVersion();
+  if (storedVersion === null) return false; // First run, no mismatch
+  return storedVersion !== LATEST_MIGRATION_VERSION;
+}
+
+/**
  * Check if migrations completed in this session.
  * Used to prevent showing migration prompt multiple times in the same session.
  */
@@ -278,6 +304,15 @@ const CRITICAL_TABLES_BY_VERSION: Record<number, string[]> = {
 };
 
 /**
+ * Critical columns that must exist for each migration version.
+ * Format: { version: { table: [columns] } }
+ * If any of these columns are missing, the migration will be re-run.
+ */
+const CRITICAL_COLUMNS_BY_VERSION: Record<number, Record<string, string[]>> = {
+  6: { recurring_patterns: ['is_dismissed'] },
+};
+
+/**
  * Verify that critical tables exist for the given migration version.
  * Returns the list of missing tables.
  */
@@ -307,8 +342,43 @@ export async function verifyTablesExist(
 }
 
 /**
- * Verify database integrity and re-run migrations if critical tables are missing.
- * This handles edge cases where schema_version says migrations ran but tables don't exist.
+ * Verify that critical columns exist for the given migration version.
+ * Returns a list of missing columns in format "table.column".
+ */
+export async function verifyColumnsExist(
+  db: MigrationContext,
+  version: number
+): Promise<string[]> {
+  const columnsByTable = CRITICAL_COLUMNS_BY_VERSION[version] || {};
+  const missingColumns: string[] = [];
+
+  for (const [table, columns] of Object.entries(columnsByTable)) {
+    try {
+      // Get table info to check column existence
+      const tableInfo = await db.queryAsync<{ name: string }>(
+        `PRAGMA table_info(${table})`
+      );
+      const existingColumns = new Set(tableInfo?.map((row) => row.name) || []);
+
+      for (const column of columns) {
+        if (!existingColumns.has(column)) {
+          missingColumns.push(`${table}.${column}`);
+        }
+      }
+    } catch {
+      // If we can't query table info, assume all columns are missing
+      for (const column of columns) {
+        missingColumns.push(`${table}.${column}`);
+      }
+    }
+  }
+
+  return missingColumns;
+}
+
+/**
+ * Verify database integrity and re-run migrations if critical tables/columns are missing.
+ * This handles edge cases where schema_version says migrations ran but tables/columns don't exist.
  * Also repairs corrupted schema_version entries from buggy migration version numbers.
  */
 export async function verifyAndRepairMigrations(
@@ -336,7 +406,7 @@ export async function verifyAndRepairMigrations(
     );
   }
 
-  // Check all migrations up to current version
+  // Check all migrations up to current version - verify tables
   for (const [versionStr] of Object.entries(CRITICAL_TABLES_BY_VERSION)) {
     const version = parseInt(versionStr, 10);
     const actualVersion = await getCurrentVersion(db);
@@ -346,6 +416,40 @@ export async function verifyAndRepairMigrations(
     if (missingTables.length > 0) {
       dbLog(
         `[MigrationRunner] Missing tables for version ${version}: ${missingTables.join(', ')}`
+      );
+      dbLog(
+        `[MigrationRunner] Rolling back schema_version to force re-migration`
+      );
+
+      // Delete the problematic version from schema_version to force re-run
+      await db.execAsync(
+        `DELETE FROM schema_version WHERE version >= ${version}`
+      );
+
+      // Clear localStorage to ensure migrations re-run
+      if (typeof localStorage !== 'undefined') {
+        localStorage.removeItem(STORAGE_KEY_DB_VERSION);
+        // Also clear session flag so migrations can run
+        if (typeof sessionStorage !== 'undefined') {
+          sessionStorage.removeItem(SESSION_KEY_MIGRATIONS_COMPLETE);
+        }
+      }
+
+      // Break to re-run migrations
+      break;
+    }
+  }
+
+  // Check all migrations up to current version - verify columns
+  for (const [versionStr] of Object.entries(CRITICAL_COLUMNS_BY_VERSION)) {
+    const version = parseInt(versionStr, 10);
+    const actualVersion = await getCurrentVersion(db);
+    if (version > actualVersion) continue;
+
+    const missingColumns = await verifyColumnsExist(db, version);
+    if (missingColumns.length > 0) {
+      dbLog(
+        `[MigrationRunner] Missing columns for version ${version}: ${missingColumns.join(', ')}`
       );
       dbLog(
         `[MigrationRunner] Rolling back schema_version to force re-migration`
