@@ -4829,6 +4829,7 @@ export function createDataService(db: Database) {
         DEFAULT_DEMO_BUDGETS,
         DEFAULT_PAYMENT_PROVIDER_RULES,
         PROPOSED_CONTACT_DEMO,
+        DEMO_RECURRING_PATTERNS,
       } = await import('@fluxby/shared');
 
       // === PERFORMANCE: Wrap all operations in a single transaction ===
@@ -4855,6 +4856,10 @@ export function createDataService(db: Database) {
         await db.runAsync('DELETE FROM address_book WHERE profile_id = ?', [
           targetProfileId,
         ]);
+        await db.runAsync(
+          'DELETE FROM recurring_patterns WHERE profile_id = ?',
+          [targetProfileId]
+        );
 
         // 2. Seed categories with subcategories using bulk inserts
         const { parentCategories, subcategories } = flattenCategoriesForDB();
@@ -5682,6 +5687,56 @@ export function createDataService(db: Database) {
           );
         }
 
+        // 8. Create recurring patterns for subscriptions demo
+        const patternDate = new Date();
+        const patternsToInsert = DEMO_RECURRING_PATTERNS.map((pattern) => {
+          const lastDate = new Date(patternDate);
+          lastDate.setDate(3); // Most subscriptions on the 3rd
+          lastDate.setMonth(lastDate.getMonth() - 1);
+
+          const nextDate = new Date(lastDate);
+          nextDate.setMonth(nextDate.getMonth() + 1);
+
+          return {
+            id: crypto.randomUUID(),
+            merchantName: pattern.merchantName,
+            patternType: pattern.patternType,
+            avgAmount: pattern.avgAmount,
+            lastAmount: pattern.lastAmount,
+            lastDate: lastDate.toISOString().split('T')[0],
+            nextExpectedDate: nextDate.toISOString().split('T')[0],
+            isConfirmed: pattern.isConfirmed ? 1 : 0,
+            isVariable: pattern.isVariable ? 1 : 0,
+            transactionCount: pattern.transactionCount,
+          };
+        });
+
+        if (patternsToInsert.length > 0) {
+          const placeholders = patternsToInsert
+            .map(() => '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+            .join(', ');
+          const values = patternsToInsert.flatMap((p) => [
+            p.id,
+            null, // opposing_iban - not needed for demo
+            p.merchantName,
+            p.patternType,
+            p.avgAmount,
+            p.lastAmount,
+            p.lastDate,
+            p.nextExpectedDate,
+            1, // is_active
+            p.isConfirmed,
+            p.isVariable,
+            p.transactionCount,
+            targetProfileId,
+            now,
+          ]);
+          await db.runAsync(
+            `INSERT INTO recurring_patterns (id, opposing_iban, merchant_name, pattern_type, avg_amount, last_amount, last_date, next_expected_date, is_active, is_confirmed, is_variable, transaction_count, profile_id, updated_at) VALUES ${placeholders}`,
+            values
+          );
+        }
+
         // === PERFORMANCE: Commit the transaction ===
         await db.runAsync('COMMIT', []);
 
@@ -5691,6 +5746,7 @@ export function createDataService(db: Database) {
           transactions: transactions.length,
           addressBookEntries: uniqueIbans.size,
           budgets: DEFAULT_DEMO_BUDGETS.length,
+          recurringPatterns: DEMO_RECURRING_PATTERNS.length,
           accounts: 2,
         };
       } catch (error) {

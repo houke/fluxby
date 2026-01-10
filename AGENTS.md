@@ -106,6 +106,30 @@ npm run test:run
 
 Only commit when all checks pass. Fix any issues before proceeding.
 
+### Feature Checklist
+
+**IMPORTANT**: When adding new features, ensure the following are included:
+
+1. **Onboarding Instructions**: If the feature has a UI component, add `data-onboarding` attributes and update the onboarding tour in `apps/web/src/components/onboarding/OnboardingContext.tsx`
+
+2. **Database Migration**: If the feature requires new tables or columns:
+   - Create a new migration file in `packages/database/src/migrations/`
+   - Follow the naming convention: `00X_feature_name.ts`
+   - Update `packages/database/src/migrations/index.ts` to include the new migration
+   - Update `LATEST_MIGRATION_VERSION`
+
+3. **Demo Data**: If the feature stores data, add demo data seeding:
+   - Add constants to `packages/shared/src/seed-data.ts` (shared between API and web)
+   - Update `apps/web/src/lib/data-service.ts` in `createDemoData()` function
+   - Update `apps/api/src/routes/profiles.ts` in the seed-demo endpoint
+   - Ensure demo data is cleared and re-seeded properly
+
+4. **Translations**: Add all user-facing strings to both language files:
+   - `apps/web/src/lib/i18n/nl.ts` (Dutch - primary, includes types)
+   - `apps/web/src/lib/i18n/en.ts` (English)
+
+5. **Help Documentation**: Update relevant help articles if the feature affects end users
+
 ### General LLM Contribution Guidelines
 
 **IMPORTANT**: Any LLM contributing to this project must ensure that all ESLint, TypeScript, and test errors are fixed, even if they are outside the immediate scope of the task.

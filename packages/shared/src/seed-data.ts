@@ -1129,3 +1129,91 @@ export const PROPOSED_CONTACT_DEMO = {
   description: 'Marktplaats aankoop',
   amount: -45.0,
 };
+
+/**
+ * Demo recurring patterns for subscriptions feature
+ * These are seeded when creating demo data to show subscription management
+ */
+export const DEMO_RECURRING_PATTERNS = [
+  {
+    merchantName: 'Netflix',
+    patternType: 'monthly' as const,
+    avgAmount: -12.99,
+    lastAmount: -12.99,
+    isConfirmed: true,
+    isVariable: false,
+    transactionCount: 18,
+  },
+  {
+    merchantName: 'Spotify',
+    patternType: 'monthly' as const,
+    avgAmount: -9.99,
+    lastAmount: -9.99,
+    isConfirmed: true,
+    isVariable: false,
+    transactionCount: 18,
+  },
+  {
+    merchantName: 'Disney+',
+    patternType: 'monthly' as const,
+    avgAmount: -8.99,
+    lastAmount: -8.99,
+    isConfirmed: false, // Pending confirmation
+    isVariable: false,
+    transactionCount: 12,
+  },
+  {
+    merchantName: 'KPN',
+    patternType: 'monthly' as const,
+    avgAmount: -52.0,
+    lastAmount: -52.0,
+    isConfirmed: true,
+    isVariable: false,
+    transactionCount: 18,
+  },
+  {
+    merchantName: 'Vattenfall',
+    patternType: 'monthly' as const,
+    avgAmount: -120.0,
+    lastAmount: -125.0,
+    isConfirmed: true,
+    isVariable: true, // Energy bills vary
+    transactionCount: 18,
+  },
+  {
+    merchantName: 'Ziggo',
+    patternType: 'monthly' as const,
+    avgAmount: -55.0,
+    lastAmount: -55.0,
+    isConfirmed: true,
+    isVariable: false,
+    transactionCount: 18,
+  },
+  {
+    merchantName: 'Woonstad Rotterdam',
+    patternType: 'monthly' as const,
+    avgAmount: -850.0,
+    lastAmount: -850.0,
+    isConfirmed: true,
+    isVariable: false,
+    transactionCount: 18,
+  },
+  {
+    merchantName: 'Basic-Fit',
+    patternType: 'monthly' as const,
+    avgAmount: -29.99,
+    lastAmount: -29.99,
+    isConfirmed: false, // Pending confirmation
+    isVariable: false,
+    transactionCount: 6,
+  },
+  {
+    merchantName: 'Werkgever BV',
+    patternType: 'monthly' as const,
+    avgAmount: 2800.0,
+    lastAmount: 2850.0,
+    isConfirmed: true,
+    isVariable: true, // Salary varies slightly
+    transactionCount: 18,
+  },
+];
