@@ -1,7 +1,7 @@
 import type { Migration, MigrationContext } from './index.js';
 
 export const migration002: Migration = {
-  version: 5,
+  version: 2,
   name: 'v5_transaction_columns',
   up: async (db: MigrationContext) => {
     // Add payment_provider

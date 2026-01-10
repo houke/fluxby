@@ -131,9 +131,9 @@ export function SpotlightDialog() {
                   key={command.id}
                   value={command.id}
                   onSelect={() => handleSelect(command)}
-                  className='group cursor-pointer hover:bg-purple-900 data-[selected=true]:bg-transparent data-[selected=true]:text-inherit'
+                  className='group cursor-pointer hover:!bg-purple-600 data-[selected=true]:bg-transparent data-[selected=true]:text-inherit'
                 >
-                  <command.icon className='mr-2 h-4 w-4' />
+                  <command.icon className='mr-2 h-4 w-4 group-hover:text-white' />
                   <span className='group-hover:text-white'>
                     {command.title}
                   </span>
@@ -157,9 +157,9 @@ export function SpotlightDialog() {
                     key={command.id}
                     value={command.id}
                     onSelect={() => handleSelect(command)}
-                    className='group cursor-pointer hover:bg-purple-900 data-[selected=true]:bg-transparent data-[selected=true]:text-inherit'
+                    className='group cursor-pointer hover:!bg-purple-600 data-[selected=true]:bg-transparent data-[selected=true]:text-inherit'
                   >
-                    <command.icon className='mr-2 h-4 w-4' />
+                    <command.icon className='mr-2 h-4 w-4 group-hover:text-white' />
                     <div className='flex flex-1 flex-col'>
                       <span className='group-hover:text-white'>
                         {command.title}
@@ -191,9 +191,9 @@ export function SpotlightDialog() {
                     key={command.id}
                     value={command.id}
                     onSelect={() => handleSelect(command)}
-                    className='group cursor-pointer hover:bg-purple-900 data-[selected=true]:bg-transparent data-[selected=true]:text-inherit'
+                    className='group cursor-pointer hover:!bg-purple-600 data-[selected=true]:bg-transparent data-[selected=true]:text-inherit'
                   >
-                    <command.icon className='mr-2 h-4 w-4' />
+                    <command.icon className='mr-2 h-4 w-4 group-hover:text-white' />
                     <div className='flex flex-1 flex-col'>
                       <span
                         className={cn('privacy-blur group-hover:text-white')}
@@ -226,9 +226,9 @@ export function SpotlightDialog() {
                     key={command.id}
                     value={command.id}
                     onSelect={() => handleSelect(command)}
-                    className='group cursor-pointer hover:bg-purple-900 data-[selected=true]:bg-transparent data-[selected=true]:text-inherit'
+                    className='group cursor-pointer hover:!bg-purple-600 data-[selected=true]:bg-transparent data-[selected=true]:text-inherit'
                   >
-                    <command.icon className='mr-2 h-4 w-4' />
+                    <command.icon className='mr-2 h-4 w-4 group-hover:text-white' />
                     <div className='flex flex-1 flex-col'>
                       <span
                         className={cn('privacy-blur group-hover:text-white')}

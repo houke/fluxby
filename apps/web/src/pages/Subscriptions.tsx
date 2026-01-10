@@ -223,19 +223,19 @@ export default function Subscriptions() {
 
   // Computed values
   const pendingPatterns = useMemo(() => {
-    return patterns?.filter((p) => !p.isConfirmed) || [];
+    return patterns?.filter((p) => !p.isConfirmed && p.isActive) || [];
   }, [patterns]);
 
   const confirmedPatterns = useMemo(() => {
-    return patterns?.filter((p) => p.isConfirmed) || [];
+    return patterns?.filter((p) => p.isConfirmed && p.isActive) || [];
   }, [patterns]);
 
-  // Check for alerts (price increases, missed payments)
+  // Check for alerts (price increases, missed payments only - not new detections)
   const alerts = useMemo(() => {
     if (!patterns) return [];
     const alertList: Array<{
       id: string;
-      type: 'price_increase' | 'missed_payment' | 'new_detected';
+      type: 'price_increase' | 'missed_payment';
       pattern: RecurringPattern;
       message: string;
     }> = [];
@@ -243,11 +243,11 @@ export default function Subscriptions() {
     const today = new Date().toISOString().split('T')[0];
 
     for (const pattern of patterns) {
+      // Only check confirmed subscriptions for alerts
+      if (!pattern.isConfirmed) continue;
+
       // Price increase alert (>5% difference)
-      if (
-        pattern.lastAmount > pattern.avgAmount * 1.05 &&
-        pattern.isConfirmed
-      ) {
+      if (pattern.lastAmount > pattern.avgAmount * 1.05) {
         alertList.push({
           id: `price-${pattern.id}`,
           type: 'price_increase',
@@ -259,11 +259,7 @@ export default function Subscriptions() {
       }
 
       // Missed payment alert (expected date passed)
-      if (
-        pattern.nextExpectedDate &&
-        pattern.nextExpectedDate < today &&
-        pattern.isConfirmed
-      ) {
+      if (pattern.nextExpectedDate && pattern.nextExpectedDate < today) {
         alertList.push({
           id: `missed-${pattern.id}`,
           type: 'missed_payment',
@@ -271,18 +267,6 @@ export default function Subscriptions() {
           message:
             t.subscriptions?.missedPaymentDescription ||
             'Expected date has passed',
-        });
-      }
-
-      // New detection alert
-      if (!pattern.isConfirmed) {
-        alertList.push({
-          id: `new-${pattern.id}`,
-          type: 'new_detected',
-          pattern,
-          message:
-            t.subscriptions?.newDetectedDescription ||
-            'Confirm if this is a subscription',
         });
       }
     }
@@ -443,7 +427,7 @@ export default function Subscriptions() {
         </Card>
       </div>
 
-      {/* Alerts */}
+      {/* Alerts - Price increases and missed payments only */}
       {alerts.length > 0 && (
         <Card data-onboarding='subscriptions-alerts'>
           <CardHeader>
@@ -466,9 +450,6 @@ export default function Subscriptions() {
                     {alert.type === 'missed_payment' && (
                       <Clock className='h-5 w-5 text-red-500' />
                     )}
-                    {alert.type === 'new_detected' && (
-                      <Sparkles className='h-5 w-5 text-purple-500' />
-                    )}
                     <div>
                       <p className='font-medium'>
                         {alert.pattern.merchantName || 'Unknown'}
@@ -478,15 +459,6 @@ export default function Subscriptions() {
                       </p>
                     </div>
                   </div>
-                  {alert.type === 'new_detected' && (
-                    <Button
-                      size='sm'
-                      variant='outline'
-                      onClick={() => handleConfirm(alert.pattern.id)}
-                    >
-                      {t.subscriptions?.confirm || 'Confirm'}
-                    </Button>
-                  )}
                 </div>
               ))}
             </div>
@@ -521,18 +493,18 @@ export default function Subscriptions() {
         </Card>
       ) : view === 'list' ? (
         <div className='space-y-6'>
-          {/* Pending confirmation */}
+          {/* Suggested subscriptions - single card for all pending patterns */}
           {pendingPatterns.length > 0 && (
             <Card data-onboarding='subscriptions-pending'>
               <CardHeader>
                 <CardTitle className='flex items-center gap-2'>
                   <Sparkles className='h-5 w-5 text-purple-500' />
-                  {t.subscriptions?.pendingConfirmation ||
-                    'Pending confirmation'}
+                  {t.subscriptions?.suggestedSubscriptions ||
+                    'Suggested subscriptions'}
                 </CardTitle>
                 <CardDescription>
-                  {t.subscriptions?.newDetectedDescription ||
-                    'Confirm if these are subscriptions'}
+                  {t.subscriptions?.suggestedDescription ||
+                    'We detected these recurring payments. Accept to track them or dismiss to hide.'}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -544,7 +516,6 @@ export default function Subscriptions() {
                       t={t}
                       onConfirm={() => handleConfirm(pattern.id)}
                       onDismiss={() => handleDismiss(pattern.id)}
-                      onDelete={() => handleDelete(pattern.id)}
                     />
                   ))}
                 </div>
@@ -558,7 +529,8 @@ export default function Subscriptions() {
               <CardHeader>
                 <CardTitle className='flex items-center gap-2'>
                   <Check className='h-5 w-5 text-green-500' />
-                  {t.subscriptions?.confirmedSubscriptions || 'Confirmed'}
+                  {t.subscriptions?.activeSubscriptions ||
+                    'Active subscriptions'}
                 </CardTitle>
               </CardHeader>
               <CardContent>

@@ -17,6 +17,9 @@ import {
   ChevronRight,
   ChevronLeft,
   History,
+  RefreshCw,
+  Check,
+  Sparkles,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -44,6 +47,7 @@ import {
   Sector,
 } from 'recharts';
 import type { PieSectorDataItem } from 'recharts/types/polar/Pie';
+import type { RecurringStats } from '@fluxby/shared';
 
 interface DashboardStats {
   totalBalance: number;
@@ -235,6 +239,12 @@ export default function Dashboard() {
         totalCount: number;
         hasMore: boolean;
       }>,
+  });
+
+  const { data: recurringStats } = useQuery<RecurringStats>({
+    queryKey: ['recurring-stats', activeProfileId],
+    queryFn: () => api.getRecurringStats() as Promise<RecurringStats>,
+    enabled: !!activeProfileId,
   });
 
   // Get min/max dates to determine if there's data in other periods
@@ -1297,9 +1307,9 @@ export default function Dashboard() {
         </Card>
       </div>
 
-      {/* Budget and Balance Widgets */}
+      {/* Budget, Balance Forecast, and Subscriptions Widgets */}
       <div className='-mx-3 sm:mx-0'>
-        <div className='grid gap-px bg-border sm:gap-4 sm:bg-transparent md:grid-cols-2'>
+        <div className='grid gap-px bg-border sm:gap-4 sm:bg-transparent md:grid-cols-2 lg:grid-cols-3'>
           {/* Budget Widget */}
           <Card
             className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'
@@ -1607,6 +1617,88 @@ export default function Dashboard() {
                       </>
                     )}
                   </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Subscriptions Widget */}
+          <Card
+            className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'
+            data-onboarding='subscriptions-summary'
+          >
+            <CardHeader>
+              <CardTitle className='text-base sm:text-lg'>
+                {t.subscriptions?.title || 'Subscriptions'}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {recurringStats &&
+              (recurringStats.activeSubscriptions > 0 ||
+                recurringStats.pendingConfirmation > 0) ? (
+                <div className='space-y-4'>
+                  <div className='flex items-center justify-between'>
+                    <span className='text-sm text-muted-foreground'>
+                      {t.subscriptions?.totalMonthlySpend ||
+                        'Total monthly spend'}
+                    </span>
+                    <span className='font-semibold'>
+                      <Currency amount={recurringStats.totalMonthlySpend} />
+                    </span>
+                  </div>
+                  <div className='flex items-center justify-between'>
+                    <div className='flex items-center gap-2'>
+                      <Check className='h-4 w-4 text-emerald-500' />
+                      <span className='text-sm text-muted-foreground'>
+                        {t.subscriptions?.confirmedSubscriptions || 'Confirmed'}
+                      </span>
+                    </div>
+                    <span className='font-semibold'>
+                      {recurringStats.confirmedSubscriptions}
+                    </span>
+                  </div>
+                  {recurringStats.pendingConfirmation > 0 && (
+                    <div className='flex items-center justify-between'>
+                      <div className='flex items-center gap-2'>
+                        <Sparkles className='h-4 w-4 text-purple-500' />
+                        <span className='text-sm text-muted-foreground'>
+                          {t.subscriptions?.suggestedSubscriptions ||
+                            'Suggested'}
+                        </span>
+                      </div>
+                      <span className='font-semibold text-purple-600'>
+                        {recurringStats.pendingConfirmation}
+                      </span>
+                    </div>
+                  )}
+                  <div className='border-t pt-2'>
+                    <Button
+                      variant='outline'
+                      size='sm'
+                      onClick={() => navigate('/subscriptions/')}
+                      className='w-full'
+                    >
+                      {t.dashboard?.viewSubscriptions || 'View subscriptions'}
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className='flex flex-col items-center justify-center py-8 text-center'>
+                  <RefreshCw className='mb-4 h-12 w-12 text-muted-foreground/50' />
+                  <p className='text-muted-foreground'>
+                    {t.dashboard?.noSubscriptions ||
+                      'No subscriptions detected yet'}
+                  </p>
+                  <p className='mt-1 text-sm text-muted-foreground'>
+                    {t.dashboard?.detectSubscriptions ||
+                      'Detect recurring payments automatically'}
+                  </p>
+                  <button
+                    onClick={() => navigate('/subscriptions/')}
+                    className='mt-3 text-sm text-primary hover:underline'
+                  >
+                    {t.dashboard?.goToSubscriptions || 'Go to subscriptions'}
+                  </button>
                 </div>
               )}
             </CardContent>

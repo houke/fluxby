@@ -1,7 +1,7 @@
 import type { Migration, MigrationContext } from './index.js';
 
 export const migration003: Migration = {
-  version: 6,
+  version: 3,
   name: 'v6_profiles_hidden',
   up: async (db: MigrationContext) => {
     try {

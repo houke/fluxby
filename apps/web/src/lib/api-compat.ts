@@ -319,6 +319,11 @@ export const api = {
     return ds.getRecurringPatterns();
   },
 
+  getRecurringPatternsWithHistory: async () => {
+    const ds = getDataService();
+    return ds.getRecurringPatternsWithHistory();
+  },
+
   getRecurringStats: async () => {
     const ds = getDataService();
     return ds.getRecurringStats();

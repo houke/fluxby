@@ -201,6 +201,10 @@ export interface TranslationKeys {
     noDataForPeriod: string;
     noDataDescription: string;
     jumpToPeriod: string;
+    viewSubscriptions: string;
+    noSubscriptions: string;
+    detectSubscriptions: string;
+    goToSubscriptions: string;
     greetings: {
       morning: string;
       afternoon: string;
@@ -336,6 +340,13 @@ export interface TranslationKeys {
     noIncomeData: string;
     transactions: string;
     viewTransactions: string;
+    recurringPayments: string;
+    priceHistory: string;
+    noPriceHistory: string;
+    selectSubscription: string;
+    noRecurringPayments: string;
+    confirmSubscriptions: string;
+    average: string;
   };
   budgets: {
     title: string;
@@ -383,6 +394,8 @@ export interface TranslationKeys {
     activeSubscriptions: string;
     confirmedSubscriptions: string;
     pendingConfirmation: string;
+    suggestedSubscriptions: string;
+    suggestedDescription: string;
     confirm: string;
     dismiss: string;
     delete: string;
@@ -1416,6 +1429,10 @@ export const nl: TranslationKeys = {
     noDataDescription:
       'Geen transacties gevonden voor {period}. Wil je een periode met gegevens bekijken?',
     jumpToPeriod: 'Ga naar {period}',
+    viewSubscriptions: 'Bekijk abonnementen',
+    noSubscriptions: 'Nog geen abonnementen gedetecteerd',
+    detectSubscriptions: 'Detecteer automatisch terugkerende betalingen',
+    goToSubscriptions: 'Ga naar abonnementen',
     greetings: {
       morning: 'Goedemorgen',
       afternoon: 'Goedemiddag',
@@ -1561,6 +1578,15 @@ export const nl: TranslationKeys = {
     noIncomeData: 'Geen inkomsten gevonden',
     transactions: 'Transacties',
     viewTransactions: 'Bekijk transacties',
+    recurringPayments: 'Terugkerende betalingen',
+    priceHistory: 'Prijsgeschiedenis',
+    noPriceHistory: 'Geen prijsgeschiedenis beschikbaar',
+    selectSubscription:
+      'Selecteer een abonnement om prijsgeschiedenis te bekijken',
+    noRecurringPayments: 'Nog geen bevestigde terugkerende betalingen',
+    confirmSubscriptions:
+      'Bevestig gedetecteerde abonnementen op de abonnementen pagina',
+    average: 'Gem.',
   },
   budgets: {
     title: 'Budgetten',
@@ -1610,10 +1636,13 @@ export const nl: TranslationKeys = {
     activeSubscriptions: 'Actieve abonnementen',
     confirmedSubscriptions: 'Bevestigd',
     pendingConfirmation: 'Te bevestigen',
-    confirm: 'Bevestigen',
+    suggestedSubscriptions: 'Voorgestelde abonnementen',
+    suggestedDescription:
+      'We hebben deze terugkerende betalingen gedetecteerd. Accepteer om te volgen of negeer om te verbergen.',
+    confirm: 'Accepteren',
     dismiss: 'Negeren',
     delete: 'Verwijderen',
-    confirmed: 'Abonnement bevestigd',
+    confirmed: 'Abonnement geaccepteerd',
     dismissed: 'Abonnement genegeerd',
     deleted: 'Abonnement verwijderd',
     nextPayment: 'Volgende betaling',

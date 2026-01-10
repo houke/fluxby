@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { User } from 'lucide-react';
 import Layout from './components/layout/Layout';
 import Dashboard from './pages/Dashboard';
 import Transactions from './pages/Transactions';
@@ -32,7 +33,7 @@ import {
   useOnboarding,
 } from './components/onboarding';
 import { SpotlightProvider } from './contexts/SpotlightContext';
-import { MigrationPrompt } from './components/MigrationPrompt';
+import { MigrationGate } from './components/MigrationGate';
 
 // Inner component that can access onboarding context
 function AppContent() {
@@ -103,7 +104,7 @@ function SecurityGate({ children }: { children: React.ReactNode }) {
           <div className='flex flex-col items-center text-center'>
             {/* Loading spinner */}
             <div className='mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-purple-100 dark:bg-purple-900/30'>
-              <div className='h-8 w-8 animate-spin rounded-full border-2 border-purple-600/20 border-t-purple-600' />
+              <User className='h-8 w-8 text-purple-600 dark:text-purple-400' />
             </div>
 
             {/* Title */}
@@ -151,30 +152,32 @@ function App() {
     <ErrorBoundary>
       <LanguageProvider>
         <EncryptionProvider>
-          <DatabaseProvider>
-            <ProfileProvider>
-              <PrivacyProvider>
-                <SyncProvider>
-                  <FilterProvider>
-                    <ToastProvider>
-                      <ConfirmProvider>
-                        <BrowserRouter basename={getRouterBasename()}>
-                          <OnboardingProvider>
-                            <SpotlightProvider>
-                              <SecurityGate>
-                                <MigrationPrompt />
-                                <AppContent />
-                              </SecurityGate>
-                            </SpotlightProvider>
-                          </OnboardingProvider>
-                        </BrowserRouter>
-                      </ConfirmProvider>
-                    </ToastProvider>
-                  </FilterProvider>
-                </SyncProvider>
-              </PrivacyProvider>
-            </ProfileProvider>
-          </DatabaseProvider>
+          {/* MigrationGate checks for pending migrations BEFORE database initializes */}
+          <MigrationGate>
+            <DatabaseProvider>
+              <ProfileProvider>
+                <PrivacyProvider>
+                  <SyncProvider>
+                    <FilterProvider>
+                      <ToastProvider>
+                        <ConfirmProvider>
+                          <BrowserRouter basename={getRouterBasename()}>
+                            <OnboardingProvider>
+                              <SpotlightProvider>
+                                <SecurityGate>
+                                  <AppContent />
+                                </SecurityGate>
+                              </SpotlightProvider>
+                            </OnboardingProvider>
+                          </BrowserRouter>
+                        </ConfirmProvider>
+                      </ToastProvider>
+                    </FilterProvider>
+                  </SyncProvider>
+                </PrivacyProvider>
+              </ProfileProvider>
+            </DatabaseProvider>
+          </MigrationGate>
         </EncryptionProvider>
       </LanguageProvider>
     </ErrorBoundary>

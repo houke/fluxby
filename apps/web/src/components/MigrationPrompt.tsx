@@ -5,28 +5,50 @@ import { RefreshCw, AlertCircle, Loader2, CheckCircle } from 'lucide-react';
 
 type MigrationState = 'pending' | 'running' | 'completed' | 'error';
 
+export type MigrationPromptProps = {
+  /** Called when migrations are complete and app should continue loading */
+  onComplete?: () => void;
+  /** Called when checking state changes */
+  onCheckingChange?: (isChecking: boolean) => void;
+};
+
 /**
  * Component that checks for pending migrations OR stale code and shows update prompt.
+ * This component runs BEFORE the database initializes to prevent race conditions.
  *
- * Two scenarios:
- * 1. Migrations were applied (new code ran) - need to refresh to load new UI
- * 2. Stale code detected (old cached code) - need to force refresh to get new code
- *
- * In both cases, we show a non-dismissible prompt and force a hard refresh.
+ * Three scenarios:
+ * 1. Stale code detected (old cached code, DB ahead) - auto-refresh to get new code
+ * 2. New migrations needed (new code, DB behind) - show prompt, run migrations, refresh
+ * 3. Up to date - call onComplete to proceed with app loading
  */
-export function MigrationPrompt() {
-  const { pendingCount, isChecking, isStale } = useMigrationCheck();
+export function MigrationPrompt({
+  onComplete,
+  onCheckingChange,
+}: MigrationPromptProps) {
+  const { pendingCount, isChecking, isStale, hasNewMigrations } =
+    useMigrationCheck();
   const { t } = useLanguage();
   const [showPrompt, setShowPrompt] = useState(false);
   const [migrationState, setMigrationState] =
     useState<MigrationState>('pending');
   const [error, setError] = useState<string | null>(null);
 
+  // Notify parent of checking state changes
   useEffect(() => {
-    if (!isChecking && pendingCount > 0) {
+    onCheckingChange?.(isChecking);
+  }, [isChecking, onCheckingChange]);
+
+  useEffect(() => {
+    if (isChecking) return;
+
+    if (pendingCount > 0 || isStale || hasNewMigrations) {
+      // Need to show prompt
       setShowPrompt(true);
+    } else {
+      // All good, proceed with app loading
+      onComplete?.();
     }
-  }, [isChecking, pendingCount]);
+  }, [isChecking, pendingCount, isStale, hasNewMigrations, onComplete]);
 
   // If we detected stale code, automatically start the refresh process
   useEffect(() => {
@@ -48,7 +70,7 @@ export function MigrationPrompt() {
     setError(null);
 
     try {
-      // Clear the migration flags
+      // Clear old migration flags (but NOT sessionStorage - let reload handle that)
       localStorage.removeItem('fluxby-migrations-applied');
 
       // Show a brief delay for UX
@@ -101,7 +123,7 @@ export function MigrationPrompt() {
   const getStateTitle = () => {
     switch (migrationState) {
       case 'pending':
-        // Different message for stale code vs migrations applied
+        // Different message for stale code vs new migrations
         if (isStale) {
           return t.migrations?.updateRequired || 'Update required';
         }
@@ -122,6 +144,12 @@ export function MigrationPrompt() {
           return (
             t.migrations?.staleCodeDescription ||
             'A newer version of Fluxby has been installed. Refreshing automatically to load the latest version...'
+          );
+        }
+        if (hasNewMigrations) {
+          return (
+            t.migrations?.newMigrationsDescription ||
+            'A database update is required. Click "Apply update" to update your database and enable new features.'
           );
         }
         return (

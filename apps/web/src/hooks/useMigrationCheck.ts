@@ -1,58 +1,65 @@
 import { useEffect, useState } from 'react';
-import { isStaleCode } from '@fluxby/database';
+import {
+  isStaleCode,
+  hasNewMigrations,
+  updateCodeVersionInStorage,
+} from '@fluxby/database';
 
 export type MigrationCheckResult = {
   pendingCount: number;
   isChecking: boolean;
   isStale: boolean;
+  hasNewMigrations: boolean;
 };
 
 /**
- * Hook to check if migrations were just applied OR if we're running stale code.
+ * Hook to check migration status BEFORE database initializes.
  *
- * Two scenarios trigger the migration prompt:
- * 1. Migrations were applied (new code ran) - need to refresh to load new UI
- * 2. Stale code detected (old cached code running) - need to force refresh to get new code
+ * Three scenarios:
+ * 1. Stale code - old cached JS, DB already migrated → auto-refresh
+ * 2. New migrations - new JS, DB needs migration → show prompt BEFORE db init
+ * 3. Up to date - code and DB versions match → proceed normally
  */
 export function useMigrationCheck(): MigrationCheckResult {
   const [pendingCount, setPendingCount] = useState<number>(0);
   const [isChecking, setIsChecking] = useState(true);
   const [isStale, setIsStale] = useState(false);
+  const [hasPending, setHasPending] = useState(false);
 
   useEffect(() => {
     let mounted = true;
 
-    async function checkMigrations() {
+    function checkMigrations() {
       try {
-        // First, check if we're running stale/cached code
-        // This happens when old JS is served from cache but DB was already migrated
+        // Update our code version in storage immediately
+        updateCodeVersionInStorage();
+
+        // Check if we're running stale/cached code (DB ahead of code)
         const staleCode = isStaleCode();
         if (staleCode) {
           if (mounted) {
             setIsStale(true);
-            setPendingCount(1); // Signal that we need to refresh
+            setPendingCount(1);
             setIsChecking(false);
           }
           return;
         }
 
-        // Check if migrations were just applied (flag set during db init)
-        const migrationsApplied = localStorage.getItem(
-          'fluxby-migrations-applied'
-        );
+        // Check if there are new migrations to run (code ahead of DB)
+        const newMigrations = hasNewMigrations();
+        if (newMigrations) {
+          if (mounted) {
+            setHasPending(true);
+            setPendingCount(1);
+            setIsChecking(false);
+          }
+          return;
+        }
 
-        if (migrationsApplied === 'true') {
-          // Migrations were applied, show prompt
-          if (mounted) {
-            setPendingCount(1); // Signal that we need to refresh
-            setIsChecking(false);
-          }
-        } else {
-          // No migrations applied
-          if (mounted) {
-            setPendingCount(0);
-            setIsChecking(false);
-          }
+        // All good - code and DB are in sync
+        if (mounted) {
+          setPendingCount(0);
+          setIsChecking(false);
         }
       } catch (error) {
         console.error('Failed to check migrations:', error);
@@ -70,5 +77,5 @@ export function useMigrationCheck(): MigrationCheckResult {
     };
   }, []);
 
-  return { pendingCount, isChecking, isStale };
+  return { pendingCount, isChecking, isStale, hasNewMigrations: hasPending };
 }

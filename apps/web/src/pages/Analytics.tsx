@@ -8,9 +8,11 @@ import {
   TrendingUp,
   ArrowDownRight,
   ArrowUpRight,
+  RefreshCw,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
 import {
   Tooltip as UITooltip,
   TooltipContent,
@@ -18,6 +20,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { useDataService } from '@/contexts/DatabaseContext';
+import { api } from '@/lib/api';
 import { Currency } from '@/components/ui/currency';
 import { useFilters } from '@/contexts/FilterContext';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -41,6 +44,7 @@ import {
   Sector,
 } from 'recharts';
 import type { PieSectorDataItem } from 'recharts/types/polar/Pie';
+import type { RecurringPattern } from '@fluxby/shared';
 
 interface MonthlyData {
   month: string;
@@ -127,6 +131,13 @@ export default function Analytics() {
       ) as Promise<CategoryBreakdown[]>,
   });
 
+  const { data: recurringPatterns, isLoading: recurringLoading } = useQuery<
+    RecurringPattern[]
+  >({
+    queryKey: ['recurring-patterns-history', activeProfileId],
+    queryFn: () => api.getRecurringPatternsWithHistory(),
+  });
+
   const [activeExpenseIndex, setActiveExpenseIndex] = useState<number | null>(
     null
   );
@@ -139,6 +150,7 @@ export default function Analytics() {
   const [pinnedIncomeIndex, setPinnedIncomeIndex] = useState<number | null>(
     null
   );
+  const [selectedPattern, setSelectedPattern] = useState<string | null>(null);
   const expenseLegendRef = useRef<HTMLDivElement>(null);
   const incomeLegendRef = useRef<HTMLDivElement>(null);
 
@@ -169,7 +181,8 @@ export default function Analytics() {
     return () => clearTimeout(timer);
   }, [monthlyData]);
 
-  const isLoading = monthlyLoading || expensesLoading || incomeLoading;
+  const isLoading =
+    monthlyLoading || expensesLoading || incomeLoading || recurringLoading;
 
   if (isLoading) {
     return <AnalyticsSkeleton />;
@@ -1027,6 +1040,223 @@ export default function Analytics() {
             </CardContent>
           </Card>
         </div>
+      </div>
+
+      {/* Recurring Payments Analysis */}
+      <div className='-mx-3 sm:mx-0'>
+        <Card className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'>
+          <CardHeader>
+            <CardTitle className='text-base sm:text-lg'>
+              {t.analytics?.recurringPayments || 'Recurring payments'}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {recurringPatterns && recurringPatterns.length > 0 ? (
+              <div className='space-y-6'>
+                {/* Subscription list with price history */}
+                <div className='grid gap-4 lg:grid-cols-2'>
+                  {/* List of subscriptions */}
+                  <div className='space-y-2'>
+                    {recurringPatterns.map((pattern) => (
+                      <button
+                        key={pattern.id}
+                        onClick={() =>
+                          setSelectedPattern(
+                            selectedPattern === pattern.id ? null : pattern.id
+                          )
+                        }
+                        className={`flex w-full items-center justify-between rounded-lg p-3 text-left transition-colors ${
+                          selectedPattern === pattern.id
+                            ? 'bg-primary/10 ring-1 ring-primary'
+                            : 'bg-muted/50 hover:bg-muted'
+                        }`}
+                      >
+                        <div className='min-w-0 flex-1'>
+                          <p className='truncate font-medium'>
+                            {pattern.merchantName ||
+                              pattern.opposingIban ||
+                              'Unknown'}
+                          </p>
+                          <p className='text-sm text-muted-foreground'>
+                            {pattern.patternType === 'monthly'
+                              ? t.subscriptions?.monthly || 'Monthly'
+                              : pattern.patternType === 'yearly'
+                                ? t.subscriptions?.yearly || 'Yearly'
+                                : pattern.patternType === 'quarterly'
+                                  ? t.subscriptions?.quarterly || 'Quarterly'
+                                  : pattern.patternType === 'weekly'
+                                    ? t.subscriptions?.weekly || 'Weekly'
+                                    : pattern.patternType}
+                          </p>
+                        </div>
+                        <div className='ml-4 text-right'>
+                          <p className='font-semibold tabular-nums'>
+                            <Currency amount={pattern.avgAmount} />
+                          </p>
+                          {pattern.lastAmount !== pattern.avgAmount && (
+                            <p
+                              className={`text-sm ${
+                                pattern.lastAmount > pattern.avgAmount
+                                  ? 'text-rose-600'
+                                  : 'text-emerald-600'
+                              }`}
+                            >
+                              {pattern.lastAmount > pattern.avgAmount
+                                ? '↑'
+                                : '↓'}{' '}
+                              <Currency amount={pattern.lastAmount} />
+                            </p>
+                          )}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Price history chart */}
+                  <div className='flex min-h-[300px] flex-col'>
+                    {selectedPattern ? (
+                      (() => {
+                        const pattern = recurringPatterns.find(
+                          (p) => p.id === selectedPattern
+                        );
+                        if (!pattern?.priceHistory?.length) {
+                          return (
+                            <div className='flex flex-1 flex-col items-center justify-center text-center text-muted-foreground'>
+                              <TrendingUp className='mb-4 h-12 w-12 text-muted-foreground/50' />
+                              <p>
+                                {t.analytics?.noPriceHistory ||
+                                  'No price history available'}
+                              </p>
+                            </div>
+                          );
+                        }
+                        return (
+                          <div className='flex-1'>
+                            <p className='mb-2 text-sm font-medium'>
+                              {t.analytics?.priceHistory || 'Price history'}:{' '}
+                              {pattern.merchantName ||
+                                pattern.opposingIban ||
+                                'Unknown'}
+                            </p>
+                            <ResponsiveContainer
+                              width='100%'
+                              height='100%'
+                              minHeight={250}
+                            >
+                              <LineChart data={pattern.priceHistory}>
+                                <CartesianGrid
+                                  strokeDasharray='3 3'
+                                  className='stroke-muted'
+                                />
+                                <XAxis
+                                  dataKey='date'
+                                  tick={{
+                                    fill: 'hsl(var(--muted-foreground))',
+                                    fontSize: 11,
+                                  }}
+                                  tickFormatter={(value) => {
+                                    const date = new Date(value);
+                                    return `${date.getMonth() + 1}/${date.getFullYear().toString().slice(-2)}`;
+                                  }}
+                                />
+                                <YAxis
+                                  tick={{
+                                    fill: 'hsl(var(--muted-foreground))',
+                                    fontSize: 11,
+                                  }}
+                                  tickFormatter={(value) => `€${value}`}
+                                />
+                                <Tooltip
+                                  formatter={(value) => {
+                                    if (typeof value !== 'number') return null;
+                                    return [
+                                      <Currency key='value' amount={value} />,
+                                      t.transactions?.amount || 'Amount',
+                                    ];
+                                  }}
+                                  labelFormatter={(label) => {
+                                    const date = new Date(label);
+                                    return date.toLocaleDateString();
+                                  }}
+                                  contentStyle={{
+                                    backgroundColor: 'hsl(var(--card))',
+                                    border: '1px solid hsl(var(--border))',
+                                    borderRadius: '8px',
+                                  }}
+                                />
+                                <ReferenceLine
+                                  y={pattern.avgAmount}
+                                  stroke='hsl(var(--muted-foreground))'
+                                  strokeDasharray='3 3'
+                                  label={{
+                                    value: t.analytics?.average || 'Avg',
+                                    position: 'right',
+                                    fill: 'hsl(var(--muted-foreground))',
+                                    fontSize: 11,
+                                  }}
+                                />
+                                <Line
+                                  type='monotone'
+                                  dataKey='amount'
+                                  stroke='hsl(var(--primary))'
+                                  strokeWidth={2}
+                                  dot={{
+                                    fill: 'hsl(var(--primary))',
+                                    r: 4,
+                                  }}
+                                  activeDot={{
+                                    r: 6,
+                                    fill: 'hsl(var(--primary))',
+                                  }}
+                                />
+                              </LineChart>
+                            </ResponsiveContainer>
+                          </div>
+                        );
+                      })()
+                    ) : (
+                      <div className='flex flex-1 flex-col items-center justify-center text-center text-muted-foreground'>
+                        <TrendingUp className='mb-4 h-12 w-12 text-muted-foreground/50' />
+                        <p>
+                          {t.analytics?.selectSubscription ||
+                            'Select a subscription to view price history'}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Link to subscriptions page */}
+                <div className='border-t pt-4'>
+                  <Button
+                    variant='outline'
+                    onClick={() => navigate('/subscriptions/')}
+                  >
+                    {t.dashboard?.viewSubscriptions || 'View all subscriptions'}
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className='flex flex-col items-center justify-center py-8 text-center'>
+                <RefreshCw className='mb-4 h-12 w-12 text-muted-foreground/50' />
+                <p className='text-muted-foreground'>
+                  {t.analytics?.noRecurringPayments ||
+                    'No confirmed recurring payments yet'}
+                </p>
+                <p className='mt-1 text-sm text-muted-foreground'>
+                  {t.analytics?.confirmSubscriptions ||
+                    'Confirm detected subscriptions in the subscriptions page'}
+                </p>
+                <button
+                  onClick={() => navigate('/subscriptions/')}
+                  className='mt-3 text-sm text-primary hover:underline'
+                >
+                  {t.dashboard?.goToSubscriptions || 'Go to subscriptions'}
+                </button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

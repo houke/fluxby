@@ -24,6 +24,7 @@ interface DBRecurringPattern {
   next_expected_date: string | null;
   is_active: number;
   is_confirmed: number;
+  is_dismissed: number;
   is_variable: number;
   transaction_count: number;
   profile_id: string;
@@ -42,6 +43,7 @@ function mapDBRecurringPattern(row: DBRecurringPattern): RecurringPattern {
     nextExpectedDate: row.next_expected_date,
     isActive: row.is_active === 1,
     isConfirmed: row.is_confirmed === 1,
+    isDismissed: row.is_dismissed === 1,
     isVariable: row.is_variable === 1,
     transactionCount: row.transaction_count,
     profileId: row.profile_id,
@@ -77,7 +79,7 @@ router.get('/', (req, res) => {
 
     let sql = `
       SELECT * FROM recurring_patterns
-      WHERE profile_id = ? AND is_deleted = 0
+      WHERE profile_id = ? AND is_deleted = 0 AND is_dismissed = 0
     `;
 
     if (activeOnly) {
@@ -126,7 +128,7 @@ router.get('/stats', (req, res) => {
     }>(
       `SELECT pattern_type, avg_amount, is_active, is_confirmed
        FROM recurring_patterns
-       WHERE profile_id = ? AND is_deleted = 0 AND is_active = 1`,
+       WHERE profile_id = ? AND is_deleted = 0 AND is_dismissed = 0 AND is_active = 1`,
       [profileId]
     );
 
@@ -223,7 +225,7 @@ router.get('/calendar', (req, res) => {
     }>(
       `SELECT id, merchant_name, pattern_type, avg_amount, last_date, is_confirmed
        FROM recurring_patterns
-       WHERE profile_id = ? AND is_deleted = 0 AND is_active = 1`,
+       WHERE profile_id = ? AND is_deleted = 0 AND is_dismissed = 0 AND is_active = 1`,
       [profileId]
     );
 
@@ -295,6 +297,7 @@ router.post('/detect', (req, res) => {
   try {
     const profileId = getEffectiveProfileId(req);
     const now = Date.now();
+    const MIN_MONTHS_SPAN_DAYS = 60; // ~2 months minimum span to ensure 3+ months of history
 
     // Get all transactions grouped by opposing_account_iban + merchant_name
     const groups = query<{
@@ -338,6 +341,16 @@ router.post('/detect', (req, res) => {
         .map((a) => Math.abs(parseFloat(a)));
 
       if (dates.length < MIN_TRANSACTIONS_FOR_PATTERN) continue;
+
+      // Check if transactions span at least 3 months
+      const firstDate = dates[0];
+      const lastDateObj = dates[dates.length - 1];
+      const daySpan = Math.round(
+        (lastDateObj.getTime() - firstDate.getTime()) / (1000 * 60 * 60 * 24)
+      );
+
+      // For monthly patterns, require ~2+ months span (60+ days)
+      if (daySpan < MIN_MONTHS_SPAN_DAYS) continue;
 
       // Calculate intervals between consecutive transactions
       const intervals: number[] = [];
@@ -384,9 +397,9 @@ router.post('/detect', (req, res) => {
       nextExpected.setDate(nextExpected.getDate() + Math.round(avgInterval));
       const nextExpectedDate = nextExpected.toISOString().split('T')[0];
 
-      // Check if pattern already exists
-      const existing = queryOne<{ id: string }>(
-        `SELECT id FROM recurring_patterns 
+      // Check if pattern already exists (including dismissed ones to avoid re-creating)
+      const existing = queryOne<{ id: string; is_dismissed: number }>(
+        `SELECT id, is_dismissed FROM recurring_patterns 
          WHERE profile_id = ? 
            AND opposing_iban = ? 
            AND merchant_name = ?
@@ -395,6 +408,9 @@ router.post('/detect', (req, res) => {
       );
 
       if (existing) {
+        // Skip if dismissed - don't update dismissed patterns
+        if (existing.is_dismissed === 1) continue;
+
         // Update existing pattern
         run(
           `UPDATE recurring_patterns SET
@@ -427,9 +443,9 @@ router.post('/detect', (req, res) => {
           `INSERT INTO recurring_patterns (
             id, opposing_iban, merchant_name, pattern_type, 
             avg_amount, last_amount, last_date, next_expected_date,
-            is_active, is_confirmed, is_variable, transaction_count,
+            is_active, is_confirmed, is_dismissed, is_variable, transaction_count,
             profile_id, created_at, updated_at
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, 0, ?, ?, ?, ?, ?)`,
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, 0, 0, ?, ?, ?, ?, ?)`,
           [
             id,
             group.opposing_iban,
@@ -554,7 +570,7 @@ router.post('/:id/dismiss', (req, res) => {
     }
 
     run(
-      'UPDATE recurring_patterns SET is_active = 0, updated_at = ? WHERE id = ?',
+      'UPDATE recurring_patterns SET is_dismissed = 1, is_active = 0, updated_at = ? WHERE id = ?',
       [Date.now(), id]
     );
 

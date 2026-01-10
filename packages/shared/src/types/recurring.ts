@@ -18,10 +18,13 @@ export interface RecurringPattern {
   nextExpectedDate: string | null;
   isActive: boolean;
   isConfirmed: boolean;
+  isDismissed: boolean;
   isVariable: boolean;
   transactionCount: number;
   profileId: string;
   createdAt: string;
+  /** Price history for tracking changes over time */
+  priceHistory?: { date: string; amount: number }[];
 }
 
 export interface RecurringPatternCreate {
@@ -75,6 +78,12 @@ export const DATE_TOLERANCE_DAYS = 3;
  * Minimum number of transactions required for pattern detection
  */
 export const MIN_TRANSACTIONS_FOR_PATTERN = 3;
+
+/**
+ * Minimum number of months a pattern must span to be considered a subscription
+ * For monthly patterns, this means at least 3 transactions over ~3 months
+ */
+export const MIN_MONTHS_FOR_SUBSCRIPTION = 3;
 
 /**
  * Amount variance threshold (percentage) to flag as variable

@@ -243,6 +243,10 @@ export const en: TranslationKeys = {
     noDataDescription:
       'No transactions found for {period}. Would you like to view a period with data?',
     jumpToPeriod: 'Jump to {period}',
+    viewSubscriptions: 'View subscriptions',
+    noSubscriptions: 'No subscriptions detected yet',
+    detectSubscriptions: 'Detect recurring payments automatically',
+    goToSubscriptions: 'Go to subscriptions',
     greetings: {
       morning: 'Good morning',
       afternoon: 'Good afternoon',
@@ -387,6 +391,14 @@ export const en: TranslationKeys = {
     noIncomeData: 'No income found',
     transactions: 'Transactions',
     viewTransactions: 'View transactions',
+    recurringPayments: 'Recurring payments',
+    priceHistory: 'Price history',
+    noPriceHistory: 'No price history available',
+    selectSubscription: 'Select a subscription to view price history',
+    noRecurringPayments: 'No confirmed recurring payments yet',
+    confirmSubscriptions:
+      'Confirm detected subscriptions on the subscriptions page',
+    average: 'Avg',
   },
   budgets: {
     title: 'Budgets',
@@ -436,10 +448,13 @@ export const en: TranslationKeys = {
     activeSubscriptions: 'Active subscriptions',
     confirmedSubscriptions: 'Confirmed',
     pendingConfirmation: 'Pending confirmation',
-    confirm: 'Confirm',
+    suggestedSubscriptions: 'Suggested subscriptions',
+    suggestedDescription:
+      'We detected these recurring payments. Accept to track them or dismiss to hide.',
+    confirm: 'Accept',
     dismiss: 'Dismiss',
     delete: 'Delete',
-    confirmed: 'Subscription confirmed',
+    confirmed: 'Subscription accepted',
     dismissed: 'Subscription dismissed',
     deleted: 'Subscription deleted',
     nextPayment: 'Next payment',
