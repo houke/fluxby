@@ -21,6 +21,20 @@ export async function getCurrentVersion(db: MigrationContext): Promise<number> {
 }
 
 /**
+ * Check if there are pending migrations
+ * Returns the count of pending migrations
+ */
+export async function checkPendingMigrations(
+  db: MigrationContext
+): Promise<number> {
+  const currentVersion = await getCurrentVersion(db);
+  const pendingCount = migrations.filter(
+    (m: Migration) => m.version > currentVersion
+  ).length;
+  return pendingCount;
+}
+
+/**
  * Run all pending migrations
  */
 export async function runMigrations(db: MigrationContext): Promise<void> {

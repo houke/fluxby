@@ -102,6 +102,12 @@ export const en: TranslationKeys = {
       'An error occurred while initializing the database. Please try refreshing the page.',
     resetDatabase: 'Reset database',
   },
+  migrations: {
+    updateAvailable: 'Update available',
+    updateDescription:
+      'A new version of Fluxby is available. Please refresh the page to apply updates.',
+    refreshNow: 'Refresh now',
+  },
   security: {
     setupTitle: 'Set up master password',
     setupDescription:

@@ -13,7 +13,7 @@ import type {
   DatabaseOptions,
 } from './types.js';
 import { getSeedSQL } from './schema.js';
-import { runMigrations } from './migrations/runner.js';
+import { runMigrations, checkPendingMigrations } from './migrations/runner.js';
 import { EncryptionVFS } from './encryption-vfs.js';
 import { getDeviceId, isTauri } from './environment.js';
 import { dbLog } from './logger.js';
@@ -872,6 +872,20 @@ export class Database implements DatabaseConnection {
     if (!this._isOpen) {
       throw new Error('Database is not open');
     }
+  }
+
+  /**
+   * Check if there are pending migrations
+   * Returns the count of pending migrations
+   */
+  async checkPendingMigrations(): Promise<number> {
+    return this.withLock(async () => {
+      this.ensureOpen();
+      if (!this.db || !this.sqlite3) {
+        throw new Error('Database not initialized');
+      }
+      return checkPendingMigrations(this);
+    });
   }
 
   /**

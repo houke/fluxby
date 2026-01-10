@@ -73,6 +73,11 @@ export interface TranslationKeys {
     databaseErrorDescription: string;
     resetDatabase: string;
   };
+  migrations: {
+    updateAvailable: string;
+    updateDescription: string;
+    refreshNow: string;
+  };
   security: {
     setupTitle: string;
     setupDescription: string;
@@ -1242,6 +1247,12 @@ export const nl: TranslationKeys = {
     databaseErrorDescription:
       'Er is een fout opgetreden bij het initialiseren van de database. Probeer de pagina te vernieuwen.',
     resetDatabase: 'Reset database',
+  },
+  migrations: {
+    updateAvailable: 'Update beschikbaar',
+    updateDescription:
+      'Er is een nieuwe versie van Fluxby beschikbaar. Vernieuw de pagina om de update toe te passen.',
+    refreshNow: 'Nu vernieuwen',
   },
   security: {
     setupTitle: 'Hoofdwachtwoord instellen',

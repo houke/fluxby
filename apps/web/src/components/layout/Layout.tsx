@@ -424,9 +424,9 @@ export default function Layout() {
                     className='h-9 w-9 text-muted-foreground'
                   >
                     {isDarkMode() ? (
-                      <Moon className='h-5 w-5' />
-                    ) : (
                       <Sun className='h-5 w-5' />
+                    ) : (
+                      <Moon className='h-5 w-5' />
                     )}
                   </Button>
                 </TooltipTrigger>

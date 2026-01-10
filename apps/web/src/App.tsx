@@ -32,6 +32,7 @@ import {
   useOnboarding,
 } from './components/onboarding';
 import { SpotlightProvider } from './contexts/SpotlightContext';
+import { MigrationPrompt } from './components/MigrationPrompt';
 
 // Inner component that can access onboarding context
 function AppContent() {
@@ -161,6 +162,7 @@ function App() {
                           <OnboardingProvider>
                             <SpotlightProvider>
                               <SecurityGate>
+                                <MigrationPrompt />
                                 <AppContent />
                               </SecurityGate>
                             </SpotlightProvider>
