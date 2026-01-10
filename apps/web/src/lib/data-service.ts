@@ -5689,27 +5689,56 @@ export function createDataService(db: Database) {
 
         // 8. Create recurring patterns for subscriptions demo
         const patternDate = new Date();
-        const patternsToInsert = DEMO_RECURRING_PATTERNS.map((pattern) => {
-          const lastDate = new Date(patternDate);
-          lastDate.setDate(3); // Most subscriptions on the 3rd
-          lastDate.setMonth(lastDate.getMonth() - 1);
+        const patternsToInsert = [] as Array<{
+          id: string;
+          merchantName: string | null;
+          patternType: string;
+          avgAmount: number;
+          lastAmount: number;
+          lastDate: string;
+          nextExpectedDate: string;
+          isConfirmed: number;
+          isVariable: number;
+          transactionCount: number;
+        }>;
 
-          const nextDate = new Date(lastDate);
+        for (const pattern of DEMO_RECURRING_PATTERNS) {
+          // Try to find the latest transaction for this merchant in the seeded transactions
+          const txRow = await db.queryOneAsync<{ date: string; amount: number }>(
+            `SELECT date, amount FROM transactions WHERE profile_id = ? AND (merchant_name LIKE ? OR opposing_account_name LIKE ?) ORDER BY date DESC LIMIT 1`,
+            [targetProfileId, `%${pattern.merchantName}%`, `%${pattern.merchantName}%`]
+          );
+
+          let lastDateStr: string;
+          let lastAmountVal: number;
+
+          if (txRow && txRow.date) {
+            lastDateStr = txRow.date;
+            lastAmountVal = txRow.amount;
+          } else {
+            const lastDate = new Date(patternDate);
+            lastDate.setDate(3); // Most subscriptions on the 3rd
+            lastDate.setMonth(lastDate.getMonth() - 1);
+            lastDateStr = lastDate.toISOString().split('T')[0];
+            lastAmountVal = pattern.lastAmount;
+          }
+
+          const nextDate = new Date(lastDateStr);
           nextDate.setMonth(nextDate.getMonth() + 1);
 
-          return {
+          patternsToInsert.push({
             id: crypto.randomUUID(),
             merchantName: pattern.merchantName,
             patternType: pattern.patternType,
             avgAmount: pattern.avgAmount,
-            lastAmount: pattern.lastAmount,
-            lastDate: lastDate.toISOString().split('T')[0],
+            lastAmount: lastAmountVal,
+            lastDate: lastDateStr,
             nextExpectedDate: nextDate.toISOString().split('T')[0],
             isConfirmed: pattern.isConfirmed ? 1 : 0,
             isVariable: pattern.isVariable ? 1 : 0,
             transactionCount: pattern.transactionCount,
-          };
-        });
+          });
+        }
 
         if (patternsToInsert.length > 0) {
           const placeholders = patternsToInsert
