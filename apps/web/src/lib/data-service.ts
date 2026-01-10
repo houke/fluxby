@@ -4606,11 +4606,16 @@ export function createDataService(db: Database) {
       let whereClause = '';
       const queryParams: unknown[] = [pid];
 
-      if (pattern.opposing_iban) {
-        whereClause = 'AND opposing_iban = ?';
+      if (pattern.opposing_iban && pattern.merchant_name) {
+        whereClause =
+          'AND opposing_account_iban = ? AND LOWER(COALESCE(merchant_name, opposing_account_name)) = LOWER(?)';
+        queryParams.push(pattern.opposing_iban, pattern.merchant_name);
+      } else if (pattern.opposing_iban) {
+        whereClause = 'AND opposing_account_iban = ?';
         queryParams.push(pattern.opposing_iban);
       } else if (pattern.merchant_name) {
-        whereClause = 'AND LOWER(merchant_name) = LOWER(?)';
+        whereClause =
+          'AND LOWER(COALESCE(merchant_name, opposing_account_name)) = LOWER(?)';
         queryParams.push(pattern.merchant_name);
       } else {
         return [];
@@ -4623,7 +4628,7 @@ export function createDataService(db: Database) {
         description: string;
         merchant_name: string | null;
         opposing_account_name: string | null;
-        opposing_iban: string | null;
+        opposing_account_iban: string | null;
         category_id: string | null;
         type: string;
         account_id: string;
@@ -4636,7 +4641,7 @@ export function createDataService(db: Database) {
         created_at: string;
       }>(
         `SELECT id, date, amount, description, merchant_name, opposing_account_name,
-                opposing_iban, category_id, type, account_id, notes, payment_method,
+                opposing_account_iban, category_id, type, account_id, notes, payment_method,
                 raw_data, import_hash, payment_provider, address_book_id, created_at
          FROM transactions
          WHERE profile_id = ? AND is_deleted = 0 ${whereClause}
@@ -4651,7 +4656,7 @@ export function createDataService(db: Database) {
         description: row.description,
         merchantName: row.merchant_name,
         opposingAccountName: row.opposing_account_name,
-        opposingAccountIban: row.opposing_iban,
+        opposingAccountIban: row.opposing_account_iban,
         categoryId: row.category_id,
         type: (row.type || 'expense') as 'income' | 'expense' | 'transfer',
         accountId: row.account_id || '',
