@@ -1323,11 +1323,28 @@ router.post('/:id/seed-demo', (req, res) => {
 
     for (const pattern of demoRecurringPatterns) {
       const id = `demo_${profileId}_${pattern.merchantName.replace(/\s+/g, '_').toLowerCase()}_${Date.now()}`;
-      const lastDate = new Date(patternDate);
-      lastDate.setDate(3); // Most subscriptions on the 3rd
-      lastDate.setMonth(lastDate.getMonth() - 1);
 
-      const nextDate = new Date(lastDate);
+      // Prefer the latest transaction for this merchant if present
+      const txRow = queryOne<{ date: string; amount: number }>(
+        `SELECT date, amount FROM transactions WHERE profile_id = ? AND (merchant_name LIKE ? OR opposing_account_name LIKE ?) ORDER BY date DESC LIMIT 1`,
+        [profileId, `%${pattern.merchantName}%`, `%${pattern.merchantName}%`]
+      );
+
+      let lastDateStr: string;
+      let lastAmountVal: number;
+
+      if (txRow && txRow.date) {
+        lastDateStr = txRow.date;
+        lastAmountVal = txRow.amount;
+      } else {
+        const lastDate = new Date(patternDate);
+        lastDate.setDate(3); // Most subscriptions on the 3rd
+        lastDate.setMonth(lastDate.getMonth() - 1);
+        lastDateStr = lastDate.toISOString().split('T')[0];
+        lastAmountVal = pattern.lastAmount;
+      }
+
+      const nextDate = new Date(lastDateStr);
       nextDate.setMonth(nextDate.getMonth() + 1);
 
       run(
@@ -1340,8 +1357,8 @@ router.post('/:id/seed-demo', (req, res) => {
           pattern.merchantName,
           pattern.patternType,
           pattern.avgAmount,
-          pattern.lastAmount,
-          lastDate.toISOString().split('T')[0],
+          lastAmountVal,
+          lastDateStr,
           nextDate.toISOString().split('T')[0],
           pattern.isConfirmed ? 1 : 0,
           pattern.isVariable ? 1 : 0,
