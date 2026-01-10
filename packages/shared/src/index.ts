@@ -5,3 +5,4 @@ export * from './gh-pages-redirect.js';
 export * from './components/FluxbyAvatar.js';
 export * from './components/FluxbyWebGL.js';
 export * from './utils/motion.js';
+export * from './recurring-seed.js';

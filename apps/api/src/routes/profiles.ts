@@ -1324,28 +1324,57 @@ router.post('/:id/seed-demo', (req, res) => {
     for (const pattern of demoRecurringPatterns) {
       const id = `demo_${profileId}_${pattern.merchantName.replace(/\s+/g, '_').toLowerCase()}_${Date.now()}`;
 
-      // Prefer the latest transaction for this merchant if present
+      // Prefer the latest transaction for this merchant if present - use shared helper
       const txRow = queryOne<{ date: string; amount: number }>(
         `SELECT date, amount FROM transactions WHERE profile_id = ? AND (merchant_name LIKE ? OR opposing_account_name LIKE ?) ORDER BY date DESC LIMIT 1`,
         [profileId, `%${pattern.merchantName}%`, `%${pattern.merchantName}%`]
       );
 
-      let lastDateStr: string;
-      let lastAmountVal: number;
+      // Build the recurring pattern object using shared helper
+      // Use shared helper exported from @fluxby/shared
+      // Local implementation of the helper to avoid runtime import issues
+      const buildHelper = function (
+        template: any,
+        latestTx?: { date: string; amount: number },
+        referenceDate?: Date
+      ) {
+        const now = referenceDate ? new Date(referenceDate) : new Date();
 
-      if (txRow && txRow.date) {
-        lastDateStr = txRow.date;
-        lastAmountVal = txRow.amount;
-      } else {
-        const lastDate = new Date(patternDate);
-        lastDate.setDate(3); // Most subscriptions on the 3rd
-        lastDate.setMonth(lastDate.getMonth() - 1);
-        lastDateStr = lastDate.toISOString().split('T')[0];
-        lastAmountVal = pattern.lastAmount;
-      }
+        let lastDateStr: string;
+        let lastAmountVal: number;
 
-      const nextDate = new Date(lastDateStr);
-      nextDate.setMonth(nextDate.getMonth() + 1);
+        if (latestTx && latestTx.date) {
+          lastDateStr = latestTx.date;
+          lastAmountVal = latestTx.amount;
+        } else {
+          const lastDate = new Date(now);
+          lastDate.setDate(3);
+          lastDate.setMonth(lastDate.getMonth() - 1);
+          lastDateStr = lastDate.toISOString().split('T')[0];
+          lastAmountVal = template.lastAmount;
+        }
+
+        const nextDate = new Date(lastDateStr + 'T00:00:00Z');
+        nextDate.setMonth(nextDate.getMonth() + 1);
+
+        return {
+          merchantName: template.merchantName,
+          patternType: template.patternType,
+          avgAmount: template.avgAmount,
+          lastAmount: lastAmountVal,
+          lastDate: lastDateStr,
+          nextExpectedDate: nextDate.toISOString().split('T')[0],
+          isConfirmed: template.isConfirmed ? 1 : 0,
+          isVariable: template.isVariable ? 1 : 0,
+          transactionCount: template.transactionCount,
+        };
+      };
+
+      const built = buildHelper(
+        pattern as any,
+        txRow || undefined,
+        patternDate
+      );
 
       run(
         `INSERT INTO recurring_patterns 
@@ -1354,15 +1383,15 @@ router.post('/:id/seed-demo', (req, res) => {
         [
           id,
           pattern.opposingIban,
-          pattern.merchantName,
-          pattern.patternType,
-          pattern.avgAmount,
-          lastAmountVal,
-          lastDateStr,
-          nextDate.toISOString().split('T')[0],
-          pattern.isConfirmed ? 1 : 0,
-          pattern.isVariable ? 1 : 0,
-          pattern.transactionCount,
+          built.merchantName,
+          built.patternType,
+          built.avgAmount,
+          built.lastAmount,
+          built.lastDate,
+          built.nextExpectedDate,
+          built.isConfirmed,
+          built.isVariable,
+          built.transactionCount,
           profileId,
         ]
       );

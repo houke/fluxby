@@ -6385,6 +6385,20 @@ export async function insertDemoRecurringPatterns(
 
   const buildHelper = await importSharedHelper();
 
+  // Import demo templates from shared seed-data with resilient fallbacks
+  let DEMO_RECURRING_PATTERNS: any[] = [];
+  try {
+    const pkg = await import('@fluxby/shared');
+    DEMO_RECURRING_PATTERNS = pkg.DEMO_RECURRING_PATTERNS;
+  } catch (e) {
+    try {
+      const local = await import('../../../../packages/shared/src/seed-data');
+      DEMO_RECURRING_PATTERNS = local.DEMO_RECURRING_PATTERNS;
+    } catch (e2) {
+      DEMO_RECURRING_PATTERNS = [];
+    }
+  }
+
   for (const pattern of DEMO_RECURRING_PATTERNS) {
     const txRow = await db.queryOneAsync<{ date: string; amount: number }>(
       `SELECT date, amount FROM transactions WHERE profile_id = ? AND (merchant_name LIKE ? OR opposing_account_name LIKE ?) ORDER BY date DESC LIMIT 1`,

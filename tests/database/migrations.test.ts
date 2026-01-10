@@ -509,7 +509,10 @@ describe('Migration System', () => {
       const db = createMockDb();
       const higherVersion = LATEST_MIGRATION_VERSION + 1;
       db.setVersion(higherVersion);
-      localStorageMock.setItem('fluxby-db-schema-version', String(higherVersion));
+      localStorageMock.setItem(
+        'fluxby-db-schema-version',
+        String(higherVersion)
+      );
 
       // This should trigger stale code detection
       expect(isStaleCode()).toBe(true);
