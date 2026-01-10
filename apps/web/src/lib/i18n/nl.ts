@@ -2539,6 +2539,8 @@ export const nl: TranslationKeys = {
     switchToDark: 'Schakel naar donkere modus',
     togglePrivacy: 'Privacy modus wisselen',
     addBudget: 'Budget toevoegen',
+    addCategory: 'Categorie toevoegen',
+    addContact: 'Contact toevoegen',
     openSearch: 'Openen zoeken',
     openSearchTooltip: 'Druk op ⌘K',
     togglePrivacyTooltip: 'Druk op ⇧⌘P',
@@ -2557,6 +2559,8 @@ export const nl: TranslationKeys = {
       theme: ['donker', 'licht', 'thema', 'modus'],
       privacy: ['privacy', 'vervagen', 'verbergen', 'tonen'],
       budget: ['nieuw', 'aanmaken', 'budget', 'toevoegen'],
+      category: ['nieuw', 'aanmaken', 'categorie', 'label', 'toevoegen'],
+      contact: ['nieuw', 'aanmaken', 'contact', 'adres', 'adresboek', 'toevoegen'],
     },
   },
 };

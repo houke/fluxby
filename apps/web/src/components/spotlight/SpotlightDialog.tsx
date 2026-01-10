@@ -171,7 +171,7 @@ export function SpotlightDialog() {
                       )}
                     </div>
                     {command.shortcut && (
-                      <CommandShortcut>{command.shortcut}</CommandShortcut>
+                      <CommandShortcut className='group-hover:text-white'>{command.shortcut}</CommandShortcut>
                     )}
                   </CommandItem>
                 ))}

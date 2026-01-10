@@ -25,6 +25,7 @@ import {
   Moon,
   Plus,
   CalendarClock,
+  UserPlus,
   type LucideIcon,
 } from 'lucide-react';
 import { useLanguage } from './LanguageContext';
@@ -308,6 +309,35 @@ export function SpotlightProvider({ children }: SpotlightProviderProps) {
         'toevoegen',
       ],
       onSelect: () => navigate('/budgets?action=add'),
+    },
+    {
+      id: 'action-add-category',
+      title: t.spotlight?.addCategory || 'Add category',
+      icon: Tags,
+      group: 'actions',
+      keywords: t.spotlight?.keywords?.category || [
+        'new',
+        'create',
+        'category',
+        'categorie',
+        'toevoegen',
+      ],
+      onSelect: () => navigate('/categories'),
+    },
+    {
+      id: 'action-add-address',
+      title: t.spotlight?.addContact || 'Add contact',
+      icon: UserPlus,
+      group: 'actions',
+      keywords: t.spotlight?.keywords?.contact || [
+        'new',
+        'create',
+        'contact',
+        'address',
+        'adresboek',
+        'toevoegen',
+      ],
+      onSelect: () => navigate('/addressbook'),
     },
   ];
 
