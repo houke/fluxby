@@ -1,6 +1,6 @@
 {
   "name": "fluxby-tauri",
-  "version": "1.4.1",
+  "version": "1.4.2",
   "description": "Fluxby Desktop Application",
   "type": "module",
   "scripts": {

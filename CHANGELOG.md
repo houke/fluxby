@@ -1,5 +1,18 @@
 # Changelog
 
+## v1.4.2
+
+**Release Date:** 2026-01-11
+
+### Bug Fixes
+
+- **web:** improve P2P sync UX and fix connection issues
+
+### Chores
+
+- **landing:** update OpenAPI artifact
+- **repo:** commit remaining local edits and formatting
+
 ## v1.4.1
 
 **Release Date:** 2026-01-11

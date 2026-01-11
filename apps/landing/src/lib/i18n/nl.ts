@@ -1938,6 +1938,11 @@ export const nl: LandingTranslationKeys = {
     updatesPage: {
       intro:
         'Bekijk wat er nieuw is in Fluxby. Hier vind je alle updates en nieuwe features.',
+      v142Date: '11 januari 2026',
+      v142Title: 'Release 1.4.2',
+      v142Description: '1 bugfix.',
+      v142F1Title: 'Verbeterd apparaat-to-apparaat synchronisatie gebruikerservaring and opgelost connection issues',
+      v142F1Desc: 'Dit had niet moeten gebeuren, maar nu is het gefixed!',
       v141Date: '11 januari 2026',
       v141Title: 'Release 1.4.1',
       v141Description: '1 bugfix.',

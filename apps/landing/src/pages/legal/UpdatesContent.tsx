@@ -33,6 +33,21 @@ const UpdatesContent = () => {
   const updatesPage = t.legal?.updatesPage;
 
   const releases = [
+        {
+      version: '1.4.2',
+      date: updatesPage?.v142Date || '11 januari 2026',
+      title: updatesPage?.v142Title || 'Release 1.4.2',
+      description:
+        updatesPage?.v142Description ||
+        '1 bugfix.',
+      features: [
+        {
+          icon: Globe,
+          title: updatesPage?.v142F1Title || 'Verbeterd apparaat-to-apparaat synchronisatie gebruikerservaring and opgelost connection issues',
+          description: updatesPage?.v142F1Desc || 'Dit had niet moeten gebeuren, maar nu is het gefixed!',
+        },
+      ],
+    },
     {
       version: '1.4.1',
       date: updatesPage?.v141Date || '11 januari 2026',
