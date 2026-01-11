@@ -931,6 +931,9 @@ export interface TranslationKeys {
       autoSync: string;
       autoSyncDescription: string;
       connectionSettings: string;
+      syncSuccess: string;
+      syncNoChanges: string;
+      syncError: string;
     };
   };
   help: {
@@ -2330,6 +2333,9 @@ export const nl: TranslationKeys = {
       autoSync: 'Automatisch synchroniseren',
       autoSyncDescription: 'Wijzigingen automatisch synchroniseren',
       connectionSettings: 'Verbindingsinstellingen',
+      syncSuccess: '{received} ontvangen, {pushed} verzonden',
+      syncNoChanges: 'Geen nieuwe wijzigingen om te synchroniseren',
+      syncError: 'Synchronisatie mislukt',
     },
   },
   help: {

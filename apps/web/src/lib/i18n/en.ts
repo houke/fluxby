@@ -1057,6 +1057,9 @@ export const en: TranslationKeys = {
       autoSync: 'Auto-sync',
       autoSyncDescription: 'Automatically sync changes as you make them',
       connectionSettings: 'Connection settings',
+      syncSuccess: '{received} received, {pushed} sent',
+      syncNoChanges: 'No new changes to sync',
+      syncError: 'Sync failed',
     },
   },
   help: {

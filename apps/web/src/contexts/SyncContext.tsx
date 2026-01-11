@@ -22,6 +22,7 @@ import {
   createSyncEngine,
   type SyncEngine,
   type SyncStatus,
+  type ForceSyncResult,
   formatRelativeTime,
 } from '@fluxby/core';
 import {
@@ -81,8 +82,8 @@ interface SyncContextType {
   retryInitialization: () => void;
   /** Sync status (state, lastSyncedAt, pendingChanges, etc.) */
   syncStatus: SyncStatus;
-  /** Force a full sync with all connected peers */
-  forceSync: () => Promise<void>;
+  /** Force a full sync with all connected peers, returns sync result */
+  forceSync: () => Promise<ForceSyncResult>;
   /** Queue a change for auto-sync */
   queueChange: (change: SyncChange<SyncableRow>) => void;
   /** Queue multiple changes for auto-sync */
@@ -96,7 +97,6 @@ interface SyncContextType {
 }
 
 const SyncContext = createContext<SyncContextType | null>(null);
-
 export function useSync() {
   const context = useContext(SyncContext);
   if (!context) {
@@ -433,8 +433,15 @@ export function SyncProvider({ children, onSyncReceived }: SyncProviderProps) {
   );
 
   // Force sync with all connected peers
-  const forceSync = useCallback(async () => {
-    if (!syncEngineRef.current) return;
+  const forceSync = useCallback(async (): Promise<ForceSyncResult> => {
+    if (!syncEngineRef.current) {
+      return {
+        success: false,
+        changesPushed: 0,
+        changesReceived: 0,
+        error: 'Sync engine not initialized',
+      };
+    }
 
     // Set up push handler to broadcast to all connected devices
     syncEngineRef.current.setPushHandler((changes) => {
@@ -455,7 +462,7 @@ export function SyncProvider({ children, onSyncReceived }: SyncProviderProps) {
       }
     });
 
-    await syncEngineRef.current.forceSync();
+    return await syncEngineRef.current.forceSync();
   }, [peerSync]);
 
   // Queue a change for auto-sync

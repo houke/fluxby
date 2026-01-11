@@ -25,6 +25,18 @@ export interface SyncStatus {
   isSyncing: boolean;
 }
 
+/** Result of a force sync operation */
+export interface ForceSyncResult {
+  /** Whether sync completed successfully */
+  success: boolean;
+  /** Number of changes pushed to peers */
+  changesPushed: number;
+  /** Number of changes received from peers */
+  changesReceived: number;
+  /** Error message if sync failed */
+  error?: string;
+}
+
 export interface SyncEngineConfig {
   /** Debounce delay in ms (default: 500) */
   debounceDelay: number;
@@ -64,6 +76,11 @@ export class SyncEngine {
   private forceSyncHandler: ((sinceTimestamp: number) => Promise<void>) | null =
     null;
   private isProcessing = false;
+
+  // Track incoming changes during a sync session
+  private syncSessionChangesReceived = 0;
+  private syncSessionResolve: ((result: ForceSyncResult) => void) | null = null;
+  private syncSessionTimeout: ReturnType<typeof setTimeout> | null = null;
 
   constructor(config: Partial<SyncEngineConfig> = {}) {
     this.config = { ...DEFAULT_SYNC_ENGINE_CONFIG, ...config };
@@ -289,23 +306,42 @@ export class SyncEngine {
   // ============================================================================
 
   /**
-   * Force a full sync with all connected peers
+   * Force a full sync with all connected peers.
+   * Returns a result indicating what was synced.
+   * @param timeoutMs - How long to wait for responses (default: 5000ms)
    */
-  async forceSync(): Promise<void> {
-    if (this.status.isSyncing) return;
+  async forceSync(timeoutMs: number = 5000): Promise<ForceSyncResult> {
+    if (this.status.isSyncing) {
+      return {
+        success: false,
+        changesPushed: 0,
+        changesReceived: 0,
+        error: 'Sync already in progress',
+      };
+    }
     if (this.status.connectedPeers === 0) {
       this.updateStatus({
         state: 'offline',
         lastError: 'No peers connected',
       });
-      return;
+      return {
+        success: false,
+        changesPushed: 0,
+        changesReceived: 0,
+        error: 'No peers connected',
+      };
     }
 
     this.updateStatus({ state: 'syncing', isSyncing: true });
 
+    // Reset sync session tracking
+    this.syncSessionChangesReceived = 0;
+    let changesPushed = 0;
+
     try {
       // First, push any pending changes
       if (this.pendingChanges.size > 0) {
+        changesPushed = this.pendingChanges.size;
         await this.processPendingChanges();
       }
 
@@ -315,14 +351,17 @@ export class SyncEngine {
         await this.forceSyncHandler(sinceTimestamp);
       }
 
-      const now = Date.now();
-      this.saveLastSyncedAt(now);
-      this.updateStatus({
-        state: 'idle',
-        isSyncing: false,
-        lastSyncedAt: now,
-        lastError: null,
+      // Wait for incoming changes with a timeout
+      // This allows time for peer responses to come in
+      const result = await new Promise<ForceSyncResult>((resolve) => {
+        this.syncSessionResolve = resolve;
+
+        this.syncSessionTimeout = setTimeout(() => {
+          this.completeSyncSession(changesPushed);
+        }, timeoutMs);
       });
+
+      return result;
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
@@ -331,7 +370,50 @@ export class SyncEngine {
         isSyncing: false,
         lastError: errorMessage,
       });
+      this.cleanupSyncSession();
+      return {
+        success: false,
+        changesPushed,
+        changesReceived: 0,
+        error: errorMessage,
+      };
     }
+  }
+
+  /**
+   * Complete the sync session and resolve with results
+   */
+  private completeSyncSession(changesPushed: number): void {
+    const changesReceived = this.syncSessionChangesReceived;
+    const now = Date.now();
+    this.saveLastSyncedAt(now);
+    this.updateStatus({
+      state: 'idle',
+      isSyncing: false,
+      lastSyncedAt: now,
+      lastError: null,
+    });
+
+    if (this.syncSessionResolve) {
+      this.syncSessionResolve({
+        success: true,
+        changesPushed,
+        changesReceived,
+      });
+    }
+    this.cleanupSyncSession();
+  }
+
+  /**
+   * Clean up sync session state
+   */
+  private cleanupSyncSession(): void {
+    if (this.syncSessionTimeout) {
+      clearTimeout(this.syncSessionTimeout);
+      this.syncSessionTimeout = null;
+    }
+    this.syncSessionResolve = null;
+    this.syncSessionChangesReceived = 0;
   }
 
   // ============================================================================
@@ -343,11 +425,12 @@ export class SyncEngine {
    * Returns true if changes should be applied, false if they should be ignored
    */
   shouldApplyIncomingChanges(changes: SyncChange<SyncableRow>[]): boolean {
-    // Always apply incoming changes - the LWW logic in sync.ts handles conflicts
-    // Just mark that we're syncing
+    // Track changes received during a sync session
     if (changes.length > 0) {
+      this.syncSessionChangesReceived += changes.length;
       this.updateStatus({ isSyncing: true });
     }
+    // Always apply incoming changes - the LWW logic in sync.ts handles conflicts
     return true;
   }
 
@@ -375,6 +458,7 @@ export class SyncEngine {
     if (this.debounceTimer) {
       clearTimeout(this.debounceTimer);
     }
+    this.cleanupSyncSession();
     this.statusListeners.clear();
     this.pendingChanges.clear();
     this.pushHandler = null;

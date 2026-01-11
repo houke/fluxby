@@ -42,12 +42,14 @@ import {
 } from '@/components/ui/tooltip';
 import { useSync } from '@/contexts/SyncContext';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useToast } from '@/contexts/ToastContext';
 import { cn } from '@/lib/utils';
 import { SyncDebugPanel } from './SyncDebugPanel';
 import { QRPairingDialog } from './QRPairingDialog';
 
 export function SyncSettings() {
   const { t } = useLanguage();
+  const toast = useToast();
   const {
     deviceId,
     deviceName,
@@ -227,6 +229,11 @@ export function SyncSettings() {
                       variant='ghost'
                       size='icon'
                       className='h-8 w-8 rounded-md hover:bg-purple-600 hover:text-white'
+                      disabled={
+                        !isInitialized ||
+                        syncStatus.connectedPeers === 0 ||
+                        isSyncingManual
+                      }
                       onClick={async () => {
                         if (
                           !isInitialized ||
@@ -237,7 +244,42 @@ export function SyncSettings() {
                         }
                         setIsSyncingManual(true);
                         try {
-                          await forceSync();
+                          const result = await forceSync();
+                          if (!result.success) {
+                            toast.error(
+                              result.error ||
+                                t.settings?.sync?.syncError ||
+                                'Sync failed'
+                            );
+                          } else if (
+                            result.changesReceived === 0 &&
+                            result.changesPushed === 0
+                          ) {
+                            toast.info(
+                              t.settings?.sync?.syncNoChanges ||
+                                'No new changes to sync'
+                            );
+                          } else {
+                            const message = (
+                              t.settings?.sync?.syncSuccess ||
+                              'Synced {received} received, {pushed} sent'
+                            )
+                              .replace(
+                                '{received}',
+                                String(result.changesReceived)
+                              )
+                              .replace(
+                                '{pushed}',
+                                String(result.changesPushed)
+                              );
+                            toast.success(message);
+                          }
+                        } catch (error) {
+                          toast.error(
+                            error instanceof Error
+                              ? error.message
+                              : t.settings?.sync?.syncError || 'Sync failed'
+                          );
                         } finally {
                           setIsSyncingManual(false);
                         }

@@ -74,9 +74,26 @@ describe('SyncEngine', () => {
       expect(engine.getStatus().state).toBe('offline');
     });
 
-    it('should update state to idle when peers connected', () => {
-      engine.setConnectedPeers(2);
-      expect(engine.getStatus().state).toBe('idle');
+    it('should update state to idle when peers connected (without syncOnReconnect)', () => {
+      // Create engine with syncOnReconnect disabled to test state change directly
+      const testEngine = createSyncEngine({
+        debounceDelay: 100,
+        maxBatchSize: 10,
+        autoSync: true,
+        syncOnReconnect: false,
+      });
+      testEngine.setConnectedPeers(2);
+      expect(testEngine.getStatus().state).toBe('idle');
+      testEngine.destroy();
+    });
+
+    it('should trigger sync when reconnecting with syncOnReconnect enabled', () => {
+      // Default config has syncOnReconnect: true
+      // When peers connect, it triggers forceSync which sets state to 'syncing'
+      engine.setConnectedPeers(0); // Start disconnected
+      engine.setConnectedPeers(2); // Reconnect
+      // State goes to 'syncing' because forceSync was triggered
+      expect(engine.getStatus().state).toBe('syncing');
     });
 
     it('should set connecting state', () => {
