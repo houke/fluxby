@@ -4262,17 +4262,12 @@ export function createDataService(db: Database) {
           if (!isConsistent) continue;
 
           // Calculate amount statistics
-          // For expenses (which this query filters for), amounts should be negative
-          // Ensure we store negative values for consistency
-          let avgAmount =
+          // Amounts may be positive or negative depending on how they were imported
+          // We store the actual values and use absolute values for comparison
+          const avgAmount =
             amounts.reduce((sum, a) => sum + a, 0) / amounts.length;
-          let lastAmount = amounts[amounts.length - 1];
+          const lastAmount = amounts[amounts.length - 1];
           const lastDate = dates[dates.length - 1].toISOString().split('T')[0];
-
-          // Safety: ensure expense amounts are negative
-          // This handles edge cases where amounts might be stored as positive
-          if (avgAmount > 0) avgAmount = -avgAmount;
-          if (lastAmount > 0) lastAmount = -lastAmount;
 
           // Check if amount is variable (>10% variance) - use absolute values for comparison
           const absAvgAmount = Math.abs(avgAmount);
@@ -4543,7 +4538,7 @@ export function createDataService(db: Database) {
       }>(
         `SELECT id, pattern_type, avg_amount, last_date, is_active, is_confirmed
          FROM recurring_patterns
-         WHERE profile_id = ? AND is_deleted = 0 AND is_dismissed = 0 AND is_active = 1 AND avg_amount < 0`,
+         WHERE profile_id = ? AND is_deleted = 0 AND is_dismissed = 0 AND is_active = 1`,
         [pid]
       );
 

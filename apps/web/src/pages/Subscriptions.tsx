@@ -342,15 +342,11 @@ export default function Subscriptions() {
     });
   };
 
-  // Computed values - only show expenses (negative amounts) as subscriptions
+  // Computed values - show all active patterns (detection already filters by expense type)
   const pendingPatterns = useMemo(() => {
     return (
       patterns?.filter(
-        (p) =>
-          !p.isConfirmed &&
-          p.isActive &&
-          typeof p.avgAmount === 'number' &&
-          p.avgAmount < 0
+        (p) => !p.isConfirmed && p.isActive && typeof p.avgAmount === 'number'
       ) || []
     );
   }, [patterns]);
@@ -358,11 +354,7 @@ export default function Subscriptions() {
   const confirmedPatterns = useMemo(() => {
     return (
       patterns?.filter(
-        (p) =>
-          p.isConfirmed &&
-          p.isActive &&
-          typeof p.avgAmount === 'number' &&
-          p.avgAmount < 0
+        (p) => p.isConfirmed && p.isActive && typeof p.avgAmount === 'number'
       ) || []
     );
   }, [patterns]);
@@ -385,12 +377,8 @@ export default function Subscriptions() {
     twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
 
     for (const pattern of patterns) {
-      // Only check confirmed expense subscriptions for alerts
-      if (
-        !pattern.isConfirmed ||
-        typeof pattern.avgAmount !== 'number' ||
-        pattern.avgAmount >= 0
-      )
+      // Only check confirmed subscriptions for alerts
+      if (!pattern.isConfirmed || typeof pattern.avgAmount !== 'number')
         continue;
 
       // Price change alert (>5% difference between last amount and saved average)
