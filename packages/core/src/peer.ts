@@ -122,7 +122,28 @@ export class PeerSync {
           const peer = new Peer(id, {
             debug: 1, // Increased debug level for better troubleshooting
             config: {
-              iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
+              iceServers: [
+                // Multiple STUN servers for better NAT traversal
+                { urls: 'stun:stun.l.google.com:19302' },
+                { urls: 'stun:stun1.l.google.com:19302' },
+                { urls: 'stun:stun2.l.google.com:19302' },
+                { urls: 'stun:stun3.l.google.com:19302' },
+                { urls: 'stun:stun4.l.google.com:19302' },
+                // OpenRelay free TURN server for symmetric NAT
+                {
+                  urls: 'turn:openrelay.metered.ca:80',
+                  username: 'openrelayproject',
+                  credential: 'openrelayproject',
+                },
+                {
+                  urls: 'turn:openrelay.metered.ca:443',
+                  username: 'openrelayproject',
+                  credential: 'openrelayproject',
+                },
+              ],
+              // ICE transport policy - prefer relay for more reliable connections
+              // when direct connection fails
+              iceCandidatePoolSize: 10,
             },
           });
           this.peer = peer;
@@ -465,11 +486,13 @@ export class PeerSync {
       }
 
       let isResolved = false;
+      let connectionAttempted = false;
 
       const conn = this.peer.connect(targetPeerId, {
         reliable: true,
       });
 
+      // Reduced timeout to 20s - if it takes longer, likely a NAT/firewall issue
       const timeout = setTimeout(() => {
         if (!isResolved) {
           isResolved = true;
@@ -478,12 +501,18 @@ export class PeerSync {
           } catch {
             // Ignore close errors
           }
-          reject(new Error('Connection timeout'));
+          // Provide more helpful error message
+          const errorMsg = connectionAttempted
+            ? 'Connection timeout - the other device may be behind a restrictive firewall or NAT. Try connecting from a different network.'
+            : 'Connection timeout - could not reach the peer server. Check your internet connection.';
+          reject(new Error(errorMsg));
         }
-      }, 30000);
+      }, 20000);
 
+      // Track when we actually start attempting connection
       conn.on('open', () => {
         if (isResolved) return;
+        connectionAttempted = true;
         this.connections.set(conn.peer, conn);
         this.options.onConnectionChange?.(conn.peer, true);
 

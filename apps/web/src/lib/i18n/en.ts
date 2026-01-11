@@ -1028,6 +1028,8 @@ export const en: TranslationKeys = {
       cannotConnectToSelf: 'Cannot connect to yourself',
       peerUnavailable:
         'Peer unavailable (ensure code is correct and peer is online)',
+      connectionTimeout:
+        'Connection timeout - the other device may be behind a firewall. Try a different network.',
       pairedDevices: 'Paired devices',
       lastSync: 'Last sync',
       neverSynced: 'Never synced',

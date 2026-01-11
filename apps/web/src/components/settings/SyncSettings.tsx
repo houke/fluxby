@@ -132,6 +132,14 @@ export function SyncSettings() {
         setConnectionError(
           t.settings?.sync?.peerUnavailable || 'Peer unavailable'
         );
+      } else if (
+        errorMessage.toLowerCase().includes('timeout') ||
+        errorMessage.toLowerCase().includes('time-out')
+      ) {
+        setConnectionError(
+          t.settings?.sync?.connectionTimeout ||
+            'Connection timeout - the other device may be behind a firewall. Try a different network.'
+        );
       } else {
         setConnectionError(errorMessage || 'Connection failed');
       }
@@ -531,7 +539,15 @@ export function SyncSettings() {
           {/* Connect Dialog */}
           <Dialog
             open={isPairingDialogOpen}
-            onOpenChange={setIsPairingDialogOpen}
+            onOpenChange={(open) => {
+              if (!open) {
+                // Reset all state when dialog closes (cancel, ESC, click outside)
+                setPairingInput('');
+                setConnectionError(null);
+                setIsConnecting(false);
+              }
+              setIsPairingDialogOpen(open);
+            }}
           >
             <DialogContent>
               <DialogHeader>
@@ -566,6 +582,7 @@ export function SyncSettings() {
                   onClick={() => {
                     setPairingInput('');
                     setConnectionError(null);
+                    setIsConnecting(false);
                     setIsPairingDialogOpen(false);
                   }}
                 >

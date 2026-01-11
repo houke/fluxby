@@ -51,8 +51,11 @@ pub fn run() {
                 &[
                     &MenuItem::with_id(app, "dashboard", "Dashboard", true, Some("CmdOrCtrl+1"))?,
                     &MenuItem::with_id(app, "transactions", "Transacties", true, Some("CmdOrCtrl+2"))?,
-                    &MenuItem::with_id(app, "budgets", "Budgetten", true, Some("CmdOrCtrl+3"))?,
-                    &MenuItem::with_id(app, "categories", "Categorieën", true, Some("CmdOrCtrl+4"))?,
+                    &MenuItem::with_id(app, "analytics", "Analyses", true, Some("CmdOrCtrl+3"))?,
+                    &MenuItem::with_id(app, "budgets", "Budgetten", true, Some("CmdOrCtrl+4"))?,
+                    &MenuItem::with_id(app, "subscriptions", "Abonnementen", true, Some("CmdOrCtrl+5"))?,
+                    &MenuItem::with_id(app, "addressbook", "Adresboek", true, Some("CmdOrCtrl+6"))?,
+                    &MenuItem::with_id(app, "categories", "Categorieën", true, Some("CmdOrCtrl+7"))?,
                     &tauri::menu::PredefinedMenuItem::separator(app)?,
                     &tauri::menu::PredefinedMenuItem::fullscreen(app, Some("Volledig scherm"))?,
                 ],
@@ -108,6 +111,21 @@ pub fn run() {
                     "budgets" => {
                         if let Some(window) = app.get_webview_window("main") {
                             let _ = window.emit("navigate", "/budgets");
+                        }
+                    }
+                    "analytics" => {
+                        if let Some(window) = app.get_webview_window("main") {
+                            let _ = window.emit("navigate", "/analytics");
+                        }
+                    }
+                    "subscriptions" => {
+                        if let Some(window) = app.get_webview_window("main") {
+                            let _ = window.emit("navigate", "/subscriptions");
+                        }
+                    }
+                    "addressbook" => {
+                        if let Some(window) = app.get_webview_window("main") {
+                            let _ = window.emit("navigate", "/addressbook");
                         }
                     }
                     "categories" => {

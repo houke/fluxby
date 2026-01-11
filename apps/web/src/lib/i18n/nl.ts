@@ -921,6 +921,7 @@ export interface TranslationKeys {
       initializing: string;
       cannotConnectToSelf: string;
       peerUnavailable: string;
+      connectionTimeout: string;
       syncing: string;
       connected: string;
       notConnected: string;
@@ -2299,6 +2300,8 @@ export const nl: TranslationKeys = {
       cannotConnectToSelf: 'Je kunt niet met jezelf verbinden',
       peerUnavailable:
         'Peer onbereikbaar (controleer code en of de ander online is)',
+      connectionTimeout:
+        'Verbinding time-out - het andere apparaat kan achter een firewall zitten. Probeer een ander netwerk.',
       pairedDevices: 'Gekoppelde apparaten',
       lastSync: 'Laatste sync',
       neverSynced: 'Nog niet gesynchroniseerd',
