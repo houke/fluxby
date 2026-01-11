@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.4.1
+
+**Release Date:** 2026-01-11
+
+### Bug Fixes
+
+- **landing:** resolve build failure due to missing imports
+
 ## v1.4.0
 
 **Release Date:** 2026-01-11
