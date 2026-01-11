@@ -2819,6 +2819,7 @@ export function createDataService(db: Database) {
 
       // Updated query to check both address_book.iban AND contact_ibans for merged contacts
       // This ensures IBANs that are part of multi-IBAN contacts are properly detected
+      // Group by both IBAN AND name to show unique contacts (important for shared IBANs)
       const rows = await db.queryAsync<{
         iban: string;
         name: string;
@@ -2854,15 +2855,15 @@ export function createDataService(db: Database) {
           )
           ${amountCondition}
           ${dateCondition}
-        GROUP BY t.opposing_account_iban
+        GROUP BY t.opposing_account_iban, COALESCE(ab.name, ci_ab.name, t.opposing_account_name)
         ORDER BY total_amount DESC
         LIMIT ?
       `,
         queryParams
       );
 
-      // Get total count
-      const countParams: (string | number)[] = [pid, pid];
+      // Get total count (group by IBAN + name for unique contacts)
+      const countParams: (string | number)[] = [pid, pid, pid, pid];
       if (startDate && endDate) {
         countParams.push(startDate, endDate);
       }
@@ -2871,9 +2872,12 @@ export function createDataService(db: Database) {
         `
         SELECT COUNT(*) as count
         FROM (
-          SELECT t.opposing_account_iban
+          SELECT t.opposing_account_iban, COALESCE(ab.name, ci_ab.name, t.opposing_account_name) as name
           FROM transactions t
           JOIN accounts a ON t.account_id = a.id
+          LEFT JOIN address_book ab ON ab.iban = t.opposing_account_iban AND ab.profile_id = ? AND ab.is_deleted = 0
+          LEFT JOIN contact_ibans ci ON ci.iban = t.opposing_account_iban
+          LEFT JOIN address_book ci_ab ON ci_ab.id = ci.contact_id AND ci_ab.profile_id = ? AND ci_ab.is_deleted = 0
           WHERE a.profile_id = ?
             AND t.type != 'transfer'
             AND t.opposing_account_iban IS NOT NULL
@@ -2884,7 +2888,7 @@ export function createDataService(db: Database) {
             )
             ${amountCondition}
             ${dateCondition}
-          GROUP BY t.opposing_account_iban
+          GROUP BY t.opposing_account_iban, COALESCE(ab.name, ci_ab.name, t.opposing_account_name)
         )
       `,
         countParams
@@ -4379,7 +4383,7 @@ export function createDataService(db: Database) {
     /**
      * Get recurring patterns with price history for analysis view
      */
-    async getRecurringPatternsWithHistory(): Promise<RecurringPattern[]> {
+    async getRecurringPatternsWithHistory(startDate?: string, endDate?: string): Promise<RecurringPattern[]> {
       const pid = profileId();
       if (!pid) return [];
 
@@ -4410,26 +4414,42 @@ export function createDataService(db: Database) {
       // For each pattern, get the price history from matching transactions
       const result: RecurringPattern[] = [];
 
+      // Build date filter fragments if provided
+      const useDateFilter = !!(startDate && endDate);
+      const dateFilterClause = useDateFilter
+        ? 'AND date >= ? AND date <= ?'
+        : '';
+
       for (const row of patterns) {
         // Query transactions matching this pattern (by IBAN or merchant name)
         let priceHistory: { date: string; amount: number }[] = [];
 
         if (row.opposing_iban) {
-          const txRows = await db.queryAsync<{ date: string; amount: number }>(
-            `SELECT date, ABS(amount) as amount FROM transactions
+          const sql = `SELECT date, ABS(amount) as amount FROM transactions
              WHERE profile_id = ? AND is_deleted = 0
-             AND opposing_account_iban = ?
-             ORDER BY date ASC`,
-            [pid, row.opposing_iban]
+             AND opposing_account_iban = ? ${dateFilterClause}
+             ORDER BY date ASC`;
+          const params: any[] = useDateFilter
+            ? [pid, row.opposing_iban, startDate, endDate]
+            : [pid, row.opposing_iban];
+
+          const txRows = await db.queryAsync<{ date: string; amount: number }>(
+            sql,
+            params
           );
           priceHistory = txRows;
         } else if (row.merchant_name) {
-          const txRows = await db.queryAsync<{ date: string; amount: number }>(
-            `SELECT date, ABS(amount) as amount FROM transactions
+          const sql = `SELECT date, ABS(amount) as amount FROM transactions
              WHERE profile_id = ? AND is_deleted = 0
-             AND LOWER(COALESCE(merchant_name, opposing_account_name)) = LOWER(?)
-             ORDER BY date ASC`,
-            [pid, row.merchant_name]
+             AND LOWER(COALESCE(merchant_name, opposing_account_name)) = LOWER(?) ${dateFilterClause}
+             ORDER BY date ASC`;
+          const params: any[] = useDateFilter
+            ? [pid, row.merchant_name, startDate, endDate]
+            : [pid, row.merchant_name];
+
+          const txRows = await db.queryAsync<{ date: string; amount: number }>(
+            sql,
+            params
           );
           priceHistory = txRows;
         }
@@ -4456,6 +4476,7 @@ export function createDataService(db: Database) {
 
       return result;
     },
+
 
     /**
      * Get recurring pattern stats (total monthly spend, counts, etc)

@@ -134,8 +134,8 @@ export default function Analytics() {
   const { data: recurringPatterns, isLoading: recurringLoading } = useQuery<
     RecurringPattern[]
   >({
-    queryKey: ['recurring-patterns-history', activeProfileId],
-    queryFn: () => api.getRecurringPatternsWithHistory(),
+    queryKey: ['recurring-patterns-history', activeProfileId, yearStartDate, yearEndDate],
+    queryFn: () => api.getRecurringPatternsWithHistory(yearStartDate, yearEndDate),
   });
 
   const [activeExpenseIndex, setActiveExpenseIndex] = useState<number | null>(
@@ -1093,20 +1093,31 @@ export default function Analytics() {
                           <p className='font-semibold tabular-nums'>
                             <Currency amount={pattern.avgAmount} />
                           </p>
-                          {pattern.lastAmount !== pattern.avgAmount && (
-                            <p
-                              className={`text-sm ${
-                                pattern.lastAmount > pattern.avgAmount
-                                  ? 'text-rose-600'
-                                  : 'text-emerald-600'
-                              }`}
-                            >
-                              {pattern.lastAmount > pattern.avgAmount
-                                ? '↑'
-                                : '↓'}{' '}
-                              <Currency amount={pattern.lastAmount} />
-                            </p>
-                          )}
+                          {(() => {
+                            const history = pattern.priceHistory || [];
+                            
+                            // If we have price history, calculate the average for the period
+                            // and compare against the saved subscription amount (avgAmount)
+                            if (history.length > 0) {
+                              const periodAverage = history.reduce((sum, h) => sum + h.amount, 0) / history.length;
+                              const savedAmount = pattern.avgAmount;
+                              
+                              // Show difference if there's a significant change (>1% difference)
+                              const diff = periodAverage - savedAmount;
+                              const percentDiff = Math.abs(diff / savedAmount) * 100;
+                              
+                              if (percentDiff > 1) {
+                                const isHigher = periodAverage > savedAmount;
+                                return (
+                                  <p className={`text-sm ${isHigher ? 'text-rose-600' : 'text-emerald-600'}`}>
+                                    {isHigher ? '↑' : '↓'} <Currency amount={Math.abs(diff)} />
+                                  </p>
+                                );
+                              }
+                            }
+
+                            return null;
+                          })()}
                         </div>
                       </button>
                     ))}
