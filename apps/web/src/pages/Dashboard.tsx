@@ -1678,7 +1678,7 @@ export default function Dashboard() {
                         </span>
                         <span className='font-semibold'>
                           <Currency
-                            amount={-recurringStats.expectedPeriodExpenses}
+                            amount={recurringStats.expectedPeriodExpenses}
                           />
                         </span>
                       </div>
