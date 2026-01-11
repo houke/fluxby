@@ -135,6 +135,27 @@ describe('Onboarding Data', () => {
     });
   });
 
+  describe('Navigation Chapter', () => {
+    const navChapter = onboardingChapters.find((ch) => ch.id === 'navigation');
+
+    it('should include header search, privacy and theme toggle after date filter', () => {
+      expect(navChapter).toBeDefined();
+      const stepIds = navChapter!.steps.map((s) => s.id);
+      const dateIndex = stepIds.indexOf('nav-date-filter');
+      expect(dateIndex).toBeGreaterThan(-1);
+      expect(stepIds[dateIndex + 1]).toBe('nav-search');
+      expect(stepIds[dateIndex + 2]).toBe('nav-privacy-mode');
+      expect(stepIds[dateIndex + 3]).toBe('nav-theme-toggle');
+    });
+
+    it('should have selectors for header search and theme toggle', () => {
+      const searchStep = navChapter!.steps.find((s) => s.id === 'nav-search');
+      const themeStep = navChapter!.steps.find((s) => s.id === 'nav-theme-toggle');
+      expect(searchStep?.selector).toBe('[data-onboarding="header-search"]');
+      expect(themeStep?.selector).toBe('[data-onboarding="header-theme-toggle"]');
+    });
+  });
+
   describe('Help Chapter', () => {
     it('should have help chapter', () => {
       const helpChapter = onboardingChapters.find((ch) => ch.id === 'help');

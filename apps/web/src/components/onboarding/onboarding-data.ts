@@ -73,6 +73,19 @@ export const onboardingChapters: OnboardingChapter[] = [
         placement: 'bottom',
       },
       {
+        id: 'nav-search',
+        title: {
+          nl: 'Zoeken',
+          en: 'Search',
+        },
+        content: {
+          nl: 'Zoek snel naar transacties of instellingen via het zoekicoon. Gebruik ⌘K om te openen.',
+          en: 'Quickly search for transactions or settings via the search icon. Press ⌘K to open.',
+        },
+        selector: '[data-onboarding="header-search"]',
+        placement: 'bottom',
+      },
+      {
         id: 'nav-privacy-mode',
         title: {
           nl: 'Privacy Modus',
@@ -83,6 +96,19 @@ export const onboardingChapters: OnboardingChapter[] = [
           en: 'Hide sensitive information with a single click or use the shortcut Cmd/Ctrl+Shift+P. Perfect for use in public.',
         },
         selector: '[data-onboarding="header-privacy-mode"]',
+        placement: 'bottom',
+      },
+      {
+        id: 'nav-theme-toggle',
+        title: {
+          nl: 'Donker/licht thema',
+          en: 'Theme toggle',
+        },
+        content: {
+          nl: 'Schakel tussen donkere en lichte weergave. Je keuze wordt onthouden.',
+          en: 'Switch between dark and light mode. Your choice will be remembered.',
+        },
+        selector: '[data-onboarding="header-theme-toggle"]',
         placement: 'bottom',
       },
       {

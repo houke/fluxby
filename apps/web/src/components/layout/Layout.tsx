@@ -442,6 +442,7 @@ export default function Layout() {
                     size='icon'
                     onClick={toggleTheme}
                     className='h-9 w-9 text-muted-foreground'
+                    data-onboarding='header-theme-toggle'
                   >
                     {isDark ? (
                       <Sun className='h-5 w-5' />
