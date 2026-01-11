@@ -2929,23 +2929,6 @@ export default function Transactions() {
                     </p>
                     <div className='mt-4 flex items-center justify-center gap-2'>
                       <Button
-                        onClick={() => {
-                          if (minMaxDates) {
-                            setDateRange(
-                              new Date(minMaxDates.minDate),
-                              new Date(minMaxDates.maxDate)
-                            );
-                          } else {
-                            const end = new Date();
-                            const start = new Date();
-                            start.setFullYear(start.getFullYear() - 10);
-                            setDateRange(start, end);
-                          }
-                        }}
-                      >
-                        {t.transactions.viewAllData || 'View all data'}
-                      </Button>
-                      <Button
                         variant='ghost'
                         className='text-purple-600 hover:bg-purple-600 hover:text-white dark:text-purple-400 dark:hover:bg-purple-600 dark:hover:text-white'
                         onClick={() => {
@@ -2967,6 +2950,23 @@ export default function Transactions() {
                         }}
                       >
                         {t.addressBook?.clearFilters || 'Filters wissen'}
+                      </Button>
+                      <Button
+                        onClick={() => {
+                          if (minMaxDates) {
+                            setDateRange(
+                              new Date(minMaxDates.minDate),
+                              new Date(minMaxDates.maxDate)
+                            );
+                          } else {
+                            const end = new Date();
+                            const start = new Date();
+                            start.setFullYear(start.getFullYear() - 10);
+                            setDateRange(start, end);
+                          }
+                        }}
+                      >
+                        {t.transactions.viewAllData || 'View all data'}
                       </Button>
                     </div>
                   </div>
