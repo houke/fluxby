@@ -299,99 +299,109 @@ export function AppSettings() {
     };
   }, [t]);
 
-  const checkForUpdates = useCallback(async () => {
-    setUpdateStatus('checking');
-    setUpdateError(null);
+  const checkForUpdates = useCallback(
+    async (showToast = true) => {
+      setUpdateStatus('checking');
+      setUpdateError(null);
 
-    if (isTauri) {
-      // Tauri: Check via plugin-updater
-      setUpdateInfo(null);
+      if (isTauri) {
+        // Tauri: Check via plugin-updater
+        setUpdateInfo(null);
 
-      try {
-        const { check } = await import('@tauri-apps/plugin-updater');
-        const update = await check();
+        try {
+          const { check } = await import('@tauri-apps/plugin-updater');
+          const update = await check();
 
-        if (update) {
-          setUpdateInfo({
-            version: update.version,
-            currentVersion: update.currentVersion,
-            date: update.date ?? undefined,
-            body: update.body ?? undefined,
-          });
-          setUpdateStatus('available');
-        } else {
-          setUpdateStatus('up-to-date');
-          updateToast.success(
-            t.updater?.upToDate || 'You are running the latest version'
+          if (update) {
+            setUpdateInfo({
+              version: update.version,
+              currentVersion: update.currentVersion,
+              date: update.date ?? undefined,
+              body: update.body ?? undefined,
+            });
+            setUpdateStatus('available');
+          } else {
+            setUpdateStatus('up-to-date');
+            if (showToast) {
+              updateToast.success(
+                t.updater?.upToDate || 'You are running the latest version'
+              );
+            }
+          }
+        } catch (err) {
+          console.error('Update check failed:', err);
+          setUpdateError(err instanceof Error ? err.message : String(err));
+          setUpdateStatus('error');
+          updateToast.error(
+            t.updater?.checkFailed || 'Failed to check for updates'
           );
         }
-      } catch (err) {
-        console.error('Update check failed:', err);
-        setUpdateError(err instanceof Error ? err.message : String(err));
-        setUpdateStatus('error');
-        updateToast.error(
-          t.updater?.checkFailed || 'Failed to check for updates'
-        );
-      }
-    } else if ('serviceWorker' in navigator) {
-      // Web: Check for service worker updates
-      try {
-        const registration = await navigator.serviceWorker.getRegistration();
-        if (registration) {
-          swRegistration = registration;
-          await registration.update();
+      } else if ('serviceWorker' in navigator) {
+        // Web: Check for service worker updates
+        try {
+          const registration = await navigator.serviceWorker.getRegistration();
+          if (registration) {
+            swRegistration = registration;
+            await registration.update();
 
-          // Check if there's a waiting worker after update check
-          if (registration.waiting && navigator.serviceWorker.controller) {
-            setWebUpdateAvailable(true);
-            setUpdateStatus('available');
-            setUpdateInfo({
-              version: t.updater?.newVersion || 'New version',
-              currentVersion: currentAppVersion || '?',
-            });
-          } else if (registration.installing) {
-            // Wait for install to complete
-            const newWorker = registration.installing;
-            newWorker.addEventListener('statechange', () => {
-              if (
-                newWorker.state === 'installed' &&
-                navigator.serviceWorker.controller
-              ) {
-                setWebUpdateAvailable(true);
-                setUpdateStatus('available');
-                setUpdateInfo({
-                  version: t.updater?.newVersion || 'New version',
-                  currentVersion: currentAppVersion || '?',
-                });
-              }
-            });
-            // Keep checking status - will be resolved by statechange listener
-            setTimeout(() => {
-              if (updateStatus === 'checking') {
-                setUpdateStatus('up-to-date');
+            // Check if there's a waiting worker after update check
+            if (registration.waiting && navigator.serviceWorker.controller) {
+              setWebUpdateAvailable(true);
+              setUpdateStatus('available');
+              setUpdateInfo({
+                version: t.updater?.newVersion || 'New version',
+                currentVersion: currentAppVersion || '?',
+              });
+            } else if (registration.installing) {
+              // Wait for install to complete
+              const newWorker = registration.installing;
+              newWorker.addEventListener('statechange', () => {
+                if (
+                  newWorker.state === 'installed' &&
+                  navigator.serviceWorker.controller
+                ) {
+                  setWebUpdateAvailable(true);
+                  setUpdateStatus('available');
+                  setUpdateInfo({
+                    version: t.updater?.newVersion || 'New version',
+                    currentVersion: currentAppVersion || '?',
+                  });
+                }
+              });
+              // Keep checking status - will be resolved by statechange listener
+              setTimeout(() => {
+                if (updateStatus === 'checking') {
+                  setUpdateStatus('up-to-date');
+                  if (showToast) {
+                    updateToast.success(
+                      t.updater?.upToDate ||
+                        'You are running the latest version'
+                    );
+                  }
+                }
+              }, 3000);
+            } else {
+              setUpdateStatus('up-to-date');
+              if (showToast) {
                 updateToast.success(
                   t.updater?.upToDate || 'You are running the latest version'
                 );
               }
-            }, 3000);
+            }
           } else {
             setUpdateStatus('up-to-date');
-            updateToast.success(
-              t.updater?.upToDate || 'You are running the latest version'
-            );
           }
-        } else {
-          setUpdateStatus('up-to-date');
+        } catch (err) {
+          console.error('SW update check failed:', err);
+          setUpdateError(err instanceof Error ? err.message : String(err));
+          setUpdateStatus('error');
         }
-      } catch (err) {
-        console.error('SW update check failed:', err);
-        setUpdateError(err instanceof Error ? err.message : String(err));
-        setUpdateStatus('error');
+      } else {
+        setUpdateStatus('up-to-date');
       }
-    } else {
-      setUpdateStatus('up-to-date');
-    }
-  }, [t, updateToast]);
+    },
+    [t, updateToast]
+  );
 
   const downloadAndInstall = useCallback(async () => {
     if (isTauri) {
@@ -458,11 +468,11 @@ export function AppSettings() {
     }
   }, [updateInfo, t, updateToast, webUpdateAvailable]);
 
-  // Auto-check for updates on mount
+  // Auto-check for updates on mount (silent - no toast for "up to date")
   useEffect(() => {
     // Check after a short delay to not block initial render
     const timer = setTimeout(() => {
-      checkForUpdates();
+      checkForUpdates(false);
     }, 2000);
     return () => clearTimeout(timer);
   }, [checkForUpdates]);
@@ -678,7 +688,7 @@ export function AppSettings() {
                       <Button
                         variant='outline'
                         size='sm'
-                        onClick={checkForUpdates}
+                        onClick={() => checkForUpdates(true)}
                       >
                         <RefreshCw className='mr-2 h-4 w-4' />
                         {t.updater?.checkNow || 'Check now'}

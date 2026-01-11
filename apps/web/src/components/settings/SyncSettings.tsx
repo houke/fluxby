@@ -562,14 +562,17 @@ export function SyncSettings() {
               <div className='py-4'>
                 <Input
                   placeholder={
-                    t.settings?.sync?.pairingPlaceholder || 'fluxby-ABC123'
+                    t.settings?.sync?.pairingPlaceholder ||
+                    'fluxby-abc123...:ABCDEF'
                   }
                   value={pairingInput}
-                  onChange={(e) =>
-                    setPairingInput(e.target.value.toUpperCase())
-                  }
+                  onChange={(e) => setPairingInput(e.target.value)}
                   className='text-center font-mono text-sm tracking-widest'
                 />
+                <p className='mt-2 text-xs text-muted-foreground'>
+                  {t.settings?.sync?.pairingHint ||
+                    'Enter the full pairing code including the colon. The code is case-sensitive.'}
+                </p>
                 {connectionError && (
                   <p className='mt-2 text-sm text-destructive'>
                     {connectionError}

@@ -147,7 +147,8 @@ export function SyncDebugPanel({ onClose }: SyncDebugPanelProps) {
               Sync Debug Panel
             </CardTitle>
             <CardDescription>
-              Developer tools for testing PeerJS connectivity
+              Debug tools for PeerJS connectivity. Pairing code format:{' '}
+              {'{peerId}:{6-char-code}'}
             </CardDescription>
           </div>
           {onClose && (
@@ -221,7 +222,14 @@ export function SyncDebugPanel({ onClose }: SyncDebugPanelProps) {
 
         {/* Ping Test */}
         <div className='rounded-lg bg-gray-50 p-3 dark:bg-gray-900'>
-          <h4 className='mb-2 text-sm font-medium'>Connectivity Test</h4>
+          <h4 className='mb-2 text-sm font-medium'>
+            Connectivity Test (Simulated)
+          </h4>
+          <p className='mb-2 text-xs text-muted-foreground'>
+            Note: This ping test is simulated for debugging logs. To test real
+            connectivity, use the "Pair device" button to connect with another
+            device using a pairing code.
+          </p>
           <div className='flex gap-2'>
             <Input
               placeholder='Target Peer ID'

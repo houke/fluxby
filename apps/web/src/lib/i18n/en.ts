@@ -1041,9 +1041,10 @@ export const en: TranslationKeys = {
       orEnterManually: 'Or enter manually',
       newCode: 'New code',
       qrCodeExpiry: 'Code expires in',
-      qrCodeValid:
-        'This code is valid until you generate a new one or close this dialog.',
-      pairingPlaceholder: 'fluxby-ABC123',
+      qrCodeValid: 'This code remains valid until you generate a new one.',
+      pairingPlaceholder: 'fluxby-abc123...:ABCDEF',
+      pairingHint:
+        'Enter the full pairing code including the colon. The code is case-sensitive.',
       pairingRequestDescription: '{device} wants to connect',
       accept: 'Accept',
       ready: 'Ready',
