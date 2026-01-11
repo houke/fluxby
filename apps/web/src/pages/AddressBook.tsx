@@ -3130,7 +3130,7 @@ export default function AddressBook() {
                                           <Button
                                             size='icon'
                                             variant='ghost'
-                                            className='group h-8 w-8 rounded-md transition-colors hover:bg-purple-600'
+                                            className='h-8 w-8 rounded-md text-muted-foreground transition-colors hover:bg-purple-600 hover:text-white'
                                             onClick={(e) => {
                                               e.stopPropagation();
                                               handleToggleExpand(contact.id);
@@ -3138,9 +3138,9 @@ export default function AddressBook() {
                                           >
                                             {expandedContactId ===
                                             contact.id ? (
-                                              <ChevronUp className='h-4 w-4 text-muted-foreground group-hover:text-white' />
+                                              <ChevronUp className='h-4 w-4' />
                                             ) : (
-                                              <ChevronDown className='h-4 w-4 text-muted-foreground group-hover:text-white' />
+                                              <ChevronDown className='h-4 w-4' />
                                             )}
                                           </Button>
                                         </TooltipTrigger>
