@@ -252,16 +252,33 @@ export function useAddressBook(options: { enabled?: boolean } = {}) {
   });
 
   const mergeContactsMutation = useMutation({
-    mutationFn: ({ contactIds, name }: { contactIds: string[]; name?: string }) =>
-      api.mergeContacts(contactIds, name),
+    mutationFn: ({
+      contactIds,
+      name,
+    }: {
+      contactIds: string[];
+      name?: string;
+    }) => api.mergeContacts(contactIds, name),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['addressbook', activeProfileId] });
-      queryClient.invalidateQueries({ queryKey: ['sharedIbans', activeProfileId] });
-      queryClient.invalidateQueries({ queryKey: ['transactions', activeProfileId] });
-      toast.success(t.addressBook?.contactsMerged || 'Contacts merged successfully');
+      queryClient.invalidateQueries({
+        queryKey: ['addressbook', activeProfileId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['sharedIbans', activeProfileId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['transactions', activeProfileId],
+      });
+      toast.success(
+        t.addressBook?.contactsMerged || 'Contacts merged successfully'
+      );
     },
     onError: (error: Error) =>
-      toast.error(error.message || t.addressBook?.errorMergingContacts || 'Error merging contacts'),
+      toast.error(
+        error.message ||
+          t.addressBook?.errorMergingContacts ||
+          'Error merging contacts'
+      ),
   });
 
   return {

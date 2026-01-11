@@ -122,7 +122,9 @@ export default function SubscriptionsAnimation({
 
   // Calculate total monthly spend
   const totalMonthly = subscriptionData
-    .filter((s, index) => s.isConfirmed || (highlightedIndex === index && confirming))
+    .filter(
+      (s, index) => s.isConfirmed || (highlightedIndex === index && confirming)
+    )
     .reduce((sum, s) => sum + s.amount, 0);
 
   return (
@@ -142,8 +144,10 @@ export default function SubscriptionsAnimation({
             <div className='text-center'>
               <div className='text-lg font-bold text-purple-600 dark:text-purple-400'>
                 {
-                  subscriptionData.filter((s, index) =>
-                    s.isConfirmed || (highlightedIndex === index && confirming)
+                  subscriptionData.filter(
+                    (s, index) =>
+                      s.isConfirmed ||
+                      (highlightedIndex === index && confirming)
                   ).length
                 }
               </div>
@@ -154,8 +158,10 @@ export default function SubscriptionsAnimation({
             <div className='text-center'>
               <div className='text-lg font-bold text-amber-500'>
                 {
-                  subscriptionData.filter((s, index) =>
-                    !s.isConfirmed && !(highlightedIndex === index && confirming)
+                  subscriptionData.filter(
+                    (s, index) =>
+                      !s.isConfirmed &&
+                      !(highlightedIndex === index && confirming)
                   ).length
                 }
               </div>

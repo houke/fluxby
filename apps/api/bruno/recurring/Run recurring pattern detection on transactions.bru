@@ -1,0 +1,28 @@
+meta {
+  name: Run recurring pattern detection on transactions
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/api/recurring/detect
+  body: json
+  auth: none
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+body:json {
+  {}
+}
+
+docs {
+  # Run recurring pattern detection on transactions
+  
+  No description provided.
+  
+  ## Endpoint
+  `POST /api/recurring/detect`
+}

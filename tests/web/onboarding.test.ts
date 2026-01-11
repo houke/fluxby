@@ -150,9 +150,13 @@ describe('Onboarding Data', () => {
 
     it('should have selectors for header search and theme toggle', () => {
       const searchStep = navChapter!.steps.find((s) => s.id === 'nav-search');
-      const themeStep = navChapter!.steps.find((s) => s.id === 'nav-theme-toggle');
+      const themeStep = navChapter!.steps.find(
+        (s) => s.id === 'nav-theme-toggle'
+      );
       expect(searchStep?.selector).toBe('[data-onboarding="header-search"]');
-      expect(themeStep?.selector).toBe('[data-onboarding="header-theme-toggle"]');
+      expect(themeStep?.selector).toBe(
+        '[data-onboarding="header-theme-toggle"]'
+      );
     });
   });
 

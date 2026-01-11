@@ -1,0 +1,28 @@
+meta {
+  name: Dismiss a recurring pattern as a false positive
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{baseUrl}}/api/recurring/:id/dismiss
+  body: json
+  auth: none
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+body:json {
+  {}
+}
+
+docs {
+  # Dismiss a recurring pattern as a false positive
+  
+  No description provided.
+  
+  ## Endpoint
+  `POST /api/recurring/{id}/dismiss`
+}

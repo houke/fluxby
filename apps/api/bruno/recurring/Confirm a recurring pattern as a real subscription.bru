@@ -1,0 +1,28 @@
+meta {
+  name: Confirm a recurring pattern as a real subscription
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/api/recurring/:id/confirm
+  body: json
+  auth: none
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+body:json {
+  {}
+}
+
+docs {
+  # Confirm a recurring pattern as a real subscription
+  
+  No description provided.
+  
+  ## Endpoint
+  `POST /api/recurring/{id}/confirm`
+}

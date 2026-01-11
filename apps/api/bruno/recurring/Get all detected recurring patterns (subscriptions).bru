@@ -1,0 +1,24 @@
+meta {
+  name: Get all detected recurring patterns (subscriptions)
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/recurring
+  body: none
+  auth: none
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+docs {
+  # Get all detected recurring patterns (subscriptions)
+  
+  No description provided.
+  
+  ## Endpoint
+  `GET /api/recurring`
+}

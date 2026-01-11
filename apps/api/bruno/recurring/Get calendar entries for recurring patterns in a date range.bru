@@ -1,0 +1,24 @@
+meta {
+  name: Get calendar entries for recurring patterns in a date range
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/recurring/calendar
+  body: none
+  auth: none
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+docs {
+  # Get calendar entries for recurring patterns in a date range
+  
+  No description provided.
+  
+  ## Endpoint
+  `GET /api/recurring/calendar`
+}

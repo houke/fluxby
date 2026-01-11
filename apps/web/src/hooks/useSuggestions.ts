@@ -10,8 +10,12 @@ export interface CategorySuggestion {
 }
 
 export function useSuggestions(transactions: Transaction[] | undefined) {
-  const [suggestions, setSuggestions] = useState<Record<string, CategorySuggestion>>({});
-  const suggestionsCache = useRef<Map<string, CategorySuggestion | null>>(new Map());
+  const [suggestions, setSuggestions] = useState<
+    Record<string, CategorySuggestion>
+  >({});
+  const suggestionsCache = useRef<Map<string, CategorySuggestion | null>>(
+    new Map()
+  );
   const lastFetchRef = useRef<number>(0);
   const lastTransactionsLengthRef = useRef<number>(0);
 
@@ -20,7 +24,10 @@ export function useSuggestions(transactions: Transaction[] | undefined) {
 
     // Skip if transactions length hasn't changed significantly
     const currentLength = transactions.length;
-    if (lastTransactionsLengthRef.current === currentLength && currentLength > 0) {
+    if (
+      lastTransactionsLengthRef.current === currentLength &&
+      currentLength > 0
+    ) {
       return;
     }
     lastTransactionsLengthRef.current = currentLength;
@@ -29,7 +36,9 @@ export function useSuggestions(transactions: Transaction[] | undefined) {
     const now = Date.now();
     if (now - lastFetchRef.current < 2000) return;
 
-    const uncategorized = transactions.filter((tx) => !tx.categoryId && tx.merchantName);
+    const uncategorized = transactions.filter(
+      (tx) => !tx.categoryId && tx.merchantName
+    );
 
     // Build initial suggestions from cache
     const newSuggestions: Record<string, CategorySuggestion> = {};
@@ -66,7 +75,9 @@ export function useSuggestions(transactions: Transaction[] | undefined) {
       await Promise.all(
         toFetch.map(async ({ txId, merchantName }) => {
           try {
-            const suggestion = (await api.suggestCategory(merchantName)) as CategorySuggestion | null;
+            const suggestion = (await api.suggestCategory(
+              merchantName
+            )) as CategorySuggestion | null;
             suggestionsCache.current.set(merchantName, suggestion);
             if (suggestion) {
               fetched[txId] = suggestion;

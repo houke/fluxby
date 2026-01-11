@@ -108,7 +108,6 @@ import { useFilterParams, useFilters } from '@/contexts/FilterContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useProfile } from '@/contexts/ProfileContext';
 
-
 export default function Transactions() {
   const { t, language } = useLanguage();
   const { activeProfileId } = useProfile();
@@ -782,7 +781,6 @@ export default function Transactions() {
   // This was causing issues when navigating from AddressBook - the filters were being cleared
   // after they were set but before the component mounted.
   // Filters are now intentionally persisted to localStorage via FilterContext.
-
 
   // Ref to track if we're currently loading more (debounce intersection observer)
   const isLoadingMoreRef = useRef(false);
@@ -1674,7 +1672,6 @@ export default function Transactions() {
       id: tx.id,
       data: { categoryId: suggestion.categoryId },
     });
-
   };
 
   const _handleAcceptAndCreateRule = (
@@ -1693,7 +1690,6 @@ export default function Transactions() {
         categoryId: suggestion.categoryId,
       });
     }
-
   };
 
   // Calculate totals using shared hook (same logic as Dashboard)
