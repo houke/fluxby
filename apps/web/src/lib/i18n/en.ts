@@ -544,6 +544,12 @@ export const en: TranslationKeys = {
       'This subscription appears to be no longer active and will be removed from your profile.',
     deleteConfirmDescription:
       'Are you sure you want to delete this subscription?',
+    noPendingSubscriptions: 'No pending subscriptions',
+    noPendingDescription:
+      'When we detect new recurring patterns, they will appear here for review',
+    noConfirmedSubscriptions: 'No active subscriptions',
+    noConfirmedDescription:
+      'Accept suggested subscriptions above to start tracking them here',
   },
   categories: {
     title: 'Categories',

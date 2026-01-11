@@ -6,13 +6,22 @@ A modern, local-first application for visualizing and analyzing your bank data. 
 
 ## ✨ Features
 
-- **📊 Clear Dashboard** - View your income, expenses, and balance at a glance
-- **📈 Charts & Analytics** - Interactive charts for trends and categories
-- **📁 CSV Import** - Easily upload CSV exports from ING (more banks coming)
-- **🏷️ Automatic Categorization** - Transactions are automatically categorized
-- **📱 Modern Interface** - Clean design with a pleasant user experience
-- **🔒 100% Local** - All data stays on your own device
-- **🖥️ Desktop App** - Native apps for Windows, macOS, and Linux via Tauri
+### 💼 Financial Management
+- **📊 Unified Dashboard** - Income, expenses, and rolling balance at a glance.
+- **📈 Advanced Analytics** - Interactive trend charts, category breakdowns, and period-over-period comparisons.
+- **📁 Smart CSV Import** - Native support for ING, manual mapping for other banks, and Web Worker-powered deduplication.
+- **🏷️ Auto-Categorization** - Rule-based engine and intelligent merchant suggestions.
+- **💸 Budget Tracking** - Progressive category-level budgets with real-time feedback.
+- **📅 Subscription Manager** - Detect recurring patterns, track upcoming payments, and alert on price changes.
+- **📇 Intelligent Address Book** - Manage contacts, detect shared IBANs, and standardize merchant names.
+
+### 🛠️ Platform & Security
+- **🔒 100% Local-First** - Data is encrypted and stored on-device (OPFS/SQLite); no personal data ever touches a server.
+- **🔐 Multi-Profile Support** - Seamlessly switch between Personal, Business, Shared, and Investing profiles.
+- **⚡ Spotlight Search** - Global command palette (`Cmd+K`) for rapid navigation and actions.
+- **🛡️ Security Suite** - PBKDF2-hashed passcode protection, auto-lock on idle, and secure local sessions.
+- **📱 True PWA** - Installable web app with full offline capabilities.
+- **🖥️ Native Desktop** - High-performance apps for macOS, Windows, and Linux via Tauri 2.0.
 
 ## 🚀 Quick Start
 

@@ -481,6 +481,10 @@ export interface TranslationKeys {
     expectedThisPeriod: string;
     deleteStaleDescription: string;
     deleteConfirmDescription: string;
+    noPendingSubscriptions: string;
+    noPendingDescription: string;
+    noConfirmedSubscriptions: string;
+    noConfirmedDescription: string;
   };
   categories: {
     title: string;
@@ -1801,6 +1805,12 @@ export const nl: TranslationKeys = {
       'Dit abonnement lijkt niet meer actief te zijn en wordt verwijderd uit je profiel.',
     deleteConfirmDescription:
       'Weet je zeker dat je dit abonnement wilt verwijderen?',
+    noPendingSubscriptions: 'Geen voorgestelde abonnementen',
+    noPendingDescription:
+      'Wanneer we nieuwe terugkerende patronen detecteren, verschijnen ze hier ter beoordeling',
+    noConfirmedSubscriptions: 'Geen actieve abonnementen',
+    noConfirmedDescription:
+      'Accepteer voorgestelde abonnementen hierboven om ze hier te volgen',
   },
   categories: {
     title: 'Categorieën',

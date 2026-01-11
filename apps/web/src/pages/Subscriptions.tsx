@@ -15,6 +15,7 @@ import {
   ChevronDown,
   ChevronUp,
   Loader2,
+  CheckCircle2,
 } from 'lucide-react';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -736,7 +737,7 @@ export default function Subscriptions() {
       ) : view === 'list' ? (
         <div className='space-y-6'>
           {/* Suggested subscriptions - single card for all pending patterns */}
-          {pendingPatterns.length > 0 && (
+          {pendingPatterns.length > 0 ? (
             <Card data-onboarding='subscriptions-pending'>
               <CardHeader>
                 <CardTitle className='flex items-center gap-2'>
@@ -774,10 +775,22 @@ export default function Subscriptions() {
                 </div>
               </CardContent>
             </Card>
+          ) : (
+            <EmptyState
+              icon={Sparkles}
+              title={
+                t.subscriptions?.noPendingSubscriptions ||
+                'No pending subscriptions'
+              }
+              description={
+                t.subscriptions?.noPendingDescription ||
+                'When we detect new recurring patterns, they will appear here for review'
+              }
+            />
           )}
 
           {/* Confirmed subscriptions */}
-          {confirmedPatterns.length > 0 && (
+          {confirmedPatterns.length > 0 ? (
             <Card data-onboarding='subscriptions-confirmed'>
               <CardHeader>
                 <CardTitle>
@@ -810,6 +823,18 @@ export default function Subscriptions() {
                 </div>
               </CardContent>
             </Card>
+          ) : (
+            <EmptyState
+              icon={CheckCircle2}
+              title={
+                t.subscriptions?.noConfirmedSubscriptions ||
+                'No active subscriptions'
+              }
+              description={
+                t.subscriptions?.noConfirmedDescription ||
+                'Accept suggested subscriptions above to start tracking them here'
+              }
+            />
           )}
         </div>
       ) : (

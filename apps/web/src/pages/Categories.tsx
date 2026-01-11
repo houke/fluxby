@@ -983,7 +983,7 @@ export default function Categories() {
                   <Button
                     variant='ghost'
                     size='icon'
-                    className='h-7 w-7 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-purple-600 hover:text-white'
+                    className='h-7 w-7 rounded-md hover:bg-purple-600 hover:text-white'
                     onClick={() => startEditing(sub)}
                   >
                     <Pencil className='h-3.5 w-3.5' />
@@ -999,7 +999,7 @@ export default function Categories() {
                   <Button
                     variant='ghost'
                     size='icon'
-                    className='h-7 w-7 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-red-600 hover:text-white'
+                    className='h-7 w-7 rounded-md hover:bg-red-600 hover:text-white'
                     onClick={async () => {
                       const isConfirmed = await confirm({
                         title: t.categories.deleteCategory || 'Delete category',

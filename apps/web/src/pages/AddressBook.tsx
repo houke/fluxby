@@ -50,7 +50,10 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useProfile } from '@/contexts/ProfileContext';
 import { useFilters } from '@/contexts/FilterContext';
 import { cn, findSimilarNameGroups } from '@/lib/utils';
-import { useAddressBook, AddressBookEntryWithStats } from '@/hooks/useAddressBook';
+import {
+  useAddressBook,
+  AddressBookEntryWithStats,
+} from '@/hooks/useAddressBook';
 import { useSharedIbans } from '@/hooks/useSharedIbans';
 import { Currency } from '@/components/ui/currency';
 import {
@@ -87,11 +90,7 @@ import {
 import { api } from '@/lib/api';
 import { useConfirm } from '@/contexts/ConfirmContext';
 
-import type {
-  AddressBookEntry,
-  SharedIban,
-  CleanupRule,
-} from '@fluxby/shared';
+import type { AddressBookEntry, SharedIban, CleanupRule } from '@fluxby/shared';
 
 type SortOption = 'name' | 'transactionCount' | 'totalAmount' | 'recent';
 
@@ -193,9 +192,8 @@ export default function AddressBook() {
 
   // Split contact modal state
   const [splitModalOpen, setSplitModalOpen] = useState(false);
-  const [splitContact, setSplitContact] = useState<AddressBookEntryWithStats | null>(
-    null
-  );
+  const [splitContact, setSplitContact] =
+    useState<AddressBookEntryWithStats | null>(null);
   const [splitIbanNames, setSplitIbanNames] = useState<Record<string, string>>(
     {}
   );
@@ -319,7 +317,6 @@ export default function AddressBook() {
   const detectSharedMutation = detectSharedMutationHook;
   const deleteRuleMutation = deleteRuleMutationHook;
   const applyRulesMutation = applyRulesMutationHook;
-
 
   const applyRulesToTransactionsMutation = useMutation({
     mutationFn: api.applyCleanupRulesToTransactions,
