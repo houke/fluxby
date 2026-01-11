@@ -891,9 +891,11 @@ export default function Categories() {
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
-              <span className='ml-auto text-xs text-muted-foreground'>
-                {renderAmountWithArrow(sub.totalExpenses || 0)}
-                {sub.transactionCount || 0} {t.categories.transactions}
+              <span className='ml-auto flex flex-col items-end text-xs text-muted-foreground'>
+                <span>{renderAmountWithArrow(sub.totalExpenses || 0)}</span>
+                <span>
+                  {sub.transactionCount || 0} {t.categories.transactions}
+                </span>
               </span>
             </div>
             {sub.description && (

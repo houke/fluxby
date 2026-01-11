@@ -144,6 +144,9 @@ export default function Analytics() {
       api.getRecurringPatternsWithHistory(yearStartDate, yearEndDate),
   });
 
+  // Filter recurring patterns to only show expenses (subscriptions)
+  const expensePatterns = recurringPatterns?.filter((p) => p.avgAmount < 0);
+
   const [activeExpenseIndex, setActiveExpenseIndex] = useState<number | null>(
     null
   );
@@ -1057,13 +1060,13 @@ export default function Analytics() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {recurringPatterns && recurringPatterns.length > 0 ? (
+            {expensePatterns && expensePatterns.length > 0 ? (
               <div className='space-y-6'>
                 {/* Subscription list with price history */}
                 <div className='grid gap-4 lg:grid-cols-2'>
                   {/* List of subscriptions */}
                   <div className='space-y-2'>
-                    {recurringPatterns.map((pattern) => (
+                    {expensePatterns.map((pattern) => (
                       <button
                         key={pattern.id}
                         onClick={() =>
@@ -1116,7 +1119,10 @@ export default function Analytics() {
                                 Math.abs(diff / savedAmount) * 100;
 
                               if (percentDiff > 1) {
-                                const isHigher = periodAverage > savedAmount;
+                                // For expenses (negative amounts), more negative = paying more = price increase
+                                // Use absolute values to determine if price went up or down
+                                const isHigher =
+                                  Math.abs(periodAverage) > Math.abs(savedAmount);
                                 return (
                                   <p
                                     className={`text-sm ${isHigher ? 'text-rose-600' : 'text-emerald-600'}`}
@@ -1139,7 +1145,7 @@ export default function Analytics() {
                   <div className='flex min-h-[300px] flex-col'>
                     {selectedPattern ? (
                       (() => {
-                        const pattern = recurringPatterns.find(
+                        const pattern = expensePatterns?.find(
                           (p) => p.id === selectedPattern
                         );
                         if (!pattern?.priceHistory?.length) {

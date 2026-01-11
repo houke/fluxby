@@ -2822,6 +2822,7 @@ export function createDataService(db: Database) {
       // This ensures IBANs that are part of multi-IBAN contacts are properly detected
       // Group by both IBAN AND name to show unique contacts (important for shared IBANs)
       // For shared IBANs (with original_name), we must also match by original_name
+      // Only show contacts that are in the address book
       const rows = await db.queryAsync<{
         iban: string;
         name: string;
@@ -2836,10 +2837,10 @@ export function createDataService(db: Database) {
         `
         SELECT 
           t.opposing_account_iban as iban,
-          COALESCE(ab.name, ci_ab.name, t.opposing_account_name) as name,
+          COALESCE(ab.name, ci_ab.name) as name,
           COALESCE(ab.original_name, ci_ab.original_name) as original_name,
           COALESCE(ab.description, ci_ab.description) as description,
-          CASE WHEN ab.id IS NOT NULL OR ci_ab.id IS NOT NULL THEN 1 ELSE 0 END as is_in_addressbook,
+          1 as is_in_addressbook,
           COALESCE(ab.id, ci_ab.id) as addressbook_id,
           COUNT(t.id) as transaction_count,
           SUM(ABS(t.amount)) as total_amount,
@@ -2863,9 +2864,10 @@ export function createDataService(db: Database) {
           AND t.opposing_account_iban NOT IN (
             SELECT iban FROM accounts WHERE profile_id = ? AND is_deleted = 0
           )
+          AND (ab.id IS NOT NULL OR ci_ab.id IS NOT NULL)
           ${amountCondition}
           ${dateCondition}
-        GROUP BY t.opposing_account_iban, COALESCE(ab.name, ci_ab.name, t.opposing_account_name)
+        GROUP BY t.opposing_account_iban, COALESCE(ab.name, ci_ab.name)
         ORDER BY total_amount DESC
         LIMIT ?
       `,
@@ -2882,7 +2884,7 @@ export function createDataService(db: Database) {
         `
         SELECT COUNT(*) as count
         FROM (
-          SELECT t.opposing_account_iban, COALESCE(ab.name, ci_ab.name, t.opposing_account_name) as name
+          SELECT t.opposing_account_iban, COALESCE(ab.name, ci_ab.name) as name
           FROM transactions t
           JOIN accounts a ON t.account_id = a.id
           LEFT JOIN address_book ab ON ab.iban = t.opposing_account_iban 
@@ -2902,9 +2904,10 @@ export function createDataService(db: Database) {
             AND t.opposing_account_iban NOT IN (
               SELECT iban FROM accounts WHERE profile_id = ? AND is_deleted = 0
             )
+            AND (ab.id IS NOT NULL OR ci_ab.id IS NOT NULL)
             ${amountCondition}
             ${dateCondition}
-          GROUP BY t.opposing_account_iban, COALESCE(ab.name, ci_ab.name, t.opposing_account_name)
+          GROUP BY t.opposing_account_iban, COALESCE(ab.name, ci_ab.name)
         )
       `,
         countParams

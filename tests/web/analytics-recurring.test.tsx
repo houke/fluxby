@@ -114,13 +114,14 @@ describe('Analytics recurring patterns', () => {
   });
 
   it('shows red ↑ when last amount increased vs previous and green ↓ when decreased', async () => {
+    // Use negative amounts as expenses (subscriptions are expenses with avgAmount < 0)
     const patterns = [
       {
         id: 'p1',
         merchantName: 'Service A',
         patternType: 'monthly',
-        avgAmount: 10,
-        lastAmount: 15,
+        avgAmount: -10,
+        lastAmount: -15,
         lastDate: '2024-12-01',
         nextExpectedDate: null,
         isActive: true,
@@ -131,16 +132,16 @@ describe('Analytics recurring patterns', () => {
         profileId: 1,
         createdAt: new Date().toISOString(),
         priceHistory: [
-          { date: '2024-11-01', amount: 10 },
-          { date: '2024-12-01', amount: 15 },
+          { date: '2024-11-01', amount: -10 },
+          { date: '2024-12-01', amount: -15 },
         ],
       },
       {
         id: 'p2',
         merchantName: 'Service B',
         patternType: 'monthly',
-        avgAmount: 20,
-        lastAmount: 18,
+        avgAmount: -20,
+        lastAmount: -18,
         lastDate: '2024-12-01',
         nextExpectedDate: null,
         isActive: true,
@@ -151,8 +152,8 @@ describe('Analytics recurring patterns', () => {
         profileId: 1,
         createdAt: new Date().toISOString(),
         priceHistory: [
-          { date: '2024-11-01', amount: 20 },
-          { date: '2024-12-01', amount: 18 },
+          { date: '2024-11-01', amount: -20 },
+          { date: '2024-12-01', amount: -18 },
         ],
       },
     ];
