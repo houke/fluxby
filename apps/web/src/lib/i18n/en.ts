@@ -504,6 +504,13 @@ export const en: TranslationKeys = {
       'This subscription has varying amounts per payment, e.g. based on usage',
     priceIncrease: 'Price increase',
     priceIncreaseDescription: 'Latest amount is higher than average',
+    priceIncreaseDetected:
+      'Price increase detected. Would you like to update the subscription amount?',
+    priceDecreaseDetected:
+      'Price decrease detected. Would you like to update the subscription amount?',
+    priceUpdated: 'Subscription amount updated',
+    updateAmount: 'Update subscription amount',
+    dismissAlert: 'Dismiss alert',
     missedPayment: 'Missed payment',
     missedPaymentDescription: 'Expected date has passed',
     newDetected: 'Newly detected',

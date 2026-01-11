@@ -11,7 +11,10 @@ import {
   X,
   PiggyBank,
   Sparkles,
+  History,
 } from 'lucide-react';
+import { PageHeader } from '@/components/layout/PageHeader';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { useState, useRef, useLayoutEffect, useMemo } from 'react';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { useFilters } from '@/contexts/FilterContext';
@@ -367,53 +370,51 @@ export default function Budgets() {
 
   return (
     <div className='space-y-6'>
-      {/* Header with Add button */}
-      <div className='flex items-start justify-between'>
-        <div>
-          <h1 className='text-2xl font-bold sm:text-3xl'>{t.budgets.title}</h1>
-          <p className='mt-1 text-xs text-muted-foreground sm:text-base'>
-            {t.budgets.subtitle}
-          </p>
-        </div>
-        <div className='flex gap-2'>
-          {hasEnoughData && (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    onClick={handleOpenProposedModal}
-                    variant='outline'
-                    size='icon'
-                    data-onboarding='budget-smart-proposals'
-                  >
-                    <Sparkles className='h-4 w-4' />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>{t.budgets.proposedBudgets}</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          )}
-          <Button
-            onClick={() => setShowAddForm(!showAddForm)}
-            variant={showAddForm ? 'secondary' : 'default'}
-            data-onboarding='add-budget-toggle'
-          >
-            {showAddForm ? (
-              <>
-                <ChevronUp className='mr-2 h-4 w-4' />
-                {t.common.close}
-              </>
-            ) : (
-              <>
-                <Plus className='mr-2 h-4 w-4' />
-                {t.budgets.addNewBudget}
-              </>
+      <PageHeader
+        title={t.budgets.title}
+        subtitle={t.budgets.subtitle}
+        dataOnboarding='budget-greeting'
+        actions={
+          <div className='flex gap-2'>
+            {hasEnoughData && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      onClick={handleOpenProposedModal}
+                      variant='outline'
+                      size='icon'
+                      data-onboarding='budget-smart-proposals'
+                    >
+                      <Sparkles className='h-4 w-4' />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{t.budgets.proposedBudgets}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             )}
-          </Button>
-        </div>
-      </div>
+            <Button
+              onClick={() => setShowAddForm(!showAddForm)}
+              variant={showAddForm ? 'secondary' : 'default'}
+              data-onboarding='add-budget-toggle'
+            >
+              {showAddForm ? (
+                <>
+                  <ChevronUp className='mr-2 h-4 w-4' />
+                  {t.common.close}
+                </>
+              ) : (
+                <>
+                  <Plus className='mr-2 h-4 w-4' />
+                  {t.budgets.addNewBudget}
+                </>
+              )}
+            </Button>
+          </div>
+        }
+      />
 
       {/* Add New Budget - collapsible */}
       {showAddForm && (
@@ -960,25 +961,20 @@ export default function Budgets() {
                 })}
               </div>
             ) : budgets && budgets.length > 0 ? (
-              <div className='py-8 text-center text-muted-foreground'>
-                <p className='font-medium'>
-                  {t.addressBook?.noResults || 'No results found'}
-                </p>
-                <p className='mt-1 text-sm'>
-                  {t.addressBook?.tryDifferentSearch ||
-                    'Try a different search term'}
-                </p>
-              </div>
+              <EmptyState
+                icon={Search}
+                title={t.addressBook?.noResults || 'No results found'}
+                description={
+                  t.addressBook?.tryDifferentSearch ||
+                  'Try a different search term'
+                }
+              />
             ) : (
-              <div className='flex flex-col items-center justify-center py-8 text-center'>
-                <PiggyBank className='mb-4 h-12 w-12 text-muted-foreground/50' />
-                <h3 className='text-lg font-medium text-muted-foreground'>
-                  {t.budgets.noBudgets}
-                </h3>
-                <p className='mt-1 text-sm text-muted-foreground'>
-                  {t.budgets.createFirst}
-                </p>
-              </div>
+              <EmptyState
+                icon={PiggyBank}
+                title={t.budgets.noBudgets}
+                description={t.budgets.createFirst}
+              />
             )}
           </CardContent>
         </Card>

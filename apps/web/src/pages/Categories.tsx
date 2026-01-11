@@ -4,20 +4,22 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import {
   Plus,
-  Pencil,
   Trash2,
-  RefreshCcw,
-  Sparkles,
-  X,
-  Check,
+  Pencil,
   Search,
   ChevronUp,
   ChevronDown,
-  ArrowDownRight,
-  ArrowUpRight,
-  FolderOpen,
   ExternalLink,
+  Check,
+  X,
+  RefreshCcw,
+  Sparkles,
+  FolderOpen,
+  Info,
+  MoreVertical,
 } from 'lucide-react';
+import { PageHeader } from '@/components/layout/PageHeader';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -889,7 +891,6 @@ export default function Categories() {
               </TooltipProvider>
               <span className='ml-auto text-xs text-muted-foreground'>
                 {renderAmountWithArrow(sub.totalExpenses || 0)}
-                {' · '}
                 {sub.transactionCount || 0} {t.categories.transactions}
               </span>
             </div>
@@ -1159,13 +1160,13 @@ export default function Categories() {
                       <Button
                         variant='ghost'
                         size='icon'
-                        className='h-7 w-7 rounded-md transition-colors hover:bg-purple-600 hover:text-white'
+                        className='h-8 w-8 rounded-md transition-colors hover:bg-purple-600 hover:text-white'
                         onClick={(e) => {
                           e.stopPropagation();
                           startEditing(category);
                         }}
                       >
-                        <Pencil className='h-3.5 w-3.5' />
+                        <Pencil className='h-4 w-4' />
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>{t.common.edit}</TooltipContent>
@@ -1178,7 +1179,7 @@ export default function Categories() {
                       <Button
                         variant='ghost'
                         size='icon'
-                        className='h-7 w-7 rounded-md transition-colors hover:bg-red-600 hover:text-white'
+                        className='h-8 w-8 rounded-md transition-colors hover:bg-red-600 hover:text-white'
                         onClick={async (e) => {
                           e.stopPropagation();
                           const isConfirmed = await confirm({
@@ -1192,7 +1193,7 @@ export default function Categories() {
                           }
                         }}
                       >
-                        <Trash2 className='h-3.5 w-3.5' />
+                        <Trash2 className='h-4 w-4' />
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>{t.common.delete}</TooltipContent>
@@ -1205,16 +1206,16 @@ export default function Categories() {
                       <Button
                         size='icon'
                         variant='ghost'
-                        className='group h-7 w-7 rounded-md transition-colors hover:bg-purple-600'
+                        className='group h-8 w-8 rounded-md transition-colors hover:bg-purple-600'
                         onClick={(e) => {
                           e.stopPropagation();
                           toggleExpanded(category.id);
                         }}
                       >
                         {isExpanded ? (
-                          <ChevronUp className='h-3.5 w-3.5 text-muted-foreground group-hover:text-white' />
+                          <ChevronUp className='h-4 w-4 text-muted-foreground group-hover:text-white' />
                         ) : (
-                          <ChevronDown className='h-3.5 w-3.5 text-muted-foreground group-hover:text-white' />
+                          <ChevronDown className='h-4 w-4 text-muted-foreground group-hover:text-white' />
                         )}
                       </Button>
                     </TooltipTrigger>
@@ -1277,65 +1278,61 @@ export default function Categories() {
 
   return (
     <div className='space-y-6'>
-      {/* Header */}
-      <div className='flex items-start justify-between'>
-        <div>
-          <h1 className='text-2xl font-bold sm:text-3xl'>
-            {t.categories.title}
-          </h1>
-          <p className='mt-1 text-xs text-muted-foreground sm:text-base'>
-            {t.categories.subtitle}
-          </p>
-        </div>
-        <div className='flex gap-2'>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant='outline'
-                  size='icon'
-                  data-onboarding='apply-rules'
-                  onClick={() => {
-                    setShowProgressModal(true);
-                    applyRulesMutation.mutate();
-                  }}
-                  disabled={applyRulesMutation.isPending}
-                >
-                  <RefreshCcw
-                    className={cn(
-                      'h-4 w-4',
-                      applyRulesMutation.isPending && 'animate-spin'
-                    )}
-                  />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent className='max-w-xs'>
-                <p>
-                  {t.categories.applyRulesTooltip ||
-                    'Apply all category rules to transactions'}
-                </p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-          <Button
-            onClick={() => setShowAddForm(!showAddForm)}
-            variant={showAddForm ? 'secondary' : 'default'}
-            data-onboarding='add-category-toggle'
-          >
-            {showAddForm ? (
-              <>
-                <ChevronUp className='mr-2 h-4 w-4' />
-                {t.common.close}
-              </>
-            ) : (
-              <>
-                <Plus className='mr-2 h-4 w-4' />
-                {t.categories.addCategory || 'Add category'}
-              </>
-            )}
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        title={t.categories.title}
+        subtitle={t.categories.subtitle}
+        dataOnboarding='category-greeting'
+        actions={
+          <div className='flex gap-2'>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant='outline'
+                    size='icon'
+                    data-onboarding='apply-rules'
+                    onClick={() => {
+                      setShowProgressModal(true);
+                      applyRulesMutation.mutate();
+                    }}
+                    disabled={applyRulesMutation.isPending}
+                  >
+                    <RefreshCcw
+                      className={cn(
+                        'h-4 w-4',
+                        applyRulesMutation.isPending && 'animate-spin'
+                      )}
+                    />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent className='max-w-xs'>
+                  <p>
+                    {t.categories.applyRulesTooltip ||
+                      'Apply all category rules to transactions'}
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            <Button
+              onClick={() => setShowAddForm(!showAddForm)}
+              variant={showAddForm ? 'secondary' : 'default'}
+              data-onboarding='add-category-toggle'
+            >
+              {showAddForm ? (
+                <>
+                  <ChevronUp className='mr-2 h-4 w-4' />
+                  {t.common.close}
+                </>
+              ) : (
+                <>
+                  <Plus className='mr-2 h-4 w-4' />
+                  {t.categories.addCategory || 'Add category'}
+                </>
+              )}
+            </Button>
+          </div>
+        }
+      />
 
       {/* Add Category Form */}
       {showAddForm && (

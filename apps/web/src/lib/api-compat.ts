@@ -320,7 +320,10 @@ export const api = {
     return ds.getRecurringPatterns();
   },
 
-  getRecurringPatternsWithHistory: async (startDate?: string, endDate?: string) => {
+  getRecurringPatternsWithHistory: async (
+    startDate?: string,
+    endDate?: string
+  ) => {
     const ds = getDataService();
     return ds.getRecurringPatternsWithHistory(startDate, endDate);
   },

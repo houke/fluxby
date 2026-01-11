@@ -89,7 +89,10 @@ export const TypeFilter = memo(function TypeFilter({
               value === 'income' && 'bg-primary/10'
             )}
           >
-            <ArrowDownRight className='h-4 w-4 text-emerald-500' />
+            <ArrowUpRight
+              data-testid='typefilter-income-icon'
+              className='h-4 w-4 text-emerald-500'
+            />
             <span className='flex-1'>{t.income}</span>
             {value === 'income' && <Check className='h-4 w-4 text-primary' />}
           </button>
@@ -100,7 +103,10 @@ export const TypeFilter = memo(function TypeFilter({
               value === 'expense' && 'bg-primary/10'
             )}
           >
-            <ArrowUpRight className='h-4 w-4 text-rose-500' />
+            <ArrowDownRight
+              data-testid='typefilter-expense-icon'
+              className='h-4 w-4 text-rose-500'
+            />
             <span className='flex-1'>{t.expense}</span>
             {value === 'expense' && <Check className='h-4 w-4 text-primary' />}
           </button>

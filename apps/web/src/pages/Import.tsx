@@ -279,7 +279,7 @@ function HistoryCard({
             {item.status === 'completed' ? t.import.completed : t.import.failed}
           </span>
           {hasSkippedRows && (
-            <span className='text-muted-foreground'>
+            <span className='flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-purple-600 hover:text-white'>
               {isExpanded ? (
                 <ChevronUp className='h-4 w-4' />
               ) : (

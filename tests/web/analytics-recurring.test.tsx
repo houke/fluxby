@@ -172,18 +172,21 @@ describe('Analytics recurring patterns', () => {
     expect(a).toBeTruthy();
 
     // Find the pattern row/button for Service A and assert it has a red ↑ indicator
-    const serviceAButton = (await screen.findByText('Service A')).
-      closest('button');
+    const serviceAButton = (await screen.findByText('Service A')).closest(
+      'button'
+    );
     expect(serviceAButton).toBeTruthy();
     const serviceAIndicator = serviceAButton?.querySelector('.text-rose-600');
     expect(serviceAIndicator).toBeTruthy();
     expect(serviceAIndicator?.textContent).toContain('↑');
 
     // Find the pattern row/button for Service B and assert it has a green ↓ indicator
-    const serviceBButton = (await screen.findByText('Service B')).
-      closest('button');
+    const serviceBButton = (await screen.findByText('Service B')).closest(
+      'button'
+    );
     expect(serviceBButton).toBeTruthy();
-    const serviceBIndicator = serviceBButton?.querySelector('.text-emerald-600');
+    const serviceBIndicator =
+      serviceBButton?.querySelector('.text-emerald-600');
     expect(serviceBIndicator).toBeTruthy();
     expect(serviceBIndicator?.textContent).toContain('↓');
   });

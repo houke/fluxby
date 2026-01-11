@@ -49,6 +49,9 @@ import {
   CardDescription,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { PageHeader } from '@/components/layout/PageHeader';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { AccountBalanceCards } from '@/components/dashboard/AccountBalanceCards';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -1912,122 +1915,18 @@ export default function Transactions() {
     <>
       {/* Toasts are handled via ToastContext */}
       <div className='space-y-0 sm:space-y-6'>
-        <div className='flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between'>
-          <div>
-            <h1 className='text-xl font-bold sm:text-3xl'>
-              {t.transactions.title}
-            </h1>
-            <p className='mt-1 text-xs text-muted-foreground sm:text-base'>
-              {t.transactions.subtitle}
-            </p>
-          </div>
-
-          {/* Account Balance Cards - Same as Dashboard */}
-          {accounts && accounts.length > 0 && (
-            <div
-              className='-mx-3 flex items-center gap-2 sm:mx-0'
-              data-onboarding='transaction-accounts'
-            >
-              {accounts.length > 3 && (
-                <Button
-                  variant='ghost'
-                  size='icon'
-                  onClick={() =>
-                    setAccountScrollIndex(Math.max(0, accountScrollIndex - 1))
-                  }
-                  disabled={accountScrollIndex === 0}
-                  className='h-8 w-8'
-                >
-                  <ChevronLeft className='h-4 w-4' />
-                </Button>
-              )}
-
-              <div className='flex flex-1 gap-px overflow-x-auto overscroll-contain border-b-0 bg-border sm:flex-initial sm:gap-3 sm:bg-transparent'>
-                {accounts
-                  .slice(accountScrollIndex, accountScrollIndex + 3)
-                  .map((account) => {
-                    const balance = account.currentBalance || 0;
-
-                    // Color logic: checking accounts are green/red based on balance, savings are blue
-                    const getAccountColors = (
-                      type: string,
-                      balance: number
-                    ) => {
-                      if (type === 'checking') {
-                        return balance >= 0
-                          ? {
-                              bg: 'bg-emerald-50 dark:bg-emerald-950',
-                              text: 'text-emerald-600',
-                            }
-                          : {
-                              bg: 'bg-red-50 dark:bg-red-950',
-                              text: 'text-red-600',
-                            };
-                      } else if (type === 'savings') {
-                        return {
-                          bg: 'bg-blue-50 dark:bg-blue-950',
-                          text: 'text-blue-600',
-                        };
-                      } else {
-                        return {
-                          bg: 'bg-gray-50 dark:bg-gray-950',
-                          text: 'text-gray-600',
-                        };
-                      }
-                    };
-
-                    const colors = getAccountColors(account.type, balance);
-
-                    return (
-                      <div
-                        key={account.id}
-                        className='flex min-w-0 flex-1 items-center gap-3 border-r border-border bg-card px-3 py-2 last:border-r-0 sm:flex-initial sm:rounded-lg sm:border sm:px-4 sm:shadow-sm'
-                      >
-                        <div className={`rounded-full p-2 ${colors.bg}`}>
-                          {account.type === 'checking' && (
-                            <Wallet className={`h-4 w-4 ${colors.text}`} />
-                          )}
-                          {account.type === 'savings' && (
-                            <PiggyBank className={`h-4 w-4 ${colors.text}`} />
-                          )}
-                          {account.type === 'credit' && (
-                            <CreditCard className={`h-4 w-4 ${colors.text}`} />
-                          )}
-                        </div>
-                        <div className='min-w-0'>
-                          <p className='truncate text-xs text-muted-foreground'>
-                            {account.name}
-                          </p>
-                          <p className='font-semibold'>
-                            <Currency
-                              amount={balance}
-                              className='font-semibold'
-                            />
-                          </p>
-                        </div>
-                      </div>
-                    );
-                  })}
-              </div>
-
-              {accounts.length > 3 && (
-                <Button
-                  variant='ghost'
-                  size='icon'
-                  onClick={() =>
-                    setAccountScrollIndex(
-                      Math.min(accounts.length - 3, accountScrollIndex + 1)
-                    )
-                  }
-                  disabled={accountScrollIndex >= accounts.length - 3}
-                  className='h-8 w-8'
-                >
-                  <ChevronRight className='h-4 w-4' />
-                </Button>
-              )}
-            </div>
-          )}
-        </div>
+        <PageHeader
+          title={t.transactions.title}
+          subtitle={t.transactions.subtitle}
+          dataOnboarding='transaction-greeting'
+          actions={
+            <AccountBalanceCards
+              accounts={accounts || []}
+              accountScrollIndex={accountScrollIndex}
+              setAccountScrollIndex={setAccountScrollIndex}
+            />
+          }
+        />
 
         {/* Summary Cards - Same as Dashboard */}
         <div
@@ -2917,17 +2816,67 @@ export default function Transactions() {
                 // but *do* return transactions across the full dataset, show a
                 // specialized empty-state with a CTA to view all data.
                 (transactionsAllData?.length || 0) > 0 ? (
-                  <div className='py-12 text-center'>
-                    <Search className='mx-auto mb-4 h-12 w-12 text-muted-foreground/50' />
-                    <h3 className='text-lg font-medium'>
-                      {t.transactions.noTransactionsInRangeTitle ||
-                        'No transactions found in this period'}
-                    </h3>
-                    <p className='mx-auto mt-2 max-w-xs text-muted-foreground'>
-                      {t.transactions.noTransactionsInRangeDescription ||
-                        'No transactions found in the selected period, but there are matching transactions in your full data.'}
-                    </p>
-                    <div className='mt-4 flex items-center justify-center gap-2'>
+                  <EmptyState
+                    icon={Search}
+                    title={
+                      t.transactions.noTransactionsInRangeTitle ||
+                      'No transactions found in this period'
+                    }
+                    description={
+                      t.transactions.noTransactionsInRangeDescription ||
+                      'No transactions found in the selected period, but there are matching transactions in your full data.'
+                    }
+                    action={
+                      <div className='flex items-center gap-2'>
+                        <Button
+                          variant='ghost'
+                          className='text-purple-600 hover:bg-purple-600 hover:text-white dark:text-purple-400 dark:hover:bg-purple-600 dark:hover:text-white'
+                          onClick={() => {
+                            // Reset all filters
+                            setSearch('');
+                            setTransactionType('all');
+                            setDebouncedType('all');
+                            setContextTransactionType('all');
+                            setSelectedCategoryIds([]);
+                            setCategories([]);
+                            setSelectedIbans([]);
+                            setSelectedAccountName(null);
+                            setSelectedAddressBookId(null);
+                            setOpposingAccountIbans([]);
+                            setOpposingAccountName(null);
+                            setAddressBookId(null);
+                            setSelectedPaymentMethods([]);
+                            setSelectedPaymentProcessors([]);
+                          }}
+                        >
+                          {t.addressBook?.clearFilters || 'Filters wissen'}
+                        </Button>
+                        <Button
+                          onClick={() => {
+                            if (minMaxDates) {
+                              setDateRange(
+                                new Date(minMaxDates.minDate),
+                                new Date(minMaxDates.maxDate)
+                              );
+                            } else {
+                              const end = new Date();
+                              const start = new Date();
+                              start.setFullYear(start.getFullYear() - 10);
+                              setDateRange(start, end);
+                            }
+                          }}
+                        >
+                          {t.transactions.viewAllData || 'View all data'}
+                        </Button>
+                      </div>
+                    }
+                  />
+                ) : (
+                  <EmptyState
+                    icon={Search}
+                    title={t.transactions.noTransactionsFound}
+                    description={t.transactions.adjustFilters}
+                    action={
                       <Button
                         variant='ghost'
                         className='text-purple-600 hover:bg-purple-600 hover:text-white dark:text-purple-400 dark:hover:bg-purple-600 dark:hover:text-white'
@@ -2951,92 +2900,46 @@ export default function Transactions() {
                       >
                         {t.addressBook?.clearFilters || 'Filters wissen'}
                       </Button>
-                      <Button
-                        onClick={() => {
-                          if (minMaxDates) {
-                            setDateRange(
-                              new Date(minMaxDates.minDate),
-                              new Date(minMaxDates.maxDate)
-                            );
-                          } else {
-                            const end = new Date();
-                            const start = new Date();
-                            start.setFullYear(start.getFullYear() - 10);
-                            setDateRange(start, end);
-                          }
-                        }}
-                      >
-                        {t.transactions.viewAllData || 'View all data'}
-                      </Button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className='py-12 text-center'>
-                    <Search className='mx-auto mb-4 h-12 w-12 text-muted-foreground/50' />
-                    <h3 className='text-lg font-medium'>
-                      {t.transactions.noTransactionsFound}
-                    </h3>
-                    <p className='mx-auto mt-2 max-w-xs text-muted-foreground'>
-                      {t.transactions.adjustFilters}
-                    </p>
-                    <Button
-                      variant='ghost'
-                      className='mt-4 text-purple-600 hover:bg-purple-600 hover:text-white dark:text-purple-400 dark:hover:bg-purple-600 dark:hover:text-white'
-                      onClick={() => {
-                        // Reset all filters
-                        setSearch('');
-                        setTransactionType('all');
-                        setDebouncedType('all');
-                        setContextTransactionType('all');
-                        setSelectedCategoryIds([]);
-                        setCategories([]);
-                        setSelectedIbans([]);
-                        setSelectedAccountName(null);
-                        setSelectedAddressBookId(null);
-                        setOpposingAccountIbans([]);
-                        setOpposingAccountName(null);
-                        setAddressBookId(null);
-                        setSelectedPaymentMethods([]);
-                        setSelectedPaymentProcessors([]);
-                      }}
-                    >
-                      {t.addressBook?.clearFilters || 'Filters wissen'}
-                    </Button>
-                  </div>
+                    }
+                  />
                 )
               ) : (
                 // Empty state when NO filters are active - show "Import" CTA
-                <div className='flex flex-col items-center justify-center py-12 text-center'>
-                  <History className='mx-auto mb-4 h-12 w-12 text-muted-foreground/50' />
-                  <h3 className='text-lg font-medium text-muted-foreground'>
-                    {t.transactions.noTransactions || 'Nog geen transacties'}
-                  </h3>
-                  <p className='mt-2 text-sm text-muted-foreground'>
-                    {t.transactions.importTransactions ||
-                      'Importeer je eerste transacties om te beginnen.'}
-                  </p>
-                  <div className='mt-3 flex flex-wrap items-center justify-center gap-x-2'>
-                    <button
-                      onClick={() => navigate('/import/')}
-                      className='text-sm text-primary hover:underline'
-                    >
-                      {t.transactions.goToImport || 'Ga naar importeren'}
-                    </button>
-                    {suggestedPeriod && !isViewingSuggestedPeriod && (
-                      <>
-                        <span className='text-muted-foreground'>&middot;</span>
-                        <button
-                          onClick={handleJumpToPeriod}
-                          className='text-sm text-primary hover:underline'
-                        >
-                          {(
-                            t.dashboard?.jumpToPeriod || 'Jump to {period}'
-                          ).replace('{period}', suggestedPeriod.label)}
-                        </button>
-                      </>
-                    )}
-                  </div>
-                </div>
+                <EmptyState
+                  icon={History}
+                  title={
+                    t.transactions.noTransactions || 'Nog geen transacties'
+                  }
+                  description={
+                    t.transactions.importTransactions ||
+                    'Importeer je eerste transacties om te beginnen.'
+                  }
+                  action={
+                    <div className='flex flex-wrap items-center justify-center gap-x-2'>
+                      <button
+                        onClick={() => navigate('/import/')}
+                        className='text-sm text-primary hover:underline'
+                      >
+                        {t.transactions.goToImport || 'Ga naar importeren'}
+                      </button>
+                      {suggestedPeriod && !isViewingSuggestedPeriod && (
+                        <>
+                          <span className='text-muted-foreground'>
+                            &middot;
+                          </span>
+                          <button
+                            onClick={handleJumpToPeriod}
+                            className='text-sm text-primary hover:underline'
+                          >
+                            {(
+                              t.dashboard?.jumpToPeriod || 'Jump to {period}'
+                            ).replace('{period}', suggestedPeriod.label)}
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  }
+                />
               )}
             </CardContent>
           </Card>

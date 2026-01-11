@@ -4383,7 +4383,10 @@ export function createDataService(db: Database) {
     /**
      * Get recurring patterns with price history for analysis view
      */
-    async getRecurringPatternsWithHistory(startDate?: string, endDate?: string): Promise<RecurringPattern[]> {
+    async getRecurringPatternsWithHistory(
+      startDate?: string,
+      endDate?: string
+    ): Promise<RecurringPattern[]> {
       const pid = profileId();
       if (!pid) return [];
 
@@ -4476,7 +4479,6 @@ export function createDataService(db: Database) {
 
       return result;
     },
-
 
     /**
      * Get recurring pattern stats (total monthly spend, counts, etc)

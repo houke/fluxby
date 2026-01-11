@@ -20,10 +20,15 @@ import {
   RefreshCw,
   Check,
   Sparkles,
+  LayoutDashboard,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { StatsCard } from '@/components/dashboard/StatsCard';
+import { AccountBalanceCards } from '@/components/dashboard/AccountBalanceCards';
+import { SpendingPieChart } from '@/components/dashboard/SpendingPieChart';
+import { PageHeader } from '@/components/layout/PageHeader';
 import { formatDateShort } from '@/lib/utils';
 import { Currency } from '@/components/ui/currency';
 import { api } from '@/lib/api';
@@ -37,17 +42,13 @@ import {
   YAxis,
   Tooltip,
   ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
   BarChart,
   Bar,
   Legend,
   CartesianGrid,
-  Sector,
 } from 'recharts';
 import type { PieSectorDataItem } from 'recharts/types/polar/Pie';
-import type { RecurringStats } from '@fluxby/shared';
+import type { RecurringStats, Account } from '@fluxby/shared';
 
 interface DashboardStats {
   totalBalance: number;
@@ -81,16 +82,6 @@ interface DashboardStats {
     categoryId: string;
     type: 'income' | 'expense' | 'transfer';
   }>;
-}
-
-interface Account {
-  id: string;
-  iban: string;
-  name: string;
-  type: 'checking' | 'savings' | 'credit';
-  bank: string;
-  currentBalance: number;
-  balance?: number;
 }
 
 interface DailyExpense {
@@ -458,122 +449,22 @@ export default function Dashboard() {
 
   return (
     <div className='space-y-0 sm:space-y-6'>
-      <div className='flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between'>
-        <div data-onboarding='dashboard-greeting'>
-          <h1 className='text-xl leading-tight sm:text-3xl'>
-            <span className='block font-bold'>
-              {getGreeting()} {user?.name ?? ''} <span aria-hidden>👋</span>
-            </span>
-          </h1>
-          <p className='mt-1 text-xs text-muted-foreground sm:text-base'>
-            {t.dashboard.subtitle}
-          </p>
-        </div>
-
-        {/* Account Balance Cards */}
-        {accounts && accounts.length > 0 && (
-          <div
-            className='-mx-3 flex items-center gap-2 sm:mx-0'
-            data-onboarding='dashboard-accounts'
-          >
-            {accounts.length > 3 && (
-              <Button
-                variant='ghost'
-                size='icon'
-                onClick={() =>
-                  setAccountScrollIndex(Math.max(0, accountScrollIndex - 1))
-                }
-                disabled={accountScrollIndex === 0}
-                className='h-8 w-8'
-              >
-                <ChevronLeft className='h-4 w-4' />
-              </Button>
-            )}
-
-            <div
-              className='flex flex-1 gap-px overflow-x-auto overscroll-contain border-b-0 bg-border sm:flex-initial sm:gap-3 sm:bg-transparent sm:px-2 sm:pb-2'
-              style={{ WebkitOverflowScrolling: 'touch' }}
-            >
-              {accounts
-                .slice(accountScrollIndex, accountScrollIndex + 3)
-                .map((account) => {
-                  const balance = account.currentBalance || 0;
-                  const _isPositive = balance >= 0;
-
-                  // Color logic: checking accounts are green/red based on balance, savings are blue
-                  const getAccountColors = (type: string, balance: number) => {
-                    if (type === 'checking') {
-                      return balance >= 0
-                        ? {
-                            bg: 'bg-emerald-50 dark:bg-emerald-950',
-                            text: 'text-emerald-600',
-                          }
-                        : {
-                            bg: 'bg-red-50 dark:bg-red-950',
-                            text: 'text-red-600',
-                          };
-                    } else if (type === 'savings') {
-                      return {
-                        bg: 'bg-blue-50 dark:bg-blue-950',
-                        text: 'text-blue-600',
-                      };
-                    } else {
-                      return {
-                        bg: 'bg-gray-50 dark:bg-gray-950',
-                        text: 'text-gray-600',
-                      };
-                    }
-                  };
-
-                  const colors = getAccountColors(account.type, balance);
-
-                  return (
-                    <div
-                      key={account.id}
-                      className='flex min-w-[10rem] flex-1 flex-shrink-0 items-center gap-3 border-r border-border bg-card px-3 py-2 last:border-r-0 sm:min-w-[12rem] sm:flex-initial sm:rounded-lg sm:border sm:px-4 sm:shadow-sm'
-                    >
-                      <div className={`rounded-full p-2 ${colors.bg}`}>
-                        {account.type === 'checking' && (
-                          <Wallet className={`h-4 w-4 ${colors.text}`} />
-                        )}
-                        {account.type === 'savings' && (
-                          <PiggyBank className={`h-4 w-4 ${colors.text}`} />
-                        )}
-                        {account.type === 'credit' && (
-                          <CreditCard className={`h-4 w-4 ${colors.text}`} />
-                        )}
-                      </div>
-                      <div className='min-w-0'>
-                        <p className='truncate text-xs text-muted-foreground'>
-                          {account.name}
-                        </p>
-                        <p className='font-semibold'>
-                          <Currency amount={balance} />
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })}
-            </div>
-
-            {accounts.length > 3 && (
-              <Button
-                variant='ghost'
-                size='icon'
-                onClick={() =>
-                  setAccountScrollIndex(
-                    Math.min(accounts.length - 3, accountScrollIndex + 1)
-                  )
-                }
-                disabled={accountScrollIndex >= accounts.length - 3}
-                className='h-8 w-8'
-              >
-                <ChevronRight className='h-4 w-4' />
-              </Button>
-            )}
-          </div>
-        )}
-      </div>
+      <PageHeader
+        title={
+          <>
+            {getGreeting()} {user?.name ?? ''} <span aria-hidden>👋</span>
+          </>
+        }
+        subtitle={t.dashboard.subtitle}
+        dataOnboarding='dashboard-greeting'
+        actions={
+          <AccountBalanceCards
+            accounts={accounts || []}
+            accountScrollIndex={accountScrollIndex}
+            setAccountScrollIndex={setAccountScrollIndex}
+          />
+        }
+      />
 
       {/* Stats Cards */}
       <div
@@ -790,210 +681,19 @@ export default function Dashboard() {
           </Card>
 
           {/* Spending by Category */}
-          <Card
-            className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'
-            onClick={() => {
-              setActiveCategoryIndex(null);
-              setPinnedCategoryIndex(null);
-            }}
-            data-onboarding='category-pie-chart'
-          >
-            <CardHeader className='flex flex-row items-center justify-between'>
-              <CardTitle className='text-base sm:text-lg'>
-                {t.dashboard.expensesByCategory}
-              </CardTitle>
-              <span
-                className='min-h-7 text-lg font-semibold'
-                style={{
-                  color:
-                    activeCategoryIndex !== null &&
-                    categoryData[activeCategoryIndex]
-                      ? categoryData[activeCategoryIndex].color
-                      : 'transparent',
-                }}
-              >
-                {activeCategoryIndex !== null &&
-                categoryData[activeCategoryIndex] ? (
-                  <Currency amount={categoryData[activeCategoryIndex].amount} />
-                ) : (
-                  '\u00A0'
-                )}
-              </span>
-            </CardHeader>
-            <CardContent>
-              <div className='flex h-[300px] items-center justify-center'>
-                {categoryData.length > 0 ? (
-                  <ResponsiveContainer
-                    width='100%'
-                    height='100%'
-                    minHeight={1}
-                    minWidth={1}
-                  >
-                    <PieChart>
-                      <Pie
-                        data={categoryData}
-                        cx='50%'
-                        cy='50%'
-                        innerRadius={60}
-                        outerRadius={100}
-                        paddingAngle={2}
-                        dataKey='amount'
-                        nameKey='categoryName'
-                        startAngle={90}
-                        endAngle={-270}
-                        isAnimationActive={false}
-                        {...{
-                          activeIndex:
-                            activeCategoryIndex !== null
-                              ? activeCategoryIndex
-                              : undefined,
-                        }}
-                        activeShape={(props: PieSectorDataItem) => {
-                          const {
-                            cx,
-                            cy,
-                            innerRadius,
-                            outerRadius,
-                            startAngle,
-                            endAngle,
-                            fill,
-                          } = props;
-                          return (
-                            <Sector
-                              cx={cx}
-                              cy={cy}
-                              innerRadius={innerRadius}
-                              outerRadius={(outerRadius || 100) + 15}
-                              startAngle={startAngle}
-                              endAngle={endAngle}
-                              fill={fill}
-                              style={{ outline: 'none' }}
-                            />
-                          );
-                        }}
-                        onClick={(_, index) => {
-                          // Toggle selection on click - grows the segment
-                          if (pinnedCategoryIndex === index) {
-                            setPinnedCategoryIndex(null);
-                            setActiveCategoryIndex(null);
-                          } else {
-                            setPinnedCategoryIndex(index);
-                            setActiveCategoryIndex(index);
-                          }
-                        }}
-                        style={{ cursor: 'pointer' }}
-                      >
-                        {categoryData.map((entry, index) => (
-                          <Cell
-                            key={`cell-${index}`}
-                            fill={entry.color}
-                            opacity={
-                              activeCategoryIndex !== null &&
-                              activeCategoryIndex !== index
-                                ? 0.3
-                                : 1
-                            }
-                          />
-                        ))}
-                      </Pie>
-                      <Tooltip
-                        formatter={(value) => (
-                          <Currency amount={value as number} />
-                        )}
-                        contentStyle={{
-                          backgroundColor: 'hsl(var(--card))',
-                          border: '1px solid hsl(var(--border))',
-                          borderRadius: '8px',
-                        }}
-                      />
-                      <Legend
-                        layout='vertical'
-                        align='right'
-                        verticalAlign='middle'
-                        wrapperStyle={{
-                          maxHeight: '280px',
-                          overflowY: 'auto',
-                        }}
-                        content={() => (
-                          <div ref={legendContainerRef} className='space-y-1'>
-                            {categoryData.map((entry, index) => (
-                              <div
-                                key={index}
-                                data-category-index={index}
-                                className={`flex cursor-pointer items-center gap-2 rounded px-1 py-0.5 ${
-                                  activeCategoryIndex === index
-                                    ? 'bg-muted'
-                                    : 'hover:bg-muted/50'
-                                }`}
-                                onClick={(event) => {
-                                  event.stopPropagation();
-                                  // Toggle selection on click - grows the segment
-                                  if (pinnedCategoryIndex === index) {
-                                    setPinnedCategoryIndex(null);
-                                    setActiveCategoryIndex(null);
-                                  } else {
-                                    setPinnedCategoryIndex(index);
-                                    setActiveCategoryIndex(index);
-                                  }
-                                }}
-                              >
-                                <div
-                                  className='h-3 w-3 flex-shrink-0 rounded-full'
-                                  style={{ backgroundColor: entry.color }}
-                                />
-                                <span
-                                  className={`truncate text-sm text-foreground ${
-                                    activeCategoryIndex === index
-                                      ? 'font-bold'
-                                      : ''
-                                  }`}
-                                >
-                                  {entry.categoryName}
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      />
-                    </PieChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <div className='flex flex-col items-center justify-center py-8 text-center'>
-                    <ArrowDownRight className='mb-4 h-12 w-12 text-muted-foreground/50' />
-                    <p className='text-muted-foreground'>
-                      {t.dashboard.noExpenses}
-                    </p>
-                    <p className='mt-1 text-sm text-muted-foreground'>
-                      {t.dashboard.importTransactions}
-                    </p>
-                    <div className='mt-3 flex flex-wrap items-center justify-center gap-x-2'>
-                      <button
-                        onClick={() => navigate('/import/')}
-                        className='text-sm text-primary hover:underline'
-                      >
-                        {t.dashboard.goToImport}
-                      </button>
-                      {suggestedPeriod && !isViewingSuggestedPeriod && (
-                        <>
-                          <span className='text-muted-foreground'>
-                            &middot;
-                          </span>
-                          <button
-                            onClick={handleJumpToPeriod}
-                            className='text-sm text-primary hover:underline'
-                          >
-                            {(
-                              t.dashboard?.jumpToPeriod || 'Jump to {period}'
-                            ).replace('{period}', suggestedPeriod.label)}
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+          <SpendingPieChart
+            categoryData={categoryData}
+            activeCategoryIndex={activeCategoryIndex}
+            setActiveCategoryIndex={setActiveCategoryIndex}
+            pinnedCategoryIndex={pinnedCategoryIndex}
+            setPinnedCategoryIndex={setPinnedCategoryIndex}
+            legendContainerRef={legendContainerRef}
+            t={t}
+            navigate={navigate}
+            suggestedPeriod={suggestedPeriod}
+            isViewingSuggestedPeriod={isViewingSuggestedPeriod}
+            handleJumpToPeriod={handleJumpToPeriod}
+          />
         </div>
       </div>
 
@@ -1879,7 +1579,7 @@ export default function Dashboard() {
                 <div className='space-y-4'>
                   {topAccounts.accounts.map((account) => (
                     <div
-                      key={account.iban}
+                      key={`${account.iban}-${account.name}`}
                       className='flex items-center justify-between gap-3 border-b py-2 last:border-0'
                     >
                       <div className='flex min-w-0 flex-1 items-center gap-3'>
@@ -1966,83 +1666,6 @@ export default function Dashboard() {
         </div>
       </div>
     </div>
-  );
-}
-
-interface StatsCardProps {
-  title: string;
-  value: string | React.ReactNode;
-  icon: React.ComponentType<{ className?: string }>;
-  iconColor?: string;
-  valueColor?: string;
-  bgColor?: string;
-  trend?: number;
-  trendLabel?: string | React.ReactNode;
-}
-
-function StatsCard({
-  title,
-  value,
-  icon: Icon,
-  iconColor = 'text-primary',
-  valueColor,
-  bgColor,
-  trend,
-  trendLabel,
-}: StatsCardProps) {
-  // Map icon color to matching pastel background
-  const getBgColor = (color: string) => {
-    if (color.includes('emerald'))
-      return 'bg-emerald-100 dark:bg-emerald-900/30';
-    if (color.includes('rose')) return 'bg-rose-100 dark:bg-rose-900/30';
-    if (color.includes('blue')) return 'bg-blue-100 dark:bg-blue-900/30';
-    return 'bg-primary/10';
-  };
-
-  return (
-    <Card className='h-full rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'>
-      <CardContent className='relative flex h-full flex-col justify-between overflow-hidden p-4 sm:flex-row sm:items-center sm:justify-between sm:p-6'>
-        <div className='flex-1 sm:mr-4'>
-          <p className='text-xs text-muted-foreground sm:text-sm'>{title}</p>
-          <p
-            className={`mt-1 text-lg font-bold sm:text-2xl ${valueColor || ''}`}
-          >
-            {value}
-          </p>
-          {trend !== undefined && trend !== 0 ? (
-            <div className='mt-1 flex items-center gap-1'>
-              {trend > 0 ? (
-                <TrendingUp className='h-4 w-4 text-success' />
-              ) : (
-                <TrendingDown className='h-4 w-4 text-destructive' />
-              )}
-              <span
-                className={`text-sm ${
-                  trend > 0 ? 'text-success' : 'text-destructive'
-                }`}
-              >
-                {trend > 0 ? '+' : ''}
-                {trend.toFixed(1)}%
-              </span>
-              {trendLabel && (
-                <span className='text-sm text-muted-foreground'>
-                  {trendLabel}
-                </span>
-              )}
-            </div>
-          ) : trendLabel ? (
-            <p className='mt-1 text-xs text-muted-foreground'>{trendLabel}</p>
-          ) : null}
-        </div>
-        <div
-          className={`absolute -top-2 -right-2 flex h-12 w-12 items-center justify-center rounded-full sm:relative sm:inset-auto sm:top-auto sm:right-auto sm:ml-4 sm:flex-shrink-0 ${
-            bgColor || getBgColor(iconColor)
-          }`}
-        >
-          <Icon className={`h-5 w-5 sm:h-6 sm:w-6 ${iconColor}`} />
-        </div>
-      </CardContent>
-    </Card>
   );
 }
 

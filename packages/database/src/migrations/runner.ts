@@ -125,6 +125,28 @@ export async function getCurrentVersion(db: MigrationContext): Promise<number> {
 }
 
 /**
+ * Ensure the schema_version table exists.
+ * This MUST be called before any other migration logic to prevent
+ * "no such table: schema_version" errors on fresh installs.
+ */
+export async function ensureSchemaVersionTable(
+  db: MigrationContext
+): Promise<void> {
+  try {
+    await db.execAsync(`
+      CREATE TABLE IF NOT EXISTS schema_version (
+        version INTEGER PRIMARY KEY,
+        applied_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now') * 1000)
+      )
+    `);
+    dbLog('[MigrationRunner] schema_version table ensured');
+  } catch (err) {
+    dbError('[MigrationRunner] Failed to create schema_version table:', err);
+    throw err;
+  }
+}
+
+/**
  * Check if there are pending migrations
  * Returns the count of pending migrations
  */
@@ -137,12 +159,15 @@ export async function checkPendingMigrations(
   ).length;
   return pendingCount;
 }
-
 /**
  * Run all pending migrations
  */
 export async function runMigrations(db: MigrationContext): Promise<void> {
-  // First, verify that all expected tables exist
+  // CRITICAL: Ensure schema_version table exists BEFORE any migration logic
+  // This prevents "no such table: schema_version" errors on fresh installs
+  await ensureSchemaVersionTable(db);
+
+  // Now verify that all expected tables exist
   // This handles edge cases where schema_version is ahead of actual schema
   await verifyAndRepairMigrations(db);
 
@@ -482,8 +507,10 @@ export async function verifyAndRepairMigrations(
 
   // After verification, sync localStorage with actual database state
   // This prevents loops where localStorage is out of sync with schema_version
+  // BUT only if the DB actually has migrations (version > 0)
+  // On fresh installs, we don't want to set version to 0 and trigger migration prompt loops
   const actualVersion = await getCurrentVersion(db);
-  if (typeof localStorage !== 'undefined') {
+  if (actualVersion > 0 && typeof localStorage !== 'undefined') {
     const storedVersion = localStorage.getItem(STORAGE_KEY_DB_VERSION);
     if (storedVersion !== String(actualVersion)) {
       dbLog(

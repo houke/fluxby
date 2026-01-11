@@ -108,6 +108,15 @@ export default function Subscriptions() {
   // View state
   const [view, setView] = useState<'list' | 'calendar'>('list');
 
+  // Track dismissed price change alerts (per session, stored by pattern ID)
+  const [dismissedPriceAlerts, setDismissedPriceAlerts] = useState<Set<string>>(
+    () => {
+      // Load from sessionStorage to persist across page navigation
+      const stored = sessionStorage.getItem('fluxby-dismissed-price-alerts');
+      return stored ? new Set(JSON.parse(stored)) : new Set();
+    }
+  );
+
   // Get current month dates for calendar
   const now = new Date();
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
@@ -209,7 +218,11 @@ export default function Subscriptions() {
       updates,
     }: {
       id: string;
-      updates: { merchantName?: string; patternType?: PatternType };
+      updates: {
+        merchantName?: string;
+        patternType?: PatternType;
+        avgAmount?: number;
+      };
     }) => api.updateRecurringPattern(id, updates),
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -288,6 +301,34 @@ export default function Subscriptions() {
     }
   };
 
+  // Handle accepting a price change (update the subscription amount)
+  const handleAcceptPriceChange = (patternId: string, newAmount: number) => {
+    updateMutation.mutate(
+      { id: patternId, updates: { avgAmount: newAmount } },
+      {
+        onSuccess: () => {
+          toast.success(
+            t.subscriptions?.priceUpdated || 'Subscription amount updated'
+          );
+        },
+      }
+    );
+  };
+
+  // Handle rejecting a price change (dismiss the alert for this session)
+  const handleRejectPriceChange = (patternId: string) => {
+    setDismissedPriceAlerts((prev) => {
+      const next = new Set(prev);
+      next.add(patternId);
+      // Persist to sessionStorage
+      sessionStorage.setItem(
+        'fluxby-dismissed-price-alerts',
+        JSON.stringify([...next])
+      );
+      return next;
+    });
+  };
+
   // Computed values
   const pendingPatterns = useMemo(() => {
     return patterns?.filter((p) => !p.isConfirmed && p.isActive) || [];
@@ -297,14 +338,16 @@ export default function Subscriptions() {
     return patterns?.filter((p) => p.isConfirmed && p.isActive) || [];
   }, [patterns]);
 
-  // Check for alerts (price increases, missed payments only - not new detections)
+  // Check for alerts (price changes, missed payments, stale subscriptions)
   const alerts = useMemo(() => {
     if (!patterns) return [];
     const alertList: Array<{
       id: string;
-      type: 'price_increase' | 'missed_payment' | 'stale';
+      type: 'price_change' | 'missed_payment' | 'stale';
       pattern: RecurringPattern;
       message: string;
+      newAmount?: number;
+      isIncrease?: boolean;
     }> = [];
 
     const today = new Date().toISOString().split('T')[0];
@@ -315,16 +358,28 @@ export default function Subscriptions() {
       // Only check confirmed subscriptions for alerts
       if (!pattern.isConfirmed) continue;
 
-      // Price increase alert (>5% difference)
-      if (pattern.lastAmount > pattern.avgAmount * 1.05) {
-        alertList.push({
-          id: `price-${pattern.id}`,
-          type: 'price_increase',
-          pattern,
-          message:
-            t.subscriptions?.priceIncreaseDescription ||
-            'Latest amount is higher than average',
-        });
+      // Price change alert (>5% difference between last amount and saved average)
+      // Skip if user has dismissed this alert for this session
+      if (!dismissedPriceAlerts.has(pattern.id)) {
+        const percentChange =
+          Math.abs(
+            (pattern.lastAmount - pattern.avgAmount) / pattern.avgAmount
+          ) * 100;
+        if (percentChange > 5) {
+          const isIncrease = pattern.lastAmount > pattern.avgAmount;
+          alertList.push({
+            id: `price-${pattern.id}`,
+            type: 'price_change',
+            pattern,
+            message: isIncrease
+              ? t.subscriptions?.priceIncreaseDetected ||
+                'Price increase detected. Would you like to update the subscription amount?'
+              : t.subscriptions?.priceDecreaseDetected ||
+                'Price decrease detected. Would you like to update the subscription amount?',
+            newAmount: pattern.lastAmount,
+            isIncrease,
+          });
+        }
       }
 
       // Missed payment alert (expected date passed)
@@ -353,7 +408,7 @@ export default function Subscriptions() {
     }
 
     return alertList;
-  }, [patterns, t]);
+  }, [patterns, t, dismissedPriceAlerts]);
 
   const isLoading = loadingPatterns || loadingStats;
 
@@ -508,7 +563,7 @@ export default function Subscriptions() {
         </Card>
       </div>
 
-      {/* Alerts - Price increases and missed payments only */}
+      {/* Alerts - Price changes, missed payments, and stale subscriptions */}
       {alerts.length > 0 && (
         <Card data-onboarding='subscriptions-alerts'>
           <CardHeader>
@@ -525,8 +580,10 @@ export default function Subscriptions() {
                   className='flex items-center justify-between rounded-lg border p-3'
                 >
                   <div className='flex items-center gap-3'>
-                    {alert.type === 'price_increase' && (
-                      <TrendingUp className='h-5 w-5 text-orange-500' />
+                    {alert.type === 'price_change' && (
+                      <TrendingUp
+                        className={`h-5 w-5 ${alert.isIncrease ? 'text-orange-500' : 'text-emerald-500'}`}
+                      />
                     )}
                     {alert.type === 'missed_payment' && (
                       <Clock className='h-5 w-5 text-red-500' />
@@ -537,32 +594,90 @@ export default function Subscriptions() {
                     <div>
                       <p className='font-medium'>
                         {alert.pattern.merchantName || 'Unknown'}
+                        {alert.type === 'price_change' && alert.newAmount && (
+                          <span
+                            className={`ml-2 text-sm ${alert.isIncrease ? 'text-orange-600' : 'text-emerald-600'}`}
+                          >
+                            <Currency amount={alert.pattern.avgAmount} /> →{' '}
+                            <Currency amount={alert.newAmount} />
+                          </span>
+                        )}
                       </p>
                       <p className='text-sm text-muted-foreground'>
                         {alert.message}
                       </p>
                     </div>
                   </div>
-                  {alert.type === 'stale' && (
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            size='sm'
-                            variant='outline'
-                            className='text-red-600 hover:bg-red-600 hover:text-white'
-                            onClick={() => handleDelete(alert.pattern.id, true)}
-                          >
-                            <Trash2 className='h-4 w-4' />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          {t.subscriptions?.removeStale ||
-                            'Remove inactive subscription'}
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  )}
+                  <div className='flex items-center gap-1'>
+                    {alert.type === 'price_change' && alert.newAmount && (
+                      <>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                size='sm'
+                                variant='ghost'
+                                className='h-8 w-8 p-0 text-emerald-600 hover:bg-emerald-600 hover:text-white focus:ring-0 focus:outline-none'
+                                onClick={() =>
+                                  handleAcceptPriceChange(
+                                    alert.pattern.id,
+                                    alert.newAmount!
+                                  )
+                                }
+                              >
+                                <Check className='h-4 w-4' />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              {t.subscriptions?.updateAmount ||
+                                'Update subscription amount'}
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                size='sm'
+                                variant='ghost'
+                                className='h-8 w-8 p-0 text-muted-foreground hover:bg-muted focus:ring-0 focus:outline-none'
+                                onClick={() =>
+                                  handleRejectPriceChange(alert.pattern.id)
+                                }
+                              >
+                                <X className='h-4 w-4' />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              {t.subscriptions?.dismissAlert || 'Dismiss alert'}
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </>
+                    )}
+                    {alert.type === 'stale' && (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              size='sm'
+                              variant='ghost'
+                              className='h-8 w-8 p-0 text-red-600 hover:bg-red-600 hover:text-white focus:ring-0 focus:outline-none'
+                              onClick={() =>
+                                handleDelete(alert.pattern.id, true)
+                              }
+                            >
+                              <Trash2 className='h-4 w-4' />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            {t.subscriptions?.removeStale ||
+                              'Remove inactive subscription'}
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>

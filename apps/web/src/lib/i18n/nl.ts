@@ -447,6 +447,11 @@ export interface TranslationKeys {
     variableTooltip: string;
     priceIncrease: string;
     priceIncreaseDescription: string;
+    priceIncreaseDetected: string;
+    priceDecreaseDetected: string;
+    priceUpdated: string;
+    updateAmount: string;
+    dismissAlert: string;
     missedPayment: string;
     missedPaymentDescription: string;
     newDetected: string;
@@ -1756,6 +1761,13 @@ export const nl: TranslationKeys = {
       'Dit abonnement heeft wisselende bedragen per betaling, bijvoorbeeld op basis van gebruik',
     priceIncrease: 'Prijsverhoging',
     priceIncreaseDescription: 'Laatste bedrag is hoger dan gemiddelde',
+    priceIncreaseDetected:
+      'Prijsverhoging gedetecteerd. Wil je het abonnementsbedrag bijwerken?',
+    priceDecreaseDetected:
+      'Prijsverlaging gedetecteerd. Wil je het abonnementsbedrag bijwerken?',
+    priceUpdated: 'Abonnementsbedrag bijgewerkt',
+    updateAmount: 'Abonnementsbedrag bijwerken',
+    dismissAlert: 'Melding negeren',
     missedPayment: 'Gemiste betaling',
     missedPaymentDescription: 'Verwachte datum is verstreken',
     newDetected: 'Nieuw gedetecteerd',

@@ -9,26 +9,40 @@ import {
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import {
+  Users,
   Search,
   Plus,
+  RefreshCcw,
+  Pencil,
   Trash2,
-  Edit2,
-  Check,
-  X,
-  Users,
-  ArrowUpRight,
-  ArrowDownRight,
-  ChevronDown,
-  ChevronUp,
   ExternalLink,
-  Settings,
-  RefreshCw,
-  AlertTriangle,
+  Check,
+  ChevronDown,
+  Info,
+  MoreVertical,
+  Settings2,
+  UserPlus,
+  History,
+  TrendingDown,
+  TrendingUp,
+  CreditCard,
   Building2,
+  Wallet,
+  PiggyBank,
+  CheckCircle2,
   Scissors,
   Merge,
-  UserPlus,
+  ArrowRight,
+  ShieldCheck,
+  AlertTriangle,
+  ChevronUp,
+  Settings,
+  RefreshCw,
   Loader2,
+  Edit2,
+  X,
+  ArrowUpRight,
+  ArrowDownRight,
 } from 'lucide-react';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -45,6 +59,8 @@ import {
   CardDescription,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { PageHeader } from '@/components/layout/PageHeader';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -858,53 +874,50 @@ export default function AddressBook() {
   return (
     <>
       <div className='space-y-6'>
-        {/* Header with Add button */}
-        <div className='flex items-start justify-between'>
-          <div>
-            <h1 className='text-2xl font-bold sm:text-3xl'>
-              {t.addressBook?.title || t.settings.addressBook.title}
-            </h1>
-            <p className='mt-1 text-xs text-muted-foreground sm:text-base'>
-              {t.addressBook?.subtitle || t.settings.addressBook.description}
-            </p>
-          </div>
-          <div className='flex gap-2'>
-            <TooltipProvider delayDuration={100}>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    onClick={() => setShowCleanupRules(!showCleanupRules)}
-                    variant={showCleanupRules ? 'secondary' : 'outline'}
-                    size='icon'
-                    data-onboarding='addressbook-settings-toggle'
-                  >
-                    <Settings className='h-4 w-4' />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>{t.addressBook?.cleanupRules || 'Cleanup rules'}</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-            <Button
-              onClick={() => setShowAddForm(!showAddForm)}
-              variant={showAddForm ? 'secondary' : 'default'}
-              data-onboarding='add-contact-toggle'
-            >
-              {showAddForm ? (
-                <>
-                  <ChevronUp className='mr-2 h-4 w-4' />
-                  {t.common.close}
-                </>
-              ) : (
-                <>
-                  <Plus className='mr-2 h-4 w-4' />
-                  {t.addressBook?.addContact || 'Add contact'}
-                </>
-              )}
-            </Button>
-          </div>
-        </div>
+        <PageHeader
+          title={t.addressBook?.title || t.settings.addressBook.title}
+          subtitle={t.addressBook?.subtitle || t.settings.addressBook.description}
+          dataOnboarding='addressbook-greeting'
+          actions={
+            <div className='flex gap-2'>
+              <TooltipProvider delayDuration={100}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      onClick={() => setShowCleanupRules(!showCleanupRules)}
+                      variant={showCleanupRules ? 'secondary' : 'outline'}
+                      size='icon'
+                      data-onboarding='addressbook-settings-toggle'
+                    >
+                      <Settings2 className='h-4 w-4' />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{t.addressBook?.cleanupRules || 'Cleanup rules'}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+
+              <Button
+                onClick={() => setShowAddForm(!showAddForm)}
+                variant={showAddForm ? 'secondary' : 'default'}
+                data-onboarding='add-contact-toggle'
+              >
+                {showAddForm ? (
+                  <>
+                    <ChevronUp className='mr-2 h-4 w-4' />
+                    {t.common.close}
+                  </>
+                ) : (
+                  <>
+                    <Plus className='mr-2 h-4 w-4' />
+                    {t.addressBook?.addContact || 'Add contact'}
+                  </>
+                )}
+              </Button>
+            </div>
+          }
+        />
 
         {/* Cleanup Rules Card */}
         {showCleanupRules && (
@@ -2638,20 +2651,20 @@ export default function AddressBook() {
                   ))}
                 </div>
               ) : visibleContacts.length === 0 ? (
-                <div className='py-12 text-center text-muted-foreground'>
-                  <Users className='mx-auto mb-3 h-12 w-12 opacity-30' />
-                  <p className='font-medium'>
-                    {search
+                <EmptyState
+                  icon={Users}
+                  title={
+                    search
                       ? t.addressBook?.noResults || 'No contacts found'
-                      : t.settings.addressBook.emptyTitle}
-                  </p>
-                  <p className='mt-1 text-sm'>
-                    {search
+                      : t.settings.addressBook.emptyTitle
+                  }
+                  description={
+                    search
                       ? t.addressBook?.tryDifferentSearch ||
                         'Try a different search term'
-                      : t.settings.addressBook.emptyDescription}
-                  </p>
-                </div>
+                      : t.settings.addressBook.emptyDescription
+                  }
+                />
               ) : (
                 <div className='space-y-0 sm:space-y-3'>
                   {(() => {
