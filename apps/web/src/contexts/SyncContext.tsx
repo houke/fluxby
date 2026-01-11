@@ -109,6 +109,8 @@ interface SyncProviderProps {
   children: ReactNode;
   /** Callback when sync data is received */
   onSyncReceived?: (changes: SyncChange<SyncableRow>[]) => void;
+  /** Callback when a peer requests sync - should return local changes to send */
+  onSyncRequested?: (peerId: string) => Promise<SyncChange<SyncableRow>[]>;
 }
 
 // Generate or retrieve device ID from OPFS cache
@@ -183,7 +185,7 @@ function getAutoSyncEnabled(): boolean {
   return true; // Default to enabled
 }
 
-export function SyncProvider({ children, onSyncReceived }: SyncProviderProps) {
+export function SyncProvider({ children, onSyncReceived, onSyncRequested }: SyncProviderProps) {
   const [deviceId] = useState(getOrCreateDeviceId);
   const [deviceName, setDeviceNameState] = useState(getDeviceName);
   const [isInitialized, setIsInitialized] = useState(false);
@@ -316,6 +318,18 @@ export function SyncProvider({ children, onSyncReceived }: SyncProviderProps) {
         if (!active) return;
         setLastError(error);
       },
+      onSyncRequested: async (peerId) => {
+        // When a peer requests sync, return our local changes
+        // The caller should provide this callback to fetch changes from the database
+        if (!active) return [];
+        try {
+          const changes = onSyncRequested ? await onSyncRequested(peerId) : [];
+          return changes;
+        } catch (error) {
+          console.error('Error fetching local changes for sync:', error);
+          return [];
+        }
+      },
     });
 
     syncRef.current = sync;
@@ -346,7 +360,7 @@ export function SyncProvider({ children, onSyncReceived }: SyncProviderProps) {
         setIsInitialized(false);
       }
     };
-  }, [deviceId, deviceName, onSyncReceived, initVersion]);
+  }, [deviceId, deviceName, onSyncReceived, onSyncRequested, initVersion]);
 
   const retryInit = useCallback(() => {
     setLastError(null);

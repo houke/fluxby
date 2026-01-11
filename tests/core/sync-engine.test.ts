@@ -20,7 +20,9 @@ describe('SyncEngine', () => {
     });
   });
 
-  afterEach(() => {
+  afterEach(async () => {
+    // Run all timers to let any pending syncs complete before destroying
+    await vi.runAllTimersAsync();
     engine.destroy();
     vi.useRealTimers();
   });
@@ -280,6 +282,34 @@ describe('SyncEngine', () => {
       // After destroy, status updates should not be delivered
       engine.setConnectedPeers(5);
       expect(listener).toHaveBeenCalledTimes(1); // Only initial call
+    });
+  });
+
+  describe('forceSync', () => {
+    it('should return error when no peers connected', async () => {
+      const result = await engine.forceSync();
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('No peers connected');
+      expect(result.changesPushed).toBe(0);
+      expect(result.changesReceived).toBe(0);
+    });
+
+    it('should return error if already syncing', async () => {
+      engine.setConnectedPeers(1);
+
+      // Start first sync
+      const promise1 = engine.forceSync(500);
+
+      // Try to start another sync while first is in progress
+      const result2 = await engine.forceSync();
+
+      expect(result2.success).toBe(false);
+      expect(result2.error).toBe('Sync already in progress');
+
+      // Let the first sync complete
+      await vi.runAllTimersAsync();
+      await promise1;
     });
   });
 });

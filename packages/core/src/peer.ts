@@ -43,6 +43,8 @@ export interface PeerOptions {
   onPaired?: (device: PeerDevice) => void;
   /** Callback when sync data is received */
   onSyncReceived?: (changes: SyncChange<SyncableRow>[]) => void;
+  /** Callback when a peer requests sync - should return local changes to send back */
+  onSyncRequested?: (peerId: string) => Promise<SyncChange<SyncableRow>[]>;
   /** Callback when connection status changes */
   onConnectionChange?: (peerId: string, connected: boolean) => void;
   /** Callback for errors */
@@ -342,8 +344,8 @@ export class PeerSync {
         break;
 
       case 'sync-request':
-        // Emit event for app to respond with changes
-        this.options.onSyncReceived?.([]); // Signal sync request
+        // Handle sync request by fetching local changes and sending them back
+        this.handleSyncRequest(conn);
         break;
 
       case 'sync-response':
@@ -356,6 +358,30 @@ export class PeerSync {
       case 'sync-ack':
         // Sync acknowledged
         break;
+    }
+  }
+
+  /**
+   * Handle sync request from a peer - fetch local changes and respond
+   */
+  private async handleSyncRequest(conn: DataConnection): Promise<void> {
+    try {
+      // If we have an onSyncRequested callback, use it to get local changes
+      const changes = this.options.onSyncRequested
+        ? await this.options.onSyncRequested(conn.peer)
+        : [];
+
+      // Send sync response with our changes
+      conn.send({
+        type: 'sync-response',
+        changes,
+      });
+    } catch (error) {
+      this.options.onError?.(
+        error instanceof Error
+          ? error
+          : new Error(`Failed to handle sync request: ${String(error)}`)
+      );
     }
   }
 

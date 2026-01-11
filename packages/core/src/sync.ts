@@ -51,6 +51,41 @@ export function checkClockDrift(remoteTimestamp: number): {
 }
 
 /**
+ * Validate a sync change has the required fields
+ */
+export function isValidSyncChange(change: unknown): change is SyncChange {
+  if (!change || typeof change !== 'object') return false;
+  const c = change as Record<string, unknown>;
+  if (typeof c.table !== 'string' || !c.table) return false;
+  if (!c.row || typeof c.row !== 'object') return false;
+  const row = c.row as Record<string, unknown>;
+  if (typeof row.id !== 'string' || !row.id) return false;
+  if (typeof row.updated_at !== 'number') return false;
+  if (typeof row.is_deleted !== 'boolean') return false;
+  if (typeof row.device_id !== 'string') return false;
+  return true;
+}
+
+/**
+ * Validate an array of sync changes
+ */
+export function validateSyncChanges(changes: unknown[]): {
+  valid: SyncChange[];
+  invalid: number;
+} {
+  const valid: SyncChange[] = [];
+  let invalid = 0;
+  for (const change of changes) {
+    if (isValidSyncChange(change)) {
+      valid.push(change);
+    } else {
+      invalid++;
+    }
+  }
+  return { valid, invalid };
+}
+
+/**
  * Merge remote changes using Last-Write-Wins
  */
 export function mergeChanges<T extends SyncableRow>(
