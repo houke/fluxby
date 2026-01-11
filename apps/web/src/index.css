@@ -231,3 +231,8 @@ body {
   user-select: none;
   transition: filter 0.2s ease-in-out;
 }
+
+/* Disable bouncy scroll on macOS (elastic scrolling) */
+html, body {
+  overscroll-behavior: none;
+}
