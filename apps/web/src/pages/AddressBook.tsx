@@ -2319,6 +2319,16 @@ export default function AddressBook() {
                         'Try a different search term'
                       : t.settings.addressBook.emptyDescription
                   }
+                  action={
+                    !search && (
+                      <button
+                        onClick={() => setShowAddForm(true)}
+                        className='text-sm text-purple-600 hover:text-purple-700 hover:underline dark:text-purple-400 dark:hover:text-purple-300'
+                      >
+                        {t.addressBook?.addContact || 'Add contact'}
+                      </button>
+                    )
+                  }
                 />
               ) : (
                 <div className='space-y-0 sm:space-y-3'>

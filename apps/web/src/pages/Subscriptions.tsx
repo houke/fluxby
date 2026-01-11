@@ -52,6 +52,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useProfile } from '@/contexts/ProfileContext';
 import { useToast } from '@/contexts/ToastContext';
 import { useConfirm } from '@/contexts/ConfirmContext';
+import { Link } from 'react-router-dom';
 import type {
   RecurringPattern,
   RecurringStats,
@@ -140,6 +141,15 @@ export default function Subscriptions() {
   const { data: stats, isLoading: loadingStats } = useQuery<RecurringStats>({
     queryKey: ['recurring-stats', activeProfileId],
     queryFn: () => api.getRecurringStats(),
+  });
+
+  // Check if there are any transactions for this profile
+  const { data: hasTransactions } = useQuery({
+    queryKey: ['has-transactions', activeProfileId],
+    queryFn: async () => {
+      const txs = await api.getTransactions({ limit: '1' });
+      return txs.length > 0;
+    },
   });
 
   const { data: calendarEntries } = useQuery<RecurringCalendarEntry[]>({
@@ -460,7 +470,8 @@ export default function Subscriptions() {
                       size='sm'
                       className={cn(
                         'rounded-r-none',
-                        view === 'list' && 'bg-purple-600 text-white hover:bg-purple-700'
+                        view === 'list' &&
+                          'bg-purple-600 text-white hover:bg-purple-700'
                       )}
                       onClick={() => setView('list')}
                     >
@@ -734,17 +745,31 @@ export default function Subscriptions() {
                 'No subscriptions detected yet'
               }
               description={
-                t.subscriptions?.noSubscriptionsDescription ||
-                'Import transactions to automatically detect recurring payments'
+                hasTransactions
+                  ? t.subscriptions?.noSubscriptionsDescriptionWithData ||
+                    'Detect recurring patterns from your imported transactions'
+                  : t.subscriptions?.noSubscriptionsDescription ||
+                    'Import transactions to automatically detect recurring payments'
               }
               action={
-                <Button
-                  onClick={() => detectMutation.mutate()}
-                  className='mt-4'
-                >
-                  <RefreshCw className='mr-2 h-4 w-4' />
-                  {t.subscriptions?.detectPatterns || 'Detect patterns'}
-                </Button>
+                hasTransactions ? (
+                  <button
+                    onClick={() => detectMutation.mutate()}
+                    disabled={detectMutation.isPending}
+                    className='text-sm text-purple-600 hover:text-purple-700 hover:underline disabled:opacity-50 dark:text-purple-400 dark:hover:text-purple-300'
+                  >
+                    {detectMutation.isPending
+                      ? t.common?.loading || 'Loading...'
+                      : t.subscriptions?.detectPatterns || 'Detect patterns'}
+                  </button>
+                ) : (
+                  <Link
+                    to='/import'
+                    className='text-sm text-purple-600 hover:text-purple-700 hover:underline dark:text-purple-400 dark:hover:text-purple-300'
+                  >
+                    {t.dashboard?.goToImport || 'Go to import'}
+                  </Link>
+                )
               }
             />
           </CardContent>

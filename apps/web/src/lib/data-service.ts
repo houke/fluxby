@@ -4201,13 +4201,20 @@ export function createDataService(db: Database) {
         for (const group of groups) {
           if (!group.dates || !group.amounts) continue;
 
-          // Parse dates and amounts
-          const dates = group.dates
-            .split(',')
-            .map((d) => new Date(d))
-            .sort((a, b) => a.getTime() - b.getTime());
+          // Parse dates and amounts together to maintain association
+          const rawDates = group.dates.split(',');
+          const rawAmounts = group.amounts.split(',');
 
-          const amounts = group.amounts.split(',').map((a) => parseFloat(a));
+          // Create pairs and sort by date
+          const pairs = rawDates
+            .map((d, i) => ({
+              date: new Date(d),
+              amount: parseFloat(rawAmounts[i]),
+            }))
+            .sort((a, b) => a.date.getTime() - b.date.getTime());
+
+          const dates = pairs.map((p) => p.date);
+          const amounts = pairs.map((p) => p.amount);
 
           if (dates.length < MIN_TRANSACTIONS_FOR_PATTERN) continue;
 
@@ -4255,10 +4262,17 @@ export function createDataService(db: Database) {
           if (!isConsistent) continue;
 
           // Calculate amount statistics
-          const avgAmount =
+          // For expenses (which this query filters for), amounts should be negative
+          // Ensure we store negative values for consistency
+          let avgAmount =
             amounts.reduce((sum, a) => sum + a, 0) / amounts.length;
-          const lastAmount = amounts[amounts.length - 1];
+          let lastAmount = amounts[amounts.length - 1];
           const lastDate = dates[dates.length - 1].toISOString().split('T')[0];
+
+          // Safety: ensure expense amounts are negative
+          // This handles edge cases where amounts might be stored as positive
+          if (avgAmount > 0) avgAmount = -avgAmount;
+          if (lastAmount > 0) lastAmount = -lastAmount;
 
           // Check if amount is variable (>10% variance) - use absolute values for comparison
           const absAvgAmount = Math.abs(avgAmount);

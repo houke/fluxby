@@ -417,6 +417,7 @@ export interface TranslationKeys {
     subtitle: string;
     noSubscriptions: string;
     noSubscriptionsDescription: string;
+    noSubscriptionsDescriptionWithData: string;
     detectPatterns: string;
     detecting: string;
     detected: string;
@@ -627,6 +628,7 @@ export interface TranslationKeys {
     startImport: string;
     importing: string;
     importProgress: string;
+    processingTransactions: string;
     importResults: string;
     importResultsDescription: string;
     skippedRows: string;
@@ -1733,6 +1735,8 @@ export const nl: TranslationKeys = {
     noSubscriptions: 'Nog geen abonnementen gedetecteerd',
     noSubscriptionsDescription:
       'Importeer transacties om terugkerende betalingen automatisch te herkennen',
+    noSubscriptionsDescriptionWithData:
+      'Detecteer terugkerende patronen uit je geïmporteerde transacties',
     detectPatterns: 'Patronen detecteren',
     detecting: 'Bezig met detecteren...',
     detected: 'nieuwe patronen gedetecteerd',
@@ -1969,6 +1973,7 @@ export const nl: TranslationKeys = {
     startImport: 'Start import',
     importing: 'Importeren...',
     importProgress: 'Voortgang: {current} van {total}',
+    processingTransactions: '{total} transacties verwerken',
     importResults: 'Import resultaten',
     importResultsDescription:
       '{imported} transacties geïmporteerd, {skipped} overgeslagen',

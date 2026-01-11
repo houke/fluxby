@@ -472,6 +472,8 @@ export const en: TranslationKeys = {
     noSubscriptions: 'No subscriptions detected yet',
     noSubscriptionsDescription:
       'Import transactions to automatically detect recurring payments',
+    noSubscriptionsDescriptionWithData:
+      'Detect recurring patterns from your imported transactions',
     detectPatterns: 'Detect patterns',
     detecting: 'Detecting...',
     detected: 'new patterns detected',
@@ -707,6 +709,7 @@ export const en: TranslationKeys = {
     startImport: 'Start import',
     importing: 'Importing...',
     importProgress: 'Progress: {current} of {total}',
+    processingTransactions: 'Processing {total} transactions',
     importResults: 'Import results',
     importResultsDescription:
       '{imported} transactions imported, {skipped} skipped',

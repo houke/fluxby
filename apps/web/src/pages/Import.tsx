@@ -976,8 +976,8 @@ export default function Import() {
               </>
             )}
 
-            {/* Preview - Show for all banks when mapping is complete */}
-            {selectedBank && isMappingComplete && (
+            {/* Preview - Show for all banks when mapping is complete and not importing */}
+            {selectedBank && isMappingComplete && importProgress === null && (
               <div className='space-y-3'>
                 <div className='flex items-center justify-between'>
                   <h3 className='font-medium'>{t.import.preview}</h3>
@@ -1080,11 +1080,19 @@ export default function Import() {
 
             {/* Loading state during import */}
             {importProgress !== null && (
-              <div className='flex flex-col items-center justify-center gap-3 py-4'>
-                <Loader2 className='h-8 w-8 animate-spin text-purple-600' />
-                <span className='text-sm text-muted-foreground'>
-                  {t.import.importing}...
-                </span>
+              <div className='flex flex-col items-center justify-center gap-3 py-8'>
+                <Loader2 className='h-10 w-10 animate-spin text-purple-600' />
+                <div className='text-center'>
+                  <p className='font-medium'>{t.import.importing}...</p>
+                  {csvParseResult && (
+                    <p className='text-sm text-muted-foreground'>
+                      {(
+                        t.import.processingTransactions ||
+                        'Processing {total} transactions'
+                      ).replace('{total}', String(csvParseResult.totalRows))}
+                    </p>
+                  )}
+                </div>
               </div>
             )}
           </div>
