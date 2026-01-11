@@ -79,7 +79,7 @@
       "requireLiteralLeadingDot": false
     },
     "updater": {
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDYxRkJFNkUxQzYyM0U3NTIKUldSUzV5UEc0ZWI3WWROOFpXa3dWVkM4NjA4WEc2MHdGeVY4QlVZS3ZyaDA4ZG9oeWFGMmUyYnIK",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDk4NkQ1MzhDMTNDNUU2NzUKUldSMTVzVVRqRk50bU5KMmc1NVQzT3hjOUV2SmpLMFdBMGFzdm1mM242K3NwSEgzQ1NBZDFBeHMK",
       "endpoints": [
         "https://github.com/houke/fluxby/releases/latest/download/latest.json"
       ],
