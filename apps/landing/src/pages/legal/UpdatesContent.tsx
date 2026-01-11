@@ -33,6 +33,21 @@ const UpdatesContent = () => {
   const updatesPage = t.legal?.updatesPage;
 
   const releases = [
+        {
+      version: '1.5.0',
+      date: updatesPage?.v150Date || '11 januari 2026',
+      title: updatesPage?.v150Title || 'Release 1.5.0',
+      description:
+        updatesPage?.v150Description ||
+        '2 nieuwe features.',
+      features: [
+        {
+          icon: RefreshCw,
+          title: updatesPage?.v150F1Title || 'sync verbeteringen',
+          description: updatesPage?.v150F1Desc || '2 nieuwe features. Bekijk de release op GitHub!',
+        },
+      ],
+    },
     {
       version: '1.4.2',
       date: updatesPage?.v142Date || '11 januari 2026',

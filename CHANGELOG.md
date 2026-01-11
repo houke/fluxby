@@ -1,5 +1,18 @@
 # Changelog
 
+## v1.5.0
+
+**Release Date:** 2026-01-11
+
+### Features
+
+- **sync:** improve P2P sync robustness with validation and proper request handling
+- **sync:** add sync result feedback with toast notifications
+
+### Chores
+
+- **landing:** update OpenAPI artifact
+
 ## v1.4.2
 
 **Release Date:** 2026-01-11
