@@ -1566,6 +1566,13 @@ export const nl: LandingTranslationKeys = {
         spent: 'Uitgegeven',
         remaining: 'Resterend',
       },
+      subscriptions: {
+        title: 'Abonnementen',
+        monthly: 'Maandelijks',
+        netflix: 'Netflix',
+        spotify: 'Spotify',
+        gym: 'Sportschool',
+      },
       accounts: {
         checking: 'Betaalrekening',
         savings: 'Spaarrekening',

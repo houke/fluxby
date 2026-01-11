@@ -8,6 +8,7 @@ type AnimationType =
   | 'transactions'
   | 'categories'
   | 'budget'
+  | 'subscriptions'
   | 'accounts'
   | 'trends'
   | 'addressBook'
@@ -41,6 +42,10 @@ export default function HelpAnimation({
       return <CategoriesAnimation height={height} anim={anim?.categories} />;
     case 'budget':
       return <BudgetAnimation height={height} anim={anim?.budget} />;
+    case 'subscriptions':
+      return (
+        <SubscriptionsAnimation height={height} anim={anim?.subscriptions} />
+      );
     case 'accounts':
       return <AccountsAnimation height={height} anim={anim?.accounts} />;
     case 'trends':
@@ -486,7 +491,113 @@ function BudgetAnimation({
   );
 }
 
-// 7. Accounts Animation
+// 7. Subscriptions Animation
+function SubscriptionsAnimation({
+  height,
+  anim,
+}: {
+  height: string;
+  anim?: {
+    title?: string;
+    monthly?: string;
+    netflix?: string;
+    spotify?: string;
+    gym?: string;
+  };
+}) {
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  const subscriptions = [
+    {
+      name: anim?.netflix || 'Netflix',
+      amount: -12.99,
+      icon: '🎬',
+      nextDate: '15 jan',
+    },
+    {
+      name: anim?.spotify || 'Spotify',
+      amount: -9.99,
+      icon: '🎵',
+      nextDate: '3 jan',
+    },
+    {
+      name: anim?.gym || 'Sportschool',
+      amount: -29.99,
+      icon: '💪',
+      nextDate: '1 feb',
+    },
+  ];
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setActiveIndex((prev) => (prev + 1) % subscriptions.length);
+    }, 2000);
+    return () => clearInterval(interval);
+  }, [subscriptions.length]);
+
+  const totalMonthly = subscriptions.reduce((sum, s) => sum + s.amount, 0);
+
+  return (
+    <AnimationWrapper height={height}>
+      <div className='flex w-72 flex-col gap-3 p-4'>
+        {/* Header with total */}
+        <div className='flex items-center justify-between border-b border-gray-200 pb-2 dark:border-gray-600'>
+          <span className='text-sm text-gray-500 dark:text-gray-400'>
+            {anim?.monthly || 'Maandelijks'}
+          </span>
+          <span className='font-bold text-purple-600'>
+            €{Math.abs(totalMonthly).toFixed(2)}
+          </span>
+        </div>
+
+        {/* Subscription list */}
+        <div className='space-y-2'>
+          {subscriptions.map((sub, idx) => (
+            <div
+              key={sub.name}
+              className={`flex items-center justify-between rounded-lg p-2 transition-all duration-300 ${
+                idx === activeIndex
+                  ? 'bg-purple-50 ring-2 ring-purple-400 dark:bg-purple-900/30 dark:ring-purple-500'
+                  : 'bg-gray-50 dark:bg-gray-700'
+              }`}
+            >
+              <div className='flex items-center gap-2'>
+                <span className='text-xl'>{sub.icon}</span>
+                <div>
+                  <p className='text-sm font-medium text-gray-800 dark:text-gray-200'>
+                    {sub.name}
+                  </p>
+                  <p className='text-xs text-gray-500 dark:text-gray-400'>
+                    {sub.nextDate}
+                  </p>
+                </div>
+              </div>
+              <span className='font-semibold text-red-500'>
+                €{Math.abs(sub.amount).toFixed(2)}
+              </span>
+            </div>
+          ))}
+        </div>
+
+        {/* Refresh indicator */}
+        <div className='flex items-center justify-center gap-1 pt-1'>
+          {subscriptions.map((_, idx) => (
+            <div
+              key={idx}
+              className={`h-1.5 w-1.5 rounded-full transition-all duration-300 ${
+                idx === activeIndex
+                  ? 'w-3 bg-purple-500'
+                  : 'bg-gray-300 dark:bg-gray-600'
+              }`}
+            />
+          ))}
+        </div>
+      </div>
+    </AnimationWrapper>
+  );
+}
+
+// 8. Accounts Animation
 function AccountsAnimation({
   height,
   anim,

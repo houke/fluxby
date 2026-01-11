@@ -1519,6 +1519,13 @@ export const en: LandingTranslationKeys = {
         spent: 'Spent',
         remaining: 'Remaining',
       },
+      subscriptions: {
+        title: 'Subscriptions',
+        monthly: 'Monthly',
+        netflix: 'Netflix',
+        spotify: 'Spotify',
+        gym: 'Gym membership',
+      },
       accounts: {
         checking: 'Checking account',
         savings: 'Savings account',

@@ -477,7 +477,8 @@ export default function Subscriptions() {
                       size='sm'
                       className={cn(
                         'rounded-l-none',
-                        view === 'calendar' && 'bg-purple-600 text-white hover:bg-purple-700'
+                        view === 'calendar' &&
+                          'bg-purple-600 text-white hover:bg-purple-700'
                       )}
                       onClick={() => setView('calendar')}
                     >

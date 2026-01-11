@@ -23,7 +23,7 @@ export default function HelpSubscriptions() {
           'Fluxby detecteert automatisch terugkerende betalingen in je transacties, zoals streaming diensten, sportschool abonnementen en nutsvoorzieningen. Je krijgt een overzicht van al je maandelijkse vaste lasten en wordt gewaarschuwd wanneer prijzen veranderen.'}
       </p>
 
-      <HelpAnimation type='budget' />
+      <HelpAnimation type='subscriptions' />
 
       <h2>
         {t.helpCenter?.subscriptions?.detectionTitle ||

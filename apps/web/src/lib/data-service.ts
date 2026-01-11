@@ -4207,9 +4207,7 @@ export function createDataService(db: Database) {
             .map((d) => new Date(d))
             .sort((a, b) => a.getTime() - b.getTime());
 
-          const amounts = group.amounts
-            .split(',')
-            .map((a) => Math.abs(parseFloat(a)));
+          const amounts = group.amounts.split(',').map((a) => parseFloat(a));
 
           if (dates.length < MIN_TRANSACTIONS_FOR_PATTERN) continue;
 
@@ -4262,10 +4260,12 @@ export function createDataService(db: Database) {
           const lastAmount = amounts[amounts.length - 1];
           const lastDate = dates[dates.length - 1].toISOString().split('T')[0];
 
-          // Check if amount is variable (>10% variance)
+          // Check if amount is variable (>10% variance) - use absolute values for comparison
+          const absAvgAmount = Math.abs(avgAmount);
           const isVariable = amounts.some(
             (a) =>
-              Math.abs(a - avgAmount) / avgAmount > AMOUNT_VARIANCE_THRESHOLD
+              Math.abs(Math.abs(a) - absAvgAmount) / absAvgAmount >
+              AMOUNT_VARIANCE_THRESHOLD
           );
 
           // Calculate next expected date
