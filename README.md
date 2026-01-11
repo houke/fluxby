@@ -7,6 +7,7 @@ A modern, local-first application for visualizing and analyzing your bank data. 
 ## ✨ Features
 
 ### 💼 Financial Management
+
 - **📊 Unified Dashboard** - Income, expenses, and rolling balance at a glance.
 - **📈 Advanced Analytics** - Interactive trend charts, category breakdowns, and period-over-period comparisons.
 - **🔮 Balance Forecasting** - Predictive analytics to estimate end-of-month balances based on historical patterns.
@@ -18,6 +19,7 @@ A modern, local-first application for visualizing and analyzing your bank data. 
 - **📇 Intelligent Address Book** - Manage contacts, detect shared IBANs, and standardize merchant names.
 
 ### 🛠️ Platform & Security
+
 - **🔒 100% Local-First** - Data is encrypted and stored on-device (OPFS/SQLite); no personal data ever touches a server.
 - **🔐 Multi-Profile Support** - Seamlessly switch between Personal, Business, Shared, and Investing profiles.
 - **⚡ Spotlight Search** - Global command palette (`Cmd+K`) for rapid navigation and actions.

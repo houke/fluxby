@@ -233,6 +233,7 @@ body {
 }
 
 /* Disable bouncy scroll on macOS (elastic scrolling) */
-html, body {
+html,
+body {
   overscroll-behavior: none;
 }

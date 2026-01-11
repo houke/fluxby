@@ -33,17 +33,17 @@ const UpdatesContent = () => {
   const updatesPage = t.legal?.updatesPage;
 
   const releases = [
-        {
+    {
       version: '1.4.1',
       date: updatesPage?.v141Date || '11 januari 2026',
       title: updatesPage?.v141Title || 'Release 1.4.1',
-      description:
-        updatesPage?.v141Description ||
-        '1 bugfix.',
+      description: updatesPage?.v141Description || '1 bugfix.',
       features: [
         {
           icon: FileText,
-          title: updatesPage?.v141F1Title || 'Resolve build failure due to missing imports',
+          title:
+            updatesPage?.v141F1Title ||
+            'Resolve build failure due to missing imports',
           description: updatesPage?.v141F1Desc || 'Bugs gedood, app verbeterd.',
         },
       ],
