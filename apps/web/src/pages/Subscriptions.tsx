@@ -456,9 +456,12 @@ export default function Subscriptions() {
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
-                      variant={view === 'list' ? 'secondary' : 'ghost'}
+                      variant={'ghost'}
                       size='sm'
-                      className='rounded-r-none'
+                      className={cn(
+                        'rounded-r-none',
+                        view === 'list' && 'bg-purple-600 text-white hover:bg-purple-700'
+                      )}
                       onClick={() => setView('list')}
                     >
                       <List className='h-4 w-4' />
