@@ -21,15 +21,7 @@ const subscriptionData = [
     nextDate: '3 jan',
     isConfirmed: true,
   },
-  {
-    id: 3,
-    name: 'iCloud',
-    icon: '☁️',
-    amount: 2.99,
-    frequency: 'monthly',
-    nextDate: '22 jan',
-    isConfirmed: true,
-  },
+
   {
     id: 4,
     name: 'Gym',
@@ -87,7 +79,10 @@ export default function SubscriptionsAnimation({
           phaseRef.current = phase;
 
           if (phase === 2) {
-            setHighlightedIndex(4); // Disney+ with price change
+            // Highlight the Disney+ entry (lookup by name so removing items won't break the index)
+            setHighlightedIndex(
+              subscriptionData.findIndex((s) => s.name === 'Disney+')
+            );
           } else if (phase === 4) {
             setShowPriceAlert(true);
           } else if (phase === 6) {
@@ -127,7 +122,7 @@ export default function SubscriptionsAnimation({
 
   // Calculate total monthly spend
   const totalMonthly = subscriptionData
-    .filter((s) => s.isConfirmed || confirming)
+    .filter((s, index) => s.isConfirmed || (highlightedIndex === index && confirming))
     .reduce((sum, s) => sum + s.amount, 0);
 
   return (
@@ -147,8 +142,9 @@ export default function SubscriptionsAnimation({
             <div className='text-center'>
               <div className='text-lg font-bold text-purple-600 dark:text-purple-400'>
                 {
-                  subscriptionData.filter((s) => s.isConfirmed || confirming)
-                    .length
+                  subscriptionData.filter((s, index) =>
+                    s.isConfirmed || (highlightedIndex === index && confirming)
+                  ).length
                 }
               </div>
               <div className='text-xs text-gray-500 dark:text-white/60'>
@@ -158,8 +154,9 @@ export default function SubscriptionsAnimation({
             <div className='text-center'>
               <div className='text-lg font-bold text-amber-500'>
                 {
-                  subscriptionData.filter((s) => !s.isConfirmed && !confirming)
-                    .length
+                  subscriptionData.filter((s, index) =>
+                    !s.isConfirmed && !(highlightedIndex === index && confirming)
+                  ).length
                 }
               </div>
               <div className='text-xs text-gray-500 dark:text-white/60'>
