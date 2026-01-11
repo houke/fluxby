@@ -1,5 +1,96 @@
 # Changelog
 
+## v1.4.0
+
+**Release Date:** 2026-01-11
+
+### Features
+
+- **web:** disable bouncy scroll on macOS Tauri app
+- **tauri,web:** add menu items and improve P2P sync reliability
+- **web:** highlight header search and theme toggle in onboarding
+- **web:** add subscription price change alerts and improve UX
+- **web:** show empty state when filters have matches outside selected period
+- **web:** polish category and addressbook actions + translations
+- **web:** refine Address Book and Categories action icons
+- **web:** add mobile-optimized navigation and transaction cards
+- **web:** extend update checker to web users with service worker updates
+- **tauri:** add in-app update mechanism via GitHub releases
+- **database:** improve migration system and create comprehensive skills
+- **shared:** add recurring transaction seeding and demo data
+- **web:** add expandable transaction view to address book contacts
+- **database:** add migration to seed demo recurring patterns
+- **database:** add demo data seeding for recurring patterns
+- **web:** improve subscriptions UX and dashboard date range support
+- **subscriptions:** improve subscription management UX
+- **web:** add shortcuts white on hover and new quick actions
+- **subscriptions:** add dashboard and analytics recurring cards
+- **i18n:** make spotlight search keywords translatable
+- **web:** add subscriptions to search modal and fix hover sticking
+- **database:** add stale code detection for cached JS bundles
+- **web:** auto-execute migrations with progress UI instead of manual refresh
+- **web,database:** add automatic migration prompt for version updates
+- **web:** add theme toggle button to header and fix shortcut
+- **web:** fix spotlight hover colors and add theme toggle shortcut
+- **web:** add subscriptions & recurring pattern detection
+- **web:** improve Spotlight search UX
+- **web:** add global search (Spotlight) with Cmd+K shortcut
+
+### Bug Fixes
+
+- **web:** add top divider below native title bar in Tauri builds
+- **web:** fix subscriptions not showing due to amount sign filtering
+- **web:** improve empty states and fix subscriptions filter bug
+- **web:** make list/calendar view toggle purple when active
+- **landing:** remove iCloud from subscriptions animation and correct totals
+- **web,landing:** fix subscriptions page issues and docs sidebar
+- **web:** make selected subscriptions view toggle purple
+- **web:** fix avgAmount storage and add empty states for subscriptions
+- **web:** handle null avgAmount in subscription filters
+- **web:** dashboard query, analytics recurring, and categories layout
+- **web:** address multiple UI and sync issues
+- **web:** filter recurring price history by date range and compute change from recent history
+- **web:** remove negative sign from 'Expected this period' in Subscriptions widget
+- **web:** chevron only changes on its button hover
+- **web:** chevron icon turns white only when button hovered
+- **web:** make addressbook chevron hover only on icon
+- **web:** correct transaction type filter icons (income up, expense down)
+- **web:** show correct arrows for income/expense in Address Book
+- **web:** reduce bottom margin for Connection settings label in Device sync card
+- **api:** make demo recurring patterns use latest transaction when available
+- **web:** use COALESCE for merchant matching in pattern transactions
+- **database:** add column verification to migration system
+- **web:** use Plus icon for add category and add contact actions
+- **ui:** restore proper hover effects in search modal
+- **web:** fix proposed contacts not being removed after adding to address book
+- **web:** resolve migration prompt causing app hang on load
+- **api,tests:** resolve variable naming conflict and update onboarding tests
+- **db:** add migration for recurring_patterns table
+- **web:** use text-gray-500 instead of text-muted-foreground for Spotlight subtitles
+- **web:** update search tooltip to match privacy tooltip format
+- **web:** force light purple hover using !important
+- **web:** use lighter purple for Spotlight subtitle hover
+
+### Performance Improvements
+
+- **web:** move CSV parsing to Web Worker for large file imports
+
+### Chores
+
+- **repo:** stage and commit all current files
+- empty commit to verify GPG key
+
+### Styles
+
+- **web:** swap clear/"view all data" button order in transactions empty state
+- **web:** reduce size of budget action buttons to small squircles
+- fix lint warnings for unused variables and imports
+
+### Tests
+
+- **api:** ensure seeded recurring patterns use latest transaction amount
+- add migration 006 to test migration prompt system
+
 ## v1.3.1
 
 **Release Date:** 2026-01-09
