@@ -463,18 +463,18 @@ export default function Categories() {
       );
     }
     if (amount > 0) {
-      // Positive amount = expense -> show down red
+      // Positive amount -> income -> show up green
       return (
-        <span className='flex items-center text-rose-600'>
-          <ArrowDownRight className='mr-1 h-3 w-3' />
+        <span className='flex items-center text-emerald-600'>
+          <ArrowUpRight className='mr-1 h-3 w-3' />
           <Currency amount={amount} />
         </span>
       );
     }
-    // Negative amount = income -> show up green
+    // Negative amount -> expense -> show down red
     return (
-      <span className='flex items-center text-emerald-600'>
-        <ArrowUpRight className='mr-1 h-3 w-3' />
+      <span className='flex items-center text-rose-600'>
+        <ArrowDownRight className='mr-1 h-3 w-3' />
         <Currency amount={Math.abs(amount)} />
       </span>
     );

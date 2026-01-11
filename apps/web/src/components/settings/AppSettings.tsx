@@ -1,6 +1,17 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Check, Pencil, AlertTriangle, Database, Code, Download, RefreshCw, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
+import {
+  Check,
+  Pencil,
+  AlertTriangle,
+  Database,
+  Code,
+  Download,
+  RefreshCw,
+  CheckCircle,
+  AlertCircle,
+  Loader2,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -223,7 +234,8 @@ export function AppSettings() {
   const updateToast = useToast();
   const [updateStatus, setUpdateStatus] = useState<UpdateStatus>('idle');
   const [updateInfo, setUpdateInfo] = useState<UpdateInfo | null>(null);
-  const [downloadProgress, setDownloadProgress] = useState<DownloadProgress | null>(null);
+  const [downloadProgress, setDownloadProgress] =
+    useState<DownloadProgress | null>(null);
   const [updateError, setUpdateError] = useState<string | null>(null);
   const [showReleaseNotes, setShowReleaseNotes] = useState(false);
   const [webUpdateAvailable, setWebUpdateAvailable] = useState(false);
@@ -317,7 +329,9 @@ export function AppSettings() {
         console.error('Update check failed:', err);
         setUpdateError(err instanceof Error ? err.message : String(err));
         setUpdateStatus('error');
-        updateToast.error(t.updater?.checkFailed || 'Failed to check for updates');
+        updateToast.error(
+          t.updater?.checkFailed || 'Failed to check for updates'
+        );
       }
     } else if ('serviceWorker' in navigator) {
       // Web: Check for service worker updates
@@ -432,7 +446,9 @@ export function AppSettings() {
         console.error('Update download/install failed:', err);
         setUpdateError(err instanceof Error ? err.message : String(err));
         setUpdateStatus('error');
-        updateToast.error(t.updater?.installFailed || 'Failed to install update');
+        updateToast.error(
+          t.updater?.installFailed || 'Failed to install update'
+        );
       }
     } else if (webUpdateAvailable && swRegistration?.waiting) {
       // Web: Tell SW to skip waiting and activate
@@ -494,13 +510,14 @@ export function AppSettings() {
             <div className='space-y-2'>
               {/* Versions & Updates */}
               <div className='rounded-lg border p-4'>
-                <div className='flex items-center justify-between mb-3'>
+                <div className='mb-3 flex items-center justify-between'>
                   <div>
                     <p className='text-sm font-medium'>
                       {t.settings?.versions || 'Versions & Updates'}
                     </p>
                     <p className='text-xs text-muted-foreground'>
-                      {t.settings?.versionsDescription || 'App versions and software updates'}
+                      {t.settings?.versionsDescription ||
+                        'App versions and software updates'}
                     </p>
                   </div>
                   <div className='flex items-center gap-2'>
@@ -568,7 +585,8 @@ export function AppSettings() {
                       <>
                         <RefreshCw className='h-4 w-4 text-muted-foreground' />
                         <span className='text-sm text-muted-foreground'>
-                          {t.updater?.clickToCheck || 'Click to check for updates'}
+                          {t.updater?.clickToCheck ||
+                            'Click to check for updates'}
                         </span>
                       </>
                     )}
@@ -599,7 +617,8 @@ export function AppSettings() {
                               onClick={() => setShowReleaseNotes(true)}
                               className='ml-2 text-xs text-purple-600 hover:underline'
                             >
-                              {t.updater?.viewReleaseNotes || 'View release notes'}
+                              {t.updater?.viewReleaseNotes ||
+                                'View release notes'}
                             </button>
                           )}
                         </div>
@@ -643,7 +662,9 @@ export function AppSettings() {
                       <>
                         <AlertCircle className='h-4 w-4 text-red-600' />
                         <span className='text-sm text-red-700 dark:text-red-400'>
-                          {updateError || t.updater?.errorOccurred || 'An error occurred'}
+                          {updateError ||
+                            t.updater?.errorOccurred ||
+                            'An error occurred'}
                         </span>
                       </>
                     )}
@@ -654,7 +675,11 @@ export function AppSettings() {
                     {(updateStatus === 'idle' ||
                       updateStatus === 'up-to-date' ||
                       updateStatus === 'error') && (
-                      <Button variant='outline' size='sm' onClick={checkForUpdates}>
+                      <Button
+                        variant='outline'
+                        size='sm'
+                        onClick={checkForUpdates}
+                      >
                         <RefreshCw className='mr-2 h-4 w-4' />
                         {t.updater?.checkNow || 'Check now'}
                       </Button>
@@ -966,7 +991,6 @@ export function AppSettings() {
         </Card>
 
         {/* Update Checker - Only shown in Tauri */}
-
       </div>
 
       {/* Release Notes Dialog */}

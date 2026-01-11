@@ -370,6 +370,7 @@ export interface TranslationKeys {
     noIncomeData: string;
     transactions: string;
     viewTransactions: string;
+    toggleSubcategories: string;
     recurringPayments: string;
     priceHistory: string;
     noPriceHistory: string;
@@ -1672,6 +1673,7 @@ export const nl: TranslationKeys = {
     noIncomeData: 'Geen inkomsten gevonden',
     transactions: 'Transacties',
     viewTransactions: 'Bekijk transacties',
+    toggleSubcategories: 'Subcategorieën tonen/verbergen',
     recurringPayments: 'Terugkerende betalingen',
     priceHistory: 'Prijsgeschiedenis',
     noPriceHistory: 'Geen prijsgeschiedenis beschikbaar',

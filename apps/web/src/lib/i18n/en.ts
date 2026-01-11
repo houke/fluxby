@@ -422,6 +422,7 @@ export const en: TranslationKeys = {
     noIncomeData: 'No income found',
     transactions: 'Transactions',
     viewTransactions: 'View transactions',
+    toggleSubcategories: 'Toggle subcategories',
     recurringPayments: 'Recurring payments',
     priceHistory: 'Price history',
     noPriceHistory: 'No price history available',

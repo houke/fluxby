@@ -382,6 +382,43 @@ export default function Transactions() {
     staleTime: 30 * 1000, // 30 seconds - prevent constant refetching on focus
   });
 
+  // Also fetch matching transactions across ALL data (no date range) so we can
+  // show a specialized empty state when the current period has no matches but
+  // the full dataset does.
+  const { data: transactionsAllData } = useQuery<Transaction[]>({
+    queryKey: [
+      'transactions-all',
+      activeProfileId,
+      {
+        search: debouncedSearch,
+        type: typeParam,
+        categoryIds: categoryIdsParam,
+        opposingAccountIbans: ibansParam,
+        opposingAccountName: nameParam,
+        addressBookId: addressBookIdParam,
+        paymentMethods: paymentMethodsParam,
+        paymentProviders: paymentProvidersParam,
+      },
+    ],
+    queryFn: () =>
+      api.getTransactions({
+        search: debouncedSearch,
+        type: typeParam || '',
+        ...(categoryIdsParam
+          ? { categoryIds: categoryIdsParam.join(',') }
+          : {}),
+        opposingAccountIbans: ibansParam?.join(',') || '',
+        opposingAccountName: nameParam || '',
+        addressBookId: addressBookIdParam?.toString() || '',
+        paymentMethods: paymentMethodsParam?.join(',') || '',
+        paymentProviders: paymentProvidersParam?.join(',') || '',
+      }) as Promise<Transaction[]>,
+    // Only run when filters are active and the current period returned zero
+    // transactions to avoid extra work during normal browsing.
+    enabled: hasActiveFilters && (transactions?.length ?? 0) === 0,
+    staleTime: 30 * 1000,
+  });
+
   // React 19: Use deferred value with initial empty array for smoother first render
   // This allows the search input to remain responsive while the list updates
   const deferredTransactions = useDeferredValue(transactions, []);
@@ -2876,38 +2913,97 @@ export default function Transactions() {
                   )}
                 </>
               ) : hasActiveFilters ? (
-                <div className='py-12 text-center'>
-                  <Search className='mx-auto mb-4 h-12 w-12 text-muted-foreground/50' />
-                  <h3 className='text-lg font-medium'>
-                    {t.transactions.noTransactionsFound}
-                  </h3>
-                  <p className='mx-auto mt-2 max-w-xs text-muted-foreground'>
-                    {t.transactions.adjustFilters}
-                  </p>
-                  <Button
-                    variant='ghost'
-                    className='mt-4 text-purple-600 hover:bg-purple-600 hover:text-white dark:text-purple-400 dark:hover:bg-purple-600 dark:hover:text-white'
-                    onClick={() => {
-                      // Reset all filters
-                      setSearch('');
-                      setTransactionType('all');
-                      setDebouncedType('all');
-                      setContextTransactionType('all');
-                      setSelectedCategoryIds([]);
-                      setCategories([]);
-                      setSelectedIbans([]);
-                      setSelectedAccountName(null);
-                      setSelectedAddressBookId(null);
-                      setOpposingAccountIbans([]);
-                      setOpposingAccountName(null);
-                      setAddressBookId(null);
-                      setSelectedPaymentMethods([]);
-                      setSelectedPaymentProcessors([]);
-                    }}
-                  >
-                    {t.addressBook?.clearFilters || 'Filters wissen'}
-                  </Button>
-                </div>
+                // If the filters returned no transactions in the current date range
+                // but *do* return transactions across the full dataset, show a
+                // specialized empty-state with a CTA to view all data.
+                (transactionsAllData?.length || 0) > 0 ? (
+                  <div className='py-12 text-center'>
+                    <Search className='mx-auto mb-4 h-12 w-12 text-muted-foreground/50' />
+                    <h3 className='text-lg font-medium'>
+                      {t.transactions.noTransactionsInRangeTitle ||
+                        'No transactions found in this period'}
+                    </h3>
+                    <p className='mx-auto mt-2 max-w-xs text-muted-foreground'>
+                      {t.transactions.noTransactionsInRangeDescription ||
+                        'No transactions found in the selected period, but there are matching transactions in your full data.'}
+                    </p>
+                    <div className='mt-4 flex items-center justify-center gap-2'>
+                      <Button
+                        onClick={() => {
+                          if (minMaxDates) {
+                            setDateRange(
+                              new Date(minMaxDates.minDate),
+                              new Date(minMaxDates.maxDate)
+                            );
+                          } else {
+                            const end = new Date();
+                            const start = new Date();
+                            start.setFullYear(start.getFullYear() - 10);
+                            setDateRange(start, end);
+                          }
+                        }}
+                      >
+                        {t.transactions.viewAllData || 'View all data'}
+                      </Button>
+                      <Button
+                        variant='ghost'
+                        className='text-purple-600 hover:bg-purple-600 hover:text-white dark:text-purple-400 dark:hover:bg-purple-600 dark:hover:text-white'
+                        onClick={() => {
+                          // Reset all filters
+                          setSearch('');
+                          setTransactionType('all');
+                          setDebouncedType('all');
+                          setContextTransactionType('all');
+                          setSelectedCategoryIds([]);
+                          setCategories([]);
+                          setSelectedIbans([]);
+                          setSelectedAccountName(null);
+                          setSelectedAddressBookId(null);
+                          setOpposingAccountIbans([]);
+                          setOpposingAccountName(null);
+                          setAddressBookId(null);
+                          setSelectedPaymentMethods([]);
+                          setSelectedPaymentProcessors([]);
+                        }}
+                      >
+                        {t.addressBook?.clearFilters || 'Filters wissen'}
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className='py-12 text-center'>
+                    <Search className='mx-auto mb-4 h-12 w-12 text-muted-foreground/50' />
+                    <h3 className='text-lg font-medium'>
+                      {t.transactions.noTransactionsFound}
+                    </h3>
+                    <p className='mx-auto mt-2 max-w-xs text-muted-foreground'>
+                      {t.transactions.adjustFilters}
+                    </p>
+                    <Button
+                      variant='ghost'
+                      className='mt-4 text-purple-600 hover:bg-purple-600 hover:text-white dark:text-purple-400 dark:hover:bg-purple-600 dark:hover:text-white'
+                      onClick={() => {
+                        // Reset all filters
+                        setSearch('');
+                        setTransactionType('all');
+                        setDebouncedType('all');
+                        setContextTransactionType('all');
+                        setSelectedCategoryIds([]);
+                        setCategories([]);
+                        setSelectedIbans([]);
+                        setSelectedAccountName(null);
+                        setSelectedAddressBookId(null);
+                        setOpposingAccountIbans([]);
+                        setOpposingAccountName(null);
+                        setAddressBookId(null);
+                        setSelectedPaymentMethods([]);
+                        setSelectedPaymentProcessors([]);
+                      }}
+                    >
+                      {t.addressBook?.clearFilters || 'Filters wissen'}
+                    </Button>
+                  </div>
+                )
               ) : (
                 // Empty state when NO filters are active - show "Import" CTA
                 <div className='flex flex-col items-center justify-center py-12 text-center'>
