@@ -9,10 +9,12 @@ A modern, local-first application for visualizing and analyzing your bank data. 
 ### 💼 Financial Management
 - **📊 Unified Dashboard** - Income, expenses, and rolling balance at a glance.
 - **📈 Advanced Analytics** - Interactive trend charts, category breakdowns, and period-over-period comparisons.
+- **🔮 Balance Forecasting** - Predictive analytics to estimate end-of-month balances based on historical patterns.
 - **📁 Smart CSV Import** - Native support for ING, manual mapping for other banks, and Web Worker-powered deduplication.
 - **🏷️ Auto-Categorization** - Rule-based engine and intelligent merchant suggestions.
 - **💸 Budget Tracking** - Progressive category-level budgets with real-time feedback.
 - **📅 Subscription Manager** - Detect recurring patterns, track upcoming payments, and alert on price changes.
+- **🐷 Savings Insights** - Dedicated tracking for savings contributions and realized savings rates.
 - **📇 Intelligent Address Book** - Manage contacts, detect shared IBANs, and standardize merchant names.
 
 ### 🛠️ Platform & Security

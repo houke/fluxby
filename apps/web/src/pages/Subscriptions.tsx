@@ -473,9 +473,12 @@ export default function Subscriptions() {
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
-                      variant={view === 'calendar' ? 'secondary' : 'ghost'}
+                      variant={'ghost'}
                       size='sm'
-                      className='rounded-l-none'
+                      className={cn(
+                        'rounded-l-none',
+                        view === 'calendar' && 'bg-purple-600 text-white hover:bg-purple-700'
+                      )}
                       onClick={() => setView('calendar')}
                     >
                       <Calendar className='h-4 w-4' />
@@ -718,22 +721,30 @@ export default function Subscriptions() {
           ))}
         </div>
       ) : !patterns || patterns.length === 0 ? (
-        <EmptyState
-          icon={Calendar}
-          title={
-            t.subscriptions?.noSubscriptions || 'No subscriptions detected yet'
-          }
-          description={
-            t.subscriptions?.noSubscriptionsDescription ||
-            'Import transactions to automatically detect recurring payments'
-          }
-          action={
-            <Button onClick={() => detectMutation.mutate()} className='mt-4'>
-              <RefreshCw className='mr-2 h-4 w-4' />
-              {t.subscriptions?.detectPatterns || 'Detect patterns'}
-            </Button>
-          }
-        />
+        <Card>
+          <CardContent className='pt-6'>
+            <EmptyState
+              icon={Calendar}
+              title={
+                t.subscriptions?.noSubscriptions ||
+                'No subscriptions detected yet'
+              }
+              description={
+                t.subscriptions?.noSubscriptionsDescription ||
+                'Import transactions to automatically detect recurring payments'
+              }
+              action={
+                <Button
+                  onClick={() => detectMutation.mutate()}
+                  className='mt-4'
+                >
+                  <RefreshCw className='mr-2 h-4 w-4' />
+                  {t.subscriptions?.detectPatterns || 'Detect patterns'}
+                </Button>
+              }
+            />
+          </CardContent>
+        </Card>
       ) : view === 'list' ? (
         <div className='space-y-6'>
           {/* Suggested subscriptions - single card for all pending patterns */}
@@ -775,19 +786,7 @@ export default function Subscriptions() {
                 </div>
               </CardContent>
             </Card>
-          ) : (
-            <EmptyState
-              icon={Sparkles}
-              title={
-                t.subscriptions?.noPendingSubscriptions ||
-                'No pending subscriptions'
-              }
-              description={
-                t.subscriptions?.noPendingDescription ||
-                'When we detect new recurring patterns, they will appear here for review'
-              }
-            />
-          )}
+          ) : null}
 
           {/* Confirmed subscriptions */}
           {confirmedPatterns.length > 0 ? (
@@ -823,19 +822,7 @@ export default function Subscriptions() {
                 </div>
               </CardContent>
             </Card>
-          ) : (
-            <EmptyState
-              icon={CheckCircle2}
-              title={
-                t.subscriptions?.noConfirmedSubscriptions ||
-                'No active subscriptions'
-              }
-              description={
-                t.subscriptions?.noConfirmedDescription ||
-                'Accept suggested subscriptions above to start tracking them here'
-              }
-            />
-          )}
+          ) : null}
         </div>
       ) : (
         /* Calendar View */
