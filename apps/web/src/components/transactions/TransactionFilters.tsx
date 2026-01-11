@@ -211,7 +211,7 @@ export const TransactionFilters = memo(function TransactionFilters({
                       transactionType === 'income' && 'bg-primary/10'
                     )}
                   >
-                    <ArrowDownRight className='h-4 w-4 text-emerald-500' />
+                    <ArrowUpRight className='h-4 w-4 text-emerald-500' />
                     <span className='flex-1'>{t.transactions.income}</span>
                     {transactionType === 'income' && (
                       <Check className='h-4 w-4 text-primary' />
@@ -227,7 +227,7 @@ export const TransactionFilters = memo(function TransactionFilters({
                       transactionType === 'expense' && 'bg-primary/10'
                     )}
                   >
-                    <ArrowUpRight className='h-4 w-4 text-rose-500' />
+                    <ArrowDownRight className='h-4 w-4 text-rose-500' />
                     <span className='flex-1'>{t.transactions.expense}</span>
                     {transactionType === 'expense' && (
                       <Check className='h-4 w-4 text-primary' />
