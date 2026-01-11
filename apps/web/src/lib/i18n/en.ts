@@ -323,6 +323,10 @@ export const en: TranslationKeys = {
     laterTransaction: 'later transaction',
     laterTransactions: 'later transactions',
     noTransactionsFound: 'No transactions found',
+    noTransactionsInRangeTitle: 'No transactions found in this period',
+    noTransactionsInRangeDescription:
+      'No transactions found in the selected period, but there are matching transactions in your full data.',
+    viewAllData: 'View all data',
     adjustFilters: 'Adjust your filters or search query',
     loadMore: 'Load more',
     updatedCount: '{count} transactions updated',
@@ -564,6 +568,7 @@ export const en: TranslationKeys = {
     transactions: 'Transactions',
     totalSpent: 'Total spent',
     viewTransactions: 'View transactions',
+    toggleSubcategories: 'Toggle subcategories',
     toastAdded: 'Category added',
     toastUpdated: 'Category updated',
     toastDeleted: 'Category deleted',

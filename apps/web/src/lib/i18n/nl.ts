@@ -281,6 +281,9 @@ export interface TranslationKeys {
     laterTransaction: string;
     laterTransactions: string;
     noTransactionsFound: string;
+    noTransactionsInRangeTitle: string;
+    noTransactionsInRangeDescription: string;
+    viewAllData: string;
     adjustFilters: string;
     loadMore: string;
     updatedCount: string;
@@ -504,6 +507,7 @@ export interface TranslationKeys {
     transactions: string;
     totalSpent: string;
     viewTransactions: string;
+    toggleSubcategories: string;
     toastAdded: string;
     toastUpdated: string;
     toastDeleted: string;
@@ -1568,6 +1572,10 @@ export const nl: TranslationKeys = {
     laterTransaction: 'latere transactie',
     laterTransactions: 'latere transacties',
     noTransactionsFound: 'Geen transacties gevonden',
+    noTransactionsInRangeTitle: 'Geen transacties in deze periode',
+    noTransactionsInRangeDescription:
+      'Er zijn geen transacties gevonden in de geselecteerde periode, maar er zijn wel resultaten in alle gegevens.',
+    viewAllData: 'Bekijk alle gegevens',
     adjustFilters: 'Pas je filters of zoekopdracht aan',
     loadMore: 'Meer laden',
     updatedCount: '{count} transacties bijgewerkt',
@@ -1811,6 +1819,7 @@ export const nl: TranslationKeys = {
     transactions: 'Transacties',
     totalSpent: 'Totaal uitgegeven',
     viewTransactions: 'Bekijk transacties',
+    toggleSubcategories: 'Subcategorieën tonen/verbergen',
     toastAdded: 'Categorie toegevoegd',
     toastUpdated: 'Categorie bijgewerkt',
     toastDeleted: 'Categorie verwijderd',

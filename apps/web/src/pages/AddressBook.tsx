@@ -3076,12 +3076,12 @@ export default function AddressBook() {
                                           <Button
                                             size='icon'
                                             variant='ghost'
-                                            className='h-7 w-7 rounded-md transition-colors hover:bg-purple-600 hover:text-white'
+                                            className='h-8 w-8 rounded-md transition-colors hover:bg-purple-600 hover:text-white'
                                             onClick={() =>
                                               startEditingContact(contact)
                                             }
                                           >
-                                            <Edit2 className='h-3.5 w-3.5' />
+                                            <Edit2 className='h-4 w-4' />
                                           </Button>
                                         </TooltipTrigger>
                                         <TooltipContent>
@@ -3095,7 +3095,7 @@ export default function AddressBook() {
                                           <Button
                                             size='icon'
                                             variant='ghost'
-                                            className='h-7 w-7 rounded-md text-destructive transition-colors hover:bg-red-600 hover:text-white dark:hover:bg-red-700'
+                                            className='h-8 w-8 rounded-md text-destructive transition-colors hover:bg-red-600 hover:text-white dark:hover:bg-red-700'
                                             onClick={async () => {
                                               const isConfirmed = await confirm(
                                                 {
@@ -3116,7 +3116,7 @@ export default function AddressBook() {
                                               }
                                             }}
                                           >
-                                            <Trash2 className='h-3.5 w-3.5' />
+                                            <Trash2 className='h-4 w-4' />
                                           </Button>
                                         </TooltipTrigger>
                                         <TooltipContent>
@@ -3130,7 +3130,7 @@ export default function AddressBook() {
                                           <Button
                                             size='icon'
                                             variant='ghost'
-                                            className='h-7 w-7 rounded-md transition-colors'
+                                            className='group h-8 w-8 rounded-md transition-colors hover:bg-purple-600'
                                             onClick={(e) => {
                                               e.stopPropagation();
                                               handleToggleExpand(contact.id);
@@ -3138,9 +3138,9 @@ export default function AddressBook() {
                                           >
                                             {expandedContactId ===
                                             contact.id ? (
-                                              <ChevronUp className='h-3.5 w-3.5' />
+                                              <ChevronUp className='h-4 w-4 text-muted-foreground group-hover:text-white' />
                                             ) : (
-                                              <ChevronDown className='h-3.5 w-3.5' />
+                                              <ChevronDown className='h-4 w-4 text-muted-foreground group-hover:text-white' />
                                             )}
                                           </Button>
                                         </TooltipTrigger>

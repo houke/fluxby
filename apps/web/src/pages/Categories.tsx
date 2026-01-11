@@ -13,6 +13,8 @@ import {
   Search,
   ChevronUp,
   ChevronDown,
+  ArrowDownRight,
+  ArrowUpRight,
   FolderOpen,
   ExternalLink,
 } from 'lucide-react';
@@ -451,6 +453,33 @@ export default function Categories() {
     return totals;
   }, [parentCategories, subcategoriesByParent]);
 
+  // Helper to render amounts with colored arrows
+  const renderAmountWithArrow = (amount: number) => {
+    if (!amount) {
+      return (
+        <span className='text-muted-foreground'>
+          <Currency amount={0} />
+        </span>
+      );
+    }
+    if (amount > 0) {
+      // Positive amount = expense -> show down red
+      return (
+        <span className='flex items-center text-rose-600'>
+          <ArrowDownRight className='mr-1 h-3 w-3' />
+          <Currency amount={amount} />
+        </span>
+      );
+    }
+    // Negative amount = income -> show up green
+    return (
+      <span className='flex items-center text-emerald-600'>
+        <ArrowUpRight className='mr-1 h-3 w-3' />
+        <Currency amount={Math.abs(amount)} />
+      </span>
+    );
+  };
+
   // Filter and sort parent categories
   const filteredSortedParents = useMemo(() => {
     let filtered = [...parentCategories];
@@ -859,7 +888,7 @@ export default function Categories() {
                 </Tooltip>
               </TooltipProvider>
               <span className='ml-auto text-xs text-muted-foreground'>
-                <Currency amount={sub.totalExpenses || 0} />
+                {renderAmountWithArrow(sub.totalExpenses || 0)}
                 {' · '}
                 {sub.transactionCount || 0} {t.categories.transactions}
               </span>
@@ -1115,9 +1144,7 @@ export default function Categories() {
                   </p>
                 )}
                 <div className='mt-1 flex items-center gap-2 text-xs text-muted-foreground'>
-                  <span>
-                    <Currency amount={totals.amount} />
-                  </span>
+                  <span>{renderAmountWithArrow(totals.amount)}</span>
                   <span aria-hidden='true'>•</span>
                   <span>
                     {totals.count} {t.categories.transactions}
@@ -1132,13 +1159,13 @@ export default function Categories() {
                       <Button
                         variant='ghost'
                         size='icon'
-                        className='rounded-md transition-colors hover:bg-purple-600 hover:text-white'
+                        className='h-7 w-7 rounded-md transition-colors hover:bg-purple-600 hover:text-white'
                         onClick={(e) => {
                           e.stopPropagation();
                           startEditing(category);
                         }}
                       >
-                        <Pencil className='h-4 w-4' />
+                        <Pencil className='h-3.5 w-3.5' />
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>{t.common.edit}</TooltipContent>
@@ -1151,7 +1178,7 @@ export default function Categories() {
                       <Button
                         variant='ghost'
                         size='icon'
-                        className='rounded-md transition-colors hover:bg-red-600 hover:text-white'
+                        className='h-7 w-7 rounded-md transition-colors hover:bg-red-600 hover:text-white'
                         onClick={async (e) => {
                           e.stopPropagation();
                           const isConfirmed = await confirm({
@@ -1165,28 +1192,40 @@ export default function Categories() {
                           }
                         }}
                       >
-                        <Trash2 className='h-4 w-4' />
+                        <Trash2 className='h-3.5 w-3.5' />
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>{t.common.delete}</TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
 
-                <Button
-                  size='icon'
-                  variant='ghost'
-                  className='rounded-md transition-colors'
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toggleExpanded(category.id);
-                  }}
-                >
-                  {isExpanded ? (
-                    <ChevronUp className='h-4 w-4 text-muted-foreground' />
-                  ) : (
-                    <ChevronDown className='h-4 w-4 text-muted-foreground' />
-                  )}
-                </Button>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        size='icon'
+                        variant='ghost'
+                        className='group h-7 w-7 rounded-md transition-colors hover:bg-purple-600'
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleExpanded(category.id);
+                        }}
+                      >
+                        {isExpanded ? (
+                          <ChevronUp className='h-3.5 w-3.5 text-muted-foreground group-hover:text-white' />
+                        ) : (
+                          <ChevronDown className='h-3.5 w-3.5 text-muted-foreground group-hover:text-white' />
+                        )}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {isExpanded
+                        ? t.common?.collapse || 'Collapse'
+                        : t.categories?.toggleSubcategories ||
+                          'Toggle subcategories'}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </div>
             </div>
 
