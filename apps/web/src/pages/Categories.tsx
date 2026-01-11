@@ -1132,7 +1132,7 @@ export default function Categories() {
                       <Button
                         variant='ghost'
                         size='icon'
-                        className='h-8 w-8 hover:bg-purple-600 hover:text-white'
+                        className='rounded-md transition-colors hover:bg-purple-600 hover:text-white'
                         onClick={(e) => {
                           e.stopPropagation();
                           startEditing(category);
@@ -1151,7 +1151,7 @@ export default function Categories() {
                       <Button
                         variant='ghost'
                         size='icon'
-                        className='h-8 w-8 hover:bg-red-600 hover:text-white'
+                        className='rounded-md transition-colors hover:bg-red-600 hover:text-white'
                         onClick={async (e) => {
                           e.stopPropagation();
                           const isConfirmed = await confirm({
@@ -1172,11 +1172,21 @@ export default function Categories() {
                   </Tooltip>
                 </TooltipProvider>
 
-                {isExpanded ? (
-                  <ChevronUp className='h-5 w-5 text-muted-foreground' />
-                ) : (
-                  <ChevronDown className='h-5 w-5 text-muted-foreground' />
-                )}
+                <Button
+                  size='icon'
+                  variant='ghost'
+                  className='rounded-md transition-colors'
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleExpanded(category.id);
+                  }}
+                >
+                  {isExpanded ? (
+                    <ChevronUp className='h-4 w-4 text-muted-foreground' />
+                  ) : (
+                    <ChevronDown className='h-4 w-4 text-muted-foreground' />
+                  )}
+                </Button>
               </div>
             </div>
 
