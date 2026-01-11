@@ -17,6 +17,8 @@ import {
   FolderOpen,
   Info,
   MoreVertical,
+  ArrowUpRight,
+  ArrowDownRight,
 } from 'lucide-react';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { EmptyState } from '@/components/ui/EmptyState';

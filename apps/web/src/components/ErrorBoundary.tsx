@@ -32,9 +32,9 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   private handleGoHome = () => {
-    // Reset error state and navigate to home
+    // Reset error state and navigate to dashboard
     this.setState({ hasError: false, error: undefined });
-    window.location.href = '/';
+    window.location.href = '/app/dashboard';
   };
 
   private handleReload = () => {

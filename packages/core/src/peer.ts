@@ -464,16 +464,26 @@ export class PeerSync {
         return;
       }
 
+      let isResolved = false;
+
       const conn = this.peer.connect(targetPeerId, {
         reliable: true,
       });
 
       const timeout = setTimeout(() => {
-        conn.close();
-        reject(new Error('Connection timeout'));
+        if (!isResolved) {
+          isResolved = true;
+          try {
+            conn.close();
+          } catch {
+            // Ignore close errors
+          }
+          reject(new Error('Connection timeout'));
+        }
       }, 30000);
 
       conn.on('open', () => {
+        if (isResolved) return;
         this.connections.set(conn.peer, conn);
         this.options.onConnectionChange?.(conn.peer, true);
 
@@ -486,16 +496,22 @@ export class PeerSync {
       });
 
       conn.on('data', (data) => {
+        if (isResolved) return;
         const message = data as PairingMessage;
 
         if (message.type === 'pairing-accept') {
+          isResolved = true;
           clearTimeout(timeout);
           this.handlePairingAccept(conn, message);
           const device = this.pairedDevices.get(message.deviceId);
           if (device) {
             resolve(device);
+          } else {
+            // Device should be set by handlePairingAccept, but just in case
+            reject(new Error('Failed to register paired device'));
           }
         } else if (message.type === 'pairing-reject') {
+          isResolved = true;
           clearTimeout(timeout);
           reject(new Error(message.reason));
         } else {
@@ -505,12 +521,23 @@ export class PeerSync {
       });
 
       conn.on('error', (err) => {
+        if (isResolved) return;
+        isResolved = true;
         clearTimeout(timeout);
         // Map common errors to more readable versions
         if ((err as any).type === 'peer-unavailable') {
           reject(new Error('peer-unavailable'));
         } else {
           reject(err);
+        }
+      });
+
+      // Handle connection close before success
+      conn.on('close', () => {
+        if (!isResolved) {
+          isResolved = true;
+          clearTimeout(timeout);
+          reject(new Error('Connection closed unexpectedly'));
         }
       });
     });

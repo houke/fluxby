@@ -2789,6 +2789,7 @@ export function createDataService(db: Database) {
       accounts: Array<{
         iban: string;
         name: string;
+        originalName: string | null;
         description: string | null;
         isInAddressBook: boolean;
         addressBookId: string | null;
@@ -2820,9 +2821,11 @@ export function createDataService(db: Database) {
       // Updated query to check both address_book.iban AND contact_ibans for merged contacts
       // This ensures IBANs that are part of multi-IBAN contacts are properly detected
       // Group by both IBAN AND name to show unique contacts (important for shared IBANs)
+      // For shared IBANs (with original_name), we must also match by original_name
       const rows = await db.queryAsync<{
         iban: string;
         name: string;
+        original_name: string | null;
         description: string | null;
         is_in_addressbook: number;
         addressbook_id: string | null;
@@ -2834,6 +2837,7 @@ export function createDataService(db: Database) {
         SELECT 
           t.opposing_account_iban as iban,
           COALESCE(ab.name, ci_ab.name, t.opposing_account_name) as name,
+          COALESCE(ab.original_name, ci_ab.original_name) as original_name,
           COALESCE(ab.description, ci_ab.description) as description,
           CASE WHEN ab.id IS NOT NULL OR ci_ab.id IS NOT NULL THEN 1 ELSE 0 END as is_in_addressbook,
           COALESCE(ab.id, ci_ab.id) as addressbook_id,
@@ -2842,9 +2846,15 @@ export function createDataService(db: Database) {
           SUM(t.amount) as net_amount
         FROM transactions t
         JOIN accounts a ON t.account_id = a.id
-        LEFT JOIN address_book ab ON ab.iban = t.opposing_account_iban AND ab.profile_id = ? AND ab.is_deleted = 0
+        LEFT JOIN address_book ab ON ab.iban = t.opposing_account_iban 
+          AND ab.profile_id = ? 
+          AND ab.is_deleted = 0
+          AND (ab.original_name IS NULL OR ab.original_name = t.opposing_account_name OR ab.original_name = t.merchant_name)
         LEFT JOIN contact_ibans ci ON ci.iban = t.opposing_account_iban
-        LEFT JOIN address_book ci_ab ON ci_ab.id = ci.contact_id AND ci_ab.profile_id = ? AND ci_ab.is_deleted = 0
+        LEFT JOIN address_book ci_ab ON ci_ab.id = ci.contact_id 
+          AND ci_ab.profile_id = ? 
+          AND ci_ab.is_deleted = 0
+          AND (ci_ab.original_name IS NULL OR ci_ab.original_name = t.opposing_account_name OR ci_ab.original_name = t.merchant_name)
         WHERE a.profile_id = ?
           AND t.type != 'transfer'
           AND t.opposing_account_iban IS NOT NULL
@@ -2875,9 +2885,15 @@ export function createDataService(db: Database) {
           SELECT t.opposing_account_iban, COALESCE(ab.name, ci_ab.name, t.opposing_account_name) as name
           FROM transactions t
           JOIN accounts a ON t.account_id = a.id
-          LEFT JOIN address_book ab ON ab.iban = t.opposing_account_iban AND ab.profile_id = ? AND ab.is_deleted = 0
+          LEFT JOIN address_book ab ON ab.iban = t.opposing_account_iban 
+            AND ab.profile_id = ? 
+            AND ab.is_deleted = 0
+            AND (ab.original_name IS NULL OR ab.original_name = t.opposing_account_name OR ab.original_name = t.merchant_name)
           LEFT JOIN contact_ibans ci ON ci.iban = t.opposing_account_iban
-          LEFT JOIN address_book ci_ab ON ci_ab.id = ci.contact_id AND ci_ab.profile_id = ? AND ci_ab.is_deleted = 0
+          LEFT JOIN address_book ci_ab ON ci_ab.id = ci.contact_id 
+            AND ci_ab.profile_id = ? 
+            AND ci_ab.is_deleted = 0
+            AND (ci_ab.original_name IS NULL OR ci_ab.original_name = t.opposing_account_name OR ci_ab.original_name = t.merchant_name)
           WHERE a.profile_id = ?
             AND t.type != 'transfer'
             AND t.opposing_account_iban IS NOT NULL
@@ -2900,6 +2916,7 @@ export function createDataService(db: Database) {
         accounts: rows.map((row) => ({
           iban: row.iban,
           name: row.name,
+          originalName: row.original_name,
           description: row.description,
           isInAddressBook: row.is_in_addressbook === 1,
           addressBookId: row.addressbook_id,

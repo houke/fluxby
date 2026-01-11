@@ -329,16 +329,24 @@ export default function Subscriptions() {
     });
   };
 
-  // Computed values
+  // Computed values - only show expenses (negative amounts) as subscriptions
   const pendingPatterns = useMemo(() => {
-    return patterns?.filter((p) => !p.isConfirmed && p.isActive) || [];
+    return (
+      patterns?.filter(
+        (p) => !p.isConfirmed && p.isActive && p.avgAmount < 0
+      ) || []
+    );
   }, [patterns]);
 
   const confirmedPatterns = useMemo(() => {
-    return patterns?.filter((p) => p.isConfirmed && p.isActive) || [];
+    return (
+      patterns?.filter((p) => p.isConfirmed && p.isActive && p.avgAmount < 0) ||
+      []
+    );
   }, [patterns]);
 
   // Check for alerts (price changes, missed payments, stale subscriptions)
+  // Only for expense patterns (subscriptions)
   const alerts = useMemo(() => {
     if (!patterns) return [];
     const alertList: Array<{
@@ -355,18 +363,19 @@ export default function Subscriptions() {
     twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
 
     for (const pattern of patterns) {
-      // Only check confirmed subscriptions for alerts
-      if (!pattern.isConfirmed) continue;
+      // Only check confirmed expense subscriptions for alerts
+      if (!pattern.isConfirmed || pattern.avgAmount >= 0) continue;
 
       // Price change alert (>5% difference between last amount and saved average)
       // Skip if user has dismissed this alert for this session
+      // For expenses, use absolute values to compare (both are negative)
       if (!dismissedPriceAlerts.has(pattern.id)) {
-        const percentChange =
-          Math.abs(
-            (pattern.lastAmount - pattern.avgAmount) / pattern.avgAmount
-          ) * 100;
+        const absLast = Math.abs(pattern.lastAmount);
+        const absAvg = Math.abs(pattern.avgAmount);
+        const percentChange = Math.abs((absLast - absAvg) / absAvg) * 100;
         if (percentChange > 5) {
-          const isIncrease = pattern.lastAmount > pattern.avgAmount;
+          // For expenses: more negative = higher cost = price increase
+          const isIncrease = absLast > absAvg;
           alertList.push({
             id: `price-${pattern.id}`,
             type: 'price_change',
@@ -598,8 +607,10 @@ export default function Subscriptions() {
                           <span
                             className={`ml-2 text-sm ${alert.isIncrease ? 'text-orange-600' : 'text-emerald-600'}`}
                           >
-                            <Currency amount={alert.pattern.avgAmount} /> →{' '}
-                            <Currency amount={alert.newAmount} />
+                            <Currency
+                              amount={Math.abs(alert.pattern.avgAmount)}
+                            />{' '}
+                            → <Currency amount={Math.abs(alert.newAmount)} />
                           </span>
                         )}
                       </p>
@@ -640,7 +651,7 @@ export default function Subscriptions() {
                               <Button
                                 size='sm'
                                 variant='ghost'
-                                className='h-8 w-8 p-0 text-muted-foreground hover:bg-muted focus:ring-0 focus:outline-none'
+                                className='h-8 w-8 p-0 text-red-600 hover:bg-red-600 hover:text-white focus:ring-0 focus:outline-none'
                                 onClick={() =>
                                   handleRejectPriceChange(alert.pattern.id)
                                 }
@@ -1044,7 +1055,7 @@ function SubscriptionCard({
             ) : (
               <span>
                 {t.subscriptions?.avgAmount || 'Avg.'}:{' '}
-                <Currency amount={pattern.avgAmount} />
+                <Currency amount={Math.abs(pattern.avgAmount)} />
               </span>
             )}
             <span className='text-muted-foreground/60'>•</span>
@@ -1095,7 +1106,7 @@ function SubscriptionCard({
           data-onboarding='subscription-actions'
         >
           <p className='mr-4 text-lg font-semibold'>
-            <Currency amount={pattern.lastAmount} />
+            <Currency amount={Math.abs(pattern.lastAmount)} />
           </p>
 
           {isEditing ? (

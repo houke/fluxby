@@ -876,7 +876,9 @@ export default function AddressBook() {
       <div className='space-y-6'>
         <PageHeader
           title={t.addressBook?.title || t.settings.addressBook.title}
-          subtitle={t.addressBook?.subtitle || t.settings.addressBook.description}
+          subtitle={
+            t.addressBook?.subtitle || t.settings.addressBook.description
+          }
           dataOnboarding='addressbook-greeting'
           actions={
             <div className='flex gap-2'>
