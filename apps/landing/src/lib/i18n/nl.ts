@@ -1942,13 +1942,17 @@ export const nl: LandingTranslationKeys = {
       v140Title: 'Release 1.4.0',
       v140Description: '29 nieuwe features en 32 bugfixes.',
       v140F1Title: 'Nieuwe web app mogelijkheden',
-      v140F1Desc: '18 nieuwe mogelijkheden om te ontdekken. Bekijk de release notes!',
-      v140F2Title: 'Toegevoegd menu items and verbeterd apparaat-to-apparaat synchronisatie reliability',
-      v140F2Desc: 'We hebben iets nieuws voor je! Bekijk de release notes voor alle details.',
+      v140F1Desc:
+        '18 nieuwe mogelijkheden om te ontdekken. Bekijk de release notes!',
+      v140F2Title:
+        'Toegevoegd menu items and verbeterd apparaat-to-apparaat synchronisatie reliability',
+      v140F2Desc:
+        'We hebben iets nieuws voor je! Bekijk de release notes voor alle details.',
       v140F3Title: 'Toegevoegd in-app bijgewerkt mechanism via github releases',
       v140F3Desc: 'Dit maakt Fluxby nog beter.',
       v140F4Title: 'Nieuwe data mogelijkheden',
-      v140F4Desc: '4 nieuwe mogelijkheden om te ontdekken. Bekijk de release notes!',
+      v140F4Desc:
+        '4 nieuwe mogelijkheden om te ontdekken. Bekijk de release notes!',
       v140F5Title: 'Toegevoegd recurring transactie seeding and demo data',
       v140F5Desc: 'Nieuwe functionaliteit waar je iets aan hebt.',
       v140F6Title: 'subscriptions verbeteringen',

@@ -1,5 +1,6 @@
 import {
   BarChart3,
+  BookOpen,
   Brain,
   Building2,
   Database,
@@ -25,64 +26,88 @@ import {
   Wrench,
   Zap,
 } from 'lucide-react';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 const UpdatesContent = () => {
   const { t } = useLanguage();
   const updatesPage = t.legal?.updatesPage;
 
   const releases = [
-        {
+    {
       version: '1.4.0',
       date: updatesPage?.v140Date || '11 januari 2026',
       title: updatesPage?.v140Title || 'Release 1.4.0',
       description:
-        updatesPage?.v140Description ||
-        '29 nieuwe features en 32 bugfixes.',
+        updatesPage?.v140Description || '29 nieuwe features en 32 bugfixes.',
       features: [
         {
           icon: Globe,
           title: updatesPage?.v140F1Title || 'Nieuwe web app mogelijkheden',
-          description: updatesPage?.v140F1Desc || '18 nieuwe mogelijkheden om te ontdekken. Bekijk de release notes!',
+          description:
+            updatesPage?.v140F1Desc ||
+            '18 nieuwe mogelijkheden om te ontdekken. Bekijk de release notes!',
         },
         {
           icon: RefreshCw,
-          title: updatesPage?.v140F2Title || 'Toegevoegd menu items and verbeterd apparaat-to-apparaat synchronisatie reliability',
-          description: updatesPage?.v140F2Desc || 'We hebben iets nieuws voor je! Bekijk de release notes voor alle details.',
+          title:
+            updatesPage?.v140F2Title ||
+            'Toegevoegd menu items and verbeterd apparaat-to-apparaat synchronisatie reliability',
+          description:
+            updatesPage?.v140F2Desc ||
+            'We hebben iets nieuws voor je! Bekijk de release notes voor alle details.',
         },
         {
           icon: Monitor,
-          title: updatesPage?.v140F3Title || 'Toegevoegd in-app bijgewerkt mechanism via github releases',
+          title:
+            updatesPage?.v140F3Title ||
+            'Toegevoegd in-app bijgewerkt mechanism via github releases',
           description: updatesPage?.v140F3Desc || 'Dit maakt Fluxby nog beter.',
         },
         {
           icon: Database,
           title: updatesPage?.v140F4Title || 'Nieuwe data mogelijkheden',
-          description: updatesPage?.v140F4Desc || '4 nieuwe mogelijkheden om te ontdekken. Bekijk de release notes!',
+          description:
+            updatesPage?.v140F4Desc ||
+            '4 nieuwe mogelijkheden om te ontdekken. Bekijk de release notes!',
         },
         {
           icon: Share2,
-          title: updatesPage?.v140F5Title || 'Toegevoegd recurring transactie seeding and demo data',
-          description: updatesPage?.v140F5Desc || 'Nieuwe functionaliteit waar je iets aan hebt.',
+          title:
+            updatesPage?.v140F5Title ||
+            'Toegevoegd recurring transactie seeding and demo data',
+          description:
+            updatesPage?.v140F5Desc ||
+            'Nieuwe functionaliteit waar je iets aan hebt.',
         },
         {
           icon: TrendingUp,
           title: updatesPage?.v140F6Title || 'subscriptions verbeteringen',
-          description: updatesPage?.v140F6Desc || '2 nieuwe features. Bekijk de release op GitHub!',
+          description:
+            updatesPage?.v140F6Desc ||
+            '2 nieuwe features. Bekijk de release op GitHub!',
         },
         {
           icon: Sun,
-          title: updatesPage?.v140F7Title || 'Make spotlight zoeken keywords translatable',
-          description: updatesPage?.v140F7Desc || 'Nieuwe functionaliteit waar je iets aan hebt.',
+          title:
+            updatesPage?.v140F7Title ||
+            'Make spotlight zoeken keywords translatable',
+          description:
+            updatesPage?.v140F7Desc ||
+            'Nieuwe functionaliteit waar je iets aan hebt.',
         },
         {
           icon: Plus,
-          title: updatesPage?.v140F8Title || 'Toegevoegd automatic migration prompt for version updates',
+          title:
+            updatesPage?.v140F8Title ||
+            'Toegevoegd automatic migration prompt for version updates',
           description: updatesPage?.v140F8Desc || 'Dit maakt Fluxby nog beter.',
         },
         {
           icon: Wrench,
           title: updatesPage?.v140F9Title || 'Bugfixes',
-          description: updatesPage?.v140F9Desc || '32 bugs opgelost. Zie changelog voor details.',
+          description:
+            updatesPage?.v140F9Desc ||
+            '32 bugs opgelost. Zie changelog voor details.',
         },
       ],
     },
