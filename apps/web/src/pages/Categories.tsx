@@ -1512,37 +1512,30 @@ export default function Categories() {
             ))}
           </div>
         ) : !categories || categories.length === 0 ? (
-          <Card className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'>
-            <CardContent className='flex flex-col items-center justify-center py-12 text-center'>
-              <FolderOpen className='mb-4 h-12 w-12 text-muted-foreground/50' />
-              <h3 className='text-lg font-medium text-muted-foreground'>
-                {t.categories.noCategories}
-              </h3>
-              <p className='mt-1 mb-6 text-sm text-muted-foreground'>
-                {t.categories.createFirst}
-              </p>
+          <EmptyState
+            icon={FolderOpen}
+            title={t.categories.noCategories}
+            description={t.categories.createFirst}
+            action={
               <Button
                 variant='outline'
                 onClick={handleSeedClick}
                 data-onboarding='seed-categories'
+                className='mt-4'
               >
                 <Sparkles className='mr-2 h-4 w-4' />
                 {t.categories.seedWithDefaultData || 'Seed with default data'}
               </Button>
-            </CardContent>
-          </Card>
+            }
+          />
         ) : filteredSortedParents.length === 0 ? (
-          <Card className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'>
-            <CardContent className='py-12 text-center text-muted-foreground'>
-              <p className='font-medium'>
-                {t.addressBook?.noResults || 'No results found'}
-              </p>
-              <p className='mt-1 text-sm'>
-                {t.addressBook?.tryDifferentSearch ||
-                  'Try a different search term'}
-              </p>
-            </CardContent>
-          </Card>
+          <EmptyState
+            icon={Search}
+            title={t.addressBook?.noResults || 'No results found'}
+            description={
+              t.addressBook?.tryDifferentSearch || 'Try a different search term'
+            }
+          />
         ) : (
           <div className='space-y-4' data-onboarding='category-list'>
             {filteredSortedParents.map((category) =>

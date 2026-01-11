@@ -24,6 +24,7 @@ import {
   Users,
 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { PageHeader } from '@/components/layout/PageHeader';
 
 export default function Help() {
   const { t } = useLanguage();
@@ -41,12 +42,11 @@ export default function Help() {
 
   return (
     <div className='space-y-0 sm:space-y-6'>
-      <div className='pb-4 sm:pb-0'>
-        <h1 className='text-xl font-bold sm:text-3xl'>{t.help.title}</h1>
-        <p className='mt-1 text-xs text-muted-foreground sm:text-base'>
-          {t.help.subtitle}
-        </p>
-      </div>
+      <PageHeader
+        title={t.help.title}
+        subtitle={t.help.subtitle}
+        dataOnboarding='help-greeting'
+      />
 
       {/* Features Overview */}
       <div className='-mx-3 sm:mx-0'>

@@ -8,6 +8,7 @@ import {
 } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
+import { useToast } from '@/contexts/ToastContext';
 import {
   Users,
   Search,
@@ -48,8 +49,9 @@ import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useProfile } from '@/contexts/ProfileContext';
 import { useFilters } from '@/contexts/FilterContext';
-import { useToast } from '@/contexts/ToastContext';
 import { cn, findSimilarNameGroups } from '@/lib/utils';
+import { useAddressBook, AddressBookEntryWithStats } from '@/hooks/useAddressBook';
+import { useSharedIbans } from '@/hooks/useSharedIbans';
 import { Currency } from '@/components/ui/currency';
 import {
   Card,
@@ -85,42 +87,11 @@ import {
 import { api } from '@/lib/api';
 import { useConfirm } from '@/contexts/ConfirmContext';
 
-interface AddressBookEntry {
-  id: string;
-  iban: string;
-  ibans?: string[];
-  name: string;
-  description: string | null;
-  notes: string | null;
-  createdAt: string;
-  isMerged?: boolean;
-  transactionCount?: number;
-  totalIncome?: number;
-  totalExpenses?: number;
-  netAmount?: number;
-  lastTransactionDate?: string | null;
-  knownProviderName?: string | null;
-}
-
-interface SharedIban {
-  iban: string;
-  merchantCount: number;
-  merchants: { name: string; transactionCount: number }[];
-  inAddressBook: boolean;
-  addressBookId: string | null;
-  isMarkedShared: boolean;
-  isPartiallyResolved: boolean;
-  providerName: string | null;
-  isKnownProvider: boolean;
-  knownProviderName: string | null;
-}
-
-interface CleanupRule {
-  id: string;
-  pattern: string;
-  isActive: boolean;
-  createdAt: string;
-}
+import type {
+  AddressBookEntry,
+  SharedIban,
+  CleanupRule,
+} from '@fluxby/shared';
 
 type SortOption = 'name' | 'transactionCount' | 'totalAmount' | 'recent';
 
@@ -141,6 +112,27 @@ export default function AddressBook() {
   useDocumentTitle(t.addressBook?.title || t.settings.addressBook.title);
 
   const queryClient = useQueryClient();
+  const {
+    addressBook,
+    cleanupRules,
+    suggestedContacts,
+    isLoading,
+    createContactMutation: createContactMutationHook,
+    updateContactMutation: updateContactMutationHook,
+    deleteContactMutation: deleteContactMutationHook,
+    createRuleMutation: createRuleMutationHook,
+    deleteRuleMutation: deleteRuleMutationHook,
+    applyRulesMutation: applyRulesMutationHook,
+    mergeContactsMutation: mergeContactsMutationHook,
+  } = useAddressBook();
+
+  const {
+    sharedIbans,
+    isLoading: sharedIbansLoading,
+    detectSharedMutation: detectSharedMutationHook,
+    resolveSharedMutation: resolveSharedMutationHook,
+    addIbanToContactMutation: addIbanToContactHook,
+  } = useSharedIbans();
 
   // Search and sort state
   const [search, setSearch] = useState('');
@@ -201,7 +193,7 @@ export default function AddressBook() {
 
   // Split contact modal state
   const [splitModalOpen, setSplitModalOpen] = useState(false);
-  const [splitContact, setSplitContact] = useState<AddressBookEntry | null>(
+  const [splitContact, setSplitContact] = useState<AddressBookEntryWithStats | null>(
     null
   );
   const [splitIbanNames, setSplitIbanNames] = useState<Record<string, string>>(
@@ -213,6 +205,12 @@ export default function AddressBook() {
   const [expandedContactId, setExpandedContactId] = useState<string | null>(
     null
   );
+
+  // State for assign-to-existing contact popover
+  const [assignPopoverOpen, setAssignPopoverOpen] = useState<string | null>(
+    null
+  );
+  const [assignSearchTerm, setAssignSearchTerm] = useState('');
 
   // Toast (global context)
   const toast = useToast();
@@ -231,32 +229,6 @@ export default function AddressBook() {
     setModalContentElement(modalContentRef.current);
   }, [sharedIbanEditModalOpen]); // Update when modal opens
 
-  // Query address book
-  const { data: addressBook, isLoading } = useQuery<AddressBookEntry[]>({
-    queryKey: ['addressbook', activeProfileId],
-    queryFn: () => api.getAddressBook() as Promise<AddressBookEntry[]>,
-  });
-
-  // Query top accounts (for suggested contacts)
-  interface TopAccount {
-    iban: string;
-    name: string;
-    description: string | null;
-    isInAddressBook: boolean;
-    addressBookId: string | null;
-    transactionCount: number;
-    totalAmount: number;
-    netAmount: number;
-  }
-  const { data: topAccountsData, isLoading: _topAccountsLoading } = useQuery<{
-    accounts: TopAccount[];
-  }>({
-    queryKey: ['topAccounts', activeProfileId, 'all'],
-    queryFn: () =>
-      api.getTopAccounts(100, 'all') as Promise<{ accounts: TopAccount[] }>,
-    enabled: !!activeProfileId,
-  });
-
   // Query for transactions when a contact is expanded
   const { data: contactTransactions, isLoading: loadingContactTransactions } =
     useQuery({
@@ -273,187 +245,81 @@ export default function AddressBook() {
     setExpandedContactId((prev) => (prev === id ? null : id));
   }, []);
 
-  // Mutations
-  const createContactMutation = useMutation({
-    mutationFn: api.createAddressBookEntry,
-    onSuccess: async (result) => {
-      // Await all query invalidations to ensure UI updates before we show toast
-      await Promise.all([
-        queryClient.invalidateQueries({
-          queryKey: ['addressbook', activeProfileId],
-        }),
-        // Use exact: false to match all topAccounts queries regardless of the type parameter
-        queryClient.invalidateQueries({
-          queryKey: ['topAccounts', activeProfileId],
-          exact: false,
-        }),
-        queryClient.invalidateQueries({
-          queryKey: ['transactions', activeProfileId],
-        }),
-      ]);
-      // Clear form but keep card open for quick entry
-      setNewContactIban('');
-      setNewContactName('');
-      setNewContactDescription('');
-      // Close suggested contact popover if open (entry was added from there)
-      setSuggestedContactPopover(null);
-      const mergedResult = result as
-        | {
-            merged?: boolean;
-            mergeReason?: 'name' | 'iban';
+  // Mutations with component-specific callbacks
+  const createContactMutation = {
+    ...createContactMutationHook,
+    mutate: (data: any, options?: any) =>
+      createContactMutationHook.mutate(data, {
+        ...options,
+        onSuccess: (res: any, vars: any, ctx: any) => {
+          setNewContactIban('');
+          setNewContactName('');
+          setNewContactDescription('');
+          setSuggestedContactPopover(null);
+          options?.onSuccess?.(res, vars, ctx);
+        },
+      }),
+  };
+
+  const updateContactMutation = {
+    ...updateContactMutationHook,
+    mutate: (data: any, options?: any) =>
+      updateContactMutationHook.mutate(data, {
+        ...options,
+        onSuccess: (res: any, vars: any, ctx: any) => {
+          setEditingContactId(null);
+          options?.onSuccess?.(res, vars, ctx);
+        },
+      }),
+  };
+
+  const deleteContactMutation = {
+    ...deleteContactMutationHook,
+    mutate: (id: string, options?: any) =>
+      deleteContactMutationHook.mutate(id, {
+        ...options,
+        onSuccess: (res: any, vars: any, ctx: any) => {
+          if (filters.addressBookId === id) {
+            clearOpposingAccountFilters();
           }
-        | undefined;
-      if (mergedResult?.merged) {
-        if (mergedResult.mergeReason === 'name') {
-          // Merged because a contact with the same name already exists
-          toast.info(
-            t.addressBook?.ibanAddedToMatchingName ||
-              'IBAN added to contact with matching name'
-          );
-        } else {
-          // Merged because IBAN already exists - shouldn't happen from suggested contacts
-          // as these IBANs should not be in the address book
-          toast.info(
-            t.addressBook?.ibanAddedToExisting ||
-              'IBAN added to existing contact'
-          );
-        }
-      } else {
-        toast.success(t.addressBook?.contactAdded || 'Contact added');
-      }
-    },
-    onError: (error: Error) => {
-      toast.error(
-        error.message ||
-          t.addressBook?.createError ||
-          'Failed to create contact'
-      );
-    },
-  });
+          options?.onSuccess?.(res, vars, ctx);
+        },
+      }),
+  };
 
-  const updateContactMutation = useMutation({
-    mutationFn: ({
-      id,
-      data,
-    }: {
-      id: string;
-      data: { name?: string; description?: string };
-    }) => api.updateAddressBookEntry(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['addressbook', activeProfileId],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ['topAccounts', activeProfileId],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ['transactions', activeProfileId],
-      });
-      setEditingContactId(null);
-      toast.success(t.addressBook?.contactUpdated || 'Contact updated');
-    },
-  });
+  const createRuleMutation = {
+    ...createRuleMutationHook,
+    mutate: (data: any, options?: any) =>
+      createRuleMutationHook.mutate(data, {
+        ...options,
+        onSuccess: (res: any, vars: any, ctx: any) => {
+          setNewRulePattern('');
+          options?.onSuccess?.(res, vars, ctx);
+        },
+      }),
+  };
 
-  const deleteContactMutation = useMutation({
-    mutationFn: api.deleteAddressBookEntry,
-    onSuccess: (_data, deletedId) => {
-      queryClient.invalidateQueries({
-        queryKey: ['addressbook', activeProfileId],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ['topAccounts', activeProfileId],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ['sharedIbans', activeProfileId],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ['transactions', activeProfileId],
-      });
-      // If the deleted contact was selected in the filter, clear the filter
-      if (filters.addressBookId === deletedId) {
-        clearOpposingAccountFilters();
-      }
-      toast.success(t.addressBook?.contactDeleted || 'Contact verwijderd');
-    },
-  });
+  const resolveSharedMutation = {
+    ...resolveSharedMutationHook,
+  };
 
-  // Cleanup rules query and mutations - always fetch for similarity matching
-  const { data: cleanupRules } = useQuery<CleanupRule[]>({
-    queryKey: ['cleanupRules', activeProfileId],
-    queryFn: () => api.getCleanupRules() as Promise<CleanupRule[]>,
-  });
+  const addIbanToContactMutation = {
+    mutate: (data: { contactId: string; iban: string }, options?: any) =>
+      addIbanToContactHook.mutate(data, {
+        ...options,
+        onSuccess: (res: any, vars: any, ctx: any) => {
+          setSuggestedContactPopover(null);
+          setAssignPopoverOpen(null);
+          options?.onSuccess?.(res, vars, ctx);
+        },
+      }),
+    isPending: addIbanToContactHook.isPending,
+  };
 
-  const createRuleMutation = useMutation({
-    mutationFn: api.createCleanupRule,
-    onSuccess: (result) => {
-      queryClient.invalidateQueries({
-        queryKey: ['cleanupRules', activeProfileId],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ['addressbook', activeProfileId],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ['topAccounts', activeProfileId],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ['transactions', activeProfileId],
-      });
-      setNewRulePattern('');
-      // Show toast with auto-apply results
-      const data = result as {
-        data?: { addressBookUpdated?: number; transactionsUpdated?: number };
-      };
-      const addressBookCount = data?.data?.addressBookUpdated || 0;
-      const transactionsCount = data?.data?.transactionsUpdated || 0;
-      const total = addressBookCount + transactionsCount;
-      if (total > 0) {
-        toast.success(
-          (
-            t.addressBook?.ruleAppliedAuto ||
-            'Rule added and applied: {addressBook} contacts, {transactions} transactions updated'
-          )
-            .replace('{addressBook}', String(addressBookCount))
-            .replace('{transactions}', String(transactionsCount))
-        );
-      } else {
-        toast.success(t.addressBook?.ruleAdded || 'Cleanup rule added');
-      }
-    },
-    onError: (error) => {
-      const errorMessage = (error as { message?: string })?.message || '';
-      if (
-        errorMessage.includes('409') ||
-        errorMessage.includes('already exists')
-      ) {
-        toast.warning(t.addressBook?.ruleExists || 'Rule already exists');
-      }
-    },
-  });
+  const detectSharedMutation = detectSharedMutationHook;
+  const deleteRuleMutation = deleteRuleMutationHook;
+  const applyRulesMutation = applyRulesMutationHook;
 
-  const deleteRuleMutation = useMutation({
-    mutationFn: api.deleteCleanupRule,
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['cleanupRules', activeProfileId],
-      });
-    },
-  });
-
-  const applyRulesMutation = useMutation({
-    mutationFn: api.applyCleanupRules,
-    onSuccess: (_result) => {
-      queryClient.invalidateQueries({
-        queryKey: ['addressbook', activeProfileId],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ['topAccounts', activeProfileId],
-      });
-      toast.info(
-        t.addressBook?.namesUpdatedInAddressBook ||
-          'Cleanup rules applied to address book'
-      );
-    },
-  });
 
   const applyRulesToTransactionsMutation = useMutation({
     mutationFn: api.applyCleanupRulesToTransactions,
@@ -471,227 +337,17 @@ export default function AddressBook() {
     },
   });
 
-  const _backfillMutation = useMutation({
-    mutationFn: api.backfillAddressbook,
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['addressbook', activeProfileId],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ['topAccounts', activeProfileId],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ['sharedIbans', activeProfileId],
-      });
-    },
-  });
-
-  // Shared IBANs query and mutations
-  const { data: sharedIbans = [], isLoading: sharedIbansLoading } = useQuery<
-    SharedIban[]
-  >({
-    queryKey: ['sharedIbans', activeProfileId],
-    queryFn: () => api.getSharedIbans() as Promise<SharedIban[]>,
-  });
-
-  // Compute suggested contacts: accounts not in addressbook and not in sharedIbans
-  const suggestedContacts = useMemo(() => {
-    if (!topAccountsData?.accounts) return [];
-    const sharedIbanSet = new Set(sharedIbans.map((s) => s.iban));
-    return topAccountsData.accounts.filter(
-      (account) => !account.isInAddressBook && !sharedIbanSet.has(account.iban)
-    );
-  }, [topAccountsData, sharedIbans]);
-
-  const _markAsSharedMutation = useMutation({
-    mutationFn: ({
-      iban,
-      providerName,
-    }: {
-      iban: string;
-      providerName?: string;
-    }) => api.markIbanAsShared(iban, providerName),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['sharedIbans', activeProfileId],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ['addressbook', activeProfileId],
-      });
-    },
-  });
-
-  const _removeSharedMutation = useMutation({
-    mutationFn: api.removeSharedIban,
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['sharedIbans', activeProfileId],
-      });
-    },
-  });
-
-  const detectSharedMutation = useMutation({
-    mutationFn: api.detectSharedIbans,
-    onSuccess: (result) => {
-      queryClient.invalidateQueries({
-        queryKey: ['sharedIbans', activeProfileId],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ['addressbook', activeProfileId],
-      });
-      const data = result as {
-        detected?: number;
-        unresolved?: number;
-        removedFromAddressBook?: number;
-        addedToShared?: number;
-      };
-      const detectedCount = data.detected || 0;
-      const addedCount = data.addedToShared || 0;
-      if (addedCount > 0) {
-        toast.success(
-          (
-            t.addressBook?.sharedIbansDetected ||
-            '{added} shared IBANs added ({detected} detected)'
-          )
-            .replace('{added}', String(addedCount))
-            .replace('{detected}', String(detectedCount))
-        );
-      } else if (detectedCount > 0) {
-        toast.info(
-          (
-            t.addressBook?.sharedIbansDetected ||
-            '{added} shared IBANs ({detected} detected)'
-          )
-            .replace('{added}', '0')
-            .replace('{detected}', String(detectedCount))
-        );
-      } else {
-        toast.info(
-          t.addressBook?.noSharedIbansFound || 'No shared IBANs found'
-        );
-      }
-    },
-  });
-
-  // Mutation for resolving a shared IBAN entry to address book
-  const resolveSharedMutation = useMutation({
-    mutationFn: (data: {
-      iban: string;
-      name: string;
-      originalNames: string[];
-      contactId?: string;
-    }) =>
-      api.resolveSharedIban(
-        data.iban,
-        data.name,
-        data.originalNames,
-        data.contactId
-      ),
-    onSuccess: (result) => {
-      queryClient.invalidateQueries({
-        queryKey: ['addressbook', activeProfileId],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ['sharedIbans', activeProfileId],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ['transactions', activeProfileId],
-      });
-      const data = result as { data?: { transactionsUpdated?: number } };
-      toast.success(
-        (
-          t.addressBook?.contactAddedTransactionsUpdated ||
-          'Contact added, {count} transactions updated'
-        ).replace('{count}', String(data.data?.transactionsUpdated || 0))
-      );
-    },
-    onError: (error: Error) => {
-      if (error.message.includes('already exists')) {
-        toast.error(
-          t.addressBook?.contactAlreadyExists ||
-            'Contact with this IBAN already exists'
-        );
-      } else {
-        toast.error(
-          t.addressBook?.errorAddingContact || 'Error adding contact'
-        );
-      }
-    },
-  });
-
-  // State for assign-to-existing contact popover
-  const [assignPopoverOpen, setAssignPopoverOpen] = useState<string | null>(
-    null
-  );
-  const [assignSearchTerm, setAssignSearchTerm] = useState('');
-
-  // Mutation for adding IBAN to existing contact
-  const addIbanToContactMutation = useMutation({
-    mutationFn: ({ contactId, iban }: { contactId: string; iban: string }) =>
-      api.addContactIban(contactId, iban),
-    onSuccess: async () => {
-      // Await all query invalidations to ensure UI updates before we show toast
-      await Promise.all([
-        queryClient.invalidateQueries({
-          queryKey: ['addressbook', activeProfileId],
-        }),
-        queryClient.invalidateQueries({
-          queryKey: ['topAccounts', activeProfileId],
-          exact: false,
-        }),
-        queryClient.invalidateQueries({
-          queryKey: ['sharedIbans', activeProfileId],
-        }),
-        queryClient.invalidateQueries({
-          queryKey: ['transactions', activeProfileId],
-        }),
-      ]);
-      // Close suggested contact popover and assign popover if open
-      setSuggestedContactPopover(null);
-      setAssignPopoverOpen(null);
-      toast.success(
-        t.addressBook?.ibanAddedToExisting || 'IBAN added to existing contact'
-      );
-    },
-    onError: (error: Error) => {
-      toast.error(
-        error.message || t.addressBook?.errorAddingIban || 'Error adding IBAN'
-      );
-    },
-  });
-
-  // Mutation for merging contacts (assign one contact to another)
-  const mergeContactsMutation = useMutation({
-    mutationFn: ({
-      contactIds,
-      name,
-    }: {
-      contactIds: string[];
-      name?: string;
-    }) => api.mergeContacts(contactIds, name),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['addressbook', activeProfileId],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ['sharedIbans', activeProfileId],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ['transactions', activeProfileId],
-      });
-      setEditingContactId(null);
-      toast.success(
-        t.addressBook?.contactsMerged || 'Contacts merged successfully'
-      );
-    },
-    onError: (error: Error) => {
-      toast.error(
-        error.message ||
-          t.addressBook?.errorMergingContacts ||
-          'Error merging contacts'
-      );
-    },
-  });
+  const mergeContactsMutation = {
+    ...mergeContactsMutationHook,
+    mutate: (data: any, options?: any) =>
+      mergeContactsMutationHook.mutate(data, {
+        ...options,
+        onSuccess: (res: any, vars: any, ctx: any) => {
+          setEditingContactId(null);
+          options?.onSuccess?.(res, vars, ctx);
+        },
+      }),
+  };
 
   // Handlers
   const handleCreateContact = () => {
@@ -703,7 +359,7 @@ export default function AddressBook() {
     });
   };
 
-  const startEditingContact = (contact: AddressBookEntry) => {
+  const startEditingContact = (contact: AddressBookEntryWithStats) => {
     // If contact is merged (multiple IBANs), show split modal first
     if (contact.isMerged && contact.ibans && contact.ibans.length > 1) {
       setSplitContact(contact);

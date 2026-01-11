@@ -95,6 +95,11 @@ export default function HelpSidebar({ isOpen, onClose }: HelpSidebarProps) {
           icon: '📊',
         },
         {
+          title: t.helpCenter?.userNav?.subscriptions || 'Subscriptions',
+          path: '/help/subscriptions',
+          icon: '🔄',
+        },
+        {
           title:
             t.helpCenter?.userNav?.understandAnalytics ||
             'Understanding analytics',

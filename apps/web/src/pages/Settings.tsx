@@ -3,6 +3,7 @@ import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useSearchParams } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { PageHeader } from '@/components/layout/PageHeader';
 
 // Import modular settings components
 import { AccountSettings } from '@/components/settings/AccountSettings';
@@ -32,12 +33,11 @@ export default function Settings() {
 
   return (
     <div className='space-y-0 sm:space-y-6'>
-      <div className='pb-4 sm:pb-0'>
-        <h1 className='text-xl font-bold sm:text-3xl'>{t.settings.title}</h1>
-        <p className='mt-1 text-xs text-muted-foreground sm:text-base'>
-          {t.settings.subtitle}
-        </p>
-      </div>
+      <PageHeader
+        title={t.settings.title}
+        subtitle={t.settings.subtitle}
+        dataOnboarding='settings-greeting'
+      />
 
       <Tabs
         value={activeTab}

@@ -19,6 +19,7 @@ Use this checklist when creating a new migration to ensure nothing is missed.
 ## Implementation
 
 ### Schema Changes
+
 - [ ] Wrap operations in `db.transactionAsync()` for performance
 - [ ] Use `CREATE TABLE IF NOT EXISTS` for new tables
 - [ ] Include all sync fields: `id`, `profile_id`, `updated_at`, `is_deleted`, `device_id`, `created_at`
@@ -30,18 +31,21 @@ Use this checklist when creating a new migration to ensure nothing is missed.
   - [ ] Frequently filtered columns
 
 ### Adding Columns
+
 - [ ] Wrap ALTER TABLE in try/catch
 - [ ] Handle 'duplicate column' error gracefully
 - [ ] Set appropriate DEFAULT value
 - [ ] Consider NOT NULL constraints
 
 ### Seeding Data
+
 - [ ] Check if data should be seeded conditionally
 - [ ] Use parameterized queries: `db.runAsync(sql, params)`
 - [ ] Import constants from `@fluxby/shared` (don't hardcode)
 - [ ] Never use string concatenation for values
 
 ### Rollback (down migration)
+
 - [ ] Implement `down` function when possible
 - [ ] For DROP COLUMN: Note SQLite limitation
 - [ ] Use `DROP TABLE IF EXISTS` for table removal

@@ -10,6 +10,7 @@ The code review skill helps ensure code quality, security, and performance in Fl
 ## Purpose
 
 This skill helps developers identify potential problems before code reaches production, with special focus on:
+
 - Local-first architecture security (OPFS, encryption)
 - OPFS database performance patterns (transactions for bulk operations)
 - TypeScript strict mode compliance
@@ -18,6 +19,7 @@ This skill helps developers identify potential problems before code reaches prod
 ## When to Use
 
 Activate this skill when:
+
 - Reviewing code changes before committing
 - Adding new features (especially database operations)
 - Modifying API endpoints
@@ -26,7 +28,7 @@ Activate this skill when:
 
 ## Step-by-Step Process
 
-1. **Security Check**: 
+1. **Security Check**:
    - Verify parameterized queries (no SQL injection)
    - Check password handling (PBKDF2 hashing)
    - Validate input sanitization for CSV imports

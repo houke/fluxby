@@ -16,6 +16,8 @@ import {
   ChevronUp,
   Loader2,
 } from 'lucide-react';
+import { PageHeader } from '@/components/layout/PageHeader';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { useState, useMemo, useCallback } from 'react';
 import { Input } from '@/components/ui/input';
 import {
@@ -333,15 +335,24 @@ export default function Subscriptions() {
   const pendingPatterns = useMemo(() => {
     return (
       patterns?.filter(
-        (p) => !p.isConfirmed && p.isActive && p.avgAmount < 0
+        (p) =>
+          !p.isConfirmed &&
+          p.isActive &&
+          typeof p.avgAmount === 'number' &&
+          p.avgAmount < 0
       ) || []
     );
   }, [patterns]);
 
   const confirmedPatterns = useMemo(() => {
     return (
-      patterns?.filter((p) => p.isConfirmed && p.isActive && p.avgAmount < 0) ||
-      []
+      patterns?.filter(
+        (p) =>
+          p.isConfirmed &&
+          p.isActive &&
+          typeof p.avgAmount === 'number' &&
+          p.avgAmount < 0
+      ) || []
     );
   }, [patterns]);
 
@@ -364,7 +375,12 @@ export default function Subscriptions() {
 
     for (const pattern of patterns) {
       // Only check confirmed expense subscriptions for alerts
-      if (!pattern.isConfirmed || pattern.avgAmount >= 0) continue;
+      if (
+        !pattern.isConfirmed ||
+        typeof pattern.avgAmount !== 'number' ||
+        pattern.avgAmount >= 0
+      )
+        continue;
 
       // Price change alert (>5% difference between last amount and saved average)
       // Skip if user has dismissed this alert for this session
@@ -424,75 +440,72 @@ export default function Subscriptions() {
   return (
     <div className='space-y-6'>
       {/* Header */}
-      <div className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
-        <div>
-          <h1 className='text-2xl font-bold'>
-            {t.subscriptions?.title || 'Subscriptions'}
-          </h1>
-          <p className='text-muted-foreground'>
-            {t.subscriptions?.subtitle || 'Manage your recurring payments'}
-          </p>
-        </div>
-        <div className='flex items-center gap-2'>
-          {/* View toggle */}
-          <div
-            className='flex rounded-md border'
-            data-onboarding='subscriptions-calendar-toggle'
-          >
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant={view === 'list' ? 'secondary' : 'ghost'}
-                    size='sm'
-                    className='rounded-r-none'
-                    onClick={() => setView('list')}
-                  >
-                    <List className='h-4 w-4' />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  {t.subscriptions?.listView || 'List view'}
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant={view === 'calendar' ? 'secondary' : 'ghost'}
-                    size='sm'
-                    className='rounded-l-none'
-                    onClick={() => setView('calendar')}
-                  >
-                    <Calendar className='h-4 w-4' />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  {t.subscriptions?.calendarView || 'Calendar view'}
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </div>
+      <PageHeader
+        title={t.subscriptions?.title || 'Subscriptions'}
+        subtitle={t.subscriptions?.subtitle || 'Manage your recurring payments'}
+        dataOnboarding='subscriptions-greeting'
+        actions={
+          <div className='flex items-center gap-2'>
+            {/* View toggle */}
+            <div
+              className='flex rounded-md border'
+              data-onboarding='subscriptions-calendar-toggle'
+            >
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant={view === 'list' ? 'secondary' : 'ghost'}
+                      size='sm'
+                      className='rounded-r-none'
+                      onClick={() => setView('list')}
+                    >
+                      <List className='h-4 w-4' />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    {t.subscriptions?.listView || 'List view'}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant={view === 'calendar' ? 'secondary' : 'ghost'}
+                      size='sm'
+                      className='rounded-l-none'
+                      onClick={() => setView('calendar')}
+                    >
+                      <Calendar className='h-4 w-4' />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    {t.subscriptions?.calendarView || 'Calendar view'}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
 
-          {/* Detect button */}
-          <Button
-            onClick={() => detectMutation.mutate()}
-            disabled={detectMutation.isPending}
-            data-onboarding='detect-patterns-button'
-          >
-            <RefreshCw
-              className={cn(
-                'mr-2 h-4 w-4',
-                detectMutation.isPending && 'animate-spin'
-              )}
-            />
-            {detectMutation.isPending
-              ? t.subscriptions?.detecting || 'Detecting...'
-              : t.subscriptions?.detectPatterns || 'Detect patterns'}
-          </Button>
-        </div>
-      </div>
+            {/* Detect button */}
+            <Button
+              onClick={() => detectMutation.mutate()}
+              disabled={detectMutation.isPending}
+              data-onboarding='detect-patterns-button'
+            >
+              <RefreshCw
+                className={cn(
+                  'mr-2 h-4 w-4',
+                  detectMutation.isPending && 'animate-spin'
+                )}
+              />
+              {detectMutation.isPending
+                ? t.subscriptions?.detecting || 'Detecting...'
+                : t.subscriptions?.detectPatterns || 'Detect patterns'}
+            </Button>
+          </div>
+        }
+      />
 
       {/* Stats Cards */}
       <div
@@ -704,23 +717,22 @@ export default function Subscriptions() {
           ))}
         </div>
       ) : !patterns || patterns.length === 0 ? (
-        <Card>
-          <CardContent className='flex flex-col items-center justify-center py-12'>
-            <Calendar className='mb-4 h-12 w-12 text-muted-foreground' />
-            <h3 className='mb-2 text-lg font-semibold'>
-              {t.subscriptions?.noSubscriptions ||
-                'No subscriptions detected yet'}
-            </h3>
-            <p className='mb-4 text-center text-muted-foreground'>
-              {t.subscriptions?.noSubscriptionsDescription ||
-                'Import transactions to automatically detect recurring payments'}
-            </p>
-            <Button onClick={() => detectMutation.mutate()}>
+        <EmptyState
+          icon={Calendar}
+          title={
+            t.subscriptions?.noSubscriptions || 'No subscriptions detected yet'
+          }
+          description={
+            t.subscriptions?.noSubscriptionsDescription ||
+            'Import transactions to automatically detect recurring payments'
+          }
+          action={
+            <Button onClick={() => detectMutation.mutate()} className='mt-4'>
               <RefreshCw className='mr-2 h-4 w-4' />
               {t.subscriptions?.detectPatterns || 'Detect patterns'}
             </Button>
-          </CardContent>
-        </Card>
+          }
+        />
       ) : view === 'list' ? (
         <div className='space-y-6'>
           {/* Suggested subscriptions - single card for all pending patterns */}

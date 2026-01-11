@@ -2,6 +2,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Home, ArrowLeft, FileQuestion, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { EmptyState } from '@/components/ui/EmptyState';
 
 export default function NotFound() {
   const navigate = useNavigate();
@@ -26,115 +27,113 @@ export default function NotFound() {
     navigate('/dashboard');
   };
 
+  const title = isAtRoot
+    ? language === 'nl'
+      ? 'Welkom bij Fluxby'
+      : 'Welcome to Fluxby'
+    : language === 'nl'
+      ? 'Pagina niet gevonden'
+      : 'Page not found';
+
+  const description =
+    isAtRoot && !isTauri ? (
+      language === 'nl' ? (
+        <>
+          Je bent op de app pagina. Ga naar het{' '}
+          <a
+            href='/'
+            className='text-purple-600 underline hover:text-purple-500'
+            onClick={(e) => {
+              e.preventDefault();
+              window.location.href = '/';
+            }}
+          >
+            startscherm
+          </a>{' '}
+          of start met het{' '}
+          <span
+            onClick={goToDashboard}
+            className='cursor-pointer text-purple-600 underline hover:text-purple-500'
+          >
+            dashboard
+          </span>
+          .
+        </>
+      ) : (
+        <>
+          You&apos;re on the app page. Go to the{' '}
+          <a
+            href='/'
+            className='text-purple-600 underline hover:text-purple-500'
+            onClick={(e) => {
+              e.preventDefault();
+              window.location.href = '/';
+            }}
+          >
+            home page
+          </a>{' '}
+          or start with the{' '}
+          <span
+            onClick={goToDashboard}
+            className='cursor-pointer text-purple-600 underline hover:text-purple-500'
+          >
+            dashboard
+          </span>
+          .
+        </>
+      )
+    ) : mightBeLandingRoute ? (
+      language === 'nl' ? (
+        <>
+          Deze pagina bestaat in het hoofdmenu. Ga naar{' '}
+          <a
+            href={currentPath}
+            className='text-purple-600 underline hover:text-purple-500'
+            onClick={(e) => {
+              e.preventDefault();
+              window.location.href = currentPath.replace('/app', '');
+            }}
+          >
+            {currentPath}
+          </a>{' '}
+          op de landingspagina.
+        </>
+      ) : (
+        <>
+          This page exists in the main menu. Go to{' '}
+          <a
+            href={currentPath}
+            className='text-purple-600 underline hover:text-purple-500'
+            onClick={(e) => {
+              e.preventDefault();
+              window.location.href = currentPath.replace('/app', '');
+            }}
+          >
+            {currentPath}
+          </a>{' '}
+          on the landing page.
+        </>
+      )
+    ) : language === 'nl' ? (
+      'De pagina die je zoekt bestaat niet of is verplaatst.'
+    ) : (
+      "The page you're looking for doesn't exist or has been moved."
+    );
+
   return (
-    <div className='flex min-h-[80vh] items-center justify-center'>
-      <div className='mx-4 w-full max-w-md rounded-lg border bg-card p-8 shadow-lg'>
-        <div className='flex flex-col items-center text-center'>
-          {/* Icon */}
-          <div className='mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-purple-100 dark:bg-purple-900/30'>
-            <FileQuestion className='h-8 w-8 text-purple-600 dark:text-purple-400' />
-          </div>
-
-          {/* Title */}
-          <h2 className='mb-2 text-xl font-semibold'>
-            {isAtRoot
-              ? language === 'nl'
-                ? 'Welkom bij Fluxby'
-                : 'Welcome to Fluxby'
-              : language === 'nl'
-                ? 'Pagina niet gevonden'
-                : 'Page not found'}
-          </h2>
-
-          {/* Description */}
-          <p className='mb-6 text-muted-foreground'>
-            {isAtRoot && !isTauri ? (
-              language === 'nl' ? (
-                <>
-                  Je bent op de app pagina. Ga naar het{' '}
-                  <a
-                    href='/'
-                    className='text-purple-600 underline hover:text-purple-500'
-                    onClick={(e) => {
-                      e.preventDefault();
-                      window.location.href = '/';
-                    }}
-                  >
-                    startscherm
-                  </a>{' '}
-                  of start met het{' '}
-                  <span
-                    onClick={goToDashboard}
-                    className='cursor-pointer text-purple-600 underline hover:text-purple-500'
-                  >
-                    dashboard
-                  </span>
-                  .
-                </>
-              ) : (
-                <>
-                  You&apos;re on the app page. Go to the{' '}
-                  <a
-                    href='/'
-                    className='text-purple-600 underline hover:text-purple-500'
-                    onClick={(e) => {
-                      e.preventDefault();
-                      window.location.href = '/';
-                    }}
-                  >
-                    home page
-                  </a>{' '}
-                  or start with the{' '}
-                  <span
-                    onClick={goToDashboard}
-                    className='cursor-pointer text-purple-600 underline hover:text-purple-500'
-                  >
-                    dashboard
-                  </span>
-                  .
-                </>
-              )
-            ) : mightBeLandingRoute ? (
-              language === 'nl' ? (
-                <>
-                  Deze pagina bestaat in het hoofdmenu. Ga naar{' '}
-                  <a
-                    href={currentPath}
-                    className='text-purple-600 underline hover:text-purple-500'
-                    onClick={(e) => {
-                      e.preventDefault();
-                      window.location.href = currentPath.replace('/app', '');
-                    }}
-                  >
-                    {currentPath}
-                  </a>{' '}
-                  op de landingspagina.
-                </>
-              ) : (
-                <>
-                  This page exists in the main menu. Go to{' '}
-                  <a
-                    href={currentPath}
-                    className='text-purple-600 underline hover:text-purple-500'
-                    onClick={(e) => {
-                      e.preventDefault();
-                      window.location.href = currentPath.replace('/app', '');
-                    }}
-                  >
-                    {currentPath}
-                  </a>{' '}
-                  on the landing page.
-                </>
-              )
-            ) : language === 'nl' ? (
-              'De pagina die je zoekt bestaat niet of is verplaatst.'
-            ) : (
-              "The page you're looking for doesn't exist or has been moved."
-            )}
-          </p>
-
-          {/* Buttons */}
+    <div className='flex min-h-[80vh] items-center justify-center p-4'>
+      <EmptyState
+        icon={FileQuestion}
+        title={title}
+        description={typeof description === 'string' ? description : undefined}
+        className='max-w-md rounded-2xl border bg-card p-8 shadow-sm shadow-purple-500/5 dark:shadow-purple-500/10'
+        action={
           <div className='flex w-full flex-col gap-3'>
+            {typeof description !== 'string' && (
+              <p className='mb-4 text-center text-sm text-muted-foreground'>
+                {description}
+              </p>
+            )}
             <Button onClick={goToDashboard} className='w-full' size='lg'>
               <Home className='mr-2 h-4 w-4' />
               {language === 'nl' ? 'Naar dashboard' : 'Go to dashboard'}
@@ -150,7 +149,6 @@ export default function NotFound() {
               {language === 'nl' ? 'Ga terug' : 'Go back'}
             </Button>
 
-            {/* Only show home page link in web (landing page doesn't exist in Tauri) */}
             {!isTauri && (
               <Button
                 variant='ghost'
@@ -163,8 +161,8 @@ export default function NotFound() {
               </Button>
             )}
           </div>
-        </div>
-      </div>
+        }
+      />
     </div>
   );
 }

@@ -6,6 +6,7 @@ import {
   BudgetsAnimation,
   AnalyticsAnimation,
   CategoriesAnimation,
+  SubscriptionsAnimation,
   ImportAnimation,
   SyncAnimation,
 } from './screenshot-animations';
@@ -17,8 +18,9 @@ const AnimationComponents = [
   BudgetsAnimation, // 2: Budgets
   AnalyticsAnimation, // 3: Analytics
   CategoriesAnimation, // 4: Categories
-  ImportAnimation, // 5: Import
-  SyncAnimation, // 6: Device Sync
+  SubscriptionsAnimation, // 5: Subscriptions
+  ImportAnimation, // 6: Import
+  SyncAnimation, // 7: Device Sync
 ];
 
 const Screenshots = () => {

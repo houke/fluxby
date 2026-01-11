@@ -89,6 +89,9 @@ import { Currency } from '@/components/ui/currency';
 import { api } from '@/lib/api';
 import { formatDate, cn, findSimilarNameGroups } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/useMediaQuery';
+import { useSuggestions, CategorySuggestion } from '@/hooks/useSuggestions';
+import { useAddressBook } from '@/hooks/useAddressBook';
+import { useSharedIbans } from '@/hooks/useSharedIbans';
 
 // Filters on this page are intentionally local to the Transactions view.
 // This prevents Dashboard/Analytics filters (global) from affecting Transactions and vice versa.
@@ -97,6 +100,7 @@ import type {
   Account,
   Category,
   AddressBookEntry,
+  SharedIban,
 } from '@fluxby/shared';
 
 type TransactionTypeFilter = 'all' | 'income' | 'expense' | 'transfer';
@@ -104,11 +108,6 @@ import { useFilterParams, useFilters } from '@/contexts/FilterContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useProfile } from '@/contexts/ProfileContext';
 
-interface CategorySuggestion {
-  categoryId: string | null;
-  categoryName: string | null;
-  confidence: number;
-}
 
 export default function Transactions() {
   const { t, language } = useLanguage();
@@ -204,9 +203,6 @@ export default function Transactions() {
   const [labelDraft, setLabelDraft] = useState('');
   const [originalLabelValue, setOriginalLabelValue] = useState('');
   const [expandedMerchant, setExpandedMerchant] = useState<string | null>(null);
-  const [suggestions, setSuggestions] = useState<
-    Record<string, CategorySuggestion>
-  >({});
   // Badge popover states are now managed internally by TransactionRowBadges component
   // CategoryFilter, AddressBookFilter manage their own open state internally
   const [_categoryFilterOpen, _setCategoryFilterOpen] = useState(false);
@@ -385,6 +381,9 @@ export default function Transactions() {
     staleTime: 30 * 1000, // 30 seconds - prevent constant refetching on focus
   });
 
+  // Use centralized suggestions hook
+  const suggestions = useSuggestions(transactions);
+
   // Also fetch matching transactions across ALL data (no date range) so we can
   // show a specialized empty state when the current period has no matches but
   // the full dataset does.
@@ -450,14 +449,20 @@ export default function Transactions() {
     selectedAddressBookId !== null ||
     (transactions?.some((tx) => tx.addressBookId !== null) ?? false);
 
-  const { data: addressBook, isLoading: addressBookLoading } = useQuery<
-    AddressBookEntry[]
-  >({
-    queryKey: ['addressbook', activeProfileId],
-    queryFn: () => api.getAddressBook() as Promise<AddressBookEntry[]>,
-    staleTime: 60 * 1000, // 1 minute - addressBook may change but not often
-    enabled: needsAddressBook, // Lazy load - only fetch when needed
+  const {
+    addressBook,
+    isLoading: addressBookLoading,
+    createContactMutation: createContactMutationHook,
+  } = useAddressBook({
+    enabled: needsAddressBook,
   });
+
+  const {
+    sharedIbans,
+    isLoading: _sharedIbansLoading,
+    resolveSharedMutation: resolveSharedMutationHook,
+    addIbanToContactMutation: addIbanToContactHook,
+  } = useSharedIbans();
 
   // Memoized addressBook lookup maps for O(1) access instead of O(n) filtering
   const addressBookLookup = useMemo((): {
@@ -499,24 +504,6 @@ export default function Transactions() {
   }, [addressBook]);
 
   // Query shared IBANs (payment processors)
-  interface SharedIban {
-    iban: string;
-    merchantCount: number;
-    merchants: Array<{ name: string; transactionCount: number }>;
-    inAddressBook: boolean;
-    isMarkedShared: boolean;
-    isPartiallyResolved: boolean;
-    providerName: string | null;
-    isKnownProvider: boolean;
-    knownProviderName: string | null;
-  }
-  const { data: sharedIbans = [], isLoading: _sharedIbansLoading } = useQuery<
-    SharedIban[]
-  >({
-    queryKey: ['sharedIbans', activeProfileId],
-    queryFn: () => api.getSharedIbans() as Promise<SharedIban[]>,
-    staleTime: 2 * 60 * 1000, // 2 minutes
-  });
 
   // Memoized sharedIbans lookup map for O(1) access
   const sharedIbansLookup = useMemo(() => {
@@ -796,94 +783,6 @@ export default function Transactions() {
   // after they were set but before the component mounted.
   // Filters are now intentionally persisted to localStorage via FilterContext.
 
-  // Cache for suggestions to avoid refetching same merchant names
-  const suggestionsCache = useRef<Map<string, CategorySuggestion | null>>(
-    new Map()
-  );
-
-  // Track last fetch time to prevent rapid re-fetching
-  const lastFetchRef = useRef<number>(0);
-  // Track the last transactions length to avoid re-processing same data
-  const lastTransactionsLengthRef = useRef<number>(0);
-
-  useEffect(() => {
-    if (!transactions) return;
-
-    // Skip if transactions length hasn't changed significantly
-    // This prevents re-running when just filters change but data is same
-    const currentLength = transactions.length;
-    if (
-      lastTransactionsLengthRef.current === currentLength &&
-      currentLength > 0
-    ) {
-      return;
-    }
-    lastTransactionsLengthRef.current = currentLength;
-
-    // Prevent rapid re-fetching (minimum 2 second gap between fetches)
-    const now = Date.now();
-    if (now - lastFetchRef.current < 2000) return;
-
-    const uncategorized = transactions.filter(
-      (tx) => !tx.categoryId && tx.merchantName
-    );
-
-    // Build initial suggestions from cache
-    const newSuggestions: Record<string, CategorySuggestion> = {};
-    const merchantsToFetch: Array<{ txId: string; merchantName: string }> = [];
-
-    // Only process first 10 uncategorized transactions to reduce API calls
-    for (const tx of uncategorized.slice(0, 10)) {
-      if (!tx.merchantName) continue;
-
-      const cached = suggestionsCache.current.get(tx.merchantName);
-      if (cached !== undefined) {
-        if (cached) {
-          newSuggestions[tx.id] = cached;
-        }
-      } else {
-        merchantsToFetch.push({ txId: tx.id, merchantName: tx.merchantName });
-      }
-    }
-
-    // Apply cached suggestions immediately
-    if (Object.keys(newSuggestions).length > 0) {
-      setSuggestions((prev) => ({ ...prev, ...newSuggestions }));
-    }
-
-    // Limit to 5 API calls at a time for better performance
-    const toFetch = merchantsToFetch.slice(0, 5);
-    if (toFetch.length === 0) return;
-
-    const timeoutId = setTimeout(async () => {
-      lastFetchRef.current = Date.now();
-      const fetched: Record<string, CategorySuggestion> = {};
-
-      // Fetch in parallel but limit concurrency
-      await Promise.all(
-        toFetch.map(async ({ txId, merchantName }) => {
-          try {
-            const suggestion = (await api.suggestCategory(
-              merchantName
-            )) as CategorySuggestion | null;
-            suggestionsCache.current.set(merchantName, suggestion);
-            if (suggestion) {
-              fetched[txId] = suggestion;
-            }
-          } catch {
-            // Cache the failure too to avoid retrying
-            suggestionsCache.current.set(merchantName, null);
-          }
-        })
-      );
-
-      if (Object.keys(fetched).length > 0) {
-        setSuggestions((prev) => ({ ...prev, ...fetched }));
-      }
-    }, 500); // 500ms debounce
-
-    return () => clearTimeout(timeoutId);
-  }, [transactions]);
 
   // Ref to track if we're currently loading more (debounce intersection observer)
   const isLoadingMoreRef = useRef(false);
@@ -1066,90 +965,44 @@ export default function Transactions() {
     },
   });
 
-  const createAccountMutation = useMutation({
-    mutationFn: async (data: {
-      iban: string;
-      name: string;
-      description?: string;
-      notes?: string;
-      transactionId?: string;
-    }) => {
-      // First create the address book entry
-      const result = await api.createAddressBookEntry(data);
-      // Then link the transaction to the new address book entry if a transactionId was provided
-      // Support both direct return format and potentially wrapped format
-      const contactId =
-        (result as { data?: { id: string } }).data?.id ||
-        (result as { id?: string }).id;
-      if (data.transactionId && contactId) {
-        await api.updateTransaction(data.transactionId, {
-          addressBookId: contactId,
-        });
-      }
-      return result;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['addressbook', activeProfileId],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ['transactions', activeProfileId],
-      });
-      setAccountModalOpen(false);
-      setAccountModalIban('');
-      setAccountModalName('');
-      toast.success(t.transactions.savedToAddressBook);
-    },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Failed to create contact');
-    },
-  });
+  const addToAddressBookMutation = {
+    ...createContactMutationHook,
+    mutate: (data: any, options?: any) =>
+      createContactMutationHook.mutate(data, {
+        ...options,
+        onSuccess: (res: any, vars: any, ctx: any) => {
+          setAccountModalOpen(false);
+          setAccountModalIban('');
+          setAccountModalName('');
+          toast.success(t.transactions.savedToAddressBook);
+          options?.onSuccess?.(res, vars, ctx);
+        },
+      }),
+  };
 
-  const resolveSharedMutation = useMutation({
-    mutationFn: ({
-      iban,
-      name,
-      originalNames,
-      contactId,
-    }: {
-      iban: string;
-      name: string;
-      originalNames: string[];
-      contactId?: string;
-    }) => api.resolveSharedIban(iban, name, originalNames, contactId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['sharedIbans', activeProfileId],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ['transactions', activeProfileId],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ['addressbook', activeProfileId],
-      });
-      toast.success('Toegevoegd aan adresboek');
-    },
-  });
+  const resolveSharedMutation = {
+    ...resolveSharedMutationHook,
+    mutate: (data: any, options?: any) =>
+      resolveSharedMutationHook.mutate(data, {
+        ...options,
+        onSuccess: (res: any, vars: any, ctx: any) => {
+          options?.onSuccess?.(res, vars, ctx);
+        },
+      }),
+  };
 
-  // Mutation for adding IBAN to existing contact
-  const addIbanToContactMutation = useMutation({
-    mutationFn: ({ contactId, iban }: { contactId: string; iban: string }) =>
-      api.addContactIban(contactId, iban),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['addressbook', activeProfileId],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ['sharedIbans', activeProfileId],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ['transactions', activeProfileId],
-      });
-      setAssignPopoverOpen(null);
-      setAssignSearchTerm('');
-      toast.success(t.apiErrors?.ibanAddedToContact || 'Added to contact');
-    },
-  });
+  const addIbanToContactMutation = {
+    ...addIbanToContactHook,
+    mutate: (data: { contactId: string; iban: string }, options?: any) =>
+      addIbanToContactHook.mutate(data, {
+        ...options,
+        onSuccess: (res: any, vars: any, ctx: any) => {
+          setAssignPopoverOpen(null);
+          setAssignSearchTerm('');
+          options?.onSuccess?.(res, vars, ctx);
+        },
+      }),
+  };
 
   // Check if transaction is linked to address book
   const isInAddressBook = (tx: Transaction) => {
@@ -1822,11 +1675,6 @@ export default function Transactions() {
       data: { categoryId: suggestion.categoryId },
     });
 
-    setSuggestions((prev) => {
-      const next = { ...prev };
-      delete next[tx.id];
-      return next;
-    });
   };
 
   const _handleAcceptAndCreateRule = (
@@ -1846,11 +1694,6 @@ export default function Transactions() {
       });
     }
 
-    setSuggestions((prev) => {
-      const next = { ...prev };
-      delete next[tx.id];
-      return next;
-    });
   };
 
   // Calculate totals using shared hook (same logic as Dashboard)
@@ -3056,7 +2899,7 @@ export default function Transactions() {
                     createContactTransaction?.opposingAccountIban &&
                     createContactName.trim()
                   ) {
-                    createAccountMutation.mutate({
+                    addToAddressBookMutation.mutate({
                       iban: createContactTransaction.opposingAccountIban,
                       name: createContactName.trim(),
                       transactionId: createContactTransaction.id,

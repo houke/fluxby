@@ -10,6 +10,8 @@ import {
   ArrowUpRight,
   RefreshCw,
 } from 'lucide-react';
+import { PageHeader } from '@/components/layout/PageHeader';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
@@ -145,7 +147,9 @@ export default function Analytics() {
   });
 
   // Filter recurring patterns to only show expenses (subscriptions)
-  const expensePatterns = recurringPatterns?.filter((p) => p.avgAmount < 0);
+  const expensePatterns = recurringPatterns?.filter(
+    (p) => typeof p.avgAmount === 'number' && p.avgAmount < 0
+  );
 
   const [activeExpenseIndex, setActiveExpenseIndex] = useState<number | null>(
     null
@@ -211,17 +215,14 @@ export default function Analytics() {
 
   return (
     <div className='space-y-6'>
-      <div className='flex items-center justify-between'>
-        <div>
-          <h1 className='text-2xl font-bold sm:text-3xl'>
-            {t.analytics.title}
-          </h1>
-          <p className='mt-1 text-xs text-muted-foreground sm:text-sm'>
-            {t.analytics.subtitle}
-          </p>
-        </div>
-        <span className='text-muted-foreground'>{formatYearRange()}</span>
-      </div>
+      <PageHeader
+        title={t.analytics.title}
+        subtitle={t.analytics.subtitle}
+        dataOnboarding='analytics-greeting'
+        actions={
+          <span className='text-muted-foreground'>{formatYearRange()}</span>
+        }
+      />
 
       {/* Savings Over Time */}
       <div className='-mx-3 sm:mx-0'>
@@ -366,10 +367,11 @@ export default function Analytics() {
                   </ResponsiveContainer>
                 </div>
               ) : (
-                <div className='flex h-full flex-col items-center justify-center py-8 text-center text-muted-foreground'>
-                  <ArrowLeftRight className='mb-4 h-12 w-12 text-muted-foreground/50' />
-                  <p>{t.analytics.noData}</p>
-                </div>
+                <EmptyState
+                  icon={ArrowLeftRight}
+                  title={t.analytics.noData}
+                  className='h-full py-8'
+                />
               )}
             </div>
           </CardContent>
@@ -502,10 +504,11 @@ export default function Analytics() {
                   </ResponsiveContainer>
                 </div>
               ) : (
-                <div className='flex h-full flex-col items-center justify-center py-8 text-center text-muted-foreground'>
-                  <TrendingUp className='mb-4 h-12 w-12 text-muted-foreground/50' />
-                  <p>{t.analytics.noData || 'Geen data beschikbaar'}</p>
-                </div>
+                <EmptyState
+                  icon={TrendingUp}
+                  title={t.analytics.noData || 'Geen data beschikbaar'}
+                  className='h-full py-8'
+                />
               )}
             </div>
           </CardContent>
@@ -692,10 +695,11 @@ export default function Analytics() {
                     </PieChart>
                   </ResponsiveContainer>
                 ) : (
-                  <div className='flex h-full flex-col items-center justify-center py-8 text-center text-muted-foreground'>
-                    <ArrowDownRight className='mb-4 h-12 w-12 text-muted-foreground/50' />
-                    <p>{t.analytics.noExpenseData}</p>
-                  </div>
+                  <EmptyState
+                    icon={ArrowDownRight}
+                    title={t.analytics.noExpenseData}
+                    className='h-full py-8'
+                  />
                 )}
               </div>
             </CardContent>
@@ -878,10 +882,11 @@ export default function Analytics() {
                     </PieChart>
                   </ResponsiveContainer>
                 ) : (
-                  <div className='flex h-full flex-col items-center justify-center py-8 text-center text-muted-foreground'>
-                    <ArrowUpRight className='mb-4 h-12 w-12 text-muted-foreground/50' />
-                    <p>{t.analytics.noIncomeData}</p>
-                  </div>
+                  <EmptyState
+                    icon={ArrowUpRight}
+                    title={t.analytics.noIncomeData}
+                    className='h-full py-8'
+                  />
                 )}
               </div>
             </CardContent>
@@ -964,10 +969,11 @@ export default function Analytics() {
                   ))}
                 </div>
               ) : (
-                <div className='flex flex-col items-center justify-center py-8 text-center text-muted-foreground'>
-                  <ArrowDownRight className='mb-4 h-12 w-12 text-muted-foreground/50' />
-                  <p>{t.analytics.noExpenseData}</p>
-                </div>
+                <EmptyState
+                  icon={ArrowDownRight}
+                  title={t.analytics.noExpenseData}
+                  className='py-8'
+                />
               )}
             </CardContent>
           </Card>
@@ -1041,10 +1047,11 @@ export default function Analytics() {
                   ))}
                 </div>
               ) : (
-                <div className='flex flex-col items-center justify-center py-8 text-center text-muted-foreground'>
-                  <ArrowUpRight className='mb-4 h-12 w-12 text-muted-foreground/50' />
-                  <p>{t.analytics.noIncomeData}</p>
-                </div>
+                <EmptyState
+                  icon={ArrowUpRight}
+                  title={t.analytics.noIncomeData}
+                  className='py-8'
+                />
               )}
             </CardContent>
           </Card>
@@ -1107,22 +1114,24 @@ export default function Analytics() {
 
                             // If we have price history, calculate the average for the period
                             // and compare against the saved subscription amount (avgAmount)
+                            // Note: priceHistory amounts are absolute values from the database
                             if (history.length > 0) {
                               const periodAverage =
                                 history.reduce((sum, h) => sum + h.amount, 0) /
                                 history.length;
-                              const savedAmount = pattern.avgAmount;
+                              // Use absolute value of saved amount since history is already absolute
+                              const savedAbsAmount = Math.abs(
+                                pattern.avgAmount
+                              );
 
                               // Show difference if there's a significant change (>1% difference)
-                              const diff = periodAverage - savedAmount;
+                              const diff = periodAverage - savedAbsAmount;
                               const percentDiff =
-                                Math.abs(diff / savedAmount) * 100;
+                                Math.abs(diff / savedAbsAmount) * 100;
 
                               if (percentDiff > 1) {
-                                // For expenses (negative amounts), more negative = paying more = price increase
-                                // Use absolute values to determine if price went up or down
-                                const isHigher =
-                                  Math.abs(periodAverage) > Math.abs(savedAmount);
+                                // For expenses: higher period average = paying more = price increase
+                                const isHigher = periodAverage > savedAbsAmount;
                                 return (
                                   <p
                                     className={`text-sm ${isHigher ? 'text-rose-600' : 'text-emerald-600'}`}
@@ -1150,13 +1159,14 @@ export default function Analytics() {
                         );
                         if (!pattern?.priceHistory?.length) {
                           return (
-                            <div className='flex flex-1 flex-col items-center justify-center text-center text-muted-foreground'>
-                              <TrendingUp className='mb-4 h-12 w-12 text-muted-foreground/50' />
-                              <p>
-                                {t.analytics?.noPriceHistory ||
-                                  'No price history available'}
-                              </p>
-                            </div>
+                            <EmptyState
+                              icon={TrendingUp}
+                              title={
+                                t.analytics?.noPriceHistory ||
+                                'No price history available'
+                              }
+                              className='h-full'
+                            />
                           );
                         }
                         return (
@@ -1244,13 +1254,14 @@ export default function Analytics() {
                         );
                       })()
                     ) : (
-                      <div className='flex flex-1 flex-col items-center justify-center text-center text-muted-foreground'>
-                        <TrendingUp className='mb-4 h-12 w-12 text-muted-foreground/50' />
-                        <p>
-                          {t.analytics?.selectSubscription ||
-                            'Select a subscription to view price history'}
-                        </p>
-                      </div>
+                      <EmptyState
+                        icon={TrendingUp}
+                        title={
+                          t.analytics?.selectSubscription ||
+                          'Select a subscription to view price history'
+                        }
+                        className='h-full'
+                      />
                     )}
                   </div>
                 </div>
@@ -1266,23 +1277,27 @@ export default function Analytics() {
                 </div>
               </div>
             ) : (
-              <div className='flex flex-col items-center justify-center py-8 text-center'>
-                <RefreshCw className='mb-4 h-12 w-12 text-muted-foreground/50' />
-                <p className='text-muted-foreground'>
-                  {t.analytics?.noRecurringPayments ||
-                    'No confirmed recurring payments yet'}
-                </p>
-                <p className='mt-1 text-sm text-muted-foreground'>
-                  {t.analytics?.confirmSubscriptions ||
-                    'Confirm detected subscriptions in the subscriptions page'}
-                </p>
-                <button
-                  onClick={() => navigate('/subscriptions/')}
-                  className='mt-3 text-sm text-primary hover:underline'
-                >
-                  {t.dashboard?.goToSubscriptions || 'Go to subscriptions'}
-                </button>
-              </div>
+              <EmptyState
+                icon={RefreshCw}
+                title={
+                  t.analytics?.noRecurringPayments ||
+                  'No confirmed recurring payments yet'
+                }
+                description={
+                  t.analytics?.confirmSubscriptions ||
+                  'Confirm detected subscriptions in the subscriptions page'
+                }
+                action={
+                  <Button
+                    onClick={() => navigate('/subscriptions/')}
+                    variant='link'
+                    className='h-auto p-0 text-sm'
+                  >
+                    {t.dashboard?.goToSubscriptions || 'Go to subscriptions'}
+                  </Button>
+                }
+                className='py-8'
+              />
             )}
           </CardContent>
         </Card>

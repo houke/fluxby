@@ -27,6 +27,7 @@ import DocsAccounts from './pages/docs/DocsAccounts';
 import DocsTransactions from './pages/docs/DocsTransactions';
 import DocsCategories from './pages/docs/DocsCategories';
 import DocsBudgets from './pages/docs/DocsBudgets';
+import DocsSubscriptions from './pages/docs/DocsSubscriptions';
 import DocsAnalytics from './pages/docs/DocsAnalytics';
 import DocsAddressBook from './pages/docs/DocsAddressBook';
 import DocsImport from './pages/docs/DocsImport';
@@ -37,6 +38,7 @@ import HelpLayout from './components/help/HelpLayout';
 import HelpHome from './pages/help/HelpHome';
 import HelpBankConnection from './pages/help/HelpBankConnection';
 import HelpBudgeting from './pages/help/HelpBudgeting';
+import HelpSubscriptions from './pages/help/HelpSubscriptions';
 import HelpPrivacy from './pages/help/HelpPrivacy';
 import HelpFirstSteps from './pages/help/HelpFirstSteps';
 import HelpTransactions from './pages/help/HelpTransactions';
@@ -151,6 +153,7 @@ function App() {
                 <Route path='transactions' element={<DocsTransactions />} />
                 <Route path='categories' element={<DocsCategories />} />
                 <Route path='budgets' element={<DocsBudgets />} />
+                <Route path='subscriptions' element={<DocsSubscriptions />} />
                 <Route path='analytics' element={<DocsAnalytics />} />
                 <Route path='addressbook' element={<DocsAddressBook />} />
                 <Route path='import' element={<DocsImport />} />
@@ -170,6 +173,7 @@ function App() {
                 <Route path='accounts' element={<HelpAccounts />} />
                 <Route path='address-book' element={<HelpAddressBook />} />
                 <Route path='budgeting' element={<HelpBudgeting />} />
+                <Route path='subscriptions' element={<HelpSubscriptions />} />
                 <Route path='analytics' element={<HelpAnalytics />} />
                 <Route path='sync' element={<HelpSync />} />
                 <Route path='privacy' element={<HelpPrivacy />} />

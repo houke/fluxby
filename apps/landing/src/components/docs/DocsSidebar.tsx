@@ -93,6 +93,11 @@ export default function DocsSidebar({ isOpen, onClose }: DocsSidebarProps) {
           icon: '📊',
         },
         {
+          title: t.docs?.nav?.subscriptions || 'Subscriptions',
+          path: '/docs/subscriptions',
+          icon: '🔄',
+        },
+        {
           title: t.docs?.nav?.analytics || 'Analytics',
           path: '/docs/analytics',
           icon: '📈',

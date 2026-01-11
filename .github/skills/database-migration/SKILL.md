@@ -8,6 +8,7 @@ description: Safe database schema changes for Fluxby's custom migration system. 
 ## Purpose
 
 This skill helps accomplish safe database schema changes in Fluxby's custom migration system, which supports:
+
 - **OPFS** (Origin Private File System) for web browsers
 - **Tauri** local SQLite for desktop apps
 - **Node.js** SQLite for the optional API server
@@ -17,6 +18,7 @@ The system includes automatic verification, repair of corrupted states, and loca
 ## When to Use
 
 Activate this skill when you need to:
+
 - Add or modify database tables
 - Add or remove columns
 - Create indexes
@@ -26,12 +28,14 @@ Activate this skill when you need to:
 ## Migration System Architecture
 
 ### Key Files
+
 - `packages/database/src/migrations/index.ts` - Migration registry and version constant
 - `packages/database/src/migrations/runner.ts` - Execution and verification engine
 - `packages/database/src/migrations/00X_*.ts` - Individual migration files
 - `docs/MIGRATIONS.md` - Complete system documentation
 
 ### Storage Keys
+
 - `fluxby-db-schema-version` (localStorage) - Cached DB version
 - `fluxby-migrations-complete-session` (sessionStorage) - Prevents re-prompting
 
@@ -48,6 +52,7 @@ This skill includes several helper files to make migration development easier:
 ### Quick Start
 
 1. **Copy the template**:
+
    ```bash
    cp .github/skills/database-migration/migration-template.ts \
       packages/database/src/migrations/008_your_feature.ts
@@ -91,7 +96,9 @@ export const migration00X: Migration = {
 
       // Add columns to existing tables
       try {
-        await db.execAsync('ALTER TABLE existing_table ADD COLUMN new_col TEXT');
+        await db.execAsync(
+          'ALTER TABLE existing_table ADD COLUMN new_col TEXT'
+        );
       } catch (err) {
         if (err instanceof Error && err.message.includes('duplicate column')) {
           // Already exists, ignore
@@ -151,6 +158,7 @@ const CRITICAL_COLUMNS_BY_VERSION: Record<number, Record<string, string[]>> = {
 ## Performance Best Practices
 
 ### ✅ Use Transactions for Bulk Operations
+
 ```typescript
 // Wrap all migration operations in a transaction
 await db.transactionAsync(async () => {
@@ -160,21 +168,24 @@ await db.transactionAsync(async () => {
 ```
 
 ### ✅ Use Parameterized Queries
+
 ```typescript
 // Secure and efficient
-await db.runAsync(
-  'INSERT INTO table (col1, col2) VALUES (?, ?)',
-  [value1, value2]
-);
+await db.runAsync('INSERT INTO table (col1, col2) VALUES (?, ?)', [
+  value1,
+  value2,
+]);
 ```
 
 ### ❌ Avoid String Concatenation
+
 ```typescript
 // SQL injection risk and parsing overhead
 await db.execAsync(`INSERT INTO table VALUES ('${value1}', '${value2}')`);
 ```
 
 ### ✅ Use Shared Constants
+
 ```typescript
 // Import from @fluxby/shared for consistency
 import { DEMO_PROFILE_ID, DEMO_RECURRING_PATTERNS } from '@fluxby/shared';
@@ -189,6 +200,7 @@ import { DEMO_PROFILE_ID, DEMO_RECURRING_PATTERNS } from '@fluxby/shared';
 ## Edge Case Handling
 
 The migration system automatically handles:
+
 - **Corrupted localStorage** (version > LATEST + 2) → Reset to LATEST
 - **Missing tables** → Roll back version, re-run migrations
 - **Missing columns** → Roll back version, re-run migrations
@@ -197,21 +209,25 @@ The migration system automatically handles:
 ## Troubleshooting
 
 ### Migration Fails to Run
+
 - Check `LATEST_MIGRATION_VERSION` matches highest migration number
 - Verify migration is imported in `index.ts`
 - Check browser console for errors
 
 ### Column Already Exists Error
+
 - Wrap ALTER TABLE in try/catch with duplicate column check
 - See migration 002 or 006 for examples
 
 ### localStorage Out of Sync
+
 - System automatically repairs via `verifyAndRepairMigrations()`
 - Manually clear: `localStorage.removeItem('fluxby-db-schema-version')`
 
 ## Documentation
 
 After creating a migration:
+
 - [ ] Update `LATEST_MIGRATION_VERSION` in `index.ts`
 - [ ] Update version tables in `docs/MIGRATIONS.md`
 - [ ] Add to AGENTS.md if it affects demo data or critical features

@@ -34,6 +34,7 @@ export interface SharedIban {
   merchantCount: number;
   merchants: Array<{ name: string; transactionCount: number }>;
   inAddressBook: boolean;
+  addressBookId: string | null;
   isMarkedShared: boolean;
   isPartiallyResolved: boolean;
   providerName: string | null;

@@ -121,6 +121,16 @@ export const en: LandingTranslationKeys = {
         ],
       },
       {
+        title: 'Subscription tracker',
+        description:
+          'Keep track of all your recurring payments. Fluxby automatically detects your subscriptions and alerts you to price changes.',
+        features: [
+          'Automatic detection',
+          'Price change alerts',
+          'Monthly overview',
+        ],
+      },
+      {
         title: 'Easy CSV import',
         description:
           'Import your bank transactions in seconds. Simply drag and drop your CSV export and Fluxby handles the rest.',
@@ -320,6 +330,7 @@ export const en: LandingTranslationKeys = {
       transactions: 'Transactions',
       categories: 'Categories',
       budgets: 'Budgets',
+      subscriptions: 'Subscriptions',
       analytics: 'Analytics',
       addressBook: 'Address Book',
       import: 'Import',
@@ -808,6 +819,76 @@ export const en: LandingTranslationKeys = {
       progressTrackingText:
         'When fetching budgets, the spent, remaining, and percentage fields are automatically calculated based on transactions in the current period.',
     },
+    // Subscriptions page
+    subscriptions: {
+      title: 'Subscriptions',
+      subtitle:
+        'Detect and manage recurring payments automatically. Get insights into your monthly fixed costs.',
+      detectionNote: 'Automatic detection',
+      detectionNoteText:
+        'Fluxby analyzes your transaction history and automatically detects recurring patterns. Patterns are detected when the same merchant appears at least 3 times with regular intervals.',
+      objectTitle: 'The Pattern Object',
+      objectText:
+        'A recurring pattern represents a detected subscription or recurring payment.',
+      fields: {
+        id: 'Unique identifier',
+        merchantName: 'Merchant name',
+        patternType: 'weekly, biweekly, monthly, quarterly, yearly',
+        avgAmount: 'Average amount (negative for expenses)',
+        lastAmount: 'Last charged amount',
+        nextExpectedDate: 'Expected next charge date',
+        isConfirmed: 'Whether the pattern is confirmed by the user',
+        isVariable: 'Whether the amount varies (>10% deviation)',
+        transactionCount: 'Number of times this pattern was detected',
+      },
+      listTitle: 'Fetch patterns',
+      listText: 'Retrieve all detected recurring patterns:',
+      params: {
+        activeOnly: 'Active patterns only (default: true)',
+        startDate: 'Start date',
+        endDate: 'End date',
+      },
+      statsTitle: 'Fetch statistics',
+      statsText: 'Get an overview of your recurring costs:',
+      calendarTitle: 'Expected payments',
+      calendarText: 'Fetch expected payments for a date range:',
+      detectTitle: 'Detect patterns',
+      detectText: 'Run pattern detection on your transaction history:',
+      detectNote: 'Detection criteria',
+      detectCriteria: {
+        minTransactions: 'Minimum 3 transactions from the same merchant',
+        minSpan: 'Transactions must span at least 2 months',
+        consistency: 'Consistent intervals (±3 days tolerance)',
+      },
+      actionsTitle: 'Manage patterns',
+      actionsText:
+        'Confirm patterns as real subscriptions or dismiss false positives:',
+      confirmTitle: 'Confirm pattern',
+      dismissTitle: 'Dismiss pattern',
+      deleteTitle: 'Delete pattern',
+      patternTypesTitle: 'Pattern types',
+      patternTypesText: 'Fluxby detects the following patterns:',
+      intervalColumn: 'Interval',
+      exampleColumn: 'Example',
+      days: 'days',
+      examples: {
+        weekly: 'Weekly groceries',
+        biweekly: 'Biweekly salary',
+        monthly: 'Netflix, Spotify, rent',
+        quarterly: 'Quarterly subscription',
+        yearly: 'Annual subscription, insurance',
+      },
+      endpointsTitle: 'All Endpoints',
+      endpoints: {
+        list: 'List all patterns',
+        stats: 'Fetch statistics',
+        calendar: 'Fetch expected payments',
+        detect: 'Run pattern detection',
+        confirm: 'Confirm a pattern',
+        dismiss: 'Dismiss a pattern',
+        delete: 'Delete a pattern',
+      },
+    },
     // Analytics page
     analytics: {
       title: 'Analytics',
@@ -1033,6 +1114,7 @@ export const en: LandingTranslationKeys = {
       addressBook: 'Address Book',
       budgeting: 'Budgeting & Analytics',
       createBudget: 'Creating a budget',
+      subscriptions: 'Subscriptions',
       understandAnalytics: 'Understanding analytics',
       security: 'Security & Privacy',
       sync: 'Device sync',
@@ -1145,6 +1227,46 @@ export const en: LandingTranslationKeys = {
       trackingTitle: 'Tracking your progress',
       trackingText:
         'The budget cards show your spending progress in real-time. The circular progress indicator fills up as you approach your limit, changing color from green to yellow to red.',
+    },
+    subscriptions: {
+      title: 'Managing subscriptions',
+      subtitle:
+        'Keep track of all your recurring payments and get notified about price changes.',
+      whatIsTitle: 'What are subscriptions in Fluxby?',
+      whatIsText:
+        'Fluxby automatically detects recurring payments in your transactions, such as streaming services, gym memberships, and utilities. You get an overview of all your monthly fixed costs and are warned when prices change.',
+      detectionTitle: 'How does automatic detection work?',
+      detectionText:
+        'When you import transactions, Fluxby analyzes the patterns in your payments. If a payment recurs regularly (weekly, monthly, quarterly, or yearly), it is automatically recognized as a subscription.',
+      step1: 'Import your transactions via the Import page',
+      step2: 'Fluxby automatically analyzes recurring patterns',
+      step3: 'Confirm detected subscriptions or dismiss them',
+      step4: 'View your total monthly fixed costs in the overview',
+      confirmTitle: 'Confirming or dismissing subscriptions',
+      confirmText:
+        'Not all detected patterns are actual subscriptions. You can indicate which recurring payments you want to track as subscriptions:',
+      confirmButton: 'Confirm',
+      confirmButtonText: 'The pattern is added to your active subscriptions',
+      dismissButton: 'Dismiss',
+      dismissButtonText: 'The pattern is ignored and no longer shown',
+      tipTitle: 'Tip',
+      tipText:
+        'Only confirm actual subscriptions you want to track. This keeps your overview clean and your monthly total accurate.',
+      priceAlertsTitle: 'Price change notifications',
+      priceAlertsText:
+        'Fluxby tracks the amounts of your subscriptions. If a subscription suddenly costs more or less than normal, you get a notification. You can then choose to accept or ignore the new amount.',
+      priceIncreaseTitle: 'Price increase',
+      priceIncreaseText:
+        'A red arrow up indicates that a subscription has become more expensive. This may mean the service has raised its prices.',
+      priceDecreaseTitle: 'Price decrease',
+      priceDecreaseText:
+        'A green arrow down indicates that you paid less than normal. This could be a temporary discount or promotion.',
+      monthlyOverviewTitle: 'Monthly overview',
+      monthlyOverviewText:
+        'At the top of the Subscriptions page, you can see the total amount you spend monthly on subscriptions. This helps you understand your fixed costs and where you might be able to save.',
+      bestPracticeTitle: 'Best practice',
+      bestPracticeText:
+        'Check your subscriptions regularly. Many people pay for services they no longer use. By monitoring your subscriptions, you can easily save money.',
     },
     privacy: {
       title: 'Your data & privacy',
@@ -2050,6 +2172,21 @@ export const en: LandingTranslationKeys = {
       total: 'Total spent',
       income: 'Income',
       expenses: 'Expenses',
+    },
+    subscriptions: {
+      monthlyTotal: 'Monthly total',
+      active: 'Active',
+      pending: 'Pending',
+      frequencies: {
+        weekly: 'Weekly',
+        biweekly: 'Bi-weekly',
+        monthly: 'Monthly',
+        quarterly: 'Quarterly',
+        yearly: 'Yearly',
+      },
+      nextPayment: 'Next',
+      priceIncrease: 'Price increase detected',
+      update: 'Update',
     },
     import: {
       dropzone: 'Drop your CSV file here',

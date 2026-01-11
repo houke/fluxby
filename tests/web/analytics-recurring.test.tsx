@@ -114,13 +114,14 @@ describe('Analytics recurring patterns', () => {
   });
 
   it('shows red ↑ when last amount increased vs previous and green ↓ when decreased', async () => {
-    // Use negative amounts as expenses (subscriptions are expenses with avgAmount < 0)
+    // Use negative avgAmount for expenses (subscriptions), but priceHistory amounts
+    // are absolute values (positive) since that's what the database returns
     const patterns = [
       {
         id: 'p1',
         merchantName: 'Service A',
         patternType: 'monthly',
-        avgAmount: -10,
+        avgAmount: -10, // Expense: negative
         lastAmount: -15,
         lastDate: '2024-12-01',
         nextExpectedDate: null,
@@ -131,16 +132,17 @@ describe('Analytics recurring patterns', () => {
         transactionCount: 2,
         profileId: 1,
         createdAt: new Date().toISOString(),
+        // Price history from DB uses ABS(amount), so values are positive
         priceHistory: [
-          { date: '2024-11-01', amount: -10 },
-          { date: '2024-12-01', amount: -15 },
+          { date: '2024-11-01', amount: 10 },
+          { date: '2024-12-01', amount: 15 },
         ],
       },
       {
         id: 'p2',
         merchantName: 'Service B',
         patternType: 'monthly',
-        avgAmount: -20,
+        avgAmount: -20, // Expense: negative
         lastAmount: -18,
         lastDate: '2024-12-01',
         nextExpectedDate: null,
@@ -151,9 +153,10 @@ describe('Analytics recurring patterns', () => {
         transactionCount: 2,
         profileId: 1,
         createdAt: new Date().toISOString(),
+        // Price history from DB uses ABS(amount), so values are positive
         priceHistory: [
-          { date: '2024-11-01', amount: -20 },
-          { date: '2024-12-01', amount: -18 },
+          { date: '2024-11-01', amount: 20 },
+          { date: '2024-12-01', amount: 18 },
         ],
       },
     ];

@@ -42,6 +42,7 @@ export const migration006: Migration = {
 ```
 
 **Key Points**:
+
 - Error handling for duplicate column
 - Data migration after schema change
 - Simple `down` migration (SQLite limitation)
@@ -101,6 +102,7 @@ export const migration005: Migration = {
 ```
 
 **Key Points**:
+
 - Full table definition with constraints
 - Multiple indexes for query performance
 - Clean rollback with DROP TABLE
@@ -194,6 +196,7 @@ export const migration007: Migration = {
 ```
 
 **Key Points**:
+
 - ✅ Uses shared constants from `@fluxby/shared`
 - ✅ Parameterized queries for security
 - ✅ Conditional seeding (checks if demo profile exists)
@@ -253,6 +256,7 @@ export const migration002: Migration = {
 ```
 
 **Key Points**:
+
 - Multiple ALTER TABLE statements
 - Consistent error handling pattern
 - Each column change is independent
@@ -262,6 +266,7 @@ export const migration002: Migration = {
 ## Common Patterns
 
 ### 1. Transaction Wrapper (Performance)
+
 ```typescript
 await db.transactionAsync(async () => {
   // All operations here
@@ -270,14 +275,16 @@ await db.transactionAsync(async () => {
 ```
 
 ### 2. Parameterized Queries (Security)
+
 ```typescript
-await db.runAsync(
-  'INSERT INTO table (col1, col2) VALUES (?, ?)',
-  [value1, value2]
-);
+await db.runAsync('INSERT INTO table (col1, col2) VALUES (?, ?)', [
+  value1,
+  value2,
+]);
 ```
 
 ### 3. Conditional Seeding
+
 ```typescript
 const exists = await db.queryAsync<{ id: string }>(
   'SELECT id FROM table WHERE condition = ? LIMIT 1',
@@ -290,6 +297,7 @@ if (exists && exists.length > 0) {
 ```
 
 ### 4. Error Handling for ALTER TABLE
+
 ```typescript
 try {
   await db.execAsync('ALTER TABLE table ADD COLUMN col TEXT');
@@ -303,6 +311,7 @@ try {
 ```
 
 ### 5. Using Shared Constants
+
 ```typescript
 import { CONSTANT } from '@fluxby/shared';
 

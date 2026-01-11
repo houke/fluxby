@@ -4386,8 +4386,8 @@ export function createDataService(db: Database) {
         opposingIban: row.opposing_iban,
         merchantName: row.merchant_name,
         patternType: row.pattern_type,
-        avgAmount: row.avg_amount,
-        lastAmount: row.last_amount,
+        avgAmount: row.avg_amount ?? 0,
+        lastAmount: row.last_amount ?? 0,
         lastDate: row.last_date,
         nextExpectedDate: row.next_expected_date,
         isActive: row.is_active === 1,
@@ -4482,8 +4482,8 @@ export function createDataService(db: Database) {
           opposingIban: row.opposing_iban,
           merchantName: row.merchant_name,
           patternType: row.pattern_type,
-          avgAmount: row.avg_amount,
-          lastAmount: row.last_amount,
+          avgAmount: row.avg_amount ?? 0,
+          lastAmount: row.last_amount ?? 0,
           lastDate: row.last_date,
           nextExpectedDate: row.next_expected_date,
           isActive: row.is_active === 1,
@@ -4529,7 +4529,7 @@ export function createDataService(db: Database) {
       }>(
         `SELECT id, pattern_type, avg_amount, last_date, is_active, is_confirmed
          FROM recurring_patterns
-         WHERE profile_id = ? AND is_deleted = 0 AND is_dismissed = 0 AND is_active = 1`,
+         WHERE profile_id = ? AND is_deleted = 0 AND is_dismissed = 0 AND is_active = 1 AND avg_amount < 0`,
         [pid]
       );
 

@@ -13,7 +13,10 @@ import {
   ChevronUp,
   ArrowRight,
   Landmark,
+  History,
 } from 'lucide-react';
+import { PageHeader } from '@/components/layout/PageHeader';
+import { EmptyState } from '@/components/ui/EmptyState';
 import {
   Card,
   CardContent,
@@ -819,12 +822,11 @@ export default function Import() {
 
   return (
     <div className='space-y-0 sm:space-y-6'>
-      <div className='pb-4 sm:pb-0'>
-        <h1 className='text-xl font-bold sm:text-3xl'>{t.import.title}</h1>
-        <p className='mt-1 text-xs text-muted-foreground sm:text-base'>
-          {t.import.subtitle}
-        </p>
-      </div>
+      <PageHeader
+        title={t.import.title}
+        subtitle={t.import.subtitle}
+        dataOnboarding='import-greeting'
+      />
 
       {/* Generic CSV Mapping Dialog */}
       <Dialog
@@ -1391,9 +1393,11 @@ export default function Import() {
                 })}
               </div>
             ) : (
-              <div className='py-8 text-center text-muted-foreground'>
-                {t.import.noHistory}
-              </div>
+              <EmptyState
+                icon={History}
+                title={t.import.noHistory}
+                description={t.import.subtitle}
+              />
             )}
           </CardContent>
         </Card>

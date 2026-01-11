@@ -163,6 +163,15 @@ export interface LandingTranslationKeys {
       income: string;
       expenses: string;
     };
+    subscriptions: {
+      monthlyTotal: string;
+      active: string;
+      pending: string;
+      frequencies: Record<string, string>;
+      nextPayment: string;
+      priceIncrease: string;
+      update: string;
+    };
     import: {
       dropzone: string;
       or: string;
@@ -328,6 +337,16 @@ export const nl: LandingTranslationKeys = {
           'Aangepaste kleuren & iconen',
           'Auto-categorisatie regels',
           'Subcategorie ondersteuning',
+        ],
+      },
+      {
+        title: 'Abonnementen tracker',
+        description:
+          'Houd al je terugkerende betalingen bij. Fluxby detecteert automatisch je abonnementen en waarschuwt bij prijswijzigingen.',
+        features: [
+          'Automatische detectie',
+          'Prijswijziging alerts',
+          'Maandelijks overzicht',
         ],
       },
       {
@@ -508,6 +527,7 @@ export const nl: LandingTranslationKeys = {
       transactions: 'Transacties',
       categories: 'Categorieën',
       budgets: 'Budgetten',
+      subscriptions: 'Abonnementen',
       analytics: 'Analytics',
       addressBook: 'Adresboek',
       import: 'Import',
@@ -995,6 +1015,76 @@ export const nl: LandingTranslationKeys = {
       progressTrackingText:
         'Wanneer je budgetten ophaalt, zijn de spent, remaining en percentage velden automatisch berekend op basis van transacties in de huidige periode.',
     },
+    // Subscriptions page
+    subscriptions: {
+      title: 'Abonnementen',
+      subtitle:
+        'Detecteer en beheer terugkerende betalingen automatisch. Krijg inzicht in je maandelijkse vaste lasten.',
+      detectionNote: 'Automatische detectie',
+      detectionNoteText:
+        'Fluxby analyseert je transactiehistorie en detecteert automatisch terugkerende patronen. Patronen worden gedetecteerd wanneer dezelfde merchant minimaal 3 keer voorkomt met regelmatige intervallen.',
+      objectTitle: 'Het Patroon Object',
+      objectText:
+        'Een recurring pattern representeert een gedetecteerd abonnement of terugkerende betaling.',
+      fields: {
+        id: 'Unieke identifier',
+        merchantName: 'Naam van de merchant',
+        patternType: 'weekly, biweekly, monthly, quarterly, yearly',
+        avgAmount: 'Gemiddeld bedrag (negatief voor uitgaven)',
+        lastAmount: 'Laatste afgeschreven bedrag',
+        nextExpectedDate: 'Verwachte volgende afschrijfdatum',
+        isConfirmed: 'Of het patroon door de gebruiker is bevestigd',
+        isVariable: 'Of het bedrag varieert (>10% afwijking)',
+        transactionCount: 'Aantal keer dat dit patroon is gedetecteerd',
+      },
+      listTitle: 'Patronen ophalen',
+      listText: 'Haal alle gedetecteerde terugkerende patronen op:',
+      params: {
+        activeOnly: 'Alleen actieve patronen (default: true)',
+        startDate: 'Startdatum',
+        endDate: 'Einddatum',
+      },
+      statsTitle: 'Statistieken ophalen',
+      statsText: 'Krijg een overzicht van je terugkerende kosten:',
+      calendarTitle: 'Verwachte betalingen',
+      calendarText: 'Haal verwachte betalingen op voor een datumbereik:',
+      detectTitle: 'Patronen detecteren',
+      detectText: 'Voer patroondetectie uit op je transactiehistorie:',
+      detectNote: 'Detectie criteria',
+      detectCriteria: {
+        minTransactions: 'Minimaal 3 transacties van dezelfde merchant',
+        minSpan: 'Transacties moeten over minimaal 2 maanden verspreid zijn',
+        consistency: 'Consistente intervallen (±3 dagen tolerantie)',
+      },
+      actionsTitle: 'Patronen beheren',
+      actionsText:
+        'Bevestig patronen als echte abonnementen of negeer false positives:',
+      confirmTitle: 'Patroon bevestigen',
+      dismissTitle: 'Patroon negeren',
+      deleteTitle: 'Patroon verwijderen',
+      patternTypesTitle: 'Patroon types',
+      patternTypesText: 'Fluxby detecteert de volgende patronen:',
+      intervalColumn: 'Interval',
+      exampleColumn: 'Voorbeeld',
+      days: 'dagen',
+      examples: {
+        weekly: 'Wekelijkse boodschappen',
+        biweekly: 'Tweewekelijkse loon',
+        monthly: 'Netflix, Spotify, huur',
+        quarterly: 'Kwartaalabonnement',
+        yearly: 'Jaarabonnement, verzekering',
+      },
+      endpointsTitle: 'Alle Endpoints',
+      endpoints: {
+        list: 'Lijst alle patronen op',
+        stats: 'Haal statistieken op',
+        calendar: 'Haal verwachte betalingen op',
+        detect: 'Voer patroondetectie uit',
+        confirm: 'Bevestig een patroon',
+        dismiss: 'Negeer een patroon',
+        delete: 'Verwijder een patroon',
+      },
+    },
     // Analytics page
     analytics: {
       title: 'Analyses',
@@ -1221,6 +1311,7 @@ export const nl: LandingTranslationKeys = {
       addressBook: 'Adresboek',
       budgeting: 'Budgetteren & Analytics',
       createBudget: 'Budget maken',
+      subscriptions: 'Abonnementen',
       understandAnalytics: 'Analytics begrijpen',
       security: 'Beveiliging & Privacy',
       sync: 'Apparaat synchronisatie',
@@ -1334,6 +1425,47 @@ export const nl: LandingTranslationKeys = {
       trackingTitle: 'Je voortgang volgen',
       trackingText:
         'De budget kaarten tonen je uitgaven voortgang in real-time. De circulaire voortgangsindicator vult zich naarmate je je limiet nadert, van kleur veranderend van groen naar geel naar rood.',
+    },
+    subscriptions: {
+      title: 'Abonnementen beheren',
+      subtitle:
+        'Houd al je terugkerende betalingen bij en krijg meldingen bij prijswijzigingen.',
+      whatIsTitle: 'Wat zijn abonnementen in Fluxby?',
+      whatIsText:
+        'Fluxby detecteert automatisch terugkerende betalingen in je transacties, zoals streaming diensten, sportschool abonnementen en nutsvoorzieningen. Je krijgt een overzicht van al je maandelijkse vaste lasten en wordt gewaarschuwd wanneer prijzen veranderen.',
+      detectionTitle: 'Hoe werkt automatische detectie?',
+      detectionText:
+        'Wanneer je transacties importeert, analyseert Fluxby de patronen in je betalingen. Als een betaling regelmatig terugkeert (wekelijks, maandelijks, per kwartaal of jaarlijks), wordt deze automatisch herkend als een abonnement.',
+      step1: 'Importeer je transacties via de Import pagina',
+      step2: 'Fluxby analyseert automatisch terugkerende patronen',
+      step3: 'Bevestig gedetecteerde abonnementen of wijs ze af',
+      step4: 'Bekijk je totale maandelijkse vaste lasten in het overzicht',
+      confirmTitle: 'Abonnementen bevestigen of afwijzen',
+      confirmText:
+        'Niet alle gedetecteerde patronen zijn daadwerkelijk abonnementen. Je kunt zelf aangeven welke terugkerende betalingen je als abonnement wilt bijhouden:',
+      confirmButton: 'Bevestigen',
+      confirmButtonText:
+        'Het patroon wordt toegevoegd aan je actieve abonnementen',
+      dismissButton: 'Afwijzen',
+      dismissButtonText: 'Het patroon wordt genegeerd en niet meer getoond',
+      tipTitle: 'Tip',
+      tipText:
+        'Bevestig alleen echte abonnementen die je wilt volgen. Dit houdt je overzicht overzichtelijk en je maandelijkse totaal nauwkeurig.',
+      priceAlertsTitle: 'Prijswijziging meldingen',
+      priceAlertsText:
+        'Fluxby houdt de bedragen van je abonnementen bij. Als een abonnement ineens meer of minder kost dan normaal, krijg je een melding. Je kunt dan kiezen om het nieuwe bedrag te accepteren of te negeren.',
+      priceIncreaseTitle: 'Prijsstijging',
+      priceIncreaseText:
+        'Een rood pijltje omhoog geeft aan dat een abonnement duurder is geworden. Dit kan betekenen dat de dienst haar prijzen heeft verhoogd.',
+      priceDecreaseTitle: 'Prijsdaling',
+      priceDecreaseText:
+        'Een groen pijltje omlaag geeft aan dat je minder hebt betaald dan normaal. Dit kan een tijdelijke korting of promotie zijn.',
+      monthlyOverviewTitle: 'Maandelijks overzicht',
+      monthlyOverviewText:
+        'Bovenaan de Abonnementen pagina zie je het totaalbedrag dat je maandelijks uitgeeft aan abonnementen. Dit helpt je om inzicht te krijgen in je vaste lasten en waar je mogelijk kunt besparen.',
+      bestPracticeTitle: 'Best practice',
+      bestPracticeText:
+        'Controleer regelmatig je abonnementen. Veel mensen betalen voor diensten die ze niet meer gebruiken. Door je abonnementen te monitoren kun je eenvoudig geld besparen.',
     },
     privacy: {
       title: 'Je data & privacy',
@@ -2119,6 +2251,21 @@ export const nl: LandingTranslationKeys = {
       total: 'Totaal uitgegeven',
       income: 'Inkomsten',
       expenses: 'Uitgaven',
+    },
+    subscriptions: {
+      monthlyTotal: 'Maandelijks totaal',
+      active: 'Actief',
+      pending: 'In afwachting',
+      frequencies: {
+        weekly: 'Wekelijks',
+        biweekly: 'Tweewekelijks',
+        monthly: 'Maandelijks',
+        quarterly: 'Per kwartaal',
+        yearly: 'Jaarlijks',
+      },
+      nextPayment: 'Volgende',
+      priceIncrease: 'Prijsstijging gedetecteerd',
+      update: 'Bijwerken',
     },
     import: {
       dropzone: 'Sleep je CSV bestand hier',
