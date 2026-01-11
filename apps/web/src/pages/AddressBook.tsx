@@ -3053,7 +3053,7 @@ export default function AddressBook() {
                                     <div className='flex items-center justify-end gap-2 text-xs'>
                                       {(contact.totalIncome || 0) > 0 && (
                                         <span className='flex items-center text-emerald-600'>
-                                          <ArrowDownRight className='mr-0.5 h-3 w-3' />
+                                          <ArrowUpRight className='mr-0.5 h-3 w-3' />
                                           <Currency
                                             amount={contact.totalIncome || 0}
                                           />
@@ -3061,7 +3061,7 @@ export default function AddressBook() {
                                       )}
                                       {(contact.totalExpenses || 0) > 0 && (
                                         <span className='flex items-center text-red-600'>
-                                          <ArrowUpRight className='mr-0.5 h-3 w-3' />
+                                          <ArrowDownRight className='mr-0.5 h-3 w-3' />
                                           <Currency
                                             amount={contact.totalExpenses || 0}
                                           />
