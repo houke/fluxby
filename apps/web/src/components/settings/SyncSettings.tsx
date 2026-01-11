@@ -375,7 +375,7 @@ export function SyncSettings() {
             </div>
 
             {/* Connection settings */}
-            <h4 className='text-sm font-medium'>
+            <h4 className='mb-1 text-sm font-medium'>
               {t.settings?.sync?.connectionSettings || 'Connection settings'}
             </h4>
 
