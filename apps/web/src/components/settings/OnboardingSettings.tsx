@@ -135,7 +135,7 @@ export function OnboardingSettings() {
       }
 
       // Always seed/reseed demo data when restarting
-      await api.seedDemoData(demoProfile.id);
+      await api.seedDemoData(demoProfile.id, language);
 
       // Clear onboarding completion flag
       await deleteFromOPFSWithCache('fluxby-onboarding-completed');

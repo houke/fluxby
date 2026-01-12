@@ -905,6 +905,8 @@ export default function Dashboard() {
                       allowDecimals={false}
                       tickCount={5}
                     />
+                    {/* Hidden Bar to provide data reference for YAxis */}
+                    <Bar dataKey='expenses' fill='transparent' />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -1073,7 +1075,7 @@ export default function Dashboard() {
                     <span className='text-sm text-muted-foreground'>
                       {t.dashboard.spent}
                     </span>
-                    <span className='font-semibold'>
+                    <span className='font-semibold text-rose-600'>
                       <Currency amount={totalSpent} />
                     </span>
                   </div>
@@ -1397,7 +1399,7 @@ export default function Dashboard() {
                       {t.subscriptions?.totalMonthlySpend ||
                         'Total monthly spend'}
                     </span>
-                    <span className='font-semibold'>
+                    <span className='font-semibold text-rose-600'>
                       <Currency
                         amount={Math.abs(recurringStats.totalMonthlySpend)}
                       />
@@ -1523,7 +1525,6 @@ export default function Dashboard() {
                               : 'text-rose-600'
                         }`}
                       >
-                        {tx.amount > 0 ? '+' : ''}
                         <Currency amount={tx.amount} />
                       </span>
                     </div>

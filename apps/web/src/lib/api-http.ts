@@ -855,7 +855,7 @@ export const api = {
       method: 'POST',
     }),
 
-  seedDemoData: (profileId: number) =>
+  seedDemoData: (profileId: number, _language?: 'nl' | 'en') =>
     fetchAPI<{
       profileId: number;
       categories: number;

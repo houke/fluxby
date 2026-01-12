@@ -211,7 +211,7 @@ export function SecuritySetup({ onSetupComplete }: SecuritySetupProps) {
       await showProgress(texts.progressCategories, 20, 200);
 
       // Create a promise that periodically updates progress while seeding
-      const seedPromise = api.seedDemoData(demoProfile.id);
+      const seedPromise = api.seedDemoData(demoProfile.id, language);
       const progressSteps = [
         { progress: 25, message: texts.progressCategories, delay: 800 },
         { progress: 30, message: texts.progressTransactions, delay: 1200 },

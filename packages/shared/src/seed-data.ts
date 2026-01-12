@@ -872,15 +872,23 @@ export const SEED_CATEGORIES: SeedCategory[] = [
         ],
       },
       {
+        name: { nl: 'Teruggaven', en: 'Refunds' },
+        icon: '🔄',
+        description: {
+          nl: 'Belastingteruggaven en terugbetalingen.',
+          en: 'Tax refunds and reimbursements.',
+        },
+        rules: ['Belastingdienst', 'Teruggave', 'Teruggaaf', 'Restitutie'],
+      },
+      {
         name: { nl: 'Toeslagen', en: 'Allowances' },
         icon: '💶',
         description: {
-          nl: 'Toeslagen en belastingteruggave.',
-          en: 'Allowances and tax refunds.',
+          nl: 'Overheidstoeslagen en bijdragen.',
+          en: 'Government allowances and benefits.',
         },
         rules: [
           'Belastingdienst Toeslagen',
-          'Teruggave',
           'Zorgtoeslag',
           'Huurtoeslag',
           'Kinderbijslag',

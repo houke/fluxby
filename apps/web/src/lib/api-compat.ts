@@ -441,10 +441,20 @@ export const api = {
 
   getTransactionsCountOutsideRange: async (
     startDate: string,
-    endDate: string
+    endDate: string,
+    filters?: {
+      search?: string;
+      type?: string;
+      categoryIds?: string;
+      opposingAccountIbans?: string;
+      opposingAccountName?: string;
+      addressBookId?: string;
+      paymentMethods?: string;
+      paymentProviders?: string;
+    }
   ) => {
     const ds = getDataService();
-    return ds.getTransactionsCountOutsideRange(startDate, endDate);
+    return ds.getTransactionsCountOutsideRange(startDate, endDate, filters);
   },
 
   getMonthlyStats: async (startDate: string, endDate: string) => {
@@ -972,11 +982,11 @@ export const api = {
     return ds.deleteAllAccounts();
   },
 
-  createDemoData: async () => {
+  createDemoData: async (language: 'nl' | 'en' = 'nl') => {
     const ds = getDataService();
     const profileId = getActiveProfileIdSync();
     if (!profileId) throw new Error('No active profile');
-    return ds.createDemoData(profileId);
+    return ds.createDemoData(profileId, language);
   },
 
   // ============= User Methods =============
@@ -1029,9 +1039,9 @@ export const api = {
     return profile;
   },
 
-  seedDemoData: async (profileId: string) => {
+  seedDemoData: async (profileId: string, language: 'nl' | 'en' = 'nl') => {
     const ds = getDataService();
-    return ds.createDemoData(profileId);
+    return ds.createDemoData(profileId, language);
   },
 
   // Check if demo profile exists

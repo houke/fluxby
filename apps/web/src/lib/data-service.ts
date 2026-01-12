@@ -1177,25 +1177,101 @@ export function createDataService(db: Database) {
 
     async getTransactionsCountOutsideRange(
       startDate: string,
-      endDate: string
+      endDate: string,
+      filters?: {
+        search?: string;
+        type?: string;
+        categoryIds?: string;
+        opposingAccountIbans?: string;
+        opposingAccountName?: string;
+        addressBookId?: string;
+        paymentMethods?: string;
+        paymentProviders?: string;
+      }
     ): Promise<{ before: number; after: number; total: number }> {
       const pid = profileId();
       if (!pid) return { before: 0, after: 0, total: 0 };
+
+      // Build filter conditions
+      const filterConditions: string[] = [];
+      const filterParams: (string | number)[] = [];
+
+      if (filters?.search) {
+        filterConditions.push(
+          `(t.description LIKE ? OR t.opposing_account_name LIKE ? OR t.opposing_account_iban LIKE ?)`
+        );
+        const searchPattern = `%${filters.search}%`;
+        filterParams.push(searchPattern, searchPattern, searchPattern);
+      }
+      if (filters?.type) {
+        filterConditions.push(`t.type = ?`);
+        filterParams.push(filters.type);
+      }
+      if (filters?.categoryIds) {
+        const ids = filters.categoryIds.split(',').filter(Boolean);
+        if (ids.length > 0) {
+          filterConditions.push(
+            `t.category_id IN (${ids.map(() => '?').join(',')})`
+          );
+          filterParams.push(...ids);
+        }
+      }
+      if (filters?.opposingAccountIbans) {
+        const ibans = filters.opposingAccountIbans.split(',').filter(Boolean);
+        if (ibans.length > 0) {
+          filterConditions.push(
+            `t.opposing_account_iban IN (${ibans.map(() => '?').join(',')})`
+          );
+          filterParams.push(...ibans);
+        }
+      }
+      if (filters?.opposingAccountName) {
+        filterConditions.push(`t.opposing_account_name LIKE ?`);
+        filterParams.push(`%${filters.opposingAccountName}%`);
+      }
+      if (filters?.addressBookId) {
+        filterConditions.push(`t.address_book_id = ?`);
+        filterParams.push(filters.addressBookId);
+      }
+      if (filters?.paymentMethods) {
+        const methods = filters.paymentMethods.split(',').filter(Boolean);
+        if (methods.length > 0) {
+          filterConditions.push(
+            `t.payment_method IN (${methods.map(() => '?').join(',')})`
+          );
+          filterParams.push(...methods);
+        }
+      }
+      if (filters?.paymentProviders) {
+        const providers = filters.paymentProviders.split(',').filter(Boolean);
+        if (providers.length > 0) {
+          // Payment providers filter by matching against resolved_payment_provider
+          filterConditions.push(
+            `t.resolved_payment_provider IN (${providers.map(() => '?').join(',')})`
+          );
+          filterParams.push(...providers);
+        }
+      }
+
+      const filterClause =
+        filterConditions.length > 0
+          ? ` AND ${filterConditions.join(' AND ')}`
+          : '';
 
       const beforeResult = await db.queryOneAsync<{ count: number }>(
         `SELECT COUNT(*) as count
          FROM transactions t
          JOIN accounts a ON t.account_id = a.id
-         WHERE a.profile_id = ? AND t.is_deleted = 0 AND t.date < ?`,
-        [pid, startDate]
+         WHERE a.profile_id = ? AND t.is_deleted = 0 AND t.date < ?${filterClause}`,
+        [pid, startDate, ...filterParams]
       );
 
       const afterResult = await db.queryOneAsync<{ count: number }>(
         `SELECT COUNT(*) as count
          FROM transactions t
          JOIN accounts a ON t.account_id = a.id
-         WHERE a.profile_id = ? AND t.is_deleted = 0 AND t.date > ?`,
-        [pid, endDate]
+         WHERE a.profile_id = ? AND t.is_deleted = 0 AND t.date > ?${filterClause}`,
+        [pid, endDate, ...filterParams]
       );
 
       const before = beforeResult?.count || 0;
@@ -5056,7 +5132,10 @@ export function createDataService(db: Database) {
       return { deleted: result.changes };
     },
 
-    async createDemoData(targetProfileId: string) {
+    async createDemoData(
+      targetProfileId: string,
+      language: 'nl' | 'en' = 'nl'
+    ) {
       const now = Date.now();
 
       // Import seed data
@@ -5102,7 +5181,10 @@ export function createDataService(db: Database) {
         );
 
         // 2. Seed categories with subcategories using bulk inserts
-        const { parentCategories, subcategories } = flattenCategoriesForDB();
+        const { parentCategories, subcategories } = flattenCategoriesForDB(
+          undefined, // use default SEED_CATEGORIES
+          language
+        );
         const categoryIdMap: Record<string, string> = {};
 
         // Prepare parent categories with pre-generated IDs

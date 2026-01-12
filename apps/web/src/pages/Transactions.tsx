@@ -584,12 +584,26 @@ export default function Transactions() {
       activeProfileId,
       startDate,
       endDate,
+      debouncedSearch,
+      typeParam,
+      categoryIdsParam,
+      ibansParam,
+      nameParam,
+      addressBookIdParam,
+      paymentMethodsParam,
+      paymentProvidersParam,
     ],
     queryFn: () =>
-      api.getTransactionsCountOutsideRange(
-        startDate || '',
-        endDate || ''
-      ) as Promise<{ before: number; after: number; total: number }>,
+      api.getTransactionsCountOutsideRange(startDate || '', endDate || '', {
+        search: debouncedSearch,
+        type: typeParam || '',
+        categoryIds: categoryIdsParam?.join(',') || '',
+        opposingAccountIbans: ibansParam?.join(',') || '',
+        opposingAccountName: nameParam || '',
+        addressBookId: addressBookIdParam?.toString() || '',
+        paymentMethods: paymentMethodsParam?.join(',') || '',
+        paymentProviders: paymentProvidersParam?.join(',') || '',
+      }) as Promise<{ before: number; after: number; total: number }>,
     enabled: !!activeProfileId && !!startDate && !!endDate,
   });
 
