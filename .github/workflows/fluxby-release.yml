@@ -251,10 +251,11 @@ jobs:
           | Platform | Download |
           |----------|----------|
           | Windows | [Fluxby_${VERSION}_x64-setup.exe](https://github.com/${{ github.repository }}/releases/download/v${VERSION}/Fluxby_${VERSION}_x64-setup.exe) |
-          | macOS (Intel) | [Fluxby_${VERSION}_x64.dmg](https://github.com/${{ github.repository }}/releases/download/v${VERSION}/Fluxby_${VERSION}_x64.dmg) |
-          | macOS (Apple Silicon) | [Fluxby_${VERSION}_aarch64.dmg](https://github.com/${{ github.repository }}/releases/download/v${VERSION}/Fluxby_${VERSION}_aarch64.dmg) |
-          | Linux (AppImage) | [fluxby_${VERSION}_amd64.AppImage](https://github.com/${{ github.repository }}/releases/download/v${VERSION}/fluxby_${VERSION}_amd64.AppImage) |
-          | Linux (Debian) | [fluxby_${VERSION}_amd64.deb](https://github.com/${{ github.repository }}/releases/download/v${VERSION}/fluxby_${VERSION}_amd64.deb) |
+          | macOS (Universal) | [Fluxby_${VERSION}_universal.dmg](https://github.com/${{ github.repository }}/releases/download/v${VERSION}/Fluxby_${VERSION}_universal.dmg) |
+          | Linux (AppImage) | [Fluxby_${VERSION}_amd64.AppImage](https://github.com/${{ github.repository }}/releases/download/v${VERSION}/Fluxby_${VERSION}_amd64.AppImage) |
+          | Linux (Debian) | [Fluxby_${VERSION}_amd64.deb](https://github.com/${{ github.repository }}/releases/download/v${VERSION}/Fluxby_${VERSION}_amd64.deb) |
+          
+          > **Note for macOS users:** The app is not code signed. On first launch, right-click the app and select "Open", then click "Open" in the dialog to bypass Gatekeeper.
           EOF
 
       - name: Create release
@@ -279,17 +280,14 @@ jobs:
       matrix:
         include:
           - platform: 'macos-latest'
-            args: '--target aarch64-apple-darwin'
-            rust-target: 'aarch64-apple-darwin'
-          - platform: 'macos-latest'
-            args: '--target x86_64-apple-darwin'
-            rust-target: 'x86_64-apple-darwin'
+            args: '--target universal-apple-darwin'
+            rust-targets: 'aarch64-apple-darwin,x86_64-apple-darwin'
           - platform: 'ubuntu-22.04'
             args: ''
-            rust-target: ''
+            rust-targets: ''
           - platform: 'windows-latest'
             args: ''
-            rust-target: ''
+            rust-targets: ''
 
     runs-on: ${{ matrix.platform }}
     steps:
@@ -309,9 +307,12 @@ jobs:
         with:
           toolchain: stable
 
-      - name: Add Rust target
-        if: matrix.rust-target != ''
-        run: rustup target add ${{ matrix.rust-target }}
+      - name: Add Rust targets
+        if: matrix.rust-targets != ''
+        run: |
+          for target in $(echo "${{ matrix.rust-targets }}" | tr ',' '\n'); do
+            rustup target add $target
+          done
 
       - name: Install Linux dependencies
         if: matrix.platform == 'ubuntu-22.04'
