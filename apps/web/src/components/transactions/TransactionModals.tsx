@@ -782,7 +782,7 @@ export const RuleModal = memo(function RuleModal({
   t,
 }: RuleModalProps) {
   const existingCategory = existingRule
-    ? categories?.find((c) => Number(c.id) === Number(existingRule.categoryId))
+    ? categories?.find((c) => String(c.id) === String(existingRule.categoryId))
     : null;
 
   return (

@@ -73,8 +73,9 @@ export const PATTERN_INTERVALS: Record<
 
 /**
  * Tolerance for date matching (in days)
+ * Relaxed from 3 to 12 days to better handle payment timing variations
  */
-export const DATE_TOLERANCE_DAYS = 3;
+export const DATE_TOLERANCE_DAYS = 12;
 
 /**
  * Minimum number of transactions required for pattern detection

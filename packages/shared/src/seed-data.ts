@@ -852,12 +852,15 @@ export const SEED_CATEGORIES: SeedCategory[] = [
     name: { nl: 'Inkomsten', en: 'Income' },
     icon: '💵',
     color: '#22C55E',
-    description: 'Al je inkomsten en ontvangsten.',
+    description: {
+      nl: 'Al je inkomsten en ontvangsten.',
+      en: 'All your income and receipts.',
+    },
     subcategories: [
       {
-        name: 'Salaris',
+        name: { nl: 'Salaris', en: 'Salary' },
         icon: '💼',
-        description: 'Loon uit dienstverband.',
+        description: { nl: 'Loon uit dienstverband.', en: 'Employment wages.' },
         rules: [
           'Salaris',
           'Loon',
@@ -869,22 +872,29 @@ export const SEED_CATEGORIES: SeedCategory[] = [
         ],
       },
       {
-        name: 'Teruggaven',
+        name: { nl: 'Toeslagen', en: 'Allowances' },
         icon: '💶',
-        description: 'Toeslagen en belastingteruggave.',
+        description: {
+          nl: 'Toeslagen en belastingteruggave.',
+          en: 'Allowances and tax refunds.',
+        },
         rules: [
           'Belastingdienst Toeslagen',
           'Teruggave',
           'Zorgtoeslag',
           'Huurtoeslag',
           'Kinderbijslag',
+          'Kinderopvangtoeslag',
           'toeslag',
         ],
       },
       {
-        name: 'Overig Inkomen',
+        name: { nl: 'Overig Inkomen', en: 'Other Income' },
         icon: '💰',
-        description: 'Tikkies en marktplaats verkopen.',
+        description: {
+          nl: 'Tikkies en marktplaats verkopen.',
+          en: 'Payment requests and marketplace sales.',
+        },
         rules: [
           'Tikkie',
           'Betaalverzoek',

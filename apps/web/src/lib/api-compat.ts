@@ -391,18 +391,20 @@ export const api = {
     const categoryStats = await ds.getCategoryStats(startDate, endDate);
     const recentTransactions = await ds.getTransactions({ limit: '10' });
 
+    // Calculate transfer/savings amounts
+    const transferStats = await ds.getTransferStats(startDate, endDate);
+
     return {
       totalBalance: basicStats.totalIncome - basicStats.totalExpenses,
       totalIncome: basicStats.totalIncome,
       totalExpenses: basicStats.totalExpenses,
-      transferToSavings: 0,
-      transferFromSavings: 0,
-      netSavingsTransfer: 0,
+      transferToSavings: transferStats.transferToSavings,
+      transferFromSavings: transferStats.transferFromSavings,
+      netSavingsTransfer:
+        transferStats.transferToSavings - transferStats.transferFromSavings,
       savingsRate:
         basicStats.totalIncome > 0
-          ? ((basicStats.totalIncome - basicStats.totalExpenses) /
-              basicStats.totalIncome) *
-            100
+          ? (transferStats.transferToSavings / basicStats.totalIncome) * 100
           : 0,
       transactionCount: basicStats.transactionCount,
       monthlyData: monthlyData.map(
@@ -435,6 +437,14 @@ export const api = {
   getMinMaxDates: async () => {
     const ds = getDataService();
     return ds.getMinMaxDates();
+  },
+
+  getTransactionsCountOutsideRange: async (
+    startDate: string,
+    endDate: string
+  ) => {
+    const ds = getDataService();
+    return ds.getTransactionsCountOutsideRange(startDate, endDate);
   },
 
   getMonthlyStats: async (startDate: string, endDate: string) => {
@@ -1302,9 +1312,12 @@ export const api = {
     return ds.bulkCategorizeByCounterparty(counterparty, categoryId);
   },
 
-  renameByCounterparty: async (oldName: string, newName: string | null) => {
+  renameByCounterparty: async (
+    transactionId: string,
+    newName: string | null
+  ) => {
     const ds = getDataService();
-    return ds.bulkRenameByCounterparty(oldName, newName || '');
+    return ds.renameByTransactionId(transactionId, newName);
   },
 
   detectInternalTransfers: async () => {

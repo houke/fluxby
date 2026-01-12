@@ -295,6 +295,25 @@ export default function Transactions() {
   // Sentinel element to observe for automatic loading when scrolling
   const loadMoreSentinelRef = useRef<HTMLDivElement>(null);
 
+  // Scroll position preservation for query invalidation
+  const savedScrollPosition = useRef<number | null>(null);
+
+  // Helper function to save scroll position before invalidation
+  const saveScrollPosition = useCallback(() => {
+    savedScrollPosition.current = window.scrollY;
+  }, []);
+
+  // Helper function to restore scroll position after refetch
+  const restoreScrollPosition = useCallback(() => {
+    if (savedScrollPosition.current !== null) {
+      // Use requestAnimationFrame to ensure DOM has updated
+      requestAnimationFrame(() => {
+        window.scrollTo(0, savedScrollPosition.current || 0);
+        savedScrollPosition.current = null;
+      });
+    }
+  }, []);
+
   const hasActiveFilters =
     search !== '' ||
     transactionType !== 'all' ||
@@ -556,6 +575,22 @@ export default function Transactions() {
         maxDate: string;
       } | null>,
     enabled: !!activeProfileId,
+  });
+
+  // Get count of transactions outside current date range
+  const { data: outsideRangeCount } = useQuery({
+    queryKey: [
+      'transactions-outside-range',
+      activeProfileId,
+      startDate,
+      endDate,
+    ],
+    queryFn: () =>
+      api.getTransactionsCountOutsideRange(
+        startDate || '',
+        endDate || ''
+      ) as Promise<{ before: number; after: number; total: number }>,
+    enabled: !!activeProfileId && !!startDate && !!endDate,
   });
 
   // Determine suggested period based on available data (for empty state)
@@ -833,6 +868,9 @@ export default function Transactions() {
     }) => api.updateTransaction(id, data),
     // Optimistic update for immediate UI feedback
     onMutate: async (variables) => {
+      // Save scroll position before invalidation
+      saveScrollPosition();
+
       // Cancel any outgoing refetches to prevent overwriting optimistic update
       await queryClient.cancelQueries({
         queryKey: ['transactions', activeProfileId],
@@ -881,6 +919,10 @@ export default function Transactions() {
           queryKey: ['sharedIbans', activeProfileId],
         });
       }
+    },
+    onSettled: () => {
+      // Restore scroll position after mutation completes
+      restoreScrollPosition();
     },
   });
 
@@ -940,6 +982,10 @@ export default function Transactions() {
       transactionId: string;
       merchantName: string | null;
     }) => api.renameByCounterparty(transactionId, merchantName),
+    onMutate: () => {
+      // Save scroll position before invalidation
+      saveScrollPosition();
+    },
     onSuccess: (result) => {
       queryClient.invalidateQueries({
         queryKey: ['transactions', activeProfileId],
@@ -960,6 +1006,10 @@ export default function Transactions() {
           )
         );
       }
+    },
+    onSettled: () => {
+      // Restore scroll position after mutation completes
+      restoreScrollPosition();
     },
   });
 
@@ -2649,6 +2699,39 @@ export default function Transactions() {
                       </Button>
                     </div>
                   )}
+
+                  {/* Show card if there are transactions outside the current date range */}
+                  {outsideRangeCount &&
+                    outsideRangeCount.total > 0 &&
+                    minMaxDates && (
+                      <div className='mt-4 rounded-lg border border-purple-200 bg-purple-50 p-4 dark:border-purple-800 dark:bg-purple-900/20'>
+                        <div className='flex items-center justify-between'>
+                          <div className='text-sm text-purple-700 dark:text-purple-300'>
+                            {(
+                              t.transactions?.transactionsOutsideRange ||
+                              '{count} more transactions outside this date range'
+                            ).replace(
+                              '{count}',
+                              String(outsideRangeCount.total)
+                            )}
+                          </div>
+                          <Button
+                            variant='ghost'
+                            size='sm'
+                            className='text-purple-600 hover:bg-purple-100 hover:text-purple-700 dark:text-purple-400 dark:hover:bg-purple-800 dark:hover:text-purple-300'
+                            onClick={() => {
+                              setDateRange(
+                                new Date(minMaxDates.minDate),
+                                new Date(minMaxDates.maxDate)
+                              );
+                            }}
+                          >
+                            {t.transactions?.expandDateRange ||
+                              'Expand date range'}
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                 </>
               ) : hasActiveFilters ? (
                 // If the filters returned no transactions in the current date range
@@ -3531,11 +3614,26 @@ export default function Transactions() {
                       </thead>
                       <tbody className='divide-y divide-border/50'>
                         {relatedTransactions.map((rt) => (
-                          <tr key={rt.id} className='text-sm hover:bg-muted/50'>
+                          <tr
+                            key={rt.id}
+                            className='cursor-pointer text-sm hover:bg-muted/50'
+                            onClick={() => {
+                              const newSet: Set<string> = new Set(
+                                selectedRelatedIds
+                              );
+                              if (selectedRelatedIds.has(rt.id)) {
+                                newSet.delete(rt.id);
+                              } else {
+                                newSet.add(rt.id);
+                              }
+                              setSelectedRelatedIds(newSet);
+                            }}
+                          >
                             <td className='py-2'>
                               <Checkbox
                                 checked={selectedRelatedIds.has(rt.id)}
                                 onChange={(e) => {
+                                  e.stopPropagation();
                                   const target = e.target as HTMLInputElement;
                                   const newSet: Set<string> = new Set(
                                     selectedRelatedIds
@@ -3612,7 +3710,7 @@ export default function Transactions() {
                   const existingRule = findExistingRule(rulePattern);
                   if (existingRule) {
                     const existingCategory = categories?.find(
-                      (c) => Number(c.id) === Number(existingRule.categoryId)
+                      (c) => String(c.id) === String(existingRule.categoryId)
                     );
                     return (
                       <div className='flex items-center gap-2 rounded-md bg-amber-50 px-3 py-2 text-amber-800 dark:bg-amber-900/20 dark:text-amber-200'>
@@ -3795,11 +3893,24 @@ export default function Transactions() {
                         </tr>
                       )}
                       {transferRelatedTransactions.map((rt) => (
-                        <tr key={rt.id} className='text-sm hover:bg-muted/50'>
+                        <tr
+                          key={rt.id}
+                          className='cursor-pointer text-sm hover:bg-muted/50'
+                          onClick={() => {
+                            const newSet = new Set(selectedTransferRelatedIds);
+                            if (selectedTransferRelatedIds.has(rt.id)) {
+                              newSet.delete(rt.id);
+                            } else {
+                              newSet.add(rt.id);
+                            }
+                            setSelectedTransferRelatedIds(newSet);
+                          }}
+                        >
                           <td className='py-2'>
                             <Checkbox
                               checked={selectedTransferRelatedIds.has(rt.id)}
                               onChange={(e) => {
+                                e.stopPropagation();
                                 const target = e.target as HTMLInputElement;
                                 const newSet = new Set(
                                   selectedTransferRelatedIds

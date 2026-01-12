@@ -259,7 +259,16 @@ export default function Dashboard() {
   );
   const categoryData = stats?.categoryBreakdown || [];
   const recentTransactions = stats?.recentTransactions || [];
-  const dailyData = dailyExpenses || [];
+
+  // Filter leading zero-expense days from daily chart data
+  // to avoid whitespace at the start of the chart
+  const dailyData = useMemo(() => {
+    const rawData = dailyExpenses || [];
+    // Find first day with non-zero expenses
+    const firstNonZeroIndex = rawData.findIndex((day) => day.expenses > 0);
+    if (firstNonZeroIndex === -1) return rawData;
+    return rawData.slice(firstNonZeroIndex);
+  }, [dailyExpenses]);
 
   // Budget calculations
   const totalBudget =
@@ -1389,7 +1398,9 @@ export default function Dashboard() {
                         'Total monthly spend'}
                     </span>
                     <span className='font-semibold'>
-                      <Currency amount={recurringStats.totalMonthlySpend} />
+                      <Currency
+                        amount={Math.abs(recurringStats.totalMonthlySpend)}
+                      />
                     </span>
                   </div>
                   <div className='flex items-center justify-between'>
@@ -1610,7 +1621,6 @@ export default function Dashboard() {
                             : 'text-rose-600'
                         }`}
                       >
-                        {account.netAmount > 0 ? '+' : ''}
                         <Currency amount={account.netAmount} />
                       </span>
                     </div>

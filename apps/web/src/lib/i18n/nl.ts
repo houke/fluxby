@@ -283,6 +283,8 @@ export interface TranslationKeys {
     noTransactionsFound: string;
     noTransactionsInRangeTitle: string;
     noTransactionsInRangeDescription: string;
+    transactionsOutsideRange: string;
+    expandDateRange: string;
     viewAllData: string;
     adjustFilters: string;
     loadMore: string;
@@ -1592,6 +1594,9 @@ export const nl: TranslationKeys = {
     noTransactionsInRangeTitle: 'Geen transacties in deze periode',
     noTransactionsInRangeDescription:
       'Er zijn geen transacties gevonden in de geselecteerde periode, maar er zijn wel resultaten in alle gegevens.',
+    transactionsOutsideRange:
+      '{count} transacties buiten de geselecteerde periode',
+    expandDateRange: 'Periode uitbreiden',
     viewAllData: 'Bekijk alle gegevens',
     adjustFilters: 'Pas je filters of zoekopdracht aan',
     loadMore: 'Meer laden',

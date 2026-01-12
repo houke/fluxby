@@ -1110,6 +1110,49 @@ export function createDataService(db: Database) {
       return results.map((r: { year: number }) => r.year);
     },
 
+    /**
+     * Get transfer statistics for savings tracking
+     * Returns amounts transferred to/from savings accounts
+     */
+    async getTransferStats(
+      startDate?: string,
+      endDate?: string
+    ): Promise<{ transferToSavings: number; transferFromSavings: number }> {
+      const pid = profileId();
+      if (!pid) {
+        return { transferToSavings: 0, transferFromSavings: 0 };
+      }
+
+      let sql = `
+        SELECT 
+          COALESCE(SUM(CASE WHEN t.type = 'transfer' AND t.amount < 0 THEN ABS(t.amount) ELSE 0 END), 0) as transferToSavings,
+          COALESCE(SUM(CASE WHEN t.type = 'transfer' AND t.amount > 0 THEN t.amount ELSE 0 END), 0) as transferFromSavings
+        FROM transactions t
+        JOIN accounts a ON t.account_id = a.id
+        WHERE a.profile_id = ? AND t.is_deleted = 0
+      `;
+      const params: unknown[] = [pid];
+
+      if (startDate) {
+        sql += ' AND t.date >= ?';
+        params.push(startDate);
+      }
+      if (endDate) {
+        sql += ' AND t.date <= ?';
+        params.push(endDate);
+      }
+
+      const result = await db.queryOneAsync<{
+        transferToSavings: number;
+        transferFromSavings: number;
+      }>(sql, params);
+
+      return {
+        transferToSavings: result?.transferToSavings || 0,
+        transferFromSavings: result?.transferFromSavings || 0,
+      };
+    },
+
     async getMinMaxDates(): Promise<{
       minDate: string;
       maxDate: string;
@@ -1130,6 +1173,34 @@ export function createDataService(db: Database) {
 
       if (!result?.minDate || !result?.maxDate) return null;
       return result;
+    },
+
+    async getTransactionsCountOutsideRange(
+      startDate: string,
+      endDate: string
+    ): Promise<{ before: number; after: number; total: number }> {
+      const pid = profileId();
+      if (!pid) return { before: 0, after: 0, total: 0 };
+
+      const beforeResult = await db.queryOneAsync<{ count: number }>(
+        `SELECT COUNT(*) as count
+         FROM transactions t
+         JOIN accounts a ON t.account_id = a.id
+         WHERE a.profile_id = ? AND t.is_deleted = 0 AND t.date < ?`,
+        [pid, startDate]
+      );
+
+      const afterResult = await db.queryOneAsync<{ count: number }>(
+        `SELECT COUNT(*) as count
+         FROM transactions t
+         JOIN accounts a ON t.account_id = a.id
+         WHERE a.profile_id = ? AND t.is_deleted = 0 AND t.date > ?`,
+        [pid, endDate]
+      );
+
+      const before = beforeResult?.count || 0;
+      const after = afterResult?.count || 0;
+      return { before, after, total: before + after };
     },
 
     // ============= Address Book =============
@@ -2133,6 +2204,58 @@ export function createDataService(db: Database) {
       );
 
       return { updated: result.changes, counterparty };
+    },
+
+    async renameByTransactionId(
+      transactionId: string,
+      newMerchantName: string | null
+    ) {
+      const pid = profileId();
+      if (!pid) return { updated: 0 };
+
+      // First, get the transaction to find the counterparty to match
+      const tx = await db.queryOneAsync<{
+        opposing_account_name: string | null;
+        merchant_name: string | null;
+        opposing_account_iban: string | null;
+      }>(
+        `SELECT opposing_account_name, merchant_name, opposing_account_iban
+         FROM transactions
+         WHERE id = ? AND account_id IN (SELECT id FROM accounts WHERE profile_id = ?)`,
+        [transactionId, pid]
+      );
+
+      if (!tx) return { updated: 0 };
+
+      // Use the counterparty name (merchant_name if set, otherwise opposing_account_name)
+      // to match other transactions from the same counterparty
+      const matchName = tx.merchant_name || tx.opposing_account_name;
+      const iban = tx.opposing_account_iban;
+
+      if (!matchName && !iban) return { updated: 0 };
+
+      // Update all transactions with the same counterparty (by IBAN or name)
+      // Use exact match on IBAN if available, otherwise match by name
+      let result;
+      if (iban) {
+        result = await db.runAsync(
+          `UPDATE transactions SET merchant_name = ?, updated_at = ?
+           WHERE opposing_account_iban = ?
+           AND account_id IN (SELECT id FROM accounts WHERE profile_id = ?)
+           AND is_deleted = 0`,
+          [newMerchantName || '', Date.now(), iban, pid]
+        );
+      } else {
+        result = await db.runAsync(
+          `UPDATE transactions SET merchant_name = ?, updated_at = ?
+           WHERE (opposing_account_name = ? OR merchant_name = ?)
+           AND account_id IN (SELECT id FROM accounts WHERE profile_id = ?)
+           AND is_deleted = 0`,
+          [newMerchantName || '', Date.now(), matchName, matchName, pid]
+        );
+      }
+
+      return { updated: result.changes };
     },
 
     async bulkRenameByCounterparty(oldName: string, newName: string) {
@@ -3896,6 +4019,23 @@ export function createDataService(db: Database) {
           now,
         ]
       );
+
+      // Recalculate account balance from the latest transaction's balance_after
+      const latestBalance = await db.queryOneAsync<{ balance_after: number }>(
+        `SELECT balance_after
+         FROM transactions
+         WHERE account_id = ? AND balance_after IS NOT NULL AND is_deleted = 0
+         ORDER BY date DESC, created_at DESC
+         LIMIT 1`,
+        [options.accountId]
+      );
+      if (latestBalance && typeof latestBalance.balance_after === 'number') {
+        await db.runAsync(
+          `UPDATE accounts SET current_balance = ?, updated_at = ?
+           WHERE id = ?`,
+          [latestBalance.balance_after, now, options.accountId]
+        );
+      }
 
       return {
         imported,

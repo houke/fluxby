@@ -326,6 +326,9 @@ export const en: TranslationKeys = {
     noTransactionsInRangeTitle: 'No transactions found in this period',
     noTransactionsInRangeDescription:
       'No transactions found in the selected period, but there are matching transactions in your full data.',
+    transactionsOutsideRange:
+      '{count} more transactions outside this date range',
+    expandDateRange: 'Expand date range',
     viewAllData: 'View all data',
     adjustFilters: 'Adjust your filters or search query',
     loadMore: 'Load more',

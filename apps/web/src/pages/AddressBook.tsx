@@ -327,6 +327,9 @@ export default function AddressBook() {
       queryClient.invalidateQueries({
         queryKey: ['sharedIbans', activeProfileId],
       });
+      queryClient.invalidateQueries({
+        queryKey: ['topAccounts', activeProfileId],
+      });
       toast.info(
         t.addressBook?.transactionNamesUpdated ||
           'Cleanup rules applied to transactions'

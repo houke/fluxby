@@ -362,9 +362,13 @@ export default function Categories() {
         type: 'success',
       });
     },
-    onError: () => {
+    onError: (error: Error) => {
+      console.error('Error applying rules:', error);
       setShowProgressModal(false);
-      setToast({ message: t.categories.toastRulesError, type: 'error' });
+      setToast({
+        message: `${t.categories.toastRulesError}: ${error.message}`,
+        type: 'error',
+      });
     },
   });
 
