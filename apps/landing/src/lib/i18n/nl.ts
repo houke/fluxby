@@ -1938,6 +1938,13 @@ export const nl: LandingTranslationKeys = {
     updatesPage: {
       intro:
         'Bekijk wat er nieuw is in Fluxby. Hier vind je alle updates en nieuwe features.',
+      v151Date: '14 januari 2026',
+      v151Title: 'Release 1.5.1',
+      v151Description: '3 bugfixes.',
+      v151F1Title: 'Betere web ervaring',
+      v151F1Desc: '2 bugfixes. Bekijk de release op GitHub!',
+      v151F2Title: 'Switch to universal macos binary and verwijderd redundant artifacts',
+      v151F2Desc: 'Kleine fix, groot verschil.',
       v150Date: '11 januari 2026',
       v150Title: 'Release 1.5.0',
       v150Description: '2 nieuwe features.',

@@ -1,5 +1,20 @@
 # Changelog
 
+## v1.5.1
+
+**Release Date:** 2026-01-14
+
+### Bug Fixes
+
+- **web:** 8 corrections to release 1.5.0 feedback fixes
+- **web:** implement 15 bug fixes from release feedback
+- **tauri:** switch to universal macOS binary and remove redundant artifacts
+
+### Other Changes
+
+- linter
+- formatting
+
 ## v1.5.0
 
 **Release Date:** 2026-01-11
