@@ -822,7 +822,7 @@ export const onboardingChapters: OnboardingChapter[] = [
     id: 'subscriptions',
     menuItem: 'subscriptions',
     route: '/subscriptions',
-    icon: 'Menu',
+    icon: 'CalendarClock',
     title: {
       nl: 'Abonnementen',
       en: 'Subscriptions',

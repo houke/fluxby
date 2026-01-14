@@ -384,15 +384,21 @@ export const api = {
     _accountIds?: string[]
   ) => {
     const ds = getDataService();
-    const basicStats = await ds.getDashboardStats(startDate, endDate);
 
-    // Get additional data for the full dashboard stats
-    const monthlyData = await ds.getMonthlyStats(startDate, endDate);
-    const categoryStats = await ds.getCategoryStats(startDate, endDate);
-    const recentTransactions = await ds.getTransactions({ limit: '10' });
-
-    // Calculate transfer/savings amounts
-    const transferStats = await ds.getTransferStats(startDate, endDate);
+    // Run all queries in parallel for better performance
+    const [
+      basicStats,
+      monthlyData,
+      categoryStats,
+      recentTransactions,
+      transferStats,
+    ] = await Promise.all([
+      ds.getDashboardStats(startDate, endDate),
+      ds.getMonthlyStats(startDate, endDate),
+      ds.getCategoryStats(startDate, endDate),
+      ds.getTransactions({ limit: '10' }),
+      ds.getTransferStats(startDate, endDate),
+    ]);
 
     return {
       totalBalance: basicStats.totalIncome - basicStats.totalExpenses,

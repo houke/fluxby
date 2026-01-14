@@ -4395,7 +4395,7 @@ export function createDataService(db: Database) {
       }>(
         `SELECT 
           opposing_account_iban as opposing_iban,
-          COALESCE(merchant_name, opposing_account_name) as merchant_name,
+          LOWER(TRIM(COALESCE(merchant_name, opposing_account_name))) as merchant_name,
           GROUP_CONCAT(date, ',') as dates,
           GROUP_CONCAT(amount, ',') as amounts,
           COUNT(*) as tx_count
@@ -4404,7 +4404,7 @@ export function createDataService(db: Database) {
          WHERE a.profile_id = ? 
            AND t.is_deleted = 0
            AND t.type = 'expense'
-         GROUP BY opposing_account_iban, COALESCE(merchant_name, opposing_account_name)
+         GROUP BY opposing_account_iban, LOWER(TRIM(COALESCE(merchant_name, opposing_account_name)))
          HAVING tx_count >= ?
          ORDER BY tx_count DESC`,
         [pid, MIN_TRANSACTIONS_FOR_PATTERN]
@@ -4501,14 +4501,15 @@ export function createDataService(db: Database) {
           const nextExpectedDate = nextExpected.toISOString().split('T')[0];
 
           // Check if pattern already exists (including dismissed ones to avoid re-creating)
+          // Use case-insensitive matching to prevent duplicates like "Netflix" vs "NETFLIX"
           const existing = await db.queryOneAsync<{
             id: string;
             is_dismissed: number;
           }>(
             `SELECT id, is_dismissed FROM recurring_patterns 
              WHERE profile_id = ? 
-               AND opposing_iban = ? 
-               AND merchant_name = ?
+               AND opposing_iban IS ? 
+               AND LOWER(TRIM(merchant_name)) = LOWER(TRIM(?))
                AND is_deleted = 0`,
             [pid, group.opposing_iban, group.merchant_name]
           );
