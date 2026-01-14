@@ -106,6 +106,12 @@ type SQLiteAPI = {
   vfs_register: (vfs: unknown, makeDefault?: boolean) => number;
 };
 
+// Default timeout for database operations (30 seconds)
+const DEFAULT_OPERATION_TIMEOUT = 30000;
+
+// Counter for tracking operations
+let operationIdCounter = 0;
+
 /**
  * SQLite Database class using @journeyapps/wa-sqlite
  */
@@ -116,20 +122,83 @@ export class Database implements DatabaseConnection {
   private _isOpen = false;
   // Mutex for serializing database operations
   private operationQueue: Promise<unknown> = Promise.resolve();
+  // Track pending operations for debugging
+  private pendingOperations = new Map<number, { sql: string; startTime: number }>();
 
   constructor(options: DatabaseOptions) {
     this.options = options;
   }
 
   /**
-   * Execute an operation with serialization to prevent concurrent access issues
+   * Execute an operation with serialization to prevent concurrent access issues.
+   * Includes timeout to prevent infinite hangs and debugging support.
    */
-  private async withLock<T>(operation: () => Promise<T>): Promise<T> {
-    // Chain this operation to the end of the queue
-    const result = this.operationQueue.then(operation, operation);
-    // Update the queue to wait for this operation (ignore errors for queue)
-    this.operationQueue = result.catch(() => {});
-    return result;
+  private async withLock<T>(
+    operation: () => Promise<T>,
+    debugInfo?: string
+  ): Promise<T> {
+    const opId = ++operationIdCounter;
+    const startTime = Date.now();
+    const info = debugInfo || 'unknown';
+
+    // Track this operation
+    this.pendingOperations.set(opId, { sql: info, startTime });
+
+    // Log if there are many pending operations (potential issue)
+    if (this.pendingOperations.size > 10) {
+      wasmLog(`WARNING: ${this.pendingOperations.size} pending DB operations`, {
+        ops: Array.from(this.pendingOperations.entries()).map(([id, op]) => ({
+          id,
+          sql: op.sql.substring(0, 50),
+          waitingMs: Date.now() - op.startTime,
+        })),
+      });
+    }
+
+    // Create a timeout promise that rejects after DEFAULT_OPERATION_TIMEOUT
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => {
+        reject(
+          new Error(
+            `Database operation timed out after ${DEFAULT_OPERATION_TIMEOUT}ms: ${info.substring(0, 100)}`
+          )
+        );
+      }, DEFAULT_OPERATION_TIMEOUT);
+    });
+
+    // Wrap the operation with cleanup
+    const wrappedOperation = async (): Promise<T> => {
+      try {
+        const result = await operation();
+        return result;
+      } finally {
+        this.pendingOperations.delete(opId);
+        const duration = Date.now() - startTime;
+        // Log slow queries (over 1 second)
+        if (duration > 1000) {
+          wasmLog(`Slow query (${duration}ms): ${info.substring(0, 100)}`);
+        }
+      }
+    };
+
+    // Chain this operation to the end of the queue, race with timeout
+    const operationPromise = this.operationQueue.then(
+      wrappedOperation,
+      wrappedOperation
+    );
+
+    // Update the queue to wait for this operation (ignore errors/timeouts for queue)
+    // We use a resolved version to prevent timeout from blocking subsequent operations
+    this.operationQueue = operationPromise.catch(() => {});
+
+    // Race the operation against the timeout
+    try {
+      return await Promise.race([operationPromise, timeoutPromise]);
+    } catch (err) {
+      // Clean up on error
+      this.pendingOperations.delete(opId);
+      throw err;
+    }
   }
 
   /**
@@ -622,60 +691,63 @@ export class Database implements DatabaseConnection {
     sql: string,
     params?: unknown[]
   ): Promise<T[]> {
-    return this.withLock(async () => {
-      this.ensureOpen();
-      if (!this.sqlite3 || this.db === null) {
-        throw new Error('Database not initialized');
-      }
-
-      const results: T[] = [];
-      const hasParams = params && params.length > 0;
-
-      // Use statements generator - it handles finalize automatically when iteration completes
-      // IMPORTANT: Do NOT manually call finalize() - the generator does this on cleanup
-      // and double-finalize causes WASM memory corruption ("table index out of bounds")
-      try {
-        for await (const stmt of this.sqlite3.statements(this.db, sql)) {
-          // Bind parameters if we have any
-          if (hasParams) {
-            this.sqlite3.bind_collection(stmt, params);
-          }
-
-          // Fetch rows
-          let stepResult = await this.sqlite3.step(stmt);
-          while (stepResult === SQLITE_ROW) {
-            const columns = this.sqlite3.column_names(stmt);
-            const values = this.sqlite3.row(stmt);
-            const row: Record<string, unknown> = {};
-
-            columns.forEach((col, i) => {
-              row[col] = values[i];
-            });
-
-            results.push(row as T);
-            stepResult = await this.sqlite3.step(stmt);
-          }
-
-          // Reset statement before breaking - this clears bindings and step state
-          // The generator will call finalize() when we break out of the loop
-          await this.sqlite3.reset(stmt);
-
-          // Only process the first statement
-          break;
+    return this.withLock(
+      async () => {
+        this.ensureOpen();
+        if (!this.sqlite3 || this.db === null) {
+          throw new Error('Database not initialized');
         }
-      } catch (err) {
-        if (isFatalWasmError(err)) {
-          markDatabaseFatal();
-          resetSingletonState();
-          throw new Error(
-            'Fatal database error (WASM). Reset your local data to continue.',
-            { cause: err as Error }
-          );
+
+        const results: T[] = [];
+        const hasParams = params && params.length > 0;
+
+        // Use statements generator - it handles finalize automatically when iteration completes
+        // IMPORTANT: Do NOT manually call finalize() - the generator does this on cleanup
+        // and double-finalize causes WASM memory corruption ("table index out of bounds")
+        try {
+          for await (const stmt of this.sqlite3.statements(this.db, sql)) {
+            // Bind parameters if we have any
+            if (hasParams) {
+              this.sqlite3.bind_collection(stmt, params);
+            }
+
+            // Fetch rows
+            let stepResult = await this.sqlite3.step(stmt);
+            while (stepResult === SQLITE_ROW) {
+              const columns = this.sqlite3.column_names(stmt);
+              const values = this.sqlite3.row(stmt);
+              const row: Record<string, unknown> = {};
+
+              columns.forEach((col, i) => {
+                row[col] = values[i];
+              });
+
+              results.push(row as T);
+              stepResult = await this.sqlite3.step(stmt);
+            }
+
+            // Reset statement before breaking - this clears bindings and step state
+            // The generator will call finalize() when we break out of the loop
+            await this.sqlite3.reset(stmt);
+
+            // Only process the first statement
+            break;
+          }
+        } catch (err) {
+          if (isFatalWasmError(err)) {
+            markDatabaseFatal();
+            resetSingletonState();
+            throw new Error(
+              'Fatal database error (WASM). Reset your local data to continue.',
+              { cause: err as Error }
+            );
+          }
+          throw err;
         }
-        throw err;
-      }
-      return results;
-    });
+        return results;
+      },
+      sql.substring(0, 100)
+    );
   }
 
   /**
@@ -720,64 +792,67 @@ export class Database implements DatabaseConnection {
     sql: string,
     params?: unknown[]
   ): Promise<{ changes: number; lastInsertRowId: number }> {
-    return this.withLock(async () => {
-      this.ensureOpen();
-      if (!this.sqlite3 || this.db === null) {
-        throw new Error('Database not initialized');
-      }
+    return this.withLock(
+      async () => {
+        this.ensureOpen();
+        if (!this.sqlite3 || this.db === null) {
+          throw new Error('Database not initialized');
+        }
 
-      if (params && params.length > 0) {
-        // Use statements generator for parameterized queries
-        // IMPORTANT: Do NOT manually call finalize() - the generator does this on cleanup
-        // and double-finalize causes WASM memory corruption
-        try {
-          for await (const stmt of this.sqlite3.statements(this.db, sql)) {
-            this.sqlite3.bind_collection(stmt, params);
+        if (params && params.length > 0) {
+          // Use statements generator for parameterized queries
+          // IMPORTANT: Do NOT manually call finalize() - the generator does this on cleanup
+          // and double-finalize causes WASM memory corruption
+          try {
+            for await (const stmt of this.sqlite3.statements(this.db, sql)) {
+              this.sqlite3.bind_collection(stmt, params);
 
-            const stepResult = await this.sqlite3.step(stmt);
-            if (stepResult !== SQLITE_DONE && stepResult !== SQLITE_ROW) {
-              throw new Error(`SQL execution failed with code ${stepResult}`);
+              const stepResult = await this.sqlite3.step(stmt);
+              if (stepResult !== SQLITE_DONE && stepResult !== SQLITE_ROW) {
+                throw new Error(`SQL execution failed with code ${stepResult}`);
+              }
+
+              // Reset statement before breaking - this clears bindings and step state
+              // The generator will call finalize() when we break out of the loop
+              await this.sqlite3.reset(stmt);
+
+              // Only process the first statement
+              break;
             }
-
-            // Reset statement before breaking - this clears bindings and step state
-            // The generator will call finalize() when we break out of the loop
-            await this.sqlite3.reset(stmt);
-
-            // Only process the first statement
-            break;
+          } catch (err) {
+            if (isFatalWasmError(err)) {
+              markDatabaseFatal();
+              resetSingletonState();
+              throw new Error(
+                'Fatal database error (WASM). Reset your local data to continue.',
+                { cause: err as Error }
+              );
+            }
+            throw err;
           }
-        } catch (err) {
-          if (isFatalWasmError(err)) {
-            markDatabaseFatal();
-            resetSingletonState();
-            throw new Error(
-              'Fatal database error (WASM). Reset your local data to continue.',
-              { cause: err as Error }
-            );
+        } else {
+          try {
+            await this.sqlite3.exec(this.db, sql);
+          } catch (err) {
+            if (isFatalWasmError(err)) {
+              markDatabaseFatal();
+              resetSingletonState();
+              throw new Error(
+                'Fatal database error (WASM). Reset your local data to continue.',
+                { cause: err as Error }
+              );
+            }
+            throw err;
           }
-          throw err;
         }
-      } else {
-        try {
-          await this.sqlite3.exec(this.db, sql);
-        } catch (err) {
-          if (isFatalWasmError(err)) {
-            markDatabaseFatal();
-            resetSingletonState();
-            throw new Error(
-              'Fatal database error (WASM). Reset your local data to continue.',
-              { cause: err as Error }
-            );
-          }
-          throw err;
-        }
-      }
 
-      return {
-        changes: this.sqlite3.changes(this.db),
-        lastInsertRowId: this.sqlite3.last_insert_id(this.db),
-      };
-    });
+        return {
+          changes: this.sqlite3.changes(this.db),
+          lastInsertRowId: this.sqlite3.last_insert_id(this.db),
+        };
+      },
+      sql.substring(0, 100)
+    );
   }
 
   /**
@@ -875,17 +950,37 @@ export class Database implements DatabaseConnection {
   }
 
   /**
+   * Get debug info about pending operations
+   * Useful for debugging hung queries
+   */
+  getPendingOperationsInfo(): Array<{
+    id: number;
+    sql: string;
+    waitingMs: number;
+  }> {
+    const now = Date.now();
+    return Array.from(this.pendingOperations.entries()).map(([id, op]) => ({
+      id,
+      sql: op.sql,
+      waitingMs: now - op.startTime,
+    }));
+  }
+
+  /**
    * Check if there are pending migrations
    * Returns the count of pending migrations
    */
   async checkPendingMigrations(): Promise<number> {
-    return this.withLock(async () => {
-      this.ensureOpen();
-      if (!this.db || !this.sqlite3) {
-        throw new Error('Database not initialized');
-      }
-      return checkPendingMigrations(this);
-    });
+    return this.withLock(
+      async () => {
+        this.ensureOpen();
+        if (!this.db || !this.sqlite3) {
+          throw new Error('Database not initialized');
+        }
+        return checkPendingMigrations(this);
+      },
+      'checkPendingMigrations'
+    );
   }
 
   /**
