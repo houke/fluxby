@@ -254,7 +254,7 @@ jobs:
           | macOS (Universal) | [Fluxby_${VERSION}_universal.dmg](https://github.com/${{ github.repository }}/releases/download/v${VERSION}/Fluxby_${VERSION}_universal.dmg) |
           | Linux (AppImage) | [Fluxby_${VERSION}_amd64.AppImage](https://github.com/${{ github.repository }}/releases/download/v${VERSION}/Fluxby_${VERSION}_amd64.AppImage) |
           | Linux (Debian) | [Fluxby_${VERSION}_amd64.deb](https://github.com/${{ github.repository }}/releases/download/v${VERSION}/Fluxby_${VERSION}_amd64.deb) |
-          
+
           > **Note for macOS users:** The app is not code signed. On first launch, right-click the app and select "Open", then click "Open" in the dialog to bypass Gatekeeper.
           EOF
 

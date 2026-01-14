@@ -185,7 +185,11 @@ function getAutoSyncEnabled(): boolean {
   return true; // Default to enabled
 }
 
-export function SyncProvider({ children, onSyncReceived, onSyncRequested }: SyncProviderProps) {
+export function SyncProvider({
+  children,
+  onSyncReceived,
+  onSyncRequested,
+}: SyncProviderProps) {
   const [deviceId] = useState(getOrCreateDeviceId);
   const [deviceName, setDeviceNameState] = useState(getDeviceName);
   const [isInitialized, setIsInitialized] = useState(false);

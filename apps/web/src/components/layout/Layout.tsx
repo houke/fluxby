@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { NavLink, Outlet, useLocation } from 'react-router-dom';
+import { NavLink, Outlet } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
   LayoutDashboard,
@@ -13,8 +13,6 @@ import {
   HelpCircle,
   LogOut,
   BookUser,
-  Menu,
-  X,
   Eye,
   EyeOff,
   Search,
@@ -58,7 +56,6 @@ export default function Layout() {
   const { isPrivacyMode, togglePrivacyMode } = usePrivacy();
   const { open: openSpotlight } = useSpotlight();
   const dataService = useDataService();
-  const location = useLocation();
 
   // Theme state
   const [isDark, setIsDark] = useState(() =>
@@ -92,14 +89,6 @@ export default function Layout() {
       setIsDark(true);
     }
   };
-
-  // Mobile sidebar state
-  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = React.useState(false);
-
-  // Close mobile sidebar on route change
-  React.useEffect(() => {
-    setIsMobileSidebarOpen(false);
-  }, [location.pathname]);
 
   const navItems = [
     {
@@ -233,34 +222,11 @@ export default function Layout() {
             </div>
           )}
 
-          {/* Mobile sidebar overlay backdrop */}
-          {isMobileSidebarOpen && (
-            <div
-              className='fixed inset-0 z-40 bg-black/50 md:hidden'
-              onClick={() => setIsMobileSidebarOpen(false)}
-            />
-          )}
-
           {/* Sidebar - hidden on mobile, visible on md+ */}
           <aside
-            className={cn(
-              'fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r bg-card transition-transform duration-300 md:static md:translate-x-0',
-              isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-            )}
+            className='hidden w-64 flex-col border-r bg-card md:flex'
             data-onboarding='sidebar'
           >
-            {/* Mobile close button */}
-            <div className='absolute top-2 right-2 md:hidden'>
-              <Button
-                variant='ghost'
-                size='icon'
-                onClick={() => setIsMobileSidebarOpen(false)}
-                className='h-8 w-8'
-              >
-                <X className='h-5 w-5' />
-              </Button>
-            </div>
-
             {/* Fluxby Branding - Click on avatar to restart onboarding */}
             <div className='w-full px-1 py-2'>
               <div className='flex items-center gap-3'>
@@ -364,18 +330,6 @@ export default function Layout() {
           <div className='flex flex-1 flex-col overflow-hidden'>
             {/* Top Bar */}
             <header className='flex h-14 items-center justify-between border-b bg-card px-3 md:h-16 md:px-6'>
-              {/* Mobile hamburger menu */}
-              <div className='flex items-center gap-2 md:hidden'>
-                <Button
-                  variant='ghost'
-                  size='icon'
-                  onClick={() => setIsMobileSidebarOpen(true)}
-                  className='h-9 w-9'
-                >
-                  <Menu className='h-5 w-5' />
-                </Button>
-              </div>
-
               <div
                 className='flex flex-1 items-center gap-2 md:gap-4'
                 data-onboarding='header-date-filter'

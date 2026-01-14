@@ -85,7 +85,7 @@ export function ProfileSwitcher() {
           </div>
 
           {/* Profile Name */}
-          <div className='flex flex-col items-start'>
+          <div className='hidden flex-col items-start md:flex'>
             <span className='text-sm font-medium transition-colors group-hover:text-purple-600'>
               {activeProfile.name}
             </span>
