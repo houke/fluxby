@@ -47,6 +47,7 @@ export function useAddressBook(options: { enabled?: boolean } = {}) {
     queryKey: ['addressbook', activeProfileId],
     queryFn: () => api.getAddressBook() as Promise<AddressBookEntryWithStats[]>,
     enabled: !!activeProfileId && (options.enabled ?? true),
+    staleTime: 2 * 60 * 1000, // 2 minutes - address book data rarely changes
   });
 
   const { data: cleanupRules, isLoading: loadingCleanupRules } = useQuery<
@@ -55,6 +56,7 @@ export function useAddressBook(options: { enabled?: boolean } = {}) {
     queryKey: ['cleanupRules', activeProfileId],
     queryFn: () => api.getCleanupRules() as Promise<CleanupRule[]>,
     enabled: !!activeProfileId && (options.enabled ?? true),
+    staleTime: 5 * 60 * 1000, // 5 minutes - cleanup rules rarely change
   });
 
   const { data: topAccountsData, isLoading: loadingTopAccounts } = useQuery<{
@@ -64,12 +66,14 @@ export function useAddressBook(options: { enabled?: boolean } = {}) {
     queryFn: () =>
       api.getTopAccounts(100, 'all') as Promise<{ accounts: TopAccount[] }>,
     enabled: !!activeProfileId && (options.enabled ?? true),
+    staleTime: 2 * 60 * 1000, // 2 minutes
   });
 
   const { data: sharedIbans = [] } = useQuery<SharedIban[]>({
     queryKey: ['sharedIbans', activeProfileId],
     queryFn: () => api.getSharedIbans() as Promise<SharedIban[]>,
     enabled: !!activeProfileId,
+    staleTime: 2 * 60 * 1000, // 2 minutes
   });
 
   const suggestedContacts = useMemo(() => {

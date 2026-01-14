@@ -34,6 +34,18 @@ export function useMigrationCheck(): MigrationCheckResult {
         // Update our code version in storage immediately
         updateCodeVersionInStorage();
 
+        // Check if migration was already triggered and we're waiting for it to complete
+        // This prevents showing the prompt again after reload
+        if (sessionStorage.getItem('fluxby-migration-triggered') === 'true') {
+          // Clear the flag now that we've checked it - migrations will run on DB init
+          sessionStorage.removeItem('fluxby-migration-triggered');
+          if (mounted) {
+            setPendingCount(0);
+            setIsChecking(false);
+          }
+          return;
+        }
+
         // Check if we're running stale/cached code (DB ahead of code)
         const staleCode = isStaleCode();
         if (staleCode) {

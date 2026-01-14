@@ -4572,6 +4572,54 @@ export function createDataService(db: Database) {
             detected++;
           }
         }
+
+        // Cleanup: Remove patterns that match category rules
+        // If a pattern's merchant_name matches a category rule, it's a known categorized
+        // expense (rent, utilities, etc.) that doesn't need subscription tracking
+        const categoryRules = await db.queryAsync<{ pattern: string }>(
+          `SELECT LOWER(pattern) as pattern FROM category_rules 
+           WHERE profile_id = ? AND is_deleted = 0`,
+          [pid]
+        );
+
+        if (categoryRules.length > 0) {
+          // Get all non-confirmed patterns
+          const patterns = await db.queryAsync<{
+            id: string;
+            merchant_name: string | null;
+          }>(
+            `SELECT id, LOWER(TRIM(merchant_name)) as merchant_name 
+             FROM recurring_patterns 
+             WHERE profile_id = ? AND is_deleted = 0 AND is_confirmed = 0`,
+            [pid]
+          );
+
+          // Build a set of pattern matches for faster lookup
+          const rulePatterns = categoryRules.map((r) =>
+            r.pattern.toLowerCase()
+          );
+
+          for (const pattern of patterns) {
+            if (!pattern.merchant_name) continue;
+
+            // Check if this pattern's merchant name matches any category rule
+            const merchantName = pattern.merchant_name;
+            const matchesRule = rulePatterns.some(
+              (rulePattern) =>
+                merchantName.includes(rulePattern) ||
+                rulePattern.includes(merchantName)
+            );
+
+            if (matchesRule) {
+              // Mark as dismissed - it's a categorized expense, not a subscription
+              await db.runAsync(
+                `UPDATE recurring_patterns SET is_dismissed = 1, updated_at = ?
+                 WHERE id = ?`,
+                [now, pattern.id]
+              );
+            }
+          }
+        }
       });
 
       return { detected, updated };
@@ -4579,10 +4627,17 @@ export function createDataService(db: Database) {
 
     /**
      * Get all recurring patterns for the current profile
+     * Filters out patterns where the last transaction was more than 6 months ago
+     * (inactive patterns that are likely no longer subscriptions)
      */
     async getRecurringPatterns(): Promise<RecurringPattern[]> {
       const pid = profileId();
       if (!pid) return [];
+
+      // Calculate 6 months ago date for filtering
+      const sixMonthsAgo = new Date();
+      sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+      const sixMonthsAgoStr = sixMonthsAgo.toISOString().split('T')[0];
 
       const rows = await db.queryAsync<{
         id: string;
@@ -4603,8 +4658,9 @@ export function createDataService(db: Database) {
       }>(
         `SELECT * FROM recurring_patterns
          WHERE profile_id = ? AND is_deleted = 0 AND is_dismissed = 0
+           AND (last_date >= ? OR is_confirmed = 1)
          ORDER BY next_expected_date ASC`,
-        [pid]
+        [pid, sixMonthsAgoStr]
       );
 
       return rows.map((row) => ({

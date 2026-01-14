@@ -95,6 +95,7 @@ export default function Analytics() {
       dataService.getMonthlyStats(yearStartDate, yearEndDate) as Promise<
         MonthlyData[]
       >,
+    staleTime: 2 * 60 * 1000, // 2 minutes - stats don't change often
   });
 
   const { data: expenseCategories, isLoading: expensesLoading } = useQuery<
@@ -113,6 +114,7 @@ export default function Analytics() {
         yearEndDate,
         'expense'
       ) as Promise<CategoryBreakdown[]>,
+    staleTime: 2 * 60 * 1000, // 2 minutes
   });
 
   const { data: incomeCategories, isLoading: incomeLoading } = useQuery<
@@ -131,6 +133,7 @@ export default function Analytics() {
         yearEndDate,
         'income'
       ) as Promise<CategoryBreakdown[]>,
+    staleTime: 2 * 60 * 1000, // 2 minutes
   });
 
   const { data: recurringPatterns, isLoading: recurringLoading } = useQuery<
@@ -144,6 +147,7 @@ export default function Analytics() {
     ],
     queryFn: () =>
       api.getRecurringPatternsWithHistory(yearStartDate, yearEndDate),
+    staleTime: 2 * 60 * 1000, // 2 minutes
   });
 
   // Filter recurring patterns to only show expenses (subscriptions)

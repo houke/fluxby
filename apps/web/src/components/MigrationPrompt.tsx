@@ -70,8 +70,9 @@ export function MigrationPrompt({
     setError(null);
 
     try {
-      // Clear old migration flags (but NOT sessionStorage - let reload handle that)
-      localStorage.removeItem('fluxby-migrations-applied');
+      // Mark that migration was triggered - this prevents the prompt from
+      // showing again after the page reloads (migrations run on db init)
+      sessionStorage.setItem('fluxby-migration-triggered', 'true');
 
       // Show a brief delay for UX
       await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -93,6 +94,8 @@ export function MigrationPrompt({
       window.location.reload();
     } catch (err) {
       console.error('Migration failed:', err);
+      // Clear the trigger flag on error so user can retry
+      sessionStorage.removeItem('fluxby-migration-triggered');
       setError(err instanceof Error ? err.message : 'Unknown error');
       setMigrationState('error');
     }

@@ -136,11 +136,13 @@ export default function Subscriptions() {
   >({
     queryKey: ['recurring-patterns', activeProfileId],
     queryFn: () => api.getRecurringPatterns(),
+    staleTime: 2 * 60 * 1000, // 2 minutes - patterns don't change often
   });
 
   const { data: stats, isLoading: loadingStats } = useQuery<RecurringStats>({
     queryKey: ['recurring-stats', activeProfileId],
     queryFn: () => api.getRecurringStats(),
+    staleTime: 2 * 60 * 1000, // 2 minutes
   });
 
   // Check if there are any transactions for this profile

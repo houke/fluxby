@@ -270,11 +270,13 @@ export default function Categories() {
   const { data: categories, isLoading: categoriesLoading } = useQuery({
     queryKey: ['categories', activeProfileId, true],
     queryFn: () => dataService.getCategories(true) as Promise<Category[]>,
+    staleTime: 2 * 60 * 1000, // 2 minutes - categories don't change often
   });
 
   const { data: rules } = useQuery({
     queryKey: ['categoryRules', activeProfileId],
     queryFn: () => dataService.getCategoryRules() as Promise<CategoryRule[]>,
+    staleTime: 5 * 60 * 1000, // 5 minutes - rules rarely change
   });
 
   // Mutations
