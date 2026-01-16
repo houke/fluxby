@@ -1313,7 +1313,6 @@ export default function Analytics() {
 function AnalyticsSkeleton() {
   return (
     <div className='space-y-6'>
-      <Skeleton className='h-9 w-48' />
       <Card>
         <CardContent className='p-6'>
           <Skeleton className='h-[300px]' />

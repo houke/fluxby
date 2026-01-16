@@ -29,6 +29,7 @@ import {
   PATTERN_INTERVALS,
   MIN_TRANSACTIONS_FOR_PATTERN,
   AMOUNT_VARIANCE_THRESHOLD,
+  DATE_TOLERANCE_DAYS,
   flattenCategoriesForDB,
   SEED_CATEGORIES,
   DEFAULT_NAME_CLEANUP_RULES,
@@ -4537,6 +4538,12 @@ export function createDataService(db: Database) {
       const now = Date.now();
       const MIN_MONTHS_SPAN_DAYS = 60; // ~2 months minimum span to ensure 3+ months of history
 
+      // Only analyze transactions from the last 6 months for pattern detection
+      // This improves performance and focuses on recent recurring patterns
+      const sixMonthsAgo = new Date();
+      sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+      const sixMonthsAgoStr = sixMonthsAgo.toISOString().split('T')[0];
+
       // Get all transactions grouped by opposing_account_iban + merchant_name
       const groups = await db.queryAsync<{
         opposing_iban: string | null;
@@ -4556,10 +4563,11 @@ export function createDataService(db: Database) {
          WHERE a.profile_id = ? 
            AND t.is_deleted = 0
            AND t.type = 'expense'
+           AND t.date >= ?
          GROUP BY opposing_account_iban, LOWER(TRIM(COALESCE(merchant_name, opposing_account_name)))
          HAVING tx_count >= ?
          ORDER BY tx_count DESC`,
-        [pid, MIN_TRANSACTIONS_FOR_PATTERN]
+        [pid, sixMonthsAgoStr, MIN_TRANSACTIONS_FOR_PATTERN]
       );
 
       let detected = 0;
@@ -4627,9 +4635,12 @@ export function createDataService(db: Database) {
 
             if (!patternType) continue;
 
-            // Check interval consistency (±3 day tolerance)
+            // Check interval consistency using DATE_TOLERANCE_DAYS (12 days)
+            // This is more lenient for monthly patterns where payment dates can vary
+            // (e.g., salary on 25th, bills around 1st-5th)
             const isConsistent = intervals.every(
-              (interval) => Math.abs(interval - avgInterval) <= 3
+              (interval) =>
+                Math.abs(interval - avgInterval) <= DATE_TOLERANCE_DAYS
             );
 
             if (!isConsistent) continue;

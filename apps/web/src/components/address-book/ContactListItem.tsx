@@ -103,7 +103,7 @@ export const ContactListItem = memo(function ContactListItem({
 
   return (
     <div
-      className='overflow-hidden border-x-0 border-t border-b-0 sm:rounded-lg sm:border'
+      className='border-x-0 border-t border-b-0 sm:rounded-lg sm:border'
       {...(isFirst
         ? { 'data-onboarding': 'addressbook-contact' }
         : isFirstMerged
