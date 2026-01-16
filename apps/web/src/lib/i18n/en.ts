@@ -713,6 +713,7 @@ export const en: TranslationKeys = {
     importing: 'Importing...',
     importProgress: 'Progress: {current} of {total}',
     processingTransactions: 'Processing {total} transactions',
+    savingToDatabase: 'Saving to database: {current} of {total}',
     importResults: 'Import results',
     importResultsDescription:
       '{imported} transactions imported, {skipped} skipped',
@@ -729,6 +730,7 @@ export const en: TranslationKeys = {
     duplicate: 'Duplicate',
     otherBank: 'Other bank',
     genericCsv: 'Generic CSV',
+    importingTo: 'Importing to',
   },
   settings: {
     title: 'Settings',

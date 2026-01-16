@@ -46,6 +46,7 @@ import { formatDate } from '@/lib/utils';
 import { Currency } from '@/components/ui/currency';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useProfile } from '@/contexts/ProfileContext';
+import { ProfileAvatar } from '@/components/ui/ProfileAvatar';
 
 interface ImportHistorySkippedRow {
   rowIndex?: number;
@@ -353,7 +354,7 @@ function HistoryCard({
 
 export default function Import() {
   const { t } = useLanguage();
-  const { activeProfileId } = useProfile();
+  const { activeProfileId, activeProfile } = useProfile();
 
   useDocumentTitle(t.import.title);
   const queryClient = useQueryClient();
@@ -380,7 +381,7 @@ export default function Import() {
     description: '',
   });
   const [showPreview, setShowPreview] = useState(true);
-  const [importProgress, setImportProgress] = useState<number | null>(null);
+  const [importProgress, setImportProgress] = useState<string | null>(null);
   const [showResultsDialog, setShowResultsDialog] = useState(false);
   const [importResults, setImportResults] =
     useState<GenericImportResult | null>(null);
@@ -569,12 +570,9 @@ export default function Import() {
       mapping: ColumnMapping;
       bank: string;
     }) =>
-      api.importGenericCSV(
-        file,
-        mapping,
-        undefined,
-        bank
-      ) as Promise<GenericImportResult>,
+      api.importGenericCSV(file, mapping, undefined, bank, (current, total) => {
+        setImportProgress(`${current}/${total}`);
+      }) as Promise<GenericImportResult>,
     onSuccess: (data) => {
       setImportResults(data);
       setShowMappingDialog(false);
@@ -634,7 +632,12 @@ export default function Import() {
   // Upload CSV mutation (for ING bank imports)
   const uploadMutation = useMutation({
     mutationFn: (file: File) =>
-      api.uploadCSV(file) as Promise<{ importId: number; imported: number }>,
+      api.uploadCSV(file, undefined, (current, total) => {
+        setImportProgress(`${current}/${total}`);
+      }) as Promise<{
+        importId: number;
+        imported: number;
+      }>,
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ['import-history', activeProfileId],
@@ -718,7 +721,7 @@ export default function Import() {
       ) as ColumnMapping;
 
       setModalError(null);
-      setImportProgress(0);
+      setImportProgress(`0/${csvParseResult?.totalRows || '?'}`);
       importGenericMutation.mutate({
         file: pendingFile,
         mapping: cleanMapping,
@@ -1083,52 +1086,75 @@ export default function Import() {
               <div className='flex flex-col items-center justify-center gap-3 py-8'>
                 <Loader2 className='h-10 w-10 animate-spin text-purple-600' />
                 <div className='text-center'>
-                  <p className='font-medium'>{t.import.importing}...</p>
-                  {csvParseResult && (
-                    <p className='text-sm text-muted-foreground'>
-                      {(
-                        t.import.processingTransactions ||
-                        'Processing {total} transactions'
-                      ).replace('{total}', String(csvParseResult.totalRows))}
-                    </p>
-                  )}
+                  <p className='font-medium'>{t.import.importing}</p>
+                  <p className='mt-1 text-sm font-bold text-purple-600 tabular-nums'>
+                    {importProgress}
+                  </p>
+                  <p className='text-xs text-muted-foreground'>
+                    {(
+                      t.import.savingToDatabase ||
+                      'Saving to database: {current} of {total}'
+                    )
+                      .replace('{current}', importProgress.split('/')[0])
+                      .replace('{total}', importProgress.split('/')[1])}
+                  </p>
                 </div>
               </div>
             )}
           </div>
 
-          <DialogFooter>
-            <Button
-              variant='outline'
-              onClick={() => {
-                setShowMappingDialog(false);
-                setPendingFile(null);
-                setCsvParseResult(null);
-                setModalError(null);
-              }}
-            >
-              {t.common.cancel}
-            </Button>
-            <Button
-              onClick={handleStartGenericImport}
-              disabled={
-                !selectedBank ||
-                !isMappingComplete ||
-                importGenericMutation.isPending
-              }
-            >
-              {importGenericMutation.isPending ? (
-                <>
-                  <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-                  {t.import.importing}
-                </>
-              ) : (
-                <>
-                  {t.import.startImport}
-                  <ArrowRight className='ml-2 h-4 w-4' />
-                </>
-              )}
-            </Button>
+          <DialogFooter className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
+            <div className='flex items-center gap-2'>
+              <ProfileAvatar
+                name={activeProfile?.name}
+                avatarUrl={activeProfile?.avatarUrl}
+                size='md'
+              />
+              <div className='min-w-0 text-left'>
+                <p className='truncate text-[10px] tracking-wider text-muted-foreground uppercase'>
+                  {t.import?.importingTo || 'Importeren naar'}
+                </p>
+                <p className='truncate text-sm font-semibold'>
+                  {activeProfile?.name}
+                </p>
+              </div>
+            </div>
+
+            <div className='flex w-full items-center justify-end gap-2 sm:w-auto'>
+              <Button
+                variant='outline'
+                onClick={() => {
+                  setShowMappingDialog(false);
+                  setPendingFile(null);
+                  setCsvParseResult(null);
+                  setModalError(null);
+                }}
+                className='flex-1 sm:flex-none'
+              >
+                {t.common.cancel}
+              </Button>
+              <Button
+                onClick={handleStartGenericImport}
+                disabled={
+                  !selectedBank ||
+                  !isMappingComplete ||
+                  importGenericMutation.isPending
+                }
+                className='flex-1 sm:flex-none'
+              >
+                {importGenericMutation.isPending ? (
+                  <>
+                    <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                    {t.import.importing}
+                  </>
+                ) : (
+                  <>
+                    {t.import.startImport}
+                    <ArrowRight className='ml-2 h-4 w-4' />
+                  </>
+                )}
+              </Button>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -1292,7 +1318,7 @@ export default function Import() {
           <CardContent className='px-3 pt-0 pb-3 sm:px-6 sm:pt-0 sm:pb-6'>
             <div
               {...getRootProps()}
-              className={`cursor-pointer rounded-xl border-2 border-dashed p-12 text-center transition-colors duration-200 ${
+              className={`cursor-pointer rounded-xl border-2 border-dashed p-6 text-center transition-colors duration-200 sm:p-12 ${
                 isDragActive
                   ? 'border-primary bg-primary/5'
                   : 'border-border hover:border-primary/50'

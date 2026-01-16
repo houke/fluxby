@@ -631,6 +631,7 @@ export interface TranslationKeys {
     importing: string;
     importProgress: string;
     processingTransactions: string;
+    savingToDatabase: string;
     importResults: string;
     importResultsDescription: string;
     skippedRows: string;
@@ -646,6 +647,7 @@ export interface TranslationKeys {
     duplicate: string;
     otherBank: string;
     genericCsv: string;
+    importingTo: string;
   };
   settings: {
     title: string;
@@ -1984,6 +1986,7 @@ export const nl: TranslationKeys = {
     importing: 'Importeren...',
     importProgress: 'Voortgang: {current} van {total}',
     processingTransactions: '{total} transacties verwerken',
+    savingToDatabase: 'Opslaan naar database: {current} van {total}',
     importResults: 'Import resultaten',
     importResultsDescription:
       '{imported} transacties geïmporteerd, {skipped} overgeslagen',
@@ -2000,7 +2003,8 @@ export const nl: TranslationKeys = {
     missingRequired: 'Verplicht veld ontbreekt',
     duplicate: 'Duplicaat',
     otherBank: 'Andere bank',
-    genericCsv: 'Generiek CSV',
+    genericCsv: 'Generiek CSV bestand',
+    importingTo: 'Importeren naar',
   },
   settings: {
     title: 'Instellingen',

@@ -3339,7 +3339,7 @@ export function createDataService(db: Database) {
       if (!pid) throw new Error('No active profile');
 
       const fields: string[] = [];
-      const params: any[] = [];
+      const params: (string | number | null | undefined)[] = [];
 
       if (typeof updates.name !== 'undefined') {
         fields.push('name = ?');
@@ -3556,6 +3556,7 @@ export function createDataService(db: Database) {
         direction?: string;
         filename?: string;
         bank?: string;
+        onProgress?: (current: number, total: number) => void;
       }
     ) {
       const pid = profileId();
@@ -3633,6 +3634,17 @@ export function createDataService(db: Database) {
       );
       const ownAccountIbans = new Set(
         ownAccountsResult.map((a) => a.iban?.replace(/\s/g, '').toUpperCase())
+      );
+
+      // Fetch all existing hashes for the profile to speed up deduplication
+      // This solves the 30s timeout issue for large imports (e.g. 8000 rows)
+      // by moving lookups from 1-by-1 database queries to a single in-memory Set lookup.
+      const existingHashesResult = await db.queryAsync<{ import_hash: string }>(
+        'SELECT import_hash FROM transactions WHERE profile_id = ? AND is_deleted = 0 AND import_hash IS NOT NULL',
+        [pid]
+      );
+      const existingHashesSet = new Set(
+        existingHashesResult.map((r) => r.import_hash)
       );
 
       let imported = 0;
@@ -3909,13 +3921,10 @@ export function createDataService(db: Database) {
             };
           }
 
-          // Check for duplicate - only within the current profile and non-deleted transactions
-          const existing = await db.queryOneAsync(
-            'SELECT id FROM transactions WHERE import_hash = ? AND profile_id = ? AND is_deleted = 0',
-            [hash, pid]
-          );
+          // Check for duplicate - optimized using the pre-fetched existingHashesSet
+          const isDuplicate = hash && existingHashesSet.has(hash);
 
-          if (existing) {
+          if (isDuplicate) {
             // Track as duplicate skip
             skippedRows.push({
               rowIndex: i + 1,
@@ -3987,20 +3996,43 @@ export function createDataService(db: Database) {
             `Row ${i + 1}: ${err instanceof Error ? err.message : 'Unknown error'}`
           );
         }
+
+        // Don't report progress during parsing - we'll report during actual inserts
+        // This provides accurate feedback about the slow part (database writes)
       }
 
       // Batch insert all transactions using bulk INSERT for OPFS performance
-      // This minimizes OPFS syncs - critical for large imports
+      // Use smaller chunks and individual transactions per chunk to prevent timeouts
+      // Each chunk gets its own transaction to allow progress reporting and prevent 30s timeout
       if (transactionsToInsert.length > 0) {
-        const CHUNK_SIZE = 500; // SQLite has a limit on query parameters, chunk large imports
+        // Use smaller chunk size to prevent timeouts and allow progress updates
+        // 100 rows per chunk with 17 params = 1700 params (well under SQLite's 32766 limit)
+        const CHUNK_SIZE = 100;
+        const totalToInsert = transactionsToInsert.length;
         const chunks: (typeof transactionsToInsert)[] = [];
 
         for (let i = 0; i < transactionsToInsert.length; i += CHUNK_SIZE) {
           chunks.push(transactionsToInsert.slice(i, i + CHUNK_SIZE));
         }
 
-        await db.transactionAsync(async () => {
-          for (const chunk of chunks) {
+        // Process each chunk in its own transaction with progress reporting
+        // This prevents the entire import from timing out and allows accurate progress
+        let insertedSoFar = 0;
+        for (let chunkIndex = 0; chunkIndex < chunks.length; chunkIndex++) {
+          const chunk = chunks[chunkIndex];
+
+          // Report progress before each chunk insert (shows actual DB write progress)
+          if (options.onProgress) {
+            options.onProgress(insertedSoFar, totalToInsert);
+          }
+
+          // Yield to the event loop between chunks to prevent UI freezing
+          // and give the browser a chance to process other events
+          if (chunkIndex > 0) {
+            await new Promise((resolve) => setTimeout(resolve, 0));
+          }
+
+          await db.transactionAsync(async () => {
             // Build bulk INSERT with multiple value sets
             const placeholders = chunk
               .map(() => '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
@@ -4037,8 +4069,15 @@ export function createDataService(db: Database) {
               importedTxIds.push(item.id);
               imported++;
             }
-          }
-        });
+          });
+
+          insertedSoFar += chunk.length;
+        }
+
+        // Final progress update after all inserts
+        if (options.onProgress) {
+          options.onProgress(totalToInsert, totalToInsert);
+        }
       }
 
       // Post-import: Add unique IBANs to address book and link transactions
@@ -4734,7 +4773,7 @@ export function createDataService(db: Database) {
              WHERE profile_id = ? AND is_deleted = 0
              AND opposing_account_iban = ? ${dateFilterClause}
              ORDER BY date ASC`;
-          const params: any[] = useDateFilter
+          const params: (string | null | undefined)[] = useDateFilter
             ? [pid, row.opposing_iban, startDate, endDate]
             : [pid, row.opposing_iban];
 
@@ -4748,7 +4787,7 @@ export function createDataService(db: Database) {
              WHERE profile_id = ? AND is_deleted = 0
              AND LOWER(COALESCE(merchant_name, opposing_account_name)) = LOWER(?) ${dateFilterClause}
              ORDER BY date ASC`;
-          const params: any[] = useDateFilter
+          const params: (string | null | undefined)[] = useDateFilter
             ? [pid, row.merchant_name, startDate, endDate]
             : [pid, row.merchant_name];
 
@@ -5139,40 +5178,50 @@ export function createDataService(db: Database) {
     ): Promise<void> {
       if (txIds.length === 0) return;
 
-      const placeholders = txIds.map(() => '?').join(',');
+      // Process in chunks to avoid SQLite parameter limits (32766) and timeouts
+      const CHUNK_SIZE = 500;
+      for (let i = 0; i < txIds.length; i += CHUNK_SIZE) {
+        const chunk = txIds.slice(i, i + CHUNK_SIZE);
+        const placeholders = chunk.map(() => '?').join(',');
 
-      // Link via direct address_book IBAN match
-      await db.runAsync(
-        `UPDATE transactions
-         SET address_book_id = (
-           SELECT ab.id FROM address_book ab 
-           WHERE ab.iban = transactions.opposing_account_iban
-           AND ab.profile_id = ?
-           AND ab.is_deleted = 0
-         ),
-         updated_at = ?
-         WHERE id IN (${placeholders})
-           AND address_book_id IS NULL
-           AND opposing_account_iban IS NOT NULL`,
-        [pid, now, ...txIds]
-      );
+        // Link via direct address_book IBAN match
+        await db.runAsync(
+          `UPDATE transactions
+           SET address_book_id = (
+             SELECT ab.id FROM address_book ab 
+             WHERE ab.iban = transactions.opposing_account_iban
+             AND ab.profile_id = ?
+             AND ab.is_deleted = 0
+           ),
+           updated_at = ?
+           WHERE id IN (${placeholders})
+             AND address_book_id IS NULL
+             AND opposing_account_iban IS NOT NULL`,
+          [pid, now, ...chunk]
+        );
 
-      // Link via contact_ibans junction table
-      await db.runAsync(
-        `UPDATE transactions
-         SET address_book_id = (
-           SELECT ci.contact_id FROM contact_ibans ci
-           JOIN address_book ab ON ab.id = ci.contact_id
-           WHERE ci.iban = transactions.opposing_account_iban
-           AND ab.profile_id = ?
-           AND ab.is_deleted = 0
-         ),
-         updated_at = ?
-         WHERE id IN (${placeholders})
-           AND address_book_id IS NULL
-           AND opposing_account_iban IS NOT NULL`,
-        [pid, now, ...txIds]
-      );
+        // Link via contact_ibans junction table
+        await db.runAsync(
+          `UPDATE transactions
+           SET address_book_id = (
+             SELECT ci.contact_id FROM contact_ibans ci
+             JOIN address_book ab ON ab.id = ci.contact_id
+             WHERE ci.iban = transactions.opposing_account_iban
+             AND ab.profile_id = ?
+             AND ab.is_deleted = 0
+           ),
+           updated_at = ?
+           WHERE id IN (${placeholders})
+             AND address_book_id IS NULL
+             AND opposing_account_iban IS NOT NULL`,
+          [pid, now, ...chunk]
+        );
+
+        // Yield to event loop between chunks
+        if (i + CHUNK_SIZE < txIds.length) {
+          await new Promise((resolve) => setTimeout(resolve, 0));
+        }
+      }
     },
 
     // ============= Profile/Deletion Methods =============
@@ -6716,6 +6765,7 @@ export async function insertDemoRecurringPatterns(
   const buildHelper = await importSharedHelper();
 
   // Import demo templates from shared seed-data with resilient fallbacks
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let DEMO_RECURRING_PATTERNS: any[] = [];
   try {
     const pkg = await import('@fluxby/shared');
@@ -6739,6 +6789,7 @@ export async function insertDemoRecurringPatterns(
       ]
     );
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const built = buildHelper(pattern as any, txRow || undefined, patternDate);
 
     await db.runAsync(
