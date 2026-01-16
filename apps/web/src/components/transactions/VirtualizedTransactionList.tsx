@@ -1,6 +1,6 @@
 import { useRef, memo, useMemo, forwardRef, useImperativeHandle } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import type { Transaction, Category, AddressBookEntry } from '@fluxby/shared';
+import type { Transaction, AddressBookEntry } from '@fluxby/shared';
 import { TransactionCard } from './TransactionCard';
 import { cn } from '@/lib/utils';
 
@@ -101,9 +101,9 @@ export const VirtualizedTransactionList = memo(
 
       return (
         <div
-          ref={parentRef}
+          ref={useWindowScroll ? undefined : parentRef}
           className={cn(
-            'overflow-auto',
+            !useWindowScroll && 'overflow-auto',
             !useWindowScroll && `max-h-[${maxHeight}px]`,
             className
           )}
@@ -153,6 +153,7 @@ export const VirtualizedTransactionList = memo(
  * Hook to prepare transaction data for the virtualized list.
  * Memoizes row data to prevent unnecessary re-renders.
  */
+// eslint-disable-next-line react-refresh/only-export-components
 export function useVirtualizedTransactionData(
   transactions: Transaction[] | undefined,
   getCategoryName: (id: string | null) => string,
