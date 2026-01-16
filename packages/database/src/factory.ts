@@ -44,6 +44,7 @@ export function resetDatabase(full = false): void {
   console.log('[DB Factory] Resetting singletons', { full });
   dbInstance = null;
   dbPromise = null;
+  dbPromiseCreatedAt = null;
   Database.resetSingletons(full);
 }
 
@@ -64,7 +65,24 @@ export function getDbPromise(): Promise<Database> | null {
 }
 
 // Timeout for database initialization (prevents infinite hangs)
-const INIT_TIMEOUT_MS = 45000;
+// Use shorter timeout in development to fail fast
+const isDev =
+  typeof window !== 'undefined' &&
+  (window.location?.hostname === 'localhost' ||
+    window.location?.hostname === '127.0.0.1');
+const INIT_TIMEOUT_MS = 90000;
+
+// Track when promise was created to detect stale promises
+let dbPromiseCreatedAt: number | null = null;
+const STALE_PROMISE_MS = 60000; // Consider promise stale after 60s
+
+/**
+ * Check if the current promise is stale (created too long ago)
+ */
+function isPromiseStale(): boolean {
+  if (!dbPromiseCreatedAt) return false;
+  return Date.now() - dbPromiseCreatedAt > STALE_PROMISE_MS;
+}
 
 /**
  * Create a database instance for the current environment
@@ -82,11 +100,17 @@ export async function createDatabase(
 
   // If initialization is already in progress, wait for it WITH TIMEOUT
   if (dbPromise) {
-    // Defensive check - ensure it's actually a Promise
-    if (typeof dbPromise.then !== 'function') {
+    // Check if promise is stale (stuck from previous failed attempt)
+    if (isPromiseStale()) {
+      // eslint-disable-next-line no-console
+      console.log('[DB Factory] Detected stale promise, resetting');
+      resetDatabase(true);
+    } else if (typeof dbPromise.then !== 'function') {
+      // Defensive check - ensure it's actually a Promise
       // eslint-disable-next-line no-console
       console.log('[DB Factory] Invalid promise detected, resetting');
       dbPromise = null;
+      dbPromiseCreatedAt = null;
     } else {
       // eslint-disable-next-line no-console
       console.log('[DB Factory] Waiting for existing init promise');
@@ -105,12 +129,20 @@ export async function createDatabase(
       try {
         return await Promise.race([dbPromise, timeoutPromise]);
       } catch (error) {
-        // If timeout or error, reset and let caller retry
+        // If timeout or error, DON'T reset the database factory if it was just a waiting timeout.
+        // The original initialization (which we were waiting for) might still be healthy and running.
+        // We only reset if the error indicates a fatal failure (not a timeout).
+        const isTimeout =
+          error instanceof Error && error.message.includes('timed out');
         console.error(
-          '[DB Factory] Waiting for existing promise failed:',
+          `[DB Factory] Waiting for existing promise failed (isTimeout: ${isTimeout}):`,
           error
         );
-        resetDatabase(true);
+
+        if (!isTimeout) {
+          // Only reset on REAL failures, not timeouts
+          resetDatabase(true);
+        }
         throw error;
       }
     }
@@ -133,6 +165,7 @@ export async function createDatabase(
   });
 
   dbPromise = Promise.race([internalPromise, timeoutPromise]);
+  dbPromiseCreatedAt = Date.now();
 
   try {
     dbInstance = await dbPromise;
