@@ -146,7 +146,7 @@ describe('Dashboard auto-scroll behavior', () => {
     // Verify the scroll container exists
     const container = await screen.findByTestId('monthly-comparison-scroll');
     expect(container).toBeTruthy();
-    
+
     // Verify it has overflow-x-auto class for scrolling
     expect(container.className).toContain('overflow-x-auto');
   });

@@ -785,30 +785,71 @@ export default function Dashboard() {
           >
             <CardHeader>
               <CardTitle className='flex items-center justify-between text-base sm:text-lg'>
-                <span>{t.dashboard.forecast}</span>
-                {hasEnoughData && (
-                  <div
-                    className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${
-                      balanceForecast.confidence === 'high'
-                        ? 'bg-emerald-100 text-emerald-700'
-                        : balanceForecast.confidence === 'medium'
-                          ? 'bg-amber-100 text-amber-700'
-                          : 'bg-rose-100 text-rose-700'
-                    }`}
-                  >
-                    <Sparkles className='h-3 w-3' />
-                    {balanceForecast.confidence.toUpperCase()}
-                  </div>
-                )}
+                <span>
+                  {hasEnoughData && balanceForecast?.isPastPeriod
+                    ? t.dashboard.periodSummary
+                    : t.dashboard.forecast}
+                </span>
+                <span className='text-sm font-normal text-muted-foreground'>
+                  {periodLabel}
+                </span>
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {hasEnoughData ? (
-                <div className='space-y-4 font-mono'>
-                  <div className='flex items-center justify-between text-sm'>
-                    <span className='text-muted-foreground'>
+              {hasEnoughData && balanceForecast?.isPastPeriod ? (
+                // Past period - show totals
+                <div className='space-y-4'>
+                  <div className='flex items-center justify-between'>
+                    <span className='text-sm text-muted-foreground'>
+                      {t.dashboard.totalIncome}
+                    </span>
+                    <span className='font-semibold text-emerald-600'>
+                      <Currency amount={balanceForecast.currentMonthIncome} />
+                    </span>
+                  </div>
+                  <div className='flex items-center justify-between'>
+                    <span className='text-sm text-muted-foreground'>
+                      {t.dashboard.totalExpenses}
+                    </span>
+                    <span className='font-semibold text-rose-600'>
+                      <Currency amount={balanceForecast.currentMonthExpenses} />
+                    </span>
+                  </div>
+                  <div className='flex items-center justify-between border-t pt-2'>
+                    <span className='text-sm text-muted-foreground'>
+                      {t.dashboard.netResult}
+                    </span>
+                    <span
+                      className={`font-semibold ${
+                        balanceForecast.expectedEndBalance >= 0
+                          ? 'text-emerald-600'
+                          : 'text-rose-600'
+                      }`}
+                    >
+                      <Currency amount={balanceForecast.expectedEndBalance} />
+                    </span>
+                  </div>
+                </div>
+              ) : hasEnoughData && balanceForecast ? (
+                // Current/future period - show forecast
+                <div className='space-y-4'>
+                  <div className='flex items-center justify-between'>
+                    <span className='text-sm text-muted-foreground'>
+                      {t.dashboard.currentIncome}
+                    </span>
+                    <span className='font-semibold text-emerald-600'>
+                      <Currency amount={balanceForecast.currentMonthIncome} />
+                    </span>
+                  </div>
+                  <div className='flex items-center justify-between'>
+                    <span className='text-sm text-muted-foreground'>
                       {t.dashboard.expectedIncome}
                     </span>
+                    <span className='font-semibold text-emerald-600'>
+                      <Currency amount={balanceForecast.expectedIncome} />
+                    </span>
+                  </div>
+                  <div className='flex items-center justify-between'>
                     <span className='text-sm text-muted-foreground'>
                       {t.dashboard.currentExpenses}
                     </span>
