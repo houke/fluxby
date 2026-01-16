@@ -63,6 +63,9 @@ export function getDbPromise(): Promise<Database> | null {
   return dbPromise;
 }
 
+// Timeout for database initialization (prevents infinite hangs)
+const INIT_TIMEOUT_MS = 45000;
+
 /**
  * Create a database instance for the current environment
  * Uses singleton pattern to handle React StrictMode double initialization
@@ -77,7 +80,7 @@ export async function createDatabase(
     return dbInstance;
   }
 
-  // If initialization is already in progress, wait for it
+  // If initialization is already in progress, wait for it WITH TIMEOUT
   if (dbPromise) {
     // Defensive check - ensure it's actually a Promise
     if (typeof dbPromise.then !== 'function') {
@@ -87,14 +90,49 @@ export async function createDatabase(
     } else {
       // eslint-disable-next-line no-console
       console.log('[DB Factory] Waiting for existing init promise');
-      return dbPromise;
+
+      // Add timeout to prevent infinite wait if the promise is stuck
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => {
+          reject(
+            new Error(
+              `Database initialization timed out after ${INIT_TIMEOUT_MS / 1000}s while waiting for existing promise`
+            )
+          );
+        }, INIT_TIMEOUT_MS);
+      });
+
+      try {
+        return await Promise.race([dbPromise, timeoutPromise]);
+      } catch (error) {
+        // If timeout or error, reset and let caller retry
+        console.error(
+          '[DB Factory] Waiting for existing promise failed:',
+          error
+        );
+        resetDatabase(true);
+        throw error;
+      }
     }
   }
 
   // Start initialization - set promise FIRST before any async work
   // eslint-disable-next-line no-console
   console.log('[DB Factory] Starting new initialization');
-  dbPromise = createDatabaseInternal(config);
+
+  // Wrap internal init with timeout
+  const internalPromise = createDatabaseInternal(config);
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    setTimeout(() => {
+      reject(
+        new Error(
+          `Database initialization timed out after ${INIT_TIMEOUT_MS / 1000}s`
+        )
+      );
+    }, INIT_TIMEOUT_MS);
+  });
+
+  dbPromise = Promise.race([internalPromise, timeoutPromise]);
 
   try {
     dbInstance = await dbPromise;

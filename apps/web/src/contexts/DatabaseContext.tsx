@@ -78,16 +78,13 @@ interface DatabaseProviderProps {
 }
 
 // Module-level tracking for initialization - persists across React StrictMode remounts
-// This is critical because React's useRef resets on StrictMode unmount/remount,
-// but the database factory's promises persist, causing a mismatch
+// This is critical because React's useRef resets on StrictMode unmount/remount
 let moduleInitStarted = false;
-let moduleInitPromise: Promise<Database> | null = null;
 let moduleInitError: Error | null = null;
 
 // Reset module state (for testing or error recovery)
 export function resetModuleInitState() {
   moduleInitStarted = false;
-  moduleInitPromise = null;
   moduleInitError = null;
 }
 
@@ -139,7 +136,7 @@ export function DatabaseProvider({ children }: DatabaseProviderProps) {
       clearTimeout(timeoutRef.current);
     }
 
-    // If database already exists (from previous init or SSR), use it
+    // If database already exists, use it immediately
     const existingDatabase = getDatabaseInstance();
     if (existingDatabase) {
       devLog('Using existing database instance');
@@ -168,49 +165,18 @@ export function DatabaseProvider({ children }: DatabaseProviderProps) {
       return;
     }
 
-    // If init is already in progress at module level, wait for it
-    if (moduleInitPromise) {
-      devLog('Waiting for existing initialization promise...');
-      setInitStatus('Connecting to database...');
-
-      moduleInitPromise
-        .then((database) => {
-          if (mountedRef.current) {
-            devLog('Existing initialization succeeded');
-            setDb(database);
-            setGlobalDatabase(database);
-            setIsReady(true);
-            setIsLoading(false);
-          }
-        })
-        .catch((err) => {
-          if (mountedRef.current) {
-            devLog('Existing initialization failed:', err);
-            setError(err instanceof Error ? err : new Error(String(err)));
-            setIsLoading(false);
-            setShowResetButton(true);
-          }
-        });
-      return;
-    }
-
-    // Start new initialization (only happens once at module level)
+    // If init already started by another mount, just wait for the factory's promise
     if (moduleInitStarted) {
-      devLog('Init already started but no promise/database - checking again');
-      // Re-check in case getDatabaseInstance was updated
-      const recheckDb = getDatabaseInstance();
-      if (recheckDb) {
-        setDb(recheckDb);
-        setGlobalDatabase(recheckDb);
-        setIsReady(true);
-        setIsLoading(false);
-      }
-      return;
+      devLog(
+        'Init already started, calling createDatabase (factory handles singleton)'
+      );
+      setInitStatus('Connecting to database...');
+    } else {
+      devLog('Starting new database initialization...');
+      moduleInitStarted = true;
+      setInitStatus('Loading database...');
     }
 
-    devLog('Starting new database initialization...');
-    moduleInitStarted = true;
-    setInitStatus('Loading database...');
     setIsLoading(true);
 
     // Show reset button after 15 seconds
@@ -221,31 +187,12 @@ export function DatabaseProvider({ children }: DatabaseProviderProps) {
       }
     }, 15000);
 
-    // Create the initialization promise with timeout
-    const initWithTimeout = async (): Promise<Database> => {
-      const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => {
-          reject(
-            new Error('Database initialization timed out after 45 seconds')
-          );
-        }, 45000);
-      });
-
-      const dbPromise = createDatabase({
-        dbPath: 'fluxby.db',
-        autoMigrate: true,
-      });
-
-      return Promise.race([dbPromise, timeoutPromise]);
-    };
-
-    // Store promise at module level so other mounts can wait for it
-    moduleInitPromise = initWithTimeout();
-
-    moduleInitPromise
+    // Just call createDatabase - the factory handles singleton, promise tracking, AND timeout
+    createDatabase({
+      dbPath: 'fluxby.db',
+      autoMigrate: true,
+    })
       .then((database) => {
-        moduleInitPromise = null; // Clear promise on success
-
         if (mountedRef.current) {
           devLog('Database initialization complete');
           if (timeoutRef.current) clearTimeout(timeoutRef.current);
@@ -257,8 +204,6 @@ export function DatabaseProvider({ children }: DatabaseProviderProps) {
       })
       .catch((err) => {
         moduleInitError = err instanceof Error ? err : new Error(String(err));
-        moduleInitPromise = null;
-        resetDatabase(true);
 
         if (mountedRef.current) {
           devLog('Database initialization failed:', err);
@@ -274,7 +219,6 @@ export function DatabaseProvider({ children }: DatabaseProviderProps) {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
-      // NOTE: Do NOT reset moduleInitStarted here - it must persist across StrictMode remounts
     };
   }, [isEncryptionEnabled, isUnlocked]);
 
