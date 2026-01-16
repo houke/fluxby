@@ -122,7 +122,19 @@ export function DatabaseProvider({ children }: DatabaseProviderProps) {
       const existingPromise = getDbPromise();
       if (existingPromise && typeof existingPromise.then === 'function') {
         devLog('Found existing init promise, waiting for it...');
-        existingPromise
+        
+        // Add timeout to prevent hanging forever if initialization is stuck
+        const initTimeout = new Promise<never>((_, reject) => {
+          setTimeout(() => {
+            reject(
+              new Error(
+                'Database initialization timed out after 45 seconds. This may be due to WASM/VFS issues.'
+              )
+            );
+          }, 45000);
+        });
+
+        Promise.race([existingPromise, initTimeout])
           .then((database) => {
             devLog('Existing init completed, using database');
             // Set global BEFORE React state, so other components can use it immediately
@@ -137,6 +149,7 @@ export function DatabaseProvider({ children }: DatabaseProviderProps) {
               err instanceof Error ? err : new Error('Database init failed')
             );
             setIsLoading(false);
+            setShowResetButton(true);
           });
       } else {
         // Check if already done (sync case)
@@ -204,10 +217,24 @@ export function DatabaseProvider({ children }: DatabaseProviderProps) {
         devLog('Creating database...');
 
         // Database is NOT encrypted - password only protects UI
-        const database = await createDatabase({
-          dbPath: 'fluxby.db',
-          autoMigrate: true,
+        // Add timeout to prevent hanging forever
+        const initTimeout = new Promise<never>((_, reject) => {
+          setTimeout(() => {
+            reject(
+              new Error(
+                'Database initialization timed out after 45 seconds. The WASM module or VFS may be stuck.'
+              )
+            );
+          }, 45000);
         });
+
+        const database = await Promise.race([
+          createDatabase({
+            dbPath: 'fluxby.db',
+            autoMigrate: true,
+          }),
+          initTimeout,
+        ]);
 
         devLog('Database created successfully');
         if (mounted) {

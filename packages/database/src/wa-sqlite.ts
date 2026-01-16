@@ -351,8 +351,10 @@ export class Database implements DatabaseConnection {
       return;
     }
 
+    wasmLog('Initializing storage adapter...');
     // Initialize storage adapter
     await this.options.adapter.initialize();
+    wasmLog('Storage adapter initialized');
 
     // Use cached SQLite module if available (prevents double init)
     if (cachedModule) {
@@ -362,23 +364,29 @@ export class Database implements DatabaseConnection {
       const SQLite = await import('@journeyapps/wa-sqlite');
       this.sqlite3 = SQLite.Factory(cachedModule) as unknown as SQLiteAPI;
       cachedSqlite3 = this.sqlite3;
+      wasmLog('SQLite Factory recreated from cached module');
     } else {
       wasmLog('Loading SQLite WASM module...');
       // Dynamically import @journeyapps/wa-sqlite
       const wasmModule =
         await import('@journeyapps/wa-sqlite/dist/wa-sqlite-async.mjs');
+      wasmLog('WASM module imported');
       const SQLiteESMFactory = wasmModule.default;
       const SQLite = await import('@journeyapps/wa-sqlite');
+      wasmLog('SQLite library imported');
 
       // Initialize SQLite module with proper error handling
       // The factory returns a Promise that resolves to the module
+      wasmLog('Calling SQLiteESMFactory...');
       const factoryResult = SQLiteESMFactory();
       if (!factoryResult || typeof factoryResult.then !== 'function') {
         throw new Error(
           'SQLiteESMFactory did not return a Promise. The WASM module may not be loaded correctly.'
         );
       }
+      wasmLog('Awaiting factory result...');
       cachedModule = await factoryResult;
+      wasmLog('Factory result received, creating SQLite API...');
       this.sqlite3 = SQLite.Factory(cachedModule) as unknown as SQLiteAPI;
       cachedSqlite3 = this.sqlite3;
       wasmLog('SQLite WASM module loaded');
