@@ -536,7 +536,7 @@ export default function Subscriptions() {
             </div>
           </CardContent>
           <div className='absolute -top-12 -right-12 flex h-48 w-48 items-center justify-center rounded-full bg-rose-200 opacity-10 transition-transform duration-500 group-hover:scale-110 sm:-top-8 sm:-right-8 dark:bg-rose-900/50'>
-            <CreditCard className='h-24 w-24 text-rose-900 dark:text-rose-400' />
+            <CreditCard className='h-16 w-16 text-rose-900 dark:text-rose-400' />
           </div>
         </Card>
 
@@ -556,7 +556,7 @@ export default function Subscriptions() {
             </div>
           </CardContent>
           <div className='absolute -top-12 -right-12 flex h-48 w-48 items-center justify-center rounded-full bg-blue-200 opacity-10 transition-transform duration-500 group-hover:scale-110 sm:-top-8 sm:-right-8 dark:bg-blue-900/50'>
-            <Clock className='h-24 w-24 text-blue-900 dark:text-blue-400' />
+            <Clock className='h-16 w-16 text-blue-900 dark:text-blue-400' />
           </div>
         </Card>
 
@@ -576,7 +576,7 @@ export default function Subscriptions() {
             </div>
           </CardContent>
           <div className='absolute -top-12 -right-12 flex h-48 w-48 items-center justify-center rounded-full bg-emerald-200 opacity-10 transition-transform duration-500 group-hover:scale-110 sm:-top-8 sm:-right-8 dark:bg-emerald-900/50'>
-            <Check className='h-24 w-24 text-emerald-900 dark:text-emerald-400' />
+            <Check className='h-16 w-16 text-emerald-900 dark:text-emerald-400' />
           </div>
         </Card>
 
@@ -596,7 +596,7 @@ export default function Subscriptions() {
             </div>
           </CardContent>
           <div className='absolute -top-12 -right-12 flex h-48 w-48 items-center justify-center rounded-full bg-purple-200 opacity-10 transition-transform duration-500 group-hover:scale-110 sm:-top-8 sm:-right-8 dark:bg-purple-900/50'>
-            <Sparkles className='h-24 w-24 text-purple-900 dark:text-purple-400' />
+            <Sparkles className='h-16 w-16 text-purple-900 dark:text-purple-400' />
           </div>
         </Card>
       </div>

@@ -4565,114 +4565,121 @@ export function createDataService(db: Database) {
       let detected = 0;
       let updated = 0;
 
-      await db.transactionAsync(async () => {
-        for (const group of groups) {
-          if (!group.dates || !group.amounts) continue;
+      // Process groups in batches to avoid long transactions that can cause OPFS stream errors
+      const BATCH_SIZE = 25;
+      for (let i = 0; i < groups.length; i += BATCH_SIZE) {
+        const batch = groups.slice(i, i + BATCH_SIZE);
 
-          // Parse dates and amounts together to maintain association
-          const rawDates = group.dates.split(',');
-          const rawAmounts = group.amounts.split(',');
+        await db.transactionAsync(async () => {
+          for (const group of batch) {
+            if (!group.dates || !group.amounts) continue;
 
-          // Create pairs and sort by date
-          const pairs = rawDates
-            .map((d, i) => ({
-              date: new Date(d),
-              amount: parseFloat(rawAmounts[i]),
-            }))
-            .sort((a, b) => a.date.getTime() - b.date.getTime());
+            // Parse dates and amounts together to maintain association
+            const rawDates = group.dates.split(',');
+            const rawAmounts = group.amounts.split(',');
 
-          const dates = pairs.map((p) => p.date);
-          const amounts = pairs.map((p) => p.amount);
+            // Create pairs and sort by date
+            const pairs = rawDates
+              .map((d, i) => ({
+                date: new Date(d),
+                amount: parseFloat(rawAmounts[i]),
+              }))
+              .sort((a, b) => a.date.getTime() - b.date.getTime());
 
-          if (dates.length < MIN_TRANSACTIONS_FOR_PATTERN) continue;
+            const dates = pairs.map((p) => p.date);
+            const amounts = pairs.map((p) => p.amount);
 
-          // Check if transactions span at least 3 months
-          const firstDate = dates[0];
-          const lastDateObj = dates[dates.length - 1];
-          const daySpan = Math.round(
-            (lastDateObj.getTime() - firstDate.getTime()) /
-              (1000 * 60 * 60 * 24)
-          );
+            if (dates.length < MIN_TRANSACTIONS_FOR_PATTERN) continue;
 
-          // For monthly patterns, require ~2+ months span (60+ days)
-          // This ensures we have at least 3 payments over 3 months
-          if (daySpan < MIN_MONTHS_SPAN_DAYS) continue;
-
-          // Calculate intervals between consecutive transactions
-          const intervals: number[] = [];
-          for (let i = 1; i < dates.length; i++) {
-            const daysDiff = Math.round(
-              (dates[i].getTime() - dates[i - 1].getTime()) /
+            // Check if transactions span at least 3 months
+            const firstDate = dates[0];
+            const lastDateObj = dates[dates.length - 1];
+            const daySpan = Math.round(
+              (lastDateObj.getTime() - firstDate.getTime()) /
                 (1000 * 60 * 60 * 24)
             );
-            intervals.push(daysDiff);
-          }
 
-          // Classify pattern based on average interval
-          const avgInterval =
-            intervals.reduce((sum, i) => sum + i, 0) / intervals.length;
-          let patternType: PatternType | null = null;
+            // For monthly patterns, require ~2+ months span (60+ days)
+            // This ensures we have at least 3 payments over 3 months
+            if (daySpan < MIN_MONTHS_SPAN_DAYS) continue;
 
-          for (const [type, range] of Object.entries(PATTERN_INTERVALS)) {
-            if (avgInterval >= range.min && avgInterval <= range.max) {
-              patternType = type as PatternType;
-              break;
+            // Calculate intervals between consecutive transactions
+            const intervals: number[] = [];
+            for (let i = 1; i < dates.length; i++) {
+              const daysDiff = Math.round(
+                (dates[i].getTime() - dates[i - 1].getTime()) /
+                  (1000 * 60 * 60 * 24)
+              );
+              intervals.push(daysDiff);
             }
-          }
 
-          if (!patternType) continue;
+            // Classify pattern based on average interval
+            const avgInterval =
+              intervals.reduce((sum, i) => sum + i, 0) / intervals.length;
+            let patternType: PatternType | null = null;
 
-          // Check interval consistency (±3 day tolerance)
-          const isConsistent = intervals.every(
-            (interval) => Math.abs(interval - avgInterval) <= 3
-          );
+            for (const [type, range] of Object.entries(PATTERN_INTERVALS)) {
+              if (avgInterval >= range.min && avgInterval <= range.max) {
+                patternType = type as PatternType;
+                break;
+              }
+            }
 
-          if (!isConsistent) continue;
+            if (!patternType) continue;
 
-          // Calculate amount statistics
-          // Amounts may be positive or negative depending on how they were imported
-          // We store the actual values and use absolute values for comparison
-          const avgAmount =
-            amounts.reduce((sum, a) => sum + a, 0) / amounts.length;
-          const lastAmount = amounts[amounts.length - 1];
-          const lastDate = dates[dates.length - 1].toISOString().split('T')[0];
+            // Check interval consistency (±3 day tolerance)
+            const isConsistent = intervals.every(
+              (interval) => Math.abs(interval - avgInterval) <= 3
+            );
 
-          // Check if amount is variable (>10% variance) - use absolute values for comparison
-          const absAvgAmount = Math.abs(avgAmount);
-          const isVariable = amounts.some(
-            (a) =>
-              Math.abs(Math.abs(a) - absAvgAmount) / absAvgAmount >
-              AMOUNT_VARIANCE_THRESHOLD
-          );
+            if (!isConsistent) continue;
 
-          // Calculate next expected date
-          const nextExpected = new Date(dates[dates.length - 1]);
-          nextExpected.setDate(
-            nextExpected.getDate() + Math.round(avgInterval)
-          );
-          const nextExpectedDate = nextExpected.toISOString().split('T')[0];
+            // Calculate amount statistics
+            // Amounts may be positive or negative depending on how they were imported
+            // We store the actual values and use absolute values for comparison
+            const avgAmount =
+              amounts.reduce((sum, a) => sum + a, 0) / amounts.length;
+            const lastAmount = amounts[amounts.length - 1];
+            const lastDate = dates[dates.length - 1]
+              .toISOString()
+              .split('T')[0];
 
-          // Check if pattern already exists (including dismissed ones to avoid re-creating)
-          // Use case-insensitive matching to prevent duplicates like "Netflix" vs "NETFLIX"
-          const existing = await db.queryOneAsync<{
-            id: string;
-            is_dismissed: number;
-          }>(
-            `SELECT id, is_dismissed FROM recurring_patterns 
+            // Check if amount is variable (>10% variance) - use absolute values for comparison
+            const absAvgAmount = Math.abs(avgAmount);
+            const isVariable = amounts.some(
+              (a) =>
+                Math.abs(Math.abs(a) - absAvgAmount) / absAvgAmount >
+                AMOUNT_VARIANCE_THRESHOLD
+            );
+
+            // Calculate next expected date
+            const nextExpected = new Date(dates[dates.length - 1]);
+            nextExpected.setDate(
+              nextExpected.getDate() + Math.round(avgInterval)
+            );
+            const nextExpectedDate = nextExpected.toISOString().split('T')[0];
+
+            // Check if pattern already exists (including dismissed ones to avoid re-creating)
+            // Use case-insensitive matching to prevent duplicates like "Netflix" vs "NETFLIX"
+            const existing = await db.queryOneAsync<{
+              id: string;
+              is_dismissed: number;
+            }>(
+              `SELECT id, is_dismissed FROM recurring_patterns 
              WHERE profile_id = ? 
                AND opposing_iban IS ? 
                AND LOWER(TRIM(merchant_name)) = LOWER(TRIM(?))
                AND is_deleted = 0`,
-            [pid, group.opposing_iban, group.merchant_name]
-          );
+              [pid, group.opposing_iban, group.merchant_name]
+            );
 
-          if (existing) {
-            // Skip if dismissed - don't update dismissed patterns
-            if (existing.is_dismissed === 1) continue;
+            if (existing) {
+              // Skip if dismissed - don't update dismissed patterns
+              if (existing.is_dismissed === 1) continue;
 
-            // Update existing pattern
-            await db.runAsync(
-              `UPDATE recurring_patterns SET
+              // Update existing pattern
+              await db.runAsync(
+                `UPDATE recurring_patterns SET
                 pattern_type = ?,
                 avg_amount = ?,
                 last_amount = ?,
@@ -4682,52 +4689,56 @@ export function createDataService(db: Database) {
                 transaction_count = ?,
                 updated_at = ?
                WHERE id = ?`,
-              [
-                patternType,
-                avgAmount,
-                lastAmount,
-                lastDate,
-                nextExpectedDate,
-                isVariable ? 1 : 0,
-                dates.length,
-                now,
-                existing.id,
-              ]
-            );
-            updated++;
-          } else {
-            // Create new pattern
-            const id = crypto.randomUUID();
-            await db.runAsync(
-              `INSERT INTO recurring_patterns (
+                [
+                  patternType,
+                  avgAmount,
+                  lastAmount,
+                  lastDate,
+                  nextExpectedDate,
+                  isVariable ? 1 : 0,
+                  dates.length,
+                  now,
+                  existing.id,
+                ]
+              );
+              updated++;
+            } else {
+              // Create new pattern
+              const id = crypto.randomUUID();
+              await db.runAsync(
+                `INSERT INTO recurring_patterns (
                 id, opposing_iban, merchant_name, pattern_type, 
                 avg_amount, last_amount, last_date, next_expected_date,
                 is_active, is_confirmed, is_dismissed, is_variable, transaction_count,
                 profile_id, created_at, updated_at
               ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, 0, 0, ?, ?, ?, ?, ?)`,
-              [
-                id,
-                group.opposing_iban,
-                group.merchant_name,
-                patternType,
-                avgAmount,
-                lastAmount,
-                lastDate,
-                nextExpectedDate,
-                isVariable ? 1 : 0,
-                dates.length,
-                pid,
-                now,
-                now,
-              ]
-            );
-            detected++;
+                [
+                  id,
+                  group.opposing_iban,
+                  group.merchant_name,
+                  patternType,
+                  avgAmount,
+                  lastAmount,
+                  lastDate,
+                  nextExpectedDate,
+                  isVariable ? 1 : 0,
+                  dates.length,
+                  pid,
+                  now,
+                  now,
+                ]
+              );
+              detected++;
+            }
           }
-        }
+        }); // End of batch transaction
+      } // End of batch loop
 
-        // Cleanup: Remove patterns that match category rules
-        // If a pattern's merchant_name matches a category rule, it's a known categorized
-        // expense (rent, utilities, etc.) that doesn't need subscription tracking
+      // Cleanup: Remove patterns that match category rules
+      // If a pattern's merchant_name matches a category rule, it's a known categorized
+      // expense (rent, utilities, etc.) that doesn't need subscription tracking
+      // This is done in a separate transaction to keep transactions short
+      await db.transactionAsync(async () => {
         const categoryRules = await db.queryAsync<{ pattern: string }>(
           `SELECT LOWER(pattern) as pattern FROM category_rules 
            WHERE profile_id = ? AND is_deleted = 0`,

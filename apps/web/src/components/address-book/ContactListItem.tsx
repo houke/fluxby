@@ -377,10 +377,10 @@ export const ContactListItem = memo(function ContactListItem({
               {contactTransactions.map((tx) => (
                 <div
                   key={tx.id}
-                  className='flex items-center justify-between rounded-lg bg-card/50 p-2 text-sm'
+                  className='flex flex-col gap-1 rounded-lg bg-card/50 p-3 text-sm sm:flex-row sm:items-center sm:justify-between'
                 >
                   <div className='min-w-0 flex-1'>
-                    <p className='truncate font-medium'>
+                    <p className='font-medium break-words'>
                       {tx.description || t.transactions?.unknown || 'Onbekend'}
                     </p>
                     <p className='text-xs text-muted-foreground'>
@@ -389,7 +389,7 @@ export const ContactListItem = memo(function ContactListItem({
                   </div>
                   <div
                     className={cn(
-                      'font-bold',
+                      'shrink-0 font-bold',
                       tx.amount > 0 ? 'text-emerald-600' : 'text-rose-600'
                     )}
                   >

@@ -895,18 +895,58 @@ export class Database implements DatabaseConnection {
 
   /**
    * Run operations in a transaction (async)
+   * Includes retry logic for OPFS stream errors that can occur during long transactions
    */
   async transactionAsync<T>(fn: () => Promise<T>): Promise<T> {
     this.ensureOpen();
-    await this.execAsync('BEGIN TRANSACTION');
-    try {
-      const result = await fn();
-      await this.execAsync('COMMIT');
-      return result;
-    } catch (error) {
-      await this.execAsync('ROLLBACK');
-      throw error;
+
+    const MAX_RETRIES = 3;
+    let lastError: unknown = null;
+
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+      try {
+        await this.execAsync('BEGIN TRANSACTION');
+        try {
+          const result = await fn();
+          await this.execAsync('COMMIT');
+          return result;
+        } catch (error) {
+          // Try to rollback, but don't fail if rollback fails
+          try {
+            await this.execAsync('ROLLBACK');
+          } catch (rollbackError) {
+            // Log but don't throw - the original error is more important
+            wasmLog('Rollback failed:', rollbackError);
+          }
+          throw error;
+        }
+      } catch (error) {
+        lastError = error;
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+
+        // Check if this is a recoverable OPFS stream error
+        const isStreamError =
+          errorMessage.includes('closing writable stream') ||
+          errorMessage.includes('disk I/O error') ||
+          errorMessage.includes('cannot rollback');
+
+        if (isStreamError && attempt < MAX_RETRIES) {
+          wasmLog(`OPFS stream error on attempt ${attempt}, retrying...`, {
+            error: errorMessage,
+          });
+          // Wait a bit before retrying to let OPFS streams stabilize
+          await new Promise((resolve) => setTimeout(resolve, 100 * attempt));
+          continue;
+        }
+
+        // Non-recoverable error or max retries reached
+        throw error;
+      }
     }
+
+    // Should not reach here, but TypeScript needs this
+    throw lastError;
   }
 
   /**

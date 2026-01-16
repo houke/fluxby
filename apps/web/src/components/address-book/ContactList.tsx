@@ -1,7 +1,8 @@
-import React from 'react';
-import { Users } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Users, Loader2 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import type { AddressBookEntryWithStats } from '@/hooks/useAddressBook';
 import { ContactListItem } from './ContactListItem';
@@ -9,6 +10,9 @@ import {
   VirtualizedContactList,
   CONTACT_VIRTUALIZATION_THRESHOLD,
 } from './VirtualizedContactList';
+
+// Number of contacts to load initially and per "load more"
+const CONTACTS_PER_PAGE = 20;
 
 interface ContactListProps {
   contacts: AddressBookEntryWithStats[];
@@ -76,6 +80,48 @@ export const ContactList: React.FC<ContactListProps> = ({
   modalContentElement,
   translations: t,
 }) => {
+  // Lazy loading state
+  const [visibleCount, setVisibleCount] = useState(CONTACTS_PER_PAGE);
+  const loadMoreRef = useRef<HTMLButtonElement>(null);
+  const loadMoreSentinelRef = useRef<HTMLDivElement>(null);
+  const isLoadingMoreRef = useRef(false);
+
+  // Reset visible count when contacts change (e.g., search filter applied)
+  useEffect(() => {
+    setVisibleCount(CONTACTS_PER_PAGE);
+  }, [contacts.length]);
+
+  // Intersection Observer for auto-loading on scroll
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !isLoadingMoreRef.current) {
+          const hasMore = visibleCount < contacts.length;
+          if (hasMore) {
+            isLoadingMoreRef.current = true;
+            setVisibleCount((prev) => prev + CONTACTS_PER_PAGE);
+            requestAnimationFrame(() => {
+              isLoadingMoreRef.current = false;
+            });
+          }
+        }
+      },
+      { threshold: 0.1, rootMargin: '200px 0px 400px 0px' }
+    );
+
+    const el = loadMoreSentinelRef.current || loadMoreRef.current;
+    if (el) observer.observe(el as Element);
+
+    return () => {
+      if (el) observer.unobserve(el as Element);
+      isLoadingMoreRef.current = false;
+    };
+  }, [contacts.length, visibleCount]);
+
+  // Get visible contacts for rendering
+  const visibleContacts = contacts.slice(0, visibleCount);
+  const hasMore = visibleCount < contacts.length;
+
   return (
     <div className='-mx-3 sm:mx-0'>
       <Card
@@ -120,7 +166,7 @@ export const ContactList: React.FC<ContactListProps> = ({
               }
             />
           ) : contacts.length >= CONTACT_VIRTUALIZATION_THRESHOLD ? (
-            // Use virtualization for large contact lists
+            // Use virtualization for very large contact lists (100+)
             <VirtualizedContactList
               contacts={contacts}
               onEditContact={onEditContact}
@@ -151,62 +197,84 @@ export const ContactList: React.FC<ContactListProps> = ({
               maxHeight={600}
             />
           ) : (
-            <div className='space-y-0 sm:space-y-3'>
-              {(() => {
-                let firstMergedFound = false;
-                return contacts.map((contact, contactIndex) => {
-                  const isFirstMerged = !!(
-                    !firstMergedFound &&
-                    contact.isMerged &&
-                    contact.ibans &&
-                    contact.ibans.length > 1
-                  );
-                  if (isFirstMerged) firstMergedFound = true;
+            <>
+              <div className='space-y-2 sm:space-y-3'>
+                {(() => {
+                  let firstMergedFound = false;
+                  return visibleContacts.map((contact, contactIndex) => {
+                    const isFirstMerged = !!(
+                      !firstMergedFound &&
+                      contact.isMerged &&
+                      contact.ibans &&
+                      contact.ibans.length > 1
+                    );
+                    if (isFirstMerged) firstMergedFound = true;
 
-                  return (
-                    <ContactListItem
-                      key={contact.id}
-                      contact={contact}
-                      isFirst={contactIndex === 0}
-                      isFirstMerged={isFirstMerged}
-                      onEditContact={onEditContact}
-                      onDeleteContact={onDeleteContact}
-                      onUpdateContact={onUpdateContact}
-                      onCancelEdit={onCancelEdit}
-                      isEditing={editingContactId === contact.id}
-                      editContactName={editContactName}
-                      setEditContactName={setEditContactName}
-                      editContactDescription={editContactDescription}
-                      setEditContactDescription={setEditContactDescription}
-                      isExpanded={expandedContactId === contact.id}
-                      onToggleExpand={() => onToggleExpand(contact.id)}
-                      contactTransactions={
-                        expandedContactId === contact.id
-                          ? contactTransactions
-                          : undefined
-                      }
-                      isLoadingTransactions={
-                        expandedContactId === contact.id
-                          ? isLoadingTransactions
-                          : false
-                      }
-                      onSplitContact={onSplitContact}
-                      onSelectContactTransactions={onSelectContactTransactions}
-                      hasSharedIban={hasSharedIban(contact)}
-                      addressBook={addressBook}
-                      onMergeContacts={onMergeContacts}
-                      isMergePending={isMergePending}
-                      assignPopoverOpen={assignPopoverOpen}
-                      setAssignPopoverOpen={setAssignPopoverOpen}
-                      assignSearchTerm={assignSearchTerm}
-                      setAssignSearchTerm={setAssignSearchTerm}
-                      modalContentElement={modalContentElement}
-                      translations={t}
-                    />
-                  );
-                });
-              })()}
-            </div>
+                    return (
+                      <ContactListItem
+                        key={contact.id}
+                        contact={contact}
+                        isFirst={contactIndex === 0}
+                        isFirstMerged={isFirstMerged}
+                        onEditContact={onEditContact}
+                        onDeleteContact={onDeleteContact}
+                        onUpdateContact={onUpdateContact}
+                        onCancelEdit={onCancelEdit}
+                        isEditing={editingContactId === contact.id}
+                        editContactName={editContactName}
+                        setEditContactName={setEditContactName}
+                        editContactDescription={editContactDescription}
+                        setEditContactDescription={setEditContactDescription}
+                        isExpanded={expandedContactId === contact.id}
+                        onToggleExpand={() => onToggleExpand(contact.id)}
+                        contactTransactions={
+                          expandedContactId === contact.id
+                            ? contactTransactions
+                            : undefined
+                        }
+                        isLoadingTransactions={
+                          expandedContactId === contact.id
+                            ? isLoadingTransactions
+                            : false
+                        }
+                        onSplitContact={onSplitContact}
+                        onSelectContactTransactions={
+                          onSelectContactTransactions
+                        }
+                        hasSharedIban={hasSharedIban(contact)}
+                        addressBook={addressBook}
+                        onMergeContacts={onMergeContacts}
+                        isMergePending={isMergePending}
+                        assignPopoverOpen={assignPopoverOpen}
+                        setAssignPopoverOpen={setAssignPopoverOpen}
+                        assignSearchTerm={assignSearchTerm}
+                        setAssignSearchTerm={setAssignSearchTerm}
+                        modalContentElement={modalContentElement}
+                        translations={t}
+                      />
+                    );
+                  });
+                })()}
+              </div>
+              {/* Load more sentinel and button */}
+              {hasMore && (
+                <div className='mt-4 flex flex-col items-center gap-2'>
+                  {/* Sentinel observed by IntersectionObserver for auto-loading */}
+                  <div ref={loadMoreSentinelRef} className='h-4 w-full' />
+                  <Button
+                    ref={loadMoreRef}
+                    variant='outline'
+                    onClick={() =>
+                      setVisibleCount((prev) => prev + CONTACTS_PER_PAGE)
+                    }
+                    className='flex items-center gap-2'
+                  >
+                    <Loader2 className='h-4 w-4 animate-spin' />
+                    {t.transactions?.loadMore || 'Load more'}
+                  </Button>
+                </div>
+              )}
+            </>
           )}
         </CardContent>
       </Card>
