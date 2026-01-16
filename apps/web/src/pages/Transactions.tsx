@@ -52,6 +52,7 @@ import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { AccountBalanceCards } from '@/components/dashboard/AccountBalanceCards';
+import { StatsCard } from '@/components/dashboard/StatsCard';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -1831,102 +1832,65 @@ export default function Transactions() {
           }
         />
 
-        {/* Summary Cards - Same as Dashboard */}
+        {/* Stats Cards */}
         <div
           className='-mx-3 grid grid-cols-2 gap-px bg-border sm:mx-0 sm:gap-4 sm:bg-transparent lg:grid-cols-4'
           data-onboarding='transaction-summary'
         >
-          <Card className='h-full rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'>
-            <CardContent className='relative flex h-full flex-col justify-between overflow-hidden p-4 sm:flex-row sm:items-center sm:justify-between sm:p-6'>
-              <div className='flex-1 sm:mr-4'>
-                <p className='text-xs text-muted-foreground sm:text-sm'>
-                  {t.dashboard.income}
-                </p>
-                <p className='mt-1 text-lg font-bold whitespace-nowrap sm:text-2xl'>
-                  <Currency amount={totals.income} />
-                </p>
-              </div>
-              <div className='absolute -top-2 -right-2 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 sm:relative sm:inset-auto sm:top-auto sm:right-auto sm:ml-4 sm:flex-shrink-0 dark:bg-emerald-900/30'>
-                <ArrowUpRight className='h-5 w-5 text-emerald-600 sm:h-6 sm:w-6' />
-              </div>
-            </CardContent>
-          </Card>
-          <Card className='h-full rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'>
-            <CardContent className='relative flex h-full flex-col justify-between overflow-hidden p-4 sm:flex-row sm:items-center sm:justify-between sm:p-6'>
-              <div className='flex-1 sm:mr-4'>
-                <p className='text-xs text-muted-foreground sm:text-sm'>
-                  {t.dashboard.expenses}
-                </p>
-                <p className='mt-1 text-lg font-bold whitespace-nowrap sm:text-2xl'>
-                  <Currency amount={totals.expenses} />
-                </p>
-              </div>
-              <div className='absolute -top-2 -right-2 flex h-12 w-12 items-center justify-center rounded-full bg-rose-100 sm:relative sm:inset-auto sm:top-auto sm:right-auto sm:ml-4 sm:flex-shrink-0 dark:bg-rose-900/30'>
-                <ArrowDownRight className='h-5 w-5 text-rose-600 sm:h-6 sm:w-6' />
-              </div>
-            </CardContent>
-          </Card>
-          <Card className='h-full rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'>
-            <CardContent className='relative flex h-full flex-col justify-between overflow-hidden p-4 sm:flex-row sm:items-center sm:justify-between sm:p-6'>
-              <div className='flex-1 sm:mr-4'>
-                <p className='text-xs text-muted-foreground sm:text-sm'>
-                  {t.dashboard.toSavings}
-                </p>
-                <p className='mt-1 text-lg font-bold whitespace-nowrap sm:text-2xl'>
-                  <Currency amount={totals.netSavingsTransfer} />
-                </p>
-                <p className='mt-1 text-xs whitespace-nowrap text-muted-foreground'>
+          <div className='h-full'>
+            <StatsCard
+              title={t.dashboard.income}
+              value={<Currency amount={totals.income} />}
+              icon={ArrowUpRight}
+              iconColor='text-emerald-900 dark:text-emerald-400'
+              trend={0}
+            />
+          </div>
+          <div className='h-full'>
+            <StatsCard
+              title={t.dashboard.expenses}
+              value={<Currency amount={totals.expenses} />}
+              icon={ArrowDownRight}
+              iconColor='text-rose-900 dark:text-rose-400'
+              trend={0}
+            />
+          </div>
+          <div className='h-full'>
+            <StatsCard
+              title={t.dashboard.toSavings}
+              value={<Currency amount={totals.netSavingsTransfer} />}
+              icon={PiggyBank}
+              iconColor='text-blue-900 dark:text-blue-400'
+              trend={0}
+              trendLabel={
+                <>
                   +<Currency amount={totals.transferToSavings} /> / -
                   <Currency amount={totals.transferFromSavings} />
-                </p>
-              </div>
-              <div className='absolute -top-2 -right-2 flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 sm:relative sm:inset-auto sm:top-auto sm:right-auto sm:ml-4 sm:flex-shrink-0 dark:bg-blue-900/30'>
-                <PiggyBank className='h-5 w-5 text-blue-600 sm:h-6 sm:w-6' />
-              </div>
-            </CardContent>
-          </Card>
-          <Card className='h-full rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'>
-            <CardContent className='relative flex h-full flex-col justify-between overflow-hidden p-4 sm:flex-row sm:items-center sm:justify-between sm:p-6'>
-              <div className='flex-1 sm:mr-4'>
-                <p className='text-xs text-muted-foreground sm:text-sm'>
-                  {t.dashboard.netResult}
-                </p>
-                <p
-                  className={cn(
-                    'mt-1 text-lg font-bold whitespace-nowrap sm:text-2xl',
-                    totals.balance === 0
-                      ? 'text-gray-900 dark:text-gray-100'
-                      : totals.balance > 0
-                        ? 'text-emerald-600'
-                        : 'text-rose-600'
-                  )}
-                >
-                  <Currency amount={totals.balance} />
-                </p>
-              </div>
-              <div
-                className={cn(
-                  'absolute -top-2 -right-2 flex h-12 w-12 items-center justify-center rounded-full sm:relative sm:inset-auto sm:top-auto sm:right-auto sm:ml-4 sm:flex-shrink-0',
-                  totals.balance === 0
-                    ? 'bg-gray-100 dark:bg-gray-900/30'
-                    : totals.balance > 0
-                      ? 'bg-emerald-100 dark:bg-emerald-900/30'
-                      : 'bg-rose-100 dark:bg-rose-900/30'
-                )}
-              >
-                <Wallet
-                  className={cn(
-                    'h-5 w-5 sm:h-6 sm:w-6',
-                    totals.balance === 0
-                      ? 'text-gray-400'
-                      : totals.balance > 0
-                        ? 'text-emerald-600'
-                        : 'text-rose-600'
-                  )}
-                />
-              </div>
-            </CardContent>
-          </Card>
+                </>
+              }
+            />
+          </div>
+          <div className='h-full'>
+            <StatsCard
+              title={t.dashboard.netResult}
+              value={<Currency amount={totals.balance} />}
+              icon={Wallet}
+              iconColor={
+                totals.balance === 0
+                  ? 'text-gray-400'
+                  : totals.balance > 0
+                    ? 'text-emerald-900 dark:text-emerald-400'
+                    : 'text-rose-900 dark:text-rose-400'
+              }
+              valueColor={
+                totals.balance === 0
+                  ? 'text-gray-900 dark:text-gray-100'
+                  : totals.balance > 0
+                    ? 'text-emerald-900 dark:text-emerald-400'
+                    : 'text-rose-900 dark:text-rose-400'
+              }
+            />
+          </div>
         </div>
 
         {/* Filters */}
