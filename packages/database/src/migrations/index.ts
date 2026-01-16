@@ -24,6 +24,7 @@ import { migration006 } from './006_recurring_dismissed.js';
 import { migration007 } from './007_seed_recurring_patterns.js';
 import { migration008 } from './008_dashboard_indexes.js';
 import { migration009 } from './009_addressbook_indexes.js';
+import { migration010 } from './010_transaction_indexes.js';
 
 export const migrations: Migration[] = [
   migration001,
@@ -35,10 +36,11 @@ export const migrations: Migration[] = [
   migration007,
   migration008,
   migration009,
+  migration010,
 ];
 
 /**
  * The highest migration version this code knows about.
  * Used to detect stale code (when database has higher version than code knows).
  */
-export const LATEST_MIGRATION_VERSION = 9;
+export const LATEST_MIGRATION_VERSION = 10;

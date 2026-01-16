@@ -153,13 +153,41 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
         console.warn('Failed to save profile ID to OPFS:', err)
       );
 
-      // Invalidate all profile-scoped queries to refetch with new profile
-      queryClient.invalidateQueries({ queryKey: ['accounts'] });
-      queryClient.invalidateQueries({ queryKey: ['transactions'] });
-      queryClient.invalidateQueries({ queryKey: ['categories'] });
-      queryClient.invalidateQueries({ queryKey: ['budgets'] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-      queryClient.invalidateQueries({ queryKey: ['analytics'] });
+      // Smart query handling: remove old profile data and prefetch new
+      // This is more efficient than blindly invalidating everything
+      const profileScopedQueryKeys = [
+        'accounts',
+        'transactions',
+        'categories',
+        'budgets',
+        'dashboard',
+        'analytics',
+        'addressBook',
+        'sharedIbans',
+        'categoryRules',
+        'min-max-dates',
+        'transactions-all',
+      ];
+
+      // Remove cached data for queries from previous profile
+      // This frees memory and ensures fresh data for new profile
+      queryClient.removeQueries({
+        predicate: (query) => {
+          const [queryType, queryProfileId] = query.queryKey;
+          // Only remove if it's a profile-scoped query AND has a different profile ID
+          return (
+            profileScopedQueryKeys.includes(queryType as string) &&
+            queryProfileId !== undefined &&
+            queryProfileId !== id
+          );
+        },
+      });
+
+      // Invalidate queries that will be used on the new profile
+      // This triggers immediate refetch when components mount
+      profileScopedQueryKeys.forEach((key) => {
+        queryClient.invalidateQueries({ queryKey: [key, id] });
+      });
 
       // Brief delay to show switching state
       setTimeout(() => setIsSwitching(false), 300);

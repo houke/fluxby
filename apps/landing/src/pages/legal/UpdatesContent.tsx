@@ -33,22 +33,24 @@ const UpdatesContent = () => {
   const updatesPage = t.legal?.updatesPage;
 
   const releases = [
-        {
+    {
       version: '1.5.1',
       date: updatesPage?.v151Date || '14 januari 2026',
       title: updatesPage?.v151Title || 'Release 1.5.1',
-      description:
-        updatesPage?.v151Description ||
-        '3 bugfixes.',
+      description: updatesPage?.v151Description || '3 bugfixes.',
       features: [
         {
           icon: Globe,
           title: updatesPage?.v151F1Title || 'Betere web ervaring',
-          description: updatesPage?.v151F1Desc || '2 bugfixes. Bekijk de release op GitHub!',
+          description:
+            updatesPage?.v151F1Desc ||
+            '2 bugfixes. Bekijk de release op GitHub!',
         },
         {
           icon: Monitor,
-          title: updatesPage?.v151F2Title || 'Switch to universal macos binary and verwijderd redundant artifacts',
+          title:
+            updatesPage?.v151F2Title ||
+            'Switch to universal macos binary and verwijderd redundant artifacts',
           description: updatesPage?.v151F2Desc || 'Kleine fix, groot verschil.',
         },
       ],

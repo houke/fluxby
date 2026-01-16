@@ -123,7 +123,10 @@ export class Database implements DatabaseConnection {
   // Mutex for serializing database operations
   private operationQueue: Promise<unknown> = Promise.resolve();
   // Track pending operations for debugging
-  private pendingOperations = new Map<number, { sql: string; startTime: number }>();
+  private pendingOperations = new Map<
+    number,
+    { sql: string; startTime: number }
+  >();
 
   constructor(options: DatabaseOptions) {
     this.options = options;
@@ -979,16 +982,13 @@ export class Database implements DatabaseConnection {
    * Returns the count of pending migrations
    */
   async checkPendingMigrations(): Promise<number> {
-    return this.withLock(
-      async () => {
-        this.ensureOpen();
-        if (!this.db || !this.sqlite3) {
-          throw new Error('Database not initialized');
-        }
-        return checkPendingMigrations(this);
-      },
-      'checkPendingMigrations'
-    );
+    return this.withLock(async () => {
+      this.ensureOpen();
+      if (!this.db || !this.sqlite3) {
+        throw new Error('Database not initialized');
+      }
+      return checkPendingMigrations(this);
+    }, 'checkPendingMigrations');
   }
 
   /**

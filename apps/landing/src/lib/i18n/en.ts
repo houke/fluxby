@@ -1868,8 +1868,9 @@ export const en: LandingTranslationKeys = {
       v151Description: '3 bug fixes.',
       v151F1Title: 'Better web experience',
       v151F1Desc: '2 bug fixes. Check the release on GitHub!',
-      v151F2Title: 'Switch to universal macOS binary and remove redundant artifacts',
-      v151F2Desc: 'This shouldn\'t have happened, but it\'s fixed now!',
+      v151F2Title:
+        'Switch to universal macOS binary and remove redundant artifacts',
+      v151F2Desc: "This shouldn't have happened, but it's fixed now!",
       v150Date: 'January 11, 2026',
       v150Title: 'Release 1.5.0',
       v150Description: '2 new features.',

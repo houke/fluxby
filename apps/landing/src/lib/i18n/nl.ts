@@ -1943,7 +1943,8 @@ export const nl: LandingTranslationKeys = {
       v151Description: '3 bugfixes.',
       v151F1Title: 'Betere web ervaring',
       v151F1Desc: '2 bugfixes. Bekijk de release op GitHub!',
-      v151F2Title: 'Switch to universal macos binary and verwijderd redundant artifacts',
+      v151F2Title:
+        'Switch to universal macos binary and verwijderd redundant artifacts',
       v151F2Desc: 'Kleine fix, groot verschil.',
       v150Date: '11 januari 2026',
       v150Title: 'Release 1.5.0',

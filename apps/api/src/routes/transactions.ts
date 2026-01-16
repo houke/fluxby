@@ -1025,8 +1025,16 @@ router.post('/apply-cleanup-rules', (req, res) => {
       [profileId]
     );
 
-    let opposingNamesUpdated = 0;
-    let merchantNamesUpdated = 0;
+    // Group transactions by their original -> cleaned name transformations
+    // This way we can do one UPDATE for all transactions with the same transformation
+    const opposingUpdates = new Map<
+      string,
+      { cleaned: string; ids: number[] }
+    >();
+    const merchantUpdates = new Map<
+      string,
+      { cleaned: string; ids: number[] }
+    >();
 
     for (const tx of transactions) {
       // Clean opposing_account_name
@@ -1039,11 +1047,15 @@ router.post('/apply-cleanup-rules', (req, res) => {
           cleanedOpposing !== tx.opposing_account_name &&
           cleanedOpposing.length > 0
         ) {
-          run(
-            'UPDATE transactions SET opposing_account_name = ? WHERE id = ?',
-            [cleanedOpposing, tx.id]
-          );
-          opposingNamesUpdated++;
+          const key = `${tx.opposing_account_name}|${cleanedOpposing}`;
+          if (opposingUpdates.has(key)) {
+            opposingUpdates.get(key)!.ids.push(tx.id);
+          } else {
+            opposingUpdates.set(key, {
+              cleaned: cleanedOpposing,
+              ids: [tx.id],
+            });
+          }
         }
       }
 
@@ -1054,12 +1066,47 @@ router.post('/apply-cleanup-rules', (req, res) => {
           cleanedMerchant !== tx.merchant_name &&
           cleanedMerchant.length > 0
         ) {
-          run('UPDATE transactions SET merchant_name = ? WHERE id = ?', [
-            cleanedMerchant,
-            tx.id,
-          ]);
-          merchantNamesUpdated++;
+          const key = `${tx.merchant_name}|${cleanedMerchant}`;
+          if (merchantUpdates.has(key)) {
+            merchantUpdates.get(key)!.ids.push(tx.id);
+          } else {
+            merchantUpdates.set(key, {
+              cleaned: cleanedMerchant,
+              ids: [tx.id],
+            });
+          }
         }
+      }
+    }
+
+    let opposingNamesUpdated = 0;
+    let merchantNamesUpdated = 0;
+
+    // Batch update opposing names - one UPDATE per unique transformation
+    // Use batches of 500 IDs per query to avoid SQL parameter limits
+    const BATCH_SIZE = 500;
+    for (const { cleaned, ids } of opposingUpdates.values()) {
+      for (let i = 0; i < ids.length; i += BATCH_SIZE) {
+        const batchIds = ids.slice(i, i + BATCH_SIZE);
+        const placeholders = batchIds.map(() => '?').join(',');
+        const result = run(
+          `UPDATE transactions SET opposing_account_name = ? WHERE id IN (${placeholders})`,
+          [cleaned, ...batchIds]
+        );
+        opposingNamesUpdated += result.changes;
+      }
+    }
+
+    // Batch update merchant names
+    for (const { cleaned, ids } of merchantUpdates.values()) {
+      for (let i = 0; i < ids.length; i += BATCH_SIZE) {
+        const batchIds = ids.slice(i, i + BATCH_SIZE);
+        const placeholders = batchIds.map(() => '?').join(',');
+        const result = run(
+          `UPDATE transactions SET merchant_name = ? WHERE id IN (${placeholders})`,
+          [cleaned, ...batchIds]
+        );
+        merchantNamesUpdated += result.changes;
       }
     }
 
