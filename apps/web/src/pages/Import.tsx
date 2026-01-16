@@ -381,7 +381,11 @@ export default function Import() {
     description: '',
   });
   const [showPreview, setShowPreview] = useState(true);
-  const [importProgress, setImportProgress] = useState<string | null>(null);
+  const [importProgress, setImportProgress] = useState<{
+    phase: 'analyzing' | 'progress' | 'finishing';
+    current?: number;
+    total?: number;
+  } | null>(null);
   const [showResultsDialog, setShowResultsDialog] = useState(false);
   const [importResults, setImportResults] =
     useState<GenericImportResult | null>(null);
@@ -571,7 +575,12 @@ export default function Import() {
       bank: string;
     }) =>
       api.importGenericCSV(file, mapping, undefined, bank, (current, total) => {
-        setImportProgress(`${current}/${total}`);
+        // When we reach total/total, switch to finishing phase
+        if (current === total) {
+          setImportProgress({ phase: 'finishing' });
+        } else {
+          setImportProgress({ phase: 'progress', current, total });
+        }
       }) as Promise<GenericImportResult>,
     onSuccess: (data) => {
       setImportResults(data);
@@ -633,7 +642,12 @@ export default function Import() {
   const uploadMutation = useMutation({
     mutationFn: (file: File) =>
       api.uploadCSV(file, undefined, (current, total) => {
-        setImportProgress(`${current}/${total}`);
+        // When we reach total/total, switch to finishing phase
+        if (current === total) {
+          setImportProgress({ phase: 'finishing' });
+        } else {
+          setImportProgress({ phase: 'progress', current, total });
+        }
       }) as Promise<{
         importId: number;
         imported: number;
@@ -721,7 +735,7 @@ export default function Import() {
       ) as ColumnMapping;
 
       setModalError(null);
-      setImportProgress(`0/${csvParseResult?.totalRows || '?'}`);
+      setImportProgress({ phase: 'analyzing' });
       importGenericMutation.mutate({
         file: pendingFile,
         mapping: cleanMapping,
@@ -1086,18 +1100,50 @@ export default function Import() {
               <div className='flex flex-col items-center justify-center gap-3 py-8'>
                 <Loader2 className='h-10 w-10 animate-spin text-purple-600' />
                 <div className='text-center'>
-                  <p className='font-medium'>{t.import.importing}</p>
-                  <p className='mt-1 text-sm font-bold text-purple-600 tabular-nums'>
-                    {importProgress}
-                  </p>
-                  <p className='text-xs text-muted-foreground'>
-                    {(
-                      t.import.savingToDatabase ||
-                      'Saving to database: {current} of {total}'
-                    )
-                      .replace('{current}', importProgress.split('/')[0])
-                      .replace('{total}', importProgress.split('/')[1])}
-                  </p>
+                  {importProgress.phase === 'analyzing' && (
+                    <>
+                      <p className='font-medium'>
+                        {t.import?.analyzingFile || 'Analyzing file...'}
+                      </p>
+                      <p className='mt-1 text-xs text-muted-foreground'>
+                        {t.import?.analyzingFileDesc ||
+                          'Please wait while we process your file'}
+                      </p>
+                    </>
+                  )}
+                  {importProgress.phase === 'progress' && (
+                    <>
+                      <p className='font-medium'>{t.import.importing}</p>
+                      <p className='mt-1 text-sm font-bold text-purple-600 tabular-nums'>
+                        {importProgress.current}/{importProgress.total}
+                      </p>
+                      <p className='text-xs text-muted-foreground'>
+                        {(
+                          t.import.savingToDatabase ||
+                          'Saving to database: {current} of {total}'
+                        )
+                          .replace(
+                            '{current}',
+                            String(importProgress.current || 0)
+                          )
+                          .replace(
+                            '{total}',
+                            String(importProgress.total || 0)
+                          )}
+                      </p>
+                    </>
+                  )}
+                  {importProgress.phase === 'finishing' && (
+                    <>
+                      <p className='font-medium'>
+                        {t.import?.finishingUp || 'Finishing up...'}
+                      </p>
+                      <p className='mt-1 text-xs text-muted-foreground'>
+                        {t.import?.finishingUpDesc ||
+                          'Almost done, just a moment longer'}
+                      </p>
+                    </>
+                  )}
                 </div>
               </div>
             )}

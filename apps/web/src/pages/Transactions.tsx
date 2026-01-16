@@ -40,7 +40,10 @@ import {
   RotateCcw,
   AlertCircle,
 } from 'lucide-react';
-import { useTransactionTotals } from '@/hooks/useTransactionTotals';
+import {
+  useTransactionTotals,
+  useTransactionTotalsQuery,
+} from '@/hooks/useTransactionTotals';
 import {
   Card,
   CardContent,
@@ -1757,8 +1760,25 @@ export default function Transactions() {
     }
   };
 
-  // Calculate totals using shared hook (same logic as Dashboard)
-  const totals = useTransactionTotals(transactions);
+  // Get totals via optimized database query (doesn't require loading all transactions)
+  // This ensures accurate totals even with pagination limits
+  const { totals: dbTotals } = useTransactionTotalsQuery({
+    startDate,
+    endDate,
+    search: debouncedSearch,
+    type: typeParam || '',
+    categoryIds: categoryIdsParam?.join(',') || '',
+    opposingAccountIbans: ibansParam?.join(',') || '',
+    opposingAccountName: nameParam || '',
+    addressBookId: addressBookIdParam?.toString() || '',
+    paymentMethods: paymentMethodsParam?.join(',') || '',
+    paymentProviders: paymentProvidersParam?.join(',') || '',
+  });
+
+  // Use database totals for accurate stats, fallback to client-side calculation
+  // if database query hasn't returned yet
+  const clientTotals = useTransactionTotals(transactions);
+  const totals = dbTotals.count > 0 ? dbTotals : clientTotals;
 
   // Memoize recurring merchants computation - this is expensive for large transaction lists
   const recurringMerchants = useMemo(() => {

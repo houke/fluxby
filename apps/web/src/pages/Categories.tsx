@@ -1526,7 +1526,26 @@ export default function Categories() {
         {categoriesLoading ? (
           <div className='space-y-4'>
             {[...Array(4)].map((_, idx) => (
-              <Skeleton key={idx} className='h-48' />
+              <Card
+                key={idx}
+                className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'
+              >
+                <CardContent className='p-4'>
+                  <div className='flex items-center gap-3'>
+                    <Skeleton className='h-10 w-10 rounded-lg' />
+                    <div className='flex-1 space-y-2'>
+                      <Skeleton className='h-5 w-32' />
+                      <Skeleton className='h-4 w-48' />
+                    </div>
+                    <Skeleton className='h-6 w-16' />
+                  </div>
+                  <div className='mt-4 flex flex-wrap gap-2'>
+                    <Skeleton className='h-8 w-24 rounded-lg' />
+                    <Skeleton className='h-8 w-20 rounded-lg' />
+                    <Skeleton className='h-8 w-28 rounded-lg' />
+                  </div>
+                </CardContent>
+              </Card>
             ))}
           </div>
         ) : !categories || categories.length === 0 ? (

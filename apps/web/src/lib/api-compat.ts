@@ -146,6 +146,15 @@ export const api = {
     await ds.deleteTransaction(id);
   },
 
+  /**
+   * Get transaction totals without loading all transaction data.
+   * This is much more efficient for displaying stats.
+   */
+  getTransactionTotals: async (filters?: Record<string, string>) => {
+    const ds = getDataService();
+    return ds.getTransactionTotals(filters);
+  },
+
   bulkCategorize: async (transactionIds: string[], categoryId: string) => {
     const ds = getDataService();
     return ds.bulkCategorize(transactionIds, categoryId);

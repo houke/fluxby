@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useDataService } from '@/contexts/DatabaseContext';
 import { useFilterParams } from '@/contexts/FilterContext';
+import { api } from '@/lib/api';
 
 // Minimal transaction type for totals calculation
 interface TransactionForTotals {
@@ -73,6 +74,57 @@ export function useTransactionTotals(
   }, [transactions]);
 }
 
+interface TransactionTotalsQuery {
+  income: number;
+  expenses: number;
+  transferToSavings: number;
+  transferFromSavings: number;
+  netSavingsTransfer: number;
+  balance: number;
+  count: number;
+}
+
+/**
+ * Hook to get transaction totals directly from database aggregation.
+ * This is much more efficient than loading all transactions for large datasets.
+ * Use this when you only need totals, not the individual transactions.
+ */
+export function useTransactionTotalsQuery(filters?: Record<string, string>) {
+  const { startDate, endDate } = useFilterParams();
+
+  // Merge filter params with passed filters
+  const mergedFilters = {
+    startDate,
+    endDate,
+    ...filters,
+  };
+
+  const { data, isLoading } = useQuery<TransactionTotalsQuery>({
+    queryKey: ['transaction-totals', mergedFilters],
+    queryFn: async () => {
+      const result = await api.getTransactionTotals(mergedFilters);
+      return {
+        ...result,
+        netSavingsTransfer: result.transferToSavings - result.transferFromSavings,
+      };
+    },
+    staleTime: 60 * 1000, // 1 minute - totals are derived data
+  });
+
+  return {
+    totals: data || {
+      income: 0,
+      expenses: 0,
+      transferToSavings: 0,
+      transferFromSavings: 0,
+      netSavingsTransfer: 0,
+      balance: 0,
+      count: 0,
+    },
+    isLoading,
+  };
+}
+
 interface DashboardStats {
   totalBalance: number;
   totalIncome: number;
@@ -107,6 +159,7 @@ export function useDashboardTotals() {
         transactionCount: stats.transactionCount,
       };
     },
+    staleTime: 2 * 60 * 1000, // 2 minutes - consistency with dashboard
   });
 
   return {

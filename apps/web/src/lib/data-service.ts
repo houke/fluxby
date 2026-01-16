@@ -466,15 +466,21 @@ export function createDataService(db: Database) {
       if (!pid) return [];
 
       if (withCounts) {
+        // Use a subquery approach which is faster than LEFT JOIN for large transaction tables
+        // The subquery leverages the idx_transactions_category_amount index
         return await db.queryAsync<Category>(
           `SELECT c.id, c.name, c.parent_id as parentId, c.icon, c.color, c.description, 
             c.profile_id, c.created_at as createdAt, c.updated_at as updatedAt, c.is_deleted,
-            COUNT(t.id) as transactionCount,
-            COALESCE(SUM(t.amount), 0) as totalExpenses
+            COALESCE(stats.cnt, 0) as transactionCount,
+            COALESCE(stats.total, 0) as totalExpenses
            FROM categories c
-           LEFT JOIN transactions t ON t.category_id = c.id AND t.is_deleted = 0 AND t.profile_id = ?
+           LEFT JOIN (
+             SELECT category_id, COUNT(*) as cnt, SUM(amount) as total
+             FROM transactions 
+             WHERE is_deleted = 0 AND profile_id = ? AND category_id IS NOT NULL
+             GROUP BY category_id
+           ) stats ON stats.category_id = c.id
            WHERE c.profile_id = ? AND c.is_deleted = 0
-           GROUP BY c.id
            ORDER BY c.name ASC`,
           [pid, pid]
         );
@@ -768,9 +774,16 @@ export function createDataService(db: Database) {
 
       sql += ' ORDER BY t.date DESC, t.id DESC';
 
-      if (filters?.limit) {
-        sql += ' LIMIT ?';
-        params.push(parseInt(filters.limit, 10));
+      // Apply limit - use provided limit or default to 500 for performance
+      // This prevents fetching all 7000+ transactions at once
+      const limit = filters?.limit ? parseInt(filters.limit, 10) : 500;
+      sql += ' LIMIT ?';
+      params.push(limit);
+
+      // Support cursor-based pagination for infinite scroll
+      if (filters?.offset) {
+        sql += ' OFFSET ?';
+        params.push(parseInt(filters.offset, 10));
       }
 
       const rows = await db.queryAsync<DBTransaction>(sql, params);
@@ -797,6 +810,99 @@ export function createDataService(db: Database) {
         paymentProvider: row.payment_provider,
         addressBookId: row.address_book_id,
       }));
+    },
+
+    /**
+     * Get transaction totals without loading all transaction data.
+     * This is much faster than loading all transactions and computing client-side.
+     */
+    async getTransactionTotals(filters?: Record<string, string>): Promise<{
+      income: number;
+      expenses: number;
+      transferToSavings: number;
+      transferFromSavings: number;
+      balance: number;
+      count: number;
+    }> {
+      const pid = profileId();
+      if (!pid)
+        return {
+          income: 0,
+          expenses: 0,
+          transferToSavings: 0,
+          transferFromSavings: 0,
+          balance: 0,
+          count: 0,
+        };
+
+      let sql = `
+        SELECT 
+          COALESCE(SUM(CASE WHEN t.type = 'income' THEN t.amount ELSE 0 END), 0) as income,
+          COALESCE(SUM(CASE WHEN t.type = 'expense' THEN ABS(t.amount) ELSE 0 END), 0) as expenses,
+          COALESCE(SUM(CASE WHEN t.type = 'transfer' AND t.amount < 0 THEN ABS(t.amount) ELSE 0 END), 0) as transferToSavings,
+          COALESCE(SUM(CASE WHEN t.type = 'transfer' AND t.amount > 0 THEN t.amount ELSE 0 END), 0) as transferFromSavings,
+          COUNT(*) as count
+        FROM transactions t
+        LEFT JOIN accounts a ON t.account_id = a.id
+        WHERE a.profile_id = ? AND t.is_deleted = 0
+      `;
+      const params: unknown[] = [pid];
+
+      if (filters) {
+        if (filters.startDate) {
+          sql += ' AND t.date >= ?';
+          params.push(filters.startDate);
+        }
+        if (filters.endDate) {
+          sql += ' AND t.date <= ?';
+          params.push(filters.endDate);
+        }
+        if (filters.type && filters.type !== 'all') {
+          sql += ' AND t.type = ?';
+          params.push(filters.type);
+        }
+        if (filters.categoryIds) {
+          const categoryIds = filters.categoryIds.split(',').filter(Boolean);
+          if (categoryIds.length > 0) {
+            const placeholders = categoryIds.map(() => '?').join(',');
+            sql += ` AND t.category_id IN (${placeholders})`;
+            params.push(...categoryIds);
+          }
+        }
+        if (filters.search) {
+          sql +=
+            ' AND (t.description LIKE ? OR t.merchant_name LIKE ? OR t.opposing_account_name LIKE ?)';
+          const search = `%${filters.search}%`;
+          params.push(search, search, search);
+        }
+      }
+
+      const result = await db.queryOneAsync<{
+        income: number;
+        expenses: number;
+        transferToSavings: number;
+        transferFromSavings: number;
+        count: number;
+      }>(sql, params);
+
+      if (!result)
+        return {
+          income: 0,
+          expenses: 0,
+          transferToSavings: 0,
+          transferFromSavings: 0,
+          balance: 0,
+          count: 0,
+        };
+
+      return {
+        income: result.income,
+        expenses: result.expenses,
+        transferToSavings: result.transferToSavings,
+        transferFromSavings: result.transferFromSavings,
+        balance: result.income - result.expenses,
+        count: result.count,
+      };
     },
 
     async updateTransaction(
@@ -4005,9 +4111,9 @@ export function createDataService(db: Database) {
       // Use smaller chunks and individual transactions per chunk to prevent timeouts
       // Each chunk gets its own transaction to allow progress reporting and prevent 30s timeout
       if (transactionsToInsert.length > 0) {
-        // Use smaller chunk size to prevent timeouts and allow progress updates
-        // 100 rows per chunk with 17 params = 1700 params (well under SQLite's 32766 limit)
-        const CHUNK_SIZE = 100;
+        // Use chunk size of 200 rows for better OPFS performance (fewer syncs)
+        // 200 rows per chunk with 17 params = 3400 params (well under SQLite's 32766 limit)
+        const CHUNK_SIZE = 200;
         const totalToInsert = transactionsToInsert.length;
         const chunks: (typeof transactionsToInsert)[] = [];
 

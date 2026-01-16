@@ -630,6 +630,10 @@ export interface TranslationKeys {
     startImport: string;
     importing: string;
     importProgress: string;
+    analyzingFile: string;
+    analyzingFileDesc: string;
+    finishingUp: string;
+    finishingUpDesc: string;
     processingTransactions: string;
     savingToDatabase: string;
     importResults: string;
@@ -1985,6 +1989,10 @@ export const nl: TranslationKeys = {
     startImport: 'Start import',
     importing: 'Importeren...',
     importProgress: 'Voortgang: {current} van {total}',
+    analyzingFile: 'Bestand analyseren...',
+    analyzingFileDesc: 'Even geduld terwijl we je bestand verwerken',
+    finishingUp: 'Bijna klaar...',
+    finishingUpDesc: 'Nog even geduld, we zijn bijna klaar',
     processingTransactions: '{total} transacties verwerken',
     savingToDatabase: 'Opslaan naar database: {current} van {total}',
     importResults: 'Import resultaten',

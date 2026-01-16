@@ -144,11 +144,13 @@ export default function Dashboard() {
         []
       ) as Promise<DashboardStats>;
     },
+    staleTime: 2 * 60 * 1000, // 2 minutes - dashboard data doesn't need constant refresh
   });
 
   const { data: accounts } = useQuery<Account[]>({
     queryKey: ['accounts', activeProfileId],
     queryFn: () => api.getAccounts() as Promise<Account[]>,
+    staleTime: 5 * 60 * 1000, // 5 minutes - accounts rarely change
   });
 
   const { data: dailyExpenses } = useQuery<DailyExpense[]>({
@@ -156,6 +158,7 @@ export default function Dashboard() {
     queryFn: () =>
       api.getDailyExpenses(startDate, endDate) as Promise<DailyExpense[]>,
     enabled: !!startDate && !!endDate,
+    staleTime: 2 * 60 * 1000, // 2 minutes - daily data is static for past periods
   });
 
   const { data: budgets } = useQuery<
@@ -194,6 +197,7 @@ export default function Dashboard() {
         }>
       >;
     },
+    staleTime: 2 * 60 * 1000, // 2 minutes - budget data doesn't change frequently
   });
 
   const { data: balanceForecast } = useQuery<{
@@ -218,6 +222,7 @@ export default function Dashboard() {
         basedOnMonths: number;
         isPastPeriod?: boolean;
       } | null>,
+    staleTime: 2 * 60 * 1000, // 2 minutes - forecast is expensive to calculate
   });
 
   const { data: topAccounts } = useQuery<{
@@ -250,6 +255,7 @@ export default function Dashboard() {
         totalCount: number;
         hasMore: boolean;
       }>,
+    staleTime: 2 * 60 * 1000, // 2 minutes - top accounts are computed
   });
 
   const { data: recurringStats } = useQuery<RecurringStats>({
@@ -257,6 +263,7 @@ export default function Dashboard() {
     queryFn: () =>
       api.getRecurringStats(startDate, endDate) as Promise<RecurringStats>,
     enabled: !!activeProfileId,
+    staleTime: 2 * 60 * 1000, // 2 minutes - recurring stats are computed
   });
 
   // Get min/max dates to determine if there's data in other periods
@@ -271,6 +278,7 @@ export default function Dashboard() {
         maxDate: string;
       } | null>,
     enabled: !!activeProfileId,
+    staleTime: 5 * 60 * 1000, // 5 minutes - min/max dates change rarely
   });
 
   const monthlyData = useMemo(

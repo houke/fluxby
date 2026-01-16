@@ -145,6 +145,16 @@ describe('Transactions empty state when period has no matches but full data does
       minDate: '2024-01-01',
       maxDate: '2025-12-31',
     } as any);
+
+    // Mock the new optimized totals API
+    vi.spyOn(api, 'getTransactionTotals' as any).mockResolvedValue({
+      income: 0,
+      expenses: 100,
+      transferToSavings: 0,
+      transferFromSavings: 0,
+      balance: -100,
+      count: 1,
+    } as any);
   });
 
   afterEach(() => {

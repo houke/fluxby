@@ -73,7 +73,7 @@ describe('TransactionFilters icons', () => {
       paymentProcessorFilterOpen: false,
       onPaymentProcessorFilterOpenChange: vi.fn(),
       colorWithOpacity: () => '',
-      translations: t,
+      t,
     };
 
     render(<TransactionFilters {...props} />);
