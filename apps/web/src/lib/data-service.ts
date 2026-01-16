@@ -5497,25 +5497,23 @@ export function createDataService(db: Database) {
             });
           }
 
-          // Occasional zorgtoeslag (around 5th)
-          if (Math.random() > 0.3) {
-            const toeslagSource = INCOME_SOURCES[1];
-            transactions.push({
-              date: new Date(Date.UTC(year, month, 5))
-                .toISOString()
-                .split('T')[0],
-              amount: 115 + randomAmount(-10, 10),
-              type: 'income',
-              description: 'Zorgtoeslag',
-              merchant_name: toeslagSource.name,
-              account_id: mainAccountId,
-              opposing_iban: toeslagSource.iban,
-              opposing_name: toeslagSource.name,
-              category_id: categoryIdMap['Teruggaven'] || null,
-              payment_method: 'Overboeking',
-              payment_provider: null,
-            });
-          }
+          // Zorgtoeslag every month (around 5th)
+          const toeslagSource = INCOME_SOURCES[1];
+          transactions.push({
+            date: new Date(Date.UTC(year, month, 5))
+              .toISOString()
+              .split('T')[0],
+            amount: 115 + randomAmount(-10, 10),
+            type: 'income',
+            description: 'Zorgtoeslag',
+            merchant_name: toeslagSource.name,
+            account_id: mainAccountId,
+            opposing_iban: toeslagSource.iban,
+            opposing_name: toeslagSource.name,
+            category_id: categoryIdMap['Teruggaven'] || null,
+            payment_method: 'Overboeking',
+            payment_provider: null,
+          });
 
           // Housing costs (around 1st)
           const housing = randomItem(DEMO_MERCHANTS.housing);

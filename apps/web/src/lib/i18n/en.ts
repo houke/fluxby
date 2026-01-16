@@ -46,7 +46,7 @@ export const en: TranslationKeys = {
     toggleTheme: 'Toggle theme',
     notifications: 'Notifications',
     restartOnboarding: 'Restart tour',
-    preparingOnboarding: 'Switching profiles, preparing onboarding…',
+    preparingOnboarding: 'Switching profiles...',
     filters: {
       thisMonth: 'This month',
       lastMonth: 'Last month',

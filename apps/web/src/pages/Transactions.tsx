@@ -2678,8 +2678,9 @@ export default function Transactions() {
                     </div>
                   )}
 
-                  {/* Show card if there are transactions outside the current date range */}
-                  {outsideRangeCount &&
+                  {/* Show card if there are transactions outside the current date range (only when filters are active) */}
+                  {hasActiveFilters &&
+                    outsideRangeCount &&
                     outsideRangeCount.total > 0 &&
                     minMaxDates && (
                       <div className='mt-4 rounded-lg border border-purple-200 bg-purple-50 p-4 dark:border-purple-800 dark:bg-purple-900/20'>

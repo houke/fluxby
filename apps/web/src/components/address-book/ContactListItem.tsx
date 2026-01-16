@@ -373,7 +373,7 @@ export const ContactListItem = memo(function ContactListItem({
               <Loader2 className='h-5 w-5 animate-spin text-muted-foreground' />
             </div>
           ) : contactTransactions && contactTransactions.length > 0 ? (
-            <div className='space-y-1'>
+            <div className='max-h-[500px] space-y-1 overflow-y-auto'>
               {contactTransactions.map((tx) => (
                 <div
                   key={tx.id}

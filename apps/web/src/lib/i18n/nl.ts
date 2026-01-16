@@ -1315,7 +1315,7 @@ export const nl: TranslationKeys = {
     toggleTheme: 'Thema wisselen',
     notifications: 'Meldingen',
     restartOnboarding: 'Rondleiding herstarten',
-    preparingOnboarding: 'Profiel wisselen, rondleiding voorbereiden…',
+    preparingOnboarding: 'Profiel wisselen…',
     filters: {
       thisMonth: 'Deze maand',
       lastMonth: 'Vorige maand',
