@@ -162,13 +162,18 @@ export default function Subscriptions() {
   // Mutations
   const detectMutation = useMutation({
     mutationFn: api.detectRecurringPatterns,
-    onSuccess: (result) => {
-      queryClient.invalidateQueries({
-        queryKey: ['recurring-patterns', activeProfileId],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ['recurring-stats', activeProfileId],
-      });
+    onSuccess: async (result) => {
+      // Invalidate and refetch immediately - don't rely on staleTime
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: ['recurring-patterns', activeProfileId],
+          refetchType: 'active',
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ['recurring-stats', activeProfileId],
+          refetchType: 'active',
+        }),
+      ]);
       toast.success(
         `${result.detected} ${t.subscriptions?.detected || 'new patterns detected'}, ${result.updated} ${t.subscriptions?.updated || 'patterns updated'}`
       );

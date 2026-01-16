@@ -103,7 +103,7 @@ export const ContactListItem = memo(function ContactListItem({
 
   return (
     <div
-      className='border-x-0 border-t border-b-0 sm:rounded-lg sm:border'
+      className='overflow-hidden border-x-0 border-t border-b-0 bg-card sm:rounded-lg sm:border'
       {...(isFirst
         ? { 'data-onboarding': 'addressbook-contact' }
         : isFirstMerged
@@ -112,7 +112,7 @@ export const ContactListItem = memo(function ContactListItem({
     >
       <div
         className={cn(
-          'group flex items-center justify-between bg-card px-3 py-4 sm:p-4',
+          'group flex items-center justify-between px-3 py-4 sm:p-4',
           !isEditing && 'cursor-pointer transition-colors hover:bg-muted/50'
         )}
         onClick={(e) => {

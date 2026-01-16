@@ -67,9 +67,11 @@ export interface VirtualizedContactListRef {
 
 /**
  * Threshold for when to use virtualization.
- * Below this count, the overhead of virtualization isn't worth it.
+ * Set high (500+) to prefer lazy loading for most cases.
+ * Virtualization requires a fixed scroll container, which creates
+ * nested scrolling that may not be desirable in most UIs.
  */
-export const CONTACT_VIRTUALIZATION_THRESHOLD = 50;
+export const CONTACT_VIRTUALIZATION_THRESHOLD = 500;
 
 /**
  * Virtualized contact list using @tanstack/react-virtual.
