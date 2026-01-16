@@ -11,7 +11,6 @@ import {
 import {
   createDatabase,
   getDatabaseInstance,
-  getDbPromise,
   resetDatabase,
   type Database,
 } from '@fluxby/database';
@@ -78,16 +77,34 @@ interface DatabaseProviderProps {
   children: ReactNode;
 }
 
+// Module-level tracking for initialization - persists across React StrictMode remounts
+// This is critical because React's useRef resets on StrictMode unmount/remount,
+// but the database factory's promises persist, causing a mismatch
+let moduleInitStarted = false;
+let moduleInitPromise: Promise<Database> | null = null;
+let moduleInitError: Error | null = null;
+
+// Reset module state (for testing or error recovery)
+export function resetModuleInitState() {
+  moduleInitStarted = false;
+  moduleInitPromise = null;
+  moduleInitError = null;
+}
+
 export function DatabaseProvider({ children }: DatabaseProviderProps) {
   const { t, language } = useLanguage();
   const { isEncryptionEnabled, isUnlocked } = useEncryption();
-  const [db, setDb] = useState<Database | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-  const [isReady, setIsReady] = useState(false);
+
+  // Initialize state from existing database if available
+  const existingDb = getDatabaseInstance();
+  const [db, setDb] = useState<Database | null>(existingDb);
+  const [isLoading, setIsLoading] = useState(!existingDb && !moduleInitError);
+  const [error, setError] = useState<Error | null>(moduleInitError);
+  const [isReady, setIsReady] = useState(!!existingDb);
   const [initStatus, setInitStatus] = useState<string>('Starting...');
   const [showResetButton, setShowResetButton] = useState(false);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const mountedRef = useRef(true);
 
   // Create data service when db is ready
   const dataService = useMemo(() => {
@@ -101,6 +118,9 @@ export function DatabaseProvider({ children }: DatabaseProviderProps) {
   const handleResetDatabase = async () => {
     devLog('User requested database reset');
     setInitStatus('Resetting database...');
+    // Reset module-level state
+    resetModuleInitState();
+    resetDatabase(true);
     try {
       // Use the shared reset function which handles both web and Tauri
       await resetAppAndRestartOnboarding();
@@ -111,170 +131,151 @@ export function DatabaseProvider({ children }: DatabaseProviderProps) {
     }
   };
 
-  // Track if initialization has started to prevent React StrictMode double-invoke
-  const initStartedRef = useRef(false);
-
   useEffect(() => {
-    // Prevent double initialization from React StrictMode
-    if (initStartedRef.current) {
-      devLog('Skipping duplicate init (StrictMode)');
-      // The first init may still be in progress - wait for its promise
-      const existingPromise = getDbPromise();
-      if (existingPromise && typeof existingPromise.then === 'function') {
-        devLog('Found existing init promise, waiting for it...');
-        
-        // Add timeout to prevent hanging forever if initialization is stuck
-        const initTimeout = new Promise<never>((_, reject) => {
-          setTimeout(() => {
-            reject(
-              new Error(
-                'Database initialization timed out after 45 seconds. This may be due to WASM/VFS issues.'
-              )
-            );
-          }, 45000);
-        });
+    mountedRef.current = true;
 
-        Promise.race([existingPromise, initTimeout])
-          .then((database) => {
-            devLog('Existing init completed, using database');
-            // Set global BEFORE React state, so other components can use it immediately
-            setGlobalDatabase(database);
+    // Clear any previous timeout
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+
+    // If database already exists (from previous init or SSR), use it
+    const existingDatabase = getDatabaseInstance();
+    if (existingDatabase) {
+      devLog('Using existing database instance');
+      setDb(existingDatabase);
+      setGlobalDatabase(existingDatabase);
+      setIsReady(true);
+      setIsLoading(false);
+      return;
+    }
+
+    // If there was a previous error at module level, show it
+    if (moduleInitError) {
+      devLog('Previous initialization failed:', moduleInitError);
+      setError(moduleInitError);
+      setIsLoading(false);
+      setShowResetButton(true);
+      return;
+    }
+
+    // If password protection is enabled but not unlocked, wait
+    if (isEncryptionEnabled && !isUnlocked) {
+      devLog('Waiting for unlock...');
+      setInitStatus('Waiting for unlock...');
+      setIsLoading(false);
+      setIsReady(false);
+      return;
+    }
+
+    // If init is already in progress at module level, wait for it
+    if (moduleInitPromise) {
+      devLog('Waiting for existing initialization promise...');
+      setInitStatus('Connecting to database...');
+
+      moduleInitPromise
+        .then((database) => {
+          if (mountedRef.current) {
+            devLog('Existing initialization succeeded');
             setDb(database);
+            setGlobalDatabase(database);
             setIsReady(true);
             setIsLoading(false);
-          })
-          .catch((err) => {
-            devLog('Existing init failed:', err);
-            setError(
-              err instanceof Error ? err : new Error('Database init failed')
-            );
+          }
+        })
+        .catch((err) => {
+          if (mountedRef.current) {
+            devLog('Existing initialization failed:', err);
+            setError(err instanceof Error ? err : new Error(String(err)));
             setIsLoading(false);
             setShowResetButton(true);
-          });
-      } else {
-        // Check if already done (sync case)
-        const existingDb = getDatabaseInstance();
-        if (existingDb) {
-          devLog('Found existing database instance, using it');
-          // Set global BEFORE React state, so other components can use it immediately
-          setGlobalDatabase(existingDb);
-          setDb(existingDb);
-          setIsReady(true);
-          setIsLoading(false);
-        } else if (existingPromise) {
-          // existingPromise exists but is not a valid Promise - this is a bug
-          devLog('Invalid existing promise detected, resetting');
-          resetDatabase(true);
-          initStartedRef.current = false;
-        }
+          }
+        });
+      return;
+    }
+
+    // Start new initialization (only happens once at module level)
+    if (moduleInitStarted) {
+      devLog('Init already started but no promise/database - checking again');
+      // Re-check in case getDatabaseInstance was updated
+      const recheckDb = getDatabaseInstance();
+      if (recheckDb) {
+        setDb(recheckDb);
+        setGlobalDatabase(recheckDb);
+        setIsReady(true);
+        setIsLoading(false);
       }
       return;
     }
-    initStartedRef.current = true;
 
-    let mounted = true;
+    devLog('Starting new database initialization...');
+    moduleInitStarted = true;
+    setInitStatus('Loading database...');
+    setIsLoading(true);
 
-    // Set timeout to show reset button after 30 seconds
+    // Show reset button after 15 seconds
     timeoutRef.current = setTimeout(() => {
-      if (mounted && isLoading) {
-        devLog('Timeout reached, showing reset button');
+      if (mountedRef.current) {
+        devLog('Showing reset button (timeout)');
         setShowResetButton(true);
       }
-    }, 30000);
+    }, 15000);
 
-    async function initDatabase() {
-      // If password protection is enabled but we're not unlocked yet, wait
-      if (isEncryptionEnabled && !isUnlocked) {
-        setInitStatus('Waiting for unlock...');
-        // Do not block the UI with the database loading screen here.
-        // The password screen (LockScreen) lives higher up in the tree and must be visible
-        // so the user can unlock.
-        if (mounted) {
-          setIsLoading(false);
-          setIsReady(false);
-        }
-
-        // Allow initialization to retry when unlocked.
-        initStartedRef.current = false;
-        return;
-      }
-
-      try {
-        setIsLoading(true);
-        setError(null);
-
-        devLog('Starting database initialization...');
-        setInitStatus('Checking browser capabilities...');
-
-        // Check for required APIs
-        const hasOPFS =
-          'storage' in navigator && 'getDirectory' in navigator.storage;
-        const hasIndexedDB = 'indexedDB' in window;
-        devLog('OPFS available:', hasOPFS);
-        devLog('IndexedDB available:', hasIndexedDB);
-
-        setInitStatus('Loading SQLite WASM...');
-        devLog('Creating database...');
-
-        // Database is NOT encrypted - password only protects UI
-        // Add timeout to prevent hanging forever
-        const initTimeout = new Promise<never>((_, reject) => {
-          setTimeout(() => {
-            reject(
-              new Error(
-                'Database initialization timed out after 45 seconds. The WASM module or VFS may be stuck.'
-              )
-            );
-          }, 45000);
-        });
-
-        const database = await Promise.race([
-          createDatabase({
-            dbPath: 'fluxby.db',
-            autoMigrate: true,
-          }),
-          initTimeout,
-        ]);
-
-        devLog('Database created successfully');
-        if (mounted) {
-          // Clear timeout since we succeeded
-          if (timeoutRef.current) {
-            clearTimeout(timeoutRef.current);
-          }
-          // Set global BEFORE React state, so other components can use it immediately
-          setGlobalDatabase(database);
-          setDb(database);
-          setIsReady(true);
-        }
-      } catch (err) {
-        console.error('Failed to initialize database:', err);
-        devLog('Database initialization failed:', err);
-        if (mounted) {
-          setError(
-            err instanceof Error
-              ? err
-              : new Error('Database initialization failed')
+    // Create the initialization promise with timeout
+    const initWithTimeout = async (): Promise<Database> => {
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => {
+          reject(
+            new Error('Database initialization timed out after 45 seconds')
           );
-        }
-      } finally {
-        if (mounted) {
+        }, 45000);
+      });
+
+      const dbPromise = createDatabase({
+        dbPath: 'fluxby.db',
+        autoMigrate: true,
+      });
+
+      return Promise.race([dbPromise, timeoutPromise]);
+    };
+
+    // Store promise at module level so other mounts can wait for it
+    moduleInitPromise = initWithTimeout();
+
+    moduleInitPromise
+      .then((database) => {
+        moduleInitPromise = null; // Clear promise on success
+
+        if (mountedRef.current) {
+          devLog('Database initialization complete');
+          if (timeoutRef.current) clearTimeout(timeoutRef.current);
+          setDb(database);
+          setGlobalDatabase(database);
+          setIsReady(true);
           setIsLoading(false);
         }
-      }
-    }
+      })
+      .catch((err) => {
+        moduleInitError = err instanceof Error ? err : new Error(String(err));
+        moduleInitPromise = null;
+        resetDatabase(true);
 
-    initDatabase();
+        if (mountedRef.current) {
+          devLog('Database initialization failed:', err);
+          if (timeoutRef.current) clearTimeout(timeoutRef.current);
+          setError(moduleInitError);
+          setIsLoading(false);
+          setShowResetButton(true);
+        }
+      });
 
     return () => {
-      mounted = false;
+      mountedRef.current = false;
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
-      // NOTE: Do NOT close database on unmount - it's a singleton that persists
-      // across React StrictMode remounts. Closing it would corrupt the cached instance.
+      // NOTE: Do NOT reset moduleInitStarted here - it must persist across StrictMode remounts
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isEncryptionEnabled, isUnlocked]);
 
   // Check if we're in Tauri
