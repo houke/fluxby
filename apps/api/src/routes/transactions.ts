@@ -129,10 +129,22 @@ router.get('/', (req, res) => {
       addressBookId: req.query.addressBookId
         ? (req.query.addressBookId as string)
         : undefined,
+      limit: req.query.limit
+        ? parseInt(req.query.limit as string, 10)
+        : undefined,
+      offset: req.query.offset
+        ? parseInt(req.query.offset as string, 10)
+        : undefined,
     };
 
-    const transactions = getTransactions(filters);
-    res.json({ success: true, data: transactions });
+    const { transactions, total } = getTransactions(filters);
+    res.json({
+      success: true,
+      data: transactions,
+      total,
+      limit: filters.limit,
+      offset: filters.offset,
+    });
   } catch (error) {
     console.error('Error fetching transactions:', error);
     res
@@ -1048,8 +1060,9 @@ router.post('/apply-cleanup-rules', (req, res) => {
           cleanedOpposing.length > 0
         ) {
           const key = `${tx.opposing_account_name}|${cleanedOpposing}`;
-          if (opposingUpdates.has(key)) {
-            opposingUpdates.get(key)!.ids.push(tx.id);
+          const existing = opposingUpdates.get(key);
+          if (existing) {
+            existing.ids.push(tx.id);
           } else {
             opposingUpdates.set(key, {
               cleaned: cleanedOpposing,
@@ -1067,8 +1080,9 @@ router.post('/apply-cleanup-rules', (req, res) => {
           cleanedMerchant.length > 0
         ) {
           const key = `${tx.merchant_name}|${cleanedMerchant}`;
-          if (merchantUpdates.has(key)) {
-            merchantUpdates.get(key)!.ids.push(tx.id);
+          const existing = merchantUpdates.get(key);
+          if (existing) {
+            existing.ids.push(tx.id);
           } else {
             merchantUpdates.set(key, {
               cleaned: cleanedMerchant,

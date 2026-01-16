@@ -21,6 +21,16 @@ db.pragma('journal_mode = WAL');
 // Enable foreign keys for cascading deletes
 db.pragma('foreign_keys = ON');
 
+// Register regexp function for SQL queries
+db.function('regexp', (pattern: string, text: string) => {
+  if (!text || !pattern) return 0;
+  try {
+    return new RegExp(pattern, 'i').test(text) ? 1 : 0;
+  } catch {
+    return 0;
+  }
+});
+
 // Initialize database schema
 export function initializeDatabase(): void {
   const schemaPath = join(__dirname, 'schema.sql');

@@ -65,11 +65,6 @@ export function getDbPromise(): Promise<Database> | null {
 }
 
 // Timeout for database initialization (prevents infinite hangs)
-// Use shorter timeout in development to fail fast
-const isDev =
-  typeof window !== 'undefined' &&
-  (window.location?.hostname === 'localhost' ||
-    window.location?.hostname === '127.0.0.1');
 const INIT_TIMEOUT_MS = 90000;
 
 // Track when promise was created to detect stale promises

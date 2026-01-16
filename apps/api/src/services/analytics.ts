@@ -310,9 +310,10 @@ export function getCategoryBreakdown(
   }));
 }
 
-export function getTransactions(
-  filters: TransactionFilters = {}
-): Transaction[] {
+export function getTransactions(filters: TransactionFilters): {
+  transactions: Transaction[];
+  total: number;
+} {
   // Build base query - if profileId filter is provided, join with accounts for profile filtering
   let sql: string;
   const params: unknown[] = [];
@@ -459,7 +460,25 @@ export function getTransactions(
     params.push(...filters.paymentMethods.map((m) => m.toLowerCase()));
   }
 
+  // Create a separate query for the total count without LIMIT/OFFSET
+  const countSql = sql.replace(
+    /SELECT .*? FROM/s,
+    'SELECT COUNT(*) as total FROM'
+  );
+  const total = queryOne<{ total: number }>(countSql, params)?.total || 0;
+
+  // Add ordering and pagination to the main query
   sql += ' ORDER BY t.date DESC, t.id DESC';
+
+  if (filters.limit !== undefined) {
+    sql += ' LIMIT ?';
+    params.push(filters.limit);
+  }
+
+  if (filters.offset !== undefined) {
+    sql += ' OFFSET ?';
+    params.push(filters.offset);
+  }
 
   const transactions = query<DBTransaction>(sql, params).map(mapDBTransaction);
 
@@ -518,7 +537,7 @@ export function getTransactions(
     );
   }
 
-  return result;
+  return { transactions: result, total };
 }
 
 function buildDateFilter(

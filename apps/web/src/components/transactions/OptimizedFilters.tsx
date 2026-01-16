@@ -69,7 +69,7 @@ export const TypeFilter = memo(function TypeFilter({
           size='sm'
           data-onboarding='transaction-type-filter-button'
           className={cn(
-            'w-full min-w-[140px] justify-start sm:w-auto',
+            'w-auto min-w-[140px] justify-start',
             value !== 'all' && 'bg-primary/10'
           )}
         >
@@ -312,7 +312,7 @@ export const CategoryFilter = memo(function CategoryFilter({
           size='sm'
           data-onboarding='transaction-category-filter'
           className={cn(
-            'w-full min-w-[140px] justify-start sm:w-auto',
+            'w-auto min-w-[140px] justify-start',
             selectedIds.length > 0 && 'bg-primary/10'
           )}
         >
@@ -538,7 +538,7 @@ export const AddressBookFilter = memo(function AddressBookFilter({
           size='sm'
           data-onboarding={dataOnboarding}
           className={cn(
-            'w-full min-w-[140px] justify-start sm:w-auto',
+            'w-auto min-w-[140px] justify-start',
             hasSelection && 'bg-primary/10'
           )}
         >
@@ -707,7 +707,7 @@ export const PaymentMethodFilter = memo(function PaymentMethodFilter({
           size='sm'
           data-onboarding={dataOnboarding}
           className={cn(
-            'w-full min-w-[140px] justify-start sm:w-auto',
+            'w-auto min-w-[140px] justify-start',
             selectedMethods.length > 0 && 'bg-primary/10'
           )}
         >
@@ -814,7 +814,7 @@ export const PaymentProcessorFilter = memo(function PaymentProcessorFilter({
           size='sm'
           data-onboarding='transaction-payment-processor-filter'
           className={cn(
-            'w-full min-w-[140px] justify-start sm:w-auto',
+            'w-auto min-w-[140px] justify-start',
             selectedProcessors.length > 0 && 'bg-primary/10'
           )}
         >

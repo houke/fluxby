@@ -92,7 +92,7 @@ export const TransactionCard = memo(function TransactionCard({
         </div>
 
         {/* Bottom row: Date, category, recurring badge */}
-        <div className='mt-2 flex items-center gap-2'>
+        <div className='mt-2 flex flex-wrap items-center gap-2'>
           <span className='text-xs text-muted-foreground'>
             {formatDate(tx.date)}
           </span>
@@ -119,12 +119,11 @@ export const TransactionCard = memo(function TransactionCard({
               <Repeat className='h-3 w-3' />
             </span>
           )}
-
-          {/* Spacer and chevron */}
-          <div className='flex-1' />
-          <ChevronRight className='h-4 w-4 flex-shrink-0 text-muted-foreground/50 transition-colors group-hover:text-muted-foreground' />
         </div>
       </div>
+
+      {/* Chevron always on the right, centered */}
+      <ChevronRight className='h-4 w-4 flex-shrink-0 self-center text-muted-foreground/50 transition-colors group-hover:text-muted-foreground' />
     </button>
   );
 });

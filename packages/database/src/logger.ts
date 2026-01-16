@@ -11,7 +11,7 @@ export function isDebugEnabled(): boolean {
     // Only log when explicitly enabled by developers
     // (keeps production/dev console clean and reduces incidental overhead)
     if (typeof window !== 'undefined') {
-      const ls = (globalThis as any)?.localStorage as Storage | undefined;
+      const ls = typeof localStorage !== 'undefined' ? localStorage : undefined;
       return ls?.getItem('fluxby.wasmDebug') === 'true';
     }
 

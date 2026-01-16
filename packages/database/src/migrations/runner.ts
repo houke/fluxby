@@ -215,7 +215,6 @@ export async function runMigrations(db: MigrationContext): Promise<void> {
 
         dbLog(`[MigrationRunner] Migration ${migration.version} completed`);
       } catch (err) {
-        // eslint-disable-next-line no-console
         console.error(
           `[MigrationRunner] Migration ${migration.version} FAILED:`,
           err

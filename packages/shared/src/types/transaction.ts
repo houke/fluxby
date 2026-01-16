@@ -56,6 +56,8 @@ export interface TransactionFilters {
   paymentMethods?: string[];
   paymentProviders?: string[];
   addressBookId?: string;
+  limit?: number;
+  offset?: number;
 }
 
 // ING CSV specific types

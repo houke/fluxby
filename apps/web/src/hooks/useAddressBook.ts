@@ -285,20 +285,38 @@ export function useAddressBook(options: { enabled?: boolean } = {}) {
       ),
   });
 
-  return {
-    addressBook,
-    cleanupRules,
-    suggestedContacts,
-    isLoading: loadingAddressBook || loadingCleanupRules || loadingTopAccounts,
-    createContactMutation,
-    updateContactMutation,
-    deleteContactMutation,
-    createRuleMutation,
-    deleteRuleMutation,
-    applyRulesMutation,
-    mergeContactsMutation,
-    getContactById: (id: string) => addressBook?.find((c) => c.id === id),
-    getContactByIban: (iban: string) =>
-      addressBook?.find((c) => c.iban === iban || c.ibans?.includes(iban)),
-  };
+  return useMemo(
+    () => ({
+      addressBook,
+      cleanupRules,
+      suggestedContacts,
+      isLoading:
+        loadingAddressBook || loadingCleanupRules || loadingTopAccounts,
+      createContactMutation,
+      updateContactMutation,
+      deleteContactMutation,
+      createRuleMutation,
+      deleteRuleMutation,
+      applyRulesMutation,
+      mergeContactsMutation,
+      getContactById: (id: string) => addressBook?.find((c) => c.id === id),
+      getContactByIban: (iban: string) =>
+        addressBook?.find((c) => c.iban === iban || c.ibans?.includes(iban)),
+    }),
+    [
+      addressBook,
+      cleanupRules,
+      suggestedContacts,
+      loadingAddressBook,
+      loadingCleanupRules,
+      loadingTopAccounts,
+      createContactMutation,
+      updateContactMutation,
+      deleteContactMutation,
+      createRuleMutation,
+      deleteRuleMutation,
+      applyRulesMutation,
+      mergeContactsMutation,
+    ]
+  );
 }

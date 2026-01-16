@@ -227,8 +227,8 @@ export function SyncDebugPanel({ onClose }: SyncDebugPanelProps) {
           </h4>
           <p className='mb-2 text-xs text-muted-foreground'>
             Note: This ping test is simulated for debugging logs. To test real
-            connectivity, use the "Pair device" button to connect with another
-            device using a pairing code.
+            connectivity, use the &quot;Pair device&quot; button to connect with
+            another device using a pairing code.
           </p>
           <div className='flex gap-2'>
             <Input

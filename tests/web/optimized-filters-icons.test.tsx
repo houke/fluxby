@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 /** @vitest-environment jsdom */
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { TypeFilter } from '@/components/transactions/OptimizedFilters';
 
 describe('TypeFilter icons (optimized)', () => {
@@ -15,7 +15,7 @@ describe('TypeFilter icons (optimized)', () => {
     } as any;
 
     const { rerender } = render(
-      <TypeFilter value={'income'} onChange={() => {}} translations={t} />
+      <TypeFilter value={'income'} onChange={vi.fn()} translations={t} />
     );
 
     // Open popover to reveal options
@@ -31,7 +31,7 @@ describe('TypeFilter icons (optimized)', () => {
 
     // Re-render as expense and open
     rerender(
-      <TypeFilter value={'expense'} onChange={() => {}} translations={t} />
+      <TypeFilter value={'expense'} onChange={vi.fn()} translations={t} />
     );
     // The trigger and option share the same name; pick the trigger via data-onboarding attr
     const triggerButtonExpense = document.querySelector(

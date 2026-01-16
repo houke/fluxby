@@ -60,6 +60,20 @@ const corsOptions = (() => {
 app.use(cors(corsOptions));
 app.use(express.json());
 
+// Performance logging for API requests
+app.use((req, res, next) => {
+  const start = Date.now();
+  res.on('finish', () => {
+    const duration = Date.now() - start;
+    if (duration > 500) {
+      console.warn(
+        `[PERF] Slow API Request: ${req.method} ${req.originalUrl} (${duration}ms)`
+      );
+    }
+  });
+  next();
+});
+
 // Serve built web app when running from root dist/
 // (frontend keeps working with its relative `/api` calls)
 try {

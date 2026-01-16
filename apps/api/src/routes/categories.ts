@@ -43,134 +43,109 @@ function applyRuleToAll(
 
   if (!rule) throw new Error('Rule not found or access denied');
 
-  // Only apply to transactions in the same profile
-  const transactions = query<DBTransactionMinimal>(
-    `SELECT t.id, t.merchant_name, t.description, t.opposing_account_name 
-     FROM transactions t
-     JOIN accounts a ON t.account_id = a.id
-     WHERE a.profile_id = ?`,
-    [profileId]
+  const result = run(
+    `UPDATE transactions
+     SET category_id = ?
+     WHERE profile_id = ?
+       AND (
+         COALESCE(merchant_name, '') || ' ' || 
+         COALESCE(description, '') || ' ' || 
+         COALESCE(opposing_account_name, '')
+       ) REGEXP ?`,
+    [rule.category_id, profileId, rule.pattern]
   );
 
-  const updates: [number, number][] = [];
-  let pattern: RegExp;
-
-  try {
-    pattern = new RegExp(rule.pattern, 'i');
-  } catch {
-    return { updated: 0 };
-  }
-
-  for (const tx of transactions) {
-    const textToMatch = `${tx.merchant_name || ''} ${tx.description || ''} ${
-      tx.opposing_account_name || ''
-    }`;
-    if (pattern.test(textToMatch)) {
-      updates.push([rule.category_id, tx.id]);
-    }
-  }
-
-  if (updates.length > 0) {
-    runMany('UPDATE transactions SET category_id = ? WHERE id = ?', updates);
-  }
-
-  return { updated: updates.length };
+  return { updated: result.changes };
 }
 
 function applyRulesToUncategorized(profileId: number): {
   updated: number;
   processed: number;
 } {
-  const rules = getCategoryRules(profileId);
-  if (rules.length === 0) return { updated: 0, processed: 0 };
+  // Get count of uncategorized transactions first
+  const processed =
+    queryOne<{ count: number }>(
+      'SELECT COUNT(*) as count FROM transactions WHERE category_id IS NULL AND profile_id = ?',
+      [profileId]
+    )?.count || 0;
 
-  // Only select uncategorized transactions for this profile
-  const uncategorized = query<DBTransactionMinimal>(
-    `SELECT t.id, t.merchant_name, t.description, t.opposing_account_name 
-     FROM transactions t
-     JOIN accounts a ON t.account_id = a.id
-     WHERE t.category_id IS NULL AND a.profile_id = ?`,
-    [profileId]
+  // Use a single SQL update for better performance
+  const result = run(
+    `UPDATE transactions
+     SET category_id = (
+       SELECT category_id 
+       FROM category_rules 
+       WHERE (
+         COALESCE(transactions.merchant_name, '') || ' ' || 
+         COALESCE(transactions.description, '') || ' ' || 
+         COALESCE(transactions.opposing_account_name, '')
+       ) REGEXP pattern
+       AND profile_id = ?
+       ORDER BY priority DESC 
+       LIMIT 1
+     )
+     WHERE category_id IS NULL 
+       AND profile_id = ?
+       AND EXISTS (
+         SELECT 1 FROM category_rules 
+         WHERE (
+           COALESCE(transactions.merchant_name, '') || ' ' || 
+           COALESCE(transactions.description, '') || ' ' || 
+           COALESCE(transactions.opposing_account_name, '')
+         ) REGEXP pattern
+         AND profile_id = ?
+       )`,
+    [profileId, profileId, profileId]
   );
 
-  const updates: [number, number][] = [];
-
-  for (const tx of uncategorized) {
-    const textToMatch = `${tx.merchant_name || ''} ${tx.description || ''} ${
-      tx.opposing_account_name || ''
-    }`;
-
-    for (const rule of rules) {
-      let pattern: RegExp;
-      try {
-        pattern = new RegExp(rule.pattern, 'i');
-      } catch {
-        continue;
-      }
-
-      if (pattern.test(textToMatch)) {
-        updates.push([parseInt(rule.categoryId, 10), tx.id]);
-        break;
-      }
-    }
-  }
-
-  if (updates.length > 0) {
-    runMany('UPDATE transactions SET category_id = ? WHERE id = ?', updates);
-  }
-
-  return { updated: updates.length, processed: uncategorized.length };
+  return { updated: result.changes, processed };
 }
 
 function applyAllRulesToAllTransactions(profileId: number): {
   updated: number;
   processed: number;
 } {
-  const rules = getCategoryRules(profileId);
-  if (rules.length === 0) return { updated: 0, processed: 0 };
+  // Get count of all transactions for this profile
+  const processed =
+    queryOne<{ count: number }>(
+      'SELECT COUNT(*) as count FROM transactions WHERE profile_id = ?',
+      [profileId]
+    )?.count || 0;
 
-  // Select all transactions for this profile
-  const allTransactions = query<{
-    id: number;
-    merchant_name: string | null;
-    description: string | null;
-    opposing_account_name: string | null;
-    category_id: number | null;
-  }>(
-    `SELECT t.id, t.merchant_name, t.description, t.opposing_account_name, t.category_id 
-     FROM transactions t
-     JOIN accounts a ON t.account_id = a.id
-     WHERE a.profile_id = ?`,
-    [profileId]
+  // Reset all categories first for a full re-matching pass
+  run('UPDATE transactions SET category_id = NULL WHERE profile_id = ?', [
+    profileId,
+  ]);
+
+  // Then apply rules in one pass
+  const result = run(
+    `UPDATE transactions
+     SET category_id = (
+       SELECT category_id 
+       FROM category_rules 
+       WHERE (
+         COALESCE(transactions.merchant_name, '') || ' ' || 
+         COALESCE(transactions.description, '') || ' ' || 
+         COALESCE(transactions.opposing_account_name, '')
+       ) REGEXP pattern
+       AND profile_id = ?
+       ORDER BY priority DESC 
+       LIMIT 1
+     )
+     WHERE profile_id = ?
+       AND EXISTS (
+         SELECT 1 FROM category_rules 
+         WHERE (
+           COALESCE(transactions.merchant_name, '') || ' ' || 
+           COALESCE(transactions.description, '') || ' ' || 
+           COALESCE(transactions.opposing_account_name, '')
+         ) REGEXP pattern
+         AND profile_id = ?
+       )`,
+    [profileId, profileId, profileId]
   );
 
-  const updates: [number, number][] = [];
-
-  for (const tx of allTransactions) {
-    const textToMatch = `${tx.merchant_name || ''} ${tx.description || ''} ${
-      tx.opposing_account_name || ''
-    }`;
-
-    for (const rule of rules) {
-      let pattern: RegExp;
-      try {
-        pattern = new RegExp(rule.pattern, 'i');
-      } catch {
-        continue;
-      }
-
-      if (pattern.test(textToMatch)) {
-        updates.push([parseInt(rule.categoryId, 10), tx.id]);
-        break; // Stop at first matching rule
-      }
-    }
-  }
-
-  if (updates.length > 0) {
-    runMany('UPDATE transactions SET category_id = ? WHERE id = ?', updates);
-  }
-
-  return { updated: updates.length, processed: allTransactions.length };
+  return { updated: result.changes, processed };
 }
 
 function mapDBCategory(row: DBCategory): Category {

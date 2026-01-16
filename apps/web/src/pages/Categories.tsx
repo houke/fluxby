@@ -1,4 +1,11 @@
-import { useMemo, useState, useEffect, useLayoutEffect, useRef } from 'react';
+import {
+  useMemo,
+  useState,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useDeferredValue,
+} from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
@@ -15,8 +22,6 @@ import {
   RefreshCcw,
   Sparkles,
   FolderOpen,
-  Info,
-  MoreVertical,
   ArrowUpRight,
   ArrowDownRight,
 } from 'lucide-react';
@@ -189,6 +194,7 @@ export default function Categories() {
   // UI State
   const [showAddForm, setShowAddForm] = useState(false);
   const [search, setSearch] = useState('');
+  const deferredSearch = useDeferredValue(search);
   const [sortBy, setSortBy] = useState<'name' | 'transactions' | 'amount'>(
     'name'
   );
@@ -494,8 +500,8 @@ export default function Categories() {
   const filteredSortedParents = useMemo(() => {
     let filtered = [...parentCategories];
 
-    if (search.trim()) {
-      const searchLower = search.toLowerCase();
+    if (deferredSearch.trim()) {
+      const searchLower = deferredSearch.toLowerCase();
       filtered = filtered.filter((cat) => {
         const matchesParent =
           cat.name.toLowerCase().includes(searchLower) ||
@@ -533,7 +539,13 @@ export default function Categories() {
     }
 
     return filtered;
-  }, [parentCategories, subcategoriesByParent, search, sortBy, parentTotals]);
+  }, [
+    parentCategories,
+    subcategoriesByParent,
+    deferredSearch,
+    sortBy,
+    parentTotals,
+  ]);
 
   // Sort switch indicator positioning
   useLayoutEffect(() => {

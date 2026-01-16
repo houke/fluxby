@@ -290,6 +290,7 @@ export function SecuritySetup({ onSetupComplete }: SecuritySetupProps) {
     texts,
     refreshProfiles,
     switchProfile,
+    language,
   ]);
 
   const isPasswordValid = password.length >= 8 && password === confirmPassword;

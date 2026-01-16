@@ -1,33 +1,67 @@
 import { useQuery } from '@tanstack/react-query';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { format } from 'date-fns';
 import { nl, enUS } from 'date-fns/locale';
 import {
   TrendingUp,
-  TrendingDown,
   Wallet,
   ArrowUpRight,
   ArrowDownRight,
   ArrowLeftRight,
   PiggyBank,
-  CreditCard,
   Users,
-  ChevronRight,
-  ChevronLeft,
   History,
   RefreshCw,
   Check,
   Sparkles,
-  LayoutDashboard,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { StatsCard } from '@/components/dashboard/StatsCard';
-import { AccountBalanceCards } from '@/components/dashboard/AccountBalanceCards';
-import { SpendingPieChart } from '@/components/dashboard/SpendingPieChart';
+import type { RecurringStats, Account } from '@fluxby/shared';
+
+// Lazy load chart components
+const AccountBalanceCards = lazy(() =>
+  import('@/components/dashboard/AccountBalanceCards').then((m) => ({
+    default: m.AccountBalanceCards,
+  }))
+);
+const SpendingPieChart = lazy(() =>
+  import('@/components/dashboard/SpendingPieChart').then((m) => ({
+    default: m.SpendingPieChart,
+  }))
+);
+const MonthlyIncomeChart = lazy(() =>
+  import('@/components/dashboard/MonthlyIncomeChart').then((m) => ({
+    default: m.MonthlyIncomeChart,
+  }))
+);
+const IncomeExpenseComparison = lazy(() =>
+  import('@/components/dashboard/IncomeExpenseComparison').then((m) => ({
+    default: m.IncomeExpenseComparison,
+  }))
+);
+const DailyExpensesTimeline = lazy(() =>
+  import('@/components/dashboard/DailyExpensesTimeline').then((m) => ({
+    default: m.DailyExpensesTimeline,
+  }))
+);
+
+// Loading skeleton for charts
+const ChartSkeleton = () => (
+  <Card className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'>
+    <CardHeader>
+      <Skeleton className='h-6 w-1/3' />
+    </CardHeader>
+    <CardContent>
+      <Skeleton className='h-[300px] w-full' />
+    </CardContent>
+  </Card>
+);
+
 import { PageHeader } from '@/components/layout/PageHeader';
 import { formatDateShort } from '@/lib/utils';
 import { Currency } from '@/components/ui/currency';
@@ -35,20 +69,6 @@ import { api } from '@/lib/api';
 import { useFilterParams, useFilters } from '@/contexts/FilterContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useProfile } from '@/contexts/ProfileContext';
-import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  Legend,
-  CartesianGrid,
-} from 'recharts';
-import type { PieSectorDataItem } from 'recharts/types/polar/Pie';
-import type { RecurringStats, Account } from '@fluxby/shared';
 
 interface DashboardStats {
   totalBalance: number;
@@ -277,14 +297,18 @@ export default function Dashboard() {
     budgets?.reduce((sum, budget) => sum + budget.spent, 0) || 0;
 
   // Calculate burn rate (expected spending based on current selected period)
-  const now = new Date();
+  const now = useMemo(() => new Date(), []);
   // Determine period start/end from filters (fallback to current month)
-  const periodStart = startDate
-    ? new Date(startDate)
-    : new Date(now.getFullYear(), now.getMonth(), 1);
-  const periodEnd = endDate
-    ? new Date(endDate)
-    : new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  const nowYear = now.getFullYear();
+  const nowMonth = now.getMonth();
+  const periodStart = useMemo(
+    () => (startDate ? new Date(startDate) : new Date(nowYear, nowMonth, 1)),
+    [startDate, nowYear, nowMonth]
+  );
+  const periodEnd = useMemo(
+    () => (endDate ? new Date(endDate) : new Date(nowYear, nowMonth + 1, 0)),
+    [endDate, nowYear, nowMonth]
+  );
 
   const msPerDay = 1000 * 60 * 60 * 24;
   const totalDays =
@@ -467,11 +491,13 @@ export default function Dashboard() {
         subtitle={t.dashboard.subtitle}
         dataOnboarding='dashboard-greeting'
         actions={
-          <AccountBalanceCards
-            accounts={accounts || []}
-            accountScrollIndex={accountScrollIndex}
-            setAccountScrollIndex={setAccountScrollIndex}
-          />
+          <Suspense fallback={<Skeleton className='h-12 w-48' />}>
+            <AccountBalanceCards
+              accounts={accounts || []}
+              accountScrollIndex={accountScrollIndex}
+              setAccountScrollIndex={setAccountScrollIndex}
+            />
+          </Suspense>
         }
       />
 
@@ -485,7 +511,7 @@ export default function Dashboard() {
             title={t.dashboard.income}
             value={<Currency amount={stats?.totalIncome || 0} />}
             icon={ArrowUpRight}
-            iconColor='text-emerald-600'
+            iconColor='text-emerald-900 dark:text-emerald-400'
             trend={0}
           />
         </div>
@@ -494,7 +520,7 @@ export default function Dashboard() {
             title={t.dashboard.expenses}
             value={<Currency amount={stats?.totalExpenses || 0} />}
             icon={ArrowDownRight}
-            iconColor='text-rose-600'
+            iconColor='text-rose-900 dark:text-rose-400'
             trend={0}
           />
         </div>
@@ -503,7 +529,7 @@ export default function Dashboard() {
             title={t.dashboard.toSavings}
             value={<Currency amount={stats?.netSavingsTransfer || 0} />}
             icon={PiggyBank}
-            iconColor='text-blue-600'
+            iconColor='text-blue-900 dark:text-blue-400'
             trend={0}
             trendLabel={
               <>
@@ -522,174 +548,35 @@ export default function Dashboard() {
               stats?.totalBalance === 0 || !stats?.totalBalance
                 ? 'text-gray-400'
                 : stats.totalBalance > 0
-                  ? 'text-emerald-600'
-                  : 'text-rose-600'
+                  ? 'text-emerald-900 dark:text-emerald-400'
+                  : 'text-rose-900 dark:text-rose-400'
             }
             valueColor={
               stats?.totalBalance === 0 || !stats?.totalBalance
                 ? 'text-gray-900 dark:text-gray-100'
                 : stats.totalBalance > 0
-                  ? 'text-emerald-600'
-                  : 'text-rose-600'
-            }
-            bgColor={
-              stats?.totalBalance === 0 || !stats?.totalBalance
-                ? 'bg-gray-50 dark:bg-gray-900/20'
-                : undefined
+                  ? 'text-emerald-900 dark:text-emerald-400'
+                  : 'text-rose-900 dark:text-rose-400'
             }
           />
         </div>
       </div>
 
-      {/* Charts Row */}
-      <div className='-mx-3 sm:mx-0'>
-        <div className='grid gap-px bg-border sm:gap-6 sm:bg-transparent lg:grid-cols-2'>
-          {/* Monthly Earnings Chart */}
-          <Card
-            className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'
-            data-onboarding='monthly-income-chart'
-          >
-            <CardHeader>
-              <CardTitle className='text-base sm:text-lg'>
-                {t.dashboard.monthlyIncome}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {monthlyData.reduce((sum, d) => sum + d.income, 0) > 0 ? (
-                <div
-                  className={`h-[300px] overflow-y-hidden ${
-                    monthlyData.length > 12
-                      ? 'overflow-x-auto'
-                      : 'overflow-x-hidden'
-                  }`}
-                  style={{ maxWidth: '100%' }}
-                  ref={monthlyIncomeScrollRef}
-                >
-                  <div
-                    ref={monthlyIncomeInnerRef}
-                    style={{
-                      width: '100%',
-                      minWidth: '100%',
-                      height: '100%',
-                      minHeight: '300px',
-                    }}
-                  >
-                    <ResponsiveContainer
-                      width='100%'
-                      height='100%'
-                      minHeight={1}
-                      minWidth={1}
-                    >
-                      <AreaChart data={monthlyData}>
-                        <defs>
-                          <linearGradient
-                            id='colorIncome'
-                            x1='0'
-                            y1='0'
-                            x2='0'
-                            y2='1'
-                          >
-                            <stop
-                              offset='5%'
-                              stopColor='#8B5CF6'
-                              stopOpacity={0.3}
-                            />
-                            <stop
-                              offset='95%'
-                              stopColor='#8B5CF6'
-                              stopOpacity={0}
-                            />
-                          </linearGradient>
-                        </defs>
-                        <XAxis
-                          dataKey='month'
-                          tickFormatter={(value) => {
-                            const [, month] = value.split('-');
-                            return t.common.monthsShort[parseInt(month) - 1];
-                          }}
-                          tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                          axisLine={false}
-                          tickLine={false}
-                        />
-                        <YAxis
-                          tickFormatter={(value) =>
-                            value >= 1000
-                              ? `€${(value / 1000).toFixed(0)}k`
-                              : `€${value}`
-                          }
-                          tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                          axisLine={false}
-                          tickLine={false}
-                          domain={[0, 'auto']}
-                        />
-                        <Tooltip
-                          formatter={(value) => [
-                            <Currency key='amount' amount={value as number} />,
-                            t.dashboard.income,
-                          ]}
-                          labelFormatter={(label) => {
-                            if (typeof label !== 'string') return '';
-                            const [year, month] = label.split('-');
-                            return `${
-                              t.common.months[parseInt(month) - 1]
-                            } ${year}`;
-                          }}
-                          contentStyle={{
-                            backgroundColor: 'hsl(var(--card))',
-                            border: '1px solid hsl(var(--border))',
-                            borderRadius: '8px',
-                          }}
-                        />
-                        <Area
-                          type='monotone'
-                          dataKey='income'
-                          stroke='#8B5CF6'
-                          strokeWidth={2}
-                          fill='url(#colorIncome)'
-                          isAnimationActive={monthlyData.length <= 10}
-                          animationDuration={1500}
-                          animationEasing='ease-out'
-                        />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
-              ) : (
-                <div className='flex h-[300px] flex-col items-center justify-center text-center'>
-                  <ArrowUpRight className='mb-4 h-12 w-12 text-muted-foreground/50' />
-                  <p className='text-muted-foreground'>
-                    {t.dashboard.noIncome}
-                  </p>
-                  <p className='mt-1 text-sm text-muted-foreground'>
-                    {t.dashboard.importTransactions}
-                  </p>
-                  <div className='mt-3 flex flex-wrap items-center justify-center gap-x-2'>
-                    <button
-                      onClick={() => navigate('/import/')}
-                      className='text-sm text-primary hover:underline'
-                    >
-                      {t.dashboard.goToImport}
-                    </button>
-                    {suggestedPeriod && !isViewingSuggestedPeriod && (
-                      <>
-                        <span className='text-muted-foreground'>&middot;</span>
-                        <button
-                          onClick={handleJumpToPeriod}
-                          className='text-sm text-primary hover:underline'
-                        >
-                          {(
-                            t.dashboard?.jumpToPeriod || 'Jump to {period}'
-                          ).replace('{period}', suggestedPeriod.label)}
-                        </button>
-                      </>
-                    )}
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+      <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-2'>
+        <Suspense fallback={<ChartSkeleton />}>
+          <MonthlyIncomeChart
+            monthlyData={monthlyData}
+            monthlyIncomeScrollRef={monthlyIncomeScrollRef}
+            monthlyIncomeInnerRef={monthlyIncomeInnerRef}
+            t={t}
+            navigate={navigate}
+            suggestedPeriod={suggestedPeriod}
+            isViewingSuggestedPeriod={isViewingSuggestedPeriod}
+            handleJumpToPeriod={handleJumpToPeriod}
+          />
+        </Suspense>
 
-          {/* Spending by Category */}
+        <Suspense fallback={<ChartSkeleton />}>
           <SpendingPieChart
             categoryData={categoryData}
             activeCategoryIndex={activeCategoryIndex}
@@ -703,344 +590,31 @@ export default function Dashboard() {
             isViewingSuggestedPeriod={isViewingSuggestedPeriod}
             handleJumpToPeriod={handleJumpToPeriod}
           />
-        </div>
+        </Suspense>
       </div>
 
-      {/* Income vs Expenses Chart */}
-      <div className='-mx-3 sm:mx-0'>
-        <Card
-          className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'
-          data-onboarding='income-expenses-chart'
-        >
-          <CardHeader>
-            <CardTitle className='text-base sm:text-lg'>
-              {t.dashboard.incomeVsExpenses}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {monthlyData.length > 0 ? (
-              <div
-                className='h-[300px] overflow-x-auto overflow-y-hidden'
-                style={{ maxWidth: '100%' }}
-                ref={monthlyComparisonScrollRef}
-                data-testid='monthly-comparison-scroll'
-              >
-                <div
-                  style={{
-                    width: `${Math.max(720, monthlyData.length * 60)}px`,
-                    minWidth: '100%',
-                    height: '100%',
-                    minHeight: '300px',
-                  }}
-                >
-                  <ResponsiveContainer
-                    width='100%'
-                    height='100%'
-                    minHeight={1}
-                    minWidth={1}
-                  >
-                    <BarChart data={monthlyData}>
-                      <CartesianGrid
-                        strokeDasharray='3 3'
-                        vertical={false}
-                        stroke='hsl(var(--border))'
-                      />
-                      <XAxis
-                        dataKey='month'
-                        tickFormatter={(value) => {
-                          const [, month] = value.split('-');
-                          return t.common.monthsShort[parseInt(month) - 1];
-                        }}
-                        tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                        axisLine={false}
-                        tickLine={false}
-                      />
-                      <YAxis
-                        tickFormatter={(value) =>
-                          value >= 1000
-                            ? `€${(value / 1000).toFixed(value >= 10000 ? 0 : 1)}k`
-                            : `€${Math.round(value)}`
-                        }
-                        tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                        axisLine={{ stroke: 'hsl(var(--border))' }}
-                        tickLine={false}
-                        domain={[
-                          0,
-                          (dataMax: number) => {
-                            if (dataMax <= 1000)
-                              return Math.ceil(dataMax / 100) * 100;
-                            if (dataMax <= 5000)
-                              return Math.ceil(dataMax / 500) * 500;
-                            if (dataMax <= 20000)
-                              return Math.ceil(dataMax / 1000) * 1000;
-                            return Math.ceil(dataMax / 5000) * 5000;
-                          },
-                        ]}
-                        allowDecimals={false}
-                      />
-                      <Tooltip
-                        content={({ active, payload, label }) => {
-                          if (
-                            active &&
-                            payload &&
-                            payload.length &&
-                            typeof label === 'string'
-                          ) {
-                            const income =
-                              (payload.find((p) => p.dataKey === 'income')
-                                ?.value as number) || 0;
-                            const expenses =
-                              (payload.find((p) => p.dataKey === 'expenses')
-                                ?.value as number) || 0;
-                            const balance = income - expenses;
-                            const [year, month] = label.split('-');
-                            return (
-                              <div className='rounded-lg border bg-card p-3 shadow-lg'>
-                                <p className='mb-2 font-medium'>
-                                  {t.common.months[parseInt(month) - 1]} {year}
-                                </p>
-                                <p className='text-emerald-600'>
-                                  {t.dashboard.income}:{' '}
-                                  <Currency amount={income} />
-                                </p>
-                                <p className='text-rose-600'>
-                                  {t.dashboard.expenses}:{' '}
-                                  <Currency amount={expenses} />
-                                </p>
-                                <p
-                                  className={`mt-1 border-t pt-1 font-semibold ${
-                                    balance >= 0
-                                      ? 'text-emerald-600'
-                                      : 'text-rose-600'
-                                  }`}
-                                >
-                                  {t.common.total}:{' '}
-                                  <Currency amount={balance} />
-                                </p>
-                              </div>
-                            );
-                          }
-                          return null;
-                        }}
-                        cursor={{ fill: 'hsl(var(--muted)/0.3)' }}
-                      />
-                      <Legend />
-                      <Bar
-                        dataKey='income'
-                        name={t.dashboard.income}
-                        fill='#10B981'
-                        radius={[4, 4, 0, 0]}
-                        activeBar={{ fill: '#047857' }}
-                      />
-                      <Bar
-                        dataKey='expenses'
-                        name={t.dashboard.expenses}
-                        fill='#F43F5E'
-                        radius={[4, 4, 0, 0]}
-                        activeBar={{ fill: '#B91C1C' }}
-                      />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-            ) : (
-              <div className='flex h-[300px] flex-col items-center justify-center text-center'>
-                <ArrowLeftRight className='mb-4 h-12 w-12 text-muted-foreground/50' />
-                <p className='text-muted-foreground'>
-                  {t.dashboard.noComparison || 'Geen data beschikbaar'}
-                </p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+      {/* Income vs Expenses - Full Width */}
+      <Suspense fallback={<ChartSkeleton />}>
+        <IncomeExpenseComparison
+          monthlyData={monthlyData}
+          monthlyComparisonScrollRef={monthlyComparisonScrollRef}
+          t={t}
+        />
+      </Suspense>
 
       {/* Daily Expenses Timeline */}
-      <div className='-mx-3 sm:mx-0'>
-        <Card
-          className='overflow-hidden rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'
-          data-onboarding='daily-expenses-chart'
-        >
-          <CardHeader>
-            <CardTitle className='text-base sm:text-lg'>
-              {t.dashboard.dailyExpenses}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className='flex h-[200px] overflow-hidden'>
-              {/* Fixed Y-Axis */}
-              <div className='h-full w-[50px] flex-shrink-0'>
-                <ResponsiveContainer
-                  width='100%'
-                  height='100%'
-                  minHeight={1}
-                  minWidth={1}
-                >
-                  <BarChart data={dailyData} layout='horizontal'>
-                    <YAxis
-                      tickFormatter={(value) =>
-                        value >= 1000
-                          ? `€${(value / 1000).toFixed(1)}k`
-                          : `€${Math.round(value)}`
-                      }
-                      tick={{
-                        fill: 'hsl(var(--muted-foreground))',
-                        fontSize: 11,
-                      }}
-                      axisLine={{ stroke: 'hsl(var(--border))' }}
-                      tickLine={false}
-                      domain={[
-                        0,
-                        (dataMax: number) => {
-                          if (dataMax <= 100)
-                            return Math.ceil(dataMax / 20) * 20;
-                          if (dataMax <= 500)
-                            return Math.ceil(dataMax / 100) * 100;
-                          if (dataMax <= 2000)
-                            return Math.ceil(dataMax / 500) * 500;
-                          return Math.ceil(dataMax / 1000) * 1000;
-                        },
-                      ]}
-                      width={50}
-                      allowDecimals={false}
-                      tickCount={5}
-                    />
-                    {/* Hidden Bar to provide data reference for YAxis */}
-                    <Bar dataKey='expenses' fill='transparent' />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-
-              {/* Scrollable Chart Content */}
-              <div
-                className='flex-1 overflow-x-auto overflow-y-hidden'
-                ref={dailyScrollRef}
-              >
-                {dailyData.reduce((sum, day) => sum + day.expenses, 0) > 0 ? (
-                  <div
-                    style={{
-                      width:
-                        dailyData.length > 15
-                          ? `${dailyData.length * 25}px`
-                          : '100%',
-                      minWidth: '100%',
-                      height: '100%',
-                    }}
-                  >
-                    <ResponsiveContainer
-                      width='100%'
-                      height='100%'
-                      minHeight={1}
-                      minWidth={1}
-                    >
-                      <BarChart data={dailyData} barCategoryGap='15%'>
-                        <CartesianGrid
-                          strokeDasharray='3 3'
-                          vertical={false}
-                          stroke='hsl(var(--border))'
-                        />
-                        <XAxis
-                          dataKey='date'
-                          tickFormatter={(value) => {
-                            const date = new Date(value);
-                            return `${date.getDate()}`;
-                          }}
-                          tick={{
-                            fill: 'hsl(var(--muted-foreground))',
-                            fontSize: 11,
-                          }}
-                          axisLine={false}
-                          tickLine={false}
-                          interval={0}
-                        />
-                        {/* Hidden YAxis to ensure same scale */}
-                        <YAxis
-                          hide
-                          domain={[
-                            0,
-                            (dataMax: number) => {
-                              if (dataMax <= 100)
-                                return Math.ceil(dataMax / 20) * 20;
-                              if (dataMax <= 500)
-                                return Math.ceil(dataMax / 100) * 100;
-                              if (dataMax <= 2000)
-                                return Math.ceil(dataMax / 500) * 500;
-                              return Math.ceil(dataMax / 1000) * 1000;
-                            },
-                          ]}
-                        />
-                        <Tooltip
-                          formatter={(value) => [
-                            <Currency key='amount' amount={value as number} />,
-                            t.dashboard.expenses,
-                          ]}
-                          labelFormatter={(label) => {
-                            const date = new Date(label as string);
-                            return date.toLocaleDateString(
-                              language === 'nl' ? 'nl-NL' : 'en-US',
-                              {
-                                weekday: 'short',
-                                day: 'numeric',
-                                month: 'short',
-                              }
-                            );
-                          }}
-                          contentStyle={{
-                            backgroundColor: 'hsl(var(--card))',
-                            border: '1px solid hsl(var(--border))',
-                          }}
-                          cursor={{ fill: 'hsl(var(--muted)/0.3)' }}
-                        />
-                        <Bar
-                          dataKey='expenses'
-                          fill='#F43F5E'
-                          radius={[4, 4, 0, 0]}
-                          activeBar={{ fill: '#B91C1C' }}
-                        />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                ) : (
-                  <div className='flex h-full items-center justify-center overflow-hidden text-muted-foreground'>
-                    <div className='flex flex-col items-center justify-center text-center'>
-                      <ArrowDownRight className='mb-4 h-12 w-12 text-muted-foreground/50' />
-                      <p className='text-muted-foreground'>
-                        {t.dashboard.noExpenses}
-                      </p>
-                      <p className='mt-1 text-sm text-muted-foreground'>
-                        {t.dashboard.importTransactions}
-                      </p>
-                      <div className='mt-3 flex flex-wrap items-center justify-center gap-x-2'>
-                        <button
-                          onClick={() => navigate('/import/')}
-                          className='text-sm text-primary hover:underline'
-                        >
-                          {t.dashboard.goToImport}
-                        </button>
-                        {suggestedPeriod && !isViewingSuggestedPeriod && (
-                          <>
-                            <span className='text-muted-foreground'>
-                              &middot;
-                            </span>
-                            <button
-                              onClick={handleJumpToPeriod}
-                              className='text-sm text-primary hover:underline'
-                            >
-                              {(
-                                t.dashboard?.jumpToPeriod || 'Jump to {period}'
-                              ).replace('{period}', suggestedPeriod.label)}
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <Suspense fallback={<ChartSkeleton />}>
+        <DailyExpensesTimeline
+          dailyData={dailyData}
+          dailyScrollRef={dailyScrollRef}
+          t={t}
+          language={language}
+          navigate={navigate}
+          suggestedPeriod={suggestedPeriod}
+          isViewingSuggestedPeriod={isViewingSuggestedPeriod}
+          handleJumpToPeriod={handleJumpToPeriod}
+        />
+      </Suspense>
 
       {/* Budget, Balance Forecast, and Subscriptions Widgets */}
       <div className='-mx-3 sm:mx-0'>
@@ -1194,97 +768,47 @@ export default function Dashboard() {
                   </div>
                 </div>
               ) : (
-                <div className='flex flex-col items-center justify-center py-8 text-center'>
+                <div className='flex h-[200px] flex-col items-center justify-center text-center'>
                   <PiggyBank className='mb-4 h-12 w-12 text-muted-foreground/50' />
                   <p className='text-muted-foreground'>
                     {t.dashboard.noBudgets}
                   </p>
-                  <p className='mt-1 text-sm text-muted-foreground'>
-                    {t.dashboard.setBudgets}
-                  </p>
-                  <button
-                    onClick={() => navigate('/budgets/')}
-                    className='mt-3 text-sm text-primary hover:underline'
-                  >
-                    {t.dashboard.goToBudgets}
-                  </button>
                 </div>
               )}
             </CardContent>
           </Card>
 
-          {/* Current vs Expected Balance Widget */}
+          {/* Balance Forecast Widget */}
           <Card
             className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'
             data-onboarding='balance-forecast'
           >
             <CardHeader>
               <CardTitle className='flex items-center justify-between text-base sm:text-lg'>
-                <span>
-                  {hasEnoughData && balanceForecast?.isPastPeriod
-                    ? t.dashboard.periodSummary
-                    : t.dashboard.forecast}
-                </span>
-                <span className='text-sm font-normal text-muted-foreground'>
-                  {periodLabel}
-                </span>
+                <span>{t.dashboard.forecast}</span>
+                {hasEnoughData && (
+                  <div
+                    className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                      balanceForecast.confidence === 'high'
+                        ? 'bg-emerald-100 text-emerald-700'
+                        : balanceForecast.confidence === 'medium'
+                          ? 'bg-amber-100 text-amber-700'
+                          : 'bg-rose-100 text-rose-700'
+                    }`}
+                  >
+                    <Sparkles className='h-3 w-3' />
+                    {balanceForecast.confidence.toUpperCase()}
+                  </div>
+                )}
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {hasEnoughData && balanceForecast?.isPastPeriod ? (
-                // Past period - show totals
-                <div className='space-y-4'>
-                  <div className='flex items-center justify-between'>
-                    <span className='text-sm text-muted-foreground'>
-                      {t.dashboard.totalIncome}
-                    </span>
-                    <span className='font-semibold text-emerald-600'>
-                      <Currency amount={balanceForecast.currentMonthIncome} />
-                    </span>
-                  </div>
-                  <div className='flex items-center justify-between'>
-                    <span className='text-sm text-muted-foreground'>
-                      {t.dashboard.totalExpenses}
-                    </span>
-                    <span className='font-semibold text-rose-600'>
-                      <Currency amount={balanceForecast.currentMonthExpenses} />
-                    </span>
-                  </div>
-                  <div className='flex items-center justify-between border-t pt-2'>
-                    <span className='text-sm text-muted-foreground'>
-                      {t.dashboard.netResult}
-                    </span>
-                    <span
-                      className={`font-semibold ${
-                        balanceForecast.expectedEndBalance >= 0
-                          ? 'text-emerald-600'
-                          : 'text-rose-600'
-                      }`}
-                    >
-                      <Currency amount={balanceForecast.expectedEndBalance} />
-                    </span>
-                  </div>
-                </div>
-              ) : hasEnoughData && balanceForecast ? (
-                // Current/future period - show forecast
-                <div className='space-y-4'>
-                  <div className='flex items-center justify-between'>
-                    <span className='text-sm text-muted-foreground'>
-                      {t.dashboard.currentIncome}
-                    </span>
-                    <span className='font-semibold text-emerald-600'>
-                      <Currency amount={balanceForecast.currentMonthIncome} />
-                    </span>
-                  </div>
-                  <div className='flex items-center justify-between'>
-                    <span className='text-sm text-muted-foreground'>
+              {hasEnoughData ? (
+                <div className='space-y-4 font-mono'>
+                  <div className='flex items-center justify-between text-sm'>
+                    <span className='text-muted-foreground'>
                       {t.dashboard.expectedIncome}
                     </span>
-                    <span className='font-semibold text-emerald-600'>
-                      <Currency amount={balanceForecast.expectedIncome} />
-                    </span>
-                  </div>
-                  <div className='flex items-center justify-between'>
                     <span className='text-sm text-muted-foreground'>
                       {t.dashboard.currentExpenses}
                     </span>

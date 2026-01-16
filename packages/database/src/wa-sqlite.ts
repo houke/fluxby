@@ -275,18 +275,18 @@ export class Database implements DatabaseConnection {
             // Clear all IndexedDB databases that might contain corrupted data
             const databases = await indexedDB.databases();
             for (const dbInfo of databases) {
+              const name = dbInfo.name;
               if (
-                dbInfo.name &&
-                (dbInfo.name.includes('idb-fluxby') ||
-                  dbInfo.name.includes('fluxby'))
+                name &&
+                (name.includes('idb-fluxby') || name.includes('fluxby'))
               ) {
-                wasmLog('Deleting IndexedDB:', dbInfo.name);
+                wasmLog('Deleting IndexedDB:', name);
                 await new Promise<void>((resolve, reject) => {
-                  const req = indexedDB.deleteDatabase(dbInfo.name!);
+                  const req = indexedDB.deleteDatabase(name);
                   req.onsuccess = () => resolve();
                   req.onerror = () => reject(req.error);
                   req.onblocked = () => {
-                    wasmLog('IndexedDB deletion blocked:', dbInfo.name);
+                    wasmLog('IndexedDB deletion blocked:', name);
                     resolve(); // Continue anyway
                   };
                 });

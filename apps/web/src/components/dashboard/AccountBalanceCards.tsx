@@ -9,6 +9,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Currency } from '@/components/ui/currency';
 import { Account } from '@fluxby/shared';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 
 interface AccountBalanceCardsProps {
   accounts: Account[];
@@ -21,6 +22,11 @@ export function AccountBalanceCards({
   accountScrollIndex,
   setAccountScrollIndex,
 }: AccountBalanceCardsProps) {
+  const isMobile = useIsMobile();
+  const displayedAccounts = isMobile
+    ? accounts
+    : accounts.slice(accountScrollIndex, accountScrollIndex + 3);
+
   if (!accounts || accounts.length === 0) return null;
 
   // Color logic: checking accounts are green/red based on balance, savings are blue
@@ -53,7 +59,7 @@ export function AccountBalanceCards({
       className='-mx-3 flex items-center gap-2 sm:mx-0'
       data-onboarding='dashboard-accounts'
     >
-      {accounts.length > 3 && (
+      {!isMobile && accounts.length > 3 && (
         <Button
           variant='ghost'
           size='icon'
@@ -69,44 +75,46 @@ export function AccountBalanceCards({
 
       <div
         className='flex flex-1 gap-px overflow-x-auto overscroll-contain border-b-0 bg-border sm:flex-initial sm:gap-3 sm:bg-transparent sm:px-2 sm:pb-2'
-        style={{ WebkitOverflowScrolling: 'touch' }}
+        style={{
+          WebkitOverflowScrolling: 'touch',
+          scrollbarWidth: 'none', // Hide scrollbar for cleaner look
+          msOverflowStyle: 'none',
+        }}
       >
-        {accounts
-          .slice(accountScrollIndex, accountScrollIndex + 3)
-          .map((account) => {
-            const balance = account.currentBalance || 0;
-            const colors = getAccountColors(account.type, balance);
+        {displayedAccounts.map((account) => {
+          const balance = account.currentBalance || 0;
+          const colors = getAccountColors(account.type, balance);
 
-            return (
-              <div
-                key={account.id}
-                className='flex min-w-[10rem] flex-1 flex-shrink-0 items-center gap-3 border-r border-border bg-card px-3 py-2 last:border-r-0 sm:min-w-[12rem] sm:flex-initial sm:rounded-lg sm:border sm:px-4 sm:shadow-sm'
-              >
-                <div className={`rounded-full p-2 ${colors.bg}`}>
-                  {account.type === 'checking' && (
-                    <Wallet className={`h-4 w-4 ${colors.text}`} />
-                  )}
-                  {account.type === 'savings' && (
-                    <PiggyBank className={`h-4 w-4 ${colors.text}`} />
-                  )}
-                  {account.type === 'credit' && (
-                    <CreditCard className={`h-4 w-4 ${colors.text}`} />
-                  )}
-                </div>
-                <div className='min-w-0'>
-                  <p className='truncate text-xs text-muted-foreground'>
-                    {account.name}
-                  </p>
-                  <p className='font-semibold'>
-                    <Currency amount={balance} />
-                  </p>
-                </div>
+          return (
+            <div
+              key={account.id}
+              className='flex min-w-[10rem] flex-1 flex-shrink-0 items-center gap-3 border-r border-border bg-card px-3 py-2 last:border-r-0 sm:min-w-[12rem] sm:flex-initial sm:rounded-lg sm:border sm:px-4 sm:shadow-sm'
+            >
+              <div className={`rounded-full p-2 ${colors.bg}`}>
+                {account.type === 'checking' && (
+                  <Wallet className={`h-4 w-4 ${colors.text}`} />
+                )}
+                {account.type === 'savings' && (
+                  <PiggyBank className={`h-4 w-4 ${colors.text}`} />
+                )}
+                {account.type === 'credit' && (
+                  <CreditCard className={`h-4 w-4 ${colors.text}`} />
+                )}
               </div>
-            );
-          })}
+              <div className='min-w-0'>
+                <p className='truncate text-xs text-muted-foreground'>
+                  {account.name}
+                </p>
+                <p className='font-semibold'>
+                  <Currency amount={balance} />
+                </p>
+              </div>
+            </div>
+          );
+        })}
       </div>
 
-      {accounts.length > 3 && (
+      {!isMobile && accounts.length > 3 && (
         <Button
           variant='ghost'
           size='icon'

@@ -706,7 +706,8 @@ export const api = {
       paymentMethod?: string;
     },
     accountId?: string,
-    bank?: string
+    bank?: string,
+    onProgress?: (current: number, total: number) => void
   ) => {
     const csvContent = await file.text();
     const ds = getDataService();
@@ -781,6 +782,7 @@ export const api = {
       direction: mapping.direction,
       filename: file.name,
       bank: bank || 'generic',
+      onProgress: onProgress,
     });
 
     return {
@@ -858,7 +860,11 @@ export const api = {
   },
 
   // Upload CSV (bank-specific import)
-  uploadCSV: async (file: File, bank?: string) => {
+  uploadCSV: async (
+    file: File,
+    bank?: string,
+    onProgress?: (current: number, total: number) => void
+  ) => {
     // Use the generic import with auto-detected mapping
     const csvContent = await file.text();
     const ds = getDataService();
@@ -924,6 +930,7 @@ export const api = {
       accountId,
       mapping,
       direction: mapping.direction,
+      onProgress,
     });
 
     return {

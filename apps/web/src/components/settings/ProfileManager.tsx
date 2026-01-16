@@ -64,6 +64,7 @@ import {
   DEMO_PROFILE_ID,
 } from '@fluxby/shared';
 import { isGradientPattern } from '@/components/settings/profile-pattern-utils';
+import { ProfileAvatar } from '@/components/ui/ProfileAvatar';
 
 // Available profile types with icons
 const PROFILE_TYPES: {
@@ -627,65 +628,69 @@ export function ProfileManager() {
                     <p className='text-sm font-medium'>
                       {t.settings?.accounts?.addTitle || 'Nieuwe rekening'}
                     </p>
-                    <div className='flex gap-2'>
-                      <Input
-                        placeholder={
-                          t.settings?.accounts?.ibanPlaceholder ||
-                          'NL00BANK0123456789'
-                        }
-                        value={newAccountIban}
-                        onChange={(e) =>
-                          setNewAccountIban(
-                            e.target.value.toUpperCase().replace(/\s/g, '')
-                          )
-                        }
-                        className='flex-1'
-                      />
-                      <Input
-                        placeholder={
-                          t.settings?.accounts?.namePlaceholder ||
-                          'Naam rekening'
-                        }
-                        value={newAccountName}
-                        onChange={(e) => setNewAccountName(e.target.value)}
-                        className='flex-1'
-                      />
-                    </div>
-                    <div className='flex gap-2'>
-                      <Select
-                        value={newAccountType}
-                        onValueChange={(v) =>
-                          setNewAccountType(v as typeof newAccountType)
-                        }
-                      >
-                        <SelectTrigger className='flex-1'>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {ACCOUNT_TYPES.map((type) => (
-                            <SelectItem key={type.value} value={type.value}>
-                              <div className='flex items-center gap-2'>
-                                <type.icon className='h-4 w-4' />
-                                <span>
-                                  {t.settings?.accounts?.types?.[type.value] ||
-                                    type.value}
-                                </span>
-                              </div>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <Button
-                        onClick={handleAddAccount}
-                        disabled={
-                          createAccountMutation.isPending ||
-                          !newAccountIban.trim() ||
-                          !newAccountName.trim()
-                        }
-                      >
-                        <Plus className='mr-2 h-4 w-4' />
-                        {t.settings?.accounts?.add || 'Toevoegen'}
-                      </Button>
+                    <div className='flex flex-col gap-3'>
+                      <div className='flex flex-col gap-3 sm:flex-row sm:gap-2'>
+                        <Input
+                          placeholder={
+                            t.settings?.accounts?.ibanPlaceholder ||
+                            'NL00BANK0123456789'
+                          }
+                          value={newAccountIban}
+                          onChange={(e) =>
+                            setNewAccountIban(
+                              e.target.value.toUpperCase().replace(/\s/g, '')
+                            )
+                          }
+                          className='w-full sm:flex-1'
+                        />
+                        <Input
+                          placeholder={
+                            t.settings?.accounts?.namePlaceholder ||
+                            'Naam rekening'
+                          }
+                          value={newAccountName}
+                          onChange={(e) => setNewAccountName(e.target.value)}
+                          className='w-full sm:flex-1'
+                        />
+                      </div>
+                      <div className='flex flex-col gap-3 sm:flex-row sm:gap-2'>
+                        <Select
+                          value={newAccountType}
+                          onValueChange={(v) =>
+                            setNewAccountType(v as typeof newAccountType)
+                          }
+                        >
+                          <SelectTrigger className='w-full sm:flex-1'>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {ACCOUNT_TYPES.map((type) => (
+                              <SelectItem key={type.value} value={type.value}>
+                                <div className='flex items-center gap-2'>
+                                  <type.icon className='h-4 w-4' />
+                                  <span>
+                                    {t.settings?.accounts?.types?.[
+                                      type.value
+                                    ] || type.value}
+                                  </span>
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Button
+                          onClick={handleAddAccount}
+                          disabled={
+                            createAccountMutation.isPending ||
+                            !newAccountIban.trim() ||
+                            !newAccountName.trim()
+                          }
+                          className='w-full sm:w-auto'
+                        >
+                          <Plus className='mr-2 h-4 w-4' />
+                          {t.settings?.accounts?.add || 'Toevoegen'}
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -706,7 +711,6 @@ export function ProfileManager() {
             PROFILE_TYPES.find((t) => t.value === profile.type) ||
             PROFILE_TYPES[0];
           const isActive = profile.id === activeProfileId;
-          const Icon = typeInfo.icon;
 
           return (
             <Card
@@ -722,25 +726,15 @@ export function ProfileManager() {
               <CardHeader className='pb-3'>
                 <div className='flex items-start justify-between'>
                   <div className='flex items-center gap-3'>
-                    <div
+                    <ProfileAvatar
+                      name={profile.name}
+                      avatarUrl={profile.avatarUrl}
+                      size='lg'
                       className={cn(
-                        'relative h-10 w-10 rounded-full border shadow-sm',
                         !profile.avatarUrl &&
                           `bg-gradient-to-br ${PROFILE_TYPE_COLORS[profile.type] || 'from-gray-500 to-gray-600'}`
                       )}
-                      style={
-                        profile.avatarUrl
-                          ? {
-                              backgroundImage: profile.avatarUrl,
-                              backgroundSize: 'cover',
-                            }
-                          : {}
-                      }
-                    >
-                      <div className='absolute inset-0 flex items-center justify-center'>
-                        <Icon className='h-5 w-5 text-white drop-shadow' />
-                      </div>
-                    </div>
+                    />
                     <div>
                       <CardTitle className='text-base'>
                         {profile.name}

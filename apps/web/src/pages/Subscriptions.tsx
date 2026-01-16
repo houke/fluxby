@@ -15,7 +15,6 @@ import {
   ChevronDown,
   ChevronUp,
   Loader2,
-  CheckCircle2,
 } from 'lucide-react';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -518,7 +517,7 @@ export default function Subscriptions() {
 
       {/* Stats Cards */}
       <div
-        className='grid gap-4 md:grid-cols-4'
+        className='grid grid-cols-2 gap-4 md:grid-cols-4'
         data-onboarding='subscriptions-stats'
       >
         <Card>
@@ -651,12 +650,14 @@ export default function Subscriptions() {
                                 size='sm'
                                 variant='ghost'
                                 className='h-8 w-8 p-0 text-emerald-600 hover:bg-emerald-600 hover:text-white focus:ring-0 focus:outline-none'
-                                onClick={() =>
-                                  handleAcceptPriceChange(
-                                    alert.pattern.id,
-                                    alert.newAmount!
-                                  )
-                                }
+                                onClick={() => {
+                                  if (alert.newAmount !== undefined) {
+                                    handleAcceptPriceChange(
+                                      alert.pattern.id,
+                                      alert.newAmount
+                                    );
+                                  }
+                                }}
                               >
                                 <Check className='h-4 w-4' />
                               </Button>
@@ -886,12 +887,6 @@ export default function Subscriptions() {
                       <p className='font-medium'>
                         <Currency amount={entry.expectedAmount} />
                       </p>
-                      {entry.isConfirmed && (
-                        <Badge variant='secondary' className='text-xs'>
-                          <Check className='mr-1 h-3 w-3' />
-                          {t.subscriptions?.confirm || 'Confirmed'}
-                        </Badge>
-                      )}
                     </div>
                   </div>
                 ))}

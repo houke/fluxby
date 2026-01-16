@@ -1334,6 +1334,7 @@ router.post('/:id/seed-demo', (req, res) => {
       // Use shared helper exported from @fluxby/shared
       // Local implementation of the helper to avoid runtime import issues
       const buildHelper = function (
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         template: any,
         latestTx?: { date: string; amount: number },
         referenceDate?: Date
@@ -1371,6 +1372,7 @@ router.post('/:id/seed-demo', (req, res) => {
       };
 
       const built = buildHelper(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         pattern as any,
         txRow || undefined,
         patternDate

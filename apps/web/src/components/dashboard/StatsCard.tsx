@@ -26,55 +26,63 @@ export function StatsCard({
   // Map icon color to matching pastel background
   const getBgColor = (color: string) => {
     if (color.includes('emerald'))
-      return 'bg-emerald-100 dark:bg-emerald-900/30';
-    if (color.includes('rose')) return 'bg-rose-100 dark:bg-rose-900/30';
-    if (color.includes('blue')) return 'bg-blue-100 dark:bg-blue-900/30';
-    return 'bg-primary/10';
+      return 'bg-emerald-200 dark:bg-emerald-900/50';
+    if (color.includes('rose')) return 'bg-rose-200 dark:bg-rose-900/50';
+    if (color.includes('blue')) return 'bg-blue-200 dark:bg-blue-900/50';
+    if (color.includes('gray')) return 'bg-gray-200 dark:bg-gray-800/50';
+    return 'bg-primary/20';
   };
 
   return (
-    <Card className='h-full rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'>
-      <CardContent className='relative flex h-full flex-col justify-between overflow-hidden p-4 sm:flex-row sm:items-center sm:justify-between sm:p-6'>
-        <div className='flex-1 sm:mr-4'>
-          <p className='text-xs text-muted-foreground sm:text-sm'>{title}</p>
-          <p
-            className={`mt-1 text-lg font-bold sm:text-2xl ${valueColor || ''}`}
-          >
-            {value}
-          </p>
+    <Card className='group relative h-full overflow-hidden rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'>
+      <CardContent className='relative z-10 flex h-full flex-col justify-between p-4 sm:p-6'>
+        <div className='flex-1'>
+          <p className='text-sm font-medium text-muted-foreground'>{title}</p>
+          <div className='flex items-baseline gap-2'>
+            <p
+              className={`mt-2 text-2xl font-bold sm:text-3xl ${valueColor || ''}`}
+            >
+              {value}
+            </p>
+          </div>
+
           {trend !== undefined && trend !== 0 ? (
-            <div className='mt-1 flex items-center gap-1'>
-              {trend > 0 ? (
-                <TrendingUp className='h-4 w-4 text-success' />
-              ) : (
-                <TrendingDown className='h-4 w-4 text-destructive' />
-              )}
-              <span
-                className={`text-sm ${
-                  trend > 0 ? 'text-success' : 'text-destructive'
+            <div className='mt-2 flex items-center gap-1'>
+              <div
+                className={`flex items-center rounded-full px-1.5 py-0.5 text-xs font-medium ${
+                  trend > 0
+                    ? 'bg-emerald-100/50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400'
+                    : 'bg-rose-100/50 text-rose-700 dark:bg-rose-900/20 dark:text-rose-400'
                 }`}
               >
+                {trend > 0 ? (
+                  <TrendingUp className='mr-1 h-3 w-3' />
+                ) : (
+                  <TrendingDown className='mr-1 h-3 w-3' />
+                )}
                 {trend > 0 ? '+' : ''}
                 {trend.toFixed(1)}%
-              </span>
+              </div>
               {trendLabel && (
-                <span className='text-sm text-muted-foreground'>
+                <span className='ml-1 text-xs text-muted-foreground'>
                   {trendLabel}
                 </span>
               )}
             </div>
           ) : trendLabel ? (
-            <p className='mt-1 text-xs text-muted-foreground'>{trendLabel}</p>
+            <p className='mt-2 text-xs text-muted-foreground'>{trendLabel}</p>
           ) : null}
         </div>
-        <div
-          className={`absolute -top-2 -right-2 flex h-12 w-12 items-center justify-center rounded-full sm:relative sm:inset-auto sm:top-auto sm:right-auto sm:ml-4 sm:flex-shrink-0 ${
-            bgColor || getBgColor(iconColor)
-          }`}
-        >
-          <Icon className={`h-5 w-5 sm:h-6 sm:w-6 ${iconColor}`} />
-        </div>
       </CardContent>
+
+      {/* Decorative Icon Background */}
+      <div
+        className={`absolute -top-12 -right-12 flex h-48 w-48 items-center justify-center rounded-full opacity-10 transition-transform duration-500 group-hover:scale-110 sm:-top-8 sm:-right-8 ${
+          bgColor || getBgColor(iconColor)
+        }`}
+      >
+        <Icon className={`h-24 w-24 ${iconColor}`} />
+      </div>
     </Card>
   );
 }

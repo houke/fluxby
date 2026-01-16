@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Check,
@@ -297,7 +297,18 @@ export function AppSettings() {
         handleControllerChange
       );
     };
+    return () => {
+      navigator.serviceWorker.removeEventListener(
+        'controllerchange',
+        handleControllerChange
+      );
+    };
   }, [t]);
+
+  const updateStatusRef = useRef(updateStatus);
+  useEffect(() => {
+    updateStatusRef.current = updateStatus;
+  }, [updateStatus]);
 
   const checkForUpdates = useCallback(
     async (showToast = true) => {
@@ -370,7 +381,7 @@ export function AppSettings() {
               });
               // Keep checking status - will be resolved by statechange listener
               setTimeout(() => {
-                if (updateStatus === 'checking') {
+                if (updateStatusRef.current === 'checking') {
                   setUpdateStatus('up-to-date');
                   if (showToast) {
                     updateToast.success(
@@ -495,9 +506,6 @@ export function AppSettings() {
   const installButtonLabel = isWeb
     ? t.updater?.refreshNow || 'Refresh now'
     : t.updater?.installUpdate || 'Install update';
-  const descriptionText = isWeb
-    ? t.updater?.webDescription || 'Check for app updates'
-    : t.updater?.description || 'Check for and install app updates';
 
   return (
     <div className='space-y-0 sm:space-y-6'>

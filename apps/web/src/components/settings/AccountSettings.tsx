@@ -630,7 +630,7 @@ export function AccountSettings() {
                 <p className='mb-3 text-sm font-medium'>
                   {t.settings.accounts.addTitle}
                 </p>
-                <div className='flex gap-2'>
+                <div className='flex flex-col gap-3 sm:flex-row sm:gap-2'>
                   <Input
                     placeholder={t.settings.accounts.ibanPlaceholder}
                     value={newIban}
@@ -639,19 +639,19 @@ export function AccountSettings() {
                         e.target.value.toUpperCase().replace(/\s/g, '')
                       )
                     }
-                    className='flex-1'
+                    className='w-full sm:flex-1'
                   />
                   <Input
                     placeholder={t.settings.accounts.namePlaceholder}
                     value={newName}
                     onChange={(e) => setNewName(e.target.value.trim())}
-                    className='flex-1'
+                    className='w-full sm:flex-1'
                   />
                   <Select
                     value={newType}
                     onValueChange={(v) => setNewType(v as typeof newType)}
                   >
-                    <SelectTrigger className='w-40'>
+                    <SelectTrigger className='w-full sm:w-40'>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -669,6 +669,7 @@ export function AccountSettings() {
                       !newIban.trim() ||
                       !newName.trim()
                     }
+                    className='w-full sm:w-auto'
                   >
                     <Plus className='mr-2 h-4 w-4' />
                     {t.settings.accounts.add}

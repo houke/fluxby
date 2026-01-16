@@ -113,109 +113,125 @@ function addToAddressBookIfNew(
   cleanupRules: { pattern: string }[],
   profileId: number
 ): boolean {
-  // Skip empty IBANs
   if (!iban || iban.trim() === '') return false;
+  const map = new Map<string, string>();
+  map.set(iban, name);
+  return batchAddContacts(map, cleanupRules, profileId) > 0;
+}
 
-  // Normalize IBAN to uppercase for consistent matching
-  const normalizedIban = iban.toUpperCase().trim();
+function batchAddContacts(
+  uniqueIbanMap: Map<string, string>,
+  cleanupRules: { pattern: string }[],
+  profileId: number
+): number {
+  if (uniqueIbanMap.size === 0) return 0;
 
-  // Skip if IBAN is one of our own accounts
-  const isOwnAccount = queryOne<{ id: number }>(
-    'SELECT id FROM accounts WHERE iban = ?',
-    [normalizedIban]
-  );
-  if (isOwnAccount) return false;
+  const ibans = Array.from(uniqueIbanMap.keys());
+  const normalizedIbans = ibans.map((iban) => iban.toUpperCase().trim());
 
-  // Skip if already marked as shared IBAN
-  if (isSharedIban(normalizedIban)) return false;
-
-  // Apply cleanup rules to name
-  const cleanedName = applyCleanupRules(name, cleanupRules);
-
-  // Check if IBAN already exists in contact_ibans for this profile
-  const existingIbanLink = queryOne<{ contact_id: number }>(
-    `SELECT ci.contact_id FROM contact_ibans ci 
-     JOIN address_book ab ON ab.id = ci.contact_id
-     WHERE ci.iban = ? AND ab.profile_id = ?`,
-    [normalizedIban, profileId]
-  );
-  if (existingIbanLink) {
-    // IBAN is already linked to a contact, nothing to do
-    return false;
-  }
-
-  // Check if IBAN already in address book for this profile (legacy check)
-  const existingEntry = queryOne<{ id: number; name: string }>(
-    'SELECT id, name FROM address_book WHERE iban = ? AND profile_id = ?',
-    [normalizedIban, profileId]
+  // 1. Get all own accounts (one query)
+  const ownAccountIbans = new Set(
+    query<{ iban: string }>(
+      `SELECT iban FROM accounts WHERE iban IN (${normalizedIbans.map(() => '?').join(',')})`,
+      normalizedIbans
+    ).map((r) => r.iban.toUpperCase())
   );
 
-  if (existingEntry) {
-    // Check if the name is different (after cleanup)
-    if (existingEntry.name !== cleanedName) {
-      // This IBAN has multiple different names - it's a shared IBAN
-      // Move it to shared_ibans table
-      moveToSharedIbans(normalizedIban);
-      return false;
+  // 2. Get all existing shared IBANs
+  const sharedIbans = new Set(
+    query<{ iban: string }>(
+      `SELECT iban FROM shared_ibans WHERE iban IN (${normalizedIbans.map(() => '?').join(',')})`,
+      normalizedIbans
+    ).map((r) => r.iban.toUpperCase())
+  );
+
+  // 3. Get all existing links in contact_ibans for this profile
+  const existingLinks = new Set(
+    query<{ iban: string }>(
+      `SELECT ci.iban FROM contact_ibans ci 
+       JOIN address_book ab ON ab.id = ci.contact_id
+       WHERE ci.iban IN (${normalizedIbans.map(() => '?').join(',')}) AND ab.profile_id = ?`,
+      [...normalizedIbans, profileId]
+    ).map((r) => r.iban.toUpperCase())
+  );
+
+  // 4. Get all existing address_book entries for these IBANs (legacy)
+  const existingLegacyEntries = new Map<string, string>(
+    query<{ iban: string; name: string }>(
+      `SELECT iban, name FROM address_book WHERE iban IN (${normalizedIbans.map(() => '?').join(',')}) AND profile_id = ?`,
+      [...normalizedIbans, profileId]
+    ).map((r) => [r.iban.toUpperCase(), r.name])
+  );
+
+  let addedCount = 0;
+  const ibansToProcess: string[] = [];
+
+  for (const [iban, name] of uniqueIbanMap) {
+    const norm = iban.toUpperCase().trim();
+    if (ownAccountIbans.has(norm)) continue;
+    if (sharedIbans.has(norm)) continue;
+    if (existingLinks.has(norm)) continue;
+
+    const cleanedName = applyCleanupRules(name, cleanupRules);
+
+    if (existingLegacyEntries.has(norm)) {
+      if (existingLegacyEntries.get(norm) !== cleanedName) {
+        moveToSharedIbans(norm);
+      }
+      continue;
     }
-    // Same name, already exists - nothing to do
-    return false;
-  }
 
-  // Check if this IBAN already has multiple names in transactions for this profile
-  const nameCount =
-    queryOne<{ name_count: number }>(
-      `SELECT COUNT(DISTINCT opposing_account_name) as name_count 
-     FROM transactions 
-     WHERE opposing_account_iban = ? AND profile_id = ?`,
-      [normalizedIban, profileId]
-    )?.name_count || 0;
+    // Still need to check name count in transactions for shared IBAN detection
+    // This is still a per-IBAN query but at least we've filtered out most obvious ones
+    const nameCount =
+      queryOne<{ name_count: number }>(
+        `SELECT COUNT(DISTINCT opposing_account_name) as name_count 
+         FROM transactions 
+         WHERE opposing_account_iban = ? AND profile_id = ?`,
+        [norm, profileId]
+      )?.name_count || 0;
 
-  if (nameCount > 1) {
-    // This IBAN has multiple merchants - add to shared_ibans instead
-    run('INSERT OR IGNORE INTO shared_ibans (iban) VALUES (?)', [
-      normalizedIban,
-    ]);
-    return false;
-  }
+    if (nameCount > 1) {
+      run('INSERT OR IGNORE INTO shared_ibans (iban) VALUES (?)', [norm]);
+      continue;
+    }
 
-  // Check if a contact with the same name already exists for this profile (case-insensitive)
-  const existingContactByName = queryOne<{ id: number; iban: string }>(
-    'SELECT id, iban FROM address_book WHERE LOWER(TRIM(name)) = LOWER(TRIM(?)) AND profile_id = ?',
-    [cleanedName, profileId]
-  );
-
-  if (existingContactByName) {
-    // A contact with this name already exists - merge the IBAN into it
-    // Add the new IBAN to the contact_ibans junction table
-    run(
-      'INSERT OR IGNORE INTO contact_ibans (contact_id, iban, is_primary) VALUES (?, ?, 0)',
-      [existingContactByName.id, normalizedIban]
+    // Match by name
+    const existingContactByName = queryOne<{ id: number; iban: string }>(
+      'SELECT id, iban FROM address_book WHERE LOWER(TRIM(name)) = LOWER(TRIM(?)) AND profile_id = ?',
+      [cleanedName, profileId]
     );
-    // Also ensure the existing primary IBAN is in the junction table
-    run(
-      'INSERT OR IGNORE INTO contact_ibans (contact_id, iban, is_primary) VALUES (?, ?, 1)',
-      [existingContactByName.id, existingContactByName.iban]
+
+    if (existingContactByName) {
+      run(
+        'INSERT OR IGNORE INTO contact_ibans (contact_id, iban, is_primary) VALUES (?, ?, 0)',
+        [existingContactByName.id, norm]
+      );
+      run(
+        'INSERT OR IGNORE INTO contact_ibans (contact_id, iban, is_primary) VALUES (?, ?, 1)',
+        [existingContactByName.id, existingContactByName.iban]
+      );
+      addedCount++;
+      continue;
+    }
+
+    // New contact
+    const result = run(
+      'INSERT OR IGNORE INTO address_book (iban, name, profile_id) VALUES (?, ?, ?)',
+      [norm, cleanedName, profileId]
     );
-    return true; // Count as added (merged)
+
+    if (result.changes > 0) {
+      const newContactId = result.lastInsertRowid;
+      run(
+        'INSERT OR IGNORE INTO contact_ibans (contact_id, iban, is_primary) VALUES (?, ?, 1)',
+        [newContactId, norm]
+      );
+      addedCount++;
+    }
   }
 
-  // Insert into address book as a new contact with profile_id
-  const result = run(
-    'INSERT OR IGNORE INTO address_book (iban, name, profile_id) VALUES (?, ?, ?)',
-    [normalizedIban, cleanedName, profileId]
-  );
-
-  // Also add to contact_ibans junction table
-  if (result.changes > 0) {
-    const newContactId = result.lastInsertRowid;
-    run(
-      'INSERT OR IGNORE INTO contact_ibans (contact_id, iban, is_primary) VALUES (?, ?, 1)',
-      [newContactId, normalizedIban]
-    );
-  }
-
-  return result.changes > 0;
+  return addedCount;
 }
 
 function getExistingImportHashes(profileId: number | string): Set<string> {
@@ -523,7 +539,7 @@ router.post('/csv', upload.single('file'), async (req, res) => {
     }
 
     // Auto-add new IBANs to address book with cleanup rules applied
-    let _addressBookAdded = 0;
+    const _addressBookAdded = 0;
 
     // Get unique opposing IBANs from newly imported transactions
     const uniqueIbanMap = new Map<string, string>();
@@ -538,12 +554,12 @@ router.post('/csv', upload.single('file'), async (req, res) => {
       }
     }
 
-    // Add each unique IBAN to address book
-    for (const [iban, name] of uniqueIbanMap) {
-      if (addToAddressBookIfNew(iban, name, cleanupRules, profileId)) {
-        _addressBookAdded++;
-      }
-    }
+    // Add all unique IBANs to address book in batch
+    const addressBookAdded = batchAddContacts(
+      uniqueIbanMap,
+      cleanupRules,
+      profileId
+    );
 
     // Link newly imported transactions to their address book entries
     // This handles both direct IBAN matches and contact_ibans junction table matches

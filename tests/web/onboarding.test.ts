@@ -140,7 +140,7 @@ describe('Onboarding Data', () => {
 
     it('should include header search, privacy and theme toggle after date filter', () => {
       expect(navChapter).toBeDefined();
-      const stepIds = navChapter!.steps.map((s) => s.id);
+      const stepIds = navChapter?.steps.map((s: any) => s.id) || [];
       const dateIndex = stepIds.indexOf('nav-date-filter');
       expect(dateIndex).toBeGreaterThan(-1);
       expect(stepIds[dateIndex + 1]).toBe('nav-search');
@@ -149,9 +149,11 @@ describe('Onboarding Data', () => {
     });
 
     it('should have selectors for header search and theme toggle', () => {
-      const searchStep = navChapter!.steps.find((s) => s.id === 'nav-search');
-      const themeStep = navChapter!.steps.find(
-        (s) => s.id === 'nav-theme-toggle'
+      const searchStep = navChapter?.steps.find(
+        (s: any) => s.id === 'nav-search'
+      );
+      const themeStep = navChapter?.steps.find(
+        (s: any) => s.id === 'nav-theme-toggle'
       );
       expect(searchStep?.selector).toBe('[data-onboarding="header-search"]');
       expect(themeStep?.selector).toBe(

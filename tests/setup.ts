@@ -29,3 +29,22 @@ global.ResizeObserver = class {
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   disconnect() {}
 };
+
+// matchMedia mock for JSDOM
+Object.defineProperty(global, 'matchMedia', {
+  writable: true,
+  value: (query: string) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    addListener: () => {}, // deprecated
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    removeListener: () => {}, // deprecated
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    addEventListener: () => {},
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    removeEventListener: () => {},
+    dispatchEvent: () => true,
+  }),
+});

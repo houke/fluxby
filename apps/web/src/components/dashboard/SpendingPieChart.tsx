@@ -1,5 +1,4 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 import { ArrowDownRight } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Currency } from '@/components/ui/currency';
@@ -20,7 +19,7 @@ interface CategoryBreakdown {
   color: string;
   amount: number;
   percentage: number;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 interface SpendingPieChartProps {
@@ -30,6 +29,7 @@ interface SpendingPieChartProps {
   pinnedCategoryIndex: number | null;
   setPinnedCategoryIndex: (index: number | null) => void;
   legendContainerRef: React.RefObject<HTMLDivElement | null>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   t: any; // Using any for t as it's a large translations object
   navigate: (path: string) => void;
   suggestedPeriod: { label: string } | null;

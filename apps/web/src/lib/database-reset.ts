@@ -62,10 +62,9 @@ async function clearTauriDatabase(): Promise<void> {
               db.name.includes('sqlite') ||
               db.name.includes('idb-'))
           ) {
-            // eslint-disable-next-line no-console
-            console.log(`Deleting IndexedDB: ${db.name}`);
+            const dbName = db.name;
             await new Promise<void>((resolve, reject) => {
-              const req = indexedDB.deleteDatabase(db.name!);
+              const req = indexedDB.deleteDatabase(dbName);
               req.onsuccess = () => resolve();
               req.onerror = () => reject(req.error);
               req.onblocked = () => {

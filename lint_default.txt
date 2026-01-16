@@ -1,0 +1,85 @@
+
+> fluxby@1.5.1 lint
+> eslint .
+
+
+/Users/houkebv/Apps/fluxby/apps/web/src/components/address-book/AddressBookFilters.tsx
+   2:10  warning  'Users' is defined but never used. Allowed unused vars must match /^_/u        @typescript-eslint/no-unused-vars
+   2:25  warning  'ChevronDown' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+   2:38  warning  'ChevronUp' is defined but never used. Allowed unused vars must match /^_/u    @typescript-eslint/no-unused-vars
+  15:17  warning  Unexpected any. Specify a different type                                       @typescript-eslint/no-explicit-any
+
+/Users/houkebv/Apps/fluxby/apps/web/src/components/address-book/AddressBookModals.tsx
+   24:10  warning  'cn' is defined but never used. Allowed unused vars must match /^_/u                          @typescript-eslint/no-unused-vars
+   31:23  warning  Unexpected any. Specify a different type                                                      @typescript-eslint/no-explicit-any
+   32:20  warning  Unexpected any. Specify a different type                                                      @typescript-eslint/no-explicit-any
+   33:35  warning  Unexpected any. Specify a different type                                                      @typescript-eslint/no-explicit-any
+   33:45  warning  Unexpected any. Specify a different type                                                      @typescript-eslint/no-explicit-any
+   42:16  warning  Unexpected any. Specify a different type                                                      @typescript-eslint/no-explicit-any
+   43:27  warning  Unexpected any. Specify a different type                                                      @typescript-eslint/no-explicit-any
+   45:30  warning  Unexpected any. Specify a different type                                                      @typescript-eslint/no-explicit-any
+   65:17  warning  Unexpected any. Specify a different type                                                      @typescript-eslint/no-explicit-any
+   67:17  warning  Unexpected any. Specify a different type                                                      @typescript-eslint/no-explicit-any
+   85:3   warning  'onAddIbanToContact' is defined but never used. Allowed unused args must match /^_/u          @typescript-eslint/no-unused-vars
+  141:23  warning  'totalTransactions' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+  142:36  warning  Unexpected any. Specify a different type                                                      @typescript-eslint/no-explicit-any
+  151:50  warning  Unexpected any. Specify a different type                                                      @typescript-eslint/no-explicit-any
+  274:72  warning  Unexpected any. Specify a different type                                                      @typescript-eslint/no-explicit-any
+  328:55  warning  Unexpected any. Specify a different type                                                      @typescript-eslint/no-explicit-any
+  383:52  warning  Unexpected any. Specify a different type                                                      @typescript-eslint/no-explicit-any
+  418:39  warning  Unexpected any. Specify a different type                                                      @typescript-eslint/no-explicit-any
+  576:31  warning  Unexpected any. Specify a different type                                                      @typescript-eslint/no-explicit-any
+
+/Users/houkebv/Apps/fluxby/apps/web/src/components/address-book/CleanupRulesManager.tsx
+   2:10  warning  'Settings2' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+  27:17  warning  Unexpected any. Specify a different type                                     @typescript-eslint/no-explicit-any
+
+/Users/houkebv/Apps/fluxby/apps/web/src/components/address-book/ContactList.tsx
+  34:10  warning  'TransactionCard' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+  54:24  warning  Unexpected any. Specify a different type                                           @typescript-eslint/no-explicit-any
+  59:16  warning  Unexpected any. Specify a different type                                           @typescript-eslint/no-explicit-any
+  67:17  warning  Unexpected any. Specify a different type                                           @typescript-eslint/no-explicit-any
+
+/Users/houkebv/Apps/fluxby/apps/web/src/components/address-book/SharedIbanManager.tsx
+  37:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/houkebv/Apps/fluxby/apps/web/src/components/address-book/SuggestedContacts.tsx
+  22:22  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  35:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/houkebv/Apps/fluxby/apps/web/src/components/dashboard/SpendingPieChart.tsx
+   2:10  warning  'useNavigate' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+  23:18  warning  Unexpected any. Specify a different type                                       @typescript-eslint/no-explicit-any
+  33:6   warning  Unexpected any. Specify a different type                                       @typescript-eslint/no-explicit-any
+
+/Users/houkebv/Apps/fluxby/apps/web/src/components/settings/AppSettings.tsx
+  403:5  warning  React Hook useCallback has a missing dependency: 'updateStatus'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  498:9  warning  'descriptionText' is assigned a value but never used. Allowed unused vars must match /^_/u                         @typescript-eslint/no-unused-vars
+
+/Users/houkebv/Apps/fluxby/apps/web/src/components/settings/ProfileManager.tsx
+  714:17  warning  'Icon' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/Users/houkebv/Apps/fluxby/apps/web/src/components/settings/SyncDebugPanel.tsx
+  230:35  warning  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  230:47  warning  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+
+/Users/houkebv/Apps/fluxby/apps/web/src/components/transactions/TransactionFilters.tsx
+  38:17  warning  Unexpected any. Specify a different type                                                   @typescript-eslint/no-explicit-any
+  58:3   warning  'addressBookFilterOpened' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+
+/Users/houkebv/Apps/fluxby/apps/web/src/components/transactions/TransactionModals.tsx
+  499:66  warning  Replace `⏎··································································_,⏎··································································i⏎································································` with `_,·i`  prettier/prettier
+  589:62  warning  Delete `⏎·····················································`                                                                                                                                                                   prettier/prettier
+  600:50  warning  Replace `⏎··················································g⏎················································):·g·is·SharedIbanGroup·=>⏎·················································` with `g):·g·is·SharedIbanGroup·=>`    prettier/prettier
+  685:56  warning  Unexpected any. Specify a different type                                                                                                                                                                                          @typescript-eslint/no-explicit-any
+  686:44  warning  Unexpected any. Specify a different type                                                                                                                                                                                          @typescript-eslint/no-explicit-any
+  716:62  warning  Unexpected any. Specify a different type                                                                                                                                                                                          @typescript-eslint/no-explicit-any
+  717:53  warning  Unexpected any. Specify a different type                                                                                                                                                                                          @typescript-eslint/no-explicit-any
+  763:56  warning  Unexpected any. Specify a different type                                                                                                                                                                                          @typescript-eslint/no-explicit-any
+  764:44  warning  Unexpected any. Specify a different type                                                                                                                                                                                          @typescript-eslint/no-explicit-any
+  792:58  warning  Unexpected any. Specify a different type                                                                                                                                                                                          @typescript-eslint/no-explicit-any
+  793:49  warning  Unexpected any. Specify a different type                                                                                                                                                                                          @typescript-eslint/no-explicit-any
+
+✖ 53 problems (0 errors, 53 warnings)
+  0 errors and 3 warnings potentially fixable with the `--fix` option.
+

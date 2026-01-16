@@ -11,7 +11,6 @@ import {
   X,
   PiggyBank,
   Sparkles,
-  History,
 } from 'lucide-react';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -928,7 +927,7 @@ export default function Budgets() {
                               : 'bg-primary'
                         )}
                       />
-                      <div className='flex justify-between px-3 text-sm sm:px-0'>
+                      <div className='flex flex-wrap justify-between gap-y-1 px-3 text-sm sm:px-0'>
                         <span className='text-muted-foreground'>
                           {t.budgets.spent}: <Currency amount={budget.spent} />
                         </span>

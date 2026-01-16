@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 /** @vitest-environment jsdom */
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { TransactionFilters } from '@/components/transactions/TransactionFilters';
 
 describe('TransactionFilters icons', () => {
@@ -73,7 +73,7 @@ describe('TransactionFilters icons', () => {
       paymentProcessorFilterOpen: false,
       onPaymentProcessorFilterOpenChange: vi.fn(),
       colorWithOpacity: () => '',
-      t,
+      translations: t,
     };
 
     render(<TransactionFilters {...props} />);
