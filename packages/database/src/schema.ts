@@ -296,6 +296,9 @@ CREATE INDEX IF NOT EXISTS idx_transactions_type ON transactions(type);
 CREATE INDEX IF NOT EXISTS idx_transactions_account ON transactions(account_id);
 CREATE INDEX IF NOT EXISTS idx_transactions_profile ON transactions(profile_id);
 CREATE INDEX IF NOT EXISTS idx_transactions_updated_at ON transactions(updated_at);
+CREATE INDEX IF NOT EXISTS idx_transactions_address_book ON transactions(address_book_id);
+CREATE INDEX IF NOT EXISTS idx_transactions_opposing_iban ON transactions(opposing_account_iban);
+CREATE INDEX IF NOT EXISTS idx_transactions_profile_date ON transactions(profile_id, date);
 
 CREATE INDEX IF NOT EXISTS idx_accounts_profile ON accounts(profile_id);
 CREATE INDEX IF NOT EXISTS idx_accounts_updated_at ON accounts(updated_at);

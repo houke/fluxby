@@ -517,79 +517,87 @@ export default function Subscriptions() {
 
       {/* Stats Cards */}
       <div
-        className='grid grid-cols-2 gap-4 md:grid-cols-4'
+        className='-mx-3 grid grid-cols-2 gap-px bg-border sm:mx-0 sm:gap-4 sm:bg-transparent lg:grid-cols-4'
         data-onboarding='subscriptions-stats'
       >
-        <Card>
-          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle className='text-sm font-medium'>
-              {t.subscriptions?.totalMonthlySpend || 'Total monthly spend'}
-            </CardTitle>
-            <CreditCard className='h-4 w-4 text-muted-foreground' />
-          </CardHeader>
-          <CardContent>
-            {loadingStats ? (
-              <Skeleton className='h-8 w-24' />
-            ) : (
-              <div className='text-2xl font-bold'>
-                <Currency amount={stats?.totalMonthlySpend || 0} />
-              </div>
-            )}
+        <Card className='group relative h-full overflow-hidden rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'>
+          <CardContent className='relative z-10 flex h-full flex-col justify-between p-4 sm:p-6'>
+            <div className='flex-1'>
+              <p className='text-sm font-medium text-muted-foreground'>
+                {t.subscriptions?.totalMonthlySpend || 'Total monthly spend'}
+              </p>
+              {loadingStats ? (
+                <Skeleton className='mt-2 h-8 w-24' />
+              ) : (
+                <p className='mt-2 text-2xl font-bold sm:text-3xl'>
+                  <Currency amount={stats?.totalMonthlySpend || 0} />
+                </p>
+              )}
+            </div>
           </CardContent>
+          <div className='absolute -top-12 -right-12 flex h-48 w-48 items-center justify-center rounded-full bg-rose-200 opacity-10 transition-transform duration-500 group-hover:scale-110 sm:-top-8 sm:-right-8 dark:bg-rose-900/50'>
+            <CreditCard className='h-24 w-24 text-rose-900 dark:text-rose-400' />
+          </div>
         </Card>
 
-        <Card>
-          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle className='text-sm font-medium'>
-              {t.subscriptions?.activeSubscriptions || 'Active subscriptions'}
-            </CardTitle>
-            <Clock className='h-4 w-4 text-muted-foreground' />
-          </CardHeader>
-          <CardContent>
-            {loadingStats ? (
-              <Skeleton className='h-8 w-16' />
-            ) : (
-              <div className='text-2xl font-bold'>
-                {stats?.activeSubscriptions || 0}
-              </div>
-            )}
+        <Card className='group relative h-full overflow-hidden rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'>
+          <CardContent className='relative z-10 flex h-full flex-col justify-between p-4 sm:p-6'>
+            <div className='flex-1'>
+              <p className='text-sm font-medium text-muted-foreground'>
+                {t.subscriptions?.activeSubscriptions || 'Active subscriptions'}
+              </p>
+              {loadingStats ? (
+                <Skeleton className='mt-2 h-8 w-16' />
+              ) : (
+                <p className='mt-2 text-2xl font-bold sm:text-3xl'>
+                  {stats?.activeSubscriptions || 0}
+                </p>
+              )}
+            </div>
           </CardContent>
+          <div className='absolute -top-12 -right-12 flex h-48 w-48 items-center justify-center rounded-full bg-blue-200 opacity-10 transition-transform duration-500 group-hover:scale-110 sm:-top-8 sm:-right-8 dark:bg-blue-900/50'>
+            <Clock className='h-24 w-24 text-blue-900 dark:text-blue-400' />
+          </div>
         </Card>
 
-        <Card>
-          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle className='text-sm font-medium'>
-              {t.subscriptions?.confirmedSubscriptions || 'Confirmed'}
-            </CardTitle>
-            <Check className='h-4 w-4 text-green-500' />
-          </CardHeader>
-          <CardContent>
-            {loadingStats ? (
-              <Skeleton className='h-8 w-16' />
-            ) : (
-              <div className='text-2xl font-bold'>
-                {stats?.confirmedSubscriptions || 0}
-              </div>
-            )}
+        <Card className='group relative h-full overflow-hidden rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'>
+          <CardContent className='relative z-10 flex h-full flex-col justify-between p-4 sm:p-6'>
+            <div className='flex-1'>
+              <p className='text-sm font-medium text-muted-foreground'>
+                {t.subscriptions?.confirmedSubscriptions || 'Confirmed'}
+              </p>
+              {loadingStats ? (
+                <Skeleton className='mt-2 h-8 w-16' />
+              ) : (
+                <p className='mt-2 text-2xl font-bold sm:text-3xl'>
+                  {stats?.confirmedSubscriptions || 0}
+                </p>
+              )}
+            </div>
           </CardContent>
+          <div className='absolute -top-12 -right-12 flex h-48 w-48 items-center justify-center rounded-full bg-emerald-200 opacity-10 transition-transform duration-500 group-hover:scale-110 sm:-top-8 sm:-right-8 dark:bg-emerald-900/50'>
+            <Check className='h-24 w-24 text-emerald-900 dark:text-emerald-400' />
+          </div>
         </Card>
 
-        <Card>
-          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle className='text-sm font-medium'>
-              {t.subscriptions?.pendingConfirmation || 'Pending confirmation'}
-            </CardTitle>
-            <Sparkles className='h-4 w-4 text-purple-500' />
-          </CardHeader>
-          <CardContent>
-            {loadingStats ? (
-              <Skeleton className='h-8 w-16' />
-            ) : (
-              <div className='text-2xl font-bold'>
-                {stats?.pendingConfirmation || 0}
-              </div>
-            )}
+        <Card className='group relative h-full overflow-hidden rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'>
+          <CardContent className='relative z-10 flex h-full flex-col justify-between p-4 sm:p-6'>
+            <div className='flex-1'>
+              <p className='text-sm font-medium text-muted-foreground'>
+                {t.subscriptions?.pendingConfirmation || 'Pending confirmation'}
+              </p>
+              {loadingStats ? (
+                <Skeleton className='mt-2 h-8 w-16' />
+              ) : (
+                <p className='mt-2 text-2xl font-bold sm:text-3xl'>
+                  {stats?.pendingConfirmation || 0}
+                </p>
+              )}
+            </div>
           </CardContent>
+          <div className='absolute -top-12 -right-12 flex h-48 w-48 items-center justify-center rounded-full bg-purple-200 opacity-10 transition-transform duration-500 group-hover:scale-110 sm:-top-8 sm:-right-8 dark:bg-purple-900/50'>
+            <Sparkles className='h-24 w-24 text-purple-900 dark:text-purple-400' />
+          </div>
         </Card>
       </div>
 

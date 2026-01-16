@@ -2746,11 +2746,7 @@ export function createDataService(db: Database) {
       const pid = profileId();
       if (!pid) return [];
 
-      // Get all address book entries with their IBANs from contact_ibans
-      // Match transactions via:
-      // 1. Direct address_book_id link (primary)
-      // 2. IBAN match when no direct link exists
-      // 3. Name match for shared IBANs when no direct link exists
+      // Step 1: Get basic address book entries (fast query)
       const contacts = await db.queryAsync<{
         id: string;
         iban: string;
@@ -2759,49 +2755,18 @@ export function createDataService(db: Database) {
         notes: string | null;
         created_at: number;
         original_name: string | null;
-        transaction_count: number;
-        total_income: number;
-        total_expenses: number;
-        last_transaction_date: string | null;
       }>(
-        `SELECT 
-          ab.id,
-          ab.iban,
-          ab.name,
-          ab.description,
-          ab.notes,
-          ab.created_at,
-          ab.original_name,
-          COUNT(DISTINCT t.id) as transaction_count,
-          COALESCE(SUM(CASE WHEN t.amount > 0 THEN t.amount ELSE 0 END), 0) as total_income,
-          COALESCE(SUM(CASE WHEN t.amount < 0 THEN ABS(t.amount) ELSE 0 END), 0) as total_expenses,
-          MAX(t.date) as last_transaction_date
-        FROM address_book ab
-        LEFT JOIN transactions t ON (
-          t.is_deleted = 0 
-          AND t.profile_id = ?
-          AND (
-            t.address_book_id = ab.id
-            OR (
-              t.address_book_id IS NULL 
-              AND t.opposing_account_iban = ab.iban
-              AND (
-                ab.original_name IS NULL 
-                OR (t.opposing_account_name = ab.original_name OR t.merchant_name = ab.original_name)
-              )
-            )
-          )
-        )
-        WHERE ab.profile_id = ? AND ab.is_deleted = 0
-        GROUP BY ab.id
-        ORDER BY ab.name`,
-        [pid, pid]
+        `SELECT id, iban, name, description, notes, created_at, original_name
+         FROM address_book 
+         WHERE profile_id = ? AND is_deleted = 0
+         ORDER BY name`,
+        [pid]
       );
 
-      // Fetch all contact_ibans for the current profile's contacts
-      const contactIds = contacts.map((c) => c.id);
-      if (contactIds.length === 0) return [];
+      if (contacts.length === 0) return [];
 
+      // Step 2: Get all contact_ibans in one query
+      const contactIds = contacts.map((c) => c.id);
       const placeholders = contactIds.map(() => '?').join(',');
       const contactIbans = await db.queryAsync<{
         contact_id: string;
@@ -2822,7 +2787,43 @@ export function createDataService(db: Database) {
         }
       }
 
-      // Return contacts with ibans array and isMerged flag
+      // Step 3: Get transaction stats using address_book_id (fast - indexed)
+      // This covers transactions that are directly linked to contacts
+      const directStats = await db.queryAsync<{
+        address_book_id: string;
+        transaction_count: number;
+        total_income: number;
+        total_expenses: number;
+        last_transaction_date: string | null;
+      }>(
+        `SELECT 
+          address_book_id,
+          COUNT(*) as transaction_count,
+          COALESCE(SUM(CASE WHEN amount > 0 THEN amount ELSE 0 END), 0) as total_income,
+          COALESCE(SUM(CASE WHEN amount < 0 THEN ABS(amount) ELSE 0 END), 0) as total_expenses,
+          MAX(date) as last_transaction_date
+        FROM transactions
+        WHERE profile_id = ? 
+          AND is_deleted = 0 
+          AND address_book_id IS NOT NULL
+        GROUP BY address_book_id`,
+        [pid]
+      );
+
+      const statsById = new Map<
+        string,
+        {
+          transaction_count: number;
+          total_income: number;
+          total_expenses: number;
+          last_transaction_date: string | null;
+        }
+      >();
+      for (const stat of directStats) {
+        statsById.set(stat.address_book_id, stat);
+      }
+
+      // Step 4: Return contacts with ibans array, isMerged flag, and stats
       return contacts.map((c) => {
         const ibans = ibansByContact.get(c.id) || [];
         // Add primary IBAN if not already in the list
@@ -2831,10 +2832,16 @@ export function createDataService(db: Database) {
         }
         // Filter out duplicates
         const uniqueIbans = [...new Set(ibans)];
+
+        const stats = statsById.get(c.id);
         return {
           ...c,
           ibans: uniqueIbans,
           is_merged: uniqueIbans.length > 1 ? 1 : 0,
+          transaction_count: stats?.transaction_count || 0,
+          total_income: stats?.total_income || 0,
+          total_expenses: stats?.total_expenses || 0,
+          last_transaction_date: stats?.last_transaction_date || null,
         };
       });
     },
@@ -4946,18 +4953,24 @@ export function createDataService(db: Database) {
         };
       }
 
+      // Calculate 6 months ago date for filtering - matches getRecurringPatterns
+      const sixMonthsAgo = new Date();
+      sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+      const sixMonthsAgoStr = sixMonthsAgo.toISOString().split('T')[0];
+
       const rows = await db.queryAsync<{
         id: string;
         pattern_type: PatternType;
-        avg_amount: number;
+        avg_amount: number | null;
         last_date: string;
         is_active: number;
         is_confirmed: number;
       }>(
         `SELECT id, pattern_type, avg_amount, last_date, is_active, is_confirmed
          FROM recurring_patterns
-         WHERE profile_id = ? AND is_deleted = 0 AND is_dismissed = 0 AND is_active = 1`,
-        [pid]
+         WHERE profile_id = ? AND is_deleted = 0 AND is_dismissed = 0
+           AND (last_date >= ? OR is_confirmed = 1)`,
+        [pid, sixMonthsAgoStr]
       );
 
       // Calculate monthly equivalent for each pattern
@@ -4975,6 +4988,10 @@ export function createDataService(db: Database) {
       let pendingConfirmation = 0;
 
       for (const row of rows) {
+        // Only count patterns that are active and have a valid amount
+        // This matches the UI filtering: p.isActive && typeof p.avgAmount === 'number'
+        if (row.is_active !== 1 || row.avg_amount === null) continue;
+
         const multiplier = multipliers[row.pattern_type] || 1;
         totalMonthlySpend += row.avg_amount * multiplier;
         activeSubscriptions++;
@@ -5002,6 +5019,9 @@ export function createDataService(db: Database) {
         let total = 0;
 
         for (const pattern of rows) {
+          // Skip patterns with null avg_amount
+          if (pattern.avg_amount === null) continue;
+
           const nextDate = new Date(pattern.last_date);
           const interval = intervalDays[pattern.pattern_type];
 

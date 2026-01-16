@@ -105,7 +105,8 @@ export function useTransactionTotalsQuery(filters?: Record<string, string>) {
       const result = await api.getTransactionTotals(mergedFilters);
       return {
         ...result,
-        netSavingsTransfer: result.transferToSavings - result.transferFromSavings,
+        netSavingsTransfer:
+          result.transferToSavings - result.transferFromSavings,
       };
     },
     staleTime: 60 * 1000, // 1 minute - totals are derived data

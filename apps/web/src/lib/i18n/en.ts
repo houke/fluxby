@@ -332,6 +332,7 @@ export const en: TranslationKeys = {
     viewAllData: 'View all data',
     adjustFilters: 'Adjust your filters or search query',
     loadMore: 'Load more',
+    showing: 'showing',
     updatedCount: '{count} transactions updated',
     resetToAddressBook: 'Reset to address book name',
     resetToOriginal: 'Reset to original',

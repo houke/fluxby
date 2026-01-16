@@ -2047,8 +2047,17 @@ export default function Transactions() {
                   )}
                 </CardTitle>
                 <CardDescription>
-                  {deferredTransactions?.length || 0}{' '}
+                  {totals.count > 0
+                    ? totals.count
+                    : deferredTransactions?.length || 0}{' '}
                   {t.transactions.transactionsFound}
+                  {totals.count > (deferredTransactions?.length || 0) && (
+                    <span className='text-muted-foreground'>
+                      {' '}
+                      ({t.transactions?.showing || 'showing'}{' '}
+                      {deferredTransactions?.length || 0})
+                    </span>
+                  )}
                 </CardDescription>
               </div>
               <div className='flex flex-shrink-0 items-center gap-2'>

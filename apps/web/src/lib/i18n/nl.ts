@@ -288,6 +288,7 @@ export interface TranslationKeys {
     viewAllData: string;
     adjustFilters: string;
     loadMore: string;
+    showing: string;
     updatedCount: string;
     resetToAddressBook: string;
     resetToOriginal: string;
@@ -1606,6 +1607,7 @@ export const nl: TranslationKeys = {
     viewAllData: 'Bekijk alle gegevens',
     adjustFilters: 'Pas je filters of zoekopdracht aan',
     loadMore: 'Meer laden',
+    showing: 'getoond',
     updatedCount: '{count} transacties bijgewerkt',
     resetToAddressBook: 'Reset naar adresboek naam',
     resetToOriginal: 'Terugzetten naar origineel',

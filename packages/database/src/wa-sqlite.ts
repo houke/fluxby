@@ -106,8 +106,8 @@ type SQLiteAPI = {
   vfs_register: (vfs: unknown, makeDefault?: boolean) => number;
 };
 
-// Default timeout for database operations (30 seconds)
-const DEFAULT_OPERATION_TIMEOUT = 30000;
+// Default timeout for database operations (60 seconds - increased for large databases)
+const DEFAULT_OPERATION_TIMEOUT = 60000;
 
 // Counter for tracking operations
 let operationIdCounter = 0;
