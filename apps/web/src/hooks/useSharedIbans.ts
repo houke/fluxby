@@ -20,7 +20,7 @@ export function useSharedIbans() {
       );
       const result = await api.getSharedIbans();
       console.log('[useSharedIbans] Received:', result);
-      return result as Promise<SharedIban[]>;
+      return result;
     },
     enabled: !!activeProfileId,
   });
