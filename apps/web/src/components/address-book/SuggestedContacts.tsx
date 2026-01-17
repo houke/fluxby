@@ -53,7 +53,7 @@ export const SuggestedContacts: React.FC<SuggestedContactsProps> = ({
   isCreateContactPending,
   translations: t,
 }) => {
-  if (suggestedContacts.length === 0) return null;
+  const hasSuggestions = suggestedContacts.length > 0;
 
   return (
     <Card
@@ -61,37 +61,47 @@ export const SuggestedContacts: React.FC<SuggestedContactsProps> = ({
       className='border-blue-500/50 bg-blue-50/50 dark:bg-blue-950/10'
     >
       <CardHeader
-        className='cursor-pointer'
-        onClick={() => setShowSuggestedContacts(!showSuggestedContacts)}
+        className={cn(hasSuggestions && 'cursor-pointer')}
+        onClick={() =>
+          hasSuggestions && setShowSuggestedContacts(!showSuggestedContacts)
+        }
       >
         <div className='flex items-center justify-between'>
           <CardTitle className='flex items-center gap-2 text-blue-700 dark:text-blue-400'>
             <UserPlus className='h-5 w-5' />
             {t.addressBook?.suggestedContacts || 'Suggested contacts'}
-            <span className='rounded-full bg-blue-200 px-2 py-0.5 text-xs font-normal dark:bg-blue-800'>
-              {suggestedContacts.length}
-            </span>
-            {showSuggestedContacts ? (
-              <ChevronUp className='ml-1 h-4 w-4' />
-            ) : (
-              <ChevronDown className='ml-1 h-4 w-4' />
+            {hasSuggestions && (
+              <>
+                <span className='rounded-full bg-blue-200 px-2 py-0.5 text-xs font-normal dark:bg-blue-800'>
+                  {suggestedContacts.length}
+                </span>
+                {showSuggestedContacts ? (
+                  <ChevronUp className='ml-1 h-4 w-4' />
+                ) : (
+                  <ChevronDown className='ml-1 h-4 w-4' />
+                )}
+              </>
             )}
           </CardTitle>
         </div>
-        {!showSuggestedContacts && (
+        {!hasSuggestions ? (
+          <CardDescription>
+            {t.addressBook?.noSuggestedContactsFound ||
+              'All transaction counterparties are already in your address book.'}
+          </CardDescription>
+        ) : !showSuggestedContacts ? (
           <CardDescription>
             {t.addressBook?.suggestedContactsCollapsed ||
               'Transaction counterparties not yet in your address book. Click to expand.'}
           </CardDescription>
-        )}
-        {showSuggestedContacts && (
+        ) : (
           <CardDescription>
             {t.addressBook?.suggestedContactsExpanded ||
               'These are counterparties from your transactions that are not in your address book yet. Add them to track spending per contact.'}
           </CardDescription>
         )}
       </CardHeader>
-      {showSuggestedContacts && (
+      {showSuggestedContacts && hasSuggestions && (
         <CardContent className='space-y-2'>
           {suggestedContacts.slice(0, 20).map((account) => (
             <div
