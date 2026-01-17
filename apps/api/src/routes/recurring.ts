@@ -482,23 +482,31 @@ router.post('/detect', (req, res) => {
       const nextExpectedDate = nextExpected.toISOString().split('T')[0];
 
       // Check if pattern already exists (including dismissed ones to avoid re-creating)
-      // Match by merchant + similar amount (within 20%)
+      // Match by merchant + similar amount (within 20%) with flexible IBAN matching
       const existingPatterns = query<{
         id: string;
         is_dismissed: number;
         avg_amount: number;
+        opposing_iban: string | null;
       }>(
-        `SELECT id, is_dismissed, avg_amount FROM recurring_patterns 
+        `SELECT id, is_dismissed, avg_amount, opposing_iban FROM recurring_patterns 
          WHERE profile_id = ? 
-           AND opposing_iban IS ? 
            AND LOWER(TRIM(merchant_name)) = LOWER(TRIM(?))
            AND is_deleted = 0`,
-        [profileId, group.opposing_iban, group.merchant_name]
+        [profileId, group.merchant_name]
       );
 
-      // Find existing pattern with similar amount (within 20%)
+      // Find existing pattern with similar amount (within 20%) and compatible IBAN
       let existing: { id: string; is_dismissed: number } | null = null;
       for (const pattern of existingPatterns) {
+        // Check IBAN compatibility: match if both NULL, both same, or one is NULL
+        const ibanMatch =
+          pattern.opposing_iban === group.opposing_iban ||
+          pattern.opposing_iban === null ||
+          group.opposing_iban === null;
+
+        if (!ibanMatch) continue;
+
         const absExisting = Math.abs(pattern.avg_amount);
         const absNew = Math.abs(avgAmount);
         if (

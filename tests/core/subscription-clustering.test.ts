@@ -39,7 +39,9 @@ describe('Subscription Amount Clustering', () => {
   /**
    * Helper to simulate full pattern detection with interval checks
    */
-  function detectPattern(transactions: Array<{ date: string; amount: number }>): {
+  function detectPattern(
+    transactions: Array<{ date: string; amount: number }>
+  ): {
     patternType: string | null;
     isConsistent: boolean;
     avgInterval: number;

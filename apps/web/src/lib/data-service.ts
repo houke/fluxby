@@ -4830,22 +4830,31 @@ export function createDataService(db: Database) {
             // Check if pattern already exists (including dismissed ones to avoid re-creating)
             // Match by merchant + similar amount (within 20%) to handle multiple subscriptions
             // from the same merchant (e.g., Netflix Basic + Premium)
+            // Use flexible IBAN matching: match if both are NULL, both are same, or merchant matches
             const existingPatterns = await db.queryAsync<{
               id: string;
               is_dismissed: number;
               avg_amount: number;
+              opposing_iban: string | null;
             }>(
-              `SELECT id, is_dismissed, avg_amount FROM recurring_patterns 
+              `SELECT id, is_dismissed, avg_amount, opposing_iban FROM recurring_patterns 
              WHERE profile_id = ? 
-               AND opposing_iban IS ? 
                AND LOWER(TRIM(merchant_name)) = LOWER(TRIM(?))
                AND is_deleted = 0`,
-              [pid, group.opposing_iban, group.merchant_name]
+              [pid, group.merchant_name]
             );
 
-            // Find existing pattern with similar amount (within 20%)
+            // Find existing pattern with similar amount (within 20%) and compatible IBAN
             let existing: { id: string; is_dismissed: number } | null = null;
             for (const pattern of existingPatterns) {
+              // Check IBAN compatibility: match if both NULL, both same, or one is NULL
+              const ibanMatch =
+                pattern.opposing_iban === group.opposing_iban ||
+                pattern.opposing_iban === null ||
+                group.opposing_iban === null;
+
+              if (!ibanMatch) continue;
+
               const absExisting = Math.abs(pattern.avg_amount);
               const absNew = Math.abs(avgAmount);
               if (
@@ -4950,12 +4959,21 @@ export function createDataService(db: Database) {
             if (!pattern.merchant_name) continue;
 
             // Check if this pattern's merchant name matches any category rule
+            // Only dismiss if the rule is reasonably specific (at least 4 chars)
+            // and is a substantial match (not just a substring of the merchant)
             const merchantName = pattern.merchant_name;
-            const matchesRule = rulePatterns.some(
-              (rulePattern) =>
-                merchantName.includes(rulePattern) ||
-                rulePattern.includes(merchantName)
-            );
+            const matchesRule = rulePatterns.some((rulePattern) => {
+              // Skip very short rules that would match too broadly
+              if (rulePattern.length < 4) return false;
+
+              // Check for exact match or the merchant name starts/ends with the rule
+              // This is more specific than just "includes"
+              return (
+                merchantName === rulePattern ||
+                merchantName.startsWith(rulePattern) ||
+                merchantName.endsWith(rulePattern)
+              );
+            });
 
             if (matchesRule) {
               // Mark as dismissed - it's a categorized expense, not a subscription
