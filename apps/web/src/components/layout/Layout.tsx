@@ -439,8 +439,8 @@ export default function Layout() {
               </div>
             )}
 
-            {/* Page Content - responsive padding */}
-            <main className='flex-1 overflow-auto p-3 pb-20 md:p-6 md:pb-6'>
+            {/* Page Content - responsive padding (edge-to-edge on mobile) */}
+            <main className='flex-1 overflow-auto pb-20 md:p-6 md:pb-6'>
               <Outlet />
             </main>
           </div>

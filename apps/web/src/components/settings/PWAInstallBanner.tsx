@@ -92,7 +92,7 @@ export function PWAInstallBanner() {
   // Show installed state
   if (isInstalled) {
     return (
-      <div className='-mx-3 sm:mx-0'>
+      <div className=''>
         <Card className='rounded-none border-x-0 border-green-500/20 bg-green-500/5 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'>
           <CardHeader className='px-3 py-3 sm:px-6 sm:pb-3'>
             <div className='flex items-start justify-between gap-4'>
@@ -117,7 +117,7 @@ export function PWAInstallBanner() {
     const instructions = getManualInstructions(browser, platform, t);
 
     return (
-      <div className='-mx-3 sm:mx-0'>
+      <div className=''>
         <Card className='rounded-none border-x-0 border-primary/20 bg-primary/5 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'>
           <CardHeader className='px-3 py-3 sm:px-6 sm:pb-3'>
             <div className='flex items-start justify-between gap-4'>
@@ -165,7 +165,7 @@ export function PWAInstallBanner() {
     const isDesktop = ['windows', 'macos', 'linux'].includes(platform);
 
     return (
-      <div className='-mx-3 sm:mx-0'>
+      <div className=''>
         <Card className='rounded-none border-x-0 border-primary/20 bg-primary/5 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'>
           <CardHeader className='px-3 py-3 sm:px-6 sm:pb-3'>
             <div className='flex items-center gap-2'>

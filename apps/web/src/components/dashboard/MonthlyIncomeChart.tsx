@@ -10,6 +10,7 @@ import {
   Tooltip,
 } from 'recharts';
 import type { TranslationKeys } from '@/lib/i18n/nl';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 
 interface MonthlyIncomeChartProps {
   monthlyData: Array<{
@@ -42,6 +43,7 @@ export function MonthlyIncomeChart({
   handleJumpToPeriod,
 }: MonthlyIncomeChartProps) {
   const hasIncome = monthlyData.reduce((sum, d) => sum + d.income, 0) > 0;
+  const isMobile = useIsMobile();
 
   return (
     <Card
@@ -96,7 +98,10 @@ export function MonthlyIncomeChart({
                       const [, month] = value.split('-');
                       return t.common.monthsShort[parseInt(month) - 1];
                     }}
-                    tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                    tick={{
+                      fill: 'hsl(var(--muted-foreground))',
+                      fontSize: isMobile ? 10 : 12,
+                    }}
                     axisLine={false}
                     tickLine={false}
                   />
@@ -106,10 +111,14 @@ export function MonthlyIncomeChart({
                         ? `€${(value / 1000).toFixed(0)}k`
                         : `€${value}`
                     }
-                    tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                    tick={{
+                      fill: 'hsl(var(--muted-foreground))',
+                      fontSize: isMobile ? 9 : 12,
+                    }}
                     axisLine={false}
                     tickLine={false}
                     domain={[0, 'auto']}
+                    width={isMobile ? 35 : 50}
                   />
                   <Tooltip
                     formatter={(value) => [

@@ -1348,7 +1348,7 @@ export default function Import() {
       </Dialog>
 
       {/* Upload Area */}
-      <div className='-mx-3 sm:mx-0'>
+      <div className=''>
         <Card
           className='card-hover rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'
           data-onboarding='import-dropzone'
@@ -1433,7 +1433,7 @@ export default function Import() {
       </div>
 
       {/* Import History */}
-      <div className='-mx-3 sm:mx-0'>
+      <div className=''>
         <Card
           className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'
           data-onboarding='import-history'

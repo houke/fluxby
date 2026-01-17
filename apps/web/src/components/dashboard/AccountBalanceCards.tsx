@@ -56,7 +56,7 @@ export function AccountBalanceCards({
 
   return (
     <div
-      className='-mx-3 flex items-center gap-2 sm:mx-0'
+      className='flex items-center gap-2'
       data-onboarding='dashboard-accounts'
     >
       {!isMobile && accounts.length > 3 && (
@@ -74,7 +74,9 @@ export function AccountBalanceCards({
       )}
 
       <div
-        className='flex flex-1 gap-px overflow-x-auto overscroll-contain border-b-0 bg-border sm:flex-initial sm:gap-3 sm:bg-transparent sm:px-2 sm:pb-2'
+        className={`flex gap-px overflow-x-auto overscroll-contain border-b-0 bg-border sm:flex-initial sm:gap-3 sm:bg-transparent sm:px-2 sm:pb-2 ${
+          isMobile ? 'w-full' : 'flex-1'
+        }`}
         style={{
           WebkitOverflowScrolling: 'touch',
           scrollbarWidth: 'none', // Hide scrollbar for cleaner look
@@ -88,7 +90,11 @@ export function AccountBalanceCards({
           return (
             <div
               key={account.id}
-              className='flex min-w-[10rem] flex-1 flex-shrink-0 items-center gap-3 border-r border-border bg-card px-3 py-2 last:border-r-0 sm:min-w-[12rem] sm:flex-initial sm:rounded-lg sm:border sm:px-4 sm:shadow-sm'
+              className={`flex flex-1 flex-shrink-0 items-center gap-3 border-r border-border bg-card px-3 py-2 last:border-r-0 sm:flex-initial sm:rounded-lg sm:border sm:px-4 sm:shadow-sm ${
+                isMobile && displayedAccounts.length === 1
+                  ? 'min-w-full'
+                  : 'min-w-[10rem] sm:min-w-[12rem]'
+              }`}
             >
               <div className={`rounded-full p-2 ${colors.bg}`}>
                 {account.type === 'checking' && (

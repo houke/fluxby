@@ -15,7 +15,7 @@ export function PageHeader({
 }: PageHeaderProps) {
   return (
     <div
-      className='flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between'
+      className='flex flex-col gap-4 px-3 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between sm:px-0'
       data-onboarding={dataOnboarding}
     >
       <div>
@@ -26,7 +26,11 @@ export function PageHeader({
           </p>
         )}
       </div>
-      {actions && <div className='flex items-center gap-2'>{actions}</div>}
+      {actions && (
+        <div className='flex w-full items-center gap-2 sm:w-auto'>
+          {actions}
+        </div>
+      )}
     </div>
   );
 }

@@ -1462,7 +1462,7 @@ export default function Categories() {
       )}
 
       {/* Filter Card */}
-      <div className='-mx-3 sm:mx-0'>
+      <div className=''>
         <Card
           className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'
           data-onboarding='category-search'
@@ -1522,7 +1522,7 @@ export default function Categories() {
       </div>
 
       {/* Category List */}
-      <div className='-mx-3 sm:mx-0'>
+      <div className=''>
         {categoriesLoading ? (
           <div className='space-y-4'>
             {[...Array(4)].map((_, idx) => (

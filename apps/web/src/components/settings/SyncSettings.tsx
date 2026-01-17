@@ -162,7 +162,7 @@ export function SyncSettings() {
   };
 
   return (
-    <div className='-mx-3 sm:mx-0'>
+    <div className=''>
       <Card className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'>
         <CardHeader className='px-3 py-3 sm:px-6 sm:py-4'>
           <div className='flex items-start justify-between gap-4'>

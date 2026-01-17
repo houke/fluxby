@@ -1,6 +1,7 @@
-import React from 'react';
-import { ArrowDownRight } from 'lucide-react';
+import React, { useState } from 'react';
+import { ArrowDownRight, List, X } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Currency } from '@/components/ui/currency';
 import {
   PieChart,
@@ -12,6 +13,7 @@ import {
   Sector,
 } from 'recharts';
 import type { PieSectorDataItem } from 'recharts/types/polar/Pie';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 
 interface CategoryBreakdown {
   categoryId: string;
@@ -50,12 +52,16 @@ export function SpendingPieChart({
   isViewingSuggestedPeriod,
   handleJumpToPeriod,
 }: SpendingPieChartProps) {
+  const isMobile = useIsMobile();
+  const [showLegend, setShowLegend] = useState(false);
+
   return (
     <Card
-      className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'
+      className='relative rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'
       onClick={() => {
         setActiveCategoryIndex(null);
         setPinnedCategoryIndex(null);
+        if (isMobile) setShowLegend(false);
       }}
       data-onboarding='category-pie-chart'
     >
@@ -79,139 +85,224 @@ export function SpendingPieChart({
           )}
         </span>
       </CardHeader>
-      <CardContent>
+      <CardContent className='relative'>
         <div className='flex h-[300px] items-center justify-center'>
           {categoryData.length > 0 ? (
-            <ResponsiveContainer
-              width='100%'
-              height='100%'
-              minHeight={1}
-              minWidth={1}
-            >
-              <PieChart>
-                <Pie
-                  data={categoryData}
-                  cx='50%'
-                  cy='50%'
-                  innerRadius={60}
-                  outerRadius={100}
-                  paddingAngle={2}
-                  dataKey='amount'
-                  nameKey='categoryName'
-                  startAngle={90}
-                  endAngle={-270}
-                  isAnimationActive={false}
-                  {...{
-                    activeIndex:
-                      activeCategoryIndex !== null
-                        ? activeCategoryIndex
-                        : undefined,
-                  }}
-                  activeShape={(props: PieSectorDataItem) => {
-                    const {
-                      cx,
-                      cy,
-                      innerRadius,
-                      outerRadius,
-                      startAngle,
-                      endAngle,
-                      fill,
-                    } = props;
-                    return (
-                      <Sector
-                        cx={cx}
-                        cy={cy}
-                        innerRadius={innerRadius}
-                        outerRadius={(outerRadius || 100) + 15}
-                        startAngle={startAngle}
-                        endAngle={endAngle}
-                        fill={fill}
-                        style={{ outline: 'none' }}
-                      />
-                    );
-                  }}
-                  onClick={(_, index) => {
-                    // Toggle selection on click - grows the segment
-                    if (pinnedCategoryIndex === index) {
-                      setPinnedCategoryIndex(null);
-                      setActiveCategoryIndex(null);
-                    } else {
-                      setPinnedCategoryIndex(index);
-                      setActiveCategoryIndex(index);
-                    }
-                  }}
-                  style={{ cursor: 'pointer' }}
-                >
-                  {categoryData.map((entry, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={entry.color}
-                      opacity={
-                        activeCategoryIndex !== null &&
-                        activeCategoryIndex !== index
-                          ? 0.3
-                          : 1
+            <>
+              <ResponsiveContainer
+                width='100%'
+                height='100%'
+                minHeight={1}
+                minWidth={1}
+              >
+                <PieChart>
+                  <Pie
+                    data={categoryData}
+                    cx='50%'
+                    cy='50%'
+                    innerRadius={isMobile ? 70 : 60}
+                    outerRadius={isMobile ? 110 : 100}
+                    paddingAngle={2}
+                    dataKey='amount'
+                    nameKey='categoryName'
+                    startAngle={90}
+                    endAngle={-270}
+                    isAnimationActive={false}
+                    {...{
+                      activeIndex:
+                        activeCategoryIndex !== null
+                          ? activeCategoryIndex
+                          : undefined,
+                    }}
+                    activeShape={(props: PieSectorDataItem) => {
+                      const {
+                        cx,
+                        cy,
+                        innerRadius,
+                        outerRadius,
+                        startAngle,
+                        endAngle,
+                        fill,
+                      } = props;
+                      return (
+                        <Sector
+                          cx={cx}
+                          cy={cy}
+                          innerRadius={innerRadius}
+                          outerRadius={(outerRadius || 100) + 15}
+                          startAngle={startAngle}
+                          endAngle={endAngle}
+                          fill={fill}
+                          style={{ outline: 'none' }}
+                        />
+                      );
+                    }}
+                    onClick={(_, index) => {
+                      // Toggle selection on click - grows the segment
+                      if (pinnedCategoryIndex === index) {
+                        setPinnedCategoryIndex(null);
+                        setActiveCategoryIndex(null);
+                      } else {
+                        setPinnedCategoryIndex(index);
+                        setActiveCategoryIndex(index);
                       }
-                    />
-                  ))}
-                </Pie>
-                <Tooltip
-                  formatter={(value) => <Currency amount={value as number} />}
-                  contentStyle={{
-                    backgroundColor: 'hsl(var(--card))',
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: '8px',
-                  }}
-                />
-                <Legend
-                  layout='vertical'
-                  align='right'
-                  verticalAlign='middle'
-                  wrapperStyle={{
-                    maxHeight: '280px',
-                    overflowY: 'auto',
-                  }}
-                  content={() => (
-                    <div ref={legendContainerRef} className='space-y-1'>
-                      {categoryData.map((entry, index) => (
-                        <div
-                          key={index}
-                          data-category-index={index}
-                          className={`flex cursor-pointer items-center gap-2 rounded px-1 py-0.5 ${
-                            activeCategoryIndex === index
-                              ? 'bg-muted'
-                              : 'hover:bg-muted/50'
-                          }`}
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            // Toggle selection on click - grows the segment
-                            if (pinnedCategoryIndex === index) {
-                              setPinnedCategoryIndex(null);
-                              setActiveCategoryIndex(null);
-                            } else {
-                              setPinnedCategoryIndex(index);
-                              setActiveCategoryIndex(index);
-                            }
-                          }}
-                        >
-                          <div
-                            className='h-3 w-3 flex-shrink-0 rounded-full'
-                            style={{ backgroundColor: entry.color }}
-                          />
-                          <span
-                            className={`truncate text-sm text-foreground ${
-                              activeCategoryIndex === index ? 'font-bold' : ''
-                            }`}
-                          >
-                            {entry.categoryName}
-                          </span>
+                    }}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    {categoryData.map((entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={entry.color}
+                        opacity={
+                          activeCategoryIndex !== null &&
+                          activeCategoryIndex !== index
+                            ? 0.3
+                            : 1
+                        }
+                      />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    formatter={(value) => <Currency amount={value as number} />}
+                    contentStyle={{
+                      backgroundColor: 'hsl(var(--card))',
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: '8px',
+                    }}
+                  />
+                  {!isMobile && (
+                    <Legend
+                      layout='vertical'
+                      align='right'
+                      verticalAlign='middle'
+                      wrapperStyle={{
+                        maxHeight: '280px',
+                        overflowY: 'auto',
+                      }}
+                      content={() => (
+                        <div ref={legendContainerRef} className='space-y-1'>
+                          {categoryData.map((entry, index) => (
+                            <div
+                              key={index}
+                              data-category-index={index}
+                              className={`flex cursor-pointer items-center gap-2 rounded px-1 py-0.5 ${
+                                activeCategoryIndex === index
+                                  ? 'bg-muted'
+                                  : 'hover:bg-muted/50'
+                              }`}
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                // Toggle selection on click - grows the segment
+                                if (pinnedCategoryIndex === index) {
+                                  setPinnedCategoryIndex(null);
+                                  setActiveCategoryIndex(null);
+                                } else {
+                                  setPinnedCategoryIndex(index);
+                                  setActiveCategoryIndex(index);
+                                }
+                              }}
+                            >
+                              <div
+                                className='h-3 w-3 flex-shrink-0 rounded-full'
+                                style={{ backgroundColor: entry.color }}
+                              />
+                              <span
+                                className={`truncate text-sm text-foreground ${
+                                  activeCategoryIndex === index
+                                    ? 'font-bold'
+                                    : ''
+                                }`}
+                              >
+                                {entry.categoryName}
+                              </span>
+                            </div>
+                          ))}
                         </div>
-                      ))}
-                    </div>
+                      )}
+                    />
                   )}
-                />
-              </PieChart>
-            </ResponsiveContainer>
+                </PieChart>
+              </ResponsiveContainer>
+
+              {/* Mobile legend toggle button */}
+              {isMobile && (
+                <Button
+                  variant='outline'
+                  size='sm'
+                  className='absolute right-4 bottom-4 z-10 gap-2'
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowLegend(true);
+                  }}
+                >
+                  <List className='h-4 w-4' />
+                  {t.dashboard?.showCategories || 'Categories'}
+                </Button>
+              )}
+
+              {/* Mobile legend overlay */}
+              {isMobile && showLegend && (
+                <div
+                  className='absolute inset-0 z-20 flex flex-col rounded-lg bg-card/95 backdrop-blur-sm'
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className='flex items-center justify-between border-b p-3'>
+                    <span className='font-medium'>
+                      {t.dashboard?.expensesByCategory ||
+                        'Expenses by category'}
+                    </span>
+                    <Button
+                      variant='ghost'
+                      size='sm'
+                      onClick={() => setShowLegend(false)}
+                    >
+                      <X className='h-4 w-4' />
+                    </Button>
+                  </div>
+                  <div
+                    ref={legendContainerRef}
+                    className='flex-1 space-y-1 overflow-y-auto p-3'
+                  >
+                    {categoryData.map((entry, index) => (
+                      <div
+                        key={index}
+                        data-category-index={index}
+                        className={`flex cursor-pointer items-center gap-3 rounded-lg p-2 ${
+                          activeCategoryIndex === index
+                            ? 'bg-muted'
+                            : 'hover:bg-muted/50'
+                        }`}
+                        onClick={() => {
+                          if (pinnedCategoryIndex === index) {
+                            setPinnedCategoryIndex(null);
+                            setActiveCategoryIndex(null);
+                          } else {
+                            setPinnedCategoryIndex(index);
+                            setActiveCategoryIndex(index);
+                          }
+                          setShowLegend(false);
+                        }}
+                      >
+                        <div
+                          className='h-4 w-4 flex-shrink-0 rounded-full'
+                          style={{ backgroundColor: entry.color }}
+                        />
+                        <span
+                          className={`flex-1 text-sm ${
+                            activeCategoryIndex === index ? 'font-bold' : ''
+                          }`}
+                        >
+                          {entry.categoryName}
+                        </span>
+                        <span className='text-sm text-muted-foreground'>
+                          <Currency amount={entry.amount} />
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
           ) : (
             <div className='flex flex-col items-center justify-center py-8 text-center'>
               <ArrowDownRight className='mb-4 h-12 w-12 text-muted-foreground/50' />

@@ -207,6 +207,7 @@ export interface TranslationKeys {
     goToTransactions: string;
     monthlyOverview: string;
     expensesByCategory: string;
+    showCategories: string;
     noExpenses: string;
     checkingAccount: string;
     savingsAccount: string;
@@ -375,6 +376,11 @@ export interface TranslationKeys {
     viewTransactions: string;
     toggleSubcategories: string;
     recurringPayments: string;
+    recurringTransactions: string;
+    recurringTransactionsDescription: string;
+    noRecurringTransactions: string;
+    selectRecurringTransaction: string;
+    total: string;
     priceHistory: string;
     noPriceHistory: string;
     selectSubscription: string;
@@ -1523,6 +1529,7 @@ export const nl: TranslationKeys = {
     goToTransactions: 'Ga naar transacties',
     monthlyOverview: 'Maandelijks overzicht',
     expensesByCategory: 'Uitgaven per categorie',
+    showCategories: 'Categorieën',
     noExpenses: 'Geen uitgaven deze maand',
     checkingAccount: 'Betaalrekening',
     savingsAccount: 'Spaarrekening',
@@ -1703,12 +1710,19 @@ export const nl: TranslationKeys = {
     transactions: 'Transacties',
     viewTransactions: 'Bekijk transacties',
     toggleSubcategories: 'Subcategorieën tonen/verbergen',
-    recurringPayments: 'Terugkerende betalingen',
+    recurringPayments: 'Abonnementen',
+    recurringTransactions: 'Terugkerende transacties',
+    recurringTransactionsDescription: 'Transacties met minimaal 6 herhalingen',
+    noRecurringTransactions:
+      'Geen terugkerende transacties met minimaal 6 herhalingen',
+    selectRecurringTransaction:
+      'Selecteer een transactie om de historie te bekijken',
+    total: 'Totaal',
     priceHistory: 'Prijsgeschiedenis',
     noPriceHistory: 'Geen prijsgeschiedenis beschikbaar',
     selectSubscription:
       'Selecteer een abonnement om prijsgeschiedenis te bekijken',
-    noRecurringPayments: 'Nog geen bevestigde terugkerende betalingen',
+    noRecurringPayments: 'Nog geen bevestigde abonnementen',
     confirmSubscriptions:
       'Bevestig gedetecteerde abonnementen op de abonnementen pagina',
     average: 'Gem.',

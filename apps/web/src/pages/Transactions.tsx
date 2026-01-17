@@ -39,6 +39,7 @@ import {
   Merge,
   RotateCcw,
   AlertCircle,
+  Loader2,
 } from 'lucide-react';
 import {
   useTransactionTotals,
@@ -1914,7 +1915,7 @@ export default function Transactions() {
         </div>
 
         {/* Filters */}
-        <div className='-mx-3 sm:mx-0'>
+        <div className=''>
           <Card
             className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'
             data-onboarding='transaction-filters'
@@ -2033,7 +2034,7 @@ export default function Transactions() {
         </div>
 
         {/* Transactions List */}
-        <div className='-mx-3 sm:mx-0'>
+        <div className=''>
           <Card
             className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'
             data-onboarding='transaction-list'
@@ -2051,13 +2052,6 @@ export default function Transactions() {
                     ? totals.count
                     : deferredTransactions?.length || 0}{' '}
                   {t.transactions.transactionsFound}
-                  {totals.count > (deferredTransactions?.length || 0) && (
-                    <span className='text-muted-foreground'>
-                      {' '}
-                      ({t.transactions?.showing || 'showing'}{' '}
-                      {deferredTransactions?.length || 0})
-                    </span>
-                  )}
                 </CardDescription>
               </div>
               <div className='flex flex-shrink-0 items-center gap-2'>
@@ -2701,7 +2695,9 @@ export default function Transactions() {
                         ref={loadMoreRef}
                         variant='outline'
                         onClick={() => setVisibleCount((prev) => prev + 50)}
+                        className='flex items-center gap-2'
                       >
+                        <Loader2 className='h-4 w-4 animate-spin' />
                         {t.transactions.loadMore}
                       </Button>
                     </div>

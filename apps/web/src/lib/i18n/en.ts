@@ -248,6 +248,7 @@ export const en: TranslationKeys = {
     goToTransactions: 'Go to transactions',
     monthlyOverview: 'Monthly overview',
     expensesByCategory: 'Expenses by category',
+    showCategories: 'Categories',
     noExpenses: 'No expenses this month',
     checkingAccount: 'Checking account',
     savingsAccount: 'Savings account',
@@ -427,11 +428,18 @@ export const en: TranslationKeys = {
     transactions: 'Transactions',
     viewTransactions: 'View transactions',
     toggleSubcategories: 'Toggle subcategories',
-    recurringPayments: 'Recurring payments',
+    recurringPayments: 'Subscriptions',
+    recurringTransactions: 'Recurring transactions',
+    recurringTransactionsDescription:
+      'Transactions with at least 6 recurrences',
+    noRecurringTransactions:
+      'No recurring transactions with at least 6 recurrences',
+    selectRecurringTransaction: 'Select a transaction to view history',
+    total: 'Total',
     priceHistory: 'Price history',
     noPriceHistory: 'No price history available',
     selectSubscription: 'Select a subscription to view price history',
-    noRecurringPayments: 'No confirmed recurring payments yet',
+    noRecurringPayments: 'No confirmed subscriptions yet',
     confirmSubscriptions:
       'Confirm detected subscriptions on the subscriptions page',
     average: 'Avg',

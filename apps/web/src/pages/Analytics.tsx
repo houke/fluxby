@@ -12,7 +12,13 @@ import {
 } from 'lucide-react';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import {
@@ -150,9 +156,18 @@ export default function Analytics() {
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
 
-  // Filter recurring patterns to only show expenses (subscriptions)
+  // Filter recurring patterns to only show confirmed expenses (subscriptions) with 6+ transactions
   const expensePatterns = recurringPatterns?.filter(
-    (p) => typeof p.avgAmount === 'number' && p.avgAmount < 0
+    (p) =>
+      typeof p.avgAmount === 'number' &&
+      p.avgAmount < 0 &&
+      p.isConfirmed &&
+      p.transactionCount >= 6
+  );
+
+  // Filter all recurring patterns with at least 6 transactions for the recurring transactions card
+  const recurringTransactionPatterns = recurringPatterns?.filter(
+    (p) => p.transactionCount >= 6
   );
 
   const [activeExpenseIndex, setActiveExpenseIndex] = useState<number | null>(
@@ -168,6 +183,8 @@ export default function Analytics() {
     null
   );
   const [selectedPattern, setSelectedPattern] = useState<string | null>(null);
+  const [selectedRecurringTransaction, setSelectedRecurringTransaction] =
+    useState<string | null>(null);
   const expenseLegendRef = useRef<HTMLDivElement>(null);
   const incomeLegendRef = useRef<HTMLDivElement>(null);
 
@@ -242,7 +259,7 @@ export default function Analytics() {
       />
 
       {/* Savings Over Time */}
-      <div className='-mx-3 sm:mx-0'>
+      <div className=''>
         <Card
           className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'
           data-onboarding='net-savings-chart'
@@ -396,7 +413,7 @@ export default function Analytics() {
       </div>
 
       {/* Income vs Expenses Trend */}
-      <div className='-mx-3 sm:mx-0'>
+      <div className=''>
         <Card
           className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'
           data-onboarding='income-expenses-trend'
@@ -533,7 +550,7 @@ export default function Analytics() {
       </div>
 
       {/* Category Breakdown */}
-      <div className='-mx-3 sm:mx-0'>
+      <div className=''>
         <div className='grid gap-px bg-border sm:gap-6 sm:bg-transparent md:grid-cols-2'>
           {/* Expense Categories */}
           <Card
@@ -912,7 +929,7 @@ export default function Analytics() {
       </div>
 
       {/* Category Breakdown Lists - 50/50 */}
-      <div className='-mx-3 sm:mx-0'>
+      <div className=''>
         <div className='grid gap-px bg-border sm:gap-6 sm:bg-transparent md:grid-cols-2'>
           {/* Expense Categories List */}
           <Card className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'>
@@ -1075,13 +1092,210 @@ export default function Analytics() {
         </div>
       </div>
 
-      {/* Recurring Payments Analysis */}
-      <div className='-mx-3 sm:mx-0'>
+      {/* Recurring Transactions Analysis */}
+      <div className=''>
         <Card className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'>
           <CardHeader>
             <CardTitle className='text-base sm:text-lg'>
-              {t.analytics?.recurringPayments || 'Recurring payments'}
+              {t.analytics?.recurringTransactions || 'Recurring transactions'}
             </CardTitle>
+            <CardDescription>
+              {t.analytics?.recurringTransactionsDescription ||
+                'Transactions with at least 6 recurrences'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {recurringTransactionPatterns &&
+            recurringTransactionPatterns.length > 0 ? (
+              <div className='space-y-6'>
+                {/* Recurring transactions list with history */}
+                <div className='grid gap-4 lg:grid-cols-2'>
+                  {/* List of recurring transactions */}
+                  <div className='max-h-[400px] space-y-2 overflow-y-auto'>
+                    {recurringTransactionPatterns.map((pattern) => {
+                      // Calculate total from price history if available
+                      const totalAmount = pattern.priceHistory?.length
+                        ? pattern.priceHistory.reduce(
+                            (sum, h) => sum + h.amount,
+                            0
+                          )
+                        : pattern.avgAmount * pattern.transactionCount;
+                      return (
+                        <button
+                          key={pattern.id}
+                          onClick={() =>
+                            setSelectedRecurringTransaction(
+                              selectedRecurringTransaction === pattern.id
+                                ? null
+                                : pattern.id
+                            )
+                          }
+                          className={`flex w-full items-center justify-between rounded-lg p-3 text-left transition-colors ${
+                            selectedRecurringTransaction === pattern.id
+                              ? 'bg-primary/10 ring-1 ring-primary'
+                              : 'bg-muted/50 hover:bg-muted'
+                          }`}
+                        >
+                          <div className='min-w-0 flex-1'>
+                            <p className='truncate font-medium'>
+                              {pattern.merchantName ||
+                                pattern.opposingIban ||
+                                'Unknown'}
+                            </p>
+                            <p className='text-sm text-muted-foreground'>
+                              {pattern.transactionCount}{' '}
+                              {t.analytics?.transactions || 'transactions'}
+                            </p>
+                          </div>
+                          <div className='ml-4 text-right'>
+                            <p className='text-xs text-muted-foreground'>
+                              {t.analytics?.total || 'Total'}
+                            </p>
+                            <p
+                              className={`font-semibold tabular-nums ${
+                                totalAmount < 0
+                                  ? 'text-rose-600'
+                                  : 'text-emerald-600'
+                              }`}
+                            >
+                              <Currency amount={totalAmount} />
+                            </p>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Transaction history chart */}
+                  <div className='flex min-h-[300px] flex-col'>
+                    {selectedRecurringTransaction ? (
+                      (() => {
+                        const pattern = recurringTransactionPatterns?.find(
+                          (p) => p.id === selectedRecurringTransaction
+                        );
+                        if (!pattern?.priceHistory?.length) {
+                          return (
+                            <EmptyState
+                              icon={TrendingUp}
+                              title={
+                                t.analytics?.noPriceHistory ||
+                                'No price history available'
+                              }
+                              className='h-full'
+                            />
+                          );
+                        }
+                        return (
+                          <div className='flex-1'>
+                            <p className='mb-2 text-sm font-medium'>
+                              {t.analytics?.priceHistory || 'Price history'}:{' '}
+                              {pattern.merchantName ||
+                                pattern.opposingIban ||
+                                'Unknown'}
+                            </p>
+                            <ResponsiveContainer
+                              width='100%'
+                              height='100%'
+                              minHeight={250}
+                            >
+                              <LineChart data={pattern.priceHistory}>
+                                <CartesianGrid
+                                  strokeDasharray='3 3'
+                                  className='stroke-muted'
+                                />
+                                <XAxis
+                                  dataKey='date'
+                                  tick={{
+                                    fill: 'hsl(var(--muted-foreground))',
+                                    fontSize: 11,
+                                  }}
+                                  tickFormatter={(value) => {
+                                    const date = new Date(value);
+                                    return `${date.getMonth() + 1}/${date.getFullYear().toString().slice(-2)}`;
+                                  }}
+                                />
+                                <YAxis
+                                  tick={{
+                                    fill: 'hsl(var(--muted-foreground))',
+                                    fontSize: 11,
+                                  }}
+                                  tickFormatter={(value) => `€${value}`}
+                                />
+                                <Tooltip
+                                  formatter={(value) => {
+                                    if (typeof value !== 'number') return null;
+                                    return [
+                                      <Currency key='value' amount={value} />,
+                                      t.transactions?.amount || 'Amount',
+                                    ];
+                                  }}
+                                  labelFormatter={(label) => {
+                                    const date = new Date(label);
+                                    return date.toLocaleDateString();
+                                  }}
+                                  contentStyle={{
+                                    backgroundColor: 'hsl(var(--card))',
+                                    border: '1px solid hsl(var(--border))',
+                                    borderRadius: '8px',
+                                  }}
+                                />
+                                <Line
+                                  type='monotone'
+                                  dataKey='amount'
+                                  stroke='hsl(var(--primary))'
+                                  strokeWidth={2}
+                                  dot={{
+                                    fill: 'hsl(var(--primary))',
+                                    r: 4,
+                                  }}
+                                  activeDot={{
+                                    r: 6,
+                                    fill: 'hsl(var(--primary))',
+                                  }}
+                                />
+                              </LineChart>
+                            </ResponsiveContainer>
+                          </div>
+                        );
+                      })()
+                    ) : (
+                      <EmptyState
+                        icon={TrendingUp}
+                        title={
+                          t.analytics?.selectRecurringTransaction ||
+                          'Select a transaction to view history'
+                        }
+                        className='h-full'
+                      />
+                    )}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <EmptyState
+                icon={RefreshCw}
+                title={
+                  t.analytics?.noRecurringTransactions ||
+                  'No recurring transactions with at least 6 recurrences'
+                }
+                className='py-8'
+              />
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Subscriptions Analysis */}
+      <div className=''>
+        <Card className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'>
+          <CardHeader>
+            <CardTitle className='text-base sm:text-lg'>
+              {t.analytics?.recurringPayments || 'Subscriptions'}
+            </CardTitle>
+            <CardDescription>
+              {t.analytics?.recurringTransactionsDescription ||
+                'Transactions with at least 6 recurrences'}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             {expensePatterns && expensePatterns.length > 0 ? (
@@ -1298,7 +1512,7 @@ export default function Analytics() {
                 icon={RefreshCw}
                 title={
                   t.analytics?.noRecurringPayments ||
-                  'No confirmed recurring payments yet'
+                  'No confirmed subscriptions yet'
                 }
                 description={
                   t.analytics?.confirmSubscriptions ||

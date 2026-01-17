@@ -49,7 +49,7 @@ export default function Help() {
       />
 
       {/* Features Overview */}
-      <div className='-mx-3 sm:mx-0'>
+      <div className=''>
         <Card
           className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'
           data-onboarding='help-features'
@@ -89,7 +89,7 @@ export default function Help() {
       </div>
 
       {/* Quick Start */}
-      <div className='-mx-3 sm:mx-0'>
+      <div className=''>
         <Card
           className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'
           data-onboarding='help-quickstart'
@@ -123,7 +123,7 @@ export default function Help() {
       </div>
 
       {/* FAQ */}
-      <div className='-mx-3 sm:mx-0'>
+      <div className=''>
         <Card
           className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'
           data-onboarding='help-faq'
@@ -149,7 +149,7 @@ export default function Help() {
       </div>
 
       {/* External Links */}
-      <div className='-mx-3 sm:mx-0'>
+      <div className=''>
         <Card
           className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'
           data-onboarding='help-external-links'

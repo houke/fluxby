@@ -129,7 +129,7 @@ describe('Analytics recurring patterns', () => {
         isConfirmed: true,
         isDismissed: false,
         isVariable: false,
-        transactionCount: 2,
+        transactionCount: 6, // At least 6 transactions required by filter
         profileId: 1,
         createdAt: new Date().toISOString(),
         // Price history from DB uses ABS(amount), so values are positive
@@ -150,7 +150,7 @@ describe('Analytics recurring patterns', () => {
         isConfirmed: true,
         isDismissed: false,
         isVariable: false,
-        transactionCount: 2,
+        transactionCount: 6, // At least 6 transactions required by filter
         profileId: 1,
         createdAt: new Date().toISOString(),
         // Price history from DB uses ABS(amount), so values are positive
@@ -172,22 +172,32 @@ describe('Analytics recurring patterns', () => {
     );
 
     // Wait for pattern merchant names to appear
-    const a = await screen.findByText('Service A');
-    expect(a).toBeTruthy();
+    const serviceAElements = await screen.findAllByText('Service A');
+    expect(serviceAElements.length).toBeGreaterThan(0);
 
-    // Find the pattern row/button for Service A and assert it has a red ↑ indicator
-    const serviceAButton = (await screen.findByText('Service A')).closest(
-      'button'
-    );
+    // The Subscriptions card shows price change indicators (↑/↓)
+    // Find the button that contains the ↑ indicator for Service A (price increased)
+    const allButtons = document.querySelectorAll('button');
+    let serviceAButton: Element | null = null;
+    let serviceBButton: Element | null = null;
+
+    allButtons.forEach((button) => {
+      const text = button.textContent || '';
+      if (text.includes('Service A') && text.includes('↑')) {
+        serviceAButton = button;
+      }
+      if (text.includes('Service B') && text.includes('↓')) {
+        serviceBButton = button;
+      }
+    });
+
+    // Assert Service A has price increase indicator
     expect(serviceAButton).toBeTruthy();
     const serviceAIndicator = serviceAButton?.querySelector('.text-rose-600');
     expect(serviceAIndicator).toBeTruthy();
     expect(serviceAIndicator?.textContent).toContain('↑');
 
-    // Find the pattern row/button for Service B and assert it has a green ↓ indicator
-    const serviceBButton = (await screen.findByText('Service B')).closest(
-      'button'
-    );
+    // Assert Service B has price decrease indicator
     expect(serviceBButton).toBeTruthy();
     const serviceBIndicator =
       serviceBButton?.querySelector('.text-emerald-600');

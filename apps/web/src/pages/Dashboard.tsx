@@ -538,7 +538,7 @@ export default function Dashboard() {
 
       {/* Stats Cards */}
       <div
-        className='-mx-3 grid grid-cols-2 gap-px bg-border sm:mx-0 sm:gap-4 sm:bg-transparent lg:grid-cols-4'
+        className='grid grid-cols-2 gap-px bg-border sm:gap-4 sm:bg-transparent lg:grid-cols-4'
         data-onboarding='dashboard-stats'
       >
         <div data-onboarding='stat-income' className='h-full'>
@@ -652,7 +652,7 @@ export default function Dashboard() {
       </Suspense>
 
       {/* Budget, Balance Forecast, and Subscriptions Widgets */}
-      <div className='-mx-3 sm:mx-0'>
+      <div>
         <div className='grid gap-px bg-border sm:gap-4 sm:bg-transparent md:grid-cols-2 lg:grid-cols-3'>
           {/* Budget Widget */}
           <Card
@@ -1066,7 +1066,7 @@ export default function Dashboard() {
       </div>
 
       {/* Recent Transactions & Top Accounts - Side by side on large screens */}
-      <div className='-mx-3 sm:mx-0'>
+      <div>
         <div className='grid grid-cols-1 gap-px bg-border sm:gap-6 sm:bg-transparent lg:grid-cols-2'>
           {/* Recent Transactions */}
           <Card

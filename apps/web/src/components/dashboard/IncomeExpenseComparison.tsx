@@ -12,6 +12,7 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import { ArrowLeftRight } from 'lucide-react';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 
 interface MonthlyData {
   month: string;
@@ -30,6 +31,12 @@ export function IncomeExpenseComparison({
   monthlyComparisonScrollRef,
   t,
 }: IncomeExpenseComparisonProps) {
+  const isMobile = useIsMobile();
+
+  // On mobile, show fewer months to fit bars in the card without scrolling
+  const mobileBarWidth = 35; // Width per month on mobile
+  const desktopBarWidth = 60; // Width per month on desktop
+
   return (
     <Card
       className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'
@@ -50,7 +57,9 @@ export function IncomeExpenseComparison({
           >
             <div
               style={{
-                width: `${Math.max(720, monthlyData.length * 60)}px`,
+                width: isMobile
+                  ? `${Math.max(280, monthlyData.length * mobileBarWidth)}px`
+                  : `${Math.max(720, monthlyData.length * desktopBarWidth)}px`,
                 minWidth: '100%',
                 height: '100%',
                 minHeight: '300px',
@@ -62,7 +71,7 @@ export function IncomeExpenseComparison({
                 minHeight={1}
                 minWidth={1}
               >
-                <BarChart data={monthlyData}>
+                <BarChart data={monthlyData} barGap={isMobile ? 1 : 4}>
                   <CartesianGrid
                     strokeDasharray='3 3'
                     vertical={false}
@@ -74,17 +83,24 @@ export function IncomeExpenseComparison({
                       const [, month] = value.split('-');
                       return t.common.monthsShort[parseInt(month) - 1];
                     }}
-                    tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                    tick={{
+                      fill: 'hsl(var(--muted-foreground))',
+                      fontSize: isMobile ? 10 : 12,
+                    }}
                     axisLine={false}
                     tickLine={false}
                   />
                   <YAxis
+                    width={isMobile ? 35 : 50}
                     tickFormatter={(value) =>
                       value >= 1000
-                        ? `€${(value / 1000).toFixed(value >= 10000 ? 0 : 1)}k`
+                        ? `€${(value / 1000).toFixed(0)}k`
                         : `€${Math.round(value)}`
                     }
-                    tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                    tick={{
+                      fill: 'hsl(var(--muted-foreground))',
+                      fontSize: isMobile ? 9 : 12,
+                    }}
                     axisLine={{ stroke: 'hsl(var(--border))' }}
                     tickLine={false}
                     domain={[
@@ -145,13 +161,14 @@ export function IncomeExpenseComparison({
                     }}
                     cursor={{ fill: 'hsl(var(--muted)/0.3)' }}
                   />
-                  <Legend />
+                  <Legend wrapperStyle={{ fontSize: isMobile ? 10 : 12 }} />
                   <Bar
                     dataKey='income'
                     name={t.dashboard.income}
                     fill='#10B981'
                     radius={[4, 4, 0, 0]}
                     activeBar={{ fill: '#047857' }}
+                    maxBarSize={isMobile ? 12 : 40}
                   />
                   <Bar
                     dataKey='expenses'
@@ -159,6 +176,7 @@ export function IncomeExpenseComparison({
                     fill='#F43F5E'
                     radius={[4, 4, 0, 0]}
                     activeBar={{ fill: '#B91C1C' }}
+                    maxBarSize={isMobile ? 12 : 40}
                   />
                 </BarChart>
               </ResponsiveContainer>

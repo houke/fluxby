@@ -635,7 +635,7 @@ export default function Budgets() {
       </Dialog>
 
       {/* Overall Progress */}
-      <div className='-mx-3 sm:mx-0'>
+      <div className=''>
         <Card className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'>
           <CardHeader>
             <CardTitle className='text-base sm:text-lg'>
@@ -685,7 +685,7 @@ export default function Budgets() {
       </div>
 
       {/* Filter Card */}
-      <div className='-mx-3 sm:mx-0'>
+      <div className=''>
         <Card
           className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'
           data-onboarding='budget-search'
@@ -739,7 +739,7 @@ export default function Budgets() {
       </div>
 
       {/* Budget List */}
-      <div className='-mx-3 sm:mx-0'>
+      <div className=''>
         <Card
           className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'
           data-onboarding='budget-list'

@@ -33,7 +33,7 @@ export function DataManagementSettings() {
   }, [dataNotice]);
 
   return (
-    <div className='-mx-3 sm:mx-0'>
+    <div className=''>
       <Card
         className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'
         data-onboarding='settings-data-management'
