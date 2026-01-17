@@ -1121,7 +1121,7 @@ export default function Analytics() {
                 {/* Recurring payments list with history */}
                 <div className='grid gap-4 lg:grid-cols-2'>
                   {/* List of recurring payments */}
-                  <div className='space-y-2'>
+                  <div className='max-h-[350px] space-y-2 overflow-y-auto'>
                     {recurringPayments.map((payment, index) => {
                       const key = payment.opposingIban
                         ? `${payment.opposingIban}|${payment.merchantName || ''}`
@@ -1310,7 +1310,7 @@ export default function Analytics() {
                 {/* Subscription list with price history */}
                 <div className='grid gap-4 lg:grid-cols-2'>
                   {/* List of subscriptions */}
-                  <div className='space-y-2'>
+                  <div className='max-h-[350px] space-y-2 overflow-y-auto'>
                     {expensePatterns.map((pattern) => (
                       <button
                         key={pattern.id}
