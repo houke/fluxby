@@ -3245,6 +3245,74 @@ export function createDataService(db: Database) {
       };
     },
 
+    /**
+     * Get suggested contacts - unique IBANs with transaction stats that are NOT in address book
+     * This is optimized to only query accounts not already in the address book
+     */
+    async getSuggestedContacts(limit: number = 100): Promise<
+      Array<{
+        iban: string;
+        name: string;
+        transactionCount: number;
+        totalAmount: number;
+        netAmount: number;
+      }>
+    > {
+      const pid = profileId();
+      if (!pid) return [];
+
+      // Fast query: Get unique IBANs NOT in address_book, grouped by IBAN + name
+      // Uses indexed columns and simple joins
+      const rows = await db.queryAsync<{
+        iban: string;
+        name: string;
+        transaction_count: number;
+        total_amount: number;
+        net_amount: number;
+      }>(
+        `
+        SELECT 
+          t.opposing_account_iban as iban,
+          COALESCE(t.merchant_name, t.opposing_account_name) as name,
+          COUNT(t.id) as transaction_count,
+          SUM(ABS(t.amount)) as total_amount,
+          SUM(t.amount) as net_amount
+        FROM transactions t
+        WHERE t.profile_id = ?
+          AND t.type != 'transfer'
+          AND t.opposing_account_iban IS NOT NULL
+          AND t.opposing_account_iban != ''
+          AND t.is_deleted = 0
+          AND t.opposing_account_iban NOT IN (
+            SELECT iban FROM accounts WHERE profile_id = ? AND is_deleted = 0
+          )
+          AND t.opposing_account_iban NOT IN (
+            SELECT iban FROM address_book WHERE profile_id = ? AND is_deleted = 0
+          )
+          AND t.opposing_account_iban NOT IN (
+            SELECT iban FROM contact_ibans ci
+            JOIN address_book ab ON ci.contact_id = ab.id
+            WHERE ab.profile_id = ? AND ab.is_deleted = 0
+          )
+          AND t.opposing_account_iban NOT IN (
+            SELECT iban FROM shared_ibans WHERE is_deleted = 0
+          )
+        GROUP BY t.opposing_account_iban, COALESCE(t.merchant_name, t.opposing_account_name)
+        ORDER BY total_amount DESC
+        LIMIT ?
+        `,
+        [pid, pid, pid, pid, limit]
+      );
+
+      return rows.map((row) => ({
+        iban: row.iban,
+        name: row.name || row.iban,
+        transactionCount: row.transaction_count,
+        totalAmount: row.total_amount,
+        netAmount: row.net_amount,
+      }));
+    },
+
     // ============= Shared IBANs / Payment Provider Methods =============
     async getSharedIbans(): Promise<
       { id: string; iban: string; provider_name: string; created_at: number }[]
@@ -4527,6 +4595,7 @@ export function createDataService(db: Database) {
      * - At least MIN_TRANSACTIONS_FOR_PATTERN transactions (3)
      * - Spans at least MIN_MONTHS_FOR_SUBSCRIPTION months (3)
      * - Consistent interval between transactions (±3 days tolerance)
+     * - Only looks at transactions from the last 12 months
      */
     async detectRecurringPatterns(): Promise<{
       detected: number;
@@ -4538,11 +4607,12 @@ export function createDataService(db: Database) {
       const now = Date.now();
       const MIN_MONTHS_SPAN_DAYS = 60; // ~2 months minimum span to ensure 3+ months of history
 
-      // Only analyze transactions from the last 6 months for pattern detection
+      // Only analyze transactions from the last 12 months for pattern detection
       // This improves performance and focuses on recent recurring patterns
-      const sixMonthsAgo = new Date();
-      sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
-      const sixMonthsAgoStr = sixMonthsAgo.toISOString().split('T')[0];
+      // Anything older than 12 months is ignored
+      const twelveMonthsAgo = new Date();
+      twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 12);
+      const twelveMonthsAgoStr = twelveMonthsAgo.toISOString().split('T')[0];
 
       // Get all transactions grouped by opposing_account_iban + merchant_name
       const groups = await db.queryAsync<{
@@ -4567,7 +4637,7 @@ export function createDataService(db: Database) {
          GROUP BY opposing_account_iban, LOWER(TRIM(COALESCE(merchant_name, opposing_account_name)))
          HAVING tx_count >= ?
          ORDER BY tx_count DESC`,
-        [pid, sixMonthsAgoStr, MIN_TRANSACTIONS_FOR_PATTERN]
+        [pid, twelveMonthsAgoStr, MIN_TRANSACTIONS_FOR_PATTERN]
       );
 
       let detected = 0;
@@ -4801,17 +4871,17 @@ export function createDataService(db: Database) {
 
     /**
      * Get all recurring patterns for the current profile
-     * Filters out patterns where the last transaction was more than 6 months ago
+     * Filters out patterns where the last transaction was more than 12 months ago
      * (inactive patterns that are likely no longer subscriptions)
      */
     async getRecurringPatterns(): Promise<RecurringPattern[]> {
       const pid = profileId();
       if (!pid) return [];
 
-      // Calculate 6 months ago date for filtering
-      const sixMonthsAgo = new Date();
-      sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
-      const sixMonthsAgoStr = sixMonthsAgo.toISOString().split('T')[0];
+      // Calculate 12 months ago date for filtering
+      const twelveMonthsAgo = new Date();
+      twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 12);
+      const twelveMonthsAgoStr = twelveMonthsAgo.toISOString().split('T')[0];
 
       const rows = await db.queryAsync<{
         id: string;
@@ -4834,7 +4904,7 @@ export function createDataService(db: Database) {
          WHERE profile_id = ? AND is_deleted = 0 AND is_dismissed = 0
            AND (last_date >= ? OR is_confirmed = 1)
          ORDER BY next_expected_date ASC`,
-        [pid, sixMonthsAgoStr]
+        [pid, twelveMonthsAgoStr]
       );
 
       return rows.map((row) => ({
@@ -4975,10 +5045,10 @@ export function createDataService(db: Database) {
         };
       }
 
-      // Calculate 6 months ago date for filtering - matches getRecurringPatterns
-      const sixMonthsAgo = new Date();
-      sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
-      const sixMonthsAgoStr = sixMonthsAgo.toISOString().split('T')[0];
+      // Calculate 12 months ago date for filtering - matches getRecurringPatterns
+      const twelveMonthsAgo = new Date();
+      twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 12);
+      const twelveMonthsAgoStr = twelveMonthsAgo.toISOString().split('T')[0];
 
       const rows = await db.queryAsync<{
         id: string;
@@ -4992,7 +5062,7 @@ export function createDataService(db: Database) {
          FROM recurring_patterns
          WHERE profile_id = ? AND is_deleted = 0 AND is_dismissed = 0
            AND (last_date >= ? OR is_confirmed = 1)`,
-        [pid, sixMonthsAgoStr]
+        [pid, twelveMonthsAgoStr]
       );
 
       // Calculate monthly equivalent for each pattern
@@ -5071,6 +5141,7 @@ export function createDataService(db: Database) {
 
     /**
      * Get calendar entries for recurring patterns in a date range
+     * Only includes patterns with activity in the last 12 months
      */
     async getRecurringCalendar(
       startDate: string,
@@ -5078,6 +5149,11 @@ export function createDataService(db: Database) {
     ): Promise<RecurringCalendarEntry[]> {
       const pid = profileId();
       if (!pid) return [];
+
+      // Calculate 12 months ago date for filtering
+      const twelveMonthsAgo = new Date();
+      twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 12);
+      const twelveMonthsAgoStr = twelveMonthsAgo.toISOString().split('T')[0];
 
       const patterns = await db.queryAsync<{
         id: string;
@@ -5089,8 +5165,9 @@ export function createDataService(db: Database) {
       }>(
         `SELECT id, merchant_name, pattern_type, avg_amount, last_date, is_confirmed
          FROM recurring_patterns
-         WHERE profile_id = ? AND is_deleted = 0 AND is_dismissed = 0 AND is_active = 1`,
-        [pid]
+         WHERE profile_id = ? AND is_deleted = 0 AND is_dismissed = 0 AND is_active = 1
+           AND (last_date >= ? OR is_confirmed = 1)`,
+        [pid, twelveMonthsAgoStr]
       );
 
       const entries: RecurringCalendarEntry[] = [];

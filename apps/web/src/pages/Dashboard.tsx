@@ -471,10 +471,6 @@ export default function Dashboard() {
     }
   }, [monthlyData]);
 
-  if (isLoading) {
-    return <DashboardSkeleton />;
-  }
-
   // Get accounts by type
   const _checkingAccount = accounts?.find((a) => a.type === 'checking');
   const _savingsAccount = accounts?.find((a) => a.type === 'savings');
@@ -487,6 +483,37 @@ export default function Dashboard() {
     if (hour >= 18 && hour < 23) return t.dashboard.greetings.evening;
     return t.dashboard.greetings.night;
   };
+
+  // Show skeleton only for initial load, not when switching dates
+  const isInitialLoading = isLoading && !stats;
+
+  if (isInitialLoading) {
+    return (
+      <div className='space-y-0 sm:space-y-6'>
+        <PageHeader
+          title={
+            <>
+              {getGreeting()}{' '}
+              {user?.name ?? <Skeleton className='inline-block h-6 w-24' />}{' '}
+              <span aria-hidden>👋</span>
+            </>
+          }
+          subtitle={t.dashboard.subtitle}
+          dataOnboarding='dashboard-greeting'
+          actions={
+            <Suspense fallback={<Skeleton className='h-12 w-48' />}>
+              <AccountBalanceCards
+                accounts={accounts || []}
+                accountScrollIndex={accountScrollIndex}
+                setAccountScrollIndex={setAccountScrollIndex}
+              />
+            </Suspense>
+          }
+        />
+        <DashboardSkeleton />
+      </div>
+    );
+  }
 
   return (
     <div className='space-y-0 sm:space-y-6'>
@@ -1255,8 +1282,7 @@ export default function Dashboard() {
 
 function DashboardSkeleton() {
   return (
-    <div className='space-y-6'>
-      <Skeleton className='h-9 w-48' />
+    <>
       <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-4'>
         {[...Array(4)].map((_, i) => (
           <Card key={i}>
@@ -1291,6 +1317,6 @@ function DashboardSkeleton() {
           </CardContent>
         </Card>
       </div>
-    </div>
+    </>
   );
 }

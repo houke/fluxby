@@ -3615,7 +3615,7 @@ export default function Transactions() {
                           <th className='pb-2 text-right'>
                             {t.transactions.amount}
                           </th>
-                          <th className='w-24 pb-2'>
+                          <th className='w-24 pb-2 text-right'>
                             {t.budgets?.category || 'Categorie'}
                           </th>
                         </tr>
@@ -3674,7 +3674,7 @@ export default function Transactions() {
                             >
                               <Currency amount={rt.amount} />
                             </td>
-                            <td className='py-2'>
+                            <td className='py-2 text-right'>
                               {rt.categoryId ? (
                                 <span className='rounded bg-muted px-1.5 py-0.5 text-xs'>
                                   {categories?.find(

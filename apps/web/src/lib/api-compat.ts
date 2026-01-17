@@ -502,6 +502,11 @@ export const api = {
     return ds.getTopAccounts(limit, type, startDate, endDate);
   },
 
+  getSuggestedContacts: async (limit?: number) => {
+    const ds = getDataService();
+    return ds.getSuggestedContacts(limit);
+  },
+
   // ============= Address Book =============
   getAddressBook: async () => {
     const ds = getDataService();

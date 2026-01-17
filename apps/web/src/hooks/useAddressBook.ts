@@ -59,15 +59,22 @@ export function useAddressBook(options: { enabled?: boolean } = {}) {
     staleTime: 5 * 60 * 1000, // 5 minutes - cleanup rules rarely change
   });
 
-  const { data: topAccountsData, isLoading: loadingTopAccounts } = useQuery<{
-    accounts: TopAccount[];
-  }>({
-    queryKey: ['topAccounts', activeProfileId, 'all'],
-    queryFn: () =>
-      api.getTopAccounts(100, 'all') as Promise<{ accounts: TopAccount[] }>,
-    enabled: !!activeProfileId && (options.enabled ?? true),
-    staleTime: 2 * 60 * 1000, // 2 minutes
-  });
+  // Use optimized getSuggestedContacts that only queries non-addressbook IBANs
+  const { data: suggestedContactsData, isLoading: loadingTopAccounts } =
+    useQuery<
+      Array<{
+        iban: string;
+        name: string;
+        transactionCount: number;
+        totalAmount: number;
+        netAmount: number;
+      }>
+    >({
+      queryKey: ['suggestedContacts', activeProfileId],
+      queryFn: () => api.getSuggestedContacts(100),
+      enabled: !!activeProfileId && (options.enabled ?? true),
+      staleTime: 2 * 60 * 1000, // 2 minutes
+    });
 
   const { data: sharedIbans = [] } = useQuery<SharedIban[]>({
     queryKey: ['sharedIbans', activeProfileId],
@@ -76,13 +83,14 @@ export function useAddressBook(options: { enabled?: boolean } = {}) {
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
 
+  // Filter out shared IBANs from suggested contacts
   const suggestedContacts = useMemo(() => {
-    if (!topAccountsData?.accounts) return [];
+    if (!suggestedContactsData) return [];
     const sharedIbanSet = new Set(sharedIbans.map((s) => s.iban));
-    return topAccountsData.accounts.filter(
-      (account) => !account.isInAddressBook && !sharedIbanSet.has(account.iban)
+    return suggestedContactsData.filter(
+      (account) => !sharedIbanSet.has(account.iban)
     );
-  }, [topAccountsData, sharedIbans]);
+  }, [suggestedContactsData, sharedIbans]);
 
   const createContactMutation = useMutation({
     mutationFn: api.createAddressBookEntry,
@@ -90,6 +98,9 @@ export function useAddressBook(options: { enabled?: boolean } = {}) {
       await Promise.all([
         queryClient.invalidateQueries({
           queryKey: ['addressbook', activeProfileId],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ['suggestedContacts', activeProfileId],
         }),
         queryClient.invalidateQueries({
           queryKey: ['topAccounts', activeProfileId],
@@ -144,6 +155,9 @@ export function useAddressBook(options: { enabled?: boolean } = {}) {
         queryKey: ['addressbook', activeProfileId],
       });
       queryClient.invalidateQueries({
+        queryKey: ['suggestedContacts', activeProfileId],
+      });
+      queryClient.invalidateQueries({
         queryKey: ['topAccounts', activeProfileId],
         exact: false,
       });
@@ -161,6 +175,9 @@ export function useAddressBook(options: { enabled?: boolean } = {}) {
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ['addressbook', activeProfileId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['suggestedContacts', activeProfileId],
       });
       queryClient.invalidateQueries({
         queryKey: ['topAccounts', activeProfileId],

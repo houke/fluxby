@@ -198,12 +198,8 @@ export default function Analytics() {
     return () => clearTimeout(timer);
   }, [monthlyData]);
 
-  const isLoading =
-    monthlyLoading || expensesLoading || incomeLoading || recurringLoading;
-
-  if (isLoading) {
-    return <AnalyticsSkeleton />;
-  }
+  // Only show skeleton on initial load, not when switching dates
+  const isInitialLoading = monthlyLoading && !monthlyData;
 
   const formatYearRange = () => {
     if (startYear === endYear) {
@@ -216,6 +212,23 @@ export default function Analytics() {
     ...m,
     savings: m.income - m.expenses,
   }));
+
+  // Always show header, show skeleton for content on initial load only
+  if (isInitialLoading) {
+    return (
+      <div className='space-y-6'>
+        <PageHeader
+          title={t.analytics.title}
+          subtitle={t.analytics.subtitle}
+          dataOnboarding='analytics-greeting'
+          actions={
+            <span className='text-muted-foreground'>{formatYearRange()}</span>
+          }
+        />
+        <AnalyticsSkeleton />
+      </div>
+    );
+  }
 
   return (
     <div className='space-y-6'>
@@ -1312,7 +1325,7 @@ export default function Analytics() {
 
 function AnalyticsSkeleton() {
   return (
-    <div className='space-y-6'>
+    <>
       <Card>
         <CardContent className='p-6'>
           <Skeleton className='h-[300px]' />
@@ -1323,6 +1336,6 @@ function AnalyticsSkeleton() {
           <Skeleton className='h-[300px]' />
         </CardContent>
       </Card>
-    </div>
+    </>
   );
 }
