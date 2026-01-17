@@ -3453,8 +3453,16 @@ export function createDataService(db: Database) {
         // This IBAN is considered 'shared' if it has ANY existing resolutions + remaining merchants
         const isPartiallyResolved = resolvedEntries.length > 0;
 
-        // Only include if there are multiple unresolved merchants
-        if (merchants.length > 1) {
+        // Include if:
+        // 1. Multiple unresolved merchants, OR
+        // 2. Explicitly marked as shared (in shared_ibans table), OR
+        // 3. Has at least 1 unresolved merchant AND is partially resolved
+        const shouldInclude =
+          merchants.length > 1 ||
+          !!markedShared ||
+          (merchants.length >= 1 && isPartiallyResolved);
+
+        if (shouldInclude && merchants.length > 0) {
           result.push({
             iban: si.iban,
             merchantCount: merchants.length,
