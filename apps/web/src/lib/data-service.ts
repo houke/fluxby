@@ -3366,8 +3366,8 @@ export function createDataService(db: Database) {
         GROUP BY opposing_account_iban
         HAVING name_count > 1 
           OR opposing_account_iban IN (SELECT iban FROM shared_ibans WHERE is_deleted = 0)
-          OR opposing_account_iban IN (SELECT iban FROM address_book WHERE original_name IS NOT NULL AND profile_id = ? AND is_deleted = 0)`,
-        [pid, pid, pid]
+          OR opposing_account_iban IN (SELECT iban FROM contact_ibans WHERE is_deleted = 0)`,
+        [pid, pid]
       )) as Array<{ iban: string; name_count: number }>;
 
       console.log(
@@ -3428,75 +3428,72 @@ export function createDataService(db: Database) {
       }> = [];
 
       for (const si of sharedIbans) {
-        // Get address book entries for this IBAN (check both address_book.iban and contact_ibans)
-        const resolvedEntries = (await db.queryAsync(
-          `SELECT DISTINCT ab.name, ab.original_name 
-           FROM address_book ab
-           LEFT JOIN contact_ibans ci ON ci.contact_id = ab.id AND ci.iban = ?
-           WHERE ab.profile_id = ? AND ab.is_deleted = 0 
-             AND (ab.iban = ? OR ci.iban IS NOT NULL)`,
-          [si.iban, pid, si.iban]
-        )) as Array<{ name: string; original_name: string | null }>;
+        try {
+          // Get address book entries for this IBAN (check both address_book.iban and contact_ibans)
+          const resolvedEntries = (await db.queryAsync(
+            `SELECT DISTINCT ab.name, ab.original_name 
+             FROM address_book ab
+             LEFT JOIN contact_ibans ci ON ci.contact_id = ab.id AND ci.iban = ?
+             WHERE ab.profile_id = ? AND ab.is_deleted = 0 
+               AND (ab.iban = ? OR ci.iban IS NOT NULL)`,
+            [si.iban, pid, si.iban]
+          )) as Array<{ name: string; original_name: string | null }>;
 
-        // Check if it's marked as shared
-        const markedShared = (await db.queryOneAsync(
-          'SELECT id, provider_name FROM shared_ibans WHERE iban = ? AND is_deleted = 0',
-          [si.iban]
-        )) as { id: string; provider_name: string } | null;
+          // Check if it's marked as shared
+          const markedShared = (await db.queryOneAsync(
+            'SELECT id, provider_name FROM shared_ibans WHERE iban = ? AND is_deleted = 0',
+            [si.iban]
+          )) as { id: string; provider_name: string } | null;
 
-        // Get all merchants for this IBAN that are not yet resolved
-        const merchants = (await db.queryAsync(
-          `SELECT 
-            opposing_account_name as name,
-            COUNT(*) as count
-          FROM transactions
-          WHERE opposing_account_iban = ?
-            AND profile_id = ?
-            AND address_book_id IS NULL
-          GROUP BY opposing_account_name
-          ORDER BY count DESC`,
-          [si.iban, pid]
-        )) as Array<{ name: string; count: number }>;
+          // Get all merchants for this IBAN that are not yet resolved
+          const merchants = (await db.queryAsync(
+            `SELECT 
+              opposing_account_name as name,
+              COUNT(*) as count
+            FROM transactions
+            WHERE opposing_account_iban = ?
+              AND profile_id = ?
+              AND address_book_id IS NULL
+            GROUP BY opposing_account_name
+            ORDER BY count DESC`,
+            [si.iban, pid]
+          )) as Array<{ name: string; count: number }>;
 
-        // Detect payment processor
-        const merchantNames = merchants.map((m) => m.name);
-        const detectedProviderName = detectProvider(si.iban, merchantNames);
+          // Detect payment processor
+          const merchantNames = merchants.map((m) => m.name);
+          const detectedProviderName = detectProvider(si.iban, merchantNames);
 
-        // This IBAN is considered 'shared' if it has ANY existing resolutions + remaining merchants
-        const isPartiallyResolved = resolvedEntries.length > 0;
+          // This IBAN is considered 'shared' if it has ANY existing resolutions + remaining merchants
+          const isPartiallyResolved = resolvedEntries.length > 0;
 
-        // Include if:
-        // 1. Multiple unresolved merchants, OR
-        // 2. Explicitly marked as shared (in shared_ibans table), OR
-        // 3. Has at least 1 unresolved merchant AND is partially resolved
-        const shouldInclude =
-          merchants.length > 1 ||
-          !!markedShared ||
-          (merchants.length >= 1 && isPartiallyResolved);
+          // Include if:
+          // 1. Multiple unresolved merchants, OR
+          // 2. Explicitly marked as shared (in shared_ibans table), OR
+          // 3. Has at least 1 unresolved merchant AND is partially resolved
+          const shouldInclude =
+            merchants.length > 1 ||
+            !!markedShared ||
+            (merchants.length >= 1 && isPartiallyResolved);
 
-        if (shouldInclude && merchants.length > 0) {
-          result.push({
-            iban: si.iban,
-            merchantCount: merchants.length,
-            merchants: merchants.map((m) => ({
-              name: m.name,
-              transactionCount: m.count,
-            })),
-            inAddressBook: false,
-            addressBookId: null,
-            isMarkedShared: !!markedShared,
-            isPartiallyResolved,
-            providerName: markedShared?.provider_name || null,
-            isKnownProvider: !!detectedProviderName,
-            knownProviderName: detectedProviderName,
-          });
-        } else {
-          console.log('[SharedIBANs] Excluding IBAN:', si.iban, {
-            shouldInclude,
-            merchantsLength: merchants.length,
-            markedShared: !!markedShared,
-            isPartiallyResolved,
-          });
+          if (shouldInclude && merchants.length > 0) {
+            result.push({
+              iban: si.iban,
+              merchantCount: merchants.length,
+              merchants: merchants.map((m) => ({
+                name: m.name,
+                transactionCount: m.count,
+              })),
+              inAddressBook: false,
+              addressBookId: null,
+              isMarkedShared: !!markedShared,
+              isPartiallyResolved,
+              providerName: markedShared?.provider_name || null,
+              isKnownProvider: !!detectedProviderName,
+              knownProviderName: detectedProviderName,
+            });
+          }
+        } catch (err) {
+          console.error('[SharedIBANs] Error processing IBAN:', si.iban, err);
         }
       }
 
@@ -4636,6 +4633,31 @@ export function createDataService(db: Database) {
       const MIN_MONTHS_SPAN_DAYS = 60; // ~2 months minimum span to ensure 3+ months of history
       const AMOUNT_CLUSTERING_THRESHOLD = 0.15; // 15% - group amounts within this threshold
 
+      // Pre-load category rules to check if a pattern should be excluded
+      // We load these early so we can skip patterns that would be immediately dismissed
+      const categoryRules = await db.queryAsync<{ pattern: string }>(
+        `SELECT LOWER(pattern) as pattern FROM category_rules 
+         WHERE profile_id = ? AND is_deleted = 0`,
+        [pid]
+      );
+      const rulePatterns = categoryRules.map((r) => r.pattern.toLowerCase());
+
+      // Helper function to check if a merchant name matches a category rule
+      const matchesCategoryRule = (merchantName: string | null): boolean => {
+        if (!merchantName) return false;
+        const name = merchantName.toLowerCase();
+        return rulePatterns.some((rulePattern) => {
+          // Skip very short rules that would match too broadly
+          if (rulePattern.length < 4) return false;
+          // Check for exact match or the merchant name starts/ends with the rule
+          return (
+            name === rulePattern ||
+            name.startsWith(rulePattern) ||
+            name.endsWith(rulePattern)
+          );
+        });
+      };
+
       // Only analyze transactions from the last 12 months for pattern detection
       // This improves performance and focuses on recent recurring patterns
       // Anything older than 12 months is ignored
@@ -4913,6 +4935,11 @@ export function createDataService(db: Database) {
               );
               updated++;
             } else {
+              // Skip patterns that match category rules - don't count them
+              if (matchesCategoryRule(group.merchant_name)) {
+                continue;
+              }
+
               // Create new pattern
               const id = crypto.randomUUID();
               await db.runAsync(
@@ -4943,66 +4970,6 @@ export function createDataService(db: Database) {
           }
         }); // End of batch transaction
       } // End of batch loop
-
-      // Cleanup: Remove patterns that match category rules
-      // If a pattern's merchant_name matches a category rule, it's a known categorized
-      // expense (rent, utilities, etc.) that doesn't need subscription tracking
-      // This is done in a separate transaction to keep transactions short
-      await db.transactionAsync(async () => {
-        const categoryRules = await db.queryAsync<{ pattern: string }>(
-          `SELECT LOWER(pattern) as pattern FROM category_rules 
-           WHERE profile_id = ? AND is_deleted = 0`,
-          [pid]
-        );
-
-        if (categoryRules.length > 0) {
-          // Get all non-confirmed patterns
-          const patterns = await db.queryAsync<{
-            id: string;
-            merchant_name: string | null;
-          }>(
-            `SELECT id, LOWER(TRIM(merchant_name)) as merchant_name 
-             FROM recurring_patterns 
-             WHERE profile_id = ? AND is_deleted = 0 AND is_confirmed = 0`,
-            [pid]
-          );
-
-          // Build a set of pattern matches for faster lookup
-          const rulePatterns = categoryRules.map((r) =>
-            r.pattern.toLowerCase()
-          );
-
-          for (const pattern of patterns) {
-            if (!pattern.merchant_name) continue;
-
-            // Check if this pattern's merchant name matches any category rule
-            // Only dismiss if the rule is reasonably specific (at least 4 chars)
-            // and is a substantial match (not just a substring of the merchant)
-            const merchantName = pattern.merchant_name;
-            const matchesRule = rulePatterns.some((rulePattern) => {
-              // Skip very short rules that would match too broadly
-              if (rulePattern.length < 4) return false;
-
-              // Check for exact match or the merchant name starts/ends with the rule
-              // This is more specific than just "includes"
-              return (
-                merchantName === rulePattern ||
-                merchantName.startsWith(rulePattern) ||
-                merchantName.endsWith(rulePattern)
-              );
-            });
-
-            if (matchesRule) {
-              // Mark as dismissed - it's a categorized expense, not a subscription
-              await db.runAsync(
-                `UPDATE recurring_patterns SET is_dismissed = 1, updated_at = ?
-                 WHERE id = ?`,
-                [now, pattern.id]
-              );
-            }
-          }
-        }
-      });
 
       return { detected, updated };
     },
