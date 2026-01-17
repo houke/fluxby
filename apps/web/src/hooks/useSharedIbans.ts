@@ -137,16 +137,20 @@ export function useSharedIbans() {
       await Promise.all([
         queryClient.invalidateQueries({
           queryKey: ['addressbook', activeProfileId],
+          refetchType: 'active',
         }),
         queryClient.invalidateQueries({
           queryKey: ['topAccounts', activeProfileId],
           exact: false,
+          refetchType: 'active',
         }),
         queryClient.invalidateQueries({
           queryKey: ['sharedIbans', activeProfileId],
+          refetchType: 'active',
         }),
         queryClient.invalidateQueries({
           queryKey: ['transactions', activeProfileId],
+          refetchType: 'active',
         }),
       ]);
       toast.success(

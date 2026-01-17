@@ -1111,7 +1111,7 @@ export default function Analytics() {
                 {/* Recurring transactions list with history */}
                 <div className='grid gap-4 lg:grid-cols-2'>
                   {/* List of recurring transactions */}
-                  <div className='max-h-[400px] space-y-2 overflow-y-auto'>
+                  <div className='space-y-2'>
                     {recurringTransactionPatterns.map((pattern) => {
                       // Calculate total from price history if available
                       const totalAmount = pattern.priceHistory?.length

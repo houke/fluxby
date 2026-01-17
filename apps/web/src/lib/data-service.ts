@@ -3419,11 +3419,14 @@ export function createDataService(db: Database) {
       }> = [];
 
       for (const si of sharedIbans) {
-        // Get address book entries for this IBAN
+        // Get address book entries for this IBAN (check both address_book.iban and contact_ibans)
         const resolvedEntries = (await db.queryAsync(
-          `SELECT name, original_name FROM address_book 
-           WHERE profile_id = ? AND iban = ? AND is_deleted = 0`,
-          [pid, si.iban]
+          `SELECT DISTINCT ab.name, ab.original_name 
+           FROM address_book ab
+           LEFT JOIN contact_ibans ci ON ci.contact_id = ab.id AND ci.iban = ?
+           WHERE ab.profile_id = ? AND ab.is_deleted = 0 
+             AND (ab.iban = ? OR ci.iban IS NOT NULL)`,
+          [si.iban, pid, si.iban]
         )) as Array<{ name: string; original_name: string | null }>;
 
         // Check if it's marked as shared
