@@ -4617,7 +4617,7 @@ export function createDataService(db: Database) {
      * then analyzes intervals to classify patterns.
      *
      * Requirements for a valid subscription:
-     * - At least MIN_TRANSACTIONS_FOR_PATTERN transactions (3)
+     * - At least MIN_TRANSACTIONS_FOR_PATTERN transactions (6)
      * - Spans at least MIN_MONTHS_FOR_SUBSCRIPTION months (3)
      * - Consistent interval between transactions (±3 days tolerance)
      * - Only looks at transactions from the last 12 months
@@ -5609,6 +5609,116 @@ export function createDataService(db: Database) {
       );
 
       return result.changes || 0;
+    },
+
+    // ============= Subscription Alert Dismissals =============
+
+    /**
+     * Get all dismissed alerts for the current profile
+     * Returns a map of pattern_id -> dismissed alert types
+     */
+    async getDismissedAlerts(): Promise<
+      Map<string, Array<{ type: string; dismissedAmount?: number }>>
+    > {
+      const pid = profileId();
+      if (!pid) return new Map();
+
+      const rows = await db.queryAsync<{
+        pattern_id: string;
+        alert_type: string;
+        dismissed_amount: number | null;
+      }>(
+        `SELECT pattern_id, alert_type, dismissed_amount
+         FROM subscription_dismissed_alerts
+         WHERE profile_id = ?`,
+        [pid]
+      );
+
+      const result = new Map<
+        string,
+        Array<{ type: string; dismissedAmount?: number }>
+      >();
+      for (const row of rows) {
+        const existing = result.get(row.pattern_id) || [];
+        existing.push({
+          type: row.alert_type,
+          dismissedAmount:
+            row.dismissed_amount !== null ? row.dismissed_amount : undefined,
+        });
+        result.set(row.pattern_id, existing);
+      }
+
+      return result;
+    },
+
+    /**
+     * Dismiss an alert for a subscription pattern
+     * For price_change alerts, stores the dismissed amount so new price changes can still alert
+     */
+    async dismissSubscriptionAlert(
+      patternId: string,
+      alertType: 'price_change' | 'missed_payment' | 'stale',
+      dismissedAmount?: number
+    ): Promise<void> {
+      const pid = profileId();
+      if (!pid) throw new Error('No active profile');
+
+      const now = Date.now();
+      const id = crypto.randomUUID();
+
+      // Use INSERT OR REPLACE to handle re-dismissing the same alert type
+      await db.runAsync(
+        `INSERT OR REPLACE INTO subscription_dismissed_alerts
+         (id, pattern_id, alert_type, dismissed_at, dismissed_amount, profile_id)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        [id, patternId, alertType, now, dismissedAmount ?? null, pid]
+      );
+    },
+
+    /**
+     * Accept a price change alert (update the subscription amount and dismiss the alert)
+     * This updates the pattern's avg_amount and dismisses the price_change alert
+     */
+    async acceptPriceChange(
+      patternId: string,
+      newAmount: number
+    ): Promise<void> {
+      const pid = profileId();
+      if (!pid) throw new Error('No active profile');
+
+      const now = Date.now();
+
+      await db.transactionAsync(async () => {
+        // Update the pattern's average amount
+        await db.runAsync(
+          `UPDATE recurring_patterns SET avg_amount = ?, updated_at = ?
+           WHERE id = ? AND profile_id = ?`,
+          [newAmount, now, patternId, pid]
+        );
+
+        // Dismiss the price change alert at the new amount
+        const id = crypto.randomUUID();
+        await db.runAsync(
+          `INSERT OR REPLACE INTO subscription_dismissed_alerts
+           (id, pattern_id, alert_type, dismissed_at, dismissed_amount, profile_id)
+           VALUES (?, ?, 'price_change', ?, ?, ?)`,
+          [id, patternId, now, newAmount, pid]
+        );
+      });
+    },
+
+    /**
+     * Clear all dismissed alerts for a pattern (e.g., when deleting the subscription)
+     */
+    async clearDismissedAlertsForPattern(patternId: string): Promise<void> {
+      const pid = profileId();
+      if (!pid) return;
+
+      await db.runAsync(
+        `DELETE FROM subscription_dismissed_alerts
+         WHERE pattern_id = ? AND profile_id = ?`,
+        [patternId, pid]
+      );
     },
 
     // Helper to link transactions to address book entries

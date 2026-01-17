@@ -531,6 +531,7 @@ export const en: TranslationKeys = {
     priceUpdated: 'Subscription amount updated',
     updateAmount: 'Update subscription amount',
     dismissAlert: 'Dismiss alert',
+    alertDismissed: 'Alert dismissed',
     missedPayment: 'Missed payment',
     missedPaymentDescription: 'Expected date has passed',
     newDetected: 'Newly detected',

@@ -52,8 +52,8 @@ describe('Recurring Pattern Constants', () => {
   });
 
   describe('MIN_TRANSACTIONS_FOR_PATTERN', () => {
-    it('requires at least 3 transactions for pattern detection', () => {
-      expect(MIN_TRANSACTIONS_FOR_PATTERN).toBe(3);
+    it('requires at least 6 transactions for pattern detection', () => {
+      expect(MIN_TRANSACTIONS_FOR_PATTERN).toBe(6);
     });
   });
 

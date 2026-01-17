@@ -385,6 +385,31 @@ export const api = {
     return ds.resetDismissedPatterns();
   },
 
+  // Subscription alert dismissals
+  getDismissedAlerts: async () => {
+    const ds = getDataService();
+    return ds.getDismissedAlerts();
+  },
+
+  dismissSubscriptionAlert: async (
+    patternId: string,
+    alertType: 'price_change' | 'missed_payment' | 'stale',
+    dismissedAmount?: number
+  ) => {
+    const ds = getDataService();
+    await ds.dismissSubscriptionAlert(patternId, alertType, dismissedAmount);
+  },
+
+  acceptPriceChange: async (patternId: string, newAmount: number) => {
+    const ds = getDataService();
+    await ds.acceptPriceChange(patternId, newAmount);
+  },
+
+  clearDismissedAlertsForPattern: async (patternId: string) => {
+    const ds = getDataService();
+    await ds.clearDismissedAlertsForPattern(patternId);
+  },
+
   updateRecurringPattern: async (
     id: string,
     updates: { merchantName?: string; patternType?: PatternType }

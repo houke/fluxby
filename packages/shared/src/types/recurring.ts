@@ -80,11 +80,11 @@ export const DATE_TOLERANCE_DAYS = 12;
 /**
  * Minimum number of transactions required for pattern detection
  */
-export const MIN_TRANSACTIONS_FOR_PATTERN = 3;
+export const MIN_TRANSACTIONS_FOR_PATTERN = 6;
 
 /**
  * Minimum number of months a pattern must span to be considered a subscription
- * For monthly patterns, this means at least 3 transactions over ~3 months
+ * For monthly patterns, this means at least 6 transactions over ~6 months
  */
 export const MIN_MONTHS_FOR_SUBSCRIPTION = 3;
 

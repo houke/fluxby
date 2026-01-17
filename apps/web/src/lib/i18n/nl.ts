@@ -466,6 +466,7 @@ export interface TranslationKeys {
     priceUpdated: string;
     updateAmount: string;
     dismissAlert: string;
+    alertDismissed: string;
     missedPayment: string;
     missedPaymentDescription: string;
     newDetected: string;
@@ -1818,6 +1819,7 @@ export const nl: TranslationKeys = {
     priceUpdated: 'Abonnementsbedrag bijgewerkt',
     updateAmount: 'Abonnementsbedrag bijwerken',
     dismissAlert: 'Melding negeren',
+    alertDismissed: 'Melding genegeerd',
     missedPayment: 'Gemiste betaling',
     missedPaymentDescription: 'Verwachte datum is verstreken',
     newDetected: 'Nieuw gedetecteerd',

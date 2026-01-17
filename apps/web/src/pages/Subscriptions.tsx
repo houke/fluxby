@@ -111,15 +111,6 @@ export default function Subscriptions() {
   // View state
   const [view, setView] = useState<'list' | 'calendar'>('list');
 
-  // Track dismissed price change alerts (per session, stored by pattern ID)
-  const [dismissedPriceAlerts, setDismissedPriceAlerts] = useState<Set<string>>(
-    () => {
-      // Load from sessionStorage to persist across page navigation
-      const stored = sessionStorage.getItem('fluxby-dismissed-price-alerts');
-      return stored ? new Set(JSON.parse(stored)) : new Set();
-    }
-  );
-
   // Get current month dates for calendar
   const now = new Date();
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
@@ -142,6 +133,13 @@ export default function Subscriptions() {
     queryKey: ['recurring-stats', activeProfileId],
     queryFn: () => api.getRecurringStats(),
     staleTime: 2 * 60 * 1000, // 2 minutes
+  });
+
+  // Query dismissed alerts from database (persisted)
+  const { data: dismissedAlerts } = useQuery({
+    queryKey: ['dismissed-alerts', activeProfileId],
+    queryFn: () => api.getDismissedAlerts(),
+    staleTime: 2 * 60 * 1000,
   });
 
   // Check if there are any transactions for this profile
@@ -322,31 +320,74 @@ export default function Subscriptions() {
     }
   };
 
-  // Handle accepting a price change (update the subscription amount)
+  // Handle accepting a price change (update the subscription amount and dismiss alert)
+  const acceptPriceChangeMutation = useMutation({
+    mutationFn: ({
+      patternId,
+      newAmount,
+    }: {
+      patternId: string;
+      newAmount: number;
+    }) => api.acceptPriceChange(patternId, newAmount),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['recurring-patterns', activeProfileId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['dismissed-alerts', activeProfileId],
+      });
+      toast.success(
+        t.subscriptions?.priceUpdated || 'Subscription amount updated'
+      );
+    },
+    onError: (error) => {
+      toast.error(error);
+    },
+  });
+
+  // Handle dismissing an alert (persist to database)
+  const dismissAlertMutation = useMutation({
+    mutationFn: ({
+      patternId,
+      alertType,
+      dismissedAmount,
+    }: {
+      patternId: string;
+      alertType: 'price_change' | 'missed_payment' | 'stale';
+      dismissedAmount?: number;
+    }) => api.dismissSubscriptionAlert(patternId, alertType, dismissedAmount),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['dismissed-alerts', activeProfileId],
+      });
+      toast.success(t.subscriptions?.alertDismissed || 'Alert dismissed');
+    },
+    onError: (error) => {
+      toast.error(error);
+    },
+  });
+
   const handleAcceptPriceChange = (patternId: string, newAmount: number) => {
-    updateMutation.mutate(
-      { id: patternId, updates: { avgAmount: newAmount } },
-      {
-        onSuccess: () => {
-          toast.success(
-            t.subscriptions?.priceUpdated || 'Subscription amount updated'
-          );
-        },
-      }
-    );
+    acceptPriceChangeMutation.mutate({ patternId, newAmount });
   };
 
-  // Handle rejecting a price change (dismiss the alert for this session)
-  const handleRejectPriceChange = (patternId: string) => {
-    setDismissedPriceAlerts((prev) => {
-      const next = new Set(prev);
-      next.add(patternId);
-      // Persist to sessionStorage
-      sessionStorage.setItem(
-        'fluxby-dismissed-price-alerts',
-        JSON.stringify([...next])
-      );
-      return next;
+  // Handle rejecting a price change (dismiss the alert permanently)
+  const handleRejectPriceChange = (
+    patternId: string,
+    currentAmount: number
+  ) => {
+    dismissAlertMutation.mutate({
+      patternId,
+      alertType: 'price_change',
+      dismissedAmount: currentAmount,
+    });
+  };
+
+  // Handle dismissing a missed payment alert
+  const handleDismissMissedPayment = (patternId: string) => {
+    dismissAlertMutation.mutate({
+      patternId,
+      alertType: 'missed_payment',
     });
   };
 
@@ -368,7 +409,7 @@ export default function Subscriptions() {
   }, [patterns]);
 
   // Check for alerts (price changes, missed payments, stale subscriptions)
-  // Only for expense patterns (subscriptions)
+  // Only for confirmed subscriptions - alerts should never show for dismissed or unconfirmed patterns
   const alerts = useMemo(() => {
     if (!patterns) return [];
     const alertList: Array<{
@@ -384,38 +425,74 @@ export default function Subscriptions() {
     const twoMonthsAgo = new Date();
     twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
 
+    // Helper to check if an alert type is dismissed for a pattern
+    const isAlertDismissed = (
+      patternId: string,
+      alertType: 'price_change' | 'missed_payment' | 'stale',
+      currentAmount?: number
+    ): boolean => {
+      if (!dismissedAlerts) return false;
+      const patternDismissals = dismissedAlerts.get(patternId);
+      if (!patternDismissals) return false;
+
+      const dismissal = patternDismissals.find((d) => d.type === alertType);
+      if (!dismissal) return false;
+
+      // For price changes, check if the dismissed amount matches the current last amount
+      // If the price changed again, show a new alert
+      if (alertType === 'price_change' && currentAmount !== undefined) {
+        // If the user dismissed at a different amount, they should see the new price change
+        if (dismissal.dismissedAmount !== undefined) {
+          const absDissmissed = Math.abs(dismissal.dismissedAmount);
+          const absCurrent = Math.abs(currentAmount);
+          // Allow 2% tolerance for rounding differences
+          const percentDiff = Math.abs(absDissmissed - absCurrent) / absCurrent;
+          return percentDiff < 0.02;
+        }
+      }
+
+      return true;
+    };
+
     for (const pattern of patterns) {
       // Only check confirmed subscriptions for alerts
+      // Dismissed patterns (is_dismissed=1) are already filtered out in getRecurringPatterns
       if (!pattern.isConfirmed || typeof pattern.avgAmount !== 'number')
         continue;
 
       // Price change alert (>5% difference between last amount and saved average)
-      // Skip if user has dismissed this alert for this session
-      // For expenses, use absolute values to compare (both are negative)
-      if (!dismissedPriceAlerts.has(pattern.id)) {
-        const absLast = Math.abs(pattern.lastAmount);
-        const absAvg = Math.abs(pattern.avgAmount);
-        const percentChange = Math.abs((absLast - absAvg) / absAvg) * 100;
-        if (percentChange > 5) {
-          // For expenses: more negative = higher cost = price increase
-          const isIncrease = absLast > absAvg;
-          alertList.push({
-            id: `price-${pattern.id}`,
-            type: 'price_change',
-            pattern,
-            message: isIncrease
-              ? t.subscriptions?.priceIncreaseDetected ||
-                'Price increase detected. Would you like to update the subscription amount?'
-              : t.subscriptions?.priceDecreaseDetected ||
-                'Price decrease detected. Would you like to update the subscription amount?',
-            newAmount: pattern.lastAmount,
-            isIncrease,
-          });
-        }
+      // Skip if user has dismissed this alert at the same amount
+      const absLast = Math.abs(pattern.lastAmount);
+      const absAvg = Math.abs(pattern.avgAmount);
+      const percentChange = Math.abs((absLast - absAvg) / absAvg) * 100;
+
+      if (
+        percentChange > 5 &&
+        !isAlertDismissed(pattern.id, 'price_change', pattern.lastAmount)
+      ) {
+        // For expenses: more negative = higher cost = price increase
+        const isIncrease = absLast > absAvg;
+        alertList.push({
+          id: `price-${pattern.id}`,
+          type: 'price_change',
+          pattern,
+          message: isIncrease
+            ? t.subscriptions?.priceIncreaseDetected ||
+              'Price increase detected. Would you like to update the subscription amount?'
+            : t.subscriptions?.priceDecreaseDetected ||
+              'Price decrease detected. Would you like to update the subscription amount?',
+          newAmount: pattern.lastAmount,
+          isIncrease,
+        });
       }
 
       // Missed payment alert (expected date passed)
-      if (pattern.nextExpectedDate && pattern.nextExpectedDate < today) {
+      // Only show if not dismissed
+      if (
+        pattern.nextExpectedDate &&
+        pattern.nextExpectedDate < today &&
+        !isAlertDismissed(pattern.id, 'missed_payment')
+      ) {
         alertList.push({
           id: `missed-${pattern.id}`,
           type: 'missed_payment',
@@ -427,7 +504,12 @@ export default function Subscriptions() {
       }
 
       // Stale subscription alert (no transactions in 2+ months)
-      if (pattern.lastDate && new Date(pattern.lastDate) < twoMonthsAgo) {
+      // Only show if not dismissed
+      if (
+        pattern.lastDate &&
+        new Date(pattern.lastDate) < twoMonthsAgo &&
+        !isAlertDismissed(pattern.id, 'stale')
+      ) {
         alertList.push({
           id: `stale-${pattern.id}`,
           type: 'stale',
@@ -440,7 +522,7 @@ export default function Subscriptions() {
     }
 
     return alertList;
-  }, [patterns, t, dismissedPriceAlerts]);
+  }, [patterns, t, dismissedAlerts]);
 
   const isLoading = loadingPatterns || loadingStats;
 
@@ -691,7 +773,10 @@ export default function Subscriptions() {
                                 variant='ghost'
                                 className='h-8 w-8 p-0 text-red-600 hover:bg-red-600 hover:text-white focus:ring-0 focus:outline-none'
                                 onClick={() =>
-                                  handleRejectPriceChange(alert.pattern.id)
+                                  handleRejectPriceChange(
+                                    alert.pattern.id,
+                                    alert.newAmount!
+                                  )
                                 }
                               >
                                 <X className='h-4 w-4' />
@@ -703,6 +788,27 @@ export default function Subscriptions() {
                           </Tooltip>
                         </TooltipProvider>
                       </>
+                    )}
+                    {alert.type === 'missed_payment' && (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              size='sm'
+                              variant='ghost'
+                              className='h-8 w-8 p-0 text-gray-600 hover:bg-gray-600 hover:text-white focus:ring-0 focus:outline-none'
+                              onClick={() =>
+                                handleDismissMissedPayment(alert.pattern.id)
+                              }
+                            >
+                              <X className='h-4 w-4' />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            {t.subscriptions?.dismissAlert || 'Dismiss alert'}
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     )}
                     {alert.type === 'stale' && (
                       <TooltipProvider>
