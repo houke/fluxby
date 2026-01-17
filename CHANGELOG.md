@@ -1,5 +1,57 @@
 # Changelog
 
+## v1.6.0
+
+**Release Date:** 2026-01-17
+
+### Features
+
+- **analytics:** limit recurring payments & subscriptions cards to max 5 rows with overflow
+- **analytics:** compute recurring payments from transactions like Transactions page
+- **web:** comprehensive mobile UI optimizations
+- **subscriptions:** implement smart amount clustering for multi-tier patterns
+- **web:** improve address book, demo data, and transaction filtering
+- **web:** align transaction KPIs with dashboard design
+
+### Bug Fixes
+
+- formatting
+- **subscriptions:** rewrite subscription alerts with persistent dismissals
+- **subscriptions:** check category rules before counting detected patterns
+- **subscriptions:** force refetch after pattern detection to show new patterns
+- **web:** fix shared IBAN visibility on page load and after adding contacts
+- **subscriptions:** fix aggressive category rule dismissal and IBAN matching
+- **analytics:** remove max-height constraint from recurring transactions list
+- **web:** keep shared IBANs visible when partially resolved or marked
+- **web:** always show SharedIbanManager and SuggestedContacts cards
+- **web:** improve UI loading states and optimize address book performance
+- **web:** fix subscription patterns, contact cards, and spinner visibility
+- **web:** address book styling, pattern detection, analytics skeleton
+- **web:** address book UI improvements and OPFS stability
+- **web:** resolve performance issues for large databases
+- **web:** revert transaction components to v1.5.1
+- **web:** revert forecast card to v1.5.1 design
+- **web:** restore Monthly Income chart and fix dashboard layout
+- **web:** fix virtualized transaction list not rendering when using window scroll
+- **web:** fix import progress counter and prevent timeouts for large imports
+- database initialization resilience and migration logging
+- **database:** add timeout handling to factory to prevent infinite hangs
+- **web:** fix database initialization race condition in StrictMode
+- **database:** add timeout to database initialization
+- **database:** add timeout to prevent queries hanging forever
+
+### Performance Improvements
+
+- **web:** major performance optimizations for large datasets
+- add database indexes, batch operations, virtual scrolling
+- **web:** optimize slow pages and fix migration issues
+- **web:** optimize dashboard queries and fix migration loop
+
+### Other Changes
+
+- Revert "fix(web): always show SharedIbanManager and SuggestedContacts cards"
+- add skill
+
 ## v1.5.1
 
 **Release Date:** 2026-01-14

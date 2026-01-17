@@ -1938,6 +1938,17 @@ export const nl: LandingTranslationKeys = {
     updatesPage: {
       intro:
         'Bekijk wat er nieuw is in Fluxby. Hier vind je alle updates en nieuwe features.',
+      v160Date: '17 januari 2026',
+      v160Title: 'Release 1.6.0',
+      v160Description: '6 nieuwe features en 24 bugfixes.',
+      v160F1Title: 'analytics verbeteringen',
+      v160F1Desc: '2 nieuwe features. Bekijk de release op GitHub!',
+      v160F2Title: 'Nieuwe web app mogelijkheden',
+      v160F2Desc: '3 nieuwe features. Bekijk de release op GitHub!',
+      v160F3Title: 'Geïmplementeerd smart amount clustering for multi-tier patterns',
+      v160F3Desc: 'Nieuwe functionaliteit waar je iets aan hebt.',
+      v160F4Title: 'Bugfixes',
+      v160F4Desc: '24 bugs opgelost. Zie changelog voor details.',
       v151Date: '14 januari 2026',
       v151Title: 'Release 1.5.1',
       v151Description: '3 bugfixes.',

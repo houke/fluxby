@@ -33,6 +33,36 @@ const UpdatesContent = () => {
   const updatesPage = t.legal?.updatesPage;
 
   const releases = [
+        {
+      version: '1.6.0',
+      date: updatesPage?.v160Date || '17 januari 2026',
+      title: updatesPage?.v160Title || 'Release 1.6.0',
+      description:
+        updatesPage?.v160Description ||
+        '6 nieuwe features en 24 bugfixes.',
+      features: [
+        {
+          icon: BarChart3,
+          title: updatesPage?.v160F1Title || 'analytics verbeteringen',
+          description: updatesPage?.v160F1Desc || '2 nieuwe features. Bekijk de release op GitHub!',
+        },
+        {
+          icon: Globe,
+          title: updatesPage?.v160F2Title || 'Nieuwe web app mogelijkheden',
+          description: updatesPage?.v160F2Desc || '3 nieuwe features. Bekijk de release op GitHub!',
+        },
+        {
+          icon: Brain,
+          title: updatesPage?.v160F3Title || 'Geïmplementeerd smart amount clustering for multi-tier patterns',
+          description: updatesPage?.v160F3Desc || 'Nieuwe functionaliteit waar je iets aan hebt.',
+        },
+        {
+          icon: Wrench,
+          title: updatesPage?.v160F4Title || 'Bugfixes',
+          description: updatesPage?.v160F4Desc || '24 bugs opgelost. Zie changelog voor details.',
+        },
+      ],
+    },
     {
       version: '1.5.1',
       date: updatesPage?.v151Date || '14 januari 2026',
