@@ -11,6 +11,7 @@ export function useSharedIbans() {
   const toast = useToast();
   const queryClient = useQueryClient();
 
+
   const { data: sharedIbans = [], isLoading } = useQuery<SharedIban[]>({
     queryKey: ['sharedIbans', activeProfileId],
     queryFn: async () => {
@@ -18,9 +19,13 @@ export function useSharedIbans() {
         '[useSharedIbans] Fetching shared IBANs for profile:',
         activeProfileId
       );
-      const result = await api.getSharedIbans();
-      console.log('[useSharedIbans] Received:', result);
-      return result;
+      try {
+        const result = await api.getSharedIbans();
+        return result;
+      } catch (err) {
+        console.error('[useSharedIbans] Error fetching:', err);
+        throw err;
+      }
     },
     enabled: !!activeProfileId,
   });
