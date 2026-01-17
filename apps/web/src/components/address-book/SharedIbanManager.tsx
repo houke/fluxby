@@ -49,7 +49,7 @@ export const SharedIbanManager: React.FC<SharedIbanManagerProps> = ({
   cleanupRules,
   translations: t,
 }) => {
-  const hasSharedIbans = sharedIbans.length > 0;
+  if (sharedIbans.length === 0) return null;
 
   const groupColors = [
     'ring-2 ring-offset-1 ring-purple-400',
@@ -65,24 +65,20 @@ export const SharedIbanManager: React.FC<SharedIbanManagerProps> = ({
       className='border-amber-500/50 bg-amber-50/50 dark:bg-amber-950/10'
     >
       <CardHeader
-        className={cn(hasSharedIbans && 'cursor-pointer')}
-        onClick={() => hasSharedIbans && setShowSharedIbans(!showSharedIbans)}
+        className='cursor-pointer'
+        onClick={() => setShowSharedIbans(!showSharedIbans)}
       >
         <div className='flex items-center justify-between'>
           <CardTitle className='flex items-center gap-2 text-amber-700 dark:text-amber-400'>
             <AlertTriangle className='h-5 w-5' />
             {t.addressBook?.sharedIbans || 'Shared IBANs'}
-            {hasSharedIbans && (
-              <>
-                <span className='rounded-full bg-amber-200 px-2 py-0.5 text-xs font-normal dark:bg-amber-800'>
-                  {sharedIbans.length}
-                </span>
-                {showSharedIbans ? (
-                  <ChevronUp className='ml-1 h-4 w-4' />
-                ) : (
-                  <ChevronDown className='ml-1 h-4 w-4' />
-                )}
-              </>
+            <span className='rounded-full bg-amber-200 px-2 py-0.5 text-xs font-normal dark:bg-amber-800'>
+              {sharedIbans.length}
+            </span>
+            {showSharedIbans ? (
+              <ChevronUp className='ml-1 h-4 w-4' />
+            ) : (
+              <ChevronDown className='ml-1 h-4 w-4' />
             )}
           </CardTitle>
           <TooltipProvider>
@@ -112,24 +108,20 @@ export const SharedIbanManager: React.FC<SharedIbanManagerProps> = ({
             </Tooltip>
           </TooltipProvider>
         </div>
-        {!hasSharedIbans ? (
-          <CardDescription>
-            {t.addressBook?.noSharedIbansFound ||
-              'No shared IBANs detected yet. Click the refresh button to scan your transactions for payment processors (Adyen, Mollie, etc.).'}
-          </CardDescription>
-        ) : !showSharedIbans ? (
+        {!showSharedIbans && (
           <CardDescription>
             {t.addressBook?.sharedIbansCollapsed ||
               'IBANs with multiple different names in transactions. Click to expand.'}
           </CardDescription>
-        ) : (
+        )}
+        {showSharedIbans && (
           <CardDescription>
             {t.addressBook?.sharedIbansExpanded ||
               'IBANs with multiple different names in transactions (payment processors like Adyen, Mollie, etc.). These are not automatically added to the address book.'}
           </CardDescription>
         )}
       </CardHeader>
-      {showSharedIbans && hasSharedIbans && (
+      {showSharedIbans && (
         <CardContent className='space-y-3'>
           <TooltipProvider>
             {isLoading ? (
