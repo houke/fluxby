@@ -3346,7 +3346,10 @@ export function createDataService(db: Database) {
       }>
     > {
       const pid = profileId();
-      if (!pid) return [];
+      if (!pid) {
+        console.log('[SharedIBANs] No profile ID');
+        return [];
+      }
 
       // Find IBANs that have multiple different merchant names in transactions
       // that are not yet resolved (address_book_id IS NULL)
@@ -3366,6 +3369,12 @@ export function createDataService(db: Database) {
           OR opposing_account_iban IN (SELECT iban FROM address_book WHERE original_name IS NOT NULL AND profile_id = ? AND is_deleted = 0)`,
         [pid, pid, pid]
       )) as Array<{ iban: string; name_count: number }>;
+
+      console.log(
+        '[SharedIBANs] Initial query found:',
+        sharedIbans.length,
+        'IBANs'
+      );
 
       // Get payment provider rules for pattern-based detection
       const providerRules = (await db.queryAsync(
@@ -3481,9 +3490,17 @@ export function createDataService(db: Database) {
             isKnownProvider: !!detectedProviderName,
             knownProviderName: detectedProviderName,
           });
+        } else {
+          console.log('[SharedIBANs] Excluding IBAN:', si.iban, {
+            shouldInclude,
+            merchantsLength: merchants.length,
+            markedShared: !!markedShared,
+            isPartiallyResolved,
+          });
         }
       }
 
+      console.log('[SharedIBANs] Returning', result.length, 'shared IBANs');
       return result;
     },
 
@@ -5140,6 +5157,97 @@ export function createDataService(db: Database) {
           transactionCount: row.transaction_count,
           profileId: row.profile_id,
           createdAt: new Date(Number(row.created_at)).toISOString(),
+          priceHistory,
+        });
+      }
+
+      return result;
+    },
+
+    /**
+     * Get recurring payments computed from transactions (like the Transactions page does)
+     * This shows all merchants/IBANs with 2+ transactions in the date range
+     */
+    async getRecurringPaymentsFromTransactions(
+      startDate: string,
+      endDate: string,
+      minTransactions = 2
+    ): Promise<
+      Array<{
+        merchantName: string | null;
+        opposingIban: string | null;
+        transactionCount: number;
+        totalAmount: number;
+        avgAmount: number;
+        lastDate: string;
+        priceHistory: Array<{ date: string; amount: number }>;
+      }>
+    > {
+      const pid = profileId();
+      if (!pid) return [];
+
+      // Get all transactions in the date range grouped by merchant/IBAN
+      const rows = await db.queryAsync<{
+        merchant_name: string | null;
+        opposing_account_iban: string | null;
+        transaction_count: number;
+        total_amount: number;
+        avg_amount: number;
+        last_date: string;
+      }>(
+        `SELECT 
+           COALESCE(merchant_name, opposing_account_name) as merchant_name,
+           opposing_account_iban,
+           COUNT(*) as transaction_count,
+           SUM(amount) as total_amount,
+           AVG(amount) as avg_amount,
+           MAX(date) as last_date
+         FROM transactions
+         WHERE profile_id = ? AND is_deleted = 0
+           AND date >= ? AND date <= ?
+           AND (merchant_name IS NOT NULL OR opposing_account_name IS NOT NULL OR opposing_account_iban IS NOT NULL)
+         GROUP BY 
+           LOWER(COALESCE(merchant_name, opposing_account_name)),
+           opposing_account_iban
+         HAVING COUNT(*) >= ?
+         ORDER BY transaction_count DESC, ABS(total_amount) DESC`,
+        [pid, startDate, endDate, minTransactions]
+      );
+
+      // For each recurring merchant, get the price history
+      const result = [];
+      for (const row of rows) {
+        let priceHistory: { date: string; amount: number }[] = [];
+
+        if (row.opposing_account_iban) {
+          const txRows = await db.queryAsync<{ date: string; amount: number }>(
+            `SELECT date, amount FROM transactions
+             WHERE profile_id = ? AND is_deleted = 0
+               AND opposing_account_iban = ?
+               AND date >= ? AND date <= ?
+             ORDER BY date ASC`,
+            [pid, row.opposing_account_iban, startDate, endDate]
+          );
+          priceHistory = txRows;
+        } else if (row.merchant_name) {
+          const txRows = await db.queryAsync<{ date: string; amount: number }>(
+            `SELECT date, amount FROM transactions
+             WHERE profile_id = ? AND is_deleted = 0
+               AND LOWER(COALESCE(merchant_name, opposing_account_name)) = LOWER(?)
+               AND date >= ? AND date <= ?
+             ORDER BY date ASC`,
+            [pid, row.merchant_name, startDate, endDate]
+          );
+          priceHistory = txRows;
+        }
+
+        result.push({
+          merchantName: row.merchant_name,
+          opposingIban: row.opposing_account_iban,
+          transactionCount: row.transaction_count,
+          totalAmount: row.total_amount,
+          avgAmount: row.avg_amount,
+          lastDate: row.last_date,
           priceHistory,
         });
       }

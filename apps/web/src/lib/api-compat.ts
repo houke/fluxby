@@ -337,6 +337,19 @@ export const api = {
     return ds.getRecurringPatternsWithHistory(startDate, endDate);
   },
 
+  getRecurringPaymentsFromTransactions: async (
+    startDate: string,
+    endDate: string,
+    minTransactions = 2
+  ) => {
+    const ds = getDataService();
+    return ds.getRecurringPaymentsFromTransactions(
+      startDate,
+      endDate,
+      minTransactions
+    );
+  },
+
   getRecurringStats: async (startDate?: string, endDate?: string) => {
     const ds = getDataService();
     return ds.getRecurringStats(startDate, endDate);
@@ -365,6 +378,11 @@ export const api = {
   deleteRecurringPattern: async (id: string) => {
     const ds = getDataService();
     await ds.deleteRecurringPattern(id);
+  },
+
+  resetDismissedPatterns: async () => {
+    const ds = getDataService();
+    return ds.resetDismissedPatterns();
   },
 
   updateRecurringPattern: async (

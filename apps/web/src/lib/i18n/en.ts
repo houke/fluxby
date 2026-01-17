@@ -428,7 +428,13 @@ export const en: TranslationKeys = {
     transactions: 'Transactions',
     viewTransactions: 'View transactions',
     toggleSubcategories: 'Toggle subcategories',
-    recurringPayments: 'Subscriptions',
+    recurringPayments: 'Recurring payments',
+    recurringPaymentsDescription:
+      'Merchants with 2+ transactions in the selected period',
+    selectRecurringPayment: 'Select a payment to view history',
+    subscriptions: 'Subscriptions',
+    subscriptionsDescription:
+      'Confirmed recurring expenses with at least 6 transactions',
     recurringTransactions: 'Recurring transactions',
     recurringTransactionsDescription:
       'Transactions with at least 6 recurrences',
@@ -439,7 +445,7 @@ export const en: TranslationKeys = {
     priceHistory: 'Price history',
     noPriceHistory: 'No price history available',
     selectSubscription: 'Select a subscription to view price history',
-    noRecurringPayments: 'No confirmed subscriptions yet',
+    noRecurringPayments: 'No recurring payments in this period',
     confirmSubscriptions:
       'Confirm detected subscriptions on the subscriptions page',
     average: 'Avg',

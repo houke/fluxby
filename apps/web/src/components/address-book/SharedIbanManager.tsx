@@ -49,6 +49,11 @@ export const SharedIbanManager: React.FC<SharedIbanManagerProps> = ({
   cleanupRules,
   translations: t,
 }) => {
+  console.log('[SharedIbanManager] Render:', {
+    sharedIbansLength: sharedIbans.length,
+    isLoading,
+  });
+
   if (sharedIbans.length === 0) return null;
 
   const groupColors = [

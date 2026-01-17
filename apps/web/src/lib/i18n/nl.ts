@@ -376,6 +376,10 @@ export interface TranslationKeys {
     viewTransactions: string;
     toggleSubcategories: string;
     recurringPayments: string;
+    recurringPaymentsDescription: string;
+    selectRecurringPayment: string;
+    subscriptions: string;
+    subscriptionsDescription: string;
     recurringTransactions: string;
     recurringTransactionsDescription: string;
     noRecurringTransactions: string;
@@ -1710,7 +1714,13 @@ export const nl: TranslationKeys = {
     transactions: 'Transacties',
     viewTransactions: 'Bekijk transacties',
     toggleSubcategories: 'Subcategorieën tonen/verbergen',
-    recurringPayments: 'Abonnementen',
+    recurringPayments: 'Terugkerende betalingen',
+    recurringPaymentsDescription:
+      'Partijen met 2+ transacties in de geselecteerde periode',
+    selectRecurringPayment: 'Selecteer een betaling om de historie te bekijken',
+    subscriptions: 'Abonnementen',
+    subscriptionsDescription:
+      'Bevestigde terugkerende uitgaven met minimaal 6 transacties',
     recurringTransactions: 'Terugkerende transacties',
     recurringTransactionsDescription: 'Transacties met minimaal 6 herhalingen',
     noRecurringTransactions:
@@ -1722,7 +1732,7 @@ export const nl: TranslationKeys = {
     noPriceHistory: 'Geen prijsgeschiedenis beschikbaar',
     selectSubscription:
       'Selecteer een abonnement om prijsgeschiedenis te bekijken',
-    noRecurringPayments: 'Nog geen bevestigde abonnementen',
+    noRecurringPayments: 'Geen terugkerende betalingen in deze periode',
     confirmSubscriptions:
       'Bevestig gedetecteerde abonnementen op de abonnementen pagina',
     average: 'Gem.',

@@ -13,7 +13,15 @@ export function useSharedIbans() {
 
   const { data: sharedIbans = [], isLoading } = useQuery<SharedIban[]>({
     queryKey: ['sharedIbans', activeProfileId],
-    queryFn: () => api.getSharedIbans() as Promise<SharedIban[]>,
+    queryFn: async () => {
+      console.log(
+        '[useSharedIbans] Fetching shared IBANs for profile:',
+        activeProfileId
+      );
+      const result = await api.getSharedIbans();
+      console.log('[useSharedIbans] Received:', result);
+      return result as Promise<SharedIban[]>;
+    },
     enabled: !!activeProfileId,
   });
 
