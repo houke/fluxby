@@ -298,47 +298,127 @@ router.post('/detect', (req, res) => {
     const profileId = getEffectiveProfileId(req);
     const now = Date.now();
     const MIN_MONTHS_SPAN_DAYS = 60; // ~2 months minimum span to ensure 3+ months of history
+    const AMOUNT_CLUSTERING_THRESHOLD = 0.15; // 15% - group amounts within this threshold
 
-    // Get all transactions grouped by opposing_account_iban + merchant_name
-    const groups = query<{
+    // Get all expense transactions to perform in-memory clustering
+    const allTransactions = query<{
+      id: string;
       opposing_iban: string | null;
       merchant_name: string | null;
-      dates: string;
-      amounts: string;
-      tx_count: number;
+      date: string;
+      amount: number;
     }>(
       `SELECT 
+        t.id,
         opposing_account_iban as opposing_iban,
-        COALESCE(merchant_name, opposing_account_name) as merchant_name,
-        GROUP_CONCAT(date, ',') as dates,
-        GROUP_CONCAT(amount, ',') as amounts,
-        COUNT(*) as tx_count
+        LOWER(TRIM(COALESCE(merchant_name, opposing_account_name))) as merchant_name,
+        date,
+        amount
        FROM transactions t
        JOIN accounts a ON t.account_id = a.id
        WHERE a.profile_id = ? 
          AND t.is_deleted = 0
          AND t.type = 'expense'
-       GROUP BY opposing_account_iban, COALESCE(merchant_name, opposing_account_name)
-       HAVING tx_count >= ?
-       ORDER BY tx_count DESC`,
-      [profileId, MIN_TRANSACTIONS_FOR_PATTERN]
+       ORDER BY merchant_name, date`,
+      [profileId]
     );
+
+    // Group by merchant first
+    const merchantGroups = new Map<
+      string,
+      Array<{
+        id: string;
+        opposing_iban: string | null;
+        date: string;
+        amount: number;
+      }>
+    >();
+
+    for (const tx of allTransactions) {
+      const key = `${tx.opposing_iban || 'null'}:${tx.merchant_name || 'null'}`;
+      if (!merchantGroups.has(key)) {
+        merchantGroups.set(key, []);
+      }
+      merchantGroups.get(key)!.push({
+        id: tx.id,
+        opposing_iban: tx.opposing_iban,
+        date: tx.date,
+        amount: tx.amount,
+      });
+    }
+
+    // Cluster each merchant group by similar amounts
+    interface AmountCluster {
+      opposing_iban: string | null;
+      merchant_name: string | null;
+      dates: Date[];
+      amounts: number[];
+    }
+
+    const groups: AmountCluster[] = [];
+
+    for (const [key, transactions] of merchantGroups.entries()) {
+      const [opposing_iban, merchant_name] = key.split(':');
+      const clusters: AmountCluster[] = [];
+
+      for (const tx of transactions) {
+        const absAmount = Math.abs(tx.amount);
+
+        // Find a cluster with similar amounts (within 15%)
+        let foundCluster = false;
+        for (const cluster of clusters) {
+          const clusterAvgAbs = Math.abs(
+            cluster.amounts.reduce((sum, a) => sum + a, 0) /
+              cluster.amounts.length
+          );
+
+          if (
+            Math.abs(absAmount - clusterAvgAbs) / clusterAvgAbs <=
+            AMOUNT_CLUSTERING_THRESHOLD
+          ) {
+            // Add to existing cluster
+            cluster.dates.push(new Date(tx.date));
+            cluster.amounts.push(tx.amount);
+            foundCluster = true;
+            break;
+          }
+        }
+
+        if (!foundCluster) {
+          // Create new cluster
+          clusters.push({
+            opposing_iban: opposing_iban === 'null' ? null : opposing_iban,
+            merchant_name: merchant_name === 'null' ? null : merchant_name,
+            dates: [new Date(tx.date)],
+            amounts: [tx.amount],
+          });
+        }
+      }
+
+      // Add clusters with enough transactions
+      for (const cluster of clusters) {
+        if (cluster.dates.length >= MIN_TRANSACTIONS_FOR_PATTERN) {
+          // Sort by date
+          const pairs = cluster.dates.map((d, i) => ({
+            date: d,
+            amount: cluster.amounts[i],
+          }));
+          pairs.sort((a, b) => a.date.getTime() - b.date.getTime());
+
+          cluster.dates = pairs.map((p) => p.date);
+          cluster.amounts = pairs.map((p) => p.amount);
+
+          groups.push(cluster);
+        }
+      }
+    }
 
     let detected = 0;
     let updated = 0;
 
     for (const group of groups) {
-      if (!group.dates || !group.amounts) continue;
-
-      // Parse dates and amounts
-      const dates = group.dates
-        .split(',')
-        .map((d) => new Date(d))
-        .sort((a, b) => a.getTime() - b.getTime());
-
-      const amounts = group.amounts
-        .split(',')
-        .map((a) => Math.abs(parseFloat(a)));
+      const dates = group.dates;
+      const amounts = group.amounts;
 
       if (dates.length < MIN_TRANSACTIONS_FOR_PATTERN) continue;
 
@@ -375,9 +455,10 @@ router.post('/detect', (req, res) => {
 
       if (!patternType) continue;
 
-      // Check interval consistency (±3 day tolerance)
+      // Check interval consistency using DATE_TOLERANCE_DAYS (12 days)
+      // More lenient for real-world payment timing variations
       const isConsistent = intervals.every(
-        (interval) => Math.abs(interval - avgInterval) <= 3
+        (interval) => Math.abs(interval - avgInterval) <= 12
       );
 
       if (!isConsistent) continue;
@@ -387,9 +468,12 @@ router.post('/detect', (req, res) => {
       const lastAmount = amounts[amounts.length - 1];
       const lastDate = dates[dates.length - 1].toISOString().split('T')[0];
 
-      // Check if amount is variable (>10% variance)
+      // Check if amount is variable (>10% variance) - use absolute values for comparison
+      const absAvgAmount = Math.abs(avgAmount);
       const isVariable = amounts.some(
-        (a) => Math.abs(a - avgAmount) / avgAmount > AMOUNT_VARIANCE_THRESHOLD
+        (a) =>
+          Math.abs(Math.abs(a) - absAvgAmount) / absAvgAmount >
+          AMOUNT_VARIANCE_THRESHOLD
       );
 
       // Calculate next expected date
@@ -398,14 +482,33 @@ router.post('/detect', (req, res) => {
       const nextExpectedDate = nextExpected.toISOString().split('T')[0];
 
       // Check if pattern already exists (including dismissed ones to avoid re-creating)
-      const existing = queryOne<{ id: string; is_dismissed: number }>(
-        `SELECT id, is_dismissed FROM recurring_patterns 
+      // Match by merchant + similar amount (within 20%)
+      const existingPatterns = query<{
+        id: string;
+        is_dismissed: number;
+        avg_amount: number;
+      }>(
+        `SELECT id, is_dismissed, avg_amount FROM recurring_patterns 
          WHERE profile_id = ? 
-           AND opposing_iban = ? 
-           AND merchant_name = ?
+           AND opposing_iban IS ? 
+           AND LOWER(TRIM(merchant_name)) = LOWER(TRIM(?))
            AND is_deleted = 0`,
         [profileId, group.opposing_iban, group.merchant_name]
       );
+
+      // Find existing pattern with similar amount (within 20%)
+      let existing: { id: string; is_dismissed: number } | null = null;
+      for (const pattern of existingPatterns) {
+        const absExisting = Math.abs(pattern.avg_amount);
+        const absNew = Math.abs(avgAmount);
+        if (
+          absExisting > 0 &&
+          Math.abs(absNew - absExisting) / absExisting <= 0.2
+        ) {
+          existing = pattern;
+          break;
+        }
+      }
 
       if (existing) {
         // Skip if dismissed - don't update dismissed patterns

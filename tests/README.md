@@ -49,6 +49,7 @@ npm run test:run -- tests/database/
 | core     | csv-parser     | `csv-parser.ts`        | Delimiter detection, date/amount parsing, mapping | ✅ Covered |
 | core     | categorization | `categorization.ts`    | Rule matching, category suggestion                | ✅ Covered |
 | core     | analytics      | `analytics.ts`         | Dashboard stats, monthly data, recurring txns     | ✅ Covered |
+| core     | clustering     | `subscription-clustering.ts` | Amount clustering for multi-tier subscriptions | ✅ Covered |
 | core     | peer           | `peer.ts`              | Pairing code generation                           | ✅ Covered |
 | database | encryption     | `encryption.ts`        | Key generation, wrap/unwrap, encrypt/decrypt      | ✅ Covered |
 | database | offline        | `offline.ts`           | SyncQueue, ConnectivityMonitor                    | ✅ Covered |
