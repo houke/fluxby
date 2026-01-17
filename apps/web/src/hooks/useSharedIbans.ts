@@ -97,16 +97,21 @@ export function useSharedIbans() {
         data.originalNames,
         data.contactId
       ),
-    onSuccess: (result) => {
-      queryClient.invalidateQueries({
-        queryKey: ['addressbook', activeProfileId],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ['sharedIbans', activeProfileId],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ['transactions', activeProfileId],
-      });
+    onSuccess: async (result) => {
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: ['addressbook', activeProfileId],
+          refetchType: 'active',
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ['sharedIbans', activeProfileId],
+          refetchType: 'active',
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ['transactions', activeProfileId],
+          refetchType: 'active',
+        }),
+      ]);
 
       const data = result as { data?: { transactionsUpdated?: number } };
       toast.success(

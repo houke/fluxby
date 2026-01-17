@@ -5516,6 +5516,26 @@ export function createDataService(db: Database) {
       );
     },
 
+    /**
+     * Reset all dismissed patterns so they can be re-detected
+     * This is useful when the user wants to re-run detection after fixing issues
+     */
+    async resetDismissedPatterns(): Promise<number> {
+      const pid = profileId();
+      if (!pid) return 0;
+
+      // Delete all dismissed (not confirmed) patterns so they can be re-detected fresh
+      // We delete rather than reset is_dismissed because the detection algorithm
+      // will create new patterns with updated data
+      const result = await db.runAsync(
+        `UPDATE recurring_patterns SET is_deleted = 1, updated_at = ?
+         WHERE profile_id = ? AND is_dismissed = 1 AND is_confirmed = 0 AND is_deleted = 0`,
+        [Date.now(), pid]
+      );
+
+      return result.changes || 0;
+    },
+
     // Helper to link transactions to address book entries
     async _linkTransactionsToAddressBook(
       txIds: string[],
