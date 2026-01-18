@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useDataService } from '@/contexts/DatabaseContext';
 import { useFilterParams } from '@/contexts/FilterContext';
+import { useProfile } from '@/contexts/ProfileContext';
 import { api } from '@/lib/api';
 
 // Minimal transaction type for totals calculation
@@ -90,6 +91,7 @@ interface TransactionTotalsQuery {
  * Use this when you only need totals, not the individual transactions.
  */
 export function useTransactionTotalsQuery(filters?: Record<string, string>) {
+  const { activeProfileId } = useProfile();
   const { startDate, endDate } = useFilterParams();
 
   // Merge filter params with passed filters
@@ -100,7 +102,7 @@ export function useTransactionTotalsQuery(filters?: Record<string, string>) {
   };
 
   const { data, isLoading } = useQuery<TransactionTotalsQuery>({
-    queryKey: ['transaction-totals', mergedFilters],
+    queryKey: ['transaction-totals', activeProfileId, mergedFilters],
     queryFn: async () => {
       const result = await api.getTransactionTotals(mergedFilters);
       return {
@@ -110,6 +112,7 @@ export function useTransactionTotalsQuery(filters?: Record<string, string>) {
       };
     },
     staleTime: 60 * 1000, // 1 minute - totals are derived data
+    enabled: !!activeProfileId,
   });
 
   return {

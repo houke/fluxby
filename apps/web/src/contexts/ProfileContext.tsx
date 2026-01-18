@@ -167,6 +167,8 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
         'categoryRules',
         'min-max-dates',
         'transactions-all',
+        'transaction-totals',
+        'available-years',
       ];
 
       // Remove cached data for queries from previous profile

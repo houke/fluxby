@@ -37,6 +37,7 @@ export function HeaderFilters() {
   const { data: availableYears } = useQuery<number[]>({
     queryKey: ['available-years', activeProfileId],
     queryFn: () => dataService.getAvailableYears(),
+    enabled: !!activeProfileId,
   });
 
   const { data: minMaxDates } = useQuery<{
@@ -45,6 +46,7 @@ export function HeaderFilters() {
   } | null>({
     queryKey: ['min-max-dates', activeProfileId],
     queryFn: () => dataService.getMinMaxDates(),
+    enabled: !!activeProfileId,
   });
 
   // Quick date range presets

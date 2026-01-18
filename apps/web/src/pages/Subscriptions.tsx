@@ -160,10 +160,9 @@ export default function Subscriptions() {
   // Mutations
   const detectMutation = useMutation({
     mutationFn: async () => {
-      // First, reset any dismissed patterns so they can be re-detected
-      // This helps when patterns were incorrectly dismissed by category rules
-      await api.resetDismissedPatterns();
-      // Then run detection
+      // Run pattern detection
+      // Note: Dismissed patterns are intentionally kept dismissed to respect user preferences.
+      // Detection will skip patterns that match already-dismissed merchants/amounts.
       return api.detectRecurringPatterns();
     },
     onSuccess: async (result) => {

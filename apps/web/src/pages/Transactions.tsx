@@ -401,6 +401,7 @@ export default function Transactions() {
         paymentMethods: paymentMethodsParam?.join(',') || '',
         paymentProviders: paymentProvidersParam?.join(',') || '',
       }) as Promise<Transaction[]>,
+    enabled: !!activeProfileId,
     staleTime: 30 * 1000, // 30 seconds - prevent constant refetching on focus
   });
 
@@ -440,7 +441,10 @@ export default function Transactions() {
       }) as Promise<Transaction[]>,
     // Only run when filters are active and the current period returned zero
     // transactions to avoid extra work during normal browsing.
-    enabled: hasActiveFilters && (transactions?.length ?? 0) === 0,
+    enabled:
+      !!activeProfileId &&
+      hasActiveFilters &&
+      (transactions?.length ?? 0) === 0,
     staleTime: 30 * 1000,
   });
 
