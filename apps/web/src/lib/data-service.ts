@@ -872,9 +872,87 @@ export function createDataService(db: Database) {
         }
         if (filters.search) {
           sql +=
-            ' AND (t.description LIKE ? OR t.merchant_name LIKE ? OR t.opposing_account_name LIKE ?)';
+            ' AND (t.description LIKE ? OR t.merchant_name LIKE ? OR t.opposing_account_name LIKE ? OR t.opposing_account_iban LIKE ?)';
           const search = `%${filters.search}%`;
-          params.push(search, search, search);
+          params.push(search, search, search, search);
+        }
+        // Support multiple opposing account IBANs (comma-separated)
+        if (filters.opposingAccountIbans) {
+          const ibans = filters.opposingAccountIbans.split(',').filter(Boolean);
+          if (ibans.length > 0) {
+            const placeholders = ibans.map(() => '?').join(',');
+            sql += ` AND t.opposing_account_iban IN (${placeholders})`;
+            params.push(...ibans);
+          }
+        }
+        // Filter by opposing account name (LIKE search)
+        if (filters.opposingAccountName) {
+          const namePattern = `%${filters.opposingAccountName}%`;
+          sql += ` AND (
+            LOWER(t.opposing_account_name) LIKE LOWER(?) 
+            OR LOWER(t.merchant_name) LIKE LOWER(?)
+          )`;
+          params.push(namePattern, namePattern);
+        }
+        // Filter by address book ID
+        if (filters.addressBookId) {
+          // Get contact info to support multi-IBAN contacts
+          const contact = await db.queryOneAsync<{
+            iban: string;
+            original_name: string | null;
+          }>('SELECT iban, original_name FROM address_book WHERE id = ?', [
+            filters.addressBookId,
+          ]);
+
+          if (contact) {
+            // Get all IBANs for this contact
+            const contactIbans = await db.queryAsync<{ iban: string }>(
+              'SELECT iban FROM contact_ibans WHERE contact_id = ?',
+              [filters.addressBookId]
+            );
+
+            const allIbans = [
+              contact.iban,
+              ...contactIbans.map((r) => r.iban),
+            ].filter(Boolean);
+            const ibanPlaceholders = allIbans.map(() => '?').join(',');
+
+            if (contact.original_name) {
+              // Shared IBAN: must match IBAN AND name
+              sql += ` AND (t.address_book_id = ? OR (t.address_book_id IS NULL AND t.opposing_account_iban IN (${ibanPlaceholders}) AND (t.opposing_account_name = ? OR t.merchant_name = ?)))`;
+              params.push(
+                filters.addressBookId,
+                ...allIbans,
+                contact.original_name,
+                contact.original_name
+              );
+            } else {
+              // Regular IBAN: match address_book_id OR IBAN
+              sql += ` AND (t.address_book_id = ? OR (t.address_book_id IS NULL AND t.opposing_account_iban IN (${ibanPlaceholders})))`;
+              params.push(filters.addressBookId, ...allIbans);
+            }
+          } else {
+            sql += ' AND t.address_book_id = ?';
+            params.push(filters.addressBookId);
+          }
+        }
+        // Filter by payment methods (comma-separated)
+        if (filters.paymentMethods) {
+          const methods = filters.paymentMethods.split(',').filter(Boolean);
+          if (methods.length > 0) {
+            const placeholders = methods.map(() => '?').join(',');
+            sql += ` AND LOWER(t.payment_method) IN (${placeholders})`;
+            params.push(...methods.map((m) => m.toLowerCase()));
+          }
+        }
+        // Filter by payment providers (comma-separated)
+        if (filters.paymentProviders) {
+          const providers = filters.paymentProviders.split(',').filter(Boolean);
+          if (providers.length > 0) {
+            const placeholders = providers.map(() => '?').join(',');
+            sql += ` AND LOWER(t.payment_provider) IN (${placeholders})`;
+            params.push(...providers.map((p) => p.toLowerCase()));
+          }
         }
       }
 
