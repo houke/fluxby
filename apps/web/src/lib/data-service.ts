@@ -4719,8 +4719,8 @@ export function createDataService(db: Database) {
      *
      * Requirements for a valid subscription:
      * - At least MIN_TRANSACTIONS_FOR_PATTERN transactions (6)
-     * - Spans at least MIN_MONTHS_FOR_SUBSCRIPTION months (3)
-     * - Consistent interval between transactions (±3 days tolerance)
+     * - Spans at least 5 months (150 days) to ensure 6+ months of data
+     * - Consistent interval between transactions (±12 days tolerance)
      * - Only looks at transactions from the last 12 months
      */
     async detectRecurringPatterns(): Promise<{
@@ -4731,7 +4731,7 @@ export function createDataService(db: Database) {
       if (!pid) return { detected: 0, updated: 0 };
 
       const now = Date.now();
-      const MIN_MONTHS_SPAN_DAYS = 60; // ~2 months minimum span to ensure 3+ months of history
+      const MIN_MONTHS_SPAN_DAYS = 150; // ~5 months minimum span to ensure 6+ months of data
       const AMOUNT_CLUSTERING_THRESHOLD = 0.15; // 15% - group amounts within this threshold
 
       // Pre-load category rules to check if a pattern should be excluded

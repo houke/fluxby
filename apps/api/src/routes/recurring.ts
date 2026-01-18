@@ -297,7 +297,7 @@ router.post('/detect', (req, res) => {
   try {
     const profileId = getEffectiveProfileId(req);
     const now = Date.now();
-    const MIN_MONTHS_SPAN_DAYS = 60; // ~2 months minimum span to ensure 3+ months of history
+    const MIN_MONTHS_SPAN_DAYS = 150; // ~5 months minimum span to ensure 6+ months of data
     const AMOUNT_CLUSTERING_THRESHOLD = 0.15; // 15% - group amounts within this threshold
 
     // Get all expense transactions to perform in-memory clustering
