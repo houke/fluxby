@@ -461,6 +461,7 @@ export default function Transactions() {
     queryKey: ['categories', activeProfileId, false],
     queryFn: () => api.getCategories() as Promise<Category[]>,
     staleTime: 5 * 60 * 1000, // 5 minutes - categories rarely change
+    enabled: !!activeProfileId,
   });
 
   // Memoized category lookup Map for O(1) access instead of O(n) find()
@@ -545,6 +546,7 @@ export default function Transactions() {
     queryKey: ['accounts', activeProfileId],
     queryFn: () => api.getAccounts() as Promise<Account[]>,
     staleTime: 5 * 60 * 1000, // 5 minutes - accounts rarely change
+    enabled: !!activeProfileId,
   });
 
   // Query category rules for checking if a rule already exists
@@ -558,6 +560,7 @@ export default function Transactions() {
     queryKey: ['categoryRules', activeProfileId],
     queryFn: () => api.getCategoryRules() as Promise<CategoryRule[]>,
     staleTime: 5 * 60 * 1000, // 5 minutes
+    enabled: !!activeProfileId,
   });
 
   // Query payment provider rules for the filter dropdown
@@ -570,6 +573,7 @@ export default function Transactions() {
         Array<{ id: string; name: string; patterns: string }>
       >,
     staleTime: 5 * 60 * 1000, // 5 minutes
+    enabled: !!activeProfileId,
   });
 
   // Get min/max dates to determine if there's data in other periods

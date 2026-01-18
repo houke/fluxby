@@ -127,12 +127,14 @@ export default function Subscriptions() {
     queryKey: ['recurring-patterns', activeProfileId],
     queryFn: () => api.getRecurringPatterns(),
     staleTime: 2 * 60 * 1000, // 2 minutes - patterns don't change often
+    enabled: !!activeProfileId,
   });
 
   const { data: stats, isLoading: loadingStats } = useQuery<RecurringStats>({
     queryKey: ['recurring-stats', activeProfileId],
     queryFn: () => api.getRecurringStats(),
     staleTime: 2 * 60 * 1000, // 2 minutes
+    enabled: !!activeProfileId,
   });
 
   // Query dismissed alerts from database (persisted)
@@ -140,6 +142,7 @@ export default function Subscriptions() {
     queryKey: ['dismissed-alerts', activeProfileId],
     queryFn: () => api.getDismissedAlerts(),
     staleTime: 2 * 60 * 1000,
+    enabled: !!activeProfileId,
   });
 
   // Check if there are any transactions for this profile
@@ -149,12 +152,13 @@ export default function Subscriptions() {
       const txs = await api.getTransactions({ limit: '1' });
       return txs.length > 0;
     },
+    enabled: !!activeProfileId,
   });
 
   const { data: calendarEntries } = useQuery<RecurringCalendarEntry[]>({
     queryKey: ['recurring-calendar', activeProfileId, startOfMonth, endOfMonth],
     queryFn: () => api.getRecurringCalendar(startOfMonth, endOfMonth),
-    enabled: view === 'calendar',
+    enabled: !!activeProfileId && view === 'calendar',
   });
 
   // Mutations

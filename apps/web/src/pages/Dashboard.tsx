@@ -145,19 +145,21 @@ export default function Dashboard() {
       ) as Promise<DashboardStats>;
     },
     staleTime: 2 * 60 * 1000, // 2 minutes - dashboard data doesn't need constant refresh
+    enabled: !!activeProfileId,
   });
 
   const { data: accounts } = useQuery<Account[]>({
     queryKey: ['accounts', activeProfileId],
     queryFn: () => api.getAccounts() as Promise<Account[]>,
     staleTime: 5 * 60 * 1000, // 5 minutes - accounts rarely change
+    enabled: !!activeProfileId,
   });
 
   const { data: dailyExpenses } = useQuery<DailyExpense[]>({
     queryKey: ['dailyExpenses', activeProfileId, startDate, endDate],
     queryFn: () =>
       api.getDailyExpenses(startDate, endDate) as Promise<DailyExpense[]>,
-    enabled: !!startDate && !!endDate,
+    enabled: !!activeProfileId && !!startDate && !!endDate,
     staleTime: 2 * 60 * 1000, // 2 minutes - daily data is static for past periods
   });
 
@@ -198,6 +200,7 @@ export default function Dashboard() {
       >;
     },
     staleTime: 2 * 60 * 1000, // 2 minutes - budget data doesn't change frequently
+    enabled: !!activeProfileId,
   });
 
   const { data: balanceForecast } = useQuery<{
@@ -223,6 +226,7 @@ export default function Dashboard() {
         isPastPeriod?: boolean;
       } | null>,
     staleTime: 2 * 60 * 1000, // 2 minutes - forecast is expensive to calculate
+    enabled: !!activeProfileId,
   });
 
   const { data: topAccounts } = useQuery<{
@@ -256,6 +260,7 @@ export default function Dashboard() {
         hasMore: boolean;
       }>,
     staleTime: 2 * 60 * 1000, // 2 minutes - top accounts are computed
+    enabled: !!activeProfileId,
   });
 
   const { data: recurringStats } = useQuery<RecurringStats>({

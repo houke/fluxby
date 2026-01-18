@@ -102,6 +102,7 @@ export default function Analytics() {
         MonthlyData[]
       >,
     staleTime: 2 * 60 * 1000, // 2 minutes - stats don't change often
+    enabled: !!activeProfileId,
   });
 
   const { data: expenseCategories, isLoading: expensesLoading } = useQuery<
@@ -121,6 +122,7 @@ export default function Analytics() {
         'expense'
       ) as Promise<CategoryBreakdown[]>,
     staleTime: 2 * 60 * 1000, // 2 minutes
+    enabled: !!activeProfileId,
   });
 
   const { data: incomeCategories, isLoading: incomeLoading } = useQuery<
@@ -140,6 +142,7 @@ export default function Analytics() {
         'income'
       ) as Promise<CategoryBreakdown[]>,
     staleTime: 2 * 60 * 1000, // 2 minutes
+    enabled: !!activeProfileId,
   });
 
   const { data: recurringPatterns, isLoading: recurringLoading } = useQuery<
@@ -154,6 +157,7 @@ export default function Analytics() {
     queryFn: () =>
       api.getRecurringPatternsWithHistory(yearStartDate, yearEndDate),
     staleTime: 2 * 60 * 1000, // 2 minutes
+    enabled: !!activeProfileId,
   });
 
   // Filter recurring patterns to only show confirmed expenses (subscriptions) with 6+ transactions
@@ -178,6 +182,7 @@ export default function Analytics() {
       queryFn: () =>
         api.getRecurringPaymentsFromTransactions(yearStartDate, yearEndDate, 2),
       staleTime: 2 * 60 * 1000, // 2 minutes
+      enabled: !!activeProfileId,
     });
 
   const [activeExpenseIndex, setActiveExpenseIndex] = useState<number | null>(
