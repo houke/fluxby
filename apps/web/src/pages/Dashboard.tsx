@@ -132,7 +132,7 @@ export default function Dashboard() {
   const [accountScrollIndex, setAccountScrollIndex] = useState(0);
   const navigate = useNavigate();
   const { startDate, endDate } = useFilterParams();
-  const { resetFilters, setDateRange } = useFilters();
+  const { setDateRange } = useFilters();
 
   const { data: stats, isLoading } = useQuery<DashboardStats>({
     queryKey: ['dashboard', activeProfileId, startDate, endDate],
@@ -1137,10 +1137,7 @@ export default function Dashboard() {
                   <div className='pt-4'>
                     <Button
                       variant='outline'
-                      onClick={() => {
-                        resetFilters();
-                        navigate('/transactions/');
-                      }}
+                      onClick={() => navigate('/transactions/')}
                     >
                       Alle transacties
                     </Button>
@@ -1234,10 +1231,7 @@ export default function Dashboard() {
                   <div className='pt-4'>
                     <Button
                       variant='outline'
-                      onClick={() => {
-                        resetFilters();
-                        navigate('/addressbook/');
-                      }}
+                      onClick={() => navigate('/addressbook/')}
                     >
                       {t.dashboard?.viewAddressBook || 'Bekijk adresboek'}
                     </Button>

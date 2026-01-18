@@ -1126,7 +1126,7 @@ export default function Analytics() {
                 {/* Recurring payments list with history */}
                 <div className='grid gap-4 lg:grid-cols-2'>
                   {/* List of recurring payments */}
-                  <div className='max-h-[350px] space-y-2 overflow-y-auto'>
+                  <div className='max-h-[350px] space-y-2 overflow-y-auto pr-1'>
                     {recurringPayments.map((payment, index) => {
                       const key = payment.opposingIban
                         ? `${payment.opposingIban}|${payment.merchantName || ''}`
@@ -1141,7 +1141,7 @@ export default function Analytics() {
                           }
                           className={`flex w-full items-center justify-between rounded-lg p-3 text-left transition-colors ${
                             selectedRecurringPayment === key
-                              ? 'bg-primary/10 ring-1 ring-primary'
+                              ? 'bg-primary/10 ring-1 ring-primary ring-inset'
                               : 'bg-muted/50 hover:bg-muted'
                           }`}
                         >
@@ -1315,7 +1315,7 @@ export default function Analytics() {
                 {/* Subscription list with price history */}
                 <div className='grid gap-4 lg:grid-cols-2'>
                   {/* List of subscriptions */}
-                  <div className='max-h-[350px] space-y-2 overflow-y-auto'>
+                  <div className='max-h-[350px] space-y-2 overflow-y-auto pr-1'>
                     {expensePatterns.map((pattern) => (
                       <button
                         key={pattern.id}
@@ -1326,7 +1326,7 @@ export default function Analytics() {
                         }
                         className={`flex w-full items-center justify-between rounded-lg p-3 text-left transition-colors ${
                           selectedPattern === pattern.id
-                            ? 'bg-primary/10 ring-1 ring-primary'
+                            ? 'bg-primary/10 ring-1 ring-primary ring-inset'
                             : 'bg-muted/50 hover:bg-muted'
                         }`}
                       >

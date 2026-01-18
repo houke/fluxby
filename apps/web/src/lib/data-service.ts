@@ -3214,6 +3214,8 @@ export function createDataService(db: Database) {
       // Group by both IBAN AND name to show unique contacts (important for shared IBANs)
       // For shared IBANs (with original_name), we must also match by original_name
       // Only show contacts that are in the address book
+      // IMPORTANT: Use COUNT(DISTINCT t.id) to prevent double counting when IBAN matches both
+      // address_book.iban and contact_ibans (e.g., primary iban also in junction table)
       const rows = await db.queryAsync<{
         iban: string;
         name: string;
@@ -3226,56 +3228,15 @@ export function createDataService(db: Database) {
         net_amount: number;
       }>(
         `
-        SELECT 
-          t.opposing_account_iban as iban,
-          COALESCE(ab.name, ci_ab.name) as name,
-          COALESCE(ab.original_name, ci_ab.original_name) as original_name,
-          COALESCE(ab.description, ci_ab.description) as description,
-          1 as is_in_addressbook,
-          COALESCE(ab.id, ci_ab.id) as addressbook_id,
-          COUNT(t.id) as transaction_count,
-          SUM(ABS(t.amount)) as total_amount,
-          SUM(t.amount) as net_amount
-        FROM transactions t
-        JOIN accounts a ON t.account_id = a.id
-        LEFT JOIN address_book ab ON ab.iban = t.opposing_account_iban 
-          AND ab.profile_id = ? 
-          AND ab.is_deleted = 0
-          AND (ab.original_name IS NULL OR ab.original_name = t.opposing_account_name OR ab.original_name = t.merchant_name)
-        LEFT JOIN contact_ibans ci ON ci.iban = t.opposing_account_iban
-        LEFT JOIN address_book ci_ab ON ci_ab.id = ci.contact_id 
-          AND ci_ab.profile_id = ? 
-          AND ci_ab.is_deleted = 0
-          AND (ci_ab.original_name IS NULL OR ci_ab.original_name = t.opposing_account_name OR ci_ab.original_name = t.merchant_name)
-        WHERE a.profile_id = ?
-          AND t.type != 'transfer'
-          AND t.opposing_account_iban IS NOT NULL
-          AND t.opposing_account_iban != ''
-          AND t.is_deleted = 0
-          AND t.opposing_account_iban NOT IN (
-            SELECT iban FROM accounts WHERE profile_id = ? AND is_deleted = 0
-          )
-          AND (ab.id IS NOT NULL OR ci_ab.id IS NOT NULL)
-          ${amountCondition}
-          ${dateCondition}
-        GROUP BY t.opposing_account_iban, COALESCE(ab.name, ci_ab.name)
-        ORDER BY total_amount DESC
-        LIMIT ?
-      `,
-        queryParams
-      );
-
-      // Get total count (group by IBAN + name for unique contacts)
-      const countParams: (string | number)[] = [pid, pid, pid, pid];
-      if (startDate && endDate) {
-        countParams.push(startDate, endDate);
-      }
-
-      const countResult = await db.queryOneAsync<{ count: number }>(
-        `
-        SELECT COUNT(*) as count
-        FROM (
-          SELECT t.opposing_account_iban, COALESCE(ab.name, ci_ab.name) as name
+        WITH matched_transactions AS (
+          SELECT DISTINCT
+            t.id,
+            t.opposing_account_iban,
+            t.amount,
+            COALESCE(ab.name, ci_ab.name) as contact_name,
+            COALESCE(ab.original_name, ci_ab.original_name) as original_name,
+            COALESCE(ab.description, ci_ab.description) as description,
+            COALESCE(ab.id, ci_ab.id) as addressbook_id
           FROM transactions t
           JOIN accounts a ON t.account_id = a.id
           LEFT JOIN address_book ab ON ab.iban = t.opposing_account_iban 
@@ -3283,6 +3244,7 @@ export function createDataService(db: Database) {
             AND ab.is_deleted = 0
             AND (ab.original_name IS NULL OR ab.original_name = t.opposing_account_name OR ab.original_name = t.merchant_name)
           LEFT JOIN contact_ibans ci ON ci.iban = t.opposing_account_iban
+            AND ab.id IS NULL  -- Only use contact_ibans if no direct match
           LEFT JOIN address_book ci_ab ON ci_ab.id = ci.contact_id 
             AND ci_ab.profile_id = ? 
             AND ci_ab.is_deleted = 0
@@ -3298,7 +3260,68 @@ export function createDataService(db: Database) {
             AND (ab.id IS NOT NULL OR ci_ab.id IS NOT NULL)
             ${amountCondition}
             ${dateCondition}
-          GROUP BY t.opposing_account_iban, COALESCE(ab.name, ci_ab.name)
+        )
+        SELECT 
+          opposing_account_iban as iban,
+          contact_name as name,
+          original_name,
+          description,
+          1 as is_in_addressbook,
+          addressbook_id,
+          COUNT(id) as transaction_count,
+          SUM(ABS(amount)) as total_amount,
+          SUM(amount) as net_amount
+        FROM matched_transactions
+        GROUP BY opposing_account_iban, contact_name
+        ORDER BY total_amount DESC
+        LIMIT ?
+      `,
+        queryParams
+      );
+
+      // Get total count (group by IBAN + name for unique contacts)
+      // Use same CTE approach to ensure consistent counting
+      const countParams: (string | number)[] = [pid, pid, pid, pid];
+      if (startDate && endDate) {
+        countParams.push(startDate, endDate);
+      }
+
+      const countResult = await db.queryOneAsync<{ count: number }>(
+        `
+        SELECT COUNT(*) as count
+        FROM (
+          WITH matched_transactions AS (
+            SELECT DISTINCT
+              t.id,
+              t.opposing_account_iban,
+              COALESCE(ab.name, ci_ab.name) as contact_name
+            FROM transactions t
+            JOIN accounts a ON t.account_id = a.id
+            LEFT JOIN address_book ab ON ab.iban = t.opposing_account_iban 
+              AND ab.profile_id = ? 
+              AND ab.is_deleted = 0
+              AND (ab.original_name IS NULL OR ab.original_name = t.opposing_account_name OR ab.original_name = t.merchant_name)
+            LEFT JOIN contact_ibans ci ON ci.iban = t.opposing_account_iban
+              AND ab.id IS NULL  -- Only use contact_ibans if no direct match
+            LEFT JOIN address_book ci_ab ON ci_ab.id = ci.contact_id 
+              AND ci_ab.profile_id = ? 
+              AND ci_ab.is_deleted = 0
+              AND (ci_ab.original_name IS NULL OR ci_ab.original_name = t.opposing_account_name OR ci_ab.original_name = t.merchant_name)
+            WHERE a.profile_id = ?
+              AND t.type != 'transfer'
+              AND t.opposing_account_iban IS NOT NULL
+              AND t.opposing_account_iban != ''
+              AND t.is_deleted = 0
+              AND t.opposing_account_iban NOT IN (
+                SELECT iban FROM accounts WHERE profile_id = ? AND is_deleted = 0
+              )
+              AND (ab.id IS NOT NULL OR ci_ab.id IS NOT NULL)
+              ${amountCondition}
+              ${dateCondition}
+          )
+          SELECT opposing_account_iban, contact_name
+          FROM matched_transactions
+          GROUP BY opposing_account_iban, contact_name
         )
       `,
         countParams
@@ -5260,26 +5283,29 @@ export function createDataService(db: Database) {
       );
 
       // For each recurring merchant, get the price history
+      // Aggregate transactions by date to handle multiple transactions on the same day
       const result = [];
       for (const row of rows) {
         let priceHistory: { date: string; amount: number }[] = [];
 
         if (row.opposing_account_iban) {
           const txRows = await db.queryAsync<{ date: string; amount: number }>(
-            `SELECT date, amount FROM transactions
+            `SELECT date, SUM(amount) as amount FROM transactions
              WHERE profile_id = ? AND is_deleted = 0
                AND opposing_account_iban = ?
                AND date >= ? AND date <= ?
+             GROUP BY date
              ORDER BY date ASC`,
             [pid, row.opposing_account_iban, startDate, endDate]
           );
           priceHistory = txRows;
         } else if (row.merchant_name) {
           const txRows = await db.queryAsync<{ date: string; amount: number }>(
-            `SELECT date, amount FROM transactions
+            `SELECT date, SUM(amount) as amount FROM transactions
              WHERE profile_id = ? AND is_deleted = 0
                AND LOWER(COALESCE(merchant_name, opposing_account_name)) = LOWER(?)
                AND date >= ? AND date <= ?
+             GROUP BY date
              ORDER BY date ASC`,
             [pid, row.merchant_name, startDate, endDate]
           );
