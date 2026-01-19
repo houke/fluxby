@@ -21,7 +21,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { StatsCard } from '@/components/dashboard/StatsCard';
-import type { RecurringStats, Account } from '@fluxby/shared';
+import type {
+  RecurringStats,
+  Account,
+  Transaction,
+} from '@fluxby/shared';
 
 // Lazy load chart components
 const AccountBalanceCards = lazy(() =>
@@ -145,6 +149,21 @@ export default function Dashboard() {
       ) as Promise<DashboardStats>;
     },
     staleTime: 2 * 60 * 1000, // 2 minutes - dashboard data doesn't need constant refresh
+    enabled: !!activeProfileId,
+  });
+
+  // Get recent transactions with date filter applied
+  const { data: recentTransactionsData } = useQuery<Transaction[]>({
+    queryKey: ['recentTransactions', activeProfileId, startDate, endDate],
+    queryFn: async () => {
+      const transactions = await api.getTransactions({
+        startDate,
+        endDate,
+        limit: '10',
+      });
+      return transactions || [];
+    },
+    staleTime: 2 * 60 * 1000,
     enabled: !!activeProfileId,
   });
 
@@ -291,7 +310,7 @@ export default function Dashboard() {
     [stats?.monthlyData]
   );
   const categoryData = stats?.categoryBreakdown || [];
-  const recentTransactions = stats?.recentTransactions || [];
+  const recentTransactions = recentTransactionsData || [];
 
   // Filter leading zero-expense days from daily chart data
   // to avoid whitespace at the start of the chart
@@ -639,6 +658,10 @@ export default function Dashboard() {
           monthlyData={monthlyData}
           monthlyComparisonScrollRef={monthlyComparisonScrollRef}
           t={t}
+          navigate={navigate}
+          suggestedPeriod={suggestedPeriod}
+          isViewingSuggestedPeriod={isViewingSuggestedPeriod}
+          handleJumpToPeriod={handleJumpToPeriod}
         />
       </Suspense>
 
@@ -813,6 +836,12 @@ export default function Dashboard() {
                   <p className='text-muted-foreground'>
                     {t.dashboard.noBudgets}
                   </p>
+                  <button
+                    onClick={() => navigate('/budgets/')}
+                    className='mt-3 text-sm text-primary hover:underline'
+                  >
+                    {t.dashboard.goToBudgets}
+                  </button>
                 </div>
               )}
             </CardContent>
@@ -1238,7 +1267,7 @@ export default function Dashboard() {
                   </div>
                 </div>
               ) : (
-                <div className='flex flex-col items-center justify-center py-8 text-center'>
+                <div className='flex h-[200px] flex-col items-center justify-center text-center'>
                   <Users className='mb-4 h-12 w-12 text-muted-foreground/50' />
                   <p className='text-muted-foreground'>
                     {t.dashboard?.noTopAccounts ||

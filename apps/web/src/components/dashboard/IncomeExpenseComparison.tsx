@@ -24,12 +24,20 @@ interface IncomeExpenseComparisonProps {
   monthlyData: MonthlyData[];
   monthlyComparisonScrollRef: React.RefObject<HTMLDivElement | null>;
   t: any;
+  navigate: (path: string) => void;
+  suggestedPeriod: { start: Date; end: Date; label: string } | null;
+  isViewingSuggestedPeriod: boolean;
+  handleJumpToPeriod: () => void;
 }
 
 export function IncomeExpenseComparison({
   monthlyData,
   monthlyComparisonScrollRef,
   t,
+  navigate,
+  suggestedPeriod,
+  isViewingSuggestedPeriod,
+  handleJumpToPeriod,
 }: IncomeExpenseComparisonProps) {
   const isMobile = useIsMobile();
 
@@ -188,6 +196,31 @@ export function IncomeExpenseComparison({
             <p className='text-muted-foreground'>
               {t.dashboard.noComparison || 'Geen data beschikbaar'}
             </p>
+            <p className='mt-1 text-sm text-muted-foreground'>
+              {t.dashboard.importTransactions}
+            </p>
+            <div className='mt-3 flex flex-wrap items-center justify-center gap-x-2'>
+              <button
+                onClick={() => navigate('/import/')}
+                className='text-sm text-primary hover:underline'
+              >
+                {t.dashboard.goToImport}
+              </button>
+              {suggestedPeriod && !isViewingSuggestedPeriod && (
+                <>
+                  <span className='text-muted-foreground'>&middot;</span>
+                  <button
+                    onClick={handleJumpToPeriod}
+                    className='text-sm text-primary hover:underline'
+                  >
+                    {(t.dashboard?.jumpToPeriod || 'Jump to {period}').replace(
+                      '{period}',
+                      suggestedPeriod.label
+                    )}
+                  </button>
+                </>
+              )}
+            </div>
           </div>
         )}
       </CardContent>
