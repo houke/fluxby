@@ -4941,6 +4941,43 @@ export function createDataService(db: Database) {
       let detected = 0;
       let updated = 0;
 
+      // Pre-fetch ALL existing patterns for this profile in one query to avoid repeated queries
+      const allExistingPatterns = await db.queryAsync<{
+        id: string;
+        merchant_name: string | null;
+        is_dismissed: number;
+        avg_amount: number;
+        opposing_iban: string | null;
+      }>(
+        `SELECT id, LOWER(TRIM(merchant_name)) as merchant_name, is_dismissed, avg_amount, opposing_iban 
+         FROM recurring_patterns 
+         WHERE profile_id = ? AND is_deleted = 0`,
+        [pid]
+      );
+
+      // Create a map for fast lookups
+      const existingPatternsMap = new Map<
+        string,
+        Array<{
+          id: string;
+          is_dismissed: number;
+          avg_amount: number;
+          opposing_iban: string | null;
+        }>
+      >();
+      for (const pattern of allExistingPatterns) {
+        const key = pattern.merchant_name || 'null';
+        if (!existingPatternsMap.has(key)) {
+          existingPatternsMap.set(key, []);
+        }
+        existingPatternsMap.get(key)!.push({
+          id: pattern.id,
+          is_dismissed: pattern.is_dismissed,
+          avg_amount: pattern.avg_amount,
+          opposing_iban: pattern.opposing_iban,
+        });
+      }
+
       // Process groups in batches to avoid long transactions that can cause OPFS stream errors
       const BATCH_SIZE = 25;
       for (let i = 0; i < groups.length; i += BATCH_SIZE) {
@@ -5055,22 +5092,10 @@ export function createDataService(db: Database) {
             );
             const nextExpectedDate = nextExpected.toISOString().split('T')[0];
 
-            // Check if pattern already exists (including dismissed ones to avoid re-creating)
-            // Match by merchant + similar amount (within 20%) to handle multiple subscriptions
-            // from the same merchant (e.g., Netflix Basic + Premium)
-            // Use flexible IBAN matching: match if both are NULL, both are same, or merchant matches
-            const existingPatterns = await db.queryAsync<{
-              id: string;
-              is_dismissed: number;
-              avg_amount: number;
-              opposing_iban: string | null;
-            }>(
-              `SELECT id, is_dismissed, avg_amount, opposing_iban FROM recurring_patterns 
-             WHERE profile_id = ? 
-               AND LOWER(TRIM(merchant_name)) = LOWER(TRIM(?))
-               AND is_deleted = 0`,
-              [pid, group.merchant_name]
-            );
+            // Look up existing patterns from pre-fetched map
+            const merchantKey =
+              group.merchant_name?.toLowerCase().trim() || 'null';
+            const existingPatterns = existingPatternsMap.get(merchantKey) || [];
 
             if (existingPatterns.length > 0) {
               console.log(

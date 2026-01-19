@@ -48,6 +48,7 @@ export function useAddressBook(options: { enabled?: boolean } = {}) {
     queryFn: () => api.getAddressBook() as Promise<AddressBookEntryWithStats[]>,
     enabled: !!activeProfileId && (options.enabled ?? true),
     staleTime: 10 * 60 * 1000, // 10 minutes - address book data rarely changes, only after imports
+    gcTime: 15 * 60 * 1000, // 15 minutes - keep in cache even when component unmounts
   });
 
   const { data: cleanupRules, isLoading: loadingCleanupRules } = useQuery<
@@ -57,6 +58,7 @@ export function useAddressBook(options: { enabled?: boolean } = {}) {
     queryFn: () => api.getCleanupRules() as Promise<CleanupRule[]>,
     enabled: !!activeProfileId && (options.enabled ?? true),
     staleTime: 5 * 60 * 1000, // 5 minutes - cleanup rules rarely change
+    gcTime: 10 * 60 * 1000, // 10 minutes - keep in cache
   });
 
   // Use optimized getSuggestedContacts that only queries non-addressbook IBANs
@@ -74,6 +76,7 @@ export function useAddressBook(options: { enabled?: boolean } = {}) {
       queryFn: () => api.getSuggestedContacts(100),
       enabled: !!activeProfileId && (options.enabled ?? true),
       staleTime: 10 * 60 * 1000, // 10 minutes - suggested contacts rarely change
+      gcTime: 15 * 60 * 1000, // 15 minutes - keep in cache
     });
 
   const { data: sharedIbans = [] } = useQuery<SharedIban[]>({

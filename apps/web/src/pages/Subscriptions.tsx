@@ -134,6 +134,7 @@ export default function Subscriptions() {
     queryKey: ['recurring-patterns', activeProfileId],
     queryFn: () => api.getRecurringPatterns(),
     staleTime: 10 * 60 * 1000, // 10 minutes - patterns don't change often, only when manually detected
+    gcTime: 15 * 60 * 1000, // 15 minutes - keep in cache
     enabled: !!activeProfileId,
   });
 
@@ -141,6 +142,7 @@ export default function Subscriptions() {
     queryKey: ['recurring-stats', activeProfileId],
     queryFn: () => api.getRecurringStats(),
     staleTime: 10 * 60 * 1000, // 10 minutes - stats don't change often
+    gcTime: 15 * 60 * 1000, // 15 minutes - keep in cache
     enabled: !!activeProfileId,
   });
 
