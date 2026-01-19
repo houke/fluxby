@@ -5279,9 +5279,10 @@ export function createDataService(db: Database) {
           );
           priceHistory = txRows;
         } else if (row.merchant_name) {
+          // Use LIKE pattern matching for normalized merchant names
           const sql = `SELECT date, ABS(amount) as amount FROM transactions
              WHERE profile_id = ? AND is_deleted = 0
-             AND LOWER(COALESCE(merchant_name, opposing_account_name)) = LOWER(?) ${dateFilterClause}
+             AND LOWER(COALESCE(merchant_name, opposing_account_name)) LIKE LOWER(?) || '%' ${dateFilterClause}
              ORDER BY date ASC`;
           const params: (string | null | undefined)[] = useDateFilter
             ? [pid, row.merchant_name, startDate, endDate]

@@ -54,6 +54,12 @@ import {
 import type { PieSectorDataItem } from 'recharts/types/polar/Pie';
 import type { RecurringPattern } from '@fluxby/shared';
 
+// Helper to capitalize first letter of merchant names
+function capitalizeFirst(name: string | null | undefined): string {
+  if (!name) return 'Unknown';
+  return name.charAt(0).toUpperCase() + name.slice(1);
+}
+
 interface MonthlyData {
   month: string;
   income: number;
@@ -1191,7 +1197,7 @@ export default function Analytics() {
                         >
                           <div className='min-w-0 flex-1'>
                             <p className='truncate font-medium'>
-                              {payment.merchantName ||
+                              {capitalizeFirst(payment.merchantName) ||
                                 payment.opposingIban ||
                                 'Unknown'}
                             </p>
@@ -1245,7 +1251,7 @@ export default function Analytics() {
                           <div className='flex-1'>
                             <p className='mb-2 text-sm font-medium'>
                               {t.analytics?.priceHistory || 'Price history'}:{' '}
-                              {payment.merchantName ||
+                              {capitalizeFirst(payment.merchantName) ||
                                 payment.opposingIban ||
                                 'Unknown'}
                             </p>
@@ -1376,7 +1382,7 @@ export default function Analytics() {
                       >
                         <div className='min-w-0 flex-1'>
                           <p className='truncate font-medium'>
-                            {pattern.merchantName ||
+                            {capitalizeFirst(pattern.merchantName) ||
                               pattern.opposingIban ||
                               'Unknown'}
                           </p>
@@ -1460,7 +1466,7 @@ export default function Analytics() {
                           <div className='flex-1'>
                             <p className='mb-2 text-sm font-medium'>
                               {t.analytics?.priceHistory || 'Price history'}:{' '}
-                              {pattern.merchantName ||
+                              {capitalizeFirst(pattern.merchantName) ||
                                 pattern.opposingIban ||
                                 'Unknown'}
                             </p>
