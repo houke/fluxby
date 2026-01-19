@@ -49,6 +49,7 @@ export function useAddressBook(options: { enabled?: boolean } = {}) {
     enabled: !!activeProfileId && (options.enabled ?? true),
     staleTime: 10 * 60 * 1000, // 10 minutes - address book data rarely changes, only after imports
     gcTime: 15 * 60 * 1000, // 15 minutes - keep in cache even when component unmounts
+    refetchOnMount: false, // Don't refetch when component mounts if data exists
   });
 
   const { data: cleanupRules, isLoading: loadingCleanupRules } = useQuery<
@@ -59,6 +60,7 @@ export function useAddressBook(options: { enabled?: boolean } = {}) {
     enabled: !!activeProfileId && (options.enabled ?? true),
     staleTime: 5 * 60 * 1000, // 5 minutes - cleanup rules rarely change
     gcTime: 10 * 60 * 1000, // 10 minutes - keep in cache
+    refetchOnMount: false,
   });
 
   // Use optimized getSuggestedContacts that only queries non-addressbook IBANs
@@ -77,6 +79,7 @@ export function useAddressBook(options: { enabled?: boolean } = {}) {
       enabled: !!activeProfileId && (options.enabled ?? true),
       staleTime: 10 * 60 * 1000, // 10 minutes - suggested contacts rarely change
       gcTime: 15 * 60 * 1000, // 15 minutes - keep in cache
+      refetchOnMount: false,
     });
 
   const { data: sharedIbans = [] } = useQuery<SharedIban[]>({

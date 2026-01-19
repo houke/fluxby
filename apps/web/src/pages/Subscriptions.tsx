@@ -135,6 +135,7 @@ export default function Subscriptions() {
     queryFn: () => api.getRecurringPatterns(),
     staleTime: 10 * 60 * 1000, // 10 minutes - patterns don't change often, only when manually detected
     gcTime: 15 * 60 * 1000, // 15 minutes - keep in cache
+    refetchOnMount: false, // Don't refetch when component mounts
     enabled: !!activeProfileId,
   });
 
@@ -143,6 +144,7 @@ export default function Subscriptions() {
     queryFn: () => api.getRecurringStats(),
     staleTime: 10 * 60 * 1000, // 10 minutes - stats don't change often
     gcTime: 15 * 60 * 1000, // 15 minutes - keep in cache
+    refetchOnMount: false, // Don't refetch when component mounts
     enabled: !!activeProfileId,
   });
 
@@ -173,6 +175,13 @@ export default function Subscriptions() {
   // Mutations
   const detectMutation = useMutation({
     mutationFn: async () => {
+      // Cancel all pending queries to free up database resources
+      // Pattern detection needs exclusive access to avoid WASM memory issues
+      await queryClient.cancelQueries();
+
+      // Small delay to let any in-flight operations complete
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
       // Run pattern detection
       // Note: Dismissed patterns are intentionally kept dismissed to respect user preferences.
       // Detection will skip patterns that match already-dismissed merchants/amounts.

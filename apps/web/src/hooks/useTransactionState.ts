@@ -715,7 +715,9 @@ export function useTransactionData(
   >({
     queryKey: ['addressbook', activeProfileId],
     queryFn: () => api.getAddressBook() as Promise<AddressBookEntry[]>,
-    staleTime: 60 * 1000,
+    staleTime: 10 * 60 * 1000, // 10 minutes - match useAddressBook settings
+    gcTime: 15 * 60 * 1000, // 15 minutes - keep in cache
+    refetchOnMount: false, // Don't refetch when component mounts if data exists
     enabled: needsAddressBook,
   });
 
