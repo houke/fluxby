@@ -4759,6 +4759,43 @@ export function createDataService(db: Database) {
         });
       };
 
+      // Normalize merchant names for better grouping
+      // Bank fees often include period info like "Kosten klantonderzoek Periode: november 2022"
+      // This function extracts a clean, groupable name
+      const normalizeMerchantName = (name: string | null): string => {
+        if (!name) return 'null';
+        let normalized = name.toLowerCase().trim();
+
+        // Remove "periode:" and everything after it (common in Dutch bank fees)
+        const periodeIndex = normalized.indexOf('periode:');
+        if (periodeIndex > 0) {
+          normalized = normalized.substring(0, periodeIndex).trim();
+        }
+
+        // Also handle "period:" variant
+        const periodIndex = normalized.indexOf('period:');
+        if (periodIndex > 0) {
+          normalized = normalized.substring(0, periodIndex).trim();
+        }
+
+        // Remove trailing date patterns like "november 2022", "2024-01", etc.
+        // Common patterns: month names, YYYY-MM, MM-YYYY
+        normalized = normalized
+          .replace(
+            /\s+(januari|februari|maart|april|mei|juni|juli|augustus|september|oktober|november|december)\s*\d{4}.*$/i,
+            ''
+          )
+          .replace(
+            /\s+(january|february|march|april|may|june|july|august|september|october|november|december)\s*\d{4}.*$/i,
+            ''
+          )
+          .replace(/\s+\d{4}[-/]\d{2}.*$/, '') // 2024-01
+          .replace(/\s+\d{2}[-/]\d{4}.*$/, '') // 01-2024
+          .trim();
+
+        return normalized;
+      };
+
       // Only analyze transactions from the last 12 months for pattern detection
       // This improves performance and focuses on recent recurring patterns
       // Anything older than 12 months is ignored
@@ -4792,24 +4829,29 @@ export function createDataService(db: Database) {
       );
 
       // Group by merchant first, then cluster by similar amounts
+      // Use normalized merchant name for grouping to handle bank fees with period info
       const merchantGroups = new Map<
         string,
         Array<{
           id: string;
           opposing_iban: string | null;
+          originalMerchantName: string | null;
           date: string;
           amount: number;
         }>
       >();
 
       for (const tx of allTransactions) {
-        const key = `${tx.opposing_iban || 'null'}:${tx.merchant_name || 'null'}`;
+        // Use normalized merchant name for grouping key
+        const normalizedName = normalizeMerchantName(tx.merchant_name);
+        const key = `${tx.opposing_iban || 'null'}:${normalizedName}`;
         if (!merchantGroups.has(key)) {
           merchantGroups.set(key, []);
         }
         merchantGroups.get(key)!.push({
           id: tx.id,
           opposing_iban: tx.opposing_iban,
+          originalMerchantName: tx.merchant_name,
           date: tx.date,
           amount: tx.amount,
         });

@@ -22,7 +22,9 @@ export function DataManagementSettings() {
     type: 'success' | 'error' | 'warning';
     text: string;
   } | null>(null);
-  const [isDataLoading, setIsDataLoading] = useState(false);
+  const [loadingAction, setLoadingAction] = useState<
+    'export' | 'import' | 'delete' | null
+  >(null);
 
   // Auto-hide notice (keep warnings visible longer)
   React.useEffect(() => {
@@ -73,9 +75,9 @@ export function DataManagementSettings() {
               </div>
               <Button
                 variant='outline'
-                disabled={isDataLoading}
+                disabled={loadingAction !== null}
                 onClick={async () => {
-                  setIsDataLoading(true);
+                  setLoadingAction('export');
                   try {
                     const data = await api.exportAll();
                     const blob = new Blob([JSON.stringify(data, null, 2)], {
@@ -84,7 +86,7 @@ export function DataManagementSettings() {
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement('a');
                     a.href = url;
-                    a.download = `finance-export-${
+                    a.download = `fluxby-export-${
                       new Date().toISOString().split('T')[0]
                     }.json`;
                     a.click();
@@ -99,11 +101,11 @@ export function DataManagementSettings() {
                       text: t.settings.dataManagement.exportError,
                     });
                   } finally {
-                    setIsDataLoading(false);
+                    setLoadingAction(null);
                   }
                 }}
               >
-                {isDataLoading ? (
+                {loadingAction === 'export' ? (
                   <RefreshCcw className='mr-2 h-4 w-4 animate-spin' />
                 ) : null}
                 {t.settings.dataManagement.exportButton}
@@ -136,7 +138,7 @@ export function DataManagementSettings() {
                     e.target.value = '';
                     return;
                   }
-                  setIsDataLoading(true);
+                  setLoadingAction('import');
                   try {
                     const text = await file.text();
                     const payload = JSON.parse(text);
@@ -173,14 +175,14 @@ export function DataManagementSettings() {
                       text: t.settings.dataManagement.importError,
                     });
                   } finally {
-                    setIsDataLoading(false);
+                    setLoadingAction(null);
                     e.target.value = '';
                   }
                 }}
               />
               <Button
                 variant='outline'
-                disabled={isDataLoading}
+                disabled={loadingAction !== null}
                 onClick={() => {
                   const input = document.getElementById(
                     'import-json-input'
@@ -188,7 +190,7 @@ export function DataManagementSettings() {
                   input?.click();
                 }}
               >
-                {isDataLoading ? (
+                {loadingAction === 'import' ? (
                   <RefreshCcw className='mr-2 h-4 w-4 animate-spin' />
                 ) : null}
                 {t.settings.dataManagement.importButton}
@@ -205,7 +207,7 @@ export function DataManagementSettings() {
               </div>
               <Button
                 variant='destructive'
-                disabled={isDataLoading}
+                disabled={loadingAction !== null}
                 onClick={async () => {
                   const isConfirmed = await confirm({
                     title: t.settings.dataManagement.deleteAllTitle,
@@ -216,7 +218,7 @@ export function DataManagementSettings() {
                     return;
                   }
 
-                  setIsDataLoading(true);
+                  setLoadingAction('delete');
                   try {
                     await resetAppAndRestartOnboarding();
                   } catch {
@@ -224,11 +226,11 @@ export function DataManagementSettings() {
                       type: 'error',
                       text: t.settings.dataManagement.deleteAllError,
                     });
-                    setIsDataLoading(false);
+                    setLoadingAction(null);
                   }
                 }}
               >
-                {isDataLoading ? (
+                {loadingAction === 'delete' ? (
                   <RefreshCcw className='mr-2 h-4 w-4 animate-spin' />
                 ) : null}
                 {t.settings.dataManagement.deleteAllButton}

@@ -21,11 +21,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { StatsCard } from '@/components/dashboard/StatsCard';
-import type {
-  RecurringStats,
-  Account,
-  Transaction,
-} from '@fluxby/shared';
+import type { RecurringStats, Account, Transaction } from '@fluxby/shared';
 
 // Lazy load chart components
 const AccountBalanceCards = lazy(() =>
