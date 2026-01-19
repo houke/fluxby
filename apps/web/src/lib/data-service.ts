@@ -4719,7 +4719,7 @@ export function createDataService(db: Database) {
      *
      * Requirements for a valid subscription:
      * - At least MIN_TRANSACTIONS_FOR_PATTERN transactions (6)
-     * - Spans at least 5 months (150 days) to ensure 6+ months of data
+     * - Spans at least 6 months (180 days) from first to last transaction
      * - Consistent interval between transactions (±12 days tolerance)
      * - Only looks at transactions from the last 12 months
      */
@@ -4731,7 +4731,7 @@ export function createDataService(db: Database) {
       if (!pid) return { detected: 0, updated: 0 };
 
       const now = Date.now();
-      const MIN_MONTHS_SPAN_DAYS = 150; // ~5 months minimum span to ensure 6+ months of data
+      const MIN_MONTHS_SPAN_DAYS = 180; // 6 months minimum span (allows up to ~200 days for flexibility)
       const AMOUNT_CLUSTERING_THRESHOLD = 0.15; // 15% - group amounts within this threshold
 
       // Pre-load category rules to check if a pattern should be excluded
@@ -4896,7 +4896,7 @@ export function createDataService(db: Database) {
 
             if (dates.length < MIN_TRANSACTIONS_FOR_PATTERN) continue;
 
-            // Check if transactions span at least 3 months
+            // Check if transactions span at least 6 months (from first to last transaction)
             const firstDate = dates[0];
             const lastDateObj = dates[dates.length - 1];
             const daySpan = Math.round(
@@ -4904,8 +4904,8 @@ export function createDataService(db: Database) {
                 (1000 * 60 * 60 * 24)
             );
 
-            // For monthly patterns, require ~2+ months span (60+ days)
-            // This ensures we have at least 3 payments over 3 months
+            // For monthly patterns, require at least 180 days span (6 months)
+            // This ensures we have at least 6 payments over 6 months
             if (daySpan < MIN_MONTHS_SPAN_DAYS) continue;
 
             // Calculate intervals between consecutive transactions

@@ -297,7 +297,7 @@ router.post('/detect', (req, res) => {
   try {
     const profileId = getEffectiveProfileId(req);
     const now = Date.now();
-    const MIN_MONTHS_SPAN_DAYS = 150; // ~5 months minimum span to ensure 6+ months of data
+    const MIN_MONTHS_SPAN_DAYS = 180; // 6 months minimum span (allows up to ~200 days for flexibility)
     const AMOUNT_CLUSTERING_THRESHOLD = 0.15; // 15% - group amounts within this threshold
 
     // Get all expense transactions to perform in-memory clustering
@@ -422,14 +422,14 @@ router.post('/detect', (req, res) => {
 
       if (dates.length < MIN_TRANSACTIONS_FOR_PATTERN) continue;
 
-      // Check if transactions span at least 3 months
+      // Check if transactions span at least 6 months (from first to last transaction)
       const firstDate = dates[0];
       const lastDateObj = dates[dates.length - 1];
       const daySpan = Math.round(
         (lastDateObj.getTime() - firstDate.getTime()) / (1000 * 60 * 60 * 24)
       );
 
-      // For monthly patterns, require ~2+ months span (60+ days)
+      // For monthly patterns, require at least 180 days span (6 months)
       if (daySpan < MIN_MONTHS_SPAN_DAYS) continue;
 
       // Calculate intervals between consecutive transactions
