@@ -498,12 +498,15 @@ router.post('/detect', (req, res) => {
       if (!patternType) continue;
 
       // Check interval consistency using DATE_TOLERANCE_DAYS (12 days)
-      // More lenient for real-world payment timing variations
-      const isConsistent = intervals.every(
+      // Allow up to 20% of intervals to be outside tolerance (real world payments can be early/late)
+      // This handles vacation payments, holidays, payment date changes, etc.
+      const consistentIntervals = intervals.filter(
         (interval) => Math.abs(interval - avgInterval) <= 12
       );
+      const consistencyRatio = consistentIntervals.length / intervals.length;
+      const MIN_CONSISTENCY_RATIO = 0.8; // At least 80% of intervals must be consistent
 
-      if (!isConsistent) continue;
+      if (consistencyRatio < MIN_CONSISTENCY_RATIO) continue;
 
       // Calculate amount statistics
       const avgAmount = amounts.reduce((sum, a) => sum + a, 0) / amounts.length;

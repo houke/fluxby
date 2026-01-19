@@ -57,22 +57,9 @@ export function MonthlyIncomeChart({
       </CardHeader>
       <CardContent>
         {hasIncome ? (
-          <div
-            className={`h-[300px] overflow-y-hidden ${
-              monthlyData.length > 12 ? 'overflow-x-auto' : 'overflow-x-hidden'
-            }`}
-            style={{ maxWidth: '100%' }}
-            ref={monthlyIncomeScrollRef}
-          >
-            <div
-              ref={monthlyIncomeInnerRef}
-              style={{
-                width: '100%',
-                minWidth: '100%',
-                height: '100%',
-                minHeight: '300px',
-              }}
-            >
+          <div className='flex h-[300px] overflow-hidden'>
+            {/* Fixed Y-Axis */}
+            <div className='h-full w-[50px] flex-shrink-0 border-r bg-card'>
               <ResponsiveContainer
                 width='100%'
                 height='100%'
@@ -80,31 +67,6 @@ export function MonthlyIncomeChart({
                 minWidth={1}
               >
                 <AreaChart data={monthlyData}>
-                  <defs>
-                    <linearGradient
-                      id='colorIncome'
-                      x1='0'
-                      y1='0'
-                      x2='0'
-                      y2='1'
-                    >
-                      <stop offset='5%' stopColor='#8B5CF6' stopOpacity={0.3} />
-                      <stop offset='95%' stopColor='#8B5CF6' stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <XAxis
-                    dataKey='month'
-                    tickFormatter={(value) => {
-                      const [, month] = value.split('-');
-                      return t.common.monthsShort[parseInt(month) - 1];
-                    }}
-                    tick={{
-                      fill: 'hsl(var(--muted-foreground))',
-                      fontSize: isMobile ? 10 : 12,
-                    }}
-                    axisLine={false}
-                    tickLine={false}
-                  />
                   <YAxis
                     tickFormatter={(value) =>
                       value >= 1000
@@ -113,41 +75,106 @@ export function MonthlyIncomeChart({
                     }
                     tick={{
                       fill: 'hsl(var(--muted-foreground))',
-                      fontSize: isMobile ? 9 : 12,
+                      fontSize: 11,
                     }}
                     axisLine={false}
                     tickLine={false}
                     domain={[0, 'auto']}
-                    width={isMobile ? 35 : 50}
+                    width={50}
                   />
-                  <Tooltip
-                    formatter={(value) => [
-                      <Currency key='amount' amount={value as number} />,
-                      t.dashboard.income,
-                    ]}
-                    labelFormatter={(label) => {
-                      if (typeof label !== 'string') return '';
-                      const [year, month] = label.split('-');
-                      return `${t.common.months[parseInt(month) - 1]} ${year}`;
-                    }}
-                    contentStyle={{
-                      backgroundColor: 'hsl(var(--card))',
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: '8px',
-                    }}
-                  />
-                  <Area
-                    type='monotone'
-                    dataKey='income'
-                    stroke='#8B5CF6'
-                    strokeWidth={2}
-                    fill='url(#colorIncome)'
-                    isAnimationActive={monthlyData.length <= 10}
-                    animationDuration={1500}
-                    animationEasing='ease-out'
-                  />
+                  <Area dataKey='income' fill='transparent' />
                 </AreaChart>
               </ResponsiveContainer>
+            </div>
+
+            {/* Scrollable Chart Content */}
+            <div
+              className={`flex-1 overflow-y-hidden ${
+                monthlyData.length > 12
+                  ? 'overflow-x-auto'
+                  : 'overflow-x-hidden'
+              }`}
+              ref={monthlyIncomeScrollRef}
+            >
+              <div
+                ref={monthlyIncomeInnerRef}
+                style={{
+                  width: '100%',
+                  minWidth: '100%',
+                  height: '100%',
+                  minHeight: '300px',
+                }}
+              >
+                <ResponsiveContainer
+                  width='100%'
+                  height='100%'
+                  minHeight={1}
+                  minWidth={1}
+                >
+                  <AreaChart data={monthlyData}>
+                    <defs>
+                      <linearGradient
+                        id='colorIncome'
+                        x1='0'
+                        y1='0'
+                        x2='0'
+                        y2='1'
+                      >
+                        <stop
+                          offset='5%'
+                          stopColor='#8B5CF6'
+                          stopOpacity={0.3}
+                        />
+                        <stop
+                          offset='95%'
+                          stopColor='#8B5CF6'
+                          stopOpacity={0}
+                        />
+                      </linearGradient>
+                    </defs>
+                    <XAxis
+                      dataKey='month'
+                      tickFormatter={(value) => {
+                        const [, month] = value.split('-');
+                        return t.common.monthsShort[parseInt(month) - 1];
+                      }}
+                      tick={{
+                        fill: 'hsl(var(--muted-foreground))',
+                        fontSize: isMobile ? 10 : 12,
+                      }}
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <YAxis hide domain={[0, 'auto']} />
+                    <Tooltip
+                      formatter={(value) => [
+                        <Currency key='amount' amount={value as number} />,
+                        t.dashboard.income,
+                      ]}
+                      labelFormatter={(label) => {
+                        if (typeof label !== 'string') return '';
+                        const [year, month] = label.split('-');
+                        return `${t.common.months[parseInt(month) - 1]} ${year}`;
+                      }}
+                      contentStyle={{
+                        backgroundColor: 'hsl(var(--card))',
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '8px',
+                      }}
+                    />
+                    <Area
+                      type='monotone'
+                      dataKey='income'
+                      stroke='#8B5CF6'
+                      strokeWidth={2}
+                      fill='url(#colorIncome)'
+                      isAnimationActive={monthlyData.length <= 10}
+                      animationDuration={1500}
+                      animationEasing='ease-out'
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
             </div>
           </div>
         ) : (

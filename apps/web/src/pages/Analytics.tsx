@@ -286,144 +286,169 @@ export default function Analytics() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div
-              className='h-[300px] overflow-x-auto'
-              ref={savingsChartScrollRef}
-            >
-              {netSavings.length > 0 ? (
-                <div
-                  style={{
-                    width: `${Math.max(12, netSavings.length) * 50}px`,
-                    minWidth: '100%',
-                    height: '100%',
-                  }}
-                >
+            {netSavings.length > 0 ? (
+              <div className='flex h-[300px] overflow-hidden'>
+                {/* Fixed Y-Axis */}
+                <div className='h-full w-[50px] flex-shrink-0 border-r bg-card'>
                   <ResponsiveContainer width='100%' height='100%'>
                     <BarChart data={netSavings}>
-                      <CartesianGrid
-                        strokeDasharray='3 3'
-                        vertical={false}
-                        stroke='hsl(var(--border))'
-                      />
-                      <XAxis
-                        dataKey='month'
-                        tickFormatter={(value) => {
-                          const [year, month] = value.split('-');
-                          const monthIdx = parseInt(month) - 1;
-                          const monthName = t.common.monthsShort[monthIdx];
-                          // Show year for January
-                          if (month === '01') {
-                            return `${monthName} '${year.slice(2)}`;
-                          }
-                          return monthName;
-                        }}
-                        tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                        axisLine={false}
-                        tickLine={false}
-                        interval={0}
-                      />
                       <YAxis
                         tickFormatter={(value) =>
                           value >= 1000 || value <= -1000
                             ? `€${(value / 1000).toFixed(0)}k`
                             : `€${Math.round(value)}`
                         }
-                        tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                        tick={{
+                          fill: 'hsl(var(--muted-foreground))',
+                          fontSize: 11,
+                        }}
                         axisLine={false}
                         tickLine={false}
                         domain={[
                           (dataMin: number) => Math.min(dataMin, 0),
                           (dataMax: number) => Math.max(dataMax, 0),
                         ]}
+                        width={50}
                       />
-                      <Tooltip
-                        content={({ active, payload, label }) => {
-                          if (!active || !payload || !payload.length)
-                            return null;
-                          if (typeof label !== 'string') return null;
-                          const value = payload[0].value as number;
-                          const [year, month] = label.split('-');
-                          const monthIdx = parseInt(month) - 1;
-                          const monthName = t.common.months[monthIdx];
-                          return (
-                            <div
-                              className='rounded-lg border bg-card p-2 shadow-sm'
-                              style={{
-                                backgroundColor: 'hsl(var(--card))',
-                                border: '1px solid hsl(var(--border))',
-                              }}
-                            >
-                              <p className='text-sm text-muted-foreground'>
-                                {monthName}{' '}
-                                <span className='font-semibold'>{year}</span>
-                              </p>
-                              <p
-                                className='text-sm font-semibold'
-                                style={{
-                                  color: value >= 0 ? '#10B981' : '#F43F5E',
-                                }}
-                              >
-                                {value >= 0 ? '+' : ''}
-                                <Currency amount={value} />
-                              </p>
-                            </div>
-                          );
-                        }}
-                        cursor={{ fill: 'hsl(var(--muted)/0.3)' }}
-                      />
-                      <ReferenceLine y={0} stroke='hsl(var(--border))' />
-                      {/* Year separator lines */}
-                      {netSavings
-                        .filter((d) => d.month.endsWith('-01'))
-                        .map((d) => (
-                          <ReferenceLine
-                            key={d.month}
-                            x={d.month}
-                            stroke='hsl(var(--muted-foreground))'
-                            strokeDasharray='5 5'
-                            strokeOpacity={0.5}
-                          />
-                        ))}
-                      <Bar
-                        dataKey='savings'
-                        radius={[4, 4, 0, 0]}
-                        fill='#10B981'
-                        activeBar={(props: unknown) => {
-                          const typedProps = props as {
-                            payload?: { savings: number };
-                            x?: number;
-                            y?: number;
-                            width?: number;
-                            height?: number;
-                          };
-                          const isPositive =
-                            (typedProps.payload?.savings ?? 0) >= 0;
-                          return (
-                            <Rectangle
-                              {...typedProps}
-                              fill={isPositive ? '#047857' : '#BE123C'}
-                            />
-                          );
-                        }}
-                      >
-                        {netSavings.map((entry, index) => (
-                          <Cell
-                            key={`cell-${index}`}
-                            fill={entry.savings >= 0 ? '#10B981' : '#F43F5E'}
-                          />
-                        ))}
-                      </Bar>
+                      <Bar dataKey='savings' fill='transparent' />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
-              ) : (
+
+                {/* Scrollable Chart Content */}
+                <div
+                  className='flex-1 overflow-x-auto overflow-y-hidden'
+                  ref={savingsChartScrollRef}
+                >
+                  <div
+                    style={{
+                      width: `${Math.max(12, netSavings.length) * 50}px`,
+                      minWidth: '100%',
+                      height: '100%',
+                    }}
+                  >
+                    <ResponsiveContainer width='100%' height='100%'>
+                      <BarChart data={netSavings}>
+                        <CartesianGrid
+                          strokeDasharray='3 3'
+                          vertical={false}
+                          stroke='hsl(var(--border))'
+                        />
+                        <XAxis
+                          dataKey='month'
+                          tickFormatter={(value) => {
+                            const [year, month] = value.split('-');
+                            const monthIdx = parseInt(month) - 1;
+                            const monthName = t.common.monthsShort[monthIdx];
+                            // Show year for January
+                            if (month === '01') {
+                              return `${monthName} '${year.slice(2)}`;
+                            }
+                            return monthName;
+                          }}
+                          tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                          axisLine={false}
+                          tickLine={false}
+                          interval={0}
+                        />
+                        <YAxis
+                          hide
+                          domain={[
+                            (dataMin: number) => Math.min(dataMin, 0),
+                            (dataMax: number) => Math.max(dataMax, 0),
+                          ]}
+                        />
+                        <Tooltip
+                          content={({ active, payload, label }) => {
+                            if (!active || !payload || !payload.length)
+                              return null;
+                            if (typeof label !== 'string') return null;
+                            const value = payload[0].value as number;
+                            const [year, month] = label.split('-');
+                            const monthIdx = parseInt(month) - 1;
+                            const monthName = t.common.months[monthIdx];
+                            return (
+                              <div
+                                className='rounded-lg border bg-card p-2 shadow-sm'
+                                style={{
+                                  backgroundColor: 'hsl(var(--card))',
+                                  border: '1px solid hsl(var(--border))',
+                                }}
+                              >
+                                <p className='text-sm text-muted-foreground'>
+                                  {monthName}{' '}
+                                  <span className='font-semibold'>{year}</span>
+                                </p>
+                                <p
+                                  className='text-sm font-semibold'
+                                  style={{
+                                    color: value >= 0 ? '#10B981' : '#F43F5E',
+                                  }}
+                                >
+                                  {value >= 0 ? '+' : ''}
+                                  <Currency amount={value} />
+                                </p>
+                              </div>
+                            );
+                          }}
+                          cursor={{ fill: 'hsl(var(--muted)/0.3)' }}
+                        />
+                        <ReferenceLine y={0} stroke='hsl(var(--border))' />
+                        {/* Year separator lines */}
+                        {netSavings
+                          .filter((d) => d.month.endsWith('-01'))
+                          .map((d) => (
+                            <ReferenceLine
+                              key={d.month}
+                              x={d.month}
+                              stroke='hsl(var(--muted-foreground))'
+                              strokeDasharray='5 5'
+                              strokeOpacity={0.5}
+                            />
+                          ))}
+                        <Bar
+                          dataKey='savings'
+                          radius={[4, 4, 0, 0]}
+                          fill='#10B981'
+                          activeBar={(props: unknown) => {
+                            const typedProps = props as {
+                              payload?: { savings: number };
+                              x?: number;
+                              y?: number;
+                              width?: number;
+                              height?: number;
+                            };
+                            const isPositive =
+                              (typedProps.payload?.savings ?? 0) >= 0;
+                            return (
+                              <Rectangle
+                                {...typedProps}
+                                fill={isPositive ? '#047857' : '#BE123C'}
+                              />
+                            );
+                          }}
+                        >
+                          {netSavings.map((entry, index) => (
+                            <Cell
+                              key={`cell-${index}`}
+                              fill={entry.savings >= 0 ? '#10B981' : '#F43F5E'}
+                            />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className='h-[300px]'>
                 <EmptyState
                   icon={ArrowLeftRight}
                   title={t.analytics.noData}
                   className='h-full py-8'
                 />
-              )}
-            </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -440,127 +465,146 @@ export default function Analytics() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div
-              className='h-[300px] overflow-x-auto'
-              ref={trendChartScrollRef}
-            >
-              {monthlyData && monthlyData.length > 0 ? (
-                <div
-                  style={{
-                    width: `${Math.max(12, monthlyData.length) * 60}px`,
-                    minWidth: '100%',
-                    height: '100%',
-                  }}
-                >
+            {monthlyData && monthlyData.length > 0 ? (
+              <div className='flex h-[300px] overflow-hidden'>
+                {/* Fixed Y-Axis */}
+                <div className='h-full w-[50px] flex-shrink-0 border-r bg-card'>
                   <ResponsiveContainer width='100%' height='100%'>
                     <LineChart data={monthlyData}>
-                      <CartesianGrid
-                        strokeDasharray='3 3'
-                        vertical={false}
-                        stroke='hsl(var(--border))'
-                      />
-                      <XAxis
-                        dataKey='month'
-                        tickFormatter={(value) => {
-                          const [year, month] = value.split('-');
-                          const monthIdx = parseInt(month) - 1;
-                          const monthName = t.common.monthsShort[monthIdx];
-                          // Show year for January
-                          if (month === '01') {
-                            return `${monthName} '${year.slice(2)}`;
-                          }
-                          return monthName;
-                        }}
-                        tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                        axisLine={false}
-                        tickLine={false}
-                      />
                       <YAxis
                         tickFormatter={(value) =>
-                          `€${(value / 1000).toFixed(1)}k`
+                          `€${(value / 1000).toFixed(0)}k`
                         }
-                        tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                        tick={{
+                          fill: 'hsl(var(--muted-foreground))',
+                          fontSize: 11,
+                        }}
                         axisLine={false}
                         tickLine={false}
-                        allowDuplicatedCategory={false}
-                        allowDecimals={true}
+                        width={50}
                       />
-                      <Tooltip
-                        content={({ active, payload, label }) => {
-                          if (!active || !payload || !payload.length)
-                            return null;
-                          if (typeof label !== 'string') return null;
-                          const [year, month] = label.split('-');
-                          const monthIdx = parseInt(month) - 1;
-                          const monthName = t.common.monthsShort[monthIdx];
-                          return (
-                            <div
-                              className='rounded-lg border bg-card p-2 shadow-sm'
-                              style={{
-                                backgroundColor: 'hsl(var(--card))',
-                                border: '1px solid hsl(var(--border))',
-                              }}
-                            >
-                              <p className='mb-1 text-sm font-medium'>
-                                {monthName} {year}
-                              </p>
-                              {payload.map((entry) => (
-                                <p
-                                  key={entry.dataKey}
-                                  className='text-sm'
-                                  style={{ color: entry.color }}
-                                >
-                                  {entry.dataKey === 'income'
-                                    ? t.dashboard.income
-                                    : t.dashboard.expenses}
-                                  : <Currency amount={entry.value as number} />
-                                </p>
-                              ))}
-                            </div>
-                          );
-                        }}
-                      />
-                      <ReferenceLine y={0} stroke='hsl(var(--border))' />
-                      {/* Year separator lines */}
-                      {monthlyData
-                        .filter((d) => d.month.endsWith('-01'))
-                        .map((d) => (
-                          <ReferenceLine
-                            key={d.month}
-                            x={d.month}
-                            stroke='hsl(var(--muted-foreground))'
-                            strokeDasharray='5 5'
-                            strokeOpacity={0.5}
-                          />
-                        ))}
-                      <Legend />
-                      <Line
-                        type='monotone'
-                        dataKey='income'
-                        name='Inkomsten'
-                        stroke='#10B981'
-                        strokeWidth={2}
-                        dot={{ fill: '#10B981', strokeWidth: 2 }}
-                      />
-                      <Line
-                        type='monotone'
-                        dataKey='expenses'
-                        name='Uitgaven'
-                        stroke='#F43F5E'
-                        strokeWidth={2}
-                        dot={{ fill: '#F43F5E', strokeWidth: 2 }}
-                      />
+                      <Line dataKey='income' stroke='transparent' />
+                      <Line dataKey='expenses' stroke='transparent' />
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
-              ) : (
+
+                {/* Scrollable Chart Content */}
+                <div
+                  className='flex-1 overflow-x-auto overflow-y-hidden'
+                  ref={trendChartScrollRef}
+                >
+                  <div
+                    style={{
+                      width: `${Math.max(12, monthlyData.length) * 60}px`,
+                      minWidth: '100%',
+                      height: '100%',
+                    }}
+                  >
+                    <ResponsiveContainer width='100%' height='100%'>
+                      <LineChart data={monthlyData}>
+                        <CartesianGrid
+                          strokeDasharray='3 3'
+                          vertical={false}
+                          stroke='hsl(var(--border))'
+                        />
+                        <XAxis
+                          dataKey='month'
+                          tickFormatter={(value) => {
+                            const [year, month] = value.split('-');
+                            const monthIdx = parseInt(month) - 1;
+                            const monthName = t.common.monthsShort[monthIdx];
+                            // Show year for January
+                            if (month === '01') {
+                              return `${monthName} '${year.slice(2)}`;
+                            }
+                            return monthName;
+                          }}
+                          tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                          axisLine={false}
+                          tickLine={false}
+                        />
+                        <YAxis hide />
+                        <Tooltip
+                          content={({ active, payload, label }) => {
+                            if (!active || !payload || !payload.length)
+                              return null;
+                            if (typeof label !== 'string') return null;
+                            const [year, month] = label.split('-');
+                            const monthIdx = parseInt(month) - 1;
+                            const monthName = t.common.monthsShort[monthIdx];
+                            return (
+                              <div
+                                className='rounded-lg border bg-card p-2 shadow-sm'
+                                style={{
+                                  backgroundColor: 'hsl(var(--card))',
+                                  border: '1px solid hsl(var(--border))',
+                                }}
+                              >
+                                <p className='mb-1 text-sm font-medium'>
+                                  {monthName} {year}
+                                </p>
+                                {payload.map((entry) => (
+                                  <p
+                                    key={entry.dataKey}
+                                    className='text-sm'
+                                    style={{ color: entry.color }}
+                                  >
+                                    {entry.dataKey === 'income'
+                                      ? t.dashboard.income
+                                      : t.dashboard.expenses}
+                                    :{' '}
+                                    <Currency amount={entry.value as number} />
+                                  </p>
+                                ))}
+                              </div>
+                            );
+                          }}
+                        />
+                        <ReferenceLine y={0} stroke='hsl(var(--border))' />
+                        {/* Year separator lines */}
+                        {monthlyData
+                          .filter((d) => d.month.endsWith('-01'))
+                          .map((d) => (
+                            <ReferenceLine
+                              key={d.month}
+                              x={d.month}
+                              stroke='hsl(var(--muted-foreground))'
+                              strokeDasharray='5 5'
+                              strokeOpacity={0.5}
+                            />
+                          ))}
+                        <Legend />
+                        <Line
+                          type='monotone'
+                          dataKey='income'
+                          name='Inkomsten'
+                          stroke='#10B981'
+                          strokeWidth={2}
+                          dot={{ fill: '#10B981', strokeWidth: 2 }}
+                        />
+                        <Line
+                          type='monotone'
+                          dataKey='expenses'
+                          name='Uitgaven'
+                          stroke='#F43F5E'
+                          strokeWidth={2}
+                          dot={{ fill: '#F43F5E', strokeWidth: 2 }}
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className='h-[300px]'>
                 <EmptyState
                   icon={TrendingUp}
                   title={t.analytics.noData || 'Geen data beschikbaar'}
                   className='h-full py-8'
                 />
-              )}
-            </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

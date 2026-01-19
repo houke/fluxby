@@ -1945,7 +1945,8 @@ export const nl: LandingTranslationKeys = {
       v160F1Desc: '2 nieuwe features. Bekijk de release op GitHub!',
       v160F2Title: 'Nieuwe web app mogelijkheden',
       v160F2Desc: '3 nieuwe features. Bekijk de release op GitHub!',
-      v160F3Title: 'Geïmplementeerd smart amount clustering for multi-tier patterns',
+      v160F3Title:
+        'Geïmplementeerd smart amount clustering for multi-tier patterns',
       v160F3Desc: 'Nieuwe functionaliteit waar je iets aan hebt.',
       v160F4Title: 'Bugfixes',
       v160F4Desc: '24 bugs opgelost. Zie changelog voor details.',

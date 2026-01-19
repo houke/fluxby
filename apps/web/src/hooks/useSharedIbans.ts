@@ -11,7 +11,6 @@ export function useSharedIbans() {
   const toast = useToast();
   const queryClient = useQueryClient();
 
-
   const { data: sharedIbans = [], isLoading } = useQuery<SharedIban[]>({
     queryKey: ['sharedIbans', activeProfileId],
     queryFn: async () => {

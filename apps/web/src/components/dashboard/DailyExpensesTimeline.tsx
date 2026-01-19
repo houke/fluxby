@@ -49,53 +49,54 @@ export function DailyExpensesTimeline({
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className='flex h-[200px] overflow-hidden'>
-          {/* Fixed Y-Axis */}
-          <div className='h-full w-[50px] flex-shrink-0'>
-            <ResponsiveContainer
-              width='100%'
-              height='100%'
-              minHeight={1}
-              minWidth={1}
-            >
-              <BarChart data={dailyData} layout='horizontal'>
-                <YAxis
-                  tickFormatter={(value) =>
-                    value >= 1000
-                      ? `€${(value / 1000).toFixed(1)}k`
-                      : `€${Math.round(value)}`
-                  }
-                  tick={{
-                    fill: 'hsl(var(--muted-foreground))',
-                    fontSize: 11,
-                  }}
-                  axisLine={{ stroke: 'hsl(var(--border))' }}
-                  tickLine={false}
-                  domain={[
-                    0,
-                    (dataMax: number) => {
-                      if (dataMax <= 100) return Math.ceil(dataMax / 20) * 20;
-                      if (dataMax <= 500) return Math.ceil(dataMax / 100) * 100;
-                      if (dataMax <= 2000)
-                        return Math.ceil(dataMax / 500) * 500;
-                      return Math.ceil(dataMax / 1000) * 1000;
-                    },
-                  ]}
-                  width={50}
-                  allowDecimals={false}
-                  tickCount={5}
-                />
-                <Bar dataKey='expenses' fill='transparent' />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+        {dailyData.reduce((sum, day) => sum + day.expenses, 0) > 0 ? (
+          <div className='flex h-[200px] overflow-hidden'>
+            {/* Fixed Y-Axis */}
+            <div className='h-full w-[50px] flex-shrink-0 border-r bg-card'>
+              <ResponsiveContainer
+                width='100%'
+                height='100%'
+                minHeight={1}
+                minWidth={1}
+              >
+                <BarChart data={dailyData} layout='horizontal'>
+                  <YAxis
+                    tickFormatter={(value) =>
+                      value >= 1000
+                        ? `€${(value / 1000).toFixed(1)}k`
+                        : `€${Math.round(value)}`
+                    }
+                    tick={{
+                      fill: 'hsl(var(--muted-foreground))',
+                      fontSize: 11,
+                    }}
+                    axisLine={{ stroke: 'hsl(var(--border))' }}
+                    tickLine={false}
+                    domain={[
+                      0,
+                      (dataMax: number) => {
+                        if (dataMax <= 100) return Math.ceil(dataMax / 20) * 20;
+                        if (dataMax <= 500)
+                          return Math.ceil(dataMax / 100) * 100;
+                        if (dataMax <= 2000)
+                          return Math.ceil(dataMax / 500) * 500;
+                        return Math.ceil(dataMax / 1000) * 1000;
+                      },
+                    ]}
+                    width={50}
+                    allowDecimals={false}
+                    tickCount={5}
+                  />
+                  <Bar dataKey='expenses' fill='transparent' />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
 
-          {/* Scrollable Chart Content */}
-          <div
-            className='flex-1 overflow-x-auto overflow-y-hidden'
-            ref={dailyScrollRef}
-          >
-            {dailyData.reduce((sum, day) => sum + day.expenses, 0) > 0 ? (
+            {/* Scrollable Chart Content */}
+            <div
+              className='flex-1 overflow-x-auto overflow-y-hidden'
+              ref={dailyScrollRef}
+            >
               <div
                 style={{
                   width:
@@ -178,42 +179,40 @@ export function DailyExpensesTimeline({
                   </BarChart>
                 </ResponsiveContainer>
               </div>
-            ) : (
-              <div className='flex h-full items-center justify-center overflow-hidden text-muted-foreground'>
-                <div className='flex flex-col items-center justify-center text-center'>
-                  <ArrowDownRight className='mb-4 h-12 w-12 text-muted-foreground/50' />
-                  <p className='text-muted-foreground'>
-                    {t.dashboard.noExpenses}
-                  </p>
-                  <p className='mt-1 text-sm text-muted-foreground'>
-                    {t.dashboard.importTransactions}
-                  </p>
-                  <div className='mt-3 flex flex-wrap items-center justify-center gap-x-2'>
+            </div>
+          </div>
+        ) : (
+          <div className='flex h-[200px] items-center justify-center overflow-hidden text-muted-foreground'>
+            <div className='flex flex-col items-center justify-center text-center'>
+              <ArrowDownRight className='mb-4 h-12 w-12 text-muted-foreground/50' />
+              <p className='text-muted-foreground'>{t.dashboard.noExpenses}</p>
+              <p className='mt-1 text-sm text-muted-foreground'>
+                {t.dashboard.importTransactions}
+              </p>
+              <div className='mt-3 flex flex-wrap items-center justify-center gap-x-2'>
+                <button
+                  onClick={() => navigate('/import/')}
+                  className='text-sm text-primary hover:underline'
+                >
+                  {t.dashboard.goToImport}
+                </button>
+                {suggestedPeriod && !isViewingSuggestedPeriod && (
+                  <>
+                    <span className='text-muted-foreground'>&middot;</span>
                     <button
-                      onClick={() => navigate('/import/')}
+                      onClick={handleJumpToPeriod}
                       className='text-sm text-primary hover:underline'
                     >
-                      {t.dashboard.goToImport}
+                      {(
+                        t.dashboard?.jumpToPeriod || 'Jump to {period}'
+                      ).replace('{period}', suggestedPeriod.label)}
                     </button>
-                    {suggestedPeriod && !isViewingSuggestedPeriod && (
-                      <>
-                        <span className='text-muted-foreground'>&middot;</span>
-                        <button
-                          onClick={handleJumpToPeriod}
-                          className='text-sm text-primary hover:underline'
-                        >
-                          {(
-                            t.dashboard?.jumpToPeriod || 'Jump to {period}'
-                          ).replace('{period}', suggestedPeriod.label)}
-                        </button>
-                      </>
-                    )}
-                  </div>
-                </div>
+                  </>
+                )}
               </div>
-            )}
+            </div>
           </div>
-        </div>
+        )}
       </CardContent>
     </Card>
   );

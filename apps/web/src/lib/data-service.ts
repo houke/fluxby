@@ -4728,36 +4728,12 @@ export function createDataService(db: Database) {
       updated: number;
     }> {
       const pid = profileId();
+      console.log('[detectRecurringPatterns] Profile ID:', pid);
       if (!pid) return { detected: 0, updated: 0 };
 
       const now = Date.now();
       const MIN_MONTHS_SPAN_DAYS = 180; // 6 months minimum span (allows up to ~200 days for flexibility)
       const AMOUNT_CLUSTERING_THRESHOLD = 0.15; // 15% - group amounts within this threshold
-
-      // Pre-load category rules to check if a pattern should be excluded
-      // We load these early so we can skip patterns that would be immediately dismissed
-      const categoryRules = await db.queryAsync<{ pattern: string }>(
-        `SELECT LOWER(pattern) as pattern FROM category_rules 
-         WHERE profile_id = ? AND is_deleted = 0`,
-        [pid]
-      );
-      const rulePatterns = categoryRules.map((r) => r.pattern.toLowerCase());
-
-      // Helper function to check if a merchant name matches a category rule
-      const matchesCategoryRule = (merchantName: string | null): boolean => {
-        if (!merchantName) return false;
-        const name = merchantName.toLowerCase();
-        return rulePatterns.some((rulePattern) => {
-          // Skip very short rules that would match too broadly
-          if (rulePattern.length < 4) return false;
-          // Check for exact match or the merchant name starts/ends with the rule
-          return (
-            name === rulePattern ||
-            name.startsWith(rulePattern) ||
-            name.endsWith(rulePattern)
-          );
-        });
-      };
 
       // Normalize merchant names for better grouping
       // Bank fees often include period info like "Kosten klantonderzoek Periode: november 2022"
@@ -4826,6 +4802,13 @@ export function createDataService(db: Database) {
            AND t.date >= ?
          ORDER BY merchant_name, date`,
         [pid, twelveMonthsAgoStr]
+      );
+
+      console.log(
+        '[detectRecurringPatterns] Loaded transactions:',
+        allTransactions.length,
+        'since',
+        twelveMonthsAgoStr
       );
 
       // Group by merchant first, then cluster by similar amounts
@@ -4923,6 +4906,12 @@ export function createDataService(db: Database) {
         }
       }
 
+      console.log(
+        '[detectRecurringPatterns] Candidate groups:',
+        groups.length,
+        groups.map((g) => `${g.merchant_name} (${g.dates.length} txns)`)
+      );
+
       let detected = 0;
       let updated = 0;
 
@@ -4936,7 +4925,12 @@ export function createDataService(db: Database) {
             const dates = group.dates;
             const amounts = group.amounts;
 
-            if (dates.length < MIN_TRANSACTIONS_FOR_PATTERN) continue;
+            if (dates.length < MIN_TRANSACTIONS_FOR_PATTERN) {
+              console.log(
+                `[detectRecurringPatterns] Skip ${group.merchant_name}: only ${dates.length} txns (need ${MIN_TRANSACTIONS_FOR_PATTERN})`
+              );
+              continue;
+            }
 
             // Check if transactions span at least 6 months (from first to last transaction)
             const firstDate = dates[0];
@@ -4948,7 +4942,12 @@ export function createDataService(db: Database) {
 
             // For monthly patterns, require at least 180 days span (6 months)
             // This ensures we have at least 6 payments over 6 months
-            if (daySpan < MIN_MONTHS_SPAN_DAYS) continue;
+            if (daySpan < MIN_MONTHS_SPAN_DAYS) {
+              console.log(
+                `[detectRecurringPatterns] Skip ${group.merchant_name}: span ${daySpan} days (need ${MIN_MONTHS_SPAN_DAYS})`
+              );
+              continue;
+            }
 
             // Calculate intervals between consecutive transactions
             const intervals: number[] = [];
@@ -4972,17 +4971,38 @@ export function createDataService(db: Database) {
               }
             }
 
-            if (!patternType) continue;
+            if (!patternType) {
+              console.log(
+                `[detectRecurringPatterns] Skip ${group.merchant_name}: avgInterval ${avgInterval.toFixed(1)} doesn't match any pattern type`
+              );
+              continue;
+            }
 
             // Check interval consistency using DATE_TOLERANCE_DAYS (12 days)
-            // This is more lenient for monthly patterns where payment dates can vary
-            // (e.g., salary on 25th, bills around 1st-5th)
-            const isConsistent = intervals.every(
+            // Allow up to 20% of intervals to be outside tolerance (real world payments can be early/late)
+            // This handles vacation payments, holidays, payment date changes, etc.
+            const consistentIntervals = intervals.filter(
               (interval) =>
                 Math.abs(interval - avgInterval) <= DATE_TOLERANCE_DAYS
             );
+            const consistencyRatio =
+              consistentIntervals.length / intervals.length;
+            const MIN_CONSISTENCY_RATIO = 0.8; // At least 80% of intervals must be consistent
 
-            if (!isConsistent) continue;
+            if (consistencyRatio < MIN_CONSISTENCY_RATIO) {
+              const inconsistentIntervals = intervals.filter(
+                (interval) =>
+                  Math.abs(interval - avgInterval) > DATE_TOLERANCE_DAYS
+              );
+              console.log(
+                `[detectRecurringPatterns] Skip ${group.merchant_name}: inconsistent intervals (${(consistencyRatio * 100).toFixed(0)}% < ${MIN_CONSISTENCY_RATIO * 100}%). Avg: ${avgInterval.toFixed(1)}, bad: ${inconsistentIntervals.join(', ')}, tolerance: ${DATE_TOLERANCE_DAYS}`
+              );
+              continue;
+            }
+
+            console.log(
+              `[detectRecurringPatterns] VALID pattern: ${group.merchant_name}, type: ${patternType}, ${dates.length} txns, avgInterval: ${avgInterval.toFixed(1)}, consistency: ${(consistencyRatio * 100).toFixed(0)}%`
+            );
 
             // Calculate amount statistics
             // Amounts may be positive or negative depending on how they were imported
@@ -5026,6 +5046,16 @@ export function createDataService(db: Database) {
               [pid, group.merchant_name]
             );
 
+            if (existingPatterns.length > 0) {
+              console.log(
+                `[detectRecurringPatterns] Found ${existingPatterns.length} existing patterns for "${group.merchant_name}":`,
+                existingPatterns.map(
+                  (p) =>
+                    `id=${p.id.slice(0, 8)}, amt=${p.avg_amount.toFixed(2)}, dismissed=${p.is_dismissed}`
+                )
+              );
+            }
+
             // Find existing pattern with similar amount (within 20%) and compatible IBAN
             let existing: { id: string; is_dismissed: number } | null = null;
             for (const pattern of existingPatterns) {
@@ -5050,7 +5080,16 @@ export function createDataService(db: Database) {
 
             if (existing) {
               // Skip if dismissed - don't update dismissed patterns
-              if (existing.is_dismissed === 1) continue;
+              if (existing.is_dismissed === 1) {
+                console.log(
+                  `[detectRecurringPatterns] Skip ${group.merchant_name}: existing pattern is dismissed`
+                );
+                continue;
+              }
+
+              console.log(
+                `[detectRecurringPatterns] Update existing pattern for ${group.merchant_name}`
+              );
 
               // Update existing pattern
               await db.runAsync(
@@ -5078,10 +5117,11 @@ export function createDataService(db: Database) {
               );
               updated++;
             } else {
-              // Skip patterns that match category rules - don't count them
-              if (matchesCategoryRule(group.merchant_name)) {
-                continue;
-              }
+              // Note: We intentionally DO NOT skip patterns that match category rules.
+              // Category rules (auto-categorization) and subscriptions serve different purposes:
+              // - Category rules: assign categories to transactions
+              // - Subscriptions: track recurring payments and predict next dates
+              // A user might want both: categorize Netflix as "Entertainment" AND track it as a subscription.
 
               // Create new pattern
               const id = crypto.randomUUID();
@@ -5107,6 +5147,9 @@ export function createDataService(db: Database) {
                   now,
                   now,
                 ]
+              );
+              console.log(
+                `[detectRecurringPatterns] Created new pattern: ${group.merchant_name}, amount: ${avgAmount.toFixed(2)}`
               );
               detected++;
             }
@@ -5631,16 +5674,23 @@ export function createDataService(db: Database) {
       const queryParams: unknown[] = [pid];
 
       if (pattern.opposing_iban && pattern.merchant_name) {
+        // Match by IBAN and merchant name that starts with the pattern name
+        // This handles normalized names like "kosten klantonderzoek houke b.v." matching
+        // transactions with names like "Kosten klantonderzoek Houke B.V. Periode: november 2022"
         whereClause =
-          'AND opposing_account_iban = ? AND LOWER(COALESCE(merchant_name, opposing_account_name)) = LOWER(?)';
-        queryParams.push(pattern.opposing_iban, pattern.merchant_name);
+          'AND opposing_account_iban = ? AND LOWER(COALESCE(merchant_name, opposing_account_name)) LIKE ?';
+        queryParams.push(
+          pattern.opposing_iban,
+          pattern.merchant_name.toLowerCase() + '%'
+        );
       } else if (pattern.opposing_iban) {
         whereClause = 'AND opposing_account_iban = ?';
         queryParams.push(pattern.opposing_iban);
       } else if (pattern.merchant_name) {
+        // Match merchant name that starts with the pattern name (handles normalized names)
         whereClause =
-          'AND LOWER(COALESCE(merchant_name, opposing_account_name)) = LOWER(?)';
-        queryParams.push(pattern.merchant_name);
+          'AND LOWER(COALESCE(merchant_name, opposing_account_name)) LIKE ?';
+        queryParams.push(pattern.merchant_name.toLowerCase() + '%');
       } else {
         return [];
       }

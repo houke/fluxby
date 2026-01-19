@@ -59,6 +59,13 @@ import type {
   PatternType,
 } from '@fluxby/shared';
 
+// Helper to capitalize merchant name (first letter of first word only)
+// Handles lowercased names like "kosten klantonderzoek houke b.v." → "Kosten klantonderzoek houke b.v."
+function capitalizeFirst(name: string | null | undefined): string {
+  if (!name) return 'Unknown';
+  return name.charAt(0).toUpperCase() + name.slice(1);
+}
+
 // Helper to format dates
 function formatDate(dateStr: string): string {
   const date = new Date(dateStr);
@@ -723,7 +730,7 @@ export default function Subscriptions() {
                     )}
                     <div>
                       <p className='font-medium'>
-                        {alert.pattern.merchantName || 'Unknown'}
+                        {capitalizeFirst(alert.pattern.merchantName)}
                         {alert.type === 'price_change' && alert.newAmount && (
                           <span
                             className={`ml-2 text-sm ${alert.isIncrease ? 'text-orange-600' : 'text-emerald-600'}`}
@@ -1000,7 +1007,7 @@ export default function Subscriptions() {
                       </div>
                       <div>
                         <p className='font-medium'>
-                          {entry.merchantName || 'Unknown'}
+                          {capitalizeFirst(entry.merchantName)}
                         </p>
                         <p className='text-sm text-muted-foreground'>
                           {getFrequencyLabel(entry.patternType, t)}
@@ -1135,7 +1142,9 @@ function SubscriptionCard({
                 autoFocus
               />
             ) : (
-              <p className='font-medium'>{pattern.merchantName || 'Unknown'}</p>
+              <p className='font-medium'>
+                {capitalizeFirst(pattern.merchantName)}
+              </p>
             )}
             {pattern.isVariable && (
               <TooltipProvider>

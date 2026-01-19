@@ -144,14 +144,18 @@ describe('Profile Query Handling', () => {
       expect(dashboardSource).toMatch(
         /queryKey:\s*\['dashboard',\s*activeProfileId/
       );
-      expect(dashboardSource).toMatch(/dashboard.*enabled:\s*!!activeProfileId/s);
+      expect(dashboardSource).toMatch(
+        /dashboard.*enabled:\s*!!activeProfileId/s
+      );
     });
 
     it('should have enabled guard for accounts query', () => {
       expect(dashboardSource).toMatch(
         /queryKey:\s*\['accounts',\s*activeProfileId\]/
       );
-      expect(dashboardSource).toMatch(/accounts.*enabled:\s*!!activeProfileId/s);
+      expect(dashboardSource).toMatch(
+        /accounts.*enabled:\s*!!activeProfileId/s
+      );
     });
 
     it('should have enabled guard for dailyExpenses query', () => {
