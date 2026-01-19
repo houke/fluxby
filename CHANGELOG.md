@@ -1,5 +1,31 @@
 # Changelog
 
+## v1.7.0
+
+**Release Date:** 2026-01-19
+
+### Features
+
+- **web:** add sticky Y-axis to all charts and improve formatting
+- **subscription-detection:** require 180-day span for 6 transactions
+
+### Bug Fixes
+
+- **web:** prevent query refetching and database crashes during pattern detection
+- **web:** improve UX and performance for subscriptions and addressbook
+- **web:** fix subscription analytics data loading and capitalize merchant names
+- **settings,recurring:** improve UX and detect bank fees as subscriptions
+- **dashboard:** improve empty states and date filtering
+- **core:** increase subscription detection span to 150 days
+- **web:** resolve multiple UI and data issues
+- **web:** KPI cards now update correctly with all transaction filters
+- **web:** add enabled guards to all profile-scoped queries
+- **web:** fix profile switching and pattern detection issues
+
+### Performance Improvements
+
+- **web:** prevent cache clearing and optimize pattern detection queries
+
 ## v1.6.0
 
 **Release Date:** 2026-01-17

@@ -1,6 +1,6 @@
 {
   "name": "@fluxby/database",
-  "version": "1.6.0",
+  "version": "1.7.0",
   "description": "Universal database layer for Fluxby - SQLite WASM with storage adapters",
   "type": "module",
   "main": "./dist/index.js",

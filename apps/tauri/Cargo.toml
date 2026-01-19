@@ -1,6 +1,6 @@
 [package]
 name = "fluxby"
-version = "1.6.0"
+version = "1.7.0"
 description = "Fluxby - Lokale financiële visualisatie app"
 authors = ["Fluxby"]
 license = "MIT"

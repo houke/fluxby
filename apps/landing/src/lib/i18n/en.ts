@@ -1863,6 +1863,15 @@ export const en: LandingTranslationKeys = {
     updatesPage: {
       intro:
         "See what's new in Fluxby. Here you'll find all updates and new features.",
+      v170Date: 'January 19, 2026',
+      v170Title: 'Release 1.7.0',
+      v170Description: '2 new features and 10 bug fixes.',
+      v170F1Title: 'Sticky Y-axis to all charts and improve formatting',
+      v170F1Desc: 'There\'s more to explore. Discover it yourself!',
+      v170F2Title: 'Require 180-day span for 6 transactions',
+      v170F2Desc: 'There\'s more to explore. Discover it yourself!',
+      v170F3Title: 'Bug fixes',
+      v170F3Desc: '10 bugs fixed. See changelog for details.',
       v160Date: 'January 17, 2026',
       v160Title: 'Release 1.6.0',
       v160Description: '6 new features and 24 bug fixes.',

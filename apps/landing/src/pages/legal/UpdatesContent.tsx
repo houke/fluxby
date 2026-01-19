@@ -33,6 +33,31 @@ const UpdatesContent = () => {
   const updatesPage = t.legal?.updatesPage;
 
   const releases = [
+        {
+      version: '1.7.0',
+      date: updatesPage?.v170Date || '19 januari 2026',
+      title: updatesPage?.v170Title || 'Release 1.7.0',
+      description:
+        updatesPage?.v170Description ||
+        '2 nieuwe features en 10 bugfixes.',
+      features: [
+        {
+          icon: Globe,
+          title: updatesPage?.v170F1Title || 'Toegevoegd sticky y-axis to all charts and verbeterd formatting',
+          description: updatesPage?.v170F1Desc || 'We hebben iets nieuws voor je! Bekijk de release notes voor alle details.',
+        },
+        {
+          icon: Sparkles,
+          title: updatesPage?.v170F2Title || 'Require 180-day span for 6 transacties',
+          description: updatesPage?.v170F2Desc || 'Dit maakt Fluxby nog beter.',
+        },
+        {
+          icon: Wrench,
+          title: updatesPage?.v170F3Title || 'Bugfixes',
+          description: updatesPage?.v170F3Desc || '10 bugs opgelost. Zie changelog voor details.',
+        },
+      ],
+    },
     {
       version: '1.6.0',
       date: updatesPage?.v160Date || '17 januari 2026',
