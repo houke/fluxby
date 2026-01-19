@@ -47,7 +47,7 @@ export function useAddressBook(options: { enabled?: boolean } = {}) {
     queryKey: ['addressbook', activeProfileId],
     queryFn: () => api.getAddressBook() as Promise<AddressBookEntryWithStats[]>,
     enabled: !!activeProfileId && (options.enabled ?? true),
-    staleTime: 2 * 60 * 1000, // 2 minutes - address book data rarely changes
+    staleTime: 10 * 60 * 1000, // 10 minutes - address book data rarely changes, only after imports
   });
 
   const { data: cleanupRules, isLoading: loadingCleanupRules } = useQuery<
@@ -73,7 +73,7 @@ export function useAddressBook(options: { enabled?: boolean } = {}) {
       queryKey: ['suggestedContacts', activeProfileId],
       queryFn: () => api.getSuggestedContacts(100),
       enabled: !!activeProfileId && (options.enabled ?? true),
-      staleTime: 2 * 60 * 1000, // 2 minutes
+      staleTime: 10 * 60 * 1000, // 10 minutes - suggested contacts rarely change
     });
 
   const { data: sharedIbans = [] } = useQuery<SharedIban[]>({

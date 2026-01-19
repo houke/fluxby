@@ -4731,6 +4731,32 @@ export function createDataService(db: Database) {
       console.log('[detectRecurringPatterns] Profile ID:', pid);
       if (!pid) return { detected: 0, updated: 0 };
 
+      // Prevent concurrent pattern detection runs to avoid database locks
+      // @ts-expect-error - Adding runtime check for concurrent execution
+      if (this._detectingPatterns) {
+        console.warn(
+          '[detectRecurringPatterns] Already running, skipping concurrent execution'
+        );
+        return { detected: 0, updated: 0 };
+      }
+      // @ts-expect-error - Setting flag
+      this._detectingPatterns = true;
+
+      try {
+        return await this._detectRecurringPatternsImpl();
+      } finally {
+        // @ts-expect-error - Clearing flag
+        this._detectingPatterns = false;
+      }
+    },
+
+    async _detectRecurringPatternsImpl(): Promise<{
+      detected: number;
+      updated: number;
+    }> {
+      const pid = profileId();
+      if (!pid) return { detected: 0, updated: 0 };
+
       const now = Date.now();
       const MIN_MONTHS_SPAN_DAYS = 180; // 6 months minimum span (allows up to ~200 days for flexibility)
       const AMOUNT_CLUSTERING_THRESHOLD = 0.15; // 15% - group amounts within this threshold

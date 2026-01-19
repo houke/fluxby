@@ -133,14 +133,14 @@ export default function Subscriptions() {
   >({
     queryKey: ['recurring-patterns', activeProfileId],
     queryFn: () => api.getRecurringPatterns(),
-    staleTime: 2 * 60 * 1000, // 2 minutes - patterns don't change often
+    staleTime: 10 * 60 * 1000, // 10 minutes - patterns don't change often, only when manually detected
     enabled: !!activeProfileId,
   });
 
   const { data: stats, isLoading: loadingStats } = useQuery<RecurringStats>({
     queryKey: ['recurring-stats', activeProfileId],
     queryFn: () => api.getRecurringStats(),
-    staleTime: 2 * 60 * 1000, // 2 minutes
+    staleTime: 10 * 60 * 1000, // 10 minutes - stats don't change often
     enabled: !!activeProfileId,
   });
 
@@ -852,11 +852,13 @@ export default function Subscriptions() {
 
       {/* Main Content */}
       {isLoading ? (
-        <div className='space-y-4'>
-          {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className='h-24 w-full' />
-          ))}
-        </div>
+        <Card>
+          <CardContent className='space-y-4 pt-6'>
+            {Array.from({ length: 3 }).map((_, i) => (
+              <Skeleton key={i} className='h-24 w-full' />
+            ))}
+          </CardContent>
+        </Card>
       ) : !patterns || patterns.length === 0 ? (
         <Card>
           <CardContent className='pt-6'>
