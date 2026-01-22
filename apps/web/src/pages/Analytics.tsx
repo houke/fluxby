@@ -111,7 +111,7 @@ export default function Analytics() {
     enabled: !!activeProfileId,
   });
 
-  const { data: expenseCategories, isLoading: expensesLoading } = useQuery<
+  const { data: expenseCategories, isLoading: _expensesLoading } = useQuery<
     CategoryBreakdown[]
   >({
     queryKey: [
@@ -131,7 +131,7 @@ export default function Analytics() {
     enabled: !!activeProfileId,
   });
 
-  const { data: incomeCategories, isLoading: incomeLoading } = useQuery<
+  const { data: incomeCategories, isLoading: _incomeLoading } = useQuery<
     CategoryBreakdown[]
   >({
     queryKey: [
@@ -151,7 +151,7 @@ export default function Analytics() {
     enabled: !!activeProfileId,
   });
 
-  const { data: recurringPatterns, isLoading: recurringLoading } = useQuery<
+  const { data: recurringPatterns, isLoading: _recurringLoading } = useQuery<
     RecurringPattern[]
   >({
     queryKey: [

@@ -11,6 +11,7 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import { ArrowDownRight } from 'lucide-react';
+import type { TranslationKeys } from '@/lib/i18n/nl';
 
 interface DailyData {
   date: string;
@@ -20,7 +21,7 @@ interface DailyData {
 interface DailyExpensesTimelineProps {
   dailyData: DailyData[];
   dailyScrollRef: React.RefObject<HTMLDivElement | null>;
-  t: any;
+  t: TranslationKeys;
   language: string;
   navigate: (path: string) => void;
   suggestedPeriod: { label: string } | null;

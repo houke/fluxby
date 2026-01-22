@@ -425,17 +425,21 @@ export const TransactionRowBadges = memo(function TransactionRowBadges({
             <button
               data-onboarding='transaction-add-addressbook'
               className={cn(
-                'flex cursor-pointer items-center gap-1 rounded px-2 py-0.5 text-xs font-medium transition-all hover:ring-2 hover:ring-primary/50 hover:ring-offset-1',
-                isInAddressBook
+                'flex max-w-[200px] cursor-pointer items-center gap-1 rounded px-2 py-0.5 text-xs font-medium transition-all hover:ring-2 hover:ring-primary/50 hover:ring-offset-1',
+                hasDirectAddressBookLink
                   ? 'bg-emerald-100 text-emerald-700'
-                  : 'bg-blue-100 text-blue-700'
+                  : isInAddressBook
+                    ? 'bg-teal-50 text-teal-700'
+                    : 'bg-blue-100 text-blue-700'
               )}
             >
-              <BookUser className='h-3 w-3' />
-              {addressBookEntry?.name ||
-                tx.merchantName ||
-                tx.opposingAccountName ||
-                t.inAddressBook}
+              <BookUser className='h-3 w-3 flex-shrink-0' />
+              <span className='truncate'>
+                {addressBookEntry?.name ||
+                  tx.merchantName ||
+                  tx.opposingAccountName ||
+                  t.inAddressBook}
+              </span>
             </button>
           </PopoverTrigger>
           <PopoverContent
@@ -458,15 +462,17 @@ export const TransactionRowBadges = memo(function TransactionRowBadges({
                       <button
                         key={contact.id}
                         className={cn(
-                          'w-full rounded px-2 py-1.5 text-left text-sm transition-colors hover:bg-muted',
+                          'w-full overflow-hidden rounded px-2 py-1.5 text-left text-sm transition-colors hover:bg-muted',
                           addressBookEntry?.id === contact.id && 'bg-muted'
                         )}
                         onClick={() => handleAddressBookSelect(contact)}
                       >
-                        <div className='flex items-center justify-between'>
-                          <span className='font-medium'>{contact.name}</span>
+                        <div className='flex min-w-0 items-center justify-between gap-2'>
+                          <span className='min-w-0 truncate font-medium'>
+                            {contact.name}
+                          </span>
                           {addressBookEntry?.id === contact.id && (
-                            <Check className='h-3 w-3 text-primary' />
+                            <Check className='h-3 w-3 flex-shrink-0 text-primary' />
                           )}
                         </div>
                         <div className='truncate text-xs text-muted-foreground'>

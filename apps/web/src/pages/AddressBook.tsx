@@ -268,7 +268,7 @@ export default function AddressBook() {
     });
   }, [addressBook, deferredSearch, sortBy]);
 
-  const visibleContacts = filteredContacts;
+  const _visibleContacts = filteredContacts;
 
   useLayoutEffect(() => {
     const sortOptions = [

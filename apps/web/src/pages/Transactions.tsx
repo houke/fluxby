@@ -26,8 +26,6 @@ import {
   Repeat,
   Check,
   PiggyBank,
-  ChevronRight,
-  ChevronLeft,
   Wallet,
   Pencil,
   Info,
@@ -1008,39 +1006,48 @@ export default function Transactions() {
   });
   const addToAddressBookMutation = {
     ...createContactMutationHook,
-    mutate: (data: any, options?: any) =>
+    mutate: (
+      data: Parameters<typeof createContactMutationHook.mutate>[0],
+      options?: Parameters<typeof createContactMutationHook.mutate>[1]
+    ) =>
       createContactMutationHook.mutate(data, {
         ...options,
-        onSuccess: (res: any, vars: any, ctx: any) => {
+        onSuccess: (res, vars, ctx, mutation) => {
           setAccountModalOpen(false);
           setAccountModalIban('');
           setAccountModalName('');
           toast.success(t.transactions.savedToAddressBook);
-          options?.onSuccess?.(res, vars, ctx);
+          options?.onSuccess?.(res, vars, ctx, mutation);
         },
       }),
   };
 
   const resolveSharedMutation = {
     ...resolveSharedMutationHook,
-    mutate: (data: any, options?: any) =>
+    mutate: (
+      data: Parameters<typeof resolveSharedMutationHook.mutate>[0],
+      options?: Parameters<typeof resolveSharedMutationHook.mutate>[1]
+    ) =>
       resolveSharedMutationHook.mutate(data, {
         ...options,
-        onSuccess: (res: any, vars: any, ctx: any) => {
-          options?.onSuccess?.(res, vars, ctx);
+        onSuccess: (res, vars, ctx, mutation) => {
+          options?.onSuccess?.(res, vars, ctx, mutation);
         },
       }),
   };
 
   const addIbanToContactMutation = {
     ...addIbanToContactHook,
-    mutate: (data: { contactId: string; iban: string }, options?: any) =>
+    mutate: (
+      data: { contactId: string; iban: string },
+      options?: Parameters<typeof addIbanToContactHook.mutate>[1]
+    ) =>
       addIbanToContactHook.mutate(data, {
         ...options,
-        onSuccess: (res: any, vars: any, ctx: any) => {
+        onSuccess: (res, vars, ctx, mutation) => {
           setAssignPopoverOpen(null);
           setAssignSearchTerm('');
-          options?.onSuccess?.(res, vars, ctx);
+          options?.onSuccess?.(res, vars, ctx, mutation);
         },
       }),
   };
@@ -2983,7 +2990,6 @@ export default function Transactions() {
                     addToAddressBookMutation.mutate({
                       iban: createContactTransaction.opposingAccountIban,
                       name: createContactName.trim(),
-                      transactionId: createContactTransaction.id,
                     });
                     setCreateContactModalOpen(false);
                     setCreateContactTransaction(null);

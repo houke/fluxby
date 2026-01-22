@@ -715,9 +715,7 @@ export function SecuritySetup({ onSetupComplete }: SecuritySetupProps) {
                   <Checkbox
                     id='skip-demo'
                     checked={skipDemoData}
-                    onCheckedChange={(checked) =>
-                      setSkipDemoData(checked === true)
-                    }
+                    onChange={(e) => setSkipDemoData(e.target.checked)}
                     className='mt-0.5'
                   />
                   <label

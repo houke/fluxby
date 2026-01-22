@@ -118,7 +118,9 @@ async function ensureServiceWorkerReady(): Promise<void> {
       // Reload to get the SW-controlled page with proper headers
       window.location.reload();
       // Return a never-resolving promise since we're reloading
-      return new Promise(() => {});
+      return new Promise(() => {
+        /* noop - waiting for reload */
+      });
     }
   } catch (error) {
     // SW registration failed - continue without it

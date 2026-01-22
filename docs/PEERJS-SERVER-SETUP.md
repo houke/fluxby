@@ -109,7 +109,7 @@ server {
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
-        
+
         # WebSocket timeout
         proxy_read_timeout 86400s;
         proxy_send_timeout 86400s;
@@ -193,12 +193,12 @@ The PeerJS server logs connections. For production monitoring:
 
 ### Common Errors
 
-| Error | Cause | Solution |
-|-------|-------|----------|
-| `WebSocket connection failed` | Wrong host/port or firewall | Verify server is reachable |
-| `SSL_ERROR` | Invalid certificate | Check SSL certificate |
-| `Unauthorized` | Missing/wrong API key | Add correct `VITE_PEERJS_KEY` |
-| `Connection timeout` | Server not responding | Check server logs |
+| Error                         | Cause                       | Solution                      |
+| ----------------------------- | --------------------------- | ----------------------------- |
+| `WebSocket connection failed` | Wrong host/port or firewall | Verify server is reachable    |
+| `SSL_ERROR`                   | Invalid certificate         | Check SSL certificate         |
+| `Unauthorized`                | Missing/wrong API key       | Add correct `VITE_PEERJS_KEY` |
+| `Connection timeout`          | Server not responding       | Check server logs             |
 
 ## Scaling
 

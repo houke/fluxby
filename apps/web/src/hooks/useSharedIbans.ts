@@ -14,6 +14,7 @@ export function useSharedIbans() {
   const { data: sharedIbans = [], isLoading } = useQuery<SharedIban[]>({
     queryKey: ['sharedIbans', activeProfileId],
     queryFn: async () => {
+      // eslint-disable-next-line no-console
       console.log(
         '[useSharedIbans] Fetching shared IBANs for profile:',
         activeProfileId

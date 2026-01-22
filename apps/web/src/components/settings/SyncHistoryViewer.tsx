@@ -14,16 +14,14 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import {
   RefreshCw,
   Trash2,
@@ -36,7 +34,7 @@ import {
   ChevronDown,
   ChevronUp,
 } from 'lucide-react';
-import { useDataService } from '@/contexts/DataServiceContext';
+import { useDataService } from '@/contexts/DatabaseContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/contexts/ToastContext';
 import { cn } from '@/lib/utils';
@@ -75,6 +73,7 @@ export function SyncHistoryViewer({ onClose }: SyncHistoryViewerProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [isClearing, setIsClearing] = useState(false);
   const [showDetails, setShowDetails] = useState<string | null>(null);
+  const [clearDialogOpen, setClearDialogOpen] = useState(false);
 
   // Load sync history
   const loadHistory = useCallback(async () => {
@@ -89,12 +88,12 @@ export function SyncHistoryViewer({ onClose }: SyncHistoryViewerProps) {
     } catch (error) {
       console.error('Failed to load sync history:', error);
       toast.error(
-        t.syncSettings?.syncHistoryLoadError || 'Failed to load sync history'
+        t.settings?.sync?.syncHistoryLoadError || 'Failed to load sync history'
       );
     } finally {
       setIsLoading(false);
     }
-  }, [dataService, toast, t.syncSettings?.syncHistoryLoadError]);
+  }, [dataService, toast, t.settings?.sync?.syncHistoryLoadError]);
 
   // Initial load
   useEffect(() => {
@@ -108,13 +107,15 @@ export function SyncHistoryViewer({ onClose }: SyncHistoryViewerProps) {
       await dataService.clearSyncHistory();
       setEntries([]);
       setStats({ creates: 0, updates: 0, deletes: 0, conflicts: 0, total: 0 });
+      setClearDialogOpen(false);
       toast.success(
-        t.syncSettings?.syncHistoryCleared || 'Sync history cleared'
+        t.settings?.sync?.syncHistoryCleared || 'Sync history cleared'
       );
     } catch (error) {
       console.error('Failed to clear sync history:', error);
       toast.error(
-        t.syncSettings?.syncHistoryClearError || 'Failed to clear sync history'
+        t.settings?.sync?.syncHistoryClearError ||
+          'Failed to clear sync history'
       );
     } finally {
       setIsClearing(false);
@@ -124,14 +125,14 @@ export function SyncHistoryViewer({ onClose }: SyncHistoryViewerProps) {
   // Format table name for display
   const formatTableName = (tableName: string): string => {
     const tableNames: Record<string, string> = {
-      transactions: t.common?.transactions || 'Transactions',
-      accounts: t.common?.accounts || 'Accounts',
-      categories: t.common?.categories || 'Categories',
-      budgets: t.common?.budgets || 'Budgets',
-      profiles: t.common?.profiles || 'Profiles',
-      category_rules: t.common?.categoryRules || 'Category Rules',
-      address_book: t.common?.addressBook || 'Address Book',
-      recurring_patterns: t.common?.recurringPatterns || 'Recurring Patterns',
+      transactions: t.nav?.transactions || 'Transactions',
+      accounts: t.settings?.accounts?.title || 'Accounts',
+      categories: t.nav?.categories || 'Categories',
+      budgets: t.nav?.budgets || 'Budgets',
+      profiles: t.settings?.profileManager?.title || 'Profiles',
+      category_rules: t.categories?.rules || 'Category Rules',
+      address_book: t.addressBook?.title || 'Address Book',
+      recurring_patterns: t.nav?.subscriptions || 'Recurring Patterns',
     };
     return tableNames[tableName] || tableName;
   };
@@ -162,10 +163,10 @@ export function SyncHistoryViewer({ onClose }: SyncHistoryViewerProps) {
         'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400',
     };
     const labels: Record<SyncHistoryEntry['action'], string> = {
-      create: t.syncSettings?.actionCreate || 'Created',
-      update: t.syncSettings?.actionUpdate || 'Updated',
-      delete: t.syncSettings?.actionDelete || 'Deleted',
-      conflict: t.syncSettings?.actionConflict || 'Conflict',
+      create: t.settings?.sync?.actionCreate || 'Created',
+      update: t.settings?.sync?.actionUpdate || 'Updated',
+      delete: t.settings?.sync?.actionDelete || 'Deleted',
+      conflict: t.settings?.sync?.actionConflict || 'Conflict',
     };
     return (
       <Badge
@@ -186,12 +187,10 @@ export function SyncHistoryViewer({ onClose }: SyncHistoryViewerProps) {
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
 
-    if (diffMins < 1) return t.common?.justNow || 'Just now';
-    if (diffMins < 60)
-      return `${diffMins} ${t.common?.minutesAgo || 'min ago'}`;
-    if (diffHours < 24)
-      return `${diffHours} ${t.common?.hoursAgo || 'hours ago'}`;
-    if (diffDays < 7) return `${diffDays} ${t.common?.daysAgo || 'days ago'}`;
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins} min ago`;
+    if (diffHours < 24) return `${diffHours} hours ago`;
+    if (diffDays < 7) return `${diffDays} ${t.common?.days || 'days'} ago`;
 
     return date.toLocaleDateString(undefined, {
       month: 'short',
@@ -207,10 +206,10 @@ export function SyncHistoryViewer({ onClose }: SyncHistoryViewerProps) {
         <div>
           <CardTitle className='flex items-center gap-2 text-lg'>
             <History className='h-5 w-5' />
-            {t.syncSettings?.syncHistory || 'Sync history'}
+            {t.settings?.sync?.syncHistory || 'Sync history'}
           </CardTitle>
           <CardDescription>
-            {t.syncSettings?.syncHistoryDescription ||
+            {t.settings?.sync?.syncHistoryDescription ||
               'View recent sync events and conflict resolutions'}
           </CardDescription>
         </div>
@@ -238,26 +237,26 @@ export function SyncHistoryViewer({ onClose }: SyncHistoryViewerProps) {
             <div className='flex items-center gap-2'>
               <Plus className='h-4 w-4 text-green-500' />
               <span className='text-sm text-muted-foreground'>
-                {stats.creates} {t.syncSettings?.created || 'created'}
+                {stats.creates} {t.settings?.sync?.created || 'created'}
               </span>
             </div>
             <div className='flex items-center gap-2'>
               <Pencil className='h-4 w-4 text-blue-500' />
               <span className='text-sm text-muted-foreground'>
-                {stats.updates} {t.syncSettings?.updated || 'updated'}
+                {stats.updates} {t.settings?.sync?.updated || 'updated'}
               </span>
             </div>
             <div className='flex items-center gap-2'>
               <Trash className='h-4 w-4 text-red-500' />
               <span className='text-sm text-muted-foreground'>
-                {stats.deletes} {t.syncSettings?.deleted || 'deleted'}
+                {stats.deletes} {t.settings?.sync?.deleted || 'deleted'}
               </span>
             </div>
             {stats.conflicts > 0 && (
               <div className='flex items-center gap-2'>
                 <AlertTriangle className='h-4 w-4 text-amber-500' />
                 <span className='text-sm text-amber-600 dark:text-amber-400'>
-                  {stats.conflicts} {t.syncSettings?.conflicts || 'conflicts'}
+                  {stats.conflicts} {t.settings?.sync?.conflicts || 'conflicts'}
                 </span>
               </div>
             )}
@@ -274,9 +273,9 @@ export function SyncHistoryViewer({ onClose }: SyncHistoryViewerProps) {
           ) : entries.length === 0 ? (
             <div className='flex flex-col items-center justify-center py-8 text-muted-foreground'>
               <History className='mb-2 h-8 w-8 opacity-50' />
-              <p>{t.syncSettings?.noSyncHistory || 'No sync history yet'}</p>
+              <p>{t.settings?.sync?.noSyncHistory || 'No sync history yet'}</p>
               <p className='mt-1 text-xs'>
-                {t.syncSettings?.syncHistoryHint ||
+                {t.settings?.sync?.syncHistoryHint ||
                   'Sync events will appear here when you sync with other devices'}
               </p>
             </div>
@@ -333,7 +332,7 @@ export function SyncHistoryViewer({ onClose }: SyncHistoryViewerProps) {
                       {entry.resolution && (
                         <div className='flex justify-between text-muted-foreground'>
                           <span>
-                            {t.syncSettings?.resolution || 'Resolution'}:
+                            {t.settings?.sync?.resolution || 'Resolution'}:
                           </span>
                           <span>{entry.resolution}</span>
                         </div>
@@ -346,14 +345,16 @@ export function SyncHistoryViewer({ onClose }: SyncHistoryViewerProps) {
                       {entry.localUpdatedAt && entry.remoteUpdatedAt && (
                         <div className='text-muted-foreground'>
                           <div className='flex justify-between'>
-                            <span>{t.syncSettings?.localTime || 'Local'}:</span>
+                            <span>
+                              {t.settings?.sync?.localTime || 'Local'}:
+                            </span>
                             <span>
                               {new Date(entry.localUpdatedAt).toLocaleString()}
                             </span>
                           </div>
                           <div className='flex justify-between'>
                             <span>
-                              {t.syncSettings?.remoteTime || 'Remote'}:
+                              {t.settings?.sync?.remoteTime || 'Remote'}:
                             </span>
                             <span>
                               {new Date(entry.remoteUpdatedAt).toLocaleString()}
@@ -372,33 +373,41 @@ export function SyncHistoryViewer({ onClose }: SyncHistoryViewerProps) {
         {/* Clear history button */}
         {entries.length > 0 && (
           <div className='flex justify-end border-t border-border pt-4'>
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
+            <Dialog open={clearDialogOpen} onOpenChange={setClearDialogOpen}>
+              <DialogTrigger asChild>
                 <Button variant='outline' size='sm' disabled={isClearing}>
                   <Trash2 className='mr-2 h-4 w-4' />
-                  {t.syncSettings?.clearHistory || 'Clear history'}
+                  {t.settings?.sync?.clearHistory || 'Clear history'}
                 </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>
-                    {t.syncSettings?.clearHistoryTitle || 'Clear sync history?'}
-                  </AlertDialogTitle>
-                  <AlertDialogDescription>
-                    {t.syncSettings?.clearHistoryDescription ||
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>
+                    {t.settings?.sync?.clearHistoryTitle ||
+                      'Clear sync history?'}
+                  </DialogTitle>
+                  <DialogDescription>
+                    {t.settings?.sync?.clearHistoryDescription ||
                       'This will remove all sync history records. Your synced data will not be affected.'}
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>
+                  </DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                  <Button
+                    variant='outline'
+                    onClick={() => setClearDialogOpen(false)}
+                  >
                     {t.common?.cancel || 'Cancel'}
-                  </AlertDialogCancel>
-                  <AlertDialogAction onClick={handleClearHistory}>
+                  </Button>
+                  <Button
+                    variant='destructive'
+                    onClick={handleClearHistory}
+                    disabled={isClearing}
+                  >
                     {t.common?.delete || 'Delete'}
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
         )}
       </CardContent>

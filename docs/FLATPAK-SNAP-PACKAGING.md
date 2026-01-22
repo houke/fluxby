@@ -202,54 +202,54 @@ snapcraft upload fluxby_1.7.1_amd64.snap --release=stable
 Add to `.github/workflows/build.yml`:
 
 ```yaml
-  build-flatpak:
-    runs-on: ubuntu-22.04
-    needs: build-linux
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Download Linux build
-        uses: actions/download-artifact@v4
-        with:
-          name: linux-build
-          path: target/release/
-      
-      - name: Install Flatpak Builder
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y flatpak flatpak-builder
-          flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
-      
-      - name: Build Flatpak
-        run: |
-          flatpak-builder --force-clean --repo=repo build-dir com.fluxby.desktop.yml
-          flatpak build-bundle repo fluxby.flatpak com.fluxby.desktop
-      
-      - name: Upload Flatpak
-        uses: actions/upload-artifact@v4
-        with:
-          name: fluxby-flatpak
-          path: fluxby.flatpak
+build-flatpak:
+  runs-on: ubuntu-22.04
+  needs: build-linux
+  steps:
+    - uses: actions/checkout@v4
 
-  build-snap:
-    runs-on: ubuntu-22.04
-    needs: build-linux
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Download Linux build
-        uses: actions/download-artifact@v4
-        with:
-          name: linux-build
-          path: target/release/
-      
-      - uses: snapcore/action-build@v1
-        id: build
-      
-      - uses: actions/upload-artifact@v4
-        with:
-          name: fluxby-snap
-          path: ${{ steps.build.outputs.snap }}
+    - name: Download Linux build
+      uses: actions/download-artifact@v4
+      with:
+        name: linux-build
+        path: target/release/
+
+    - name: Install Flatpak Builder
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y flatpak flatpak-builder
+        flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+
+    - name: Build Flatpak
+      run: |
+        flatpak-builder --force-clean --repo=repo build-dir com.fluxby.desktop.yml
+        flatpak build-bundle repo fluxby.flatpak com.fluxby.desktop
+
+    - name: Upload Flatpak
+      uses: actions/upload-artifact@v4
+      with:
+        name: fluxby-flatpak
+        path: fluxby.flatpak
+
+build-snap:
+  runs-on: ubuntu-22.04
+  needs: build-linux
+  steps:
+    - uses: actions/checkout@v4
+
+    - name: Download Linux build
+      uses: actions/download-artifact@v4
+      with:
+        name: linux-build
+        path: target/release/
+
+    - uses: snapcore/action-build@v1
+      id: build
+
+    - uses: actions/upload-artifact@v4
+      with:
+        name: fluxby-snap
+        path: ${{ steps.build.outputs.snap }}
 ```
 
 ## Distribution

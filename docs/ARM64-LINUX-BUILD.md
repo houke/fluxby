@@ -79,12 +79,12 @@ build-linux-arm64:
   runs-on: ubuntu-22.04
   steps:
     - uses: actions/checkout@v4
-    
+
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v3
       with:
         platforms: arm64
-    
+
     - name: Build in ARM64 container
       run: |
         docker run --rm \
@@ -103,7 +103,7 @@ build-linux-arm64:
             npm install
             npm run build:tauri
           "
-    
+
     - name: Upload ARM64 artifacts
       uses: actions/upload-artifact@v4
       with:
@@ -140,13 +140,13 @@ Update `apps/tauri/tauri.conf.json` for ARM64-specific settings if needed:
 
 ### Tested Devices
 
-| Device | Status | Notes |
-|--------|--------|-------|
+| Device                | Status   | Notes                        |
+| --------------------- | -------- | ---------------------------- |
 | Raspberry Pi 4 (4GB+) | ✅ Works | 8GB recommended for building |
-| Raspberry Pi 5 | ✅ Works | Best performance |
-| Pine64 | ✅ Works | |
-| Orange Pi 5 | ✅ Works | |
-| NVIDIA Jetson | ✅ Works | |
+| Raspberry Pi 5        | ✅ Works | Best performance             |
+| Pine64                | ✅ Works |                              |
+| Orange Pi 5           | ✅ Works |                              |
+| NVIDIA Jetson         | ✅ Works |                              |
 
 ### Minimum Requirements
 
@@ -187,6 +187,7 @@ chmod +x fluxby_1.7.1_arm64.AppImage
 ### Raspberry Pi Specific
 
 1. **Increase GPU Memory**:
+
    ```bash
    # Edit /boot/config.txt
    gpu_mem=256
@@ -212,6 +213,7 @@ chmod +x fluxby_1.7.1_arm64.AppImage
 ### Build Failures
 
 **Out of memory during build**:
+
 ```bash
 # Add swap space
 sudo fallocate -l 4G /swapfile
@@ -221,6 +223,7 @@ sudo swapon /swapfile
 ```
 
 **Missing WebKit**:
+
 ```bash
 sudo apt-get install libwebkit2gtk-4.1-dev
 ```
@@ -228,10 +231,12 @@ sudo apt-get install libwebkit2gtk-4.1-dev
 ### Runtime Issues
 
 **Slow startup**:
+
 - First launch compiles JIT code, subsequent launches faster
 - Consider preloading: `LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libGL.so fluxby`
 
 **Display issues**:
+
 - Ensure proper GPU drivers are installed
 - Try with `GDK_BACKEND=x11 fluxby` if Wayland has issues
 
