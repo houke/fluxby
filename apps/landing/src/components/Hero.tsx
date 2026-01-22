@@ -1,6 +1,13 @@
 import { Link } from 'react-router-dom';
 import { FluxbyWebGL } from '@fluxby/shared';
-import { useState, useMemo, CSSProperties, useEffect } from 'react';
+import {
+  useState,
+  useMemo,
+  CSSProperties,
+  useEffect,
+  useCallback,
+} from 'react';
+import { Loader2 } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useTheme } from '../contexts/ThemeContext';
 
@@ -141,6 +148,27 @@ const Hero = () => {
   const { t, language, setLanguage, languages } = useLanguage();
   const { theme, toggleTheme } = useTheme();
   const appHref = `${import.meta.env.BASE_URL}app/`;
+  const [isNavigating, setIsNavigating] = useState(false);
+
+  // Handle Get Started click with loading feedback
+  const handleGetStartedClick = useCallback(
+    (_e: React.MouseEvent<HTMLAnchorElement>) => {
+      setIsNavigating(true);
+      // Allow navigation to proceed naturally
+      // The loading state provides visual feedback
+    },
+    []
+  );
+
+  // Reset loading state after a brief period (in case user stays on page)
+  useEffect(() => {
+    if (isNavigating) {
+      const timer = setTimeout(() => {
+        setIsNavigating(false);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [isNavigating]);
 
   // Category emojis - static list of common financial category icons
   const categoryEmojis = useMemo(
@@ -575,9 +603,17 @@ const Hero = () => {
                 href={appHref}
                 target='_blank'
                 rel='noopener noreferrer'
+                onClick={handleGetStartedClick}
                 className='btn-primary fluffy-shadow w-full transform px-12 py-6 text-center text-xl transition-all duration-300 hover:scale-110 sm:w-auto'
               >
-                {t.hero.getStarted}
+                {isNavigating ? (
+                  <span className='flex items-center justify-center gap-2'>
+                    <Loader2 className='h-5 w-5 animate-spin' />
+                    {t.hero.getStarted}
+                  </span>
+                ) : (
+                  t.hero.getStarted
+                )}
               </a>
             </div>
           </div>

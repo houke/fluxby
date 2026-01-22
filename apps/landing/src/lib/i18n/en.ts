@@ -244,11 +244,16 @@ export const en: LandingTranslationKeys = {
       name: 'Windows',
       description: 'Easy installer for Windows 10 & 11.',
       label: 'Download',
+      x64Label: 'x64',
+      arm64Label: 'ARM64',
     },
     linux: {
       name: 'Linux',
-      description: 'Standalone AppImage for all distributions.',
+      description: 'Packages for all major Linux distributions.',
       label: 'Download',
+      appimageLabel: 'AppImage',
+      debLabel: 'DEB',
+      rpmLabel: 'RPM',
     },
     pwa: {
       name: 'Browser (PWA)',
@@ -1119,6 +1124,7 @@ export const en: LandingTranslationKeys = {
       welcome: 'Welcome',
       bankConnection: 'Connecting your bank',
       firstSteps: 'First steps',
+      installation: 'Installation',
       features: 'Features',
       transactions: 'Transactions',
       categories: 'Categories',
@@ -1189,6 +1195,50 @@ export const en: LandingTranslationKeys = {
       next2: 'Create custom categories for better organization',
       next3: 'Add contacts in the Address Book to track who you transact with',
       next4: 'Import transactions regularly to keep your data up to date',
+    },
+    installation: {
+      title: 'Installing Fluxby',
+      subtitle:
+        'Fluxby works in your browser without installation, but you can also install it as an app for a better experience.',
+      desktopTitle: 'Desktop (Windows, macOS, Linux)',
+      desktopText:
+        'For the best experience on desktop, download the native app from our Downloads page. Native apps offer better performance and work offline.',
+      browserTitle: 'Web browser',
+      browserText:
+        'Fluxby works directly in your browser. Just visit the app URL and start using it - no installation required. Your data is stored locally in your browser.',
+      iosTitle: 'iPhone & iPad',
+      iosIntro:
+        'Fluxby can be installed as a Progressive Web App (PWA) on your iPhone or iPad. This gives you an app-like experience with a home screen icon.',
+      iosStep1Title: 'Open in Safari',
+      iosStep1Text:
+        'Open Fluxby in Safari (not Chrome or another browser). Safari is required for PWA installation on iOS.',
+      iosStep2Title: 'Tap the Share button',
+      iosStep2Text:
+        'Tap the Share button at the bottom of Safari (the square with an arrow pointing up).',
+      iosStep3Title: 'Add to Home Screen',
+      iosStep3Text:
+        'Scroll down and tap "Add to Home Screen". You may need to scroll right to find this option.',
+      iosStep4Title: 'Confirm',
+      iosStep4Text:
+        'Tap "Add" in the top right corner. Fluxby will now appear on your home screen like any other app.',
+      iosTipTitle: 'Tip',
+      iosTipText:
+        'Once installed, Fluxby will open in full-screen mode without the Safari address bar. Your data is stored locally on your device and syncs between your installed apps via peer-to-peer sync.',
+      androidTitle: 'Android',
+      androidIntro:
+        'On Android, you can install Fluxby as a PWA from Chrome or other browsers.',
+      androidStep1Title: 'Open in Chrome',
+      androidStep1Text:
+        'Open Fluxby in Chrome (or another compatible browser like Edge).',
+      androidStep2Title: 'Look for the install prompt',
+      androidStep2Text:
+        'Chrome may show an "Install app" banner at the bottom. If you see it, tap "Install".',
+      androidStep3Title: 'Or use the menu',
+      androidStep3Text:
+        'Tap the three-dot menu in Chrome and select "Install app" or "Add to Home screen".',
+      dataStorageTitle: 'About your data',
+      dataStorageText:
+        'Regardless of how you access Fluxby, your data is stored locally on your device. If you use Fluxby in a browser, your data is stored in that browser. If you install the app, data is stored in the app. Use the sync feature to keep your data in sync between devices.',
     },
     bankConnection: {
       title: 'Connecting your bank account',

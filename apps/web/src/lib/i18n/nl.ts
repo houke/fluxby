@@ -149,6 +149,8 @@ export interface TranslationKeys {
     installComplete: string;
     errorOccurred: string;
     clickToCheck: string;
+    lastChecked: string;
+    backgroundCheckEnabled: string;
   };
   nav: {
     dashboard: string;
@@ -272,6 +274,7 @@ export interface TranslationKeys {
     date: string;
     amount: string;
     addToAddressBook: string;
+    unlinkFromContact: string;
     savedToAddressBook: string;
     createContactError: string;
     inAddressBook: string;
@@ -957,6 +960,29 @@ export interface TranslationKeys {
       schemaMismatch: string;
       protocolMismatch: string;
       upgradeRequired: string;
+      // Sync history viewer
+      syncHistory: string;
+      syncHistoryDescription: string;
+      syncHistoryLoadError: string;
+      syncHistoryCleared: string;
+      syncHistoryClearError: string;
+      noSyncHistory: string;
+      syncHistoryHint: string;
+      clearHistory: string;
+      clearHistoryTitle: string;
+      clearHistoryDescription: string;
+      actionCreate: string;
+      actionUpdate: string;
+      actionDelete: string;
+      actionConflict: string;
+      created: string;
+      updated: string;
+      deleted: string;
+      conflicts: string;
+      resolution: string;
+      localTime: string;
+      remoteTime: string;
+      showHistory: string;
     };
   };
   help: {
@@ -1478,6 +1504,8 @@ export const nl: TranslationKeys = {
     installComplete: 'Update geïnstalleerd! Herstarten...',
     errorOccurred: 'Er is een fout opgetreden',
     clickToCheck: 'Klik om te controleren op updates',
+    lastChecked: 'Laatst gecontroleerd: {time}',
+    backgroundCheckEnabled: 'Automatische controle elke 4 uur',
   },
   nav: {
     dashboard: 'Dashboard',
@@ -1603,6 +1631,7 @@ export const nl: TranslationKeys = {
     date: 'Datum',
     amount: 'Bedrag',
     addToAddressBook: 'Toevoegen aan adresboek',
+    unlinkFromContact: 'Ontkoppelen',
     savedToAddressBook: 'Toegevoegd aan adresboek',
     createContactError: 'Fout bij aanmaken contact',
     inAddressBook: 'In adresboek',
@@ -2389,6 +2418,32 @@ export const nl: TranslationKeys = {
       protocolMismatch:
         'Dit apparaat gebruikt een incompatibele sync-versie. Update beide apparaten naar de nieuwste versie.',
       upgradeRequired: 'App-update vereist',
+      // Sync history viewer
+      syncHistory: 'Synchronisatiegeschiedenis',
+      syncHistoryDescription:
+        'Bekijk recente synchronisatie-events en conflictoplossingen',
+      syncHistoryLoadError: 'Kan synchronisatiegeschiedenis niet laden',
+      syncHistoryCleared: 'Synchronisatiegeschiedenis gewist',
+      syncHistoryClearError: 'Kan synchronisatiegeschiedenis niet wissen',
+      noSyncHistory: 'Nog geen synchronisatiegeschiedenis',
+      syncHistoryHint:
+        'Sync-events verschijnen hier wanneer je synchroniseert met andere apparaten',
+      clearHistory: 'Geschiedenis wissen',
+      clearHistoryTitle: 'Synchronisatiegeschiedenis wissen?',
+      clearHistoryDescription:
+        'Dit verwijdert alle synchronisatie-records. Je gesynchroniseerde gegevens worden niet beïnvloed.',
+      actionCreate: 'Aangemaakt',
+      actionUpdate: 'Bijgewerkt',
+      actionDelete: 'Verwijderd',
+      actionConflict: 'Conflict',
+      created: 'aangemaakt',
+      updated: 'bijgewerkt',
+      deleted: 'verwijderd',
+      conflicts: 'conflicten',
+      resolution: 'Oplossing',
+      localTime: 'Lokaal',
+      remoteTime: 'Extern',
+      showHistory: 'Geschiedenis tonen',
     },
   },
   help: {

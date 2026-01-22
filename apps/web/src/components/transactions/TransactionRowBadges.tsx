@@ -17,6 +17,7 @@ import {
   Building2,
   X,
   UserPlus,
+  UserMinus,
   BookUser,
   ArrowLeftRight,
 } from 'lucide-react';
@@ -64,6 +65,7 @@ interface TransactionRowBadgesProps {
   addressBook: AddressBookEntry[] | undefined;
   addressBookEntry: AddressBookEntry | null | undefined;
   isInAddressBook: boolean;
+  hasDirectAddressBookLink: boolean;
 
   onCategorySelect: (tx: Transaction, categoryId: string) => void;
   onPaymentMethodSelect: (tx: Transaction, method: string | null) => void;
@@ -73,6 +75,7 @@ interface TransactionRowBadgesProps {
     contact: AddressBookEntry
   ) => void | Promise<void>;
   onAddToAddressBook: (tx: Transaction) => void;
+  onRemoveFromAddressBook: (tx: Transaction) => void;
   onTransferToggle: (tx: Transaction) => void;
   isUpdatePending: boolean;
   translations: {
@@ -82,6 +85,7 @@ interface TransactionRowBadgesProps {
     };
     remove: string;
     addToAddressBook: string;
+    unlinkFromContact: string;
     inAddressBook: string;
     searchContacts: string;
     noContactsFound: string;
@@ -102,11 +106,13 @@ export const TransactionRowBadges = memo(function TransactionRowBadges({
   addressBook,
   addressBookEntry,
   isInAddressBook,
+  hasDirectAddressBookLink,
   onCategorySelect,
   onPaymentMethodSelect,
   onPaymentProcessorSelect,
   onAddressBookSelect,
   onAddToAddressBook,
+  onRemoveFromAddressBook,
   onTransferToggle,
   isUpdatePending,
   translations: t,
@@ -197,6 +203,11 @@ export const TransactionRowBadges = memo(function TransactionRowBadges({
     onAddToAddressBook(tx);
     setAddressBookOpen(false);
   }, [tx, onAddToAddressBook]);
+
+  const handleRemoveFromAddressBook = useCallback(() => {
+    onRemoveFromAddressBook(tx);
+    setAddressBookOpen(false);
+  }, [tx, onRemoveFromAddressBook]);
 
   const handleTransferToggle = useCallback(() => {
     onTransferToggle(tx);
@@ -477,6 +488,15 @@ export const TransactionRowBadges = memo(function TransactionRowBadges({
                 >
                   <UserPlus className='h-4 w-4' />
                   {t.addToAddressBook}
+                </button>
+              )}
+              {hasDirectAddressBookLink && (
+                <button
+                  className='flex w-full items-center gap-2 border-t pt-2 text-sm text-red-600 hover:text-red-700'
+                  onClick={handleRemoveFromAddressBook}
+                >
+                  <UserMinus className='h-4 w-4' />
+                  {t.unlinkFromContact}
                 </button>
               )}
             </div>

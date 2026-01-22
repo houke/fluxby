@@ -7533,6 +7533,106 @@ export function createDataService(db: Database) {
         throw err;
       }
     },
+
+    // ============= Sync History =============
+    /**
+     * Get sync log entries for displaying sync history to users
+     */
+    async getSyncHistory(limit = 100): Promise<
+      Array<{
+        id: string;
+        tableName: string;
+        rowId: string;
+        action: 'create' | 'update' | 'delete' | 'conflict';
+        localUpdatedAt: number | null;
+        remoteUpdatedAt: number | null;
+        resolution: string | null;
+        errorMessage: string | null;
+        createdAt: number;
+      }>
+    > {
+      return db.queryAsync<{
+        id: string;
+        tableName: string;
+        rowId: string;
+        action: 'create' | 'update' | 'delete' | 'conflict';
+        localUpdatedAt: number | null;
+        remoteUpdatedAt: number | null;
+        resolution: string | null;
+        errorMessage: string | null;
+        createdAt: number;
+      }>(
+        `SELECT
+           id,
+           table_name as tableName,
+           row_id as rowId,
+           action,
+           local_updated_at as localUpdatedAt,
+           remote_updated_at as remoteUpdatedAt,
+           resolution,
+           error_message as errorMessage,
+           created_at as createdAt
+         FROM sync_log
+         ORDER BY created_at DESC
+         LIMIT ?`,
+        [limit]
+      );
+    },
+
+    /**
+     * Clear sync history
+     */
+    async clearSyncHistory(): Promise<void> {
+      await db.runAsync('DELETE FROM sync_log');
+    },
+
+    /**
+     * Get count of sync events by action type
+     */
+    async getSyncHistoryStats(): Promise<{
+      creates: number;
+      updates: number;
+      deletes: number;
+      conflicts: number;
+      total: number;
+    }> {
+      const rows = await db.queryAsync<{
+        action: string;
+        count: number;
+      }>(
+        `SELECT action, COUNT(*) as count
+         FROM sync_log
+         GROUP BY action`
+      );
+
+      const stats = {
+        creates: 0,
+        updates: 0,
+        deletes: 0,
+        conflicts: 0,
+        total: 0,
+      };
+
+      for (const row of rows) {
+        switch (row.action) {
+          case 'create':
+            stats.creates = row.count;
+            break;
+          case 'update':
+            stats.updates = row.count;
+            break;
+          case 'delete':
+            stats.deletes = row.count;
+            break;
+          case 'conflict':
+            stats.conflicts = row.count;
+            break;
+        }
+        stats.total += row.count;
+      }
+
+      return stats;
+    },
   };
 }
 

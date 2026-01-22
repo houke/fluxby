@@ -54,3 +54,15 @@ export function useIsTablet(): boolean {
 export function useIsDesktop(): boolean {
   return useMediaQuery('(min-width: 1024px)');
 }
+
+/**
+ * Hook that returns true when the user prefers reduced motion.
+ * Respects the OS-level accessibility setting.
+ *
+ * @example
+ * const prefersReducedMotion = useReducedMotion();
+ * const transitionDuration = prefersReducedMotion ? 0 : 300;
+ */
+export function useReducedMotion(): boolean {
+  return useMediaQuery('(prefers-reduced-motion: reduce)');
+}

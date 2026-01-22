@@ -250,7 +250,8 @@ jobs:
 
           | Platform | Download |
           |----------|----------|
-          | Windows | [Fluxby_${VERSION}_x64-setup.exe](https://github.com/${{ github.repository }}/releases/download/v${VERSION}/Fluxby_${VERSION}_x64-setup.exe) |
+          | Windows (x64) | [Fluxby_${VERSION}_x64-setup.exe](https://github.com/${{ github.repository }}/releases/download/v${VERSION}/Fluxby_${VERSION}_x64-setup.exe) |
+          | Windows (ARM64) | [Fluxby_${VERSION}_arm64-setup.exe](https://github.com/${{ github.repository }}/releases/download/v${VERSION}/Fluxby_${VERSION}_arm64-setup.exe) |
           | macOS (Universal) | [Fluxby_${VERSION}_universal.dmg](https://github.com/${{ github.repository }}/releases/download/v${VERSION}/Fluxby_${VERSION}_universal.dmg) |
           | Linux (AppImage) | [Fluxby_${VERSION}_amd64.AppImage](https://github.com/${{ github.repository }}/releases/download/v${VERSION}/Fluxby_${VERSION}_amd64.AppImage) |
           | Linux (Debian) | [Fluxby_${VERSION}_amd64.deb](https://github.com/${{ github.repository }}/releases/download/v${VERSION}/Fluxby_${VERSION}_amd64.deb) |
@@ -286,8 +287,11 @@ jobs:
             args: ''
             rust-targets: ''
           - platform: 'windows-latest'
-            args: ''
+            args: '--target x86_64-pc-windows-msvc'
             rust-targets: ''
+          - platform: 'windows-latest'
+            args: '--target aarch64-pc-windows-msvc'
+            rust-targets: 'aarch64-pc-windows-msvc'
 
     runs-on: ${{ matrix.platform }}
     steps:

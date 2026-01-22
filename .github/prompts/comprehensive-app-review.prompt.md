@@ -25,16 +25,16 @@ This document provides a thorough review of the Fluxby application across all pl
 
 ### 1.1 Current Structure
 
-| Component | Path | Purpose |
-|-----------|------|---------|
-| Hero | `components/Hero.tsx` | Main CTA, animated avatar, language toggle |
-| Features | `components/Features.tsx` | Feature highlights |
-| Screenshots | `components/Screenshots.tsx` | App screenshots carousel |
-| Developer | `components/Developer.tsx` | API documentation links |
-| HelpCenter | `components/HelpCenter.tsx` | Help links |
-| Downloads | `components/Downloads.tsx` | Platform-specific download links |
-| CTA | `components/CTA.tsx` | Final call-to-action |
-| Footer | `components/Footer.tsx` | Legal links, social |
+| Component   | Path                         | Purpose                                    |
+| ----------- | ---------------------------- | ------------------------------------------ |
+| Hero        | `components/Hero.tsx`        | Main CTA, animated avatar, language toggle |
+| Features    | `components/Features.tsx`    | Feature highlights                         |
+| Screenshots | `components/Screenshots.tsx` | App screenshots carousel                   |
+| Developer   | `components/Developer.tsx`   | API documentation links                    |
+| HelpCenter  | `components/HelpCenter.tsx`  | Help links                                 |
+| Downloads   | `components/Downloads.tsx`   | Platform-specific download links           |
+| CTA         | `components/CTA.tsx`         | Final call-to-action                       |
+| Footer      | `components/Footer.tsx`      | Legal links, social                        |
 
 ### 1.2 Routes Configuration
 
@@ -50,24 +50,24 @@ This document provides a thorough review of the Fluxby application across all pl
 
 #### 🔴 Critical
 
-| Issue | Location | Impact | Suggested Fix |
-|-------|----------|--------|---------------|
+| Issue                            | Location        | Impact                                          | Suggested Fix                                        |
+| -------------------------------- | --------------- | ----------------------------------------------- | ---------------------------------------------------- |
 | No PWA install prompt on landing | `Downloads.tsx` | Users only see native downloads, not PWA option | Add PWA install detection and prompt to landing page |
 
 #### 🟡 Medium Priority
 
-| Issue | Location | Impact | Suggested Fix |
-|-------|----------|--------|---------------|
+| Issue                                | Location                 | Impact                                                               | Suggested Fix                                                     |
+| ------------------------------------ | ------------------------ | -------------------------------------------------------------------- | ----------------------------------------------------------------- |
 | Downloads hardcoded version mismatch | `Downloads.tsx` line ~15 | Download links use `__APP_VERSION__` but may not match Tauri version | Ensure version sync between Tauri config and build-time injection |
-| Mobile responsiveness on hero | `Hero.tsx` | Avatar size jumps at 768px breakpoint | Add intermediate breakpoint (640px) for smoother transition |
-| No loading state on "Get Started" | `Hero.tsx` line ~560 | User sees no feedback when clicking CTA | Add loading spinner or navigation feedback |
+| Mobile responsiveness on hero        | `Hero.tsx`               | Avatar size jumps at 768px breakpoint                                | Add intermediate breakpoint (640px) for smoother transition       |
+| No loading state on "Get Started"    | `Hero.tsx` line ~560     | User sees no feedback when clicking CTA                              | Add loading spinner or navigation feedback                        |
 
 #### 🟢 Low Priority
 
-| Issue | Location | Impact | Suggested Fix |
-|-------|----------|--------|---------------|
-| Bokeh animations cause jank on low-end devices | `Hero.tsx` | Performance issue on mobile | Add `prefers-reduced-motion` media query check |
-| Language selector flags only (no text) | `Hero.tsx` line ~292 | Accessibility concern | Add `aria-label` with language name |
+| Issue                                          | Location             | Impact                      | Suggested Fix                                  |
+| ---------------------------------------------- | -------------------- | --------------------------- | ---------------------------------------------- |
+| Bokeh animations cause jank on low-end devices | `Hero.tsx`           | Performance issue on mobile | Add `prefers-reduced-motion` media query check |
+| Language selector flags only (no text)         | `Hero.tsx` line ~292 | Accessibility concern       | Add `aria-label` with language name            |
 
 ---
 
@@ -111,55 +111,55 @@ This document provides a thorough review of the Fluxby application across all pl
 
 **File**: `apps/web/src/components/SecuritySetup.tsx`
 
-| Step | Name | Validation | Notes |
-|------|------|------------|-------|
-| 1 | Language | Click NL/EN flag | Saves to LanguageContext |
-| 2 | Name | Any non-empty string | Stored in user table |
-| 3 | Password | ≥8 chars, must match | PBKDF2 hashed |
-| 4 | Loading | Progress bar 0-100% | Demo profile + seed data |
+| Step | Name     | Validation           | Notes                    |
+| ---- | -------- | -------------------- | ------------------------ |
+| 1    | Language | Click NL/EN flag     | Saves to LanguageContext |
+| 2    | Name     | Any non-empty string | Stored in user table     |
+| 3    | Password | ≥8 chars, must match | PBKDF2 hashed            |
+| 4    | Loading  | Progress bar 0-100%  | Demo profile + seed data |
 
 ### 2.3 Onboarding Tour
 
 **File**: `apps/web/src/components/onboarding/onboarding-data.ts`
 
-| Chapter | Steps | Route | Key Elements |
-|---------|-------|-------|--------------|
-| Welcome | 1 | /dashboard | Welcome message |
-| Navigation | 7 | /dashboard | Sidebar, date filter, search, privacy mode, theme, profile, mascot |
-| Dashboard | 8 | /dashboard | Greeting, accounts, stats, income/expense, recent transactions |
-| Transactions | 6 | /transactions | Table, sorting, filtering, inline edit, details |
-| Categories | 4 | /categories | List, rules, budgets |
-| Analytics | 4 | /analytics | Charts, insights |
-| Budgets | 4 | /budgets | Overview, add, edit |
-| Subscriptions | 4 | /subscriptions | List, detection |
-| Address Book | 3 | /addressbook | Contacts |
-| Import | 3 | /import | Drag/drop, mapping |
-| Settings | 4 | /settings | Tabs, profile, sync |
-| Completion | 1 | /dashboard | Finish message |
+| Chapter       | Steps | Route          | Key Elements                                                       |
+| ------------- | ----- | -------------- | ------------------------------------------------------------------ |
+| Welcome       | 1     | /dashboard     | Welcome message                                                    |
+| Navigation    | 7     | /dashboard     | Sidebar, date filter, search, privacy mode, theme, profile, mascot |
+| Dashboard     | 8     | /dashboard     | Greeting, accounts, stats, income/expense, recent transactions     |
+| Transactions  | 6     | /transactions  | Table, sorting, filtering, inline edit, details                    |
+| Categories    | 4     | /categories    | List, rules, budgets                                               |
+| Analytics     | 4     | /analytics     | Charts, insights                                                   |
+| Budgets       | 4     | /budgets       | Overview, add, edit                                                |
+| Subscriptions | 4     | /subscriptions | List, detection                                                    |
+| Address Book  | 3     | /addressbook   | Contacts                                                           |
+| Import        | 3     | /import        | Drag/drop, mapping                                                 |
+| Settings      | 4     | /settings      | Tabs, profile, sync                                                |
+| Completion    | 1     | /dashboard     | Finish message                                                     |
 
 ### 2.4 Identified Issues
 
 #### 🔴 Critical
 
-| Issue | Location | Impact | Suggested Fix |
-|-------|----------|--------|---------------|
-| Password recovery impossible | `SecuritySetup.tsx` | User loses access if password forgotten | Add clear warning + optional recovery hint |
-| Demo seeding can timeout | `SecuritySetup.tsx` line ~250 | Large data sets on slow devices | Add timeout handling, retry button |
+| Issue                        | Location                      | Impact                                  | Suggested Fix                              |
+| ---------------------------- | ----------------------------- | --------------------------------------- | ------------------------------------------ |
+| Password recovery impossible | `SecuritySetup.tsx`           | User loses access if password forgotten | Add clear warning + optional recovery hint |
+| Demo seeding can timeout     | `SecuritySetup.tsx` line ~250 | Large data sets on slow devices         | Add timeout handling, retry button         |
 
 #### 🟡 Medium Priority
 
-| Issue | Location | Impact | Suggested Fix |
-|-------|----------|--------|---------------|
-| Keyboard covers input on iOS | `SecuritySetup.tsx` | Hard to type password on mobile Safari | Already has `isKeyboardVisible` state but may need CSS adjustment |
-| No "skip" option during seeding | `SecuritySetup.tsx` | Users must wait for full demo data | Add ability to skip demo data creation |
-| Onboarding doesn't respect `prefers-reduced-motion` | `OnboardingModal.tsx` | Animations may be distracting | Check media query, reduce animations |
+| Issue                                               | Location              | Impact                                 | Suggested Fix                                                     |
+| --------------------------------------------------- | --------------------- | -------------------------------------- | ----------------------------------------------------------------- |
+| Keyboard covers input on iOS                        | `SecuritySetup.tsx`   | Hard to type password on mobile Safari | Already has `isKeyboardVisible` state but may need CSS adjustment |
+| No "skip" option during seeding                     | `SecuritySetup.tsx`   | Users must wait for full demo data     | Add ability to skip demo data creation                            |
+| Onboarding doesn't respect `prefers-reduced-motion` | `OnboardingModal.tsx` | Animations may be distracting          | Check media query, reduce animations                              |
 
 #### 🟢 Low Priority
 
-| Issue | Location | Impact | Suggested Fix |
-|-------|----------|--------|---------------|
-| Progress bar steps are artificial | `SecuritySetup.tsx` line ~235 | Fixed timing, not actual progress | Connect to real seeding events |
-| Name step could be skipped | `SecuritySetup.tsx` | Some users may not want to share name | Make name optional |
+| Issue                             | Location                      | Impact                                | Suggested Fix                  |
+| --------------------------------- | ----------------------------- | ------------------------------------- | ------------------------------ |
+| Progress bar steps are artificial | `SecuritySetup.tsx` line ~235 | Fixed timing, not actual progress     | Connect to real seeding events |
+| Name step could be skipped        | `SecuritySetup.tsx`           | Some users may not want to share name | Make name optional             |
 
 ---
 
@@ -226,21 +226,23 @@ App Start
 
 ### 3.3 Build Targets
 
-| Platform | Format | File Pattern |
-|----------|--------|--------------|
-| macOS | DMG | `Fluxby_{version}_aarch64.dmg`, `Fluxby_{version}_x64.dmg` |
-| Windows | NSIS EXE | `Fluxby_{version}_x64-setup.exe` |
-| Linux | AppImage | `fluxby_{version}_amd64.AppImage` |
-| Linux | DEB | `fluxby_{version}_amd64.deb` |
+| Platform | Format   | File Pattern                                               |
+| -------- | -------- | ---------------------------------------------------------- |
+| macOS    | DMG      | `Fluxby_{version}_aarch64.dmg`, `Fluxby_{version}_x64.dmg` |
+| Windows  | NSIS EXE | `Fluxby_{version}_x64-setup.exe`                           |
+| Linux    | AppImage | `fluxby_{version}_amd64.AppImage`                          |
+| Linux    | DEB      | `fluxby_{version}_amd64.deb`                               |
 
 ### 3.4 Updater Artifacts
 
 Set in `tauri.conf.json`:
+
 ```json
 "createUpdaterArtifacts": true
 ```
 
 This generates:
+
 - `latest.json` - Version manifest
 - `.sig` files - Signatures for verification
 
@@ -248,25 +250,25 @@ This generates:
 
 #### 🔴 Critical
 
-| Issue | Location | Impact | Suggested Fix |
-|-------|----------|--------|---------------|
-| GitHub endpoint hardcoded | `tauri.conf.json` | No fallback if GitHub is down | Add secondary endpoint or CDN fallback |
-| No update check in background | `UpdateChecker.tsx` | Users only see updates when viewing Settings | Add periodic background check |
+| Issue                         | Location            | Impact                                       | Suggested Fix                          |
+| ----------------------------- | ------------------- | -------------------------------------------- | -------------------------------------- |
+| GitHub endpoint hardcoded     | `tauri.conf.json`   | No fallback if GitHub is down                | Add secondary endpoint or CDN fallback |
+| No update check in background | `UpdateChecker.tsx` | Users only see updates when viewing Settings | Add periodic background check          |
 
 #### 🟡 Medium Priority
 
-| Issue | Location | Impact | Suggested Fix |
-|-------|----------|--------|---------------|
-| Windows passive install may be silent | `tauri.conf.json` | User doesn't see progress | Consider `basicUi` mode for Windows |
-| No rollback mechanism | N/A | Failed update corrupts app | Implement backup before update |
-| ARM64 Windows not supported | `Downloads.tsx` | Surface Pro X, etc. can't use native app | Add ARM64 Windows build target |
+| Issue                                 | Location          | Impact                                   | Suggested Fix                       |
+| ------------------------------------- | ----------------- | ---------------------------------------- | ----------------------------------- |
+| Windows passive install may be silent | `tauri.conf.json` | User doesn't see progress                | Consider `basicUi` mode for Windows |
+| No rollback mechanism                 | N/A               | Failed update corrupts app               | Implement backup before update      |
+| ARM64 Windows not supported           | `Downloads.tsx`   | Surface Pro X, etc. can't use native app | Add ARM64 Windows build target      |
 
 #### 🟢 Low Priority
 
-| Issue | Location | Impact | Suggested Fix |
-|-------|----------|--------|---------------|
-| Release notes may be in wrong language | `UpdateChecker.tsx` | GitHub releases are typically in one language | Add i18n support for release notes |
-| Auto-check on mount may fail silently | `UpdateChecker.tsx` line ~296 | Network error not shown | Add retry button if initial check fails |
+| Issue                                  | Location                      | Impact                                        | Suggested Fix                           |
+| -------------------------------------- | ----------------------------- | --------------------------------------------- | --------------------------------------- |
+| Release notes may be in wrong language | `UpdateChecker.tsx`           | GitHub releases are typically in one language | Add i18n support for release notes      |
+| Auto-check on mount may fail silently  | `UpdateChecker.tsx` line ~296 | Network error not shown                       | Add retry button if initial check fails |
 
 ---
 
@@ -293,21 +295,21 @@ Device A                                    Device B
 
 **Version**: 1 (SYNC_PROTOCOL_VERSION)
 
-| Message Type | Purpose |
-|--------------|---------|
-| `sync:handshake` | Initial connection, exchange device info + schema version |
-| `sync:handshake-ack` | Confirm/reject handshake |
-| `sync:heartbeat` | Keep-alive (every 5s) |
-| `sync:heartbeat-ack` | Response to heartbeat |
-| `sync:request` | Request changes since timestamp |
-| `sync:manifest` | List of changed row IDs |
-| `sync:fetch` | Request specific rows |
-| `sync:data` | Actual row data (chunked) |
-| `sync:push` | Proactive push of changes |
-| `sync:ack` | Acknowledge received data |
-| `sync:error` | Error during sync |
-| `sync:debug-ping` | Connectivity test |
-| `sync:debug-pong` | Response to ping |
+| Message Type         | Purpose                                                   |
+| -------------------- | --------------------------------------------------------- |
+| `sync:handshake`     | Initial connection, exchange device info + schema version |
+| `sync:handshake-ack` | Confirm/reject handshake                                  |
+| `sync:heartbeat`     | Keep-alive (every 5s)                                     |
+| `sync:heartbeat-ack` | Response to heartbeat                                     |
+| `sync:request`       | Request changes since timestamp                           |
+| `sync:manifest`      | List of changed row IDs                                   |
+| `sync:fetch`         | Request specific rows                                     |
+| `sync:data`          | Actual row data (chunked)                                 |
+| `sync:push`          | Proactive push of changes                                 |
+| `sync:ack`           | Acknowledge received data                                 |
+| `sync:error`         | Error during sync                                         |
+| `sync:debug-ping`    | Connectivity test                                         |
+| `sync:debug-pong`    | Response to ping                                          |
 
 ### 4.3 Pairing Flow
 
@@ -373,35 +375,35 @@ iceServers: [
     username: 'openrelayproject',
     credential: 'openrelayproject',
   },
-]
+];
 ```
 
 ### 4.6 Identified Issues
 
 #### 🔴 Critical
 
-| Issue | Location | Impact | Suggested Fix |
-|-------|----------|--------|---------------|
-| OpenRelay TURN is unreliable/free tier | `peer.ts` line ~130 | May fail under load, no SLA | Self-host TURN or use paid TURN service (Twilio, Xirsys) |
-| Schema mismatch blocks sync silently | `sync-protocol.ts` | Different app versions can't sync | Show clear error message with upgrade prompt |
-| No encryption for sync messages | `peer-enhanced.ts` | Data transmitted unencrypted over WebRTC | Add E2E encryption layer (already planned in architecture) |
+| Issue                                  | Location            | Impact                                   | Suggested Fix                                              |
+| -------------------------------------- | ------------------- | ---------------------------------------- | ---------------------------------------------------------- |
+| OpenRelay TURN is unreliable/free tier | `peer.ts` line ~130 | May fail under load, no SLA              | Self-host TURN or use paid TURN service (Twilio, Xirsys)   |
+| Schema mismatch blocks sync silently   | `sync-protocol.ts`  | Different app versions can't sync        | Show clear error message with upgrade prompt               |
+| No encryption for sync messages        | `peer-enhanced.ts`  | Data transmitted unencrypted over WebRTC | Add E2E encryption layer (already planned in architecture) |
 
 #### 🟡 Medium Priority
 
-| Issue | Location | Impact | Suggested Fix |
-|-------|----------|--------|---------------|
-| Heartbeat timeout too aggressive | `sync-protocol.ts` DEFAULT_SYNC_CONFIG | 15s timeout may disconnect on slow networks | Make configurable, increase default to 30s |
-| No offline queue | `SyncContext.tsx` | Changes made offline are lost | Queue changes in IndexedDB, sync when online |
-| Reconnection attempts limited to 5 | `sync-protocol.ts` | May not recover from temporary network issues | Add exponential backoff with unlimited retries |
-| PeerJS public server rate limits | `peer.ts` | High traffic may hit limits | Consider self-hosted PeerJS server |
+| Issue                              | Location                               | Impact                                        | Suggested Fix                                  |
+| ---------------------------------- | -------------------------------------- | --------------------------------------------- | ---------------------------------------------- |
+| Heartbeat timeout too aggressive   | `sync-protocol.ts` DEFAULT_SYNC_CONFIG | 15s timeout may disconnect on slow networks   | Make configurable, increase default to 30s     |
+| No offline queue                   | `SyncContext.tsx`                      | Changes made offline are lost                 | Queue changes in IndexedDB, sync when online   |
+| Reconnection attempts limited to 5 | `sync-protocol.ts`                     | May not recover from temporary network issues | Add exponential backoff with unlimited retries |
+| PeerJS public server rate limits   | `peer.ts`                              | High traffic may hit limits                   | Consider self-hosted PeerJS server             |
 
 #### 🟢 Low Priority
 
-| Issue | Location | Impact | Suggested Fix |
-|-------|----------|--------|---------------|
+| Issue                             | Location           | Impact                                    | Suggested Fix              |
+| --------------------------------- | ------------------ | ----------------------------------------- | -------------------------- |
 | Pairing code uses ambiguous chars | `peer.ts` line ~57 | Already excludes 0,O,1,I but "L" included | Consider excluding "L" too |
-| Debug panel requires triple-click | `SyncSettings.tsx` | Hidden feature, no docs | Document in developer docs |
-| No sync history/log UI | N/A | Users can't see what synced | Add sync history viewer |
+| Debug panel requires triple-click | `SyncSettings.tsx` | Hidden feature, no docs                   | Document in developer docs |
+| No sync history/log UI            | N/A                | Users can't see what synced               | Add sync history viewer    |
 
 ---
 
@@ -409,61 +411,61 @@ iceServers: [
 
 ### 5.1 iOS (PWA via Safari)
 
-| Issue | Impact | Status | Fix |
-|-------|--------|--------|-----|
-| Safari OPFS support limited | May fail on older iOS | ⚠️ | Check Safari 17+ requirement |
-| PWA installation flow different | Users may not know how to install | ⚠️ | Add iOS-specific install instructions |
-| Keyboard covers input fields | Hard to type in forms | ⚠️ | Already has `isKeyboardVisible` detection |
-| No push notifications | Users miss sync updates | ℹ️ | PWA limitation, document in Help |
-| Background sync unavailable | App must be open to sync | ℹ️ | PWA limitation, document in Help |
+| Issue                           | Impact                            | Status | Fix                                       |
+| ------------------------------- | --------------------------------- | ------ | ----------------------------------------- |
+| Safari OPFS support limited     | May fail on older iOS             | ⚠️     | Check Safari 17+ requirement              |
+| PWA installation flow different | Users may not know how to install | ⚠️     | Add iOS-specific install instructions     |
+| Keyboard covers input fields    | Hard to type in forms             | ⚠️     | Already has `isKeyboardVisible` detection |
+| No push notifications           | Users miss sync updates           | ℹ️     | PWA limitation, document in Help          |
+| Background sync unavailable     | App must be open to sync          | ℹ️     | PWA limitation, document in Help          |
 
 ### 5.2 Android (PWA via Chrome)
 
-| Issue | Impact | Status | Fix |
-|-------|--------|--------|-----|
-| PWA install prompt works | Good UX | ✅ | `beforeinstallprompt` handled |
-| OPFS fully supported | Data persists | ✅ | N/A |
-| WebRTC works well | Sync functions | ✅ | N/A |
-| No native app alternative | Some users prefer native | ℹ️ | Consider Tauri mobile in future |
+| Issue                     | Impact                   | Status | Fix                             |
+| ------------------------- | ------------------------ | ------ | ------------------------------- |
+| PWA install prompt works  | Good UX                  | ✅     | `beforeinstallprompt` handled   |
+| OPFS fully supported      | Data persists            | ✅     | N/A                             |
+| WebRTC works well         | Sync functions           | ✅     | N/A                             |
+| No native app alternative | Some users prefer native | ℹ️     | Consider Tauri mobile in future |
 
 ### 5.3 Windows (Tauri)
 
-| Issue | Impact | Status | Fix |
-|-------|--------|--------|-----|
-| NSIS installer works | Clean install | ✅ | N/A |
-| Auto-update works | Seamless updates | ✅ | N/A |
-| ARM64 not supported | Surface Pro X users excluded | 🔴 | Add ARM64 build target |
-| Windows Defender may flag | First-run warning | ⚠️ | Code sign with EV certificate |
-| CSP blocking some resources | May affect WebGL | ⚠️ | Review CSP in tauri.conf.json |
+| Issue                       | Impact                       | Status | Fix                           |
+| --------------------------- | ---------------------------- | ------ | ----------------------------- |
+| NSIS installer works        | Clean install                | ✅     | N/A                           |
+| Auto-update works           | Seamless updates             | ✅     | N/A                           |
+| ARM64 not supported         | Surface Pro X users excluded | 🔴     | Add ARM64 build target        |
+| Windows Defender may flag   | First-run warning            | ⚠️     | Code sign with EV certificate |
+| CSP blocking some resources | May affect WebGL             | ⚠️     | Review CSP in tauri.conf.json |
 
 ### 5.4 macOS (Tauri)
 
-| Issue | Impact | Status | Fix |
-|-------|--------|--------|-----|
-| DMG for both architectures | Universal support | ✅ | Apple Silicon + Intel |
-| Gatekeeper warning | First-run requires approval | ⚠️ | Code sign + notarize |
-| Menu bar integration | Native feel | ✅ | Full menu implemented |
-| No app sandbox | Security concern | ⚠️ | Enable hardened runtime |
-| Minimum macOS 10.15 | Excludes older Macs | ℹ️ | Acceptable, 10.15 is from 2019 |
+| Issue                      | Impact                      | Status | Fix                            |
+| -------------------------- | --------------------------- | ------ | ------------------------------ |
+| DMG for both architectures | Universal support           | ✅     | Apple Silicon + Intel          |
+| Gatekeeper warning         | First-run requires approval | ⚠️     | Code sign + notarize           |
+| Menu bar integration       | Native feel                 | ✅     | Full menu implemented          |
+| No app sandbox             | Security concern            | ⚠️     | Enable hardened runtime        |
+| Minimum macOS 10.15        | Excludes older Macs         | ℹ️     | Acceptable, 10.15 is from 2019 |
 
 ### 5.5 Linux (Tauri)
 
-| Issue | Impact | Status | Fix |
-|-------|--------|--------|-----|
-| AppImage works universally | Good compatibility | ✅ | N/A |
-| DEB for Debian/Ubuntu | Native package manager | ✅ | N/A |
-| No RPM package | Fedora/RHEL users must use AppImage | ⚠️ | Add RPM build target |
-| No Flatpak/Snap | Limited discoverability | ⚠️ | Consider Flatpak support |
-| ARM64 Linux not supported | Raspberry Pi users excluded | ⚠️ | Add ARM64 Linux build |
+| Issue                      | Impact                              | Status | Fix                      |
+| -------------------------- | ----------------------------------- | ------ | ------------------------ |
+| AppImage works universally | Good compatibility                  | ✅     | N/A                      |
+| DEB for Debian/Ubuntu      | Native package manager              | ✅     | N/A                      |
+| No RPM package             | Fedora/RHEL users must use AppImage | ⚠️     | Add RPM build target     |
+| No Flatpak/Snap            | Limited discoverability             | ⚠️     | Consider Flatpak support |
+| ARM64 Linux not supported  | Raspberry Pi users excluded         | ⚠️     | Add ARM64 Linux build    |
 
 ### 5.6 Web Browser (PWA)
 
-| Issue | Impact | Status | Fix |
-|-------|--------|--------|-----|
-| COOP/COEP headers required | SharedArrayBuffer for WASM | ✅ | Configured in Vite |
-| Service Worker updates | App stays fresh | ✅ | Update detection in UpdateChecker |
-| OPFS in all major browsers | Data persistence | ✅ | Chrome, Firefox, Safari 17+ |
-| Firefox OPFS performance | May be slower | ⚠️ | Test and document limitations |
+| Issue                      | Impact                     | Status | Fix                               |
+| -------------------------- | -------------------------- | ------ | --------------------------------- |
+| COOP/COEP headers required | SharedArrayBuffer for WASM | ✅     | Configured in Vite                |
+| Service Worker updates     | App stays fresh            | ✅     | Update detection in UpdateChecker |
+| OPFS in all major browsers | Data persistence           | ✅     | Chrome, Firefox, Safari 17+       |
+| Firefox OPFS performance   | May be slower              | ⚠️     | Test and document limitations     |
 
 ---
 
@@ -471,43 +473,43 @@ iceServers: [
 
 ### 6.1 Critical (Must Fix)
 
-| # | Item | Priority | Effort | Owner |
-|---|------|----------|--------|-------|
-| 1 | Replace OpenRelay TURN with reliable service | P0 | High | Backend |
-| 2 | Add E2E encryption for sync messages | P0 | High | Core |
-| 3 | Show clear error when schema mismatch blocks sync | P0 | Low | Frontend |
-| 4 | Add GitHub endpoint fallback for Tauri updater | P0 | Medium | Build |
-| 5 | Add ARM64 Windows build | P0 | Medium | Build |
+| #   | Item                                              | Priority | Effort | Owner    |
+| --- | ------------------------------------------------- | -------- | ------ | -------- |
+| 1   | Replace OpenRelay TURN with reliable service      | P0       | High   | Backend  |
+| 2   | Add E2E encryption for sync messages              | P0       | High   | Core     |
+| 3   | Show clear error when schema mismatch blocks sync | P0       | Low    | Frontend |
+| 4   | Add GitHub endpoint fallback for Tauri updater    | P0       | Medium | Build    |
+| 5   | Add ARM64 Windows build                           | P0       | Medium | Build    |
 
 ### 6.2 High Priority (Should Fix)
 
-| # | Item | Priority | Effort | Owner |
-|---|------|----------|--------|-------|
-| 6 | Add PWA install prompt to landing page | P1 | Low | Landing |
-| 7 | Add offline change queue for sync | P1 | High | Core |
-| 8 | Increase heartbeat timeout to 30s | P1 | Low | Core |
-| 9 | Add background update check for Tauri | P1 | Medium | Frontend |
-| 10 | Code sign Windows and macOS builds | P1 | Medium | DevOps |
+| #   | Item                                   | Priority | Effort | Owner    |
+| --- | -------------------------------------- | -------- | ------ | -------- |
+| 6   | Add PWA install prompt to landing page | P1       | Low    | Landing  |
+| 7   | Add offline change queue for sync      | P1       | High   | Core     |
+| 8   | Increase heartbeat timeout to 30s      | P1       | Low    | Core     |
+| 9   | Add background update check for Tauri  | P1       | Medium | Frontend |
+| 10  | Code sign Windows and macOS builds     | P1       | Medium | DevOps   |
 
 ### 6.3 Medium Priority (Nice to Have)
 
-| # | Item | Priority | Effort | Owner |
-|---|------|----------|--------|-------|
-| 11 | Add `prefers-reduced-motion` support | P2 | Low | Frontend |
-| 12 | Add intermediate mobile breakpoint for Hero | P2 | Low | Landing |
-| 13 | Make demo data seeding optional | P2 | Medium | Onboarding |
-| 14 | Add sync history viewer | P2 | Medium | Frontend |
-| 15 | Add RPM package for Linux | P2 | Low | Build |
-| 16 | Self-host PeerJS server | P2 | Medium | DevOps |
+| #   | Item                                        | Priority | Effort | Owner      |
+| --- | ------------------------------------------- | -------- | ------ | ---------- |
+| 11  | Add `prefers-reduced-motion` support        | P2       | Low    | Frontend   |
+| 12  | Add intermediate mobile breakpoint for Hero | P2       | Low    | Landing    |
+| 13  | Make demo data seeding optional             | P2       | Medium | Onboarding |
+| 14  | Add sync history viewer                     | P2       | Medium | Frontend   |
+| 15  | Add RPM package for Linux                   | P2       | Low    | Build      |
+| 16  | Self-host PeerJS server                     | P2       | Medium | DevOps     |
 
 ### 6.4 Low Priority (Future Consideration)
 
-| # | Item | Priority | Effort | Owner |
-|---|------|----------|--------|-------|
-| 17 | Add Flatpak/Snap support | P3 | Medium | Build |
-| 18 | Add ARM64 Linux build | P3 | Low | Build |
-| 19 | Consider Tauri mobile app | P3 | High | Mobile |
-| 20 | Add i18n for release notes | P3 | Low | Frontend |
+| #   | Item                       | Priority | Effort | Owner    |
+| --- | -------------------------- | -------- | ------ | -------- |
+| 17  | Add Flatpak/Snap support   | P3       | Medium | Build    |
+| 18  | Add ARM64 Linux build      | P3       | Low    | Build    |
+| 19  | Consider Tauri mobile app  | P3       | High   | Mobile   |
+| 20  | Add i18n for release notes | P3       | Low    | Frontend |
 
 ---
 
@@ -577,4 +579,4 @@ The test suite provides good coverage of the sync protocol and utility functions
 
 ---
 
-*This review was generated automatically. Please validate findings manually before implementing changes.*
+_This review was generated automatically. Please validate findings manually before implementing changes._

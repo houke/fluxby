@@ -41,6 +41,7 @@ import HelpBudgeting from './pages/help/HelpBudgeting';
 import HelpSubscriptions from './pages/help/HelpSubscriptions';
 import HelpPrivacy from './pages/help/HelpPrivacy';
 import HelpFirstSteps from './pages/help/HelpFirstSteps';
+import HelpInstallation from './pages/help/HelpInstallation';
 import HelpTransactions from './pages/help/HelpTransactions';
 import HelpCategories from './pages/help/HelpCategories';
 import HelpAccounts from './pages/help/HelpAccounts';
@@ -164,6 +165,7 @@ function App() {
               <Route path='/help' element={<HelpLayout />}>
                 <Route index element={<HelpHome />} />
                 <Route path='first-steps' element={<HelpFirstSteps />} />
+                <Route path='installation' element={<HelpInstallation />} />
                 <Route
                   path='bank-connection'
                   element={<HelpBankConnection />}

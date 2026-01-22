@@ -99,6 +99,50 @@ export function getIceServers(): IceServerConfig[] {
   return [...getDefaultStunServers(), ...getDefaultTurnServers()];
 }
 
+/**
+ * Get PeerJS server configuration from environment variables
+ * Set VITE_PEERJS_HOST to use a custom PeerJS server
+ *
+ * Environment variables:
+ * - VITE_PEERJS_HOST: Server hostname (required for custom server)
+ * - VITE_PEERJS_PORT: Server port (default: 443)
+ * - VITE_PEERJS_PATH: Server path (default: '/')
+ * - VITE_PEERJS_SECURE: Use HTTPS (default: 'true')
+ * - VITE_PEERJS_KEY: API key (optional)
+ */
+export function getPeerServerConfig(): PeerServerConfig | undefined {
+  const host =
+    typeof import.meta !== 'undefined' &&
+    (import.meta as any).env?.VITE_PEERJS_HOST;
+
+  if (!host) {
+    return undefined; // Use default PeerJS cloud server
+  }
+
+  const port =
+    typeof import.meta !== 'undefined' &&
+    (import.meta as any).env?.VITE_PEERJS_PORT;
+  const path =
+    typeof import.meta !== 'undefined' &&
+    (import.meta as any).env?.VITE_PEERJS_PATH;
+  const secure =
+    typeof import.meta !== 'undefined' &&
+    (import.meta as any).env?.VITE_PEERJS_SECURE;
+  const key =
+    typeof import.meta !== 'undefined' &&
+    (import.meta as any).env?.VITE_PEERJS_KEY;
+
+  console.log('Using custom PeerJS server:', host);
+
+  return {
+    host,
+    port: port ? parseInt(port, 10) : 443,
+    path: path || '/',
+    secure: secure !== 'false', // Default to true
+    key: key || undefined,
+  };
+}
+
 // Pairing message types
 export type PairingMessage =
   | { type: 'pairing-request'; pairingCode: string; deviceName: string }
@@ -117,6 +161,22 @@ export interface PeerDevice {
   isConnected: boolean;
 }
 
+/**
+ * PeerJS server configuration for self-hosted servers
+ */
+export interface PeerServerConfig {
+  /** Server host (e.g., 'my-peerjs-server.com') */
+  host: string;
+  /** Server port (default: 443 for secure, 9000 for local) */
+  port?: number;
+  /** Server path (default: '/') */
+  path?: string;
+  /** Use secure WebSocket (wss://) - should be true for production */
+  secure?: boolean;
+  /** API key for the PeerJS server (if required) */
+  key?: string;
+}
+
 export interface PeerOptions {
   /** Device ID for this device */
   deviceId: string;
@@ -124,6 +184,8 @@ export interface PeerOptions {
   deviceName: string;
   /** Custom ICE servers configuration (optional) */
   iceServers?: IceServerConfig[];
+  /** Custom PeerJS server configuration for self-hosted servers (optional) */
+  peerServer?: PeerServerConfig;
   /** Callback when a new device wants to pair */
   onPairingRequest?: (
     deviceName: string,
@@ -215,7 +277,9 @@ export class PeerSync {
           // Use custom ICE servers if provided, otherwise use defaults
           const iceServers = this.options.iceServers || getIceServers();
 
-          const peer = new Peer(id, {
+          // Build PeerJS options - support custom server configuration
+
+          const peerOptions: any = {
             debug: 1, // Increased debug level for better troubleshooting
             config: {
               iceServers,
@@ -223,7 +287,20 @@ export class PeerSync {
               // when direct connection fails
               iceCandidatePoolSize: 10,
             },
-          });
+          };
+
+          // Add custom PeerJS server configuration if provided
+          if (this.options.peerServer) {
+            peerOptions.host = this.options.peerServer.host;
+            peerOptions.port = this.options.peerServer.port ?? 443;
+            peerOptions.path = this.options.peerServer.path ?? '/';
+            peerOptions.secure = this.options.peerServer.secure ?? true;
+            if (this.options.peerServer.key) {
+              peerOptions.key = this.options.peerServer.key;
+            }
+          }
+
+          const peer = new Peer(id, peerOptions);
           this.peer = peer;
 
           peer.on('open', (peerId) => {

@@ -197,6 +197,290 @@ export class SyncQueue {
 }
 
 /**
+ * IndexedDB storage key for sync queue
+ */
+const SYNC_QUEUE_DB_NAME = 'fluxby-sync-queue';
+const SYNC_QUEUE_STORE_NAME = 'queue';
+const SYNC_QUEUE_DB_VERSION = 1;
+
+/**
+ * Persistent sync queue using IndexedDB
+ * Automatically persists changes and recovers on page reload
+ */
+export class PersistentSyncQueue extends SyncQueue {
+  private db: IDBDatabase | null = null;
+  private initPromise: Promise<void> | null = null;
+  private profileId: string;
+
+  constructor(profileId: string) {
+    super();
+    this.profileId = profileId;
+    this.initPromise = this.initDB();
+  }
+
+  /**
+   * Initialize IndexedDB connection
+   */
+  private async initDB(): Promise<void> {
+    if (typeof indexedDB === 'undefined') {
+      console.warn('[PersistentSyncQueue] IndexedDB not available');
+      return;
+    }
+
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open(
+        `${SYNC_QUEUE_DB_NAME}-${this.profileId}`,
+        SYNC_QUEUE_DB_VERSION
+      );
+
+      request.onerror = () => {
+        console.error(
+          '[PersistentSyncQueue] Failed to open IndexedDB:',
+          request.error
+        );
+        reject(request.error);
+      };
+
+      request.onsuccess = () => {
+        this.db = request.result;
+        // Load existing queue from IndexedDB
+        void this.loadFromDB().then(resolve);
+      };
+
+      request.onupgradeneeded = () => {
+        const db = request.result;
+        if (!db.objectStoreNames.contains(SYNC_QUEUE_STORE_NAME)) {
+          db.createObjectStore(SYNC_QUEUE_STORE_NAME, { keyPath: 'id' });
+        }
+      };
+    });
+  }
+
+  /**
+   * Wait for DB initialization
+   */
+  async ready(): Promise<void> {
+    if (this.initPromise) {
+      await this.initPromise;
+    }
+  }
+
+  /**
+   * Load queue from IndexedDB
+   */
+  private async loadFromDB(): Promise<void> {
+    if (!this.db) return;
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction(
+        SYNC_QUEUE_STORE_NAME,
+        'readonly'
+      );
+      const store = transaction.objectStore(SYNC_QUEUE_STORE_NAME);
+      const request = store.getAll();
+
+      request.onerror = () => {
+        console.error(
+          '[PersistentSyncQueue] Failed to load from IndexedDB:',
+          request.error
+        );
+        reject(request.error);
+      };
+
+      request.onsuccess = () => {
+        const items = request.result as SyncQueueItem[];
+        // Sort by timestamp to maintain order
+        items.sort((a, b) => a.timestamp - b.timestamp);
+        super.fromJSON(JSON.stringify(items));
+        resolve();
+      };
+    });
+  }
+
+  /**
+   * Save an item to IndexedDB
+   */
+  private async saveItem(item: SyncQueueItem): Promise<void> {
+    if (!this.db) return;
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction(
+        SYNC_QUEUE_STORE_NAME,
+        'readwrite'
+      );
+      const store = transaction.objectStore(SYNC_QUEUE_STORE_NAME);
+      const request = store.put(item);
+
+      request.onerror = () => {
+        console.error(
+          '[PersistentSyncQueue] Failed to save item:',
+          request.error
+        );
+        reject(request.error);
+      };
+
+      request.onsuccess = () => resolve();
+    });
+  }
+
+  /**
+   * Remove an item from IndexedDB
+   */
+  private async removeItem(id: string): Promise<void> {
+    if (!this.db) return;
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction(
+        SYNC_QUEUE_STORE_NAME,
+        'readwrite'
+      );
+      const store = transaction.objectStore(SYNC_QUEUE_STORE_NAME);
+      const request = store.delete(id);
+
+      request.onerror = () => {
+        console.error(
+          '[PersistentSyncQueue] Failed to remove item:',
+          request.error
+        );
+        reject(request.error);
+      };
+
+      request.onsuccess = () => resolve();
+    });
+  }
+
+  /**
+   * Clear all items from IndexedDB
+   */
+  private async clearDB(): Promise<void> {
+    if (!this.db) return;
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction(
+        SYNC_QUEUE_STORE_NAME,
+        'readwrite'
+      );
+      const store = transaction.objectStore(SYNC_QUEUE_STORE_NAME);
+      const request = store.clear();
+
+      request.onerror = () => {
+        console.error(
+          '[PersistentSyncQueue] Failed to clear IndexedDB:',
+          request.error
+        );
+        reject(request.error);
+      };
+
+      request.onsuccess = () => resolve();
+    });
+  }
+
+  /**
+   * Override enqueue to persist to IndexedDB
+   */
+  override enqueue(
+    table: string,
+    rowId: string,
+    operation: 'insert' | 'update' | 'delete',
+    data: Record<string, unknown>
+  ): void {
+    // Get queue state before and after to detect merged items
+    const sizeBefore = this.size();
+    const itemsBefore = this.getAll().map((i) => i.id);
+
+    super.enqueue(table, rowId, operation, data);
+
+    const itemsAfter = this.getAll();
+    const sizeAfter = itemsAfter.length;
+
+    // If size decreased (insert + delete = remove), remove old item from DB
+    if (sizeAfter < sizeBefore) {
+      // Find removed items
+      for (const oldId of itemsBefore) {
+        if (!itemsAfter.find((i) => i.id === oldId)) {
+          void this.removeItem(oldId);
+        }
+      }
+    } else if (sizeAfter === sizeBefore) {
+      // Item was merged/updated - find the updated item
+      const changedItem = itemsAfter.find(
+        (i) => i.table === table && i.rowId === rowId
+      );
+      if (changedItem) {
+        void this.saveItem(changedItem);
+      }
+    } else {
+      // New item added
+      const newItem = itemsAfter.find((i) => !itemsBefore.includes(i.id));
+      if (newItem) {
+        void this.saveItem(newItem);
+      }
+    }
+  }
+
+  /**
+   * Override dequeue to remove from IndexedDB
+   */
+  override dequeue(): SyncQueueItem | undefined {
+    const item = super.dequeue();
+    if (item) {
+      void this.removeItem(item.id);
+    }
+    return item;
+  }
+
+  /**
+   * Override clear to clear IndexedDB
+   */
+  override clear(): void {
+    super.clear();
+    void this.clearDB();
+  }
+
+  /**
+   * Override requeueFailed to update in IndexedDB
+   */
+  override requeueFailed(item: SyncQueueItem): boolean {
+    const requeued = super.requeueFailed(item);
+    if (requeued) {
+      // Save the updated item with incremented retry count
+      const items = this.getAll();
+      const updatedItem = items.find(
+        (i) => i.rowId === item.rowId && i.table === item.table
+      );
+      if (updatedItem) {
+        void this.saveItem(updatedItem);
+      }
+    }
+    return requeued;
+  }
+
+  /**
+   * Close the database connection
+   */
+  close(): void {
+    if (this.db) {
+      this.db.close();
+      this.db = null;
+    }
+  }
+
+  /**
+   * Get pending changes count
+   */
+  getPendingCount(): number {
+    return this.size();
+  }
+
+  /**
+   * Check if there are pending changes
+   */
+  hasPendingChanges(): boolean {
+    return !this.isEmpty();
+  }
+}
+
+/**
  * Connectivity monitor
  * Tracks online/offline state and triggers sync attempts
  */

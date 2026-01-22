@@ -15,6 +15,7 @@ import {
   RefreshCw,
   ToggleLeft,
   ToggleRight,
+  History,
 } from 'lucide-react';
 import {
   Card,
@@ -45,6 +46,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/contexts/ToastContext';
 import { cn } from '@/lib/utils';
 import { SyncDebugPanel } from './SyncDebugPanel';
+import { SyncHistoryViewer } from './SyncHistoryViewer';
 import { QRPairingDialog } from './QRPairingDialog';
 
 export function SyncSettings() {
@@ -74,6 +76,7 @@ export function SyncSettings() {
   const [isConnecting, setIsConnecting] = useState(false);
   const [connectionError, setConnectionError] = useState<string | null>(null);
   const [showDebugPanel, setShowDebugPanel] = useState(false);
+  const [showHistoryViewer, setShowHistoryViewer] = useState(false);
   const [isSyncingManual, setIsSyncingManual] = useState(false);
 
   // Triple-click detection for debug panel
@@ -353,6 +356,25 @@ export function SyncSettings() {
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant='ghost'
+                      size='icon'
+                      className='group h-8 w-8 rounded-md hover:bg-purple-600 hover:text-white'
+                      onClick={() => setShowHistoryViewer(!showHistoryViewer)}
+                    >
+                      <History className='h-4 w-4 text-muted-foreground group-hover:text-white' />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className='font-medium'>
+                      {t.settings?.sync?.syncHistory || 'Sync history'}
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
           </div>
         </CardHeader>
@@ -361,6 +383,13 @@ export function SyncSettings() {
           {showDebugPanel && (
             <div className='mb-4'>
               <SyncDebugPanel onClose={() => setShowDebugPanel(false)} />
+            </div>
+          )}
+
+          {/* Sync History Viewer */}
+          {showHistoryViewer && (
+            <div className='mb-4'>
+              <SyncHistoryViewer onClose={() => setShowHistoryViewer(false)} />
             </div>
           )}
 

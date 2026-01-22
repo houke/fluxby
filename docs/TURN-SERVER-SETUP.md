@@ -5,6 +5,7 @@ Fluxby uses WebRTC for peer-to-peer device synchronization. In most cases, direc
 ## Default Configuration
 
 By default, Fluxby uses:
+
 - **STUN**: Google's free STUN servers (stun.l.google.com)
 - **TURN**: Metered's free OpenRelay servers (openrelay.metered.ca)
 
@@ -106,6 +107,7 @@ max-bps=0
 #### Firewall Rules
 
 Open the following ports:
+
 - **TCP/UDP 3478**: Standard TURN port
 - **TCP/UDP 5349**: TLS TURN port
 - **UDP 49152-65535**: Relay ports (or configure a smaller range)
@@ -114,11 +116,11 @@ Open the following ports:
 
 If you prefer managed services:
 
-| Service | Free Tier | Pricing | Notes |
-|---------|-----------|---------|-------|
-| [Twilio TURN](https://www.twilio.com/stun-turn) | No | Pay-per-use | Most reliable |
-| [Xirsys](https://xirsys.com/) | Yes (limited) | Plans from $0 | Good documentation |
-| [Metered](https://www.metered.ca/) | Yes (limited) | Plans from $0 | Default fallback |
+| Service                                         | Free Tier     | Pricing       | Notes              |
+| ----------------------------------------------- | ------------- | ------------- | ------------------ |
+| [Twilio TURN](https://www.twilio.com/stun-turn) | No            | Pay-per-use   | Most reliable      |
+| [Xirsys](https://xirsys.com/)                   | Yes (limited) | Plans from $0 | Good documentation |
+| [Metered](https://www.metered.ca/)              | Yes (limited) | Plans from $0 | Default fallback   |
 
 ### Twilio Configuration Example
 

@@ -189,6 +189,8 @@ export const en: TranslationKeys = {
     installComplete: 'Update installed! Restarting...',
     errorOccurred: 'An error occurred',
     clickToCheck: 'Click to check for updates',
+    lastChecked: 'Last checked: {time}',
+    backgroundCheckEnabled: 'Auto-check every 4 hours',
   },
   nav: {
     dashboard: 'Dashboard',
@@ -314,6 +316,7 @@ export const en: TranslationKeys = {
     date: 'Date',
     amount: 'Amount',
     addToAddressBook: 'Add to address book',
+    unlinkFromContact: 'Unlink',
     savedToAddressBook: 'Added to address book',
     createContactError: 'Failed to create contact',
     inAddressBook: 'In address book',
@@ -1090,6 +1093,32 @@ export const en: TranslationKeys = {
       protocolMismatch:
         'This device uses an incompatible sync version. Update both devices to the latest version.',
       upgradeRequired: 'App update required',
+      // Sync history viewer
+      syncHistory: 'Sync history',
+      syncHistoryDescription:
+        'View recent sync events and conflict resolutions',
+      syncHistoryLoadError: 'Failed to load sync history',
+      syncHistoryCleared: 'Sync history cleared',
+      syncHistoryClearError: 'Failed to clear sync history',
+      noSyncHistory: 'No sync history yet',
+      syncHistoryHint:
+        'Sync events will appear here when you sync with other devices',
+      clearHistory: 'Clear history',
+      clearHistoryTitle: 'Clear sync history?',
+      clearHistoryDescription:
+        'This will remove all sync history records. Your synced data will not be affected.',
+      actionCreate: 'Created',
+      actionUpdate: 'Updated',
+      actionDelete: 'Deleted',
+      actionConflict: 'Conflict',
+      created: 'created',
+      updated: 'updated',
+      deleted: 'deleted',
+      conflicts: 'conflicts',
+      resolution: 'Resolution',
+      localTime: 'Local',
+      remoteTime: 'Remote',
+      showHistory: 'Show history',
     },
   },
   help: {

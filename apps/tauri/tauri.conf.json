@@ -32,13 +32,7 @@
   },
   "bundle": {
     "active": true,
-    "targets": [
-      "app",
-      "dmg",
-      "nsis",
-      "appimage",
-      "deb"
-    ],
+    "targets": ["app", "dmg", "nsis", "appimage", "deb", "rpm"],
     "createUpdaterArtifacts": true,
     "icon": [
       "icons/32x32.png",
@@ -77,6 +71,10 @@
       },
       "deb": {
         "depends": []
+      },
+      "rpm": {
+        "depends": [],
+        "release": "1"
       }
     }
   },
@@ -87,10 +85,11 @@
     "updater": {
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDk4NkQ1MzhDMTNDNUU2NzUKUldSMTVzVVRqRk50bU5KMmc1NVQzT3hjOUV2SmpLMFdBMGFzdm1mM242K3NwSEgzQ1NBZDFBeHMK",
       "endpoints": [
-        "https://github.com/houke/fluxby/releases/latest/download/latest.json"
+        "https://github.com/houke/fluxby/releases/latest/download/latest.json",
+        "https://cdn.jsdelivr.net/gh/houke/fluxby@latest/latest.json"
       ],
       "windows": {
-        "installMode": "passive"
+        "installMode": "basicUi"
       }
     }
   }

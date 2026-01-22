@@ -54,6 +54,11 @@ export default function HelpSidebar({ isOpen, onClose }: HelpSidebarProps) {
           icon: '🚀',
         },
         {
+          title: t.helpCenter?.userNav?.installation || 'Installation',
+          path: '/help/installation',
+          icon: '📲',
+        },
+        {
           title:
             t.helpCenter?.userNav?.bankConnection || 'Connecting your bank',
           path: '/help/bank-connection',

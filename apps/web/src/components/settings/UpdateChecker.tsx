@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Download,
   RefreshCw,
@@ -25,6 +25,7 @@ import {
 } from '@/components/ui/dialog';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/contexts/ToastContext';
+import type { Language } from '@/lib/i18n';
 
 // Check if running in Tauri
 const isTauri = typeof window !== 'undefined' && '__TAURI__' in window;
@@ -34,6 +35,68 @@ const currentAppVersion =
   typeof import.meta !== 'undefined'
     ? (import.meta.env?.VITE_APP_VERSION as string | undefined)
     : undefined;
+
+/**
+ * Parse localized release notes from GitHub release body.
+ * Supports two formats:
+ *
+ * Format 1 - HTML comments (recommended for GitHub):
+ * <!-- nl -->
+ * Dutch release notes...
+ * <!-- /nl -->
+ * <!-- en -->
+ * English release notes...
+ * <!-- /en -->
+ *
+ * Format 2 - Markdown headers:
+ * ## 🇳🇱 Nederlands
+ * Dutch release notes...
+ *
+ * ## 🇬🇧 English
+ * English release notes...
+ *
+ * If no language markers found, returns the full body.
+ */
+function parseLocalizedReleaseNotes(
+  body: string | undefined,
+  language: Language
+): string {
+  if (!body) return '';
+
+  // Try HTML comment format first (<!-- nl --> ... <!-- /nl -->)
+  const commentRegex = new RegExp(
+    `<!--\\s*${language}\\s*-->([\\s\\S]*?)<!--\\s*\\/${language}\\s*-->`,
+    'i'
+  );
+  const commentMatch = body.match(commentRegex);
+  if (commentMatch) {
+    return commentMatch[1].trim();
+  }
+
+  // Try markdown header format (## 🇳🇱 Nederlands or ## 🇬🇧 English)
+  const headerPatterns: Record<Language, RegExp> = {
+    nl: /##\s*(?:🇳🇱\s*)?Nederlands\s*\n([\s\S]*?)(?=##\s*(?:🇬🇧\s*)?English|$)/i,
+    en: /##\s*(?:🇬🇧\s*)?English\s*\n([\s\S]*?)(?=##\s*(?:🇳🇱\s*)?Nederlands|$)/i,
+  };
+
+  const headerMatch = body.match(headerPatterns[language]);
+  if (headerMatch) {
+    return headerMatch[1].trim();
+  }
+
+  // Try simple [nl] ... [en] markers
+  const simpleRegex = new RegExp(
+    `\\[${language}\\]([\\s\\S]*?)(?=\\[(?:nl|en)\\]|$)`,
+    'i'
+  );
+  const simpleMatch = body.match(simpleRegex);
+  if (simpleMatch) {
+    return simpleMatch[1].trim();
+  }
+
+  // No language markers found, return full body
+  return body;
+}
 
 interface UpdateInfo {
   version: string;
@@ -60,7 +123,7 @@ type UpdateStatus =
   | 'error';
 
 export function UpdateChecker() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const toast = useToast();
 
   const [status, setStatus] = useState<UpdateStatus>('idle');
@@ -70,6 +133,12 @@ export function UpdateChecker() {
   const [error, setError] = useState<string | null>(null);
   const [showReleaseNotes, setShowReleaseNotes] = useState(false);
   const [webUpdateAvailable, setWebUpdateAvailable] = useState(false);
+  const [lastChecked, setLastChecked] = useState<Date | null>(null);
+
+  // Parse localized release notes based on current language
+  const localizedReleaseNotes = useMemo(() => {
+    return parseLocalizedReleaseNotes(updateInfo?.body, language);
+  }, [updateInfo?.body, language]);
 
   // For web: detect service worker updates
   useEffect(() => {
@@ -294,6 +363,34 @@ export function UpdateChecker() {
     return () => clearTimeout(timer);
   }, [checkForUpdates]);
 
+  // Background periodic update check for Tauri (every 4 hours)
+  useEffect(() => {
+    if (!isTauri) return;
+
+    // Check every 4 hours (in milliseconds)
+    const BACKGROUND_CHECK_INTERVAL = 4 * 60 * 60 * 1000;
+
+    const intervalId = setInterval(() => {
+      // Only check if not already checking/downloading
+      if (status === 'idle' || status === 'up-to-date' || status === 'error') {
+        checkForUpdates();
+      }
+    }, BACKGROUND_CHECK_INTERVAL);
+
+    return () => clearInterval(intervalId);
+  }, [status, checkForUpdates]);
+
+  // Track when update check completes
+  useEffect(() => {
+    if (
+      status === 'up-to-date' ||
+      status === 'available' ||
+      status === 'error'
+    ) {
+      setLastChecked(new Date());
+    }
+  }, [status]);
+
   const progressPercentage =
     downloadProgress && downloadProgress.total > 0
       ? Math.round((downloadProgress.downloaded / downloadProgress.total) * 100)
@@ -316,6 +413,11 @@ export function UpdateChecker() {
     ? t.updater?.webDescription || 'Check for app updates'
     : t.updater?.description || 'Check for and install app updates';
 
+  // Format last checked time
+  const formatLastChecked = (date: Date): string => {
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
   return (
     <>
       <Card className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'>
@@ -327,7 +429,23 @@ export function UpdateChecker() {
               </CardTitle>
               <CardDescription className='text-xs sm:text-sm'>
                 {descriptionText}
+                {isTauri && (
+                  <span className='ml-1 text-xs text-muted-foreground'>
+                    (
+                    {t.updater?.backgroundCheckEnabled ||
+                      'Auto-check every 4 hours'}
+                    )
+                  </span>
+                )}
               </CardDescription>
+              {lastChecked && (
+                <p className='mt-1 text-xs text-muted-foreground'>
+                  {(t.updater?.lastChecked || 'Last checked: {time}').replace(
+                    '{time}',
+                    formatLastChecked(lastChecked)
+                  )}
+                </p>
+              )}
             </div>
           </div>
         </CardHeader>
@@ -374,7 +492,7 @@ export function UpdateChecker() {
                               'Version {version} is available'
                             ).replace('{version}', updateInfo.version)}
                       </span>
-                      {!isWeb && updateInfo.body && (
+                      {!isWeb && localizedReleaseNotes && (
                         <button
                           onClick={() => setShowReleaseNotes(true)}
                           className='ml-2 text-xs text-purple-600 hover:underline'
@@ -478,7 +596,7 @@ export function UpdateChecker() {
           </DialogHeader>
           <div className='max-h-80 overflow-y-auto rounded border bg-muted/50 p-4'>
             <pre className='text-sm whitespace-pre-wrap'>
-              {updateInfo?.body}
+              {localizedReleaseNotes}
             </pre>
           </div>
           <DialogFooter>

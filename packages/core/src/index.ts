@@ -23,6 +23,9 @@ export * from './sync-logger.js';
 // Sync protocol
 export * from './sync-protocol.js';
 
+// Sync encryption (E2E)
+export * from './sync-encryption.js';
+
 // Sync service
 export * from './sync-service.js';
 

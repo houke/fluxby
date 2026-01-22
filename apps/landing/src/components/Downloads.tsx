@@ -78,9 +78,14 @@ const Downloads = () => {
         'Eenvoudige installatie voor Windows 10 & 11.',
       downloads: [
         {
-          label: t.downloads?.windows?.label || 'Download',
+          label: t.downloads?.windows?.x64Label || 'x64',
           link: getDownloadLink(`Fluxby_${version}_x64-setup.exe`),
           type: 'x64 EXE',
+        },
+        {
+          label: t.downloads?.windows?.arm64Label || 'ARM64',
+          link: getDownloadLink(`Fluxby_${version}_arm64-setup.exe`),
+          type: 'ARM64 EXE',
         },
       ],
     },
@@ -90,12 +95,22 @@ const Downloads = () => {
       icon: AppWindow,
       description:
         t.downloads?.linux?.description ||
-        'Standalone AppImage voor alle distributies.',
+        'Packages for all major Linux distributions.',
       downloads: [
         {
-          label: t.downloads?.linux?.label || 'Download',
+          label: t.downloads?.linux?.appimageLabel || 'AppImage',
           link: getDownloadLink(`fluxby_${version}_amd64.AppImage`),
-          type: 'AMD64 AppImage',
+          type: 'AppImage',
+        },
+        {
+          label: t.downloads?.linux?.debLabel || 'DEB',
+          link: getDownloadLink(`fluxby_${version}_amd64.deb`),
+          type: 'Debian/Ubuntu',
+        },
+        {
+          label: t.downloads?.linux?.rpmLabel || 'RPM',
+          link: getDownloadLink(`fluxby_${version}_amd64.rpm`),
+          type: 'Fedora/RHEL',
         },
       ],
     },

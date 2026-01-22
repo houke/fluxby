@@ -1006,46 +1006,6 @@ export default function Transactions() {
       }
     },
   });
-
-  const renameCounterpartyMutation = useMutation({
-    mutationFn: ({
-      transactionId,
-      merchantName,
-    }: {
-      transactionId: string;
-      merchantName: string | null;
-    }) => api.renameByCounterparty(transactionId, merchantName),
-    onMutate: () => {
-      // Save scroll position before invalidation
-      saveScrollPosition();
-    },
-    onSuccess: (result) => {
-      queryClient.invalidateQueries({
-        queryKey: ['transactions', activeProfileId],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ['dashboard', activeProfileId],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ['addressbook', activeProfileId],
-      });
-      setEditingLabelId(null);
-      setLabelDraft('');
-      if (result.updated > 0) {
-        toast.success(
-          t.transactions.updatedCount.replace(
-            '{count}',
-            result.updated.toString()
-          )
-        );
-      }
-    },
-    onSettled: () => {
-      // Restore scroll position after mutation completes
-      restoreScrollPosition();
-    },
-  });
-
   const addToAddressBookMutation = {
     ...createContactMutationHook,
     mutate: (data: any, options?: any) =>
@@ -1325,11 +1285,13 @@ export default function Transactions() {
 
   const saveLabel = (txId: string) => {
     const value = labelDraft.trim();
-    // Rename related transactions as well
-    renameCounterpartyMutation.mutate({
-      transactionId: txId,
-      merchantName: value === '' ? null : value,
+    // Only update this single transaction's merchant name
+    updateMutation.mutate({
+      id: txId,
+      data: { merchantName: value === '' ? null : value },
     });
+    setEditingLabelId(null);
+    setLabelDraft('');
   };
 
   const createRuleMutation = useMutation({
@@ -1636,6 +1598,12 @@ export default function Transactions() {
   ) => {
     // Note: popover is managed by TransactionRowBadges component internally
     updateMutation.mutate({ id: tx.id, data: { paymentProvider: provider } });
+  };
+
+  // Handle removing a transaction from the address book
+  const handleRemoveFromAddressBook = (tx: Transaction) => {
+    // Unlink the transaction from its address book entry by setting addressBookId to null
+    updateMutation.mutate({ id: tx.id, data: { addressBookId: null } });
   };
 
   // Available payment methods
@@ -2490,6 +2458,10 @@ export default function Transactions() {
                                   addressBook={addressBook}
                                   addressBookEntry={addressBookEntry}
                                   isInAddressBook={isInAddressBook(tx)}
+                                  hasDirectAddressBookLink={
+                                    tx.addressBookId !== null &&
+                                    tx.addressBookId !== undefined
+                                  }
                                   onCategorySelect={handleCategorySelect}
                                   onPaymentMethodSelect={
                                     handlePaymentMethodSelect
@@ -2499,6 +2471,9 @@ export default function Transactions() {
                                   }
                                   onAddressBookSelect={handleAddressBookSelect}
                                   onAddToAddressBook={addToAddressBook}
+                                  onRemoveFromAddressBook={
+                                    handleRemoveFromAddressBook
+                                  }
                                   onTransferToggle={handleTransferToggle}
                                   isUpdatePending={updateMutation.isPending}
                                   translations={{
@@ -2513,6 +2488,9 @@ export default function Transactions() {
                                     remove: t.common?.remove || 'Verwijderen',
                                     addToAddressBook:
                                       t.transactions.addToAddressBook,
+                                    unlinkFromContact:
+                                      t.transactions.unlinkFromContact ||
+                                      'Ontkoppelen',
                                     inAddressBook: t.transactions.inAddressBook,
                                     searchContacts:
                                       t.addressBook?.searchContacts ||

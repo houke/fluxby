@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { useEncryption } from '@/contexts/EncryptionContext';
@@ -51,6 +52,14 @@ export function SecuritySetup({ onSetupComplete }: SecuritySetupProps) {
   const [seedMs, setSeedMs] = useState<number | null>(null);
   const [encryptionMs, setEncryptionMs] = useState<number | null>(null);
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+  const [skipDemoData, setSkipDemoData] = useState(false);
+  const [seedingTimedOut, setSeedingTimedOut] = useState(false);
+  const [pendingDemoProfile, setPendingDemoProfile] = useState<{
+    id: string;
+  } | null>(null);
+
+  // Timeout for demo data seeding (60 seconds)
+  const SEEDING_TIMEOUT_MS = 60_000;
 
   // Detect virtual keyboard on mobile devices
   useEffect(() => {
@@ -86,8 +95,13 @@ export function SecuritySetup({ onSetupComplete }: SecuritySetupProps) {
       passwordTooShort: 'Wachtwoord moet minimaal 8 tekens zijn',
       passwordsNoMatch: 'Wachtwoorden komen niet overeen',
       setupError: 'Fout bij opzetten van versleuteling',
+      seedingTimeout:
+        'Het laden van demo gegevens duurt langer dan verwacht. Dit kan voorkomen op langzamere apparaten.',
+      seedingTimeoutRetry: 'Opnieuw proberen',
+      seedingTimeoutSkip: 'Doorgaan zonder demo gegevens',
+      recoveryWarningTitle: 'Wachtwoord kan niet worden hersteld',
       recoveryWarning:
-        'Let op: Je wachtwoord kan niet worden hersteld. Als je het vergeet, zijn al je gegevens permanent ontoegankelijk.',
+        'Als je dit wachtwoord vergeet, zijn al je gegevens permanent ontoegankelijk. Er is geen manier om je wachtwoord te herstellen of te resetten.',
       next: 'Volgende',
       back: 'Vorige',
       finish: 'Aan de slag!',
@@ -107,6 +121,9 @@ export function SecuritySetup({ onSetupComplete }: SecuritySetupProps) {
       elapsed: 'Verstreken',
       seeding: 'Seeden',
       encrypting: 'Versleutelen',
+      skipDemoData: 'Begin met lege database',
+      skipDemoDataDescription:
+        'Sla de voorbeeldgegevens over en begin met een schone lei',
     },
     en: {
       languageTitle: 'Choose your language',
@@ -124,8 +141,13 @@ export function SecuritySetup({ onSetupComplete }: SecuritySetupProps) {
       passwordTooShort: 'Password must be at least 8 characters',
       passwordsNoMatch: 'Passwords do not match',
       setupError: 'Failed to setup encryption',
+      seedingTimeout:
+        'Loading demo data is taking longer than expected. This can happen on slower devices.',
+      seedingTimeoutRetry: 'Retry',
+      seedingTimeoutSkip: 'Continue without demo data',
+      recoveryWarningTitle: 'Password cannot be recovered',
       recoveryWarning:
-        'Warning: Your password cannot be recovered. If you forget it, all your data will be permanently inaccessible.',
+        'If you forget this password, all your data will be permanently inaccessible. There is no way to recover or reset your password.',
       next: 'Next',
       back: 'Back',
       finish: "Let's get started!",
@@ -144,6 +166,9 @@ export function SecuritySetup({ onSetupComplete }: SecuritySetupProps) {
       elapsed: 'Elapsed',
       seeding: 'Seeding',
       encrypting: 'Encrypting',
+      skipDemoData: 'Start with empty database',
+      skipDemoDataDescription:
+        'Skip the sample data and begin with a clean slate',
     },
   };
 
@@ -195,6 +220,7 @@ export function SecuritySetup({ onSetupComplete }: SecuritySetupProps) {
     setEncryptionMs(null);
     setElapsedMs(0);
     setSetupStartedAt(performance.now());
+    setSeedingTimedOut(false);
 
     // Helper to show progress with a small delay for visual feedback
     const showProgress = async (
@@ -221,46 +247,69 @@ export function SecuritySetup({ onSetupComplete }: SecuritySetupProps) {
       // Create demo profile
       const demoProfile = await api.createDemoProfile();
       setProgressValue(15);
+      setPendingDemoProfile(demoProfile);
 
-      // Seed demo data with progress updates
-      // Use a series of progress updates to show activity during the seeding
-      const seedStart = performance.now();
+      // Seed demo data with progress updates (unless user opted out)
+      if (!skipDemoData) {
+        // Use a series of progress updates to show activity during the seeding
+        const seedStart = performance.now();
 
-      // Show categories progress, then start seeding
-      await showProgress(texts.progressCategories, 20, 200);
+        // Show categories progress, then start seeding
+        await showProgress(texts.progressCategories, 20, 200);
 
-      // Create a promise that periodically updates progress while seeding
-      const seedPromise = api.seedDemoData(demoProfile.id, language);
-      const progressSteps = [
-        { progress: 25, message: texts.progressCategories, delay: 800 },
-        { progress: 30, message: texts.progressTransactions, delay: 1200 },
-        { progress: 35, message: texts.progressTransactions, delay: 1200 },
-        { progress: 40, message: texts.progressTransactions, delay: 1200 },
-        { progress: 45, message: texts.progressTransactions, delay: 1200 },
-        { progress: 50, message: texts.progressBudgets, delay: 1000 },
-        { progress: 55, message: texts.progressAddressBook, delay: 1000 },
-        { progress: 60, message: texts.progressAddressBook, delay: 1500 },
-        { progress: 65, message: texts.progressFinalizing, delay: 1500 },
-      ];
+        // Create a promise that periodically updates progress while seeding
+        const seedPromise = api.seedDemoData(demoProfile.id, language);
 
-      // Run progress updates in parallel with seeding
-      let stepIndex = 0;
-      const progressInterval = setInterval(() => {
-        if (stepIndex < progressSteps.length) {
-          const step = progressSteps[stepIndex];
-          setProgressValue(step.progress);
-          setLoadingProgress(step.message);
-          stepIndex++;
+        // Create a timeout promise
+        const timeoutPromise = new Promise<'timeout'>((resolve) => {
+          setTimeout(() => resolve('timeout'), SEEDING_TIMEOUT_MS);
+        });
+
+        const progressSteps = [
+          { progress: 25, message: texts.progressCategories, delay: 800 },
+          { progress: 30, message: texts.progressTransactions, delay: 1200 },
+          { progress: 35, message: texts.progressTransactions, delay: 1200 },
+          { progress: 40, message: texts.progressTransactions, delay: 1200 },
+          { progress: 45, message: texts.progressTransactions, delay: 1200 },
+          { progress: 50, message: texts.progressBudgets, delay: 1000 },
+          { progress: 55, message: texts.progressAddressBook, delay: 1000 },
+          { progress: 60, message: texts.progressAddressBook, delay: 1500 },
+          { progress: 65, message: texts.progressFinalizing, delay: 1500 },
+        ];
+
+        // Run progress updates in parallel with seeding
+        let stepIndex = 0;
+        const progressInterval = setInterval(() => {
+          if (stepIndex < progressSteps.length) {
+            const step = progressSteps[stepIndex];
+            setProgressValue(step.progress);
+            setLoadingProgress(step.message);
+            stepIndex++;
+          }
+        }, 1000);
+
+        try {
+          // Race between seeding and timeout
+          const result = await Promise.race([
+            seedPromise.then(() => 'success' as const),
+            timeoutPromise,
+          ]);
+
+          if (result === 'timeout') {
+            clearInterval(progressInterval);
+            // Show timeout state and let user decide
+            setSeedingTimedOut(true);
+            return; // Exit handleFinish - user will retry or skip
+          }
+        } finally {
+          clearInterval(progressInterval);
         }
-      }, 1000);
 
-      try {
-        await seedPromise;
-      } finally {
-        clearInterval(progressInterval);
+        setSeedMs(performance.now() - seedStart);
+      } else {
+        // Skip demo data - just seed default categories
+        await showProgress(texts.progressCategories, 30, 300);
       }
-
-      setSeedMs(performance.now() - seedStart);
       setProgressValue(70);
 
       // Show dashboard preparation as the final step
@@ -310,6 +359,156 @@ export function SecuritySetup({ onSetupComplete }: SecuritySetupProps) {
     refreshProfiles,
     switchProfile,
     language,
+    skipDemoData,
+    SEEDING_TIMEOUT_MS,
+  ]);
+
+  // Continue setup after timeout - skip demo data and proceed
+  const handleSkipDemoAfterTimeout = useCallback(async () => {
+    if (!pendingDemoProfile) return;
+
+    setSeedingTimedOut(false);
+    setProgressValue(70);
+
+    try {
+      // Show dashboard preparation as the final step
+      setLoadingProgress(texts.progressDashboard);
+      setProgressValue(80);
+      await new Promise((resolve) => setTimeout(resolve, 200));
+
+      // Refresh profiles to include the new demo profile
+      await refreshProfiles();
+
+      // Switch to demo profile as the active profile
+      switchProfile(pendingDemoProfile.id);
+
+      // Small delay to ensure profile switch is processed
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      // Setup encryption
+      setLoadingProgress(texts.progressEncrypting);
+      const encryptionStart = performance.now();
+      await setupEncryption(password);
+      setEncryptionMs(performance.now() - encryptionStart);
+
+      setProgressValue(100);
+      await new Promise((resolve) => setTimeout(resolve, 200));
+
+      // Call onSetupComplete to start onboarding
+      onSetupComplete();
+    } catch (err) {
+      console.error('Setup error after skip:', err);
+      setError(texts.setupError);
+      setStep('password');
+      setIsLoading(false);
+      setLoadingProgress('');
+      setProgressValue(0);
+      setSetupStartedAt(null);
+      setElapsedMs(0);
+      setSeedingTimedOut(false);
+      setPendingDemoProfile(null);
+    }
+  }, [
+    pendingDemoProfile,
+    texts,
+    refreshProfiles,
+    switchProfile,
+    setupEncryption,
+    password,
+    onSetupComplete,
+  ]);
+
+  // Retry seeding after timeout
+  const handleRetrySeedingAfterTimeout = useCallback(async () => {
+    if (!pendingDemoProfile) return;
+
+    setSeedingTimedOut(false);
+    setProgressValue(20);
+    setLoadingProgress(texts.progressCategories);
+
+    const seedStart = performance.now();
+
+    try {
+      // Create timeout promise with extended time (2x)
+      const seedPromise = api.seedDemoData(pendingDemoProfile.id, language);
+      const timeoutPromise = new Promise<'timeout'>((resolve) => {
+        setTimeout(() => resolve('timeout'), SEEDING_TIMEOUT_MS * 2);
+      });
+
+      const progressSteps = [
+        { progress: 25, message: texts.progressCategories },
+        { progress: 35, message: texts.progressTransactions },
+        { progress: 45, message: texts.progressTransactions },
+        { progress: 55, message: texts.progressBudgets },
+        { progress: 65, message: texts.progressFinalizing },
+      ];
+
+      let stepIndex = 0;
+      const progressInterval = setInterval(() => {
+        if (stepIndex < progressSteps.length) {
+          const step = progressSteps[stepIndex];
+          setProgressValue(step.progress);
+          setLoadingProgress(step.message);
+          stepIndex++;
+        }
+      }, 1500);
+
+      const result = await Promise.race([
+        seedPromise.then(() => 'success' as const),
+        timeoutPromise,
+      ]);
+
+      clearInterval(progressInterval);
+
+      if (result === 'timeout') {
+        // Still timed out - show timeout UI again
+        setSeedingTimedOut(true);
+        return;
+      }
+
+      setSeedMs(performance.now() - seedStart);
+      setProgressValue(70);
+
+      // Continue with rest of setup
+      setLoadingProgress(texts.progressDashboard);
+      setProgressValue(80);
+      await new Promise((resolve) => setTimeout(resolve, 200));
+
+      await refreshProfiles();
+      switchProfile(pendingDemoProfile.id);
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      setLoadingProgress(texts.progressEncrypting);
+      const encryptionStart = performance.now();
+      await setupEncryption(password);
+      setEncryptionMs(performance.now() - encryptionStart);
+
+      setProgressValue(100);
+      await new Promise((resolve) => setTimeout(resolve, 200));
+
+      onSetupComplete();
+    } catch (err) {
+      console.error('Setup error during retry:', err);
+      setError(texts.setupError);
+      setStep('password');
+      setIsLoading(false);
+      setLoadingProgress('');
+      setProgressValue(0);
+      setSetupStartedAt(null);
+      setElapsedMs(0);
+      setSeedingTimedOut(false);
+      setPendingDemoProfile(null);
+    }
+  }, [
+    pendingDemoProfile,
+    language,
+    texts,
+    refreshProfiles,
+    switchProfile,
+    setupEncryption,
+    password,
+    onSetupComplete,
+    SEEDING_TIMEOUT_MS,
   ]);
 
   const isPasswordValid = password.length >= 8 && password === confirmPassword;
@@ -342,37 +541,70 @@ export function SecuritySetup({ onSetupComplete }: SecuritySetupProps) {
             </CardHeader>
 
             <CardContent className='flex flex-col items-center gap-6 py-8'>
-              {/* Spinner */}
-              <div className='relative'>
-                <Loader2 className='h-16 w-16 animate-spin text-purple-600' />
-              </div>
+              {/* Spinner - hide when timed out */}
+              {!seedingTimedOut && (
+                <div className='relative'>
+                  <Loader2 className='h-16 w-16 animate-spin text-purple-600' />
+                </div>
+              )}
 
               {/* Progress text */}
               <p className='text-center text-sm font-medium text-purple-600'>
                 {loadingProgress}
               </p>
 
+              {/* Timeout message with retry/skip options */}
+              {seedingTimedOut && (
+                <div className='w-full space-y-4'>
+                  <div className='flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50/50 p-4 shadow-sm dark:border-amber-900/50 dark:bg-amber-900/20'>
+                    <AlertCircle className='mt-0.5 h-5 w-5 flex-shrink-0 text-amber-600 dark:text-amber-400' />
+                    <p className='text-sm leading-relaxed text-amber-800 dark:text-amber-200'>
+                      {texts.seedingTimeout}
+                    </p>
+                  </div>
+                  <div className='flex gap-3'>
+                    <Button
+                      onClick={handleRetrySeedingAfterTimeout}
+                      variant='outline'
+                      className='flex-1'
+                    >
+                      {texts.seedingTimeoutRetry}
+                    </Button>
+                    <Button
+                      onClick={handleSkipDemoAfterTimeout}
+                      className='flex-1 bg-purple-600 hover:bg-purple-700'
+                    >
+                      {texts.seedingTimeoutSkip}
+                    </Button>
+                  </div>
+                </div>
+              )}
+
               {/* Progress bar + timings */}
-              <div className='w-full space-y-2'>
-                <Progress value={progressValue} />
-                <p className='text-center text-xs text-muted-foreground'>
-                  {texts.elapsed}: {formatDuration(elapsedMs)}
-                  {seedMs !== null
-                    ? ` • ${texts.seeding}: ${formatDuration(seedMs)}`
-                    : ''}
-                  {encryptionMs !== null
-                    ? ` • ${texts.encrypting}: ${formatDuration(encryptionMs)}`
-                    : ''}
-                </p>
-              </div>
+              {!seedingTimedOut && (
+                <div className='w-full space-y-2'>
+                  <Progress value={progressValue} />
+                  <p className='text-center text-xs text-muted-foreground'>
+                    {texts.elapsed}: {formatDuration(elapsedMs)}
+                    {seedMs !== null
+                      ? ` • ${texts.seeding}: ${formatDuration(seedMs)}`
+                      : ''}
+                    {encryptionMs !== null
+                      ? ` • ${texts.encrypting}: ${formatDuration(encryptionMs)}`
+                      : ''}
+                  </p>
+                </div>
+              )}
 
               {/* Warning */}
-              <div className='flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50/50 p-4 shadow-sm dark:border-amber-900/50 dark:bg-amber-900/20'>
-                <AlertCircle className='mt-0.5 h-5 w-5 flex-shrink-0 text-amber-600 dark:text-amber-400' />
-                <p className='text-sm leading-relaxed text-amber-800 dark:text-amber-200'>
-                  {texts.loadingWarning}
-                </p>
-              </div>
+              {!seedingTimedOut && (
+                <div className='flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50/50 p-4 shadow-sm dark:border-amber-900/50 dark:bg-amber-900/20'>
+                  <AlertCircle className='mt-0.5 h-5 w-5 flex-shrink-0 text-amber-600 dark:text-amber-400' />
+                  <p className='text-sm leading-relaxed text-amber-800 dark:text-amber-200'>
+                    {texts.loadingWarning}
+                  </p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -478,6 +710,29 @@ export function SecuritySetup({ onSetupComplete }: SecuritySetupProps) {
                   autoFocus
                 />
 
+                {/* Skip demo data option */}
+                <div className='flex items-start gap-3 rounded-lg border border-gray-200 bg-gray-50/50 p-3 dark:border-gray-700 dark:bg-gray-800/30'>
+                  <Checkbox
+                    id='skip-demo'
+                    checked={skipDemoData}
+                    onCheckedChange={(checked) =>
+                      setSkipDemoData(checked === true)
+                    }
+                    className='mt-0.5'
+                  />
+                  <label
+                    htmlFor='skip-demo'
+                    className='cursor-pointer space-y-1'
+                  >
+                    <span className='block text-sm font-medium text-foreground'>
+                      {texts.skipDemoData}
+                    </span>
+                    <span className='block text-xs text-muted-foreground'>
+                      {texts.skipDemoDataDescription}
+                    </span>
+                  </label>
+                </div>
+
                 <div className='flex items-center justify-between'>
                   <Button
                     type='button'
@@ -513,12 +768,19 @@ export function SecuritySetup({ onSetupComplete }: SecuritySetupProps) {
                 }}
                 className='space-y-4'
               >
-                {/* Warning */}
-                <div className='flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50/50 p-4 shadow-sm dark:border-amber-900/50 dark:bg-amber-900/20'>
-                  <AlertCircle className='mt-0.5 h-5 w-5 flex-shrink-0 text-amber-600 dark:text-amber-400' />
-                  <p className='text-sm leading-relaxed text-amber-800 dark:text-amber-200'>
-                    {texts.recoveryWarning}
-                  </p>
+                {/* Critical Warning - Cannot Recover Password */}
+                <div className='flex items-start gap-3 rounded-xl border-2 border-red-300 bg-red-50/80 p-4 shadow-md dark:border-red-800 dark:bg-red-900/30'>
+                  <div className='flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/50'>
+                    <AlertCircle className='h-5 w-5 text-red-600 dark:text-red-400' />
+                  </div>
+                  <div className='space-y-1'>
+                    <p className='text-sm font-semibold text-red-800 dark:text-red-200'>
+                      {texts.recoveryWarningTitle}
+                    </p>
+                    <p className='text-sm leading-relaxed text-red-700 dark:text-red-300'>
+                      {texts.recoveryWarning}
+                    </p>
+                  </div>
                 </div>
 
                 {/* Error message */}
