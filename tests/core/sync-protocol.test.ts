@@ -154,7 +154,8 @@ describe('Sync Protocol', () => {
   describe('DEFAULT_SYNC_CONFIG', () => {
     it('has expected default values', () => {
       expect(DEFAULT_SYNC_CONFIG.heartbeatInterval).toBe(5000);
-      expect(DEFAULT_SYNC_CONFIG.heartbeatTimeout).toBe(15000);
+      // Increased from 15s to 30s to handle mobile networks with higher latency
+      expect(DEFAULT_SYNC_CONFIG.heartbeatTimeout).toBe(30000);
       expect(DEFAULT_SYNC_CONFIG.maxChunkSize).toBe(16 * 1024);
       expect(DEFAULT_SYNC_CONFIG.connectionTimeout).toBe(30000);
       expect(DEFAULT_SYNC_CONFIG.autoReconnect).toBe(true);

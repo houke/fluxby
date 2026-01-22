@@ -25,6 +25,17 @@ export interface LandingTranslationKeys {
       description: string;
       label: string;
     };
+    pwa: {
+      name: string;
+      description: string;
+      installButton: string;
+      installedBadge: string;
+      browserInstructions: {
+        ios: string;
+        android: string;
+        desktop: string;
+      };
+    };
     note: string;
   };
   common: {
@@ -224,6 +235,18 @@ export const nl: LandingTranslationKeys = {
       name: 'Linux',
       description: 'Voor alle grote Linux distributies',
       label: 'Download .AppImage',
+    },
+    pwa: {
+      name: 'Browser (PWA)',
+      description:
+        'Installeer direct vanuit je browser. Geen download nodig, werkt offline.',
+      installButton: 'Installeren als app',
+      installedBadge: 'Geïnstalleerd',
+      browserInstructions: {
+        ios: 'Tik op het Deel-icoon en dan "Zet op beginscherm"',
+        android: 'Tik op het menu (⋮) en dan "Toevoegen aan startscherm"',
+        desktop: 'Klik op het installatie-icoon in de adresbalk',
+      },
     },
     note: 'Je hoeft niets te installeren om Fluxby te gebruiken; het werkt volledig in je browser. Deze downloads zijn beschikbaar voor gebruikers die de voorkeur geven aan een dedicated applicatie op hun systeem.',
   },
@@ -1941,7 +1964,8 @@ export const nl: LandingTranslationKeys = {
       v171Date: '22 januari 2026',
       v171Title: 'Release 1.7.1',
       v171Description: '3 bugfixes.',
-      v171F1Title: 'Enable macos updater ondersteuning toegevoegd voor and opgelost build warnings',
+      v171F1Title:
+        'Enable macos updater ondersteuning toegevoegd voor and opgelost build warnings',
       v171F1Desc: 'Een vervelend probleempje opgelost.',
       v171F2Title: 'Web app verbeteringen',
       v171F2Desc: '2 bugfixes. Bekijk de release op GitHub!',

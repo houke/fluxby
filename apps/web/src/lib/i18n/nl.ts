@@ -954,6 +954,9 @@ export interface TranslationKeys {
       syncSuccess: string;
       syncNoChanges: string;
       syncError: string;
+      schemaMismatch: string;
+      protocolMismatch: string;
+      upgradeRequired: string;
     };
   };
   help: {
@@ -2381,6 +2384,11 @@ export const nl: TranslationKeys = {
       syncSuccess: '{received} ontvangen, {pushed} verzonden',
       syncNoChanges: 'Geen nieuwe wijzigingen om te synchroniseren',
       syncError: 'Synchronisatie mislukt',
+      schemaMismatch:
+        'Dit apparaat heeft een andere app-versie. Update beide apparaten naar de nieuwste versie om te synchroniseren.',
+      protocolMismatch:
+        'Dit apparaat gebruikt een incompatibele sync-versie. Update beide apparaten naar de nieuwste versie.',
+      upgradeRequired: 'App-update vereist',
     },
   },
   help: {

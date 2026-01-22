@@ -1085,6 +1085,11 @@ export const en: TranslationKeys = {
       syncSuccess: '{received} received, {pushed} sent',
       syncNoChanges: 'No new changes to sync',
       syncError: 'Sync failed',
+      schemaMismatch:
+        'This device has a different app version. Update both devices to the latest version to sync.',
+      protocolMismatch:
+        'This device uses an incompatible sync version. Update both devices to the latest version.',
+      upgradeRequired: 'App update required',
     },
   },
   help: {

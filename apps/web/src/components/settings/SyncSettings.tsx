@@ -142,6 +142,20 @@ export function SyncSettings() {
           t.settings?.sync?.connectionTimeout ||
             'Connection timeout - the other device may be behind a firewall. Try a different network.'
         );
+      } else if (
+        errorMessage.toLowerCase().includes('schema version mismatch')
+      ) {
+        setConnectionError(
+          t.settings?.sync?.schemaMismatch ||
+            'This device has a different app version. Update both devices to the latest version to sync.'
+        );
+      } else if (
+        errorMessage.toLowerCase().includes('protocol version mismatch')
+      ) {
+        setConnectionError(
+          t.settings?.sync?.protocolMismatch ||
+            'This device uses an incompatible sync version. Update both devices to the latest version.'
+        );
       } else {
         setConnectionError(errorMessage || 'Connection failed');
       }

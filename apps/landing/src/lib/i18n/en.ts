@@ -250,6 +250,18 @@ export const en: LandingTranslationKeys = {
       description: 'Standalone AppImage for all distributions.',
       label: 'Download',
     },
+    pwa: {
+      name: 'Browser (PWA)',
+      description:
+        'Install directly from your browser. No download needed, works offline.',
+      installButton: 'Install as app',
+      installedBadge: 'Installed',
+      browserInstructions: {
+        ios: 'Tap the Share icon and then "Add to Home Screen"',
+        android: 'Tap the menu (⋮) and then "Add to Home Screen"',
+        desktop: 'Click the install icon in the address bar',
+      },
+    },
     note: "You don't need to install anything to use Fluxby — it runs fully in your browser. These downloads are provided for users who prefer a dedicated application on their system.",
   },
 
@@ -1867,7 +1879,7 @@ export const en: LandingTranslationKeys = {
       v171Title: 'Release 1.7.1',
       v171Description: '3 bug fixes.',
       v171F1Title: 'Enable macOS updater support and fix build warnings',
-      v171F1Desc: 'This shouldn\'t have happened, but it\'s fixed now!',
+      v171F1Desc: "This shouldn't have happened, but it's fixed now!",
       v171F2Title: 'Web app improvements',
       v171F2Desc: '2 bug fixes. Check the release on GitHub!',
       v170Date: 'January 19, 2026',

@@ -68,6 +68,26 @@ const bokehStyles = `
   .bokeh-pulse { animation: bokehPulse 8s ease-in-out infinite; }
   .bokeh-drift { animation: bokehDrift 15s ease-in-out infinite; }
   .bokeh-float-delayed { animation: bokehFloat 25s ease-in-out infinite; animation-delay: -5s; }
+
+  /* Respect user's reduced motion preference */
+  @media (prefers-reduced-motion: reduce) {
+    .bokeh-orb,
+    .bokeh-float,
+    .bokeh-pulse,
+    .bokeh-drift,
+    .bokeh-float-delayed,
+    .emoji-float,
+    .scroll-mouse,
+    .scroll-mouse::before,
+    .avatar-breathe,
+    .animate-pulse-slow,
+    .bokeh-breathe,
+    .bokeh-blur-pulse {
+      animation: none !important;
+      transition: none !important;
+    }
+  }
+
     /* Automated emoji animation (slow, randomized pulse + tiny motion) */
     @keyframes emojiAuto {
       0%, 100% {
@@ -153,9 +173,11 @@ const Hero = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const isMobile = windowWidth < 768;
-  const baseRadius = isMobile ? 140 : 220;
-  const avatarSize = isMobile ? 280 : 400;
+  // More granular breakpoints for smoother transitions
+  const isSmall = windowWidth < 640;
+  const isMedium = windowWidth >= 640 && windowWidth < 768;
+  const baseRadius = isSmall ? 120 : isMedium ? 160 : 220;
+  const avatarSize = isSmall ? 240 : isMedium ? 320 : 400;
 
   // We no longer use mouse-driven parallax; instead compute per-emoji
   // randomized animation parameters (kept stable while categories are stable)
@@ -331,6 +353,8 @@ const Hero = () => {
                     language === lang ? 'scale-110' : 'opacity-60'
                   }`}
                   title={languages[lang].name}
+                  aria-label={`Switch to ${languages[lang].name}`}
+                  aria-pressed={language === lang}
                 >
                   {languages[lang].flag}
                 </button>
@@ -560,7 +584,7 @@ const Hero = () => {
 
           {/* Right side - Big Fluxby Avatar */}
           <div className='flex flex-1 justify-center px-4 lg:justify-end lg:px-0'>
-            <div className='avatar-breathe relative flex aspect-square w-full max-w-[280px] items-center justify-center sm:max-w-[400px]'>
+            <div className='avatar-breathe xs:max-w-[320px] relative flex aspect-square w-full max-w-[240px] items-center justify-center sm:max-w-[400px]'>
               {/* Glow effect behind avatar */}
               <div className='bg-fluxby-purple/30 animate-pulse-slow absolute inset-0 scale-150 rounded-full blur-3xl'></div>
               <FluxbyWebGL
