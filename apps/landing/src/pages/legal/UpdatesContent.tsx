@@ -33,23 +33,26 @@ const UpdatesContent = () => {
   const updatesPage = t.legal?.updatesPage;
 
   const releases = [
-        {
+    {
       version: '1.7.1',
       date: updatesPage?.v171Date || '22 januari 2026',
       title: updatesPage?.v171Title || 'Release 1.7.1',
-      description:
-        updatesPage?.v171Description ||
-        '3 bugfixes.',
+      description: updatesPage?.v171Description || '3 bugfixes.',
       features: [
         {
           icon: Monitor,
-          title: updatesPage?.v171F1Title || 'Enable macos updater ondersteuning toegevoegd voor and opgelost build warnings',
-          description: updatesPage?.v171F1Desc || 'Een vervelend probleempje opgelost.',
+          title:
+            updatesPage?.v171F1Title ||
+            'Enable macos updater ondersteuning toegevoegd voor and opgelost build warnings',
+          description:
+            updatesPage?.v171F1Desc || 'Een vervelend probleempje opgelost.',
         },
         {
           icon: Globe,
           title: updatesPage?.v171F2Title || 'Web app verbeteringen',
-          description: updatesPage?.v171F2Desc || '2 bugfixes. Bekijk de release op GitHub!',
+          description:
+            updatesPage?.v171F2Desc ||
+            '2 bugfixes. Bekijk de release op GitHub!',
         },
       ],
     },

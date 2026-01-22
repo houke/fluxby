@@ -10,6 +10,95 @@
 import { Peer, DataConnection } from 'peerjs';
 import type { SyncChange, SyncableRow } from './sync.js';
 
+/**
+ * ICE Server Configuration
+ *
+ * STUN servers help peers discover their public IP addresses.
+ * TURN servers relay traffic when direct peer-to-peer connections fail (symmetric NAT).
+ *
+ * For production deployments, consider:
+ * 1. Self-hosted TURN server using coturn (https://github.com/coturn/coturn)
+ * 2. Paid TURN services like Twilio, Xirsys, or Metered
+ *
+ * Set environment variable VITE_TURN_SERVER_URL, VITE_TURN_USERNAME, VITE_TURN_CREDENTIAL
+ * to override the default TURN server.
+ */
+export interface IceServerConfig {
+  urls: string | string[];
+  username?: string;
+  credential?: string;
+}
+
+/**
+ * Get default STUN servers (Google's free STUN servers)
+ */
+export function getDefaultStunServers(): IceServerConfig[] {
+  return [
+    { urls: 'stun:stun.l.google.com:19302' },
+    { urls: 'stun:stun1.l.google.com:19302' },
+    { urls: 'stun:stun2.l.google.com:19302' },
+    { urls: 'stun:stun3.l.google.com:19302' },
+    { urls: 'stun:stun4.l.google.com:19302' },
+  ];
+}
+
+/**
+ * Get default TURN servers
+ * Uses Metered free TURN servers as fallback, but these have rate limits.
+ * For production, use environment variables to configure your own TURN server.
+ */
+export function getDefaultTurnServers(): IceServerConfig[] {
+  // Check for custom TURN server configuration via environment
+  const customTurnUrl =
+    typeof import.meta !== 'undefined' &&
+    (import.meta as any).env?.VITE_TURN_SERVER_URL;
+  const customTurnUsername =
+    typeof import.meta !== 'undefined' &&
+    (import.meta as any).env?.VITE_TURN_USERNAME;
+  const customTurnCredential =
+    typeof import.meta !== 'undefined' &&
+    (import.meta as any).env?.VITE_TURN_CREDENTIAL;
+
+  if (customTurnUrl && customTurnUsername && customTurnCredential) {
+    console.log('Using custom TURN server configuration');
+    return [
+      {
+        urls: customTurnUrl,
+        username: customTurnUsername,
+        credential: customTurnCredential,
+      },
+    ];
+  }
+
+  // Default: Metered free TURN servers
+  // Note: These are rate-limited. For production use, configure your own TURN server.
+  // See: https://www.metered.ca/tools/openrelay/
+  return [
+    {
+      urls: 'turn:openrelay.metered.ca:80',
+      username: 'openrelayproject',
+      credential: 'openrelayproject',
+    },
+    {
+      urls: 'turn:openrelay.metered.ca:443',
+      username: 'openrelayproject',
+      credential: 'openrelayproject',
+    },
+    {
+      urls: 'turn:openrelay.metered.ca:443?transport=tcp',
+      username: 'openrelayproject',
+      credential: 'openrelayproject',
+    },
+  ];
+}
+
+/**
+ * Get combined ICE servers configuration
+ */
+export function getIceServers(): IceServerConfig[] {
+  return [...getDefaultStunServers(), ...getDefaultTurnServers()];
+}
+
 // Pairing message types
 export type PairingMessage =
   | { type: 'pairing-request'; pairingCode: string; deviceName: string }
@@ -33,6 +122,8 @@ export interface PeerOptions {
   deviceId: string;
   /** Human-readable device name */
   deviceName: string;
+  /** Custom ICE servers configuration (optional) */
+  iceServers?: IceServerConfig[];
   /** Callback when a new device wants to pair */
   onPairingRequest?: (
     deviceName: string,
@@ -55,7 +146,7 @@ export interface PeerOptions {
  * Generate a 6-digit pairing code
  */
 export function generatePairingCode(): string {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Avoid ambiguous chars
+  const chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'; // Avoid ambiguous chars (0,O,1,I,L removed)
   let code = '';
   for (let i = 0; i < 6; i++) {
     const randomIndex = Math.floor(Math.random() * chars.length);
@@ -121,28 +212,13 @@ export class PeerSync {
             this.peer.destroy();
           }
 
+          // Use custom ICE servers if provided, otherwise use defaults
+          const iceServers = this.options.iceServers || getIceServers();
+
           const peer = new Peer(id, {
             debug: 1, // Increased debug level for better troubleshooting
             config: {
-              iceServers: [
-                // Multiple STUN servers for better NAT traversal
-                { urls: 'stun:stun.l.google.com:19302' },
-                { urls: 'stun:stun1.l.google.com:19302' },
-                { urls: 'stun:stun2.l.google.com:19302' },
-                { urls: 'stun:stun3.l.google.com:19302' },
-                { urls: 'stun:stun4.l.google.com:19302' },
-                // OpenRelay free TURN server for symmetric NAT
-                {
-                  urls: 'turn:openrelay.metered.ca:80',
-                  username: 'openrelayproject',
-                  credential: 'openrelayproject',
-                },
-                {
-                  urls: 'turn:openrelay.metered.ca:443',
-                  username: 'openrelayproject',
-                  credential: 'openrelayproject',
-                },
-              ],
+              iceServers,
               // ICE transport policy - prefer relay for more reliable connections
               // when direct connection fails
               iceCandidatePoolSize: 10,
