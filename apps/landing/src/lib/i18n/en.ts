@@ -1863,6 +1863,13 @@ export const en: LandingTranslationKeys = {
     updatesPage: {
       intro:
         "See what's new in Fluxby. Here you'll find all updates and new features.",
+      v171Date: 'January 22, 2026',
+      v171Title: 'Release 1.7.1',
+      v171Description: '3 bug fixes.',
+      v171F1Title: 'Enable macOS updater support and fix build warnings',
+      v171F1Desc: 'This shouldn\'t have happened, but it\'s fixed now!',
+      v171F2Title: 'Web app improvements',
+      v171F2Desc: '2 bug fixes. Check the release on GitHub!',
       v170Date: 'January 19, 2026',
       v170Title: 'Release 1.7.0',
       v170Description: '2 new features and 10 bug fixes.',

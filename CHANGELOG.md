@@ -1,5 +1,20 @@
 # Changelog
 
+## v1.7.1
+
+**Release Date:** 2026-01-22
+
+### Bug Fixes
+
+- **tauri:** enable macOS updater support and fix build warnings
+- **web:** ensure service worker is active before OPFS initialization on iOS
+- **web:** resolve mobile keyboard overlay and loading UI consistency
+
+### Other Changes
+
+- lint
+- linting
+
 ## v1.7.0
 
 **Release Date:** 2026-01-19

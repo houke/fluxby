@@ -1,6 +1,6 @@
 {
   "name": "@fluxby/core",
-  "version": "1.7.0",
+  "version": "1.7.1",
   "description": "Core business logic for Fluxby - CSV parsing, categorization, analytics",
   "type": "module",
   "main": "./dist/index.js",
