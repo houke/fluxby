@@ -3,6 +3,7 @@
  *
  * Initial setup screen for new users - collects language, name, and master password.
  * Shows on the purple/pink gradient with the same card style as LockScreen.
+ * Uses top positioning on mobile to avoid keyboard overlay issues.
  */
 
 import { useEffect, useState, useCallback } from 'react';
@@ -49,6 +50,24 @@ export function SecuritySetup({ onSetupComplete }: SecuritySetupProps) {
   const [elapsedMs, setElapsedMs] = useState(0);
   const [seedMs, setSeedMs] = useState<number | null>(null);
   const [encryptionMs, setEncryptionMs] = useState<number | null>(null);
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+
+  // Detect virtual keyboard on mobile devices
+  useEffect(() => {
+    const viewport = window.visualViewport;
+    if (!viewport) return;
+
+    const handleResize = () => {
+      // If viewport height is significantly less than window height, keyboard is likely visible
+      const keyboardVisible = viewport.height < window.innerHeight * 0.75;
+      setIsKeyboardVisible(keyboardVisible);
+    };
+
+    viewport.addEventListener('resize', handleResize);
+    handleResize();
+
+    return () => viewport.removeEventListener('resize', handleResize);
+  }, []);
 
   const t = {
     nl: {
@@ -362,7 +381,16 @@ export function SecuritySetup({ onSetupComplete }: SecuritySetupProps) {
   }
 
   return (
-    <div className='flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-purple-50 via-pink-50 to-indigo-100 p-4 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900'>
+    <div
+      className={`flex min-h-screen flex-col items-center bg-gradient-to-br from-purple-50 via-pink-50 to-indigo-100 p-4 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 ${
+        isKeyboardVisible
+          ? 'justify-start pt-4'
+          : 'justify-start pt-16 sm:justify-center sm:pt-0'
+      }`}
+      style={{
+        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+      }}
+    >
       <div className='w-full max-w-md duration-500 animate-in fade-in zoom-in'>
         <Card className='border-white/20 bg-white/70 shadow-2xl backdrop-blur-xl dark:bg-gray-900/80'>
           <CardHeader className='text-center'>

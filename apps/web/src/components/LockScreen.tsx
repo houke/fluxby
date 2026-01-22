@@ -2,9 +2,10 @@
  * Lock Screen Component
  *
  * Displayed when the app is locked, prompting for password or biometric unlock.
+ * Uses top positioning on mobile to avoid keyboard overlay issues.
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -43,6 +44,25 @@ export function LockScreen({
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isForgotDialogOpen, setIsForgotDialogOpen] = useState(false);
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+
+  // Detect virtual keyboard on mobile devices
+  useEffect(() => {
+    // Use visualViewport API to detect keyboard (best mobile support)
+    const viewport = window.visualViewport;
+    if (!viewport) return;
+
+    const handleResize = () => {
+      // If viewport height is significantly less than window height, keyboard is likely visible
+      const keyboardVisible = viewport.height < window.innerHeight * 0.75;
+      setIsKeyboardVisible(keyboardVisible);
+    };
+
+    viewport.addEventListener('resize', handleResize);
+    handleResize(); // Check initial state
+
+    return () => viewport.removeEventListener('resize', handleResize);
+  }, []);
 
   // Determine if we're in setup mode
   const isSetupMode = showSetup || !isEncryptionEnabled;
@@ -107,7 +127,17 @@ export function LockScreen({
   };
 
   return (
-    <div className='flex min-h-screen flex-col items-center justify-start p-4 pt-16 bg-app-gradient md:justify-center md:pt-0'>
+    <div
+      className={`flex min-h-screen flex-col items-center p-4 bg-app-gradient md:justify-center md:pt-0 ${
+        isKeyboardVisible
+          ? 'justify-start pt-4'
+          : 'justify-start pt-16 sm:justify-center sm:pt-0'
+      }`}
+      style={{
+        // Use safe-area-inset for iOS notch/home indicator
+        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+      }}
+    >
       <div className='w-full max-w-md duration-500 animate-in fade-in zoom-in'>
         <Card className='glass-morphism border-white/20 bg-white/70 shadow-2xl backdrop-blur-xl dark:bg-gray-900/80'>
           <CardHeader className='text-center'>
