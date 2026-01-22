@@ -57,6 +57,76 @@ function showErrorOnScreen(message: string, error: unknown) {
   document.body.appendChild(errorDiv);
 }
 
+/**
+ * Register service worker and wait for it to be ready.
+ * This is critical for iOS Safari where OPFS operations may hang
+ * without the Cross-Origin Isolation headers provided by the SW.
+ *
+ * On first visit, we need the SW to be active before OPFS operations.
+ * On subsequent visits, the SW is already controlling the page.
+ */
+async function ensureServiceWorkerReady(): Promise<void> {
+  const isTauri = '__TAURI__' in window;
+
+  // Skip SW in Tauri - it uses native storage
+  if (isTauri || !('serviceWorker' in navigator)) {
+    // eslint-disable-next-line no-console
+    console.log('[SW] Skipped (Tauri or no SW support)');
+    return;
+  }
+
+  const swPath = `${basePath}sw.js`;
+
+  try {
+    // Check if we already have an active SW controlling this page
+    if (navigator.serviceWorker.controller) {
+      // eslint-disable-next-line no-console
+      console.log('[SW] Already controlling page');
+      return;
+    }
+
+    // eslint-disable-next-line no-console
+    console.log('[SW] First visit - registering and waiting for activation...');
+
+    // Register the service worker
+    const registration = await navigator.serviceWorker.register(swPath, {
+      scope: basePath,
+    });
+    // eslint-disable-next-line no-console
+    console.log('[SW] Registered:', registration.scope);
+
+    // Wait for the SW to be ready (installed and activated)
+    // This ensures COOP/COEP headers will be applied on next navigation
+    await navigator.serviceWorker.ready;
+    // eslint-disable-next-line no-console
+    console.log('[SW] Ready');
+
+    // For first-time visitors, the SW won't control the page until reload.
+    // Check if we need to reload to get the SW-provided headers.
+    // Only do this on browsers that need it (check for cross-origin isolation)
+    const needsCOI =
+      typeof SharedArrayBuffer === 'undefined' &&
+      !navigator.serviceWorker.controller;
+
+    if (needsCOI) {
+      // eslint-disable-next-line no-console
+      console.log(
+        '[SW] First visit without COI - reloading to activate SW headers...'
+      );
+      // Small delay to ensure SW is fully ready
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      // Reload to get the SW-controlled page with proper headers
+      window.location.reload();
+      // Return a never-resolving promise since we're reloading
+      return new Promise(() => {});
+    }
+  } catch (error) {
+    // SW registration failed - continue without it
+    // This is not fatal, but OPFS performance may be degraded
+    console.warn('[SW] Registration failed:', error);
+  }
+}
+
 // Initialize OPFS settings cache before rendering
 // This allows synchronous access to settings during initial render
 async function initializeApp() {
@@ -101,24 +171,6 @@ async function initializeApp() {
   }
 }
 
-initializeApp();
-
-// Register service worker for PWA support and COI headers
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    // Use the base path from Vite for correct SW path
-    const basePath = import.meta.env.BASE_URL || '/app/';
-    const swPath = `${basePath}sw.js`;
-
-    navigator.serviceWorker
-      .register(swPath, { scope: basePath })
-      .then((registration) => {
-        // eslint-disable-next-line no-console
-        console.log('SW registered:', registration.scope);
-      })
-      .catch((error) => {
-        // eslint-disable-next-line no-console
-        console.log('SW registration failed:', error);
-      });
-  });
-}
+// Bootstrap: Register SW first (critical for iOS Safari OPFS), then initialize app
+// This prevents hangs on first visit where OPFS needs cross-origin isolation
+ensureServiceWorkerReady().then(initializeApp);
