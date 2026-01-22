@@ -6,6 +6,8 @@ import {
   useCallback,
   useDeferredValue,
   useTransition,
+  lazy,
+  Suspense,
 } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
@@ -55,7 +57,11 @@ import {
 import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { AccountBalanceCards } from '@/components/dashboard/AccountBalanceCards';
+const AccountBalanceCards = lazy(() =>
+  import('@/components/dashboard/AccountBalanceCards').then((m) => ({
+    default: m.AccountBalanceCards,
+  }))
+);
 import { StatsCard } from '@/components/dashboard/StatsCard';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -1853,11 +1859,13 @@ export default function Transactions() {
           subtitle={t.transactions.subtitle}
           dataOnboarding='transaction-greeting'
           actions={
-            <AccountBalanceCards
-              accounts={accounts || []}
-              accountScrollIndex={accountScrollIndex}
-              setAccountScrollIndex={setAccountScrollIndex}
-            />
+            <Suspense fallback={<div className="h-16 w-48 animate-pulse rounded-lg bg-muted" />}>
+              <AccountBalanceCards
+                accounts={accounts || []}
+                accountScrollIndex={accountScrollIndex}
+                setAccountScrollIndex={setAccountScrollIndex}
+              />
+            </Suspense>
           }
         />
 

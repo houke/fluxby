@@ -90,6 +90,8 @@ export default defineConfig({
       output: {
         manualChunks: {
           'wa-sqlite': ['@journeyapps/wa-sqlite'],
+          // Keep all recharts modules in one chunk to avoid circular dependency warnings
+          recharts: ['recharts'],
         },
       },
     },
