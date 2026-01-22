@@ -1941,8 +1941,10 @@ export const nl: LandingTranslationKeys = {
       v170Date: '19 januari 2026',
       v170Title: 'Release 1.7.0',
       v170Description: '2 nieuwe features en 10 bugfixes.',
-      v170F1Title: 'Toegevoegd sticky y-axis to all charts and verbeterd formatting',
-      v170F1Desc: 'We hebben iets nieuws voor je! Bekijk de release notes voor alle details.',
+      v170F1Title:
+        'Toegevoegd sticky y-axis to all charts and verbeterd formatting',
+      v170F1Desc:
+        'We hebben iets nieuws voor je! Bekijk de release notes voor alle details.',
       v170F2Title: 'Require 180-day span for 6 transacties',
       v170F2Desc: 'Dit maakt Fluxby nog beter.',
       v170F3Title: 'Bugfixes',

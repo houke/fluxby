@@ -1859,7 +1859,11 @@ export default function Transactions() {
           subtitle={t.transactions.subtitle}
           dataOnboarding='transaction-greeting'
           actions={
-            <Suspense fallback={<div className="h-16 w-48 animate-pulse rounded-lg bg-muted" />}>
+            <Suspense
+              fallback={
+                <div className='h-16 w-48 animate-pulse rounded-lg bg-muted' />
+              }
+            >
               <AccountBalanceCards
                 accounts={accounts || []}
                 accountScrollIndex={accountScrollIndex}
