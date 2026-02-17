@@ -1351,6 +1351,28 @@ export const en: TranslationKeys = {
     enterName: 'Enter name...',
     assignedToContact: 'IBAN assigned to contact',
   },
+  bulkDelete: {
+    selectionMode: 'Selection mode',
+    selected: '{count} selected',
+    cancelSelection: 'Cancel selection',
+    deleteSelected: 'Delete selected',
+    deleteByDateRange: 'Delete by date range',
+    confirmTitle: 'Delete {count} transaction(s)?',
+    confirmWarning: 'This action cannot be undone after 5 minutes.',
+    totalImpact: 'Total impact',
+    andMore: 'and {count} more',
+    undoToast: 'Deleted {count} transactions',
+    undo: 'Undo',
+    undoSuccess: 'Transactions restored',
+    undoExpired: 'Undo no longer available',
+    selectAll: 'Select all',
+    dateRange: {
+      start: 'Start date',
+      end: 'End date',
+      preview: '{count} transactions will be deleted',
+      noMatches: 'No transactions found',
+    },
+  },
   apiErrors: {
     // Generic errors
     requestFailed: 'Request failed',

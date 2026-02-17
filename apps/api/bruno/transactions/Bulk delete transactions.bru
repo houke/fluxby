@@ -1,0 +1,77 @@
+meta {
+  name: Bulk delete transactions
+  type: http
+  seq: 4
+}
+
+delete {
+  url: {{baseUrl}}/transactions/bulk
+  body: json
+  auth: none
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+body:json {
+  {
+    "transactionIds": ["1", "2", "3"],
+    "dryRun": true
+  }
+}
+
+docs {
+  # Bulk delete transactions
+  
+  Delete multiple transactions at once. You can specify transactions by:
+  - `transactionIds`: Array of specific transaction IDs (max 1000)
+  - `dateRange`: Object with `start` and `end` dates (YYYY-MM-DD format)
+  
+  At least one of `transactionIds` or `dateRange` is required.
+  
+  ## Endpoint
+  `DELETE /api/transactions/bulk`
+  
+  ## Request Body
+  
+  | Field | Type | Required | Description |
+  |-------|------|----------|-------------|
+  | `transactionIds` | `string[]` | No* | Specific transaction IDs to delete (max 1000) |
+  | `dateRange` | `{ start: string, end: string }` | No* | Delete all in date range |
+  | `accountId` | `string` | No | Limit deletion to specific account |
+  | `dryRun` | `boolean` | No | If true, return count without deleting |
+  
+  *At least one of `transactionIds` or `dateRange` is required.
+  
+  ## Example: Delete by IDs
+  ```json
+  {
+    "transactionIds": ["1", "2", "3"],
+    "dryRun": false
+  }
+  ```
+  
+  ## Example: Delete by date range
+  ```json
+  {
+    "dateRange": {
+      "start": "2024-01-01",
+      "end": "2024-01-31"
+    },
+    "accountId": "1",
+    "dryRun": true
+  }
+  ```
+  
+  ## Response
+  
+  ```json
+  {
+    "success": true,
+    "deleted": 47,
+    "affectedAccounts": ["1", "2"],
+    "balancesUpdated": true
+  }
+  ```
+}

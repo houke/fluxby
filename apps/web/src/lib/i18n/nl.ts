@@ -1117,6 +1117,28 @@ export interface TranslationKeys {
     deleteRuleTitle: string;
     deleteContactTitle: string;
   };
+  bulkDelete?: {
+    selectionMode: string;
+    selected: string;
+    cancelSelection: string;
+    deleteSelected: string;
+    deleteByDateRange: string;
+    confirmTitle: string;
+    confirmWarning: string;
+    totalImpact: string;
+    andMore: string;
+    undoToast: string;
+    undo: string;
+    undoSuccess: string;
+    undoExpired: string;
+    selectAll: string;
+    dateRange: {
+      start: string;
+      end: string;
+      preview: string;
+      noMatches: string;
+    };
+  };
   apiErrors: {
     // Generic errors
     requestFailed: string;
@@ -2677,6 +2699,28 @@ export const nl: TranslationKeys = {
     addAsNewContact: 'Toevoegen als nieuw contact',
     enterName: 'Voer naam in...',
     assignedToContact: 'IBAN toegewezen aan contact',
+  },
+  bulkDelete: {
+    selectionMode: 'Selectiemodus',
+    selected: '{count} geselecteerd',
+    cancelSelection: 'Selectie annuleren',
+    deleteSelected: 'Selectie verwijderen',
+    deleteByDateRange: 'Verwijderen op datum',
+    confirmTitle: '{count} transactie(s) verwijderen?',
+    confirmWarning: 'Deze actie kan niet ongedaan worden gemaakt na 5 minuten.',
+    totalImpact: 'Totale impact',
+    andMore: 'en {count} meer',
+    undoToast: '{count} transacties verwijderd',
+    undo: 'Ongedaan maken',
+    undoSuccess: 'Transacties hersteld',
+    undoExpired: 'Ongedaan maken niet meer mogelijk',
+    selectAll: 'Alles selecteren',
+    dateRange: {
+      start: 'Startdatum',
+      end: 'Einddatum',
+      preview: '{count} transacties worden verwijderd',
+      noMatches: 'Geen transacties gevonden',
+    },
   },
   apiErrors: {
     // Generic errors
