@@ -29,6 +29,9 @@
     "test": "vitest",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:ui": "playwright test --ui",
     "start": "npm run start -w apps/api",
     "release": "npm run build && node scripts/release.mjs",
     "release:dry": "node scripts/release.mjs --dry-run"
@@ -38,7 +41,9 @@
     "packages/*"
   ],
   "devDependencies": {
+    "@axe-core/playwright": "^4.11.1",
     "@eslint/js": "^9.17.0",
+    "@playwright/test": "^1.58.2",
     "@testing-library/react": "^16.3.1",
     "@vitest/coverage-v8": "^4.0.16",
     "concurrently": "^9.1.0",

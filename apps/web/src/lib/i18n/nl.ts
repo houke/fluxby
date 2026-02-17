@@ -1122,6 +1122,7 @@ export interface TranslationKeys {
     selected: string;
     cancelSelection: string;
     deleteSelected: string;
+    deleting: string;
     deleteByDateRange: string;
     confirmTitle: string;
     confirmWarning: string;
@@ -1132,6 +1133,8 @@ export interface TranslationKeys {
     undoSuccess: string;
     undoExpired: string;
     selectAll: string;
+    selectTransaction: string;
+    selectAllRelated: string;
     dateRange: {
       start: string;
       end: string;
@@ -2705,6 +2708,7 @@ export const nl: TranslationKeys = {
     selected: '{count} geselecteerd',
     cancelSelection: 'Selectie annuleren',
     deleteSelected: 'Selectie verwijderen',
+    deleting: 'Verwijderen...',
     deleteByDateRange: 'Verwijderen op datum',
     confirmTitle: '{count} transactie(s) verwijderen?',
     confirmWarning: 'Deze actie kan niet ongedaan worden gemaakt na 5 minuten.',
@@ -2715,6 +2719,8 @@ export const nl: TranslationKeys = {
     undoSuccess: 'Transacties hersteld',
     undoExpired: 'Ongedaan maken niet meer mogelijk',
     selectAll: 'Alles selecteren',
+    selectTransaction: 'Selecteer transactie: {description} {amount}',
+    selectAllRelated: 'Alle gerelateerde transacties selecteren',
     dateRange: {
       start: 'Startdatum',
       end: 'Einddatum',

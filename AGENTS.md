@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Fluxby - A local-first financial dashboard for visualizing bank transactions. Monorepo structure with TypeScript, React 19, Vite 6, Tauri 2.0, and SQLite.
+Fluxby - A local-first financial dashboard for visualizing bank transactions. Monorepo structure with TypeScript, React 19, Vite 7, Tauri 2.0, and SQLite.
 
 **Architecture**: Local-First, Password-Protected UI, Peer-to-Peer sync capable.
 
@@ -242,6 +242,97 @@ With transactions, all operations share a single commit/sync, dramatically impro
 - TanStack Query for data fetching
 - Tailwind CSS
 - Bilingual UI (Dutch and English)
+
+## Nexus Agent System
+
+This repository uses the **Nexus multi-agent orchestration system** for complex planning, execution, and review workflows.
+
+### System Overview
+
+```
+.nexus/                     # Project-specific orchestration files
+├── features/               # Feature planning and tracking
+├── memory/                 # Agent preferences and learned behaviors
+├── toc.md                  # Master feature index
+├── tmp/                    # Temporary files (gitignored)
+└── logs/                   # Execution logs
+
+.github/
+├── agents/                 # Agent definitions (12 specialized agents)
+├── prompts/                # Workflow prompts (Nexus workflows)
+└── skills/                 # Domain-specific knowledge (16 skills)
+
+.nexusrc                    # Points to central Nexus template repo
+```
+
+### The Orchestrator (@Nexus)
+
+The **@Nexus** agent is the orchestrator that:
+
+- **Triages** incoming requests to determine which agent(s) are needed
+- **Delegates** work to specialized agents using `runSubagent`
+- **Synthesizes** multi-agent responses into unified answers
+- **Maintains context** across agent interactions
+- **Never implements directly** - only coordinates
+
+### Specialized Agents
+
+| Agent               | File                        | Purpose                                          |
+| ------------------- | --------------------------- | ------------------------------------------------ |
+| Nexus               | `nexus.agent.md`            | **Orchestrator** - delegates to all agents       |
+| Architect           | `architect.agent.md`        | System design, schemas, local-first architecture |
+| Software Developer  | `software-developer.agent.md` | Implementation, TDD, production code           |
+| Tech Lead           | `tech-lead.agent.md`        | Code quality, patterns, architectural decisions  |
+| QA Engineer         | `qa-engineer.agent.md`      | Testing, edge cases, accessibility               |
+| Security Agent      | `security.agent.md`         | Security audits, OWASP, vulnerabilities          |
+| Product Manager     | `product-manager.agent.md`  | Requirements, priorities, acceptance criteria    |
+| UX Designer         | `ux-designer.agent.md`      | User flows, wireframes, interactions             |
+| Visual Designer     | `visual-designer.agent.md`  | UI polish, animations, styling                   |
+| DevOps              | `devops.agent.md`           | CI/CD, infrastructure, deployment                |
+| Gamer               | `gamer.agent.md`            | Gamification mechanics, engagement               |
+| SEO Specialist      | `seo-specialist.agent.md`   | SEO optimization, search rankings                |
+
+### Core Workflows
+
+| Workflow | Prompt | Purpose |
+| -------- | ------ | ------- |
+| Planning | `#nexus-planning` | Orchestrates all agents to create comprehensive feature plans |
+| Execution | `#nexus-execution` | Takes plans and coordinates implementation |
+| Review | `#nexus-review` | Comprehensive code review with automatic fixes |
+| Sync | `#nexus-sync` | Reconciles documentation with actual work done |
+| Summary | `#nexus-summary` | Project status snapshot (have vs need) |
+| Hotfix | `#nexus-hotfix` | Expedited workflow for small, well-understood bugs |
+
+### Feature Tracking
+
+All features are tracked in `.nexus/toc.md` with status lifecycle:
+
+```
+draft → in-progress → review → complete
+```
+
+Feature files are stored in `.nexus/features/<feature-slug>/`:
+- `plan.md` - What we're building and why
+- `execution.md` - Implementation tracking
+- `review.md` - Code review findings
+- `summary.md` - Status snapshots
+
+### MCP Servers
+
+Available MCP integrations (`.vscode/mcp.json`):
+
+- **filesystem** - Enhanced file operations
+- **playwright** - E2E test automation
+- **sequential-thinking** - Complex problem decomposition
+
+### ⛔ Critical Safety Rules
+
+These rules are **ABSOLUTE** and must **NEVER** be violated by any agent:
+
+1. **NEVER Run Interactive Commands** - Use non-interactive flags (`-y`, `--yes`)
+2. **NEVER Delete Infrastructure Directories** - `.nexus/`, `.github/`, `.vscode/`
+3. **Use `.nexus/tmp/`** - For all temporary files instead of system `/tmp`
+4. **Clean Up After Yourself** - Agents MUST remove temporary files they create
 
 ## Security Considerations
 

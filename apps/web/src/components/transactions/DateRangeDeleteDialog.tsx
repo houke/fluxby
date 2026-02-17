@@ -125,8 +125,14 @@ export const DateRangeDeleteDialog = memo(function DateRangeDeleteDialog({
   const canSubmit =
     startDate && endDate && previewCount !== null && previewCount > 0;
 
+  // Prevent closing dialog while loading
+  const handleOpenChange = (open: boolean) => {
+    if (isLoading && !open) return;
+    onOpenChange(open);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className='sm:max-w-[440px]'>
         <DialogHeader>
           <DialogTitle>

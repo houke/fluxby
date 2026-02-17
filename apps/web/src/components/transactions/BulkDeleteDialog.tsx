@@ -67,8 +67,14 @@ export const BulkDeleteDialog = memo(function BulkDeleteDialog({
 
   const count = transactions.length;
 
+  // Prevent closing dialog while loading
+  const handleOpenChange = (open: boolean) => {
+    if (isLoading && !open) return;
+    onOpenChange(open);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className='sm:max-w-[480px]'>
         <DialogHeader className='flex flex-col items-center text-center'>
           {/* Warning icon */}

@@ -52,3 +52,14 @@ vite.config.d.ts
 # Rust
 target/
 apps/tauri/target/
+
+# Nexus temporary files
+.nexus/**/tmp/
+.nexus/**/*.tmp
+.nexus/**/temp/
+
+# Nexus local caches
+.nexus/**/.cache/
+
+# Agent memory backups (keep originals)
+.nexus/memory/*.backup.md

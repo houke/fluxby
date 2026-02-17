@@ -1,0 +1,3 @@
+# Nexus Template Repository Path
+# This file tells Nexus prompts where to find templates and documentation
+NEXUS_REPO_PATH="/Users/houkebv/Apps/nexus"

@@ -1356,6 +1356,7 @@ export const en: TranslationKeys = {
     selected: '{count} selected',
     cancelSelection: 'Cancel selection',
     deleteSelected: 'Delete selected',
+    deleting: 'Deleting...',
     deleteByDateRange: 'Delete by date range',
     confirmTitle: 'Delete {count} transaction(s)?',
     confirmWarning: 'This action cannot be undone after 5 minutes.',
@@ -1366,6 +1367,8 @@ export const en: TranslationKeys = {
     undoSuccess: 'Transactions restored',
     undoExpired: 'Undo no longer available',
     selectAll: 'Select all',
+    selectTransaction: 'Select transaction: {description} {amount}',
+    selectAllRelated: 'Select all related transactions',
     dateRange: {
       start: 'Start date',
       end: 'End date',

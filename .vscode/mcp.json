@@ -1,22 +1,23 @@
 {
   "servers": {
-    "io.github.upstash/context7": {
+    "filesystem": {
       "type": "stdio",
       "command": "npx",
-      "args": ["@upstash/context7-mcp@1.0.31"],
-      "env": {
-        "CONTEXT7_API_KEY": "${input:CONTEXT7_API_KEY}"
-      },
-      "gallery": "https://api.mcp.github.com",
-      "version": "1.0.31"
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "${workspaceFolder}"
+      ]
+    },
+    "playwright": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@executeautomation/playwright-mcp-server"]
+    },
+    "sequential-thinking": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"]
     }
-  },
-  "inputs": [
-    {
-      "id": "CONTEXT7_API_KEY",
-      "type": "promptString",
-      "description": "API key for authentication",
-      "password": true
-    }
-  ]
+  }
 }

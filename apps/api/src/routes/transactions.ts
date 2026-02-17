@@ -567,6 +567,314 @@ router.delete('/', (req, res) => {
   }
 });
 
+/**
+ * Helper to validate ISO 8601 date format (YYYY-MM-DD)
+ */
+function isValidDateFormat(dateStr: string): boolean {
+  const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+  if (!dateRegex.test(dateStr)) return false;
+  const date = new Date(dateStr);
+  return !isNaN(date.getTime());
+}
+
+/**
+ * Validate date is not in the future and not more than 10 years ago
+ */
+function isValidDateRange(dateStr: string): {
+  valid: boolean;
+  error?: string;
+} {
+  const date = new Date(dateStr);
+  const now = new Date();
+  const tenYearsAgo = new Date();
+  tenYearsAgo.setFullYear(tenYearsAgo.getFullYear() - 10);
+
+  if (date > now) {
+    return { valid: false, error: 'Date cannot be in the future' };
+  }
+  if (date < tenYearsAgo) {
+    return { valid: false, error: 'Date cannot be more than 10 years ago' };
+  }
+  return { valid: true };
+}
+
+/**
+ * Recalculate account balance based on latest transaction with balance_after
+ */
+function recalculateAccountBalance(
+  accountId: number,
+  profileId: number
+): { previousBalance: number; newBalance: number } {
+  // Get current balance
+  const account = queryOne<{ current_balance: number }>(
+    'SELECT current_balance FROM accounts WHERE id = ? AND profile_id = ?',
+    [accountId, profileId]
+  );
+  const previousBalance = account?.current_balance ?? 0;
+
+  // Find latest transaction with balance_after
+  const latestTx = queryOne<{ balance_after: number }>(
+    `SELECT balance_after FROM transactions 
+     WHERE account_id = ? AND balance_after IS NOT NULL 
+     ORDER BY date DESC, id DESC LIMIT 1`,
+    [accountId]
+  );
+  const newBalance = latestTx?.balance_after ?? 0;
+
+  // Update account balance
+  run(
+    'UPDATE accounts SET current_balance = ? WHERE id = ? AND profile_id = ?',
+    [newBalance, accountId, profileId]
+  );
+
+  return { previousBalance, newBalance };
+}
+
+/**
+ * @swagger
+ * /api/transactions/bulk:
+ *   delete:
+ *     summary: Bulk delete transactions
+ *     description: |
+ *       Delete multiple transactions at once. Provide either transactionIds (specific IDs)
+ *       or dateRange (delete all in range). Account balances are automatically recalculated.
+ *     tags: [Transactions]
+ *     security:
+ *       - ProfileAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               transactionIds:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 description: Specific transaction IDs to delete (max 1000)
+ *               dateRange:
+ *                 type: object
+ *                 properties:
+ *                   start:
+ *                     type: string
+ *                     format: date
+ *                     description: Start date (YYYY-MM-DD)
+ *                   end:
+ *                     type: string
+ *                     format: date
+ *                     description: End date (YYYY-MM-DD)
+ *               accountId:
+ *                 type: string
+ *                 description: Limit deletion to specific account
+ *               dryRun:
+ *                 type: boolean
+ *                 description: If true, return count without deleting
+ *     responses:
+ *       200:
+ *         description: Deletion successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 deleted:
+ *                   type: integer
+ *                 affectedAccounts:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *                 balancesUpdated:
+ *                   type: boolean
+ *       400:
+ *         description: Invalid request - missing criteria or validation failed
+ *       403:
+ *         description: Access denied - resource belongs to different profile
+ *       500:
+ *         description: Server error
+ */
+router.delete('/bulk', (req, res) => {
+  try {
+    const profileId = getEffectiveProfileId(req);
+    const { transactionIds, dateRange, accountId, dryRun } = req.body;
+
+    // Validate: at least one criterion required
+    if (!transactionIds && !dateRange) {
+      return res.status(400).json({
+        success: false,
+        error: 'Either transactionIds or dateRange is required',
+      });
+    }
+
+    // Validate transactionIds if provided
+    if (transactionIds) {
+      if (!Array.isArray(transactionIds)) {
+        return res.status(400).json({
+          success: false,
+          error: 'transactionIds must be an array',
+        });
+      }
+      if (transactionIds.length > 1000) {
+        return res.status(400).json({
+          success: false,
+          error: 'Maximum 1000 transaction IDs per request',
+        });
+      }
+      // Validate all IDs are valid
+      for (const id of transactionIds) {
+        if (typeof id !== 'string' && typeof id !== 'number') {
+          return res.status(400).json({
+            success: false,
+            error: 'All transaction IDs must be strings or numbers',
+          });
+        }
+      }
+    }
+
+    // Validate dateRange if provided
+    if (dateRange) {
+      if (!dateRange.start || !dateRange.end) {
+        return res.status(400).json({
+          success: false,
+          error: 'dateRange requires both start and end dates',
+        });
+      }
+      if (!isValidDateFormat(dateRange.start)) {
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid start date format. Use YYYY-MM-DD',
+        });
+      }
+      if (!isValidDateFormat(dateRange.end)) {
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid end date format. Use YYYY-MM-DD',
+        });
+      }
+      const startValidation = isValidDateRange(dateRange.start);
+      if (!startValidation.valid) {
+        return res.status(400).json({
+          success: false,
+          error: `Start date: ${startValidation.error}`,
+        });
+      }
+      const endValidation = isValidDateRange(dateRange.end);
+      if (!endValidation.valid) {
+        return res.status(400).json({
+          success: false,
+          error: `End date: ${endValidation.error}`,
+        });
+      }
+      if (dateRange.start > dateRange.end) {
+        return res.status(400).json({
+          success: false,
+          error: 'Start date must be before or equal to end date',
+        });
+      }
+    }
+
+    // Validate accountId belongs to profile if provided
+    if (accountId) {
+      const account = queryOne<{ id: number }>(
+        'SELECT id FROM accounts WHERE id = ? AND profile_id = ?',
+        [accountId, profileId]
+      );
+      if (!account) {
+        return res.status(403).json({
+          success: false,
+          error: 'Account not found or belongs to different profile',
+        });
+      }
+    }
+
+    // Build query to find matching transactions
+    const conditions: string[] = [
+      'account_id IN (SELECT id FROM accounts WHERE profile_id = ?)',
+    ];
+    const params: unknown[] = [profileId];
+
+    if (transactionIds && transactionIds.length > 0) {
+      const placeholders = transactionIds.map(() => '?').join(',');
+      conditions.push(`id IN (${placeholders})`);
+      params.push(...transactionIds);
+    }
+
+    if (dateRange) {
+      conditions.push('date >= ? AND date <= ?');
+      params.push(dateRange.start, dateRange.end);
+    }
+
+    if (accountId) {
+      conditions.push('account_id = ?');
+      params.push(accountId);
+    }
+
+    const whereClause = conditions.join(' AND ');
+
+    // Verify all transactionIds belong to profile (if using IDs)
+    if (transactionIds && transactionIds.length > 0) {
+      const countResult = queryOne<{ count: number }>(
+        `SELECT COUNT(*) as count FROM transactions WHERE ${whereClause}`,
+        params
+      );
+      if (countResult && countResult.count !== transactionIds.length) {
+        return res.status(403).json({
+          success: false,
+          error: 'Some transaction IDs do not belong to this profile',
+        });
+      }
+    }
+
+    // Get affected account IDs before deletion
+    const affectedAccountRows = query<{ account_id: number }>(
+      `SELECT DISTINCT account_id FROM transactions WHERE ${whereClause}`,
+      params
+    );
+    const affectedAccountIds = affectedAccountRows.map((r) =>
+      String(r.account_id)
+    );
+
+    // Get count for dry run or actual deletion
+    const countResult = queryOne<{ count: number }>(
+      `SELECT COUNT(*) as count FROM transactions WHERE ${whereClause}`,
+      params
+    );
+    const deleteCount = countResult?.count ?? 0;
+
+    if (dryRun) {
+      return res.json({
+        success: true,
+        deleted: deleteCount,
+        affectedAccounts: affectedAccountIds,
+        balancesUpdated: false,
+        dryRun: true,
+      });
+    }
+
+    // Perform deletion (hard delete for API)
+    const result = run(`DELETE FROM transactions WHERE ${whereClause}`, params);
+
+    // Recalculate balances for affected accounts
+    for (const accountIdStr of affectedAccountIds) {
+      recalculateAccountBalance(parseInt(accountIdStr, 10), profileId);
+    }
+
+    res.json({
+      success: true,
+      deleted: result.changes,
+      affectedAccounts: affectedAccountIds,
+      balancesUpdated: affectedAccountIds.length > 0,
+    });
+  } catch (error) {
+    console.error('Error bulk deleting transactions:', error);
+    res
+      .status(500)
+      .json({ success: false, error: 'Failed to bulk delete transactions' });
+  }
+});
+
 // Categorize by opposing account name
 /**
  * @swagger

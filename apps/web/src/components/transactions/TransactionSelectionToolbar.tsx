@@ -1,5 +1,5 @@
 import { memo, useEffect, useState } from 'react';
-import { Trash2, X, ChevronDown, Calendar } from 'lucide-react';
+import { Trash2, X, ChevronDown, Calendar, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -98,11 +98,17 @@ export const TransactionSelectionToolbar = memo(
                   data-testid='bulk-delete-button'
                   className='gap-1.5'
                 >
-                  <Trash2 className='h-4 w-4' />
+                  {isDeleting ? (
+                    <Loader2 className='h-4 w-4 animate-spin' />
+                  ) : (
+                    <Trash2 className='h-4 w-4' />
+                  )}
                   <span className='hidden sm:inline'>
-                    {t.bulkDelete?.deleteSelected || 'Delete selected'}
+                    {isDeleting
+                      ? t.bulkDelete?.deleting || 'Deleting...'
+                      : t.bulkDelete?.deleteSelected || 'Delete selected'}
                   </span>
-                  <ChevronDown className='h-3.5 w-3.5' />
+                  {!isDeleting && <ChevronDown className='h-3.5 w-3.5' />}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align='end'>
@@ -134,9 +140,15 @@ export const TransactionSelectionToolbar = memo(
               data-testid='bulk-delete-button'
               className='gap-1.5'
             >
-              <Trash2 className='h-4 w-4' />
+              {isDeleting ? (
+                <Loader2 className='h-4 w-4 animate-spin' />
+              ) : (
+                <Trash2 className='h-4 w-4' />
+              )}
               <span className='hidden sm:inline'>
-                {t.bulkDelete?.deleteSelected || 'Delete selected'}
+                {isDeleting
+                  ? t.bulkDelete?.deleting || 'Deleting...'
+                  : t.bulkDelete?.deleteSelected || 'Delete selected'}
               </span>
             </Button>
           )}

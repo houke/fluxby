@@ -103,7 +103,7 @@ import { TransactionRowBadges } from '@/components/transactions/TransactionRowBa
 import { TransactionCard } from '@/components/transactions/TransactionCard';
 import { Currency } from '@/components/ui/currency';
 import { api } from '@/lib/api';
-import { formatDate, cn, findSimilarNameGroups } from '@/lib/utils';
+import { formatDate, cn, findSimilarNameGroups, formatCurrency } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useSuggestions, CategorySuggestion } from '@/hooks/useSuggestions';
 import { useAddressBook } from '@/hooks/useAddressBook';
@@ -2287,25 +2287,44 @@ export default function Transactions() {
                             }}
                           >
                             <div className='flex min-w-0 flex-1 items-center gap-4 px-3 py-4 sm:p-0'>
-                              {/* Selection checkbox */}
-                              {transactionSelection.isSelecting && (
-                                <div
-                                  className='flex-shrink-0'
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  <Checkbox
-                                    data-testid='transaction-checkbox'
-                                    checked={transactionSelection.isSelected(
-                                      tx.id
+                              {/* Selection checkbox - always visible on desktop, hidden on mobile until selection mode */}
+                              <div
+                                className={cn(
+                                  'flex-shrink-0',
+                                  // On mobile: only show when in selection mode
+                                  // On desktop (sm+): always show, but opacity transitions
+                                  'hidden sm:block',
+                                  transactionSelection.isSelecting
+                                    ? 'opacity-100'
+                                    : 'opacity-0 group-hover:opacity-100'
+                                )}
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <Checkbox
+                                  data-testid='transaction-checkbox'
+                                  checked={transactionSelection.isSelected(
+                                    tx.id
+                                  )}
+                                  onChange={() =>
+                                    transactionSelection.toggleSelection(tx.id)
+                                  }
+                                  aria-label={(
+                                    t.bulkDelete?.selectTransaction ||
+                                    'Select transaction: {description} {amount}'
+                                  )
+                                    .replace(
+                                      '{description}',
+                                      tx.merchantName ||
+                                        tx.opposingAccountName ||
+                                        tx.description ||
+                                        t.transactions.unknown
+                                    )
+                                    .replace(
+                                      '{amount}',
+                                      formatCurrency(tx.amount)
                                     )}
-                                    onChange={() =>
-                                      transactionSelection.toggleSelection(
-                                        tx.id
-                                      )
-                                    }
-                                  />
-                                </div>
-                              )}
+                                />
+                              </div>
                               <div
                                 className={cn(
                                   'flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full',
@@ -3710,6 +3729,10 @@ export default function Transactions() {
                                   setSelectedRelatedIds(new Set());
                                 }
                               }}
+                              aria-label={
+                                t.bulkDelete?.selectAllRelated ||
+                                'Select all related transactions'
+                              }
                             />
                           </th>
                           <th className='pb-2'>
@@ -3756,6 +3779,21 @@ export default function Transactions() {
                                   }
                                   setSelectedRelatedIds(newSet);
                                 }}
+                                aria-label={(
+                                  t.bulkDelete?.selectTransaction ||
+                                  'Select transaction: {description} {amount}'
+                                )
+                                  .replace(
+                                    '{description}',
+                                    rt.merchantName ||
+                                      rt.opposingAccountName ||
+                                      rt.description ||
+                                      t.transactions.unknown
+                                  )
+                                  .replace(
+                                    '{amount}',
+                                    formatCurrency(rt.amount)
+                                  )}
                               />
                             </td>
                             <td className='max-w-[200px] py-2'>
@@ -3943,6 +3981,10 @@ export default function Transactions() {
                                 setSelectedTransferRelatedIds(new Set());
                               }
                             }}
+                            aria-label={
+                              t.bulkDelete?.selectAllRelated ||
+                              'Select all related transactions'
+                            }
                           />
                         </th>
                         <th className='pb-2'>{t.categories?.name || 'Naam'}</th>
@@ -4033,6 +4075,18 @@ export default function Transactions() {
                                 }
                                 setSelectedTransferRelatedIds(newSet);
                               }}
+                              aria-label={(
+                                t.bulkDelete?.selectTransaction ||
+                                'Select transaction: {description} {amount}'
+                              )
+                                .replace(
+                                  '{description}',
+                                  rt.merchantName ||
+                                    rt.opposingAccountName ||
+                                    rt.description ||
+                                    t.transactions.unknown
+                                )
+                                .replace('{amount}', formatCurrency(rt.amount))}
                             />
                           </td>
                           <td className='max-w-[200px] py-2'>
@@ -4155,6 +4209,7 @@ export default function Transactions() {
             transactionSelection.clearSelection();
             transactionSelection.exitSelectionMode();
           }}
+          isDeleting={bulkDelete.isDeleting}
         />
 
         {/* Undo Toast */}

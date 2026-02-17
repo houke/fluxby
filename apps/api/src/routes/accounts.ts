@@ -494,6 +494,104 @@ router.delete('/:id', (req, res) => {
 
 /**
  * @swagger
+ * /api/accounts/{id}/recalculate-balance:
+ *   post:
+ *     summary: Recalculate account balance
+ *     description: |
+ *       Recalculates the account's current balance based on the latest transaction's
+ *       balance_after value. If no transactions exist, balance is set to 0.
+ *     tags: [Accounts]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Account ID
+ *       - in: header
+ *         name: X-Profile-Id
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Balance recalculated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 accountId:
+ *                   type: string
+ *                 previousBalance:
+ *                   type: number
+ *                 newBalance:
+ *                   type: number
+ *       403:
+ *         description: Access denied - account belongs to different profile
+ *       404:
+ *         description: Account not found
+ */
+router.post('/:id/recalculate-balance', (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const profileId = getEffectiveProfileId(req);
+
+    // Verify account belongs to this profile
+    if (!verifyAccountProfile(id, profileId)) {
+      return res.status(403).json({
+        success: false,
+        error: 'Access denied: account does not belong to this profile',
+      });
+    }
+
+    // Get current balance
+    const account = queryOne<{ current_balance: number }>(
+      'SELECT current_balance FROM accounts WHERE id = ? AND profile_id = ?',
+      [id, profileId]
+    );
+
+    if (!account) {
+      return res.status(404).json({
+        success: false,
+        error: 'Account not found',
+      });
+    }
+
+    const previousBalance = account.current_balance ?? 0;
+
+    // Find latest transaction with balance_after
+    const latestTx = queryOne<{ balance_after: number }>(
+      `SELECT balance_after FROM transactions 
+       WHERE account_id = ? AND balance_after IS NOT NULL 
+       ORDER BY date DESC, id DESC LIMIT 1`,
+      [id]
+    );
+    const newBalance = latestTx?.balance_after ?? 0;
+
+    // Update account balance
+    run(
+      'UPDATE accounts SET current_balance = ? WHERE id = ? AND profile_id = ?',
+      [newBalance, id, profileId]
+    );
+
+    res.json({
+      success: true,
+      accountId: String(id),
+      previousBalance,
+      newBalance,
+    });
+  } catch (error) {
+    console.error('Error recalculating balance:', error);
+    res
+      .status(500)
+      .json({ success: false, error: 'Failed to recalculate balance' });
+  }
+});
+
+/**
+ * @swagger
  * /api/accounts:
  *   delete:
  *     summary: Delete all accounts for current profile
