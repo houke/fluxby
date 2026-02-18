@@ -40,7 +40,6 @@ import {
   RotateCcw,
   AlertCircle,
   Loader2,
-  Calendar,
 } from 'lucide-react';
 import { useTransactionSelection } from '@/hooks/useTransactionSelection';
 import { useBulkDelete } from '@/hooks/useBulkDelete';
@@ -2094,29 +2093,6 @@ export default function Transactions() {
                 </CardDescription>
               </div>
               <div className='flex flex-shrink-0 items-center gap-2'>
-                {/* Bulk delete action */}
-                <TooltipProvider delayDuration={100}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant='ghost'
-                        size='sm'
-                        className='h-8 gap-1.5 text-muted-foreground hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:text-red-400'
-                        onClick={() => setDateRangeDeleteDialogOpen(true)}
-                      >
-                        <Calendar className='h-4 w-4' />
-                        <span className='hidden sm:inline'>
-                          {t.bulkDelete?.deleteByDateRange ||
-                            'Verwijderen op periode'}
-                        </span>
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      {t.bulkDelete?.deleteByDateRange ||
-                        'Verwijderen op periode'}
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
                 {/* Active filters summary */}
                 <div className='flex flex-wrap items-center gap-2'>
                   {transactionType !== 'all' && (
@@ -2303,16 +2279,34 @@ export default function Transactions() {
                                     ? 'opacity-100'
                                     : 'opacity-0 group-hover:opacity-100'
                                 )}
-                                onClick={(e) => e.stopPropagation()}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  // Support shift-click range selection on checkbox too
+                                  if (
+                                    e.shiftKey &&
+                                    transactionSelection.isSelecting
+                                  ) {
+                                    const visibleIds =
+                                      deferredTransactions
+                                        ?.slice(0, visibleCount)
+                                        .map((t) => t.id) || [];
+                                    transactionSelection.selectRange(
+                                      transactionSelection.lastSelectedId ||
+                                        tx.id,
+                                      tx.id,
+                                      visibleIds
+                                    );
+                                  } else {
+                                    transactionSelection.toggleSelection(tx.id);
+                                  }
+                                }}
                               >
                                 <Checkbox
                                   data-testid='transaction-checkbox'
                                   checked={transactionSelection.isSelected(
                                     tx.id
                                   )}
-                                  onChange={() =>
-                                    transactionSelection.toggleSelection(tx.id)
-                                  }
+                                  // Checkbox is controlled - click handler on parent div
                                   aria-label={(
                                     t.bulkDelete?.selectTransaction ||
                                     'Select transaction: {description} {amount}'
@@ -4205,17 +4199,21 @@ export default function Transactions() {
           isLoading={bulkDelete.isDeleting}
         />
 
-        {/* Selection Toolbar (floating) */}
-        <TransactionSelectionToolbar
-          selectionCount={transactionSelection.selectionCount}
-          onDeleteSelected={() => setBulkDeleteDialogOpen(true)}
-          onDeleteByDateRange={() => setDateRangeDeleteDialogOpen(true)}
-          onCancelSelection={() => {
-            transactionSelection.clearSelection();
-            transactionSelection.exitSelectionMode();
-          }}
-          isDeleting={bulkDelete.isDeleting}
-        />
+        {/* Selection Toolbar (sticky bottom) */}
+        {transactionSelection.isSelecting && (
+          <div className='fixed bottom-4 left-1/2 z-50 w-full max-w-3xl -translate-x-1/2 px-4'>
+            <TransactionSelectionToolbar
+              selectionCount={transactionSelection.selectionCount}
+              onDeleteSelected={() => setBulkDeleteDialogOpen(true)}
+              onDeleteByDateRange={() => setDateRangeDeleteDialogOpen(true)}
+              onCancelSelection={() => {
+                transactionSelection.clearSelection();
+                transactionSelection.exitSelectionMode();
+              }}
+              isDeleting={bulkDelete.isDeleting}
+            />
+          </div>
+        )}
 
         {/* Undo Toast */}
         {bulkDelete.canUndo && (

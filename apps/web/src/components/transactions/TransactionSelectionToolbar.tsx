@@ -102,7 +102,7 @@ export const TransactionSelectionToolbar = memo(
                 <Button
                   variant='destructive'
                   size='sm'
-                  disabled={isDeleting || selectionCount === 0}
+                  disabled={isDeleting}
                   data-testid='bulk-delete-button'
                   className='gap-1.5'
                 >
@@ -128,7 +128,7 @@ export const TransactionSelectionToolbar = memo(
                 <DropdownMenuItem
                   onClick={onDeleteSelected}
                   disabled={selectionCount === 0}
-                  className='gap-2 text-destructive focus:text-destructive'
+                  className='gap-2 text-destructive focus:bg-destructive focus:text-white'
                 >
                   <Trash2 className='h-4 w-4' aria-hidden='true' />
                   {(
@@ -137,7 +137,7 @@ export const TransactionSelectionToolbar = memo(
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={onDeleteByDateRange}
-                  className='gap-2 text-destructive focus:text-destructive'
+                  className='gap-2 text-destructive focus:bg-destructive focus:text-white'
                   data-testid='date-range-delete'
                 >
                   <Calendar className='h-4 w-4' aria-hidden='true' />
