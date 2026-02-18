@@ -9,6 +9,7 @@
 **URL:** https://developers.google.com/search/docs/specialty/international/localized-versions
 
 **Contents:**
+
 - Tell Google about localized versions of your page
 - Methods for indicating your alternate pages
   - Guidelines for all methods
@@ -46,16 +47,18 @@ Example Widgets, Inc has a website that serves users in the USA, UK, and Germany
 
 Note that the language-specific subdomains in these URLs (en, en-gb, en-us, de) are no
 
-*[Content truncated]*
+_[Content truncated]_
 
 **Examples:**
 
 Example 1 (unknown):
+
 ```unknown
 <link rel="alternate" hreflang="lang_code" href="url_of_page" />
 ```
 
 Example 2 (unknown):
+
 ```unknown
 <head>
  <title>Widgets, Inc</title>
@@ -73,11 +76,13 @@ Example 2 (unknown):
 ```
 
 Example 3 (unknown):
+
 ```unknown
 Link: <url1>; rel="alternate"; hreflang="lang_code_1", <url2>; rel="alternate"; hreflang="lang_code_2", ...
 ```
 
 Example 4 (unknown):
+
 ```unknown
 Link: <https://example.com/file.pdf>; rel="alternate"; hreflang="en",
       <https://de-ch.example.com/file.pdf>; rel="alternate"; hreflang="de-ch",
@@ -91,6 +96,7 @@ Link: <https://example.com/file.pdf>; rel="alternate"; hreflang="en",
 **URL:** https://developers.google.com/search/docs/specialty/ecommerce/write-high-quality-reviews
 
 **Contents:**
+
 - Write high quality reviews
 
 Publishing high quality reviews can help people learn more about things they are considering, such as products, services, destinations, games, movies or other topics. For example, you could write a review as:
@@ -112,6 +118,7 @@ Last updated 2025-02-04 UTC.
 **URL:** https://developers.google.com/search/docs/specialty/ecommerce/help-google-understand-your-ecommerce-site-structure
 
 **Contents:**
+
 - Help Google understand your ecommerce website structure
 - Make your ecommerce site navigation Google crawler friendly
 - Promote your best categories or products
@@ -130,7 +137,7 @@ Google generally doesn't look at the structure of URLs to work out the structure
 
 For example, if you have a best selling product, consider linking to it from the home page or in other content, such as blog posts or newsletters on your site. This will help Google u
 
-*[Content truncated]*
+_[Content truncated]_
 
 ---
 
@@ -139,6 +146,7 @@ For example, if you have a best selling product, consider linking to it from the
 **URL:** https://developers.google.com/search/docs/specialty/international/managing-multi-regional-sites#geotargeting
 
 **Contents:**
+
 - Managing multi-regional and multilingual sites
 - What's the difference between multilingual and multi-regional?
 - Managing multilingual versions of your site
@@ -176,7 +184,7 @@ You can target your website or parts of it to users in a single specific country
 
 To geotarget your site
 
-*[Content truncated]*
+_[Content truncated]_
 
 ---
 
@@ -185,6 +193,7 @@ To geotarget your site
 **URL:** https://developers.google.com/search/docs/guides/fix-search-javascript
 
 **Contents:**
+
 - Fix Search-related JavaScript problems
 
 This guide helps you identify and fix JavaScript issues that may be blocking your page, or specific content on JavaScript powered pages, from showing up in Google Search. While Google Search does run JavaScript, there are some differences and limitations that you need to account for when designing your pages and applications to accommodate how crawlers access and render your content. Our guide on JavaScript SEO basics has more information on how you can optimize your JavaScript site for Google Search.
@@ -201,11 +210,12 @@ Except as otherwise noted, the content of this page is licensed under the Creati
 
 Last upd
 
-*[Content truncated]*
+_[Content truncated]_
 
 **Examples:**
 
 Example 1 (unknown):
+
 ```unknown
 window.addEventListener('error', function(e) {
     var errorText = [
@@ -225,29 +235,31 @@ window.addEventListener('error', function(e) {
 ```
 
 Example 2 (javascript):
+
 ```javascript
 fetch(`https://api.kitten.club/cats/${id}`)
- .then(res => res.json())
- .then((cat) => {
-   if (!cat.exists) {
-     // redirect to page that gives a 404
-     window.location.href = '/not-found';
-   }
- });
+  .then((res) => res.json())
+  .then((cat) => {
+    if (!cat.exists) {
+      // redirect to page that gives a 404
+      window.location.href = '/not-found';
+    }
+  });
 ```
 
 Example 3 (javascript):
+
 ```javascript
 fetch(`https://api.kitten.club/cats/${id}`)
- .then(res => res.json())
- .then((cat) => {
-   if (!cat.exists) {
-     const metaRobots = document.createElement('meta');
-     metaRobots.name = 'robots';
-     metaRobots.content = 'noindex';
-     document.head.appendChild(metaRobots);
-   }
- });
+  .then((res) => res.json())
+  .then((cat) => {
+    if (!cat.exists) {
+      const metaRobots = document.createElement('meta');
+      metaRobots.name = 'robots';
+      metaRobots.content = 'noindex';
+      document.head.appendChild(metaRobots);
+    }
+  });
 ```
 
 ---

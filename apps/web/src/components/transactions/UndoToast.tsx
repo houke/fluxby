@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react';
 import { X, RotateCcw, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -27,7 +26,6 @@ export function UndoToast({
   isUndoing = false,
 }: UndoToastProps) {
   const { t } = useLanguage();
-  const [isVisible, setIsVisible] = useState(true);
 
   // Format time as mm:ss
   const formatTime = (ms: number) => {
@@ -47,22 +45,19 @@ export function UndoToast({
 
   const urgency = getUrgencyLevel();
 
-  // Animate out when expired
-  useEffect(() => {
-    if (timeRemainingMs <= 0) {
-      setIsVisible(false);
-    }
-  }, [timeRemainingMs]);
-
-  if (!isVisible || timeRemainingMs <= 0) return null;
+  // Don't render if expired
+  if (timeRemainingMs <= 0) return null;
 
   return (
     <div
       data-testid='undo-toast'
+      role='status'
+      aria-live='polite'
+      aria-atomic='true'
       className={cn(
         'fixed bottom-4 left-1/2 z-50 -translate-x-1/2',
         'flex items-center gap-3 rounded-lg px-4 py-3 shadow-lg',
-        'border backdrop-blur-sm transition-all duration-300 ease-out',
+        'border backdrop-blur-sm transition-all duration-300 ease-out motion-reduce:transition-none',
         // Base styles
         urgency === 'normal' && [
           'border-gray-700 bg-gray-900/95 text-white',
@@ -74,7 +69,7 @@ export function UndoToast({
         ],
         // Critical styles (≤30s) with pulse
         urgency === 'critical' && [
-          'animate-pulse border-red-500 bg-red-600/95 text-white',
+          'animate-pulse border-red-500 bg-red-600/95 text-white motion-reduce:animate-none',
         ]
       )}
     >
@@ -112,9 +107,9 @@ export function UndoToast({
         )}
       >
         {isUndoing ? (
-          <Loader2 className='h-4 w-4 animate-spin' />
+          <Loader2 className='h-4 w-4 animate-spin' aria-hidden='true' />
         ) : (
-          <RotateCcw className='h-4 w-4' />
+          <RotateCcw className='h-4 w-4' aria-hidden='true' />
         )}
         {t.bulkDelete?.undo || 'Ongedaan maken'}
       </Button>
@@ -133,7 +128,7 @@ export function UndoToast({
         )}
         aria-label={t.common?.close || 'Sluiten'}
       >
-        <X className='h-4 w-4' />
+        <X className='h-4 w-4' aria-hidden='true' />
       </Button>
     </div>
   );

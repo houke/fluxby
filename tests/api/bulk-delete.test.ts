@@ -219,6 +219,13 @@ function simulateBulkDelete(
     if (!Array.isArray(transactionIds)) {
       return { success: false, error: 'transactionIds must be an array' };
     }
+    // Security: Reject empty arrays to prevent accidental mass deletion
+    if (transactionIds.length === 0) {
+      return {
+        success: false,
+        error: 'transactionIds array cannot be empty',
+      };
+    }
     if (transactionIds.length > 1000) {
       return {
         success: false,
@@ -435,19 +442,16 @@ describe('DELETE /api/transactions/bulk with transactionIds', () => {
     expect(balance).toBe(900);
   });
 
-  it('handles empty transactionIds array gracefully', () => {
+  it('rejects empty transactionIds array', () => {
     createTransaction(accountId, profileId);
 
     const response = simulateBulkDelete({ transactionIds: [] }, profileId);
 
-    // Empty array is truthy, so passes the `!transactionIds && !dateRange` check.
-    // With `transactionIds.length === 0`, no ID filter is added to the query,
-    // which means ALL transactions for the profile are matched and deleted.
-    // This is potentially dangerous behavior but matches the current API.
-    // TODO: Consider adding validation to reject empty transactionIds arrays.
-    expect(response.success).toBe(true);
-    expect(response.deleted).toBe(1); // All transactions deleted
-    expect(getTransactionCount(profileId)).toBe(0);
+    // Security: Empty arrays are now rejected to prevent accidental mass deletion
+    expect(response.success).toBe(false);
+    expect(response.error).toContain('cannot be empty');
+    // Transaction should NOT be deleted
+    expect(getTransactionCount(profileId)).toBe(1);
   });
 });
 

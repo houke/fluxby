@@ -9,6 +9,7 @@
 **URL:** https://developers.google.com/search/docs/appearance/video#indexing-criteria
 
 **Contents:**
+
 - Video SEO best practices
 - Help Google find your videos
 - Ensure your videos can be indexed
@@ -44,11 +45,12 @@ To be eligible for video features (including video results on the main search re
 
 A watch page's main purpose is to show users a single video. The following pages are watch pages because watching an individual video is the main reason the user is
 
-*[Content truncated]*
+_[Content truncated]_
 
 **Examples:**
 
 Example 1 (unknown):
+
 ```unknown
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
@@ -60,16 +62,19 @@ Example 1 (unknown):
 ```
 
 Example 2 (unknown):
+
 ```unknown
 <iframe src="https://example.com/videoplayer.php?video=123" width="640" height="360" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>
 ```
 
 Example 3 (unknown):
+
 ```unknown
 "embedUrl": "https://example.com/videoplayer.php?video=123"
 ```
 
 Example 4 (unknown):
+
 ```unknown
 <video:player_loc>https://example.com/videoplayer.php?video=123</video:player_loc>
 ```

@@ -57,7 +57,7 @@ export class XPService {
   constructor(
     config: XPConfig,
     actions: XPAction[],
-    initialState?: Partial<UserXPState>,
+    initialState?: Partial<UserXPState>
   ) {
     this.config = config;
     this.actions = new Map(actions.map((a) => [a.id, a]));
@@ -82,7 +82,7 @@ export class XPService {
   xpForLevel(level: number): number {
     if (level <= 1) return 0;
     return Math.floor(
-      this.config.baseXPPerLevel * Math.pow(this.config.growthRate, level - 2),
+      this.config.baseXPPerLevel * Math.pow(this.config.growthRate, level - 2)
     );
   }
 
@@ -175,7 +175,7 @@ export class XPService {
    */
   grantBonusXP(
     amount: number,
-    applyMultipliers: boolean = false,
+    applyMultipliers: boolean = false
   ): XPGainResult {
     const xpToGrant = applyMultipliers ? this.applyMultipliers(amount) : amount;
 
@@ -207,7 +207,7 @@ export class XPService {
   addMultiplier(multiplier: XPMultiplier): void {
     // Remove existing multiplier with same ID
     this.state.multipliers = this.state.multipliers.filter(
-      (m) => m.id !== multiplier.id,
+      (m) => m.id !== multiplier.id
     );
     this.state.multipliers.push(multiplier);
   }
@@ -235,7 +235,7 @@ export class XPService {
   private cleanExpiredMultipliers(): void {
     const now = new Date();
     this.state.multipliers = this.state.multipliers.filter(
-      (m) => !m.expiresAt || m.expiresAt > now,
+      (m) => !m.expiresAt || m.expiresAt > now
     );
   }
 
@@ -339,7 +339,7 @@ const xpService = new XPService(
     { id: 'complete_task', baseXP: 50, dailyCap: 20 },
     { id: 'daily_login', baseXP: 25, cooldownMs: 24 * 60 * 60 * 1000 },
     { id: 'complete_challenge', baseXP: 200 },
-  ],
+  ]
 );
 
 // Add 2x XP weekend event

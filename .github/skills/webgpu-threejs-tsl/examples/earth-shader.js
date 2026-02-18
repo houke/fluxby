@@ -36,7 +36,7 @@ import {
   normalWorld,
   normalLocal,
   cameraPosition,
-  bumpMap
+  bumpMap,
 } from 'three/tsl';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
@@ -52,7 +52,12 @@ const cityLightIntensity = uniform(1.5);
 
 async function init() {
   // Camera
-  camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+  camera = new THREE.PerspectiveCamera(
+    45,
+    window.innerWidth / window.innerHeight,
+    0.1,
+    100
+  );
   camera.position.set(0, 0, 4);
 
   // Scene
@@ -69,7 +74,12 @@ async function init() {
   const earthBumpTexture = loader.load('textures/earth_bump.jpg');
 
   // Set texture properties
-  [earthDayTexture, earthNightTexture, earthCloudsTexture, earthBumpTexture].forEach((tex) => {
+  [
+    earthDayTexture,
+    earthNightTexture,
+    earthCloudsTexture,
+    earthBumpTexture,
+  ].forEach((tex) => {
     tex.colorSpace = THREE.SRGBColorSpace;
     tex.wrapS = THREE.RepeatWrapping;
     tex.wrapT = THREE.ClampToEdgeWrapping;
@@ -127,9 +137,9 @@ function createEarth(dayTex, nightTex, bumpTex) {
     const dayNight = smoothstep(0.4, 0.6, orientation);
 
     // Add city lights on night side
-    const cityLights = nightColor.mul(cityLightIntensity).mul(
-      float(1.0).sub(dayNight)
-    );
+    const cityLights = nightColor
+      .mul(cityLightIntensity)
+      .mul(float(1.0).sub(dayNight));
 
     const baseColor = mix(nightColor, dayColor, dayNight);
     return baseColor.add(cityLights.mul(float(1.0).sub(orientation).pow(2.0)));
@@ -149,10 +159,17 @@ function createEarth(dayTex, nightTex, bumpTex) {
   // Subtle atmospheric rim on day side
   material.emissiveNode = Fn(() => {
     const viewDir = normalize(cameraPosition.sub(positionWorld));
-    const fresnel = pow(float(1.0).sub(normalWorld.dot(viewDir).saturate()), 4.0);
+    const fresnel = pow(
+      float(1.0).sub(normalWorld.dot(viewDir).saturate()),
+      4.0
+    );
 
     const orientation = sunOrientation();
-    const atmosphereColor = mix(atmosphereTwilightColor, atmosphereDayColor, orientation);
+    const atmosphereColor = mix(
+      atmosphereTwilightColor,
+      atmosphereDayColor,
+      orientation
+    );
 
     return atmosphereColor.mul(fresnel).mul(orientation).mul(0.3);
   })();
@@ -207,7 +224,11 @@ function createAtmosphere() {
     const fresnel = pow(float(1.0).sub(normalWorld.dot(viewDir).abs()), 3.0);
 
     const sunOrientation = normalWorld.dot(sunDirection).mul(0.5).add(0.5);
-    const atmosphereColor = mix(atmosphereTwilightColor, atmosphereDayColor, sunOrientation);
+    const atmosphereColor = mix(
+      atmosphereTwilightColor,
+      atmosphereDayColor,
+      sunOrientation
+    );
 
     return atmosphereColor;
   })();
@@ -253,7 +274,10 @@ function createStars() {
     colors[i * 3 + 2] = brightness + Math.random() * 0.2;
   }
 
-  starsGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  starsGeometry.setAttribute(
+    'position',
+    new THREE.BufferAttribute(positions, 3)
+  );
   starsGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
 
   const starsMaterial = new THREE.PointsNodeMaterial();
@@ -289,4 +313,10 @@ function animate() {
 init();
 
 // Export for external control
-export { sunDirection, atmosphereDayColor, atmosphereTwilightColor, cloudSpeed, cityLightIntensity };
+export {
+  sunDirection,
+  atmosphereDayColor,
+  atmosphereTwilightColor,
+  cloudSpeed,
+  cityLightIntensity,
+};

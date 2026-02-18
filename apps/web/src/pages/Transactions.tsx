@@ -103,7 +103,12 @@ import { TransactionRowBadges } from '@/components/transactions/TransactionRowBa
 import { TransactionCard } from '@/components/transactions/TransactionCard';
 import { Currency } from '@/components/ui/currency';
 import { api } from '@/lib/api';
-import { formatDate, cn, findSimilarNameGroups, formatCurrency } from '@/lib/utils';
+import {
+  formatDate,
+  cn,
+  findSimilarNameGroups,
+  formatCurrency,
+} from '@/lib/utils';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useSuggestions, CategorySuggestion } from '@/hooks/useSuggestions';
 import { useAddressBook } from '@/hooks/useAddressBook';

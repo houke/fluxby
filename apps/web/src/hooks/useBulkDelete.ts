@@ -1,9 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useProfile } from '@/contexts/ProfileContext';
 import { api } from '@/lib/api';
-
-import type { Transaction } from '@fluxby/shared';
 
 export interface UndoPayload {
   transactionIds: string[];
@@ -107,7 +104,6 @@ export interface UseBulkDeleteReturn {
 export function useBulkDelete(
   options?: UseBulkDeleteOptions
 ): UseBulkDeleteReturn {
-  const { activeProfileId: _activeProfileId } = useProfile();
   const queryClient = useQueryClient();
 
   const [undoPayload, setUndoPayload] = useState<UndoPayload | null>(() =>
@@ -116,6 +112,10 @@ export function useBulkDelete(
   const [timeRemainingMs, setTimeRemainingMs] = useState(0);
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Use ref for callback to avoid stale closure issues
+  const onUndoExpiredRef = useRef(options?.onUndoExpired);
+  onUndoExpiredRef.current = options?.onUndoExpired;
 
   // Update countdown timer
   useEffect(() => {
@@ -134,7 +134,7 @@ export function useBulkDelete(
         setTimeRemainingMs(0);
         setUndoPayload(null);
         clearUndoPayload();
-        options?.onUndoExpired?.();
+        onUndoExpiredRef.current?.();
         if (intervalRef.current) {
           clearInterval(intervalRef.current);
           intervalRef.current = null;
@@ -153,7 +153,7 @@ export function useBulkDelete(
         intervalRef.current = null;
       }
     };
-  }, [undoPayload, options]);
+  }, [undoPayload]);
 
   // Invalidate all related queries after bulk operations
   const invalidateQueries = useCallback(() => {
@@ -166,15 +166,11 @@ export function useBulkDelete(
   }, [queryClient]);
 
   // Delete by IDs mutation
-  const deleteByIdsMutation = useMutation<
-    BulkDeleteResult,
-    Error,
-    { transactionIds: string[]; transactions: Transaction[] }
-  >({
-    mutationFn: async ({ transactionIds }) => {
+  const deleteByIdsMutation = useMutation<BulkDeleteResult, Error, string[]>({
+    mutationFn: async (transactionIds) => {
       return api.deleteTransactionsByIds(transactionIds);
     },
-    onSuccess: (result, { transactionIds }) => {
+    onSuccess: (result, transactionIds) => {
       // Store undo payload
       const payload: UndoPayload = {
         transactionIds,
@@ -236,11 +232,8 @@ export function useBulkDelete(
 
   // Delete by IDs wrapper
   const deleteByIds = useCallback(
-    async (transactionIds: string[], transactions?: Transaction[]) => {
-      return deleteByIdsMutation.mutateAsync({
-        transactionIds,
-        transactions: transactions || [],
-      });
+    async (transactionIds: string[]) => {
+      return deleteByIdsMutation.mutateAsync(transactionIds);
     },
     [deleteByIdsMutation]
   );

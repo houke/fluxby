@@ -76,7 +76,7 @@ interface MergeableDocument {
 
 function mergeDocuments(
   local: MergeableDocument,
-  remote: MergeableDocument,
+  remote: MergeableDocument
 ): MergeableDocument {
   const result: MergeableDocument = {};
   const allFields = new Set([...Object.keys(local), ...Object.keys(remote)]);
@@ -116,7 +116,7 @@ interface ThreeWayMergeResult<T> {
 function threeWayMerge<T extends Record<string, any>>(
   base: T, // Common ancestor
   local: T, // Local changes
-  remote: T, // Remote changes
+  remote: T // Remote changes
 ): ThreeWayMergeResult<T> {
   const result: any = {};
   const conflicts: ConflictField[] = [];
@@ -189,7 +189,7 @@ function mergeSet<T>(
   base: Set<T>,
   local: Set<T>,
   remote: Set<T>,
-  strategy: 'union' | 'intersection',
+  strategy: 'union' | 'intersection'
 ): Set<T> {
   const localAdded = new Set([...local].filter((x) => !base.has(x)));
   const localRemoved = new Set([...base].filter((x) => !local.has(x)));
@@ -229,7 +229,7 @@ function incrementVersion(vv: VersionVector, nodeId: string): VersionVector {
 
 function compareVersions(
   a: VersionVector,
-  b: VersionVector,
+  b: VersionVector
 ): 'before' | 'after' | 'concurrent' | 'equal' {
   let aGreater = false;
   let bGreater = false;

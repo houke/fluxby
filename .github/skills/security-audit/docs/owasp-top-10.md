@@ -226,7 +226,7 @@ app.use(
       styleSrc: ["'self'", "'unsafe-inline'"],
       imgSrc: ["'self'", 'data:', 'https:'],
     },
-  }),
+  })
 );
 
 // ✅ Hide implementation details
@@ -302,7 +302,7 @@ app.use(
       sameSite: 'strict',
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
     },
-  }),
+  })
 );
 
 // ✅ Regenerate session on login

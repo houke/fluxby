@@ -16,7 +16,7 @@ export async function hashPassword(password: string): Promise<string> {
 
 export async function verifyPassword(
   password: string,
-  hash: string,
+  hash: string
 ): Promise<boolean> {
   return bcrypt.compare(password, hash);
 }
@@ -38,7 +38,7 @@ interface PasswordStrength {
 
 export function checkPasswordStrength(
   password: string,
-  userInputs: string[] = [],
+  userInputs: string[] = []
 ): PasswordStrength {
   const result = zxcvbn(password, userInputs);
 
@@ -98,13 +98,13 @@ export function generateTokens(user: {
   const accessToken = jwt.sign(
     { ...payload, jti: randomUUID() },
     process.env.JWT_SECRET!,
-    { expiresIn: ACCESS_TOKEN_EXPIRY },
+    { expiresIn: ACCESS_TOKEN_EXPIRY }
   );
 
   const refreshToken = jwt.sign(
     { sub: user.id, jti: randomUUID() },
     process.env.JWT_REFRESH_SECRET!,
-    { expiresIn: REFRESH_TOKEN_EXPIRY },
+    { expiresIn: REFRESH_TOKEN_EXPIRY }
   );
 
   return {
@@ -128,7 +128,7 @@ export function verifyAccessToken(token: string): TokenPayload | null {
 }
 
 export function verifyRefreshToken(
-  token: string,
+  token: string
 ): { sub: string; jti: string } | null {
   try {
     const payload = jwt.verify(token, process.env.JWT_REFRESH_SECRET!) as {
@@ -152,7 +152,7 @@ const redis = new Redis(process.env.REDIS_URL);
 
 export async function revokeToken(
   jti: string,
-  expiresAt: number,
+  expiresAt: number
 ): Promise<void> {
   const ttl = expiresAt - Math.floor(Date.now() / 1000);
   if (ttl > 0) {
@@ -210,7 +210,7 @@ app.use(
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
       domain: process.env.COOKIE_DOMAIN,
     },
-  }),
+  })
 );
 ```
 
@@ -260,7 +260,7 @@ export function generateTOTPSecret(): string {
 // Generate QR code for authenticator app
 export async function generateTOTPQRCode(
   email: string,
-  secret: string,
+  secret: string
 ): Promise<string> {
   const otpauth = authenticator.keyuri(email, 'MyApp', secret);
   return QRCode.toDataURL(otpauth);
@@ -302,7 +302,7 @@ export async function hashBackupCodes(codes: string[]): Promise<string[]> {
 // Verify and consume backup code
 export async function useBackupCode(
   userId: string,
-  code: string,
+  code: string
 ): Promise<boolean> {
   const user = await db.users.findById(userId);
 
@@ -331,7 +331,7 @@ import { OAuth2Client } from 'google-auth-library';
 const googleClient = new OAuth2Client(
   process.env.GOOGLE_CLIENT_ID,
   process.env.GOOGLE_CLIENT_SECRET,
-  process.env.GOOGLE_CALLBACK_URL,
+  process.env.GOOGLE_CALLBACK_URL
 );
 
 // Generate authorization URL

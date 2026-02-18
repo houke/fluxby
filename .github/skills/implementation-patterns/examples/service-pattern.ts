@@ -75,7 +75,7 @@ export class UserService {
     private readonly userRepo: UserRepository,
     private readonly passwordService: PasswordService,
     private readonly emailService: EmailService,
-    private readonly eventBus: EventBus,
+    private readonly eventBus: EventBus
   ) {}
 
   // ============================================================================
@@ -103,7 +103,7 @@ export class UserService {
         name: dto.name,
         passwordHash,
         role: 'user',
-      }),
+      })
     );
 
     if (!userResult.ok) {
@@ -172,12 +172,12 @@ export class UserService {
 
   async listUsers(
     page: number = 1,
-    limit: number = 20,
+    limit: number = 20
   ): Promise<Result<User[], UserError>> {
     const offset = (page - 1) * limit;
 
     const usersResult = await tryCatch(
-      this.userRepo.findAll({ limit, offset }),
+      this.userRepo.findAll({ limit, offset })
     );
 
     if (!usersResult.ok) {
@@ -194,7 +194,7 @@ export class UserService {
   async updateUser(
     id: string,
     dto: UpdateUserDTO,
-    requesterId: string,
+    requesterId: string
   ): Promise<Result<User, UserError>> {
     // Check authorization
     const authResult = await this.authorizeUpdate(id, requesterId);
@@ -235,7 +235,7 @@ export class UserService {
 
   private async authorizeUpdate(
     targetId: string,
-    requesterId: string,
+    requesterId: string
   ): Promise<Result<void, UserError>> {
     // Users can update themselves
     if (targetId === requesterId) {
@@ -257,7 +257,7 @@ export class UserService {
 
   async deleteUser(
     id: string,
-    requesterId: string,
+    requesterId: string
   ): Promise<Result<void, UserError>> {
     // Only admins can delete users
     const requester = await this.userRepo.findById(requesterId);
@@ -292,7 +292,7 @@ export class UserService {
 
   async authenticate(
     email: string,
-    password: string,
+    password: string
   ): Promise<Result<User, UserError>> {
     const user = await this.userRepo.findByEmail(email.toLowerCase());
 
@@ -303,7 +303,7 @@ export class UserService {
 
     const valid = await this.passwordService.verify(
       password,
-      user.passwordHash,
+      user.passwordHash
     );
 
     if (!valid) {
@@ -328,6 +328,6 @@ export function createUserService(deps: {
     deps.userRepo,
     deps.passwordService,
     deps.emailService,
-    deps.eventBus,
+    deps.eventBus
   );
 }

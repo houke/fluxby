@@ -6048,8 +6048,19 @@ export function createDataService(db: Database) {
       const pid = profileId();
       if (!pid) throw new Error('No active profile');
 
-      if (!transactionIds || transactionIds.length === 0) {
+      // Security: Validate input array
+      if (!transactionIds || !Array.isArray(transactionIds)) {
         return { deletedCount: 0, affectedAccountIds: [] };
+      }
+
+      // Security: Reject empty arrays to prevent accidental mass deletion
+      if (transactionIds.length === 0) {
+        return { deletedCount: 0, affectedAccountIds: [] };
+      }
+
+      // Security: Enforce max 1000 IDs per request to prevent DoS
+      if (transactionIds.length > 1000) {
+        throw new Error('Maximum 1000 transaction IDs per request');
       }
 
       const now = Date.now();
@@ -6125,12 +6136,36 @@ export function createDataService(db: Database) {
       const pid = profileId();
       if (!pid) throw new Error('No active profile');
 
-      // Validate date format (basic check)
-      if (
-        !/^\d{4}-\d{2}-\d{2}$/.test(startDate) ||
-        !/^\d{4}-\d{2}-\d{2}$/.test(endDate)
-      ) {
+      // Security: Validate date format (YYYY-MM-DD)
+      const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+      if (!dateRegex.test(startDate) || !dateRegex.test(endDate)) {
         throw new Error('Invalid date format. Use YYYY-MM-DD.');
+      }
+
+      // Security: Validate dates are parseable
+      const startParsed = new Date(startDate);
+      const endParsed = new Date(endDate);
+      if (isNaN(startParsed.getTime()) || isNaN(endParsed.getTime())) {
+        throw new Error('Invalid date value.');
+      }
+
+      // Security: Ensure start date is not after end date
+      if (startDate > endDate) {
+        throw new Error('Start date must be before or equal to end date.');
+      }
+
+      // Security: Prevent deletion of future transactions
+      const today = new Date().toISOString().split('T')[0];
+      if (startDate > today || endDate > today) {
+        throw new Error('Date cannot be in the future.');
+      }
+
+      // Security: Limit date range to 10 years in the past
+      const tenYearsAgo = new Date();
+      tenYearsAgo.setFullYear(tenYearsAgo.getFullYear() - 10);
+      const minDate = tenYearsAgo.toISOString().split('T')[0];
+      if (startDate < minDate) {
+        throw new Error('Start date cannot be more than 10 years ago.');
       }
 
       // Build WHERE clause

@@ -182,7 +182,7 @@ class AppError extends Error {
   constructor(
     message: string,
     public code: string,
-    public statusCode: number = 500,
+    public statusCode: number = 500
   ) {
     super(message);
     this.name = 'AppError';
@@ -192,7 +192,7 @@ class AppError extends Error {
 class ValidationError extends AppError {
   constructor(
     message: string,
-    public field: string,
+    public field: string
   ) {
     super(message, 'VALIDATION_ERROR', 400);
     this.name = 'ValidationError';
@@ -288,7 +288,7 @@ const withTimeout = <T>(promise: Promise<T>, ms: number): Promise<T> =>
   Promise.race([
     promise,
     new Promise<T>((_, reject) =>
-      setTimeout(() => reject(new Error('Timeout')), ms),
+      setTimeout(() => reject(new Error('Timeout')), ms)
     ),
   ]);
 ```

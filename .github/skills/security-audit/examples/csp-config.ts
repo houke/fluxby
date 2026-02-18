@@ -113,7 +113,7 @@ export function generateNonce(): string {
  */
 export function buildCSPHeader(
   directives: CSPDirectives,
-  nonce?: string,
+  nonce?: string
 ): string {
   const parts: string[] = [];
 
@@ -237,14 +237,14 @@ export function securityHeadersMiddleware() {
     if (process.env.NODE_ENV === 'production') {
       res.setHeader(
         'Strict-Transport-Security',
-        'max-age=31536000; includeSubDomains; preload',
+        'max-age=31536000; includeSubDomains; preload'
       );
     }
 
     // Permissions Policy
     res.setHeader(
       'Permissions-Policy',
-      'camera=(), microphone=(), geolocation=(), interest-cohort=()',
+      'camera=(), microphone=(), geolocation=(), interest-cohort=()'
     );
 
     next();

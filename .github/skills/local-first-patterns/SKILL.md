@@ -116,7 +116,7 @@ async function listFiles(): Promise<string[]> {
 ```typescript
 // worker.ts - For better performance in Web Worker
 async function getSyncAccessHandle(
-  filename: string,
+  filename: string
 ): Promise<FileSystemSyncAccessHandle> {
   const root = await navigator.storage.getDirectory();
   const fileHandle = await root.getFileHandle(filename, { create: true });
@@ -263,7 +263,7 @@ class SyncQueue {
   private readonly STORE_NAME = 'pending';
 
   async add(
-    item: Omit<SyncQueueItem, 'id' | 'timestamp' | 'retries'>,
+    item: Omit<SyncQueueItem, 'id' | 'timestamp' | 'retries'>
   ): Promise<void> {
     const db = await this.openDB();
     const tx = db.transaction(this.STORE_NAME, 'readwrite');
@@ -352,7 +352,7 @@ interface MergeableRecord {
 
 function fieldLevelMerge(
   local: MergeableRecord,
-  remote: MergeableRecord,
+  remote: MergeableRecord
 ): MergeableRecord {
   return {
     id: local.id,
@@ -364,7 +364,7 @@ function fieldLevelMerge(
 
 function mergeField<T>(
   local: VersionedField<T>,
-  remote: VersionedField<T>,
+  remote: VersionedField<T>
 ): VersionedField<T> {
   return remote.updatedAt > local.updatedAt ? remote : local;
 }
@@ -499,7 +499,7 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(STATIC_ASSETS);
-    }),
+    })
   );
 });
 
@@ -507,7 +507,7 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(
     caches.match(event.request).then((cached) => {
       return cached || fetch(event.request);
-    }),
+    })
   );
 });
 ```

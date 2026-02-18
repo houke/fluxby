@@ -143,7 +143,9 @@ const computeAttract = Fn(() => {
   const direction = toAttractor.normalize();
 
   // Apply force (inverse square falloff)
-  const force = direction.mul(attractorStrength).div(distance.mul(distance).add(0.1));
+  const force = direction
+    .mul(attractorStrength)
+    .div(distance.mul(distance).add(0.1));
   velocity.addAssign(force.mul(deltaTimeUniform));
 })().compute(count);
 ```
@@ -237,7 +239,15 @@ const computeShader = Fn(() => {
 For thread-safe read-modify-write operations:
 
 ```javascript
-import { atomicAdd, atomicSub, atomicMax, atomicMin, atomicAnd, atomicOr, atomicXor } from 'three/tsl';
+import {
+  atomicAdd,
+  atomicSub,
+  atomicMax,
+  atomicMin,
+  atomicAnd,
+  atomicOr,
+  atomicXor,
+} from 'three/tsl';
 
 const counter = instancedArray(1, 'uint');
 
@@ -273,7 +283,10 @@ scene.add(mesh);
 
 ```javascript
 const geometry = new THREE.BufferGeometry();
-geometry.setAttribute('position', new THREE.Float32BufferAttribute(new Float32Array(count * 3), 3));
+geometry.setAttribute(
+  'position',
+  new THREE.Float32BufferAttribute(new Float32Array(count * 3), 3)
+);
 
 const material = new THREE.PointsNodeMaterial();
 material.positionNode = positions.element(instanceIndex);
@@ -308,7 +321,10 @@ const readBuffer = new Float32Array(count * 3);
 // Read data back from GPU
 await renderer.readRenderTargetPixelsAsync(
   computeTexture,
-  0, 0, width, height,
+  0,
+  0,
+  width,
+  height,
   readBuffer
 );
 ```
@@ -318,8 +334,15 @@ await renderer.readRenderTargetPixelsAsync(
 ```javascript
 import * as THREE from 'three/webgpu';
 import {
-  Fn, If, instancedArray, instanceIndex, uniform,
-  vec3, float, hash, time
+  Fn,
+  If,
+  instancedArray,
+  instanceIndex,
+  uniform,
+  vec3,
+  float,
+  hash,
+  time,
 } from 'three/tsl';
 
 // Setup
@@ -371,11 +394,17 @@ const computeUpdate = Fn(() => {
   If(life.lessThan(0), () => {
     pos.assign(emitterPos);
     const angle = hash(instanceIndex.add(time.mul(1000))).mul(Math.PI * 2);
-    const speed = hash(instanceIndex.add(time.mul(1000)).add(1)).mul(2).add(1);
+    const speed = hash(instanceIndex.add(time.mul(1000)).add(1))
+      .mul(2)
+      .add(1);
     vel.x.assign(angle.cos().mul(speed).mul(0.3));
     vel.y.assign(speed);
     vel.z.assign(angle.sin().mul(speed).mul(0.3));
-    life.assign(hash(instanceIndex.add(time.mul(1000)).add(2)).mul(2).add(1));
+    life.assign(
+      hash(instanceIndex.add(time.mul(1000)).add(2))
+        .mul(2)
+        .add(1)
+    );
   });
 })().compute(count);
 
@@ -387,7 +416,10 @@ material.colorNode = vec3(1, 0.5, 0.2);
 
 // Geometry (dummy positions)
 const geometry = new THREE.BufferGeometry();
-geometry.setAttribute('position', new THREE.Float32BufferAttribute(new Float32Array(count * 3), 3));
+geometry.setAttribute(
+  'position',
+  new THREE.Float32BufferAttribute(new Float32Array(count * 3), 3)
+);
 
 const points = new THREE.Points(geometry, material);
 scene.add(points);

@@ -20,7 +20,7 @@ export async function getOPFSRoot(): Promise<FileSystemDirectoryHandle> {
  */
 export async function getFile(
   path: string,
-  create: boolean = false,
+  create: boolean = false
 ): Promise<FileSystemFileHandle> {
   const root = await getOPFSRoot();
   const parts = path.split('/').filter(Boolean);
@@ -39,7 +39,7 @@ export async function getFile(
  */
 export async function getDirectory(
   path: string,
-  create: boolean = false,
+  create: boolean = false
 ): Promise<FileSystemDirectoryHandle> {
   const root = await getOPFSRoot();
   const parts = path.split('/').filter(Boolean);
@@ -57,7 +57,7 @@ export async function getDirectory(
  */
 export async function writeTextFile(
   path: string,
-  content: string,
+  content: string
 ): Promise<void> {
   const fileHandle = await getFile(path, true);
   const writable = await fileHandle.createWritable();
@@ -79,7 +79,7 @@ export async function readTextFile(path: string): Promise<string> {
  */
 export async function writeBinaryFile(
   path: string,
-  data: ArrayBuffer | Uint8Array,
+  data: ArrayBuffer | Uint8Array
 ): Promise<void> {
   const fileHandle = await getFile(path, true);
   const writable = await fileHandle.createWritable();
@@ -132,7 +132,7 @@ export async function deleteDirectory(path: string): Promise<void> {
  * List directory contents
  */
 export async function listDirectory(
-  path: string = '',
+  path: string = ''
 ): Promise<Array<{ name: string; kind: 'file' | 'directory' }>> {
   const dir = path ? await getDirectory(path) : await getOPFSRoot();
   const entries: Array<{ name: string; kind: 'file' | 'directory' }> = [];
@@ -165,7 +165,7 @@ export async function fileExists(path: string): Promise<boolean> {
  * NOTE: Only works in Web Workers!
  */
 export async function getSyncAccessHandle(
-  path: string,
+  path: string
 ): Promise<FileSystemSyncAccessHandle> {
   const fileHandle = await getFile(path, true);
   return fileHandle.createSyncAccessHandle();
@@ -210,7 +210,7 @@ export function syncWorkerExample() {
  */
 export async function streamWriteFile(
   path: string,
-  stream: ReadableStream,
+  stream: ReadableStream
 ): Promise<void> {
   const fileHandle = await getFile(path, true);
   const writable = await fileHandle.createWritable();
@@ -232,7 +232,7 @@ export async function streamReadFile(path: string): Promise<ReadableStream> {
 export async function processFileInChunks(
   path: string,
   chunkSize: number,
-  processor: (chunk: Uint8Array, offset: number) => Promise<void>,
+  processor: (chunk: Uint8Array, offset: number) => Promise<void>
 ): Promise<void> {
   const stream = await streamReadFile(path);
   const reader = stream.getReader();
@@ -256,7 +256,7 @@ export async function processFileInChunks(
  */
 export async function copyFile(
   srcPath: string,
-  destPath: string,
+  destPath: string
 ): Promise<void> {
   const data = await readBinaryFile(srcPath);
   await writeBinaryFile(destPath, data);
@@ -267,7 +267,7 @@ export async function copyFile(
  */
 export async function moveFile(
   srcPath: string,
-  destPath: string,
+  destPath: string
 ): Promise<void> {
   await copyFile(srcPath, destPath);
   await deleteFile(srcPath);

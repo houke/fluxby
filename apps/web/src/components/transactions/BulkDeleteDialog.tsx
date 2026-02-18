@@ -78,7 +78,10 @@ export const BulkDeleteDialog = memo(function BulkDeleteDialog({
       <DialogContent className='sm:max-w-[480px]'>
         <DialogHeader className='flex flex-col items-center text-center'>
           {/* Warning icon */}
-          <div className='mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/40'>
+          <div
+            className='mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/40'
+            aria-hidden='true'
+          >
             <AlertTriangle className='h-6 w-6 text-red-600 dark:text-red-400' />
           </div>
 
@@ -97,11 +100,18 @@ export const BulkDeleteDialog = memo(function BulkDeleteDialog({
         {/* Preview list */}
         {previewItems.length > 0 && (
           <ScrollArea className='max-h-60 rounded-lg bg-muted/50 p-3 dark:bg-neutral-900'>
-            <div className='space-y-2'>
+            <ul
+              className='space-y-2'
+              role='list'
+              aria-label={
+                t.bulkDelete?.previewListLabel || 'Transactions to be deleted'
+              }
+            >
               {previewItems.map((tx) => (
-                <div
+                <li
                   key={tx.id}
                   className='flex items-center justify-between gap-3 text-sm'
+                  role='listitem'
                 >
                   <div className='flex min-w-0 items-center gap-2'>
                     <span className='flex-shrink-0 text-muted-foreground'>
@@ -124,17 +134,20 @@ export const BulkDeleteDialog = memo(function BulkDeleteDialog({
                     {tx.amount > 0 ? '+' : ''}
                     <Currency amount={tx.amount} />
                   </span>
-                </div>
+                </li>
               ))}
               {remainingCount > 0 && (
-                <div className='pt-1 text-center text-sm text-muted-foreground'>
+                <li
+                  className='pt-1 text-center text-sm text-muted-foreground'
+                  role='listitem'
+                >
                   {(t.bulkDelete?.andMore || 'and {count} more').replace(
                     '{count}',
                     String(remainingCount)
                   )}
-                </div>
+                </li>
               )}
-            </div>
+            </ul>
           </ScrollArea>
         )}
 
@@ -174,9 +187,9 @@ export const BulkDeleteDialog = memo(function BulkDeleteDialog({
             className='gap-2'
           >
             {isLoading ? (
-              <Loader2 className='h-4 w-4 animate-spin' />
+              <Loader2 className='h-4 w-4 animate-spin' aria-hidden='true' />
             ) : (
-              <Trash2 className='h-4 w-4' />
+              <Trash2 className='h-4 w-4' aria-hidden='true' />
             )}
             {(
               t.bulkDelete?.deleteSelected || 'Delete {count} transactions'

@@ -50,7 +50,7 @@ export function isArray(value: unknown): value is unknown[] {
 
 export function isArrayOf<T>(
   value: unknown,
-  itemGuard: (item: unknown) => item is T,
+  itemGuard: (item: unknown) => item is T
 ): value is T[] {
   return Array.isArray(value) && value.every(itemGuard);
 }
@@ -85,7 +85,7 @@ export function isPromise<T = unknown>(value: unknown): value is Promise<T> {
  */
 export function hasProperty<K extends string>(
   obj: unknown,
-  key: K,
+  key: K
 ): obj is Record<K, unknown> {
   return isObject(obj) && key in obj;
 }
@@ -96,7 +96,7 @@ export function hasProperty<K extends string>(
 export function hasPropertyOfType<K extends string, T>(
   obj: unknown,
   key: K,
-  guard: (value: unknown) => value is T,
+  guard: (value: unknown) => value is T
 ): obj is Record<K, T> {
   return hasProperty(obj, key) && guard(obj[key]);
 }
@@ -106,7 +106,7 @@ export function hasPropertyOfType<K extends string, T>(
  */
 export function hasRequiredProperties<K extends string>(
   obj: unknown,
-  keys: K[],
+  keys: K[]
 ): obj is Record<K, unknown> {
   return isObject(obj) && keys.every((key) => key in obj);
 }
@@ -146,7 +146,7 @@ interface ApiResponse<T> {
 
 export function isApiResponse<T>(
   value: unknown,
-  dataGuard: (data: unknown) => data is T,
+  dataGuard: (data: unknown) => data is T
 ): value is ApiResponse<T> {
   return (
     isObject(value) &&
@@ -167,13 +167,13 @@ type Result<T, E = Error> =
   | { success: false; error: E };
 
 export function isSuccess<T, E>(
-  result: Result<T, E>,
+  result: Result<T, E>
 ): result is { success: true; data: T } {
   return result.success === true;
 }
 
 export function isFailure<T, E>(
-  result: Result<T, E>,
+  result: Result<T, E>
 ): result is { success: false; error: E } {
   return result.success === false;
 }
@@ -185,13 +185,13 @@ type Action =
   | { type: 'RESET' };
 
 export function isIncrementAction(
-  action: Action,
+  action: Action
 ): action is { type: 'INCREMENT'; payload: number } {
   return action.type === 'INCREMENT';
 }
 
 export function isDecrementAction(
-  action: Action,
+  action: Action
 ): action is { type: 'DECREMENT'; payload: number } {
   return action.type === 'DECREMENT';
 }
@@ -220,7 +220,7 @@ export function isNotUndefined<T>(value: T | undefined): value is T {
 
 export function assertDefined<T>(
   value: T | null | undefined,
-  message = 'Value is null or undefined',
+  message = 'Value is null or undefined'
 ): asserts value is T {
   if (value === null || value === undefined) {
     throw new Error(message);
@@ -229,7 +229,7 @@ export function assertDefined<T>(
 
 export function assertString(
   value: unknown,
-  message = 'Value is not a string',
+  message = 'Value is not a string'
 ): asserts value is string {
   if (typeof value !== 'string') {
     throw new Error(message);

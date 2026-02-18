@@ -142,6 +142,7 @@ const fbm = wgslFn(`
 ## WGSL Types Reference
 
 ### Scalar Types
+
 ```wgsl
 bool        // Boolean
 i32         // 32-bit signed integer
@@ -151,6 +152,7 @@ f16         // 16-bit float (if enabled)
 ```
 
 ### Vector Types
+
 ```wgsl
 vec2<f32>   // 2D float vector
 vec3<f32>   // 3D float vector
@@ -160,6 +162,7 @@ vec2<u32>   // 2D unsigned integer vector
 ```
 
 ### Matrix Types
+
 ```wgsl
 mat2x2<f32> // 2x2 matrix
 mat3x3<f32> // 3x3 matrix
@@ -168,6 +171,7 @@ mat2x3<f32> // 2 columns, 3 rows
 ```
 
 ### Texture Types
+
 ```wgsl
 texture_2d<f32>
 texture_3d<f32>
@@ -178,6 +182,7 @@ texture_storage_2d<rgba8unorm, write>
 ## WGSL Syntax Reference
 
 ### Variables
+
 ```wgsl
 let x = 1.0;              // Immutable
 var y = 2.0;              // Mutable
@@ -185,6 +190,7 @@ const PI = 3.14159;       // Compile-time constant
 ```
 
 ### Control Flow
+
 ```wgsl
 // If-else
 if (condition) {
@@ -214,6 +220,7 @@ switch (value) {
 ```
 
 ### Built-in Functions
+
 ```wgsl
 // Math
 abs(x), sign(x), floor(x), ceil(x), round(x)
@@ -292,6 +299,7 @@ material.colorNode = finalColor();
 ## Performance Tips
 
 ### Avoid Branching When Possible
+
 ```wgsl
 // Instead of:
 if (x > 0.5) {
@@ -305,6 +313,7 @@ result = mix(b, a, step(0.5, x));
 ```
 
 ### Use Local Variables
+
 ```wgsl
 fn compute(p: vec2<f32>) -> f32 {
   // Cache repeated calculations
@@ -315,6 +324,7 @@ fn compute(p: vec2<f32>) -> f32 {
 ```
 
 ### Minimize Texture Samples
+
 ```wgsl
 // Sample once, use multiple times
 let sample = textureSample(tex, sampler, uv);

@@ -1361,6 +1361,7 @@ export const en: TranslationKeys = {
     confirmTitle: 'Delete {count} transaction(s)?',
     confirmWarning: 'This action cannot be undone after 5 minutes.',
     totalImpact: 'Total impact',
+    previewListLabel: 'Transactions to be deleted',
     andMore: 'and {count} more',
     undoToast: 'Deleted {count} transactions',
     undo: 'Undo',

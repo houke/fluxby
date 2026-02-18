@@ -3,6 +3,7 @@
 ## Types and Constructors
 
 ### Scalar Types
+
 ```javascript
 import { float, int, uint, bool } from 'three/tsl';
 
@@ -13,6 +14,7 @@ const b = bool(true);
 ```
 
 ### Vector Types
+
 ```javascript
 import { vec2, vec3, vec4, color } from 'three/tsl';
 
@@ -21,11 +23,12 @@ const v3 = vec3(1.0, 2.0, 3.0);
 const v4 = vec4(1.0, 2.0, 3.0, 1.0);
 
 // Color (RGB, accepts hex or components)
-const c = color(0xff0000);     // Red
-const c2 = color(1, 0.5, 0);   // Orange
+const c = color(0xff0000); // Red
+const c2 = color(1, 0.5, 0); // Orange
 ```
 
 ### Matrix Types
+
 ```javascript
 import { mat2, mat3, mat4 } from 'three/tsl';
 
@@ -34,11 +37,12 @@ const m4 = mat4();
 ```
 
 ### Type Conversion
+
 ```javascript
 const v = vec3(1, 2, 3);
-const v4 = v.toVec4(1.0);      // vec4(1, 2, 3, 1)
-const f = int(42).toFloat();   // 42.0
-const c = v.toColor();         // Convert to color
+const v4 = v.toVec4(1.0); // vec4(1, 2, 3, 1)
+const f = int(42).toFloat(); // 42.0
+const c = v.toColor(); // Convert to color
 ```
 
 ## Vector Swizzling
@@ -49,23 +53,23 @@ Access and reorder vector components using standard notation:
 const v = vec3(1.0, 2.0, 3.0);
 
 // Single component access
-v.x  // 1.0
-v.y  // 2.0
-v.z  // 3.0
+v.x; // 1.0
+v.y; // 2.0
+v.z; // 3.0
 
 // Multiple components
-v.xy   // vec2(1.0, 2.0)
-v.xyz  // vec3(1.0, 2.0, 3.0)
+v.xy; // vec2(1.0, 2.0)
+v.xyz; // vec3(1.0, 2.0, 3.0)
 
 // Reorder components
-v.zyx  // vec3(3.0, 2.0, 1.0)
-v.xxy  // vec3(1.0, 1.0, 2.0)
-v.rrr  // vec3(1.0, 1.0, 1.0) - same as xxx
+v.zyx; // vec3(3.0, 2.0, 1.0)
+v.xxy; // vec3(1.0, 1.0, 2.0)
+v.rrr; // vec3(1.0, 1.0, 1.0) - same as xxx
 
 // Alternative accessors (all equivalent)
-v.xyz  // position
-v.rgb  // color
-v.stp  // texture coordinates
+v.xyz; // position
+v.rgb; // color
+v.stp; // texture coordinates
 ```
 
 ## Uniforms
@@ -112,61 +116,67 @@ const renderValue = uniform(0).onRenderUpdate((state) => {
 ## Operators
 
 ### Arithmetic
+
 ```javascript
 // Method chaining (preferred)
 const result = a.add(b).mul(c).sub(d).div(e);
 
 // Individual operations
-a.add(b)   // a + b
-a.sub(b)   // a - b
-a.mul(b)   // a * b
-a.div(b)   // a / b
-a.mod(b)   // a % b
-a.negate() // -a
+a.add(b); // a + b
+a.sub(b); // a - b
+a.mul(b); // a * b
+a.div(b); // a / b
+a.mod(b); // a % b
+a.negate(); // -a
 ```
 
 ### Comparison
+
 ```javascript
-a.equal(b)            // a == b
-a.notEqual(b)         // a != b
-a.lessThan(b)         // a < b
-a.greaterThan(b)      // a > b
-a.lessThanEqual(b)    // a <= b
-a.greaterThanEqual(b) // a >= b
+a.equal(b); // a == b
+a.notEqual(b); // a != b
+a.lessThan(b); // a < b
+a.greaterThan(b); // a > b
+a.lessThanEqual(b); // a <= b
+a.greaterThanEqual(b); // a >= b
 ```
 
 ### Logical
+
 ```javascript
-a.and(b)   // a && b
-a.or(b)    // a || b
-a.not()    // !a
-a.xor(b)   // a ^ b
+a.and(b); // a && b
+a.or(b); // a || b
+a.not(); // !a
+a.xor(b); // a ^ b
 ```
 
 ### Bitwise
+
 ```javascript
-a.bitAnd(b)      // a & b
-a.bitOr(b)       // a | b
-a.bitXor(b)      // a ^ b
-a.bitNot()       // ~a
-a.shiftLeft(n)   // a << n
-a.shiftRight(n)  // a >> n
+a.bitAnd(b); // a & b
+a.bitOr(b); // a | b
+a.bitXor(b); // a ^ b
+a.bitNot(); // ~a
+a.shiftLeft(n); // a << n
+a.shiftRight(n); // a >> n
 ```
 
 ### Assignment (for variables)
-```javascript
-const v = vec3(0).toVar();  // Create mutable variable
 
-v.assign(vec3(1, 2, 3));    // v = vec3(1, 2, 3)
-v.addAssign(vec3(1));       // v += vec3(1)
-v.subAssign(vec3(1));       // v -= vec3(1)
-v.mulAssign(2.0);           // v *= 2.0
-v.divAssign(2.0);           // v /= 2.0
+```javascript
+const v = vec3(0).toVar(); // Create mutable variable
+
+v.assign(vec3(1, 2, 3)); // v = vec3(1, 2, 3)
+v.addAssign(vec3(1)); // v += vec3(1)
+v.subAssign(vec3(1)); // v -= vec3(1)
+v.mulAssign(2.0); // v *= 2.0
+v.divAssign(2.0); // v /= 2.0
 ```
 
 ## Variables
 
 ### Mutable Variables
+
 ```javascript
 // Create mutable variable with toVar()
 const myVar = vec3(1, 0, 0).toVar();
@@ -178,12 +188,14 @@ const named = vec3(0).toVar('myPosition');
 ```
 
 ### Constants
+
 ```javascript
 // Create compile-time constant
 const PI_HALF = float(Math.PI / 2).toConst();
 ```
 
 ### Properties (named values for shader stages)
+
 ```javascript
 import { property } from 'three/tsl';
 
@@ -203,18 +215,20 @@ import { If, select } from 'three/tsl';
 const result = vec3(0).toVar();
 
 If(value.greaterThan(0.5), () => {
-  result.assign(vec3(1, 0, 0));  // Red
-}).ElseIf(value.greaterThan(0.25), () => {
-  result.assign(vec3(0, 1, 0));  // Green
-}).Else(() => {
-  result.assign(vec3(0, 0, 1));  // Blue
-});
+  result.assign(vec3(1, 0, 0)); // Red
+})
+  .ElseIf(value.greaterThan(0.25), () => {
+    result.assign(vec3(0, 1, 0)); // Green
+  })
+  .Else(() => {
+    result.assign(vec3(0, 0, 1)); // Blue
+  });
 
 // Ternary operator (select)
 const color = select(
-  condition,           // if true
-  vec3(1, 0, 0),      // return this
-  vec3(0, 0, 1)       // else return this
+  condition, // if true
+  vec3(1, 0, 0), // return this
+  vec3(0, 0, 1) // else return this
 );
 ```
 
@@ -226,10 +240,18 @@ import { Switch } from 'three/tsl';
 const col = vec3(0).toVar();
 
 Switch(intValue)
-  .Case(0, () => { col.assign(color(1, 0, 0)); })
-  .Case(1, () => { col.assign(color(0, 1, 0)); })
-  .Case(2, () => { col.assign(color(0, 0, 1)); })
-  .Default(() => { col.assign(color(1, 1, 1)); });
+  .Case(0, () => {
+    col.assign(color(1, 0, 0));
+  })
+  .Case(1, () => {
+    col.assign(color(0, 1, 0));
+  })
+  .Case(2, () => {
+    col.assign(color(0, 0, 1));
+  })
+  .Default(() => {
+    col.assign(color(1, 1, 1));
+  });
 ```
 
 ### Loops
@@ -257,10 +279,10 @@ Loop(width, height, ({ i, j }) => {
 // Loop control
 Loop(100, ({ i }) => {
   If(shouldStop, () => {
-    Break();  // Exit loop
+    Break(); // Exit loop
   });
   If(shouldSkip, () => {
-    Continue();  // Skip to next iteration
+    Continue(); // Skip to next iteration
   });
 });
 ```
@@ -287,6 +309,7 @@ const myFn = Fn(() => {
 ## Custom Functions with Fn()
 
 ### Basic Function
+
 ```javascript
 import { Fn } from 'three/tsl';
 
@@ -299,18 +322,20 @@ const result = addVectors(vec3(1, 0, 0), vec3(0, 1, 0));
 ```
 
 ### Default Parameters
+
 ```javascript
 const oscillate = Fn(([frequency = 1.0, amplitude = 1.0]) => {
   return time.mul(frequency).sin().mul(amplitude);
 });
 
 // Call variations
-oscillate();           // Uses defaults
-oscillate(2.0);        // frequency = 2.0
-oscillate(2.0, 0.5);   // frequency = 2.0, amplitude = 0.5
+oscillate(); // Uses defaults
+oscillate(2.0); // frequency = 2.0
+oscillate(2.0, 0.5); // frequency = 2.0, amplitude = 0.5
 ```
 
 ### Named Parameters (Object Style)
+
 ```javascript
 const createGradient = Fn(({ colorA = vec3(0), colorB = vec3(1), t = 0.5 }) => {
   return mix(colorA, colorB, t);
@@ -321,6 +346,7 @@ createGradient({ colorA: vec3(1, 0, 0), t: uv().x });
 ```
 
 ### Function with Context
+
 ```javascript
 // Access shader context
 const customShader = Fn(({ material, geometry, object }) => {
@@ -337,7 +363,7 @@ const customShader = Fn(({ material, geometry, object }) => {
 import { time, deltaTime } from 'three/tsl';
 
 // time - seconds since start
-const rotation = time.mul(0.5);  // Half rotation per second
+const rotation = time.mul(0.5); // Half rotation per second
 
 // deltaTime - time since last frame
 const velocity = speed.mul(deltaTime);
@@ -349,86 +375,100 @@ const velocity = speed.mul(deltaTime);
 import { oscSine, oscSquare, oscTriangle, oscSawtooth } from 'three/tsl';
 
 // All oscillators return 0-1 range
-oscSine(time)      // Smooth sine wave
-oscSquare(time)    // Square wave (0 or 1)
-oscTriangle(time)  // Triangle wave
-oscSawtooth(time)  // Sawtooth wave
+oscSine(time); // Smooth sine wave
+oscSquare(time); // Square wave (0 or 1)
+oscTriangle(time); // Triangle wave
+oscSawtooth(time); // Sawtooth wave
 
 // Custom frequency
-oscSine(time.mul(2.0))  // 2Hz oscillation
+oscSine(time.mul(2.0)); // 2Hz oscillation
 ```
 
 ## Math Functions
 
 ### Basic Math
+
 ```javascript
 import { abs, sign, floor, ceil, fract, mod, min, max, clamp } from 'three/tsl';
 
-abs(x)           // Absolute value
-sign(x)          // -1, 0, or 1
-floor(x)         // Round down
-ceil(x)          // Round up
-fract(x)         // Fractional part (x - floor(x))
-mod(x, y)        // Modulo
-min(x, y)        // Minimum
-max(x, y)        // Maximum
-clamp(x, 0, 1)   // Clamp to range
+abs(x); // Absolute value
+sign(x); // -1, 0, or 1
+floor(x); // Round down
+ceil(x); // Round up
+fract(x); // Fractional part (x - floor(x))
+mod(x, y); // Modulo
+min(x, y); // Minimum
+max(x, y); // Maximum
+clamp(x, 0, 1); // Clamp to range
 ```
 
 ### Trigonometry
+
 ```javascript
 import { sin, cos, tan, asin, acos, atan, atan2 } from 'three/tsl';
 
-sin(x)
-cos(x)
-tan(x)
-asin(x)
-acos(x)
-atan(x)
-atan2(y, x)
+sin(x);
+cos(x);
+tan(x);
+asin(x);
+acos(x);
+atan(x);
+atan2(y, x);
 ```
 
 ### Exponential
+
 ```javascript
 import { pow, exp, log, sqrt, inverseSqrt } from 'three/tsl';
 
-pow(x, 2.0)      // x^2
-exp(x)           // e^x
-log(x)           // Natural log
-sqrt(x)          // Square root
-inverseSqrt(x)   // 1 / sqrt(x)
+pow(x, 2.0); // x^2
+exp(x); // e^x
+log(x); // Natural log
+sqrt(x); // Square root
+inverseSqrt(x); // 1 / sqrt(x)
 ```
 
 ### Interpolation
+
 ```javascript
 import { mix, step, smoothstep } from 'three/tsl';
 
-mix(a, b, 0.5)              // Linear interpolation
-step(0.5, x)                // 0 if x < 0.5, else 1
-smoothstep(0.0, 1.0, x)     // Smooth 0-1 transition
+mix(a, b, 0.5); // Linear interpolation
+step(0.5, x); // 0 if x < 0.5, else 1
+smoothstep(0.0, 1.0, x); // Smooth 0-1 transition
 ```
 
 ### Vector Math
-```javascript
-import { length, distance, dot, cross, normalize, reflect, refract } from 'three/tsl';
 
-length(v)              // Vector length
-distance(a, b)         // Distance between points
-dot(a, b)              // Dot product
-cross(a, b)            // Cross product (vec3 only)
-normalize(v)           // Unit vector
-reflect(incident, normal)
-refract(incident, normal, eta)
+```javascript
+import {
+  length,
+  distance,
+  dot,
+  cross,
+  normalize,
+  reflect,
+  refract,
+} from 'three/tsl';
+
+length(v); // Vector length
+distance(a, b); // Distance between points
+dot(a, b); // Dot product
+cross(a, b); // Cross product (vec3 only)
+normalize(v); // Unit vector
+reflect(incident, normal);
+refract(incident, normal, eta);
 ```
 
 ### Constants
+
 ```javascript
 import { PI, TWO_PI, HALF_PI, EPSILON } from 'three/tsl';
 
-PI        // 3.14159...
-TWO_PI    // 6.28318...
-HALF_PI   // 1.57079...
-EPSILON   // Very small number
+PI; // 3.14159...
+TWO_PI; // 6.28318...
+HALF_PI; // 1.57079...
+EPSILON; // Very small number
 ```
 
 ## Utility Functions
@@ -437,17 +477,17 @@ EPSILON   // Very small number
 import { hash, checker, remap, range, rotate } from 'three/tsl';
 
 // Pseudo-random hash
-hash(seed)                    // Returns 0-1
+hash(seed); // Returns 0-1
 
 // Checkerboard pattern
-checker(uv())                 // Returns 0 or 1
+checker(uv()); // Returns 0 or 1
 
 // Remap value from one range to another
-remap(x, 0, 1, -1, 1)        // Map 0-1 to -1 to 1
+remap(x, 0, 1, -1, 1); // Map 0-1 to -1 to 1
 
 // Generate value in range
-range(min, max)               // Random in range (per instance)
+range(min, max); // Random in range (per instance)
 
 // Rotate 2D vector
-rotate(vec2(1, 0), angle)
+rotate(vec2(1, 0), angle);
 ```

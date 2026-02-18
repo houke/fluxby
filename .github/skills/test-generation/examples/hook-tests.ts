@@ -109,7 +109,7 @@ function useLocalStorage<T>(key: string, initialValue: T) {
         return valueToStore;
       });
     },
-    [key],
+    [key]
   );
 
   const removeValue = React.useCallback(() => {
@@ -311,7 +311,7 @@ describe('useDebounce', () => {
   it('debounces value changes', () => {
     const { result, rerender } = renderHook(
       ({ value }) => useDebounce(value, 500),
-      { initialProps: { value: 'initial' } },
+      { initialProps: { value: 'initial' } }
     );
 
     rerender({ value: 'updated' });
@@ -331,7 +331,7 @@ describe('useDebounce', () => {
   it('resets timer on rapid changes', () => {
     const { result, rerender } = renderHook(
       ({ value }) => useDebounce(value, 500),
-      { initialProps: { value: 'a' } },
+      { initialProps: { value: 'a' } }
     );
 
     rerender({ value: 'b' });

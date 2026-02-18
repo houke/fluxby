@@ -277,31 +277,31 @@ The **@Nexus** agent is the orchestrator that:
 
 ### Specialized Agents
 
-| Agent               | File                        | Purpose                                          |
-| ------------------- | --------------------------- | ------------------------------------------------ |
-| Nexus               | `nexus.agent.md`            | **Orchestrator** - delegates to all agents       |
-| Architect           | `architect.agent.md`        | System design, schemas, local-first architecture |
-| Software Developer  | `software-developer.agent.md` | Implementation, TDD, production code           |
-| Tech Lead           | `tech-lead.agent.md`        | Code quality, patterns, architectural decisions  |
-| QA Engineer         | `qa-engineer.agent.md`      | Testing, edge cases, accessibility               |
-| Security Agent      | `security.agent.md`         | Security audits, OWASP, vulnerabilities          |
-| Product Manager     | `product-manager.agent.md`  | Requirements, priorities, acceptance criteria    |
-| UX Designer         | `ux-designer.agent.md`      | User flows, wireframes, interactions             |
-| Visual Designer     | `visual-designer.agent.md`  | UI polish, animations, styling                   |
-| DevOps              | `devops.agent.md`           | CI/CD, infrastructure, deployment                |
-| Gamer               | `gamer.agent.md`            | Gamification mechanics, engagement               |
-| SEO Specialist      | `seo-specialist.agent.md`   | SEO optimization, search rankings                |
+| Agent              | File                          | Purpose                                          |
+| ------------------ | ----------------------------- | ------------------------------------------------ |
+| Nexus              | `nexus.agent.md`              | **Orchestrator** - delegates to all agents       |
+| Architect          | `architect.agent.md`          | System design, schemas, local-first architecture |
+| Software Developer | `software-developer.agent.md` | Implementation, TDD, production code             |
+| Tech Lead          | `tech-lead.agent.md`          | Code quality, patterns, architectural decisions  |
+| QA Engineer        | `qa-engineer.agent.md`        | Testing, edge cases, accessibility               |
+| Security Agent     | `security.agent.md`           | Security audits, OWASP, vulnerabilities          |
+| Product Manager    | `product-manager.agent.md`    | Requirements, priorities, acceptance criteria    |
+| UX Designer        | `ux-designer.agent.md`        | User flows, wireframes, interactions             |
+| Visual Designer    | `visual-designer.agent.md`    | UI polish, animations, styling                   |
+| DevOps             | `devops.agent.md`             | CI/CD, infrastructure, deployment                |
+| Gamer              | `gamer.agent.md`              | Gamification mechanics, engagement               |
+| SEO Specialist     | `seo-specialist.agent.md`     | SEO optimization, search rankings                |
 
 ### Core Workflows
 
-| Workflow | Prompt | Purpose |
-| -------- | ------ | ------- |
-| Planning | `#nexus-planning` | Orchestrates all agents to create comprehensive feature plans |
-| Execution | `#nexus-execution` | Takes plans and coordinates implementation |
-| Review | `#nexus-review` | Comprehensive code review with automatic fixes |
-| Sync | `#nexus-sync` | Reconciles documentation with actual work done |
-| Summary | `#nexus-summary` | Project status snapshot (have vs need) |
-| Hotfix | `#nexus-hotfix` | Expedited workflow for small, well-understood bugs |
+| Workflow  | Prompt             | Purpose                                                       |
+| --------- | ------------------ | ------------------------------------------------------------- |
+| Planning  | `#nexus-planning`  | Orchestrates all agents to create comprehensive feature plans |
+| Execution | `#nexus-execution` | Takes plans and coordinates implementation                    |
+| Review    | `#nexus-review`    | Comprehensive code review with automatic fixes                |
+| Sync      | `#nexus-sync`      | Reconciles documentation with actual work done                |
+| Summary   | `#nexus-summary`   | Project status snapshot (have vs need)                        |
+| Hotfix    | `#nexus-hotfix`    | Expedited workflow for small, well-understood bugs            |
 
 ### Feature Tracking
 
@@ -312,6 +312,7 @@ draft → in-progress → review → complete
 ```
 
 Feature files are stored in `.nexus/features/<feature-slug>/`:
+
 - `plan.md` - What we're building and why
 - `execution.md` - Implementation tracking
 - `review.md` - Code review findings

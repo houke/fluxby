@@ -9,6 +9,7 @@
 **URL:** https://developers.google.com/search/docs/fundamentals/creating-helpful-content#eat
 
 **Contents:**
+
 - Creating helpful, reliable, people-first content
 - Self-assess your content
   - Content and quality questions
@@ -36,7 +37,7 @@ There are some things you could do that are specifically meant to help search en
 
 Google's automated systems are designed to use many different factors to rank great content. After identifying relevant content, our systems aim to prioritize those that seem most helpful. To do this, they identify a mix of factors that can help determine which content demonstrates aspects of experience, expertise, authoritativeness, and trustworthiness,
 
-*[Content truncated]*
+_[Content truncated]_
 
 ---
 
@@ -45,6 +46,7 @@ Google's automated systems are designed to use many different factors to rank gr
 **URL:** https://developers.google.com/search/docs/fundamentals/seo-starter-guide#expect-search-terms
 
 **Contents:**
+
 - Search Engine Optimization (SEO) Starter Guide
 - How does Google Search work?
 - How long until I see impact in search results?
@@ -66,9 +68,9 @@ Google is a fully automated search engine that uses programs called crawlers to 
 
 Every change you make will take some time to be reflected on Google's end. Some changes might take effect in a few hours, others could take several months. In general, you likely want to wait a few weeks to assess whether your work had beneficial effects in Google Search results. Keep in mind that not all changes you make to your website will result in noticeable impact in search results; if you're not satisfied with your results and your business strategies allow it, try iterating with the changes and see if they make a difference.
 
-Before you actually do anything mentioned in this section, check if Google has already found your content (maybe you don't need to do anything!). Try searching on Google for your site with the site: search operator. If you see results pointing to your site, you're 
+Before you actually do anything mentioned in this section, check if Google has already found your content (maybe you don't need to do anything!). Try searching on Google for your site with the site: search operator. If you see results pointing to your site, you're
 
-*[Content truncated]*
+_[Content truncated]_
 
 ---
 
@@ -77,6 +79,7 @@ Before you actually do anything mentioned in this section, check if Google has a
 **URL:** https://developers.google.com/search/docs/fundamentals/how-search-works#indexing
 
 **Contents:**
+
 - In-depth guide to how Google Search works
 - A few notes before we get started
 - Introducing the three stages of Google Search
@@ -100,7 +103,7 @@ However, Googlebot doesn't crawl all the pages it discovered. Some pages may be 
 
 During the crawl, Google renders the page and runs any JavaScript it finds using a recent version of Chrome, similar to how your b
 
-*[Content truncated]*
+_[Content truncated]_
 
 ---
 
@@ -109,6 +112,7 @@ During the crawl, Google renders the page and runs any JavaScript it finds using
 **URL:** https://developers.google.com/search/docs/fundamentals/get-started
 
 **Contents:**
+
 - Maintaining your website's SEO
 - Control how Google crawls and indexes your site
   - Duplicate content
@@ -136,7 +140,7 @@ If your site includes multiple languages, or is targeted at users in specific lo
 
 On the occasion that you might need to move a single URL or eve
 
-*[Content truncated]*
+_[Content truncated]_
 
 ---
 
@@ -145,6 +149,7 @@ On the occasion that you might need to move a single URL or eve
 **URL:** https://developers.google.com/search/docs/crawling-indexing/javascript/javascript-seo-basics#how-googlebot-processes-javascript
 
 **Contents:**
+
 - Understand the JavaScript SEO basics
 - How Google processes JavaScript
 - Describe your page with unique titles and snippets
@@ -174,43 +179,46 @@ Keep in mind that server-side or pre-rendering is still a great idea because it 
 
 Unique, descriptive <title> elements and meta descriptions help users quickly identify the best result for their goal. You can use JavaScript to set or change the m
 
-*[Content truncated]*
+_[Content truncated]_
 
 **Examples:**
 
 Example 1 (javascript):
+
 ```javascript
 fetch(`/api/products/${productId}`)
-.then(response => response.json())
-.then(product => {
-  if(product.exists) {
-    showProductDetails(product); // shows the product information on the page
-  } else {
-    // this product does not exist, so this is an error page.
-    window.location.href = '/not-found'; // redirect to 404 page on the server.
-  }
-})
+  .then((response) => response.json())
+  .then((product) => {
+    if (product.exists) {
+      showProductDetails(product); // shows the product information on the page
+    } else {
+      // this product does not exist, so this is an error page.
+      window.location.href = '/not-found'; // redirect to 404 page on the server.
+    }
+  });
 ```
 
 Example 2 (javascript):
+
 ```javascript
 fetch(`/api/products/${productId}`)
-.then(response => response.json())
-.then(product => {
-  if(product.exists) {
-    showProductDetails(product); // shows the product information on the page
-  } else {
-    // this product does not exist, so this is an error page.
-    // Note: This example assumes there is no other robots meta tag present in the HTML.
-    const metaRobots = document.createElement('meta');
-    metaRobots.name = 'robots';
-    metaRobots.content = 'noindex';
-    document.head.appendChild(metaRobots);
-  }
-})
+  .then((response) => response.json())
+  .then((product) => {
+    if (product.exists) {
+      showProductDetails(product); // shows the product information on the page
+    } else {
+      // this product does not exist, so this is an error page.
+      // Note: This example assumes there is no other robots meta tag present in the HTML.
+      const metaRobots = document.createElement('meta');
+      metaRobots.name = 'robots';
+      metaRobots.content = 'noindex';
+      document.head.appendChild(metaRobots);
+    }
+  });
 ```
 
 Example 3 (javascript):
+
 ```javascript
 <nav>
   <ul>
@@ -233,6 +241,7 @@ window.addEventListener('hashchange', function goToPage() {
 ```
 
 Example 4 (javascript):
+
 ```javascript
 <nav>
   <ul>
@@ -261,6 +270,7 @@ function goToPage(event) {
 **URL:** https://developers.google.com/search/docs/fundamentals/seo-starter-guide#promoting
 
 **Contents:**
+
 - Search Engine Optimization (SEO) Starter Guide
 - How does Google Search work?
 - How long until I see impact in search results?
@@ -282,9 +292,9 @@ Google is a fully automated search engine that uses programs called crawlers to 
 
 Every change you make will take some time to be reflected on Google's end. Some changes might take effect in a few hours, others could take several months. In general, you likely want to wait a few weeks to assess whether your work had beneficial effects in Google Search results. Keep in mind that not all changes you make to your website will result in noticeable impact in search results; if you're not satisfied with your results and your business strategies allow it, try iterating with the changes and see if they make a difference.
 
-Before you actually do anything mentioned in this section, check if Google has already found your content (maybe you don't need to do anything!). Try searching on Google for your site with the site: search operator. If you see results pointing to your site, you're 
+Before you actually do anything mentioned in this section, check if Google has already found your content (maybe you don't need to do anything!). Try searching on Google for your site with the site: search operator. If you see results pointing to your site, you're
 
-*[Content truncated]*
+_[Content truncated]_
 
 ---
 
@@ -293,6 +303,7 @@ Before you actually do anything mentioned in this section, check if Google has a
 **URL:** https://developers.google.com/search/docs/fundamentals/how-search-works#serving
 
 **Contents:**
+
 - In-depth guide to how Google Search works
 - A few notes before we get started
 - Introducing the three stages of Google Search
@@ -316,7 +327,7 @@ However, Googlebot doesn't crawl all the pages it discovered. Some pages may be 
 
 During the crawl, Google renders the page and runs any JavaScript it finds using a recent version of Chrome, similar to how your b
 
-*[Content truncated]*
+_[Content truncated]_
 
 ---
 
@@ -325,6 +336,7 @@ During the crawl, Google renders the page and runs any JavaScript it finds using
 **URL:** https://developers.google.com/search/docs/fundamentals/how-search-works
 
 **Contents:**
+
 - In-depth guide to how Google Search works
 - A few notes before we get started
 - Introducing the three stages of Google Search
@@ -348,7 +360,7 @@ However, Googlebot doesn't crawl all the pages it discovered. Some pages may be 
 
 During the crawl, Google renders the page and runs any JavaScript it finds using a recent version of Chrome, similar to how your b
 
-*[Content truncated]*
+_[Content truncated]_
 
 ---
 
@@ -357,6 +369,7 @@ During the crawl, Google renders the page and runs any JavaScript it finds using
 **URL:** https://developers.google.com/search/docs/fundamentals/do-i-need-seo
 
 **Contents:**
+
 - Do you need an SEO?
 - Getting started with SEO
 - Choosing an SEO
@@ -385,7 +398,7 @@ If you feel that you were deceived by an SEO in some way, you may want to report
 
 In the United States, the Federal Trade Commission (FTC) handles complaints about deceptive or unfair business practices. To f
 
-*[Content truncated]*
+_[Content truncated]_
 
 ---
 
@@ -394,6 +407,7 @@ In the United States, the Federal Trade Commission (FTC) handles complaints abou
 **URL:** https://developers.google.com/search/docs/fundamentals/creating-helpful-content#self-assess
 
 **Contents:**
+
 - Creating helpful, reliable, people-first content
 - Self-assess your content
   - Content and quality questions
@@ -421,7 +435,7 @@ There are some things you could do that are specifically meant to help search en
 
 Google's automated systems are designed to use many different factors to rank great content. After identifying relevant content, our systems aim to prioritize those that seem most helpful. To do this, they identify a mix of factors that can help determine which content demonstrates aspects of experience, expertise, authoritativeness, and trustworthiness,
 
-*[Content truncated]*
+_[Content truncated]_
 
 ---
 
@@ -430,6 +444,7 @@ Google's automated systems are designed to use many different factors to rank gr
 **URL:** https://developers.google.com/search/docs/fundamentals/seo-starter-guide
 
 **Contents:**
+
 - Search Engine Optimization (SEO) Starter Guide
 - How does Google Search work?
 - How long until I see impact in search results?
@@ -451,9 +466,9 @@ Google is a fully automated search engine that uses programs called crawlers to 
 
 Every change you make will take some time to be reflected on Google's end. Some changes might take effect in a few hours, others could take several months. In general, you likely want to wait a few weeks to assess whether your work had beneficial effects in Google Search results. Keep in mind that not all changes you make to your website will result in noticeable impact in search results; if you're not satisfied with your results and your business strategies allow it, try iterating with the changes and see if they make a difference.
 
-Before you actually do anything mentioned in this section, check if Google has already found your content (maybe you don't need to do anything!). Try searching on Google for your site with the site: search operator. If you see results pointing to your site, you're 
+Before you actually do anything mentioned in this section, check if Google has already found your content (maybe you don't need to do anything!). Try searching on Google for your site with the site: search operator. If you see results pointing to your site, you're
 
-*[Content truncated]*
+_[Content truncated]_
 
 ---
 
@@ -462,6 +477,7 @@ Before you actually do anything mentioned in this section, check if Google has a
 **URL:** https://developers.google.com/search/docs/fundamentals/creating-helpful-content
 
 **Contents:**
+
 - Creating helpful, reliable, people-first content
 - Self-assess your content
   - Content and quality questions
@@ -489,7 +505,7 @@ There are some things you could do that are specifically meant to help search en
 
 Google's automated systems are designed to use many different factors to rank great content. After identifying relevant content, our systems aim to prioritize those that seem most helpful. To do this, they identify a mix of factors that can help determine which content demonstrates aspects of experience, expertise, authoritativeness, and trustworthiness,
 
-*[Content truncated]*
+_[Content truncated]_
 
 ---
 
@@ -498,6 +514,7 @@ Google's automated systems are designed to use many different factors to rank gr
 **URL:** https://developers.google.com/search/docs/fundamentals/how-search-works#crawling
 
 **Contents:**
+
 - In-depth guide to how Google Search works
 - A few notes before we get started
 - Introducing the three stages of Google Search
@@ -521,7 +538,7 @@ However, Googlebot doesn't crawl all the pages it discovered. Some pages may be 
 
 During the crawl, Google renders the page and runs any JavaScript it finds using a recent version of Chrome, similar to how your b
 
-*[Content truncated]*
+_[Content truncated]_
 
 ---
 
@@ -530,6 +547,7 @@ During the crawl, Google renders the page and runs any JavaScript it finds using
 **URL:** https://developers.google.com/search/docs/guides/javascript-seo-basics
 
 **Contents:**
+
 - Understand the JavaScript SEO basics
 - How Google processes JavaScript
 - Describe your page with unique titles and snippets
@@ -559,43 +577,46 @@ Keep in mind that server-side or pre-rendering is still a great idea because it 
 
 Unique, descriptive <title> elements and meta descriptions help users quickly identify the best result for their goal. You can use JavaScript to set or change the m
 
-*[Content truncated]*
+_[Content truncated]_
 
 **Examples:**
 
 Example 1 (javascript):
+
 ```javascript
 fetch(`/api/products/${productId}`)
-.then(response => response.json())
-.then(product => {
-  if(product.exists) {
-    showProductDetails(product); // shows the product information on the page
-  } else {
-    // this product does not exist, so this is an error page.
-    window.location.href = '/not-found'; // redirect to 404 page on the server.
-  }
-})
+  .then((response) => response.json())
+  .then((product) => {
+    if (product.exists) {
+      showProductDetails(product); // shows the product information on the page
+    } else {
+      // this product does not exist, so this is an error page.
+      window.location.href = '/not-found'; // redirect to 404 page on the server.
+    }
+  });
 ```
 
 Example 2 (javascript):
+
 ```javascript
 fetch(`/api/products/${productId}`)
-.then(response => response.json())
-.then(product => {
-  if(product.exists) {
-    showProductDetails(product); // shows the product information on the page
-  } else {
-    // this product does not exist, so this is an error page.
-    // Note: This example assumes there is no other robots meta tag present in the HTML.
-    const metaRobots = document.createElement('meta');
-    metaRobots.name = 'robots';
-    metaRobots.content = 'noindex';
-    document.head.appendChild(metaRobots);
-  }
-})
+  .then((response) => response.json())
+  .then((product) => {
+    if (product.exists) {
+      showProductDetails(product); // shows the product information on the page
+    } else {
+      // this product does not exist, so this is an error page.
+      // Note: This example assumes there is no other robots meta tag present in the HTML.
+      const metaRobots = document.createElement('meta');
+      metaRobots.name = 'robots';
+      metaRobots.content = 'noindex';
+      document.head.appendChild(metaRobots);
+    }
+  });
 ```
 
 Example 3 (javascript):
+
 ```javascript
 <nav>
   <ul>
@@ -618,6 +639,7 @@ window.addEventListener('hashchange', function goToPage() {
 ```
 
 Example 4 (javascript):
+
 ```javascript
 <nav>
   <ul>
@@ -646,6 +668,7 @@ function goToPage(event) {
 **URL:** https://developers.google.com/search/docs/fundamentals/get-on-google
 
 **Contents:**
+
 - Get your website on Google
 - Basic checklist for appearing in Google Search results
   - Is your website showing up on Google?
@@ -682,11 +705,12 @@ Depending on what your content is about, there are more ways you can get that co
 
 To learn more about getting digit
 
-*[Content truncated]*
+_[Content truncated]_
 
 **Examples:**
 
 Example 1 (unknown):
+
 ```unknown
 site:example.com
 ```
@@ -698,6 +722,7 @@ site:example.com
 **URL:** https://developers.google.com/search/docs/crawling-indexing/javascript/javascript-seo-basics
 
 **Contents:**
+
 - Understand the JavaScript SEO basics
 - How Google processes JavaScript
 - Describe your page with unique titles and snippets
@@ -727,43 +752,46 @@ Keep in mind that server-side or pre-rendering is still a great idea because it 
 
 Unique, descriptive <title> elements and meta descriptions help users quickly identify the best result for their goal. You can use JavaScript to set or change the m
 
-*[Content truncated]*
+_[Content truncated]_
 
 **Examples:**
 
 Example 1 (javascript):
+
 ```javascript
 fetch(`/api/products/${productId}`)
-.then(response => response.json())
-.then(product => {
-  if(product.exists) {
-    showProductDetails(product); // shows the product information on the page
-  } else {
-    // this product does not exist, so this is an error page.
-    window.location.href = '/not-found'; // redirect to 404 page on the server.
-  }
-})
+  .then((response) => response.json())
+  .then((product) => {
+    if (product.exists) {
+      showProductDetails(product); // shows the product information on the page
+    } else {
+      // this product does not exist, so this is an error page.
+      window.location.href = '/not-found'; // redirect to 404 page on the server.
+    }
+  });
 ```
 
 Example 2 (javascript):
+
 ```javascript
 fetch(`/api/products/${productId}`)
-.then(response => response.json())
-.then(product => {
-  if(product.exists) {
-    showProductDetails(product); // shows the product information on the page
-  } else {
-    // this product does not exist, so this is an error page.
-    // Note: This example assumes there is no other robots meta tag present in the HTML.
-    const metaRobots = document.createElement('meta');
-    metaRobots.name = 'robots';
-    metaRobots.content = 'noindex';
-    document.head.appendChild(metaRobots);
-  }
-})
+  .then((response) => response.json())
+  .then((product) => {
+    if (product.exists) {
+      showProductDetails(product); // shows the product information on the page
+    } else {
+      // this product does not exist, so this is an error page.
+      // Note: This example assumes there is no other robots meta tag present in the HTML.
+      const metaRobots = document.createElement('meta');
+      metaRobots.name = 'robots';
+      metaRobots.content = 'noindex';
+      document.head.appendChild(metaRobots);
+    }
+  });
 ```
 
 Example 3 (javascript):
+
 ```javascript
 <nav>
   <ul>
@@ -786,6 +814,7 @@ window.addEventListener('hashchange', function goToPage() {
 ```
 
 Example 4 (javascript):
+
 ```javascript
 <nav>
   <ul>

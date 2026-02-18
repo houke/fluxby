@@ -4,7 +4,7 @@ description: SEO and AEO (Answer Engine Optimization) best practices including E
 license: MIT
 metadata:
   author: sanity
-  version: "1.0.0"
+  version: '1.0.0'
 ---
 
 # SEO & AEO Best Practices
@@ -14,6 +14,7 @@ Principles for optimizing content for both traditional search engines (SEO) and 
 ## When to Apply
 
 Reference these guidelines when:
+
 - Implementing metadata and Open Graph tags
 - Creating sitemaps and robots.txt
 - Adding JSON-LD structured data
@@ -24,17 +25,21 @@ Reference these guidelines when:
 ## Core Concepts
 
 ### SEO (Search Engine Optimization)
+
 Optimizing content to rank well in traditional search results (Google, Bing).
 
 ### AEO (Answer Engine Optimization)
+
 Optimizing content to be selected as authoritative answers by AI systems.
 
 ### EEAT (Experience, Expertise, Authoritativeness, Trustworthiness)
+
 Google's framework for evaluating content quality.
 
 ## Resources
 
 See `resources/` for detailed guidance:
+
 - EEAT implementation
 - Structured data patterns
 - Technical SEO checklist

@@ -126,7 +126,7 @@ export class AchievementService {
   constructor(
     achievements: Achievement[],
     initialState?: Partial<UserAchievementState>,
-    onUnlock?: (result: UnlockResult) => void,
+    onUnlock?: (result: UnlockResult) => void
   ) {
     this.achievements = new Map(achievements.map((a) => [a.id, a]));
     this.state = {
@@ -176,7 +176,7 @@ export class AchievementService {
     lastDate.setHours(0, 0, 0, 0);
 
     const daysDiff = Math.floor(
-      (today.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24),
+      (today.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24)
     );
 
     if (daysDiff === 0) {
@@ -376,7 +376,7 @@ export class AchievementService {
 
   getAchievementsByCategory(category: AchievementCategory): Achievement[] {
     return Array.from(this.achievements.values()).filter(
-      (a) => a.category === category,
+      (a) => a.category === category
     );
   }
 

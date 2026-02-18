@@ -8,119 +8,134 @@ import * as THREE from 'three/webgpu';
 
 // Core TSL
 import {
-  float, int, uint, bool,
-  vec2, vec3, vec4, color,
-  mat2, mat3, mat4,
-  uniform, texture, uv,
-  Fn, If, Loop, Break, Continue,
-  time, deltaTime
+  float,
+  int,
+  uint,
+  bool,
+  vec2,
+  vec3,
+  vec4,
+  color,
+  mat2,
+  mat3,
+  mat4,
+  uniform,
+  texture,
+  uv,
+  Fn,
+  If,
+  Loop,
+  Break,
+  Continue,
+  time,
+  deltaTime,
 } from 'three/tsl';
 ```
 
 ## Types
 
-| TSL | WGSL | Example |
-|-----|------|---------|
-| `float(1.0)` | `f32` | Scalar float |
-| `int(1)` | `i32` | Signed integer |
-| `uint(1)` | `u32` | Unsigned integer |
-| `bool(true)` | `bool` | Boolean |
-| `vec2(x, y)` | `vec2<f32>` | 2D vector |
-| `vec3(x, y, z)` | `vec3<f32>` | 3D vector |
-| `vec4(x, y, z, w)` | `vec4<f32>` | 4D vector |
-| `color(0xff0000)` | `vec3<f32>` | RGB color |
-| `uniform(value)` | uniform | Dynamic value |
+| TSL                | WGSL        | Example          |
+| ------------------ | ----------- | ---------------- |
+| `float(1.0)`       | `f32`       | Scalar float     |
+| `int(1)`           | `i32`       | Signed integer   |
+| `uint(1)`          | `u32`       | Unsigned integer |
+| `bool(true)`       | `bool`      | Boolean          |
+| `vec2(x, y)`       | `vec2<f32>` | 2D vector        |
+| `vec3(x, y, z)`    | `vec3<f32>` | 3D vector        |
+| `vec4(x, y, z, w)` | `vec4<f32>` | 4D vector        |
+| `color(0xff0000)`  | `vec3<f32>` | RGB color        |
+| `uniform(value)`   | uniform     | Dynamic value    |
 
 ## Operators
 
-| Operation | TSL | GLSL Equivalent |
-|-----------|-----|-----------------|
-| Add | `a.add(b)` | `a + b` |
-| Subtract | `a.sub(b)` | `a - b` |
-| Multiply | `a.mul(b)` | `a * b` |
-| Divide | `a.div(b)` | `a / b` |
-| Modulo | `a.mod(b)` | `mod(a, b)` |
-| Negate | `a.negate()` | `-a` |
-| Less Than | `a.lessThan(b)` | `a < b` |
-| Greater Than | `a.greaterThan(b)` | `a > b` |
-| Equal | `a.equal(b)` | `a == b` |
-| And | `a.and(b)` | `a && b` |
-| Or | `a.or(b)` | `a \|\| b` |
-| Assign | `a.assign(b)` | `a = b` |
-| Add Assign | `a.addAssign(b)` | `a += b` |
+| Operation    | TSL                | GLSL Equivalent |
+| ------------ | ------------------ | --------------- |
+| Add          | `a.add(b)`         | `a + b`         |
+| Subtract     | `a.sub(b)`         | `a - b`         |
+| Multiply     | `a.mul(b)`         | `a * b`         |
+| Divide       | `a.div(b)`         | `a / b`         |
+| Modulo       | `a.mod(b)`         | `mod(a, b)`     |
+| Negate       | `a.negate()`       | `-a`            |
+| Less Than    | `a.lessThan(b)`    | `a < b`         |
+| Greater Than | `a.greaterThan(b)` | `a > b`         |
+| Equal        | `a.equal(b)`       | `a == b`        |
+| And          | `a.and(b)`         | `a && b`        |
+| Or           | `a.or(b)`          | `a \|\| b`      |
+| Assign       | `a.assign(b)`      | `a = b`         |
+| Add Assign   | `a.addAssign(b)`   | `a += b`        |
 
 ## Swizzling
 
 ```javascript
 const v = vec3(1, 2, 3);
-v.x        // 1
-v.xy       // vec2(1, 2)
-v.zyx      // vec3(3, 2, 1)
-v.rgb      // same as xyz
+v.x; // 1
+v.xy; // vec2(1, 2)
+v.zyx; // vec3(3, 2, 1)
+v.rgb; // same as xyz
 ```
 
 ## Math Functions
 
-| Function | Description |
-|----------|-------------|
-| `abs(x)` | Absolute value |
-| `sign(x)` | Sign (-1, 0, 1) |
-| `floor(x)` | Round down |
-| `ceil(x)` | Round up |
-| `fract(x)` | Fractional part |
-| `min(a, b)` | Minimum |
-| `max(a, b)` | Maximum |
-| `clamp(x, lo, hi)` | Clamp to range |
-| `mix(a, b, t)` | Linear interpolation |
-| `step(edge, x)` | Step function |
-| `smoothstep(a, b, x)` | Smooth step |
-| `sin(x)`, `cos(x)` | Trigonometry |
-| `pow(x, y)` | Power |
-| `sqrt(x)` | Square root |
-| `length(v)` | Vector length |
-| `distance(a, b)` | Distance |
-| `dot(a, b)` | Dot product |
-| `cross(a, b)` | Cross product |
-| `normalize(v)` | Unit vector |
-| `reflect(i, n)` | Reflection |
+| Function              | Description          |
+| --------------------- | -------------------- |
+| `abs(x)`              | Absolute value       |
+| `sign(x)`             | Sign (-1, 0, 1)      |
+| `floor(x)`            | Round down           |
+| `ceil(x)`             | Round up             |
+| `fract(x)`            | Fractional part      |
+| `min(a, b)`           | Minimum              |
+| `max(a, b)`           | Maximum              |
+| `clamp(x, lo, hi)`    | Clamp to range       |
+| `mix(a, b, t)`        | Linear interpolation |
+| `step(edge, x)`       | Step function        |
+| `smoothstep(a, b, x)` | Smooth step          |
+| `sin(x)`, `cos(x)`    | Trigonometry         |
+| `pow(x, y)`           | Power                |
+| `sqrt(x)`             | Square root          |
+| `length(v)`           | Vector length        |
+| `distance(a, b)`      | Distance             |
+| `dot(a, b)`           | Dot product          |
+| `cross(a, b)`         | Cross product        |
+| `normalize(v)`        | Unit vector          |
+| `reflect(i, n)`       | Reflection           |
 
 ## Geometry Nodes
 
-| Node | Description |
-|------|-------------|
-| `positionLocal` | Model space position |
-| `positionWorld` | World space position |
-| `positionView` | Camera space position |
-| `normalLocal` | Model space normal |
-| `normalWorld` | World space normal |
-| `normalView` | Camera space normal |
-| `uv()` | UV coordinates |
-| `uv(1)` | Secondary UVs |
-| `tangentLocal` | Tangent vector |
-| `vertexColor()` | Vertex colors |
+| Node            | Description           |
+| --------------- | --------------------- |
+| `positionLocal` | Model space position  |
+| `positionWorld` | World space position  |
+| `positionView`  | Camera space position |
+| `normalLocal`   | Model space normal    |
+| `normalWorld`   | World space normal    |
+| `normalView`    | Camera space normal   |
+| `uv()`          | UV coordinates        |
+| `uv(1)`         | Secondary UVs         |
+| `tangentLocal`  | Tangent vector        |
+| `vertexColor()` | Vertex colors         |
 
 ## Camera Nodes
 
-| Node | Description |
-|------|-------------|
-| `cameraPosition` | Camera world position |
-| `cameraNear` | Near plane |
-| `cameraFar` | Far plane |
-| `cameraViewMatrix` | View matrix |
-| `cameraProjectionMatrix` | Projection matrix |
-| `screenUV` | Screen UV (0-1) |
-| `screenSize` | Screen dimensions |
+| Node                     | Description           |
+| ------------------------ | --------------------- |
+| `cameraPosition`         | Camera world position |
+| `cameraNear`             | Near plane            |
+| `cameraFar`              | Far plane             |
+| `cameraViewMatrix`       | View matrix           |
+| `cameraProjectionMatrix` | Projection matrix     |
+| `screenUV`               | Screen UV (0-1)       |
+| `screenSize`             | Screen dimensions     |
 
 ## Time
 
-| Node | Description |
-|------|-------------|
-| `time` | Seconds since start |
-| `deltaTime` | Frame delta |
-| `oscSine(t)` | Sine wave (0-1) |
-| `oscSquare(t)` | Square wave |
-| `oscTriangle(t)` | Triangle wave |
-| `oscSawtooth(t)` | Sawtooth wave |
+| Node             | Description         |
+| ---------------- | ------------------- |
+| `time`           | Seconds since start |
+| `deltaTime`      | Frame delta         |
+| `oscSine(t)`     | Sine wave (0-1)     |
+| `oscSquare(t)`   | Square wave         |
+| `oscTriangle(t)` | Triangle wave       |
+| `oscSawtooth(t)` | Sawtooth wave       |
 
 ## Material Properties
 
@@ -154,11 +169,13 @@ mat.positionNode = displaced;
 // If-Else
 If(condition, () => {
   // true
-}).ElseIf(other, () => {
-  // other true
-}).Else(() => {
-  // false
-});
+})
+  .ElseIf(other, () => {
+    // other true
+  })
+  .Else(() => {
+    // false
+  });
 
 // Select (ternary)
 const result = select(condition, trueVal, falseVal);
@@ -171,7 +188,7 @@ Loop(10, ({ i }) => {
 // Loop control
 Break();
 Continue();
-Discard();  // Fragment only
+Discard(); // Fragment only
 ```
 
 ## Custom Functions
@@ -189,7 +206,7 @@ const myFn = Fn(([a = 1.0, b = 2.0]) => {
 
 // Usage
 myFn(x, y);
-myFn();  // uses defaults
+myFn(); // uses defaults
 ```
 
 ## Compute Shaders
@@ -206,8 +223,8 @@ const compute = Fn(() => {
 })().compute(count);
 
 // Execute
-await renderer.computeAsync(compute);  // Once
-renderer.compute(compute);              // Each frame
+await renderer.computeAsync(compute); // Once
+renderer.compute(compute); // Each frame
 ```
 
 ## Post-Processing
@@ -247,7 +264,12 @@ const animUV = uv().add(vec2(time.mul(0.1), 0));
 ### Noise Hash
 
 ```javascript
-const noise = fract(position.dot(vec3(12.9898, 78.233, 45.543)).sin().mul(43758.5453));
+const noise = fract(
+  position
+    .dot(vec3(12.9898, 78.233, 45.543))
+    .sin()
+    .mul(43758.5453)
+);
 ```
 
 ### Dissolve
@@ -265,16 +287,16 @@ const gradient = mix(colorA, colorB, positionLocal.y.mul(0.5).add(0.5));
 
 ## Node Materials
 
-| Material | Use Case |
-|----------|----------|
-| `MeshBasicNodeMaterial` | Unlit |
-| `MeshStandardNodeMaterial` | PBR |
-| `MeshPhysicalNodeMaterial` | Advanced PBR |
-| `MeshPhongNodeMaterial` | Phong shading |
-| `MeshToonNodeMaterial` | Cel shading |
-| `PointsNodeMaterial` | Point clouds |
-| `LineBasicNodeMaterial` | Lines |
-| `SpriteNodeMaterial` | Sprites |
+| Material                   | Use Case      |
+| -------------------------- | ------------- |
+| `MeshBasicNodeMaterial`    | Unlit         |
+| `MeshStandardNodeMaterial` | PBR           |
+| `MeshPhysicalNodeMaterial` | Advanced PBR  |
+| `MeshPhongNodeMaterial`    | Phong shading |
+| `MeshToonNodeMaterial`     | Cel shading   |
+| `PointsNodeMaterial`       | Point clouds  |
+| `LineBasicNodeMaterial`    | Lines         |
+| `SpriteNodeMaterial`       | Sprites       |
 
 ## Resources
 

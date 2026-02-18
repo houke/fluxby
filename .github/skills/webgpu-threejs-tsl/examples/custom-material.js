@@ -29,7 +29,7 @@ import {
   positionWorld,
   normalLocal,
   normalWorld,
-  cameraPosition
+  cameraPosition,
 } from 'three/tsl';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
@@ -38,7 +38,12 @@ let rimColor, patternScale, displacementStrength;
 
 async function init() {
   // Setup
-  camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 100);
+  camera = new THREE.PerspectiveCamera(
+    70,
+    window.innerWidth / window.innerHeight,
+    0.1,
+    100
+  );
   camera.position.z = 3;
 
   scene = new THREE.Scene();
@@ -94,8 +99,12 @@ function createCustomMaterial() {
 
     // Create animated wave pattern
     const wave1 = sin(uvCoord.x.mul(10.0).add(t)).mul(0.5).add(0.5);
-    const wave2 = sin(uvCoord.y.mul(10.0).sub(t.mul(1.3))).mul(0.5).add(0.5);
-    const wave3 = sin(uvCoord.x.add(uvCoord.y).mul(7.0).add(t.mul(0.7))).mul(0.5).add(0.5);
+    const wave2 = sin(uvCoord.y.mul(10.0).sub(t.mul(1.3)))
+      .mul(0.5)
+      .add(0.5);
+    const wave3 = sin(uvCoord.x.add(uvCoord.y).mul(7.0).add(t.mul(0.7)))
+      .mul(0.5)
+      .add(0.5);
 
     return wave1.mul(wave2).mul(wave3);
   });
@@ -140,7 +149,7 @@ function setupGUI() {
   const params = {
     rimColor: '#00ffff',
     patternScale: 5.0,
-    displacementStrength: 0.1
+    displacementStrength: 0.1,
   };
 
   gui.addColor(params, 'rimColor').onChange((value) => {

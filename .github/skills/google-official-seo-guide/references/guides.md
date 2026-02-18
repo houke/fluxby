@@ -9,6 +9,7 @@
 **URL:** https://developers.google.com/search/docs/guides/sd-policies
 
 **Contents:**
+
 - General structured data guidelines
 - Technical guidelines
   - Format
@@ -38,13 +39,14 @@ Your structured data must be a true representation of the page content. Here are
 
 Multiple items on a page means that there is more than one kind of thing on a page. For example, a page could contain a recipe, a video that shows how to make that recipe, and breadcrumb information for how people can discover that recipe. All of this user-visible information can also be marked up with structured data, which makes it easier for search engines like Google Search to understand the information on a page. When you add more items that apply to a page, Google Search has a fuller picture of what the page is about and can display that page in different search features.
 
-Google Search understands multiple items on a page, whether you nest the items or specify each item individually: Nesting: When there is one main item, and additional items are grouped under the main item. This is particularly helpful when grouping related items (for example, 
+Google Search understands multiple items on a page, whether you nest the items or specify each item individually: Nesting: When there is one main item, and additional items are grouped under the main item. This is particularly helpful when grouping related items (for example,
 
-*[Content truncated]*
+_[Content truncated]_
 
 **Examples:**
 
 Example 1 (unknown):
+
 ```unknown
 <html>
   <head>
@@ -68,6 +70,7 @@ Example 1 (unknown):
 ```
 
 Example 2 (unknown):
+
 ```unknown
 <html>
   <head>
@@ -99,6 +102,7 @@ Example 2 (unknown):
 **URL:** https://developers.google.com/search/docs/guides/debug
 
 **Contents:**
+
 - Debugging your pages
 - General tips
 - Useful testing tools
@@ -136,11 +140,12 @@ Pass your exposed ngrok URL to the test tool of your choice.
 
 The root URL in our example is http://ad0a5735.ngrok.io, so if our page is saved locally at ~/testwebdir/mypage.html, and we started the server above from ~/testwebdir/, we could test http://ad0a5735.ngrok.io/mypage.html. In th
 
-*[Content truncated]*
+_[Content truncated]_
 
 **Examples:**
 
 Example 1 (unknown):
+
 ```unknown
 python3 -m http.server 5326
 Serving HTTP on 0.0.0.0 port 5326
@@ -148,6 +153,7 @@ Serving HTTP on 0.0.0.0 port 5326
 ```
 
 Example 2 (unknown):
+
 ```unknown
 ./ngrok http 5326 --request-header-add ngrok-skip-browser-warning:1
 ngrok by @inconshreveable (Ctrl+C to quit)
@@ -170,6 +176,7 @@ Connections ttl opn rt1 rt5 p50 p90
 **URL:** https://developers.google.com/search/docs/guides/lazy-loading
 
 **Contents:**
+
 - Fix lazy-loaded content
 - Load content when it's visible in the viewport
 - Support paginated loading for infinite scroll

@@ -176,10 +176,15 @@ router.get('/', (req, res) => {
  */
 router.get('/:id', (req, res) => {
   try {
+    const profileId = getEffectiveProfileId(req);
     const id = parseInt(req.params.id);
+
+    // Security: Verify transaction belongs to profile via account
     const row = queryOne<DBTransaction>(
-      'SELECT * FROM transactions WHERE id = ?',
-      [id]
+      `SELECT t.* FROM transactions t
+       JOIN accounts a ON t.account_id = a.id
+       WHERE t.id = ? AND a.profile_id = ?`,
+      [id, profileId]
     );
 
     if (!row) {
@@ -522,7 +527,23 @@ router.patch('/:id', (req, res) => {
  */
 router.delete('/:id', (req, res) => {
   try {
+    const profileId = getEffectiveProfileId(req);
     const id = parseInt(req.params.id);
+
+    // Security: Verify transaction belongs to profile before deletion
+    const tx = queryOne<{ id: number }>(
+      `SELECT t.id FROM transactions t
+       JOIN accounts a ON t.account_id = a.id
+       WHERE t.id = ? AND a.profile_id = ?`,
+      [id, profileId]
+    );
+
+    if (!tx) {
+      return res
+        .status(404)
+        .json({ success: false, error: 'Transaction not found' });
+    }
+
     run('DELETE FROM transactions WHERE id = ?', [id]);
     res.json({ success: true });
   } catch (error) {
@@ -714,6 +735,13 @@ router.delete('/bulk', (req, res) => {
         return res.status(400).json({
           success: false,
           error: 'transactionIds must be an array',
+        });
+      }
+      // Security: Reject empty arrays to prevent accidental deletion of all transactions
+      if (transactionIds.length === 0) {
+        return res.status(400).json({
+          success: false,
+          error: 'transactionIds array cannot be empty',
         });
       }
       if (transactionIds.length > 1000) {

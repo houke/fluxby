@@ -19,7 +19,7 @@ describe('ComponentName', () => {
   it('handles user interaction', async () => {
     const handleAction = vi.fn();
     render(<ComponentName onAction={handleAction} />);
-    
+
     // Example interaction
     // await user.click(screen.getByRole('button'));
     // expect(handleAction).toHaveBeenCalled();

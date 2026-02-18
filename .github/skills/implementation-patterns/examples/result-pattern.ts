@@ -53,7 +53,7 @@ export function isErr<T, E>(result: Result<T, E>): result is Err<E> {
  */
 export function map<T, U, E>(
   result: Result<T, E>,
-  fn: (value: T) => U,
+  fn: (value: T) => U
 ): Result<U, E> {
   if (result.ok) {
     return Ok(fn(result.value));
@@ -66,7 +66,7 @@ export function map<T, U, E>(
  */
 export function mapErr<T, E, F>(
   result: Result<T, E>,
-  fn: (error: E) => F,
+  fn: (error: E) => F
 ): Result<T, F> {
   if (!result.ok) {
     return Err(fn(result.error));
@@ -79,7 +79,7 @@ export function mapErr<T, E, F>(
  */
 export function flatMap<T, U, E>(
   result: Result<T, E>,
-  fn: (value: T) => Result<U, E>,
+  fn: (value: T) => Result<U, E>
 ): Result<U, E> {
   if (result.ok) {
     return fn(result.value);
@@ -102,7 +102,7 @@ export function unwrapOr<T, E>(result: Result<T, E>, defaultValue: T): T {
  */
 export function unwrapOrElse<T, E>(
   result: Result<T, E>,
-  fn: (error: E) => T,
+  fn: (error: E) => T
 ): T {
   if (result.ok) {
     return result.value;
@@ -128,7 +128,7 @@ export function unwrap<T, E>(result: Result<T, E>): T {
  * Wrap a promise in a Result
  */
 export async function tryCatch<T>(
-  promise: Promise<T>,
+  promise: Promise<T>
 ): Promise<Result<T, Error>> {
   try {
     const value = await promise;
@@ -143,7 +143,7 @@ export async function tryCatch<T>(
  */
 export async function mapAsync<T, U, E>(
   result: Result<T, E>,
-  fn: (value: T) => Promise<U>,
+  fn: (value: T) => Promise<U>
 ): Promise<Result<U, E>> {
   if (result.ok) {
     return Ok(await fn(result.value));
@@ -156,7 +156,7 @@ export async function mapAsync<T, U, E>(
  */
 export async function flatMapAsync<T, U, E>(
   result: Result<T, E>,
-  fn: (value: T) => Promise<Result<U, E>>,
+  fn: (value: T) => Promise<Result<U, E>>
 ): Promise<Result<U, E>> {
   if (result.ok) {
     return fn(result.value);
@@ -172,7 +172,7 @@ export async function flatMapAsync<T, U, E>(
  * Combine multiple results into one
  */
 export function all<T extends Result<any, any>[]>(
-  results: T,
+  results: T
 ): Result<
   { [K in keyof T]: T[K] extends Result<infer U, any> ? U : never },
   T[number] extends Result<any, infer E> ? E : never
@@ -225,7 +225,7 @@ export class ResultBuilder<T, E> {
   }
 
   async flatMapAsync<U>(
-    fn: (value: T) => Promise<Result<U, E>>,
+    fn: (value: T) => Promise<Result<U, E>>
   ): Promise<ResultBuilder<U, E>> {
     return new ResultBuilder(await flatMapAsync(this.result, fn));
   }
@@ -284,7 +284,7 @@ function validatePassword(password: string): Result<string, ValidationError> {
 // Combining validations
 function validateCredentials(
   email: string,
-  password: string,
+  password: string
 ): Result<{ email: string; password: string }, ValidationError> {
   const emailResult = validateEmail(email);
   if (!emailResult.ok) return emailResult;
@@ -302,7 +302,7 @@ async function example() {
     .flatMap((email) =>
       validatePassword('secret123').ok
         ? Ok({ email, valid: true })
-        : Err({ field: 'password', message: 'Invalid' }),
+        : Err({ field: 'password', message: 'Invalid' })
     )
     .match({
       ok: (value) => `Valid: ${value.email}`,

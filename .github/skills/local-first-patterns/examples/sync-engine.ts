@@ -66,7 +66,7 @@ export class SyncEngine {
 
   constructor(
     config: SyncConfig,
-    conflictResolver: ConflictResolver = defaultConflictResolver,
+    conflictResolver: ConflictResolver = defaultConflictResolver
   ) {
     this.config = config;
     this.clientId = this.getOrCreateClientId();
@@ -129,7 +129,7 @@ export class SyncEngine {
           await this.applyResolution(conflict, resolved);
         } catch (error) {
           result.errors.push(
-            `Failed to resolve conflict for ${conflict.id}: ${error}`,
+            `Failed to resolve conflict for ${conflict.id}: ${error}`
           );
         }
       }
@@ -149,7 +149,7 @@ export class SyncEngine {
   recordChange(
     table: string,
     operation: 'insert' | 'update' | 'delete',
-    data: any,
+    data: any
   ): void {
     this.pendingChanges.push({
       id: data.id,
@@ -197,7 +197,7 @@ export class SyncEngine {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ changes: batch, clientId: this.clientId }),
-          },
+          }
         );
 
         const { accepted, conflicts } = await response.json();
@@ -208,7 +208,7 @@ export class SyncEngine {
         // Remove accepted changes from pending
         for (const change of accepted) {
           const index = this.pendingChanges.findIndex(
-            (c) => c.id === change.id,
+            (c) => c.id === change.id
           );
           if (index !== -1) {
             this.pendingChanges.splice(index, 1);
@@ -271,7 +271,7 @@ export class SyncEngine {
 
   private async applyResolution(
     conflict: SyncConflict,
-    resolved: any,
+    resolved: any
   ): Promise<void> {
     // Apply resolved data locally and mark for sync
     console.log('Applying resolution:', conflict.id, resolved);
@@ -280,7 +280,7 @@ export class SyncEngine {
 
   private async fetchWithRetry(
     url: string,
-    options?: RequestInit,
+    options?: RequestInit
   ): Promise<Response> {
     let lastError: Error | undefined;
 
@@ -361,12 +361,12 @@ export function createSyncEngine(): SyncEngine {
 
       // For now, prefer remote
       return conflict.remoteData;
-    },
+    }
   );
 
   engine.onSync((result) => {
     console.log(
-      `Sync complete: ${result.pushed} pushed, ${result.pulled} pulled`,
+      `Sync complete: ${result.pushed} pushed, ${result.pulled} pulled`
     );
     if (result.conflicts.length > 0) {
       console.warn(`${result.conflicts.length} conflicts resolved`);

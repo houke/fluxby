@@ -201,6 +201,6 @@ Always respect user preferences:
 ```typescript
 // JavaScript check
 const prefersReducedMotion = window.matchMedia(
-  '(prefers-reduced-motion: reduce)',
+  '(prefers-reduced-motion: reduce)'
 ).matches;
 ```

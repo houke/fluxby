@@ -24,7 +24,7 @@ postProcessing.outputNode = scenePassColor;
 
 // Render with post-processing
 function animate() {
-  postProcessing.render();  // Not renderer.render()
+  postProcessing.render(); // Not renderer.render()
 }
 ```
 
@@ -42,9 +42,9 @@ const scenePassColor = scenePass.getTextureNode('output');
 const bloomPass = bloom(scenePassColor);
 
 // Configure
-bloomPass.threshold.value = 0.5;   // Brightness threshold
-bloomPass.strength.value = 1.0;    // Bloom intensity
-bloomPass.radius.value = 0.5;      // Blur radius
+bloomPass.threshold.value = 0.5; // Brightness threshold
+bloomPass.strength.value = 1.0; // Bloom intensity
+bloomPass.radius.value = 0.5; // Blur radius
 
 // Combine original + bloom
 postProcessing.outputNode = scenePassColor.add(bloomPass);
@@ -85,9 +85,9 @@ const colorNode = scenePass.getTextureNode('output');
 const depthNode = scenePass.getTextureNode('depth');
 
 const dofPass = dof(colorNode, depthNode, {
-  focus: 5.0,      // Focus distance
+  focus: 5.0, // Focus distance
   aperture: 0.025, // Aperture size
-  maxblur: 0.01    // Maximum blur
+  maxblur: 0.01, // Maximum blur
 });
 
 postProcessing.outputNode = dofPass;
@@ -139,7 +139,7 @@ import { film } from 'three/addons/tsl/display/FilmNode.js';
 
 const filmPass = film(scenePassColor, {
   intensity: 0.5,
-  grayscale: false
+  grayscale: false,
 });
 postProcessing.outputNode = filmPass;
 ```
@@ -154,7 +154,7 @@ const outlinePass = outline(scene, camera, selectedObjects, {
   edgeGlow: 0.0,
   edgeThickness: 1.0,
   visibleEdgeColor: new THREE.Color(0xffffff),
-  hiddenEdgeColor: new THREE.Color(0x190a05)
+  hiddenEdgeColor: new THREE.Color(0x190a05),
 });
 
 postProcessing.outputNode = scenePassColor.add(outlinePass);
@@ -166,7 +166,7 @@ postProcessing.outputNode = scenePassColor.add(outlinePass);
 import { chromaticAberration } from 'three/addons/tsl/display/ChromaticAberrationNode.js';
 
 const caPass = chromaticAberration(scenePassColor, {
-  offset: vec2(0.002, 0.002)
+  offset: vec2(0.002, 0.002),
 });
 postProcessing.outputNode = caPass;
 ```
@@ -306,7 +306,12 @@ const pixelSize = uniform(8.0);
 
 const pixelate = Fn(() => {
   const uv = screenUV;
-  const pixelUV = uv.mul(screenSize).div(pixelSize).floor().mul(pixelSize).div(screenSize);
+  const pixelUV = uv
+    .mul(screenSize)
+    .div(pixelSize)
+    .floor()
+    .mul(pixelSize)
+    .div(screenSize);
   return texture(scenePassColor, pixelUV);
 });
 
@@ -321,14 +326,30 @@ const sobelEdge = Fn(() => {
   const texelSize = vec2(1.0).div(screenSize);
 
   // Sample 3x3 kernel
-  const tl = luminance(texture(scenePassColor, uv.add(texelSize.mul(vec2(-1, -1)))));
-  const tc = luminance(texture(scenePassColor, uv.add(texelSize.mul(vec2(0, -1)))));
-  const tr = luminance(texture(scenePassColor, uv.add(texelSize.mul(vec2(1, -1)))));
-  const ml = luminance(texture(scenePassColor, uv.add(texelSize.mul(vec2(-1, 0)))));
-  const mr = luminance(texture(scenePassColor, uv.add(texelSize.mul(vec2(1, 0)))));
-  const bl = luminance(texture(scenePassColor, uv.add(texelSize.mul(vec2(-1, 1)))));
-  const bc = luminance(texture(scenePassColor, uv.add(texelSize.mul(vec2(0, 1)))));
-  const br = luminance(texture(scenePassColor, uv.add(texelSize.mul(vec2(1, 1)))));
+  const tl = luminance(
+    texture(scenePassColor, uv.add(texelSize.mul(vec2(-1, -1))))
+  );
+  const tc = luminance(
+    texture(scenePassColor, uv.add(texelSize.mul(vec2(0, -1))))
+  );
+  const tr = luminance(
+    texture(scenePassColor, uv.add(texelSize.mul(vec2(1, -1))))
+  );
+  const ml = luminance(
+    texture(scenePassColor, uv.add(texelSize.mul(vec2(-1, 0))))
+  );
+  const mr = luminance(
+    texture(scenePassColor, uv.add(texelSize.mul(vec2(1, 0))))
+  );
+  const bl = luminance(
+    texture(scenePassColor, uv.add(texelSize.mul(vec2(-1, 1))))
+  );
+  const bc = luminance(
+    texture(scenePassColor, uv.add(texelSize.mul(vec2(0, 1))))
+  );
+  const br = luminance(
+    texture(scenePassColor, uv.add(texelSize.mul(vec2(1, 1))))
+  );
 
   // Sobel operators
   const gx = tl.add(ml.mul(2)).add(bl).sub(tr).sub(mr.mul(2)).sub(br);
@@ -352,11 +373,13 @@ import { mrt, output } from 'three/tsl';
 const scenePass = pass(scene, camera);
 
 // Set up MRT
-scenePass.setMRT(mrt({
-  output: output,           // Color output
-  normal: normalView,       // View-space normals
-  depth: depth              // Depth buffer
-}));
+scenePass.setMRT(
+  mrt({
+    output: output, // Color output
+    normal: normalView, // View-space normals
+    depth: depth, // Depth buffer
+  })
+);
 
 // Access individual targets
 const colorTexture = scenePass.getTextureNode('output');
@@ -421,7 +444,7 @@ const transitionPass = transition(
   scenePassA.getTextureNode('output'),
   scenePassB.getTextureNode('output'),
   transitionProgress,
-  texture(transitionTexture)  // Optional transition texture
+  texture(transitionTexture) // Optional transition texture
 );
 
 postProcessing.outputNode = transitionPass;

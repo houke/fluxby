@@ -1127,6 +1127,7 @@ export const en: LandingTranslationKeys = {
       installation: 'Installation',
       features: 'Features',
       transactions: 'Transactions',
+      bulkDelete: 'Bulk delete',
       categories: 'Categories',
       accounts: 'Accounts',
       addressBook: 'Address Book',

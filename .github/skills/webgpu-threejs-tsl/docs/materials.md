@@ -2,20 +2,20 @@
 
 ## Available Material Types
 
-| Material | Description |
-|----------|-------------|
-| `MeshBasicNodeMaterial` | Unlit, no lighting calculations |
-| `MeshStandardNodeMaterial` | PBR material with metalness/roughness |
+| Material                   | Description                                     |
+| -------------------------- | ----------------------------------------------- |
+| `MeshBasicNodeMaterial`    | Unlit, no lighting calculations                 |
+| `MeshStandardNodeMaterial` | PBR material with metalness/roughness           |
 | `MeshPhysicalNodeMaterial` | Advanced PBR with clearcoat, transmission, etc. |
-| `MeshPhongNodeMaterial` | Classic Phong shading |
-| `MeshToonNodeMaterial` | Cel/toon shading |
-| `MeshLambertNodeMaterial` | Diffuse-only lighting |
-| `MeshNormalNodeMaterial` | Visualize normals |
-| `MeshMatcapNodeMaterial` | Matcap texture shading |
-| `PointsNodeMaterial` | For point clouds |
-| `LineBasicNodeMaterial` | For lines |
-| `LineDashedNodeMaterial` | For dashed lines |
-| `SpriteNodeMaterial` | For sprites/billboards |
+| `MeshPhongNodeMaterial`    | Classic Phong shading                           |
+| `MeshToonNodeMaterial`     | Cel/toon shading                                |
+| `MeshLambertNodeMaterial`  | Diffuse-only lighting                           |
+| `MeshNormalNodeMaterial`   | Visualize normals                               |
+| `MeshMatcapNodeMaterial`   | Matcap texture shading                          |
+| `PointsNodeMaterial`       | For point clouds                                |
+| `LineBasicNodeMaterial`    | For lines                                       |
+| `LineDashedNodeMaterial`   | For dashed lines                                |
+| `SpriteNodeMaterial`       | For sprites/billboards                          |
 
 ## Creating Node Materials
 
@@ -181,10 +181,10 @@ material.outputNode = outputStruct;
 
 ```javascript
 import {
-  positionGeometry,  // Original mesh position
-  positionLocal,     // Position in model space
-  positionWorld,     // Position in world space
-  positionView       // Position in camera space
+  positionGeometry, // Original mesh position
+  positionLocal, // Position in model space
+  positionWorld, // Position in world space
+  positionView, // Position in camera space
 } from 'three/tsl';
 ```
 
@@ -192,10 +192,10 @@ import {
 
 ```javascript
 import {
-  normalGeometry,    // Original mesh normal
-  normalLocal,       // Normal in model space
-  normalWorld,       // Normal in world space (use for lighting)
-  normalView         // Normal in camera space
+  normalGeometry, // Original mesh normal
+  normalLocal, // Normal in model space
+  normalWorld, // Normal in world space (use for lighting)
+  normalView, // Normal in camera space
 } from 'three/tsl';
 ```
 
@@ -203,8 +203,12 @@ import {
 
 ```javascript
 import {
-  tangentLocal, tangentWorld, tangentView,
-  bitangentLocal, bitangentWorld, bitangentView
+  tangentLocal,
+  tangentWorld,
+  tangentView,
+  bitangentLocal,
+  bitangentWorld,
+  bitangentView,
 } from 'three/tsl';
 ```
 
@@ -213,9 +217,9 @@ import {
 ```javascript
 import { uv } from 'three/tsl';
 
-uv()    // Primary UV set (UV0)
-uv(1)   // Secondary UV set (UV1)
-uv(2)   // Tertiary UV set (UV2)
+uv(); // Primary UV set (UV0)
+uv(1); // Secondary UV set (UV1)
+uv(2); // Tertiary UV set (UV2)
 ```
 
 ### Other Attributes
@@ -223,21 +227,21 @@ uv(2)   // Tertiary UV set (UV2)
 ```javascript
 import { vertexColor, instanceIndex, vertexIndex } from 'three/tsl';
 
-vertexColor()    // Vertex colors (if present)
-instanceIndex    // Index for instanced meshes
-vertexIndex      // Current vertex index
+vertexColor(); // Vertex colors (if present)
+instanceIndex; // Index for instanced meshes
+vertexIndex; // Current vertex index
 ```
 
 ## Camera Nodes
 
 ```javascript
 import {
-  cameraPosition,         // Camera world position
-  cameraNear,             // Near plane distance
-  cameraFar,              // Far plane distance
-  cameraViewMatrix,       // View matrix
+  cameraPosition, // Camera world position
+  cameraNear, // Near plane distance
+  cameraFar, // Far plane distance
+  cameraViewMatrix, // View matrix
   cameraProjectionMatrix, // Projection matrix
-  cameraWorldMatrix       // Camera world matrix
+  cameraWorldMatrix, // Camera world matrix
 } from 'three/tsl';
 ```
 
@@ -245,12 +249,12 @@ import {
 
 ```javascript
 import {
-  screenUV,         // Screen UV (0-1)
+  screenUV, // Screen UV (0-1)
   screenCoordinate, // Pixel coordinates
-  screenSize,       // Screen dimensions
-  viewportUV,       // Viewport UV
-  viewport,         // Viewport dimensions
-  depth             // Fragment depth
+  screenSize, // Screen dimensions
+  viewportUV, // Viewport UV
+  viewport, // Viewport dimensions
+  depth, // Fragment depth
 } from 'three/tsl';
 ```
 
@@ -284,9 +288,9 @@ const material = new THREE.MeshStandardNodeMaterial();
 // Apply texture from all three axes
 material.colorNode = triplanarTexture(
   texture(diffuseMap),
-  null,           // Y-axis texture (optional)
-  null,           // Z-axis texture (optional)
-  float(0.1)      // Blend sharpness
+  null, // Y-axis texture (optional)
+  null, // Z-axis texture (optional)
+  float(0.1) // Blend sharpness
 );
 ```
 
@@ -311,8 +315,12 @@ material.thicknessNode = float(0.5);
 ```javascript
 import * as THREE from 'three/webgpu';
 import {
-  color, float, normalWorld, positionWorld,
-  cameraPosition, Fn
+  color,
+  float,
+  normalWorld,
+  positionWorld,
+  cameraPosition,
+  Fn,
 } from 'three/tsl';
 
 const fresnel = Fn(() => {
@@ -331,8 +339,14 @@ material.emissiveNode = color(0x00ffff).mul(fresnel());
 ```javascript
 import * as THREE from 'three/webgpu';
 import {
-  color, float, hash, positionLocal, uniform,
-  If, Discard, smoothstep
+  color,
+  float,
+  hash,
+  positionLocal,
+  uniform,
+  If,
+  Discard,
+  smoothstep,
 } from 'three/tsl';
 
 const threshold = uniform(0.5);

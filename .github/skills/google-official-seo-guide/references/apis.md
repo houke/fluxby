@@ -9,6 +9,7 @@
 **URL:** https://developers.google.com/search/docs/monitor-debug/search-console-start
 
 **Contents:**
+
 - Get started with Search Console
 - Helpful reports for SEO specialists, digital marketers, and site administrators
 - Helpful reports for web developers

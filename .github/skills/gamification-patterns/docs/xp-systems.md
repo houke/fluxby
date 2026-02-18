@@ -21,7 +21,7 @@ function xpForLevel(level: number, config: XPConfig): number {
 function xpForLevelPolynomial(
   level: number,
   base: number,
-  power: number,
+  power: number
 ): number {
   return Math.floor(base * Math.pow(level, power));
 }
@@ -171,7 +171,7 @@ interface AntiFarmConfig {
 function calculateDiminishedXP(
   baseXP: number,
   actionCount: number,
-  config: AntiFarmConfig['diminishingReturns'],
+  config: AntiFarmConfig['diminishingReturns']
 ): number {
   if (actionCount <= config.threshold) {
     return baseXP;
@@ -180,7 +180,7 @@ function calculateDiminishedXP(
   const overThreshold = actionCount - config.threshold;
   const multiplier = Math.max(
     Math.pow(config.reductionRate, overThreshold),
-    config.floor,
+    config.floor
   );
 
   return Math.floor(baseXP * multiplier);

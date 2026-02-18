@@ -71,7 +71,7 @@ export class StreakService {
   constructor(
     config: StreakConfig,
     initialStreak?: Partial<UserStreak>,
-    onMilestone?: (milestone: StreakMilestone, streak: number) => void,
+    onMilestone?: (milestone: StreakMilestone, streak: number) => void
   ) {
     this.config = config;
     this.userStreak = {
@@ -151,7 +151,7 @@ export class StreakService {
     const now = new Date();
     const resetTime = this.getResetTime(now);
     const gracePeriodEnd = new Date(
-      resetTime.getTime() + this.config.gracePeriodHours * 60 * 60 * 1000,
+      resetTime.getTime() + this.config.gracePeriodHours * 60 * 60 * 1000
     );
 
     const isActive = this.isStreakActive(now);
@@ -212,7 +212,7 @@ export class StreakService {
   addFreezeCards(count: number): void {
     this.userStreak.freezeCardsAvailable = Math.min(
       this.userStreak.freezeCardsAvailable + count,
-      this.config.maxFreezeCards,
+      this.config.maxFreezeCards
     );
   }
 
@@ -362,7 +362,7 @@ const streakService = new StreakService(
   { currentStreak: 5 },
   (milestone, streak) => {
     console.log(`🎉 Milestone reached: ${milestone.name} at ${streak} days!`);
-  },
+  }
 );
 
 // Check status

@@ -9,6 +9,7 @@
 **URL:** https://developers.google.com/search/docs/essentials/spam-policies#keyword-stuffing
 
 **Contents:**
+
 - Spam policies for Google web search
 - Cloaking
 - Doorway abuse
@@ -42,7 +43,7 @@ Expired domain abuse is where an expired domain name is purchased and repurposed
 
 Hacked con
 
-*[Content truncated]*
+_[Content truncated]_
 
 ---
 
@@ -51,6 +52,7 @@ Hacked con
 **URL:** https://developers.google.com/search/docs/monitor-debug/debugging-search-traffic-drops#main-causes
 
 **Contents:**
+
 - Debugging drops in Google Search traffic
 - Main causes for drops in organic Search traffic
   - Algorithmic update
@@ -70,7 +72,7 @@ Large drop from an algorithmic update, site-wide security or spam issue
 
 Technical issue across your site, changing interests
 
-Reporting glitch ¯\_(ツ)_/¯
+Reporting glitch ¯\_(ツ)\_/¯
 
 The following sections cover the main causes you should investigate when analyzing a traffic drop. Also make sure to check the Search Console Data Anomalies page to see if there is anything applicable to your site. The drop might be related to a change in the data processing or a logging error.
 
@@ -86,7 +88,7 @@ A large drop in position is when you see a notable drop out of the top results f
 
 In cases like this, self-assess your whole website overall (not just individual pages) to make sure it's helpful, reliable and people-first. If you've made changes to your site, it may take time to see an effect: some changes c
 
-*[Content truncated]*
+_[Content truncated]_
 
 ---
 
@@ -95,6 +97,7 @@ In cases like this, self-assess your whole website overall (not just individual 
 **URL:** https://developers.google.com/search/docs/essentials/spam-policies#hidden-text-and-links
 
 **Contents:**
+
 - Spam policies for Google web search
 - Cloaking
 - Doorway abuse
@@ -128,7 +131,7 @@ Expired domain abuse is where an expired domain name is purchased and repurposed
 
 Hacked con
 
-*[Content truncated]*
+_[Content truncated]_
 
 ---
 
@@ -137,6 +140,7 @@ Hacked con
 **URL:** https://developers.google.com/search/docs/monitor-debug/security/malware#what-is-unwanted-software
 
 **Contents:**
+
 - Malware and unwanted software
 - What is malware?
 - What is unwanted software?
@@ -163,7 +167,7 @@ Be sure that you don't violate the Unwanted Software Policy, and follow the guid
 
 Inform users of your intent to collect their data. Provide users an opportunity to agree to the collection of their data before you start collecting and sending it from the device, including data about third-party accounts, email, phone number, installed apps, and files on the mobile device. Make sure you securely handle any personal or sensitive user data that you collect, including being transmitted using modern cryptography (for example, over HTTPS). For non-Play apps, you must disclose your data collection to the user in the app. For Google Play apps, disclosure must adhere to Play policy. Don't collect data that goes beyond the published use of y
 
-*[Content truncated]*
+_[Content truncated]_
 
 ---
 
@@ -172,6 +176,7 @@ Inform users of your intent to collect their data. Provide users an opportunity 
 **URL:** https://developers.google.com/search/docs/essentials
 
 **Contents:**
+
 - Google Search Essentials
 - Technical requirements
 - Spam policies
@@ -198,16 +203,17 @@ Last updated 2025-02-04 UTC.
 **URL:** https://developers.google.com/search/docs
 
 **Contents:**
+
 - Explore Google Search documentation to improve your site's SEO
 - What is SEO?
-    - Get your website on Google
-    - Why does SEO matter?
-    - How Google Search Works
-    - Do you need an SEO?
+  - Get your website on Google
+  - Why does SEO matter?
+  - How Google Search Works
+  - Do you need an SEO?
 - SEO Starter Guide
 - Improve how your site appears on Google
-    - Control how Google crawls and indexes your site
-    - Add features to your Google Search listings
+  - Control how Google crawls and indexes your site
+  - Add features to your Google Search listings
 
 Search engine optimization is the process of making your site better for search engines. It's also the job title of a person who does this for a living: We just hired a new SEO to improve our presence on the web.
 
@@ -230,6 +236,7 @@ Last updated 2025-02-04 UTC.
 **URL:** https://developers.google.com/search/docs/essentials/spam-policies#scaled-content
 
 **Contents:**
+
 - Spam policies for Google web search
 - Cloaking
 - Doorway abuse
@@ -263,7 +270,7 @@ Expired domain abuse is where an expired domain name is purchased and repurposed
 
 Hacked con
 
-*[Content truncated]*
+_[Content truncated]_
 
 ---
 
@@ -272,6 +279,7 @@ Hacked con
 **URL:** https://developers.google.com/search/docs/monitor-debug/search-operators/all-search-site
 
 **Contents:**
+
 - site: search operator
 - Uses for site owners
 - Limitations
@@ -297,6 +305,7 @@ Last updated 2025-02-04 UTC.
 **URL:** https://developers.google.com/search/docs/monitor-debug/security/malware#guidelines
 
 **Contents:**
+
 - Malware and unwanted software
 - What is malware?
 - What is unwanted software?
@@ -323,7 +332,7 @@ Be sure that you don't violate the Unwanted Software Policy, and follow the guid
 
 Inform users of your intent to collect their data. Provide users an opportunity to agree to the collection of their data before you start collecting and sending it from the device, including data about third-party accounts, email, phone number, installed apps, and files on the mobile device. Make sure you securely handle any personal or sensitive user data that you collect, including being transmitted using modern cryptography (for example, over HTTPS). For non-Play apps, you must disclose your data collection to the user in the app. For Google Play apps, disclosure must adhere to Play policy. Don't collect data that goes beyond the published use of y
 
-*[Content truncated]*
+_[Content truncated]_
 
 ---
 
@@ -332,6 +341,7 @@ Inform users of your intent to collect their data. Provide users an opportunity 
 **URL:** https://developers.google.com/search/docs/monitor-debug/debugging-search-traffic-drops#small
 
 **Contents:**
+
 - Debugging drops in Google Search traffic
 - Main causes for drops in organic Search traffic
   - Algorithmic update
@@ -351,7 +361,7 @@ Large drop from an algorithmic update, site-wide security or spam issue
 
 Technical issue across your site, changing interests
 
-Reporting glitch ¯\_(ツ)_/¯
+Reporting glitch ¯\_(ツ)\_/¯
 
 The following sections cover the main causes you should investigate when analyzing a traffic drop. Also make sure to check the Search Console Data Anomalies page to see if there is anything applicable to your site. The drop might be related to a change in the data processing or a logging error.
 
@@ -367,7 +377,7 @@ A large drop in position is when you see a notable drop out of the top results f
 
 In cases like this, self-assess your whole website overall (not just individual pages) to make sure it's helpful, reliable and people-first. If you've made changes to your site, it may take time to see an effect: some changes c
 
-*[Content truncated]*
+_[Content truncated]_
 
 ---
 
@@ -376,6 +386,7 @@ In cases like this, self-assess your whole website overall (not just individual 
 **URL:** https://developers.google.com/search/docs/monitor-debug/security
 
 **Contents:**
+
 - Preventing and monitoring abuse on your site
 
 The following topics describe how you can prevent and monitor abuse on your site.
@@ -391,6 +402,7 @@ Last updated 2025-02-04 UTC.
 **URL:** https://developers.google.com/search/docs/monitor-debug/debugging-search-traffic-drops
 
 **Contents:**
+
 - Debugging drops in Google Search traffic
 - Main causes for drops in organic Search traffic
   - Algorithmic update
@@ -410,7 +422,7 @@ Large drop from an algorithmic update, site-wide security or spam issue
 
 Technical issue across your site, changing interests
 
-Reporting glitch ¯\_(ツ)_/¯
+Reporting glitch ¯\_(ツ)\_/¯
 
 The following sections cover the main causes you should investigate when analyzing a traffic drop. Also make sure to check the Search Console Data Anomalies page to see if there is anything applicable to your site. The drop might be related to a change in the data processing or a logging error.
 
@@ -426,7 +438,7 @@ A large drop in position is when you see a notable drop out of the top results f
 
 In cases like this, self-assess your whole website overall (not just individual pages) to make sure it's helpful, reliable and people-first. If you've made changes to your site, it may take time to see an effect: some changes c
 
-*[Content truncated]*
+_[Content truncated]_
 
 ---
 
@@ -435,6 +447,7 @@ In cases like this, self-assess your whole website overall (not just individual 
 **URL:** https://developers.google.com/search/docs/advanced/guidelines/report-spam
 
 **Contents:**
+
 - Report spam, phishing, or malware
 - Spammy, deceptive, or low quality web pages
 - Malware
@@ -459,6 +472,7 @@ Last updated 2025-02-04 UTC.
 **URL:** https://developers.google.com/search/docs/monitor-debug/prevent-abuse
 
 **Contents:**
+
 - Prevent user-generated spam on your site and platform
 - Tell users that you don't allow spam on your service
 - Identify spammy accounts
@@ -487,7 +501,7 @@ In your sign-up form, consider using reCAPTCHAs or similar verification tools to
 
 Except as otherwise noted, the content of thi
 
-*[Content truncated]*
+_[Content truncated]_
 
 ---
 
@@ -496,6 +510,7 @@ Except as otherwise noted, the content of thi
 **URL:** https://developers.google.com/search/docs/monitor-debug/security/malware#what_is_malware
 
 **Contents:**
+
 - Malware and unwanted software
 - What is malware?
 - What is unwanted software?
@@ -522,7 +537,7 @@ Be sure that you don't violate the Unwanted Software Policy, and follow the guid
 
 Inform users of your intent to collect their data. Provide users an opportunity to agree to the collection of their data before you start collecting and sending it from the device, including data about third-party accounts, email, phone number, installed apps, and files on the mobile device. Make sure you securely handle any personal or sensitive user data that you collect, including being transmitted using modern cryptography (for example, over HTTPS). For non-Play apps, you must disclose your data collection to the user in the app. For Google Play apps, disclosure must adhere to Play policy. Don't collect data that goes beyond the published use of y
 
-*[Content truncated]*
+_[Content truncated]_
 
 ---
 
@@ -531,6 +546,7 @@ Inform users of your intent to collect their data. Provide users an opportunity 
 **URL:** https://developers.google.com/search/docs/essentials/spam-policies#cloaking
 
 **Contents:**
+
 - Spam policies for Google web search
 - Cloaking
 - Doorway abuse
@@ -564,7 +580,7 @@ Expired domain abuse is where an expired domain name is purchased and repurposed
 
 Hacked con
 
-*[Content truncated]*
+_[Content truncated]_
 
 ---
 
@@ -573,6 +589,7 @@ Hacked con
 **URL:** https://developers.google.com/search/docs/monitor-debug/debugging-search-traffic-drops#large
 
 **Contents:**
+
 - Debugging drops in Google Search traffic
 - Main causes for drops in organic Search traffic
   - Algorithmic update
@@ -592,7 +609,7 @@ Large drop from an algorithmic update, site-wide security or spam issue
 
 Technical issue across your site, changing interests
 
-Reporting glitch ¯\_(ツ)_/¯
+Reporting glitch ¯\_(ツ)\_/¯
 
 The following sections cover the main causes you should investigate when analyzing a traffic drop. Also make sure to check the Search Console Data Anomalies page to see if there is anything applicable to your site. The drop might be related to a change in the data processing or a logging error.
 
@@ -608,7 +625,7 @@ A large drop in position is when you see a notable drop out of the top results f
 
 In cases like this, self-assess your whole website overall (not just individual pages) to make sure it's helpful, reliable and people-first. If you've made changes to your site, it may take time to see an effect: some changes c
 
-*[Content truncated]*
+_[Content truncated]_
 
 ---
 
@@ -617,6 +634,7 @@ In cases like this, self-assess your whole website overall (not just individual 
 **URL:** https://developers.google.com/search/docs/essentials/spam-policies#link-spam
 
 **Contents:**
+
 - Spam policies for Google web search
 - Cloaking
 - Doorway abuse
@@ -650,7 +668,7 @@ Expired domain abuse is where an expired domain name is purchased and repurposed
 
 Hacked con
 
-*[Content truncated]*
+_[Content truncated]_
 
 ---
 
@@ -659,6 +677,7 @@ Hacked con
 **URL:** https://developers.google.com/search/docs/monitor-debug/trends-start
 
 **Contents:**
+
 - Get started with Google Trends
 - About Google Trends
 - Monitoring rising trends
@@ -689,7 +708,7 @@ To explore trends specific to your website, compile a list of terms you're alrea
 
 In this example, the topics include data that's related to each type of cheese, not just the search terms. Topics aggregate across languages and include misspellings, variations, and acronyms related to it. This can be useful, especially in this case if the terms you are s
 
-*[Content truncated]*
+_[Content truncated]_
 
 ---
 
@@ -698,6 +717,7 @@ In this example, the topics include data that's related to each type of cheese, 
 **URL:** https://developers.google.com/search/docs/essentials/spam-policies#scraped-content
 
 **Contents:**
+
 - Spam policies for Google web search
 - Cloaking
 - Doorway abuse
@@ -731,7 +751,7 @@ Expired domain abuse is where an expired domain name is purchased and repurposed
 
 Hacked con
 
-*[Content truncated]*
+_[Content truncated]_
 
 ---
 
@@ -740,6 +760,7 @@ Hacked con
 **URL:** https://developers.google.com/search/docs/essentials/spam-policies
 
 **Contents:**
+
 - Spam policies for Google web search
 - Cloaking
 - Doorway abuse
@@ -773,6 +794,6 @@ Expired domain abuse is where an expired domain name is purchased and repurposed
 
 Hacked con
 
-*[Content truncated]*
+_[Content truncated]_
 
 ---

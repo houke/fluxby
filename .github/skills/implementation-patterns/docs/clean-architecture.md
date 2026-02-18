@@ -39,7 +39,7 @@ class User {
     public readonly id: UserId,
     public readonly email: Email,
     private _name: string,
-    private _role: UserRole,
+    private _role: UserRole
   ) {}
 
   get name(): string {
@@ -96,13 +96,13 @@ class CreateUserUseCase {
   constructor(
     private userRepository: UserRepository,
     private emailService: EmailService,
-    private eventBus: EventBus,
+    private eventBus: EventBus
   ) {}
 
   async execute(input: CreateUserInput): Promise<CreateUserOutput> {
     // Validate uniqueness
     const existing = await this.userRepository.findByEmail(
-      Email.create(input.email),
+      Email.create(input.email)
     );
     if (existing) {
       throw new ConflictError('Email already registered');
@@ -113,7 +113,7 @@ class CreateUserUseCase {
       UserId.generate(),
       Email.create(input.email),
       input.name,
-      UserRole.Member,
+      UserRole.Member
     );
 
     // Persist
@@ -175,7 +175,7 @@ class PrismaUserRepository implements UserRepository {
       new UserId(data.id),
       Email.create(data.email),
       data.name,
-      data.role as UserRole,
+      data.role as UserRole
     );
   }
 
@@ -248,7 +248,7 @@ function createContainer() {
   const createUser = new CreateUserUseCase(
     userRepository,
     emailService,
-    eventBus,
+    eventBus
   );
 
   // Controllers

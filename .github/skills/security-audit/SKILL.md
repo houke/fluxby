@@ -158,7 +158,7 @@ app.use(
       preload: true,
     },
     referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
-  }),
+  })
 );
 ```
 
@@ -195,7 +195,7 @@ app.use(
       sameSite: 'strict',
       maxAge: 3600000,
     },
-  }),
+  })
 );
 
 // ✅ Password requirements

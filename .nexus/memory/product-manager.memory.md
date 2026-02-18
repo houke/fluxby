@@ -10,7 +10,7 @@ Persistent preferences and learned patterns for the **@product-manager** agent.
 
 _No preferences recorded yet._
 
-<!-- 
+<!--
 Example entry:
 ### Accessibility Priority
 - **Preference**: Accessibility features are always P0

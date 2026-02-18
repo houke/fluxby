@@ -23,6 +23,7 @@ material.colorNode = color(0xff0000).mul(oscSine(time));
 ## Skill Contents
 
 ### Documentation
+
 - `docs/core-concepts.md` - Types, operators, uniforms, control flow
 - `docs/materials.md` - Node materials and all properties
 - `docs/compute-shaders.md` - GPU compute with instanced arrays
@@ -30,6 +31,7 @@ material.colorNode = color(0xff0000).mul(oscSine(time));
 - `docs/wgsl-integration.md` - Custom WGSL functions
 
 ### Examples
+
 - `examples/basic-setup.js` - Minimal WebGPU project
 - `examples/custom-material.js` - Custom shader material
 - `examples/particle-system.js` - GPU compute particles
@@ -37,38 +39,47 @@ material.colorNode = color(0xff0000).mul(oscSine(time));
 - `examples/earth-shader.js` - Complete Earth with atmosphere
 
 ### Templates
+
 - `templates/webgpu-project.js` - Starter project template
 - `templates/compute-shader.js` - Compute shader template
 
 ### Reference
+
 - `REFERENCE.md` - Quick reference cheatsheet
 
 ## Key Concepts
 
 ### Import Pattern
+
 ```javascript
 // Always use the WebGPU entry point
 import * as THREE from 'three/webgpu';
-import { /* TSL functions */ } from 'three/tsl';
+import {} from /* TSL functions */ 'three/tsl';
 ```
 
 ### Node Materials
+
 Replace standard material properties with TSL nodes:
+
 ```javascript
-material.colorNode = texture(map);        // instead of material.map
-material.roughnessNode = float(0.5);      // instead of material.roughness
-material.positionNode = displaced;         // vertex displacement
+material.colorNode = texture(map); // instead of material.map
+material.roughnessNode = float(0.5); // instead of material.roughness
+material.positionNode = displaced; // vertex displacement
 ```
 
 ### Method Chaining
+
 TSL uses method chaining for operations:
+
 ```javascript
 // Instead of: sin(time * 2.0 + offset) * 0.5 + 0.5
-time.mul(2.0).add(offset).sin().mul(0.5).add(0.5)
+time.mul(2.0).add(offset).sin().mul(0.5).add(0.5);
 ```
 
 ### Custom Functions
+
 Use `Fn()` for reusable shader logic:
+
 ```javascript
 const fresnel = Fn(([power = 2.0]) => {
   const nDotV = normalWorld.dot(viewDir).saturate();

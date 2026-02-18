@@ -144,13 +144,13 @@ const peerServer: PeerServerConfig = {
   port: 443,
   path: '/',
   secure: true,
-  key: 'your-api-key',  // Optional
+  key: 'your-api-key', // Optional
 };
 
 const peerSync = createPeerSync({
   deviceId: 'your-device-id',
   deviceName: 'My Device',
-  peerServer,  // Custom server
+  peerServer, // Custom server
   // ... other options
 });
 ```

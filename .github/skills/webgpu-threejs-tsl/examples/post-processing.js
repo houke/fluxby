@@ -29,7 +29,7 @@ import {
   smoothstep,
   texture,
   grayscale,
-  saturation
+  saturation,
 } from 'three/tsl';
 import { bloom } from 'three/addons/tsl/display/BloomNode.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
@@ -46,7 +46,12 @@ const colorTint = uniform(new THREE.Color(1.0, 0.95, 0.9));
 
 async function init() {
   // Camera
-  camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
+  camera = new THREE.PerspectiveCamera(
+    60,
+    window.innerWidth / window.innerHeight,
+    0.1,
+    100
+  );
   camera.position.set(0, 2, 8);
 
   // Scene
@@ -81,7 +86,7 @@ function createScene() {
   // Floor
   const floorGeometry = new THREE.PlaneGeometry(20, 20);
   const floorMaterial = new THREE.MeshStandardNodeMaterial({
-    color: 0x222222
+    color: 0x222222,
   });
   const floor = new THREE.Mesh(floorGeometry, floorMaterial);
   floor.rotation.x = -Math.PI / 2;
@@ -100,7 +105,9 @@ function createScene() {
 
     // Animated emissive
     material.emissiveNode = Fn(() => {
-      const pulse = oscSine(time.mul(1.0 + i * 0.2)).mul(0.5).add(0.5);
+      const pulse = oscSine(time.mul(1.0 + i * 0.2))
+        .mul(0.5)
+        .add(0.5);
       return color(colors[i]).mul(pulse.mul(2.0).add(0.5));
     })();
 
@@ -122,7 +129,10 @@ function createScene() {
   centerMaterial.roughnessNode = float(0.1);
   centerMaterial.metalnessNode = float(1.0);
 
-  const centerSphere = new THREE.Mesh(new THREE.SphereGeometry(1, 64, 64), centerMaterial);
+  const centerSphere = new THREE.Mesh(
+    new THREE.SphereGeometry(1, 64, 64),
+    centerMaterial
+  );
   centerSphere.position.y = 1;
   scene.add(centerSphere);
 
@@ -169,7 +179,12 @@ function setupPostProcessing() {
 
   // 4. Optional: Scanlines
   const scanlines = Fn(() => {
-    const scanline = screenUV.y.mul(screenSize.y).mul(0.5).sin().mul(0.05).add(0.95);
+    const scanline = screenUV.y
+      .mul(screenSize.y)
+      .mul(0.5)
+      .sin()
+      .mul(0.05)
+      .add(0.95);
     return scanline;
   });
 
@@ -196,4 +211,10 @@ function animate() {
 init();
 
 // Export uniforms for external control (e.g., GUI)
-export { bloomStrength, bloomThreshold, vignetteIntensity, saturationAmount, colorTint };
+export {
+  bloomStrength,
+  bloomThreshold,
+  vignetteIntensity,
+  saturationAmount,
+  colorTint,
+};

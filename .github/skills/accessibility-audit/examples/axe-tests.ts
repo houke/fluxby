@@ -147,11 +147,11 @@ test.describe('Detailed Accessibility Report', () => {
       console.log('Accessibility Violations Found:');
       results.violations.forEach((violation, index) => {
         console.log(
-          `\n${index + 1}. ${violation.id}: ${violation.description}`,
+          `\n${index + 1}. ${violation.id}: ${violation.description}`
         );
         console.log(`   Impact: ${violation.impact}`);
         console.log(
-          `   WCAG: ${violation.tags.filter((t) => t.startsWith('wcag')).join(', ')}`,
+          `   WCAG: ${violation.tags.filter((t) => t.startsWith('wcag')).join(', ')}`
         );
         console.log(`   Help: ${violation.helpUrl}`);
         console.log(`   Affected elements:`);
@@ -176,7 +176,7 @@ async function checkAccessibility(
     scope?: string;
     exclude?: string[];
     level?: 'A' | 'AA' | 'AAA';
-  } = {},
+  } = {}
 ) {
   let builder = new AxeBuilder({ page });
 

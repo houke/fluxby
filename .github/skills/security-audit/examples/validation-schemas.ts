@@ -63,19 +63,19 @@ export const passwordSchema = z
   .max(128, 'Password must be less than 128 characters')
   .refine(
     (password) => /[A-Z]/.test(password),
-    'Password must contain at least one uppercase letter',
+    'Password must contain at least one uppercase letter'
   )
   .refine(
     (password) => /[a-z]/.test(password),
-    'Password must contain at least one lowercase letter',
+    'Password must contain at least one lowercase letter'
   )
   .refine(
     (password) => /[0-9]/.test(password),
-    'Password must contain at least one number',
+    'Password must contain at least one number'
   )
   .refine(
     (password) => /[^A-Za-z0-9]/.test(password),
-    'Password must contain at least one special character',
+    'Password must contain at least one special character'
   );
 
 // Less strict password for cases where external auth is primary
@@ -101,11 +101,11 @@ export const usernameSchema = z
   .max(30, 'Username must be less than 30 characters')
   .regex(
     /^[a-zA-Z0-9_-]+$/,
-    'Username can only contain letters, numbers, underscores, and hyphens',
+    'Username can only contain letters, numbers, underscores, and hyphens'
   )
   .refine(
     (username) => !/^[-_]|[-_]$/.test(username),
-    'Username cannot start or end with special characters',
+    'Username cannot start or end with special characters'
   )
   .transform((username) => username.toLowerCase());
 
@@ -190,7 +190,7 @@ export const slugSchema = z
   .max(100, 'Slug too long')
   .regex(
     /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
-    'Slug must be lowercase with hyphens only',
+    'Slug must be lowercase with hyphens only'
   );
 
 // ============================================================================

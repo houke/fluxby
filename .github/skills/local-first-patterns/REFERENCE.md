@@ -126,7 +126,7 @@ interface SyncOperation {
 
 // Add to queue
 const addToQueue = (
-  op: Omit<SyncOperation, 'id' | 'timestamp' | 'retries'>,
+  op: Omit<SyncOperation, 'id' | 'timestamp' | 'retries'>
 ) => {
   const operation: SyncOperation = {
     ...op,
@@ -168,8 +168,8 @@ const merge = (local: Item, remote: Item) => ({
   ...remote,
   ...Object.fromEntries(
     Object.entries(local).filter(
-      ([key, value]) => local.fieldVersions[key] > remote.fieldVersions[key],
-    ),
+      ([key, value]) => local.fieldVersions[key] > remote.fieldVersions[key]
+    )
   ),
 });
 
@@ -220,16 +220,14 @@ const useOnlineStatus = () => {
 // Cache-first
 self.addEventListener('fetch', (event) => {
   event.respondWith(
-    caches
-      .match(event.request)
-      .then((cached) => cached || fetch(event.request)),
+    caches.match(event.request).then((cached) => cached || fetch(event.request))
   );
 });
 
 // Network-first
 self.addEventListener('fetch', (event) => {
   event.respondWith(
-    fetch(event.request).catch(() => caches.match(event.request)),
+    fetch(event.request).catch(() => caches.match(event.request))
   );
 });
 
@@ -244,7 +242,7 @@ self.addEventListener('fetch', (event) => {
         return response;
       });
       return cached || fetched;
-    }),
+    })
   );
 });
 ```

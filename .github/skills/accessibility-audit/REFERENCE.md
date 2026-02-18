@@ -119,7 +119,7 @@ aria-errormessage="id"
 // Trap focus within modal
 const modal = document.querySelector('[role="dialog"]');
 const focusableElements = modal.querySelectorAll(
-  'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+  'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
 );
 const firstFocusable = focusableElements[0];
 const lastFocusable = focusableElements[focusableElements.length - 1];
@@ -213,7 +213,7 @@ items.forEach((item, index) => {
 ```javascript
 // JavaScript detection
 const prefersReducedMotion = window.matchMedia(
-  '(prefers-reduced-motion: reduce)',
+  '(prefers-reduced-motion: reduce)'
 ).matches;
 
 if (!prefersReducedMotion) {

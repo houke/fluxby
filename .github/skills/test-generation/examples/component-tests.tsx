@@ -152,7 +152,7 @@ describe('Button', () => {
   it('renders children', () => {
     render(<Button>Click me</Button>);
     expect(
-      screen.getByRole('button', { name: /click me/i }),
+      screen.getByRole('button', { name: /click me/i })
     ).toBeInTheDocument();
   });
 
@@ -179,7 +179,7 @@ describe('Button', () => {
     render(
       <Button onClick={handleClick} disabled>
         Click me
-      </Button>,
+      </Button>
     );
 
     await user.click(screen.getByRole('button'));
@@ -206,7 +206,7 @@ describe('LoginForm', () => {
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
     expect(
-      screen.getByRole('button', { name: /sign in/i }),
+      screen.getByRole('button', { name: /sign in/i })
     ).toBeInTheDocument();
   });
 
@@ -243,7 +243,7 @@ describe('LoginForm', () => {
 
     expect(screen.getByLabelText(/email/i)).toHaveAttribute(
       'aria-invalid',
-      'true',
+      'true'
     );
   });
 
@@ -299,7 +299,7 @@ describe('UserProfile', () => {
     render(<UserProfile userId='123' />);
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      /failed to load/i,
+      /failed to load/i
     );
   });
 
@@ -331,7 +331,7 @@ describe('Snapshots', () => {
   it('matches inline snapshot', () => {
     const { container } = render(<Button>Click</Button>);
     expect(container.innerHTML).toMatchInlineSnapshot(
-      `"<button class=\\"btn btn-primary\\">Click</button>"`,
+      `"<button class=\\"btn btn-primary\\">Click</button>"`
     );
   });
 });

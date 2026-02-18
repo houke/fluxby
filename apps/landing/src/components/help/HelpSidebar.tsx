@@ -75,6 +75,11 @@ export default function HelpSidebar({ isOpen, onClose }: HelpSidebarProps) {
           icon: '💸',
         },
         {
+          title: t.helpCenter?.userNav?.bulkDelete || 'Bulk delete',
+          path: '/help/bulk-delete',
+          icon: '🗑️',
+        },
+        {
           title: t.helpCenter?.userNav?.categories || 'Categories',
           path: '/help/categories',
           icon: '🏷️',

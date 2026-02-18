@@ -1127,6 +1127,7 @@ export interface TranslationKeys {
     confirmTitle: string;
     confirmWarning: string;
     totalImpact: string;
+    previewListLabel: string;
     andMore: string;
     undoToast: string;
     undo: string;
@@ -2713,6 +2714,7 @@ export const nl: TranslationKeys = {
     confirmTitle: '{count} transactie(s) verwijderen?',
     confirmWarning: 'Deze actie kan niet ongedaan worden gemaakt na 5 minuten.',
     totalImpact: 'Totale impact',
+    previewListLabel: 'Te verwijderen transacties',
     andMore: 'en {count} meer',
     undoToast: '{count} transacties verwijderd',
     undo: 'Ongedaan maken',

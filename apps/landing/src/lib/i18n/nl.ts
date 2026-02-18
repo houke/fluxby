@@ -1340,6 +1340,7 @@ export const nl: LandingTranslationKeys = {
       installation: 'Installatie',
       features: 'Functies',
       transactions: 'Transacties',
+      bulkDelete: 'Bulk verwijderen',
       categories: 'Categorieën',
       accounts: 'Rekeningen',
       addressBook: 'Adresboek',

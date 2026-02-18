@@ -68,13 +68,13 @@ test.describe('Keyboard Navigation', () => {
       });
 
       const focusedElement = await page.evaluate(
-        () => document.activeElement?.tagName,
+        () => document.activeElement?.tagName
       );
 
       if (focusedElement !== 'BODY') {
         expect(
           hasFocusStyle,
-          `Focus should be visible on ${focusedElement}`,
+          `Focus should be visible on ${focusedElement}`
         ).toBe(true);
       }
 
@@ -145,7 +145,7 @@ test.describe('Modal Keyboard Interaction', () => {
       const modal = document.querySelector('[role="dialog"]');
       return (
         modal?.querySelectorAll(
-          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
         ).length ?? 0
       );
     });
@@ -184,7 +184,7 @@ test.describe('Modal Keyboard Interaction', () => {
     await page.keyboard.press('Escape');
 
     const triggerFocused = await trigger.evaluate(
-      (el) => el === document.activeElement,
+      (el) => el === document.activeElement
     );
     expect(triggerFocused).toBe(true);
   });

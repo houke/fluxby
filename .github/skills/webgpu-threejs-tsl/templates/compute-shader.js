@@ -29,7 +29,7 @@ import {
   instanceIndex,
   hash,
   time,
-  deltaTime
+  deltaTime,
 } from 'three/tsl';
 
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
@@ -225,7 +225,12 @@ async function init() {
   scene.background = new THREE.Color(0x111122);
 
   // Camera
-  camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
+  camera = new THREE.PerspectiveCamera(
+    60,
+    window.innerWidth / window.innerHeight,
+    0.1,
+    100
+  );
   camera.position.set(0, 5, 15);
 
   // Lights
@@ -301,5 +306,5 @@ export {
   dt,
   computeInit,
   computeUpdate,
-  computeInteraction
+  computeInteraction,
 };

@@ -132,7 +132,7 @@ class XPService {
   async awardXP(
     userId: string,
     amount: number,
-    reason: string,
+    reason: string
   ): Promise<{
     newXP: number;
     leveledUp: boolean;
@@ -292,7 +292,7 @@ const ACHIEVEMENTS: Achievement[] = [
 class AchievementService {
   async checkAchievements(
     userId: string,
-    event: GameEvent,
+    event: GameEvent
   ): Promise<Achievement[]> {
     const userStats = await this.getUserStats(userId);
     const unlockedIds = await this.getUnlockedAchievements(userId);
@@ -313,7 +313,7 @@ class AchievementService {
   private meetsAchievementCriteria(
     achievement: Achievement,
     stats: UserStats,
-    event: GameEvent,
+    event: GameEvent
   ): boolean {
     const { criteria } = achievement;
     const value = stats[criteria.type] || 0;
@@ -354,7 +354,7 @@ class StreakService {
     const now = new Date();
     const hoursSinceLastActivity = this.hoursBetween(
       current.lastActivityDate,
-      now,
+      now
     );
 
     let newStreak: number;
@@ -515,7 +515,7 @@ interface LeaderboardConfig {
 // Show user's position even if not in top N
 async function getLeaderboard(
   config: LeaderboardConfig,
-  currentUserId: string,
+  currentUserId: string
 ): Promise<{
   top: LeaderboardEntry[];
   userPosition: LeaderboardEntry | null;

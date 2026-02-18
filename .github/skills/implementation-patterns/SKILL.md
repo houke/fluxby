@@ -251,7 +251,7 @@ interface AppError {
 
 // Usage
 async function processPayment(
-  amount: number,
+  amount: number
 ): Promise<Result<Payment, AppError>> {
   if (amount <= 0) {
     return err({ code: 'INVALID_AMOUNT', message: 'Amount must be positive' });
@@ -346,7 +346,7 @@ interface UseAsyncOptions<T> {
 
 function useAsync<T, Args extends unknown[]>(
   asyncFn: (...args: Args) => Promise<T>,
-  options: UseAsyncOptions<T> = {},
+  options: UseAsyncOptions<T> = {}
 ) {
   const [state, setState] = useState<{
     data: T | null;
@@ -374,7 +374,7 @@ function useAsync<T, Args extends unknown[]>(
         throw err;
       }
     },
-    [asyncFn, options.onSuccess, options.onError],
+    [asyncFn, options.onSuccess, options.onError]
   );
 
   return { ...state, execute };
@@ -383,7 +383,7 @@ function useAsync<T, Args extends unknown[]>(
 // Usage
 const { data, error, isLoading, execute } = useAsync(
   (id: string) => userService.getUser(id),
-  { onSuccess: (user) => console.log('Loaded:', user.name) },
+  { onSuccess: (user) => console.log('Loaded:', user.name) }
 );
 ```
 
@@ -427,7 +427,7 @@ abstract class AppError extends Error {
 
   constructor(
     message: string,
-    public readonly cause?: unknown,
+    public readonly cause?: unknown
   ) {
     super(message);
     this.name = this.constructor.name;
@@ -440,7 +440,7 @@ class ValidationError extends AppError {
 
   constructor(
     message: string,
-    public readonly fields: Record<string, string[]>,
+    public readonly fields: Record<string, string[]>
   ) {
     super(message);
   }
@@ -464,7 +464,7 @@ function handleError(error: unknown): Response {
         code: error.code,
         message: error.message,
       }),
-      { status: error.statusCode },
+      { status: error.statusCode }
     );
   }
 
@@ -475,7 +475,7 @@ function handleError(error: unknown): Response {
       code: 'INTERNAL_ERROR',
       message: 'An unexpected error occurred',
     }),
-    { status: 500 },
+    { status: 500 }
   );
 }
 ```

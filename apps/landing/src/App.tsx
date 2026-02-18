@@ -43,6 +43,7 @@ import HelpPrivacy from './pages/help/HelpPrivacy';
 import HelpFirstSteps from './pages/help/HelpFirstSteps';
 import HelpInstallation from './pages/help/HelpInstallation';
 import HelpTransactions from './pages/help/HelpTransactions';
+import HelpBulkDelete from './pages/help/HelpBulkDelete';
 import HelpCategories from './pages/help/HelpCategories';
 import HelpAccounts from './pages/help/HelpAccounts';
 import HelpAnalytics from './pages/help/HelpAnalytics';
@@ -171,6 +172,7 @@ function App() {
                   element={<HelpBankConnection />}
                 />
                 <Route path='transactions' element={<HelpTransactions />} />
+                <Route path='bulk-delete' element={<HelpBulkDelete />} />
                 <Route path='categories' element={<HelpCategories />} />
                 <Route path='accounts' element={<HelpAccounts />} />
                 <Route path='address-book' element={<HelpAddressBook />} />

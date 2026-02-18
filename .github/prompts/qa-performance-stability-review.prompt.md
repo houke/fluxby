@@ -7,6 +7,7 @@ A comprehensive QA review of the Fluxby application across all platforms (Web/PW
 ## Dashboard
 
 ### Current State
+
 - Uses lazy loading for chart components (good practice)
 - Multiple TanStack Query hooks with 2-minute staleTime
 - Suspense boundaries for chart loading states
@@ -46,6 +47,7 @@ A comprehensive QA review of the Fluxby application across all platforms (Web/PW
 ## Transactions
 
 ### Current State
+
 - 4000+ lines file - very large component
 - Virtualized list with @tanstack/react-virtual
 - Multiple filter states (search, type, category, IBAN, payment method, etc.)
@@ -100,6 +102,7 @@ A comprehensive QA review of the Fluxby application across all platforms (Web/PW
 ## Subscriptions
 
 ### Current State
+
 - Pattern detection via ML-like analysis of recurring transactions
 - Calendar view with date-based grouping
 - Stats cards for monthly costs
@@ -135,6 +138,7 @@ A comprehensive QA review of the Fluxby application across all platforms (Web/PW
 ## Analytics
 
 ### Current State
+
 - Uses year-based date range (expands user selection to full year boundaries)
 - Multiple chart types: Pie, Bar, Line
 - Recharts library for visualization
@@ -171,6 +175,7 @@ A comprehensive QA review of the Fluxby application across all platforms (Web/PW
 ## Budgets
 
 ### Current State
+
 - CRUD for budget items
 - Smart budget suggestions based on spending history
 - Progress bars with color coding
@@ -203,6 +208,7 @@ A comprehensive QA review of the Fluxby application across all platforms (Web/PW
 ## Categories
 
 ### Current State
+
 - Hierarchical categories with subcategories
 - Category rules for auto-assignment
 - Preset icons and colors
@@ -232,6 +238,7 @@ A comprehensive QA review of the Fluxby application across all platforms (Web/PW
 ## Address Book
 
 ### Current State
+
 - Contact management with IBAN mapping
 - Shared IBAN detection (payment processors)
 - Cleanup rules for name normalization
@@ -265,6 +272,7 @@ A comprehensive QA review of the Fluxby application across all platforms (Web/PW
 ## Import
 
 ### Current State
+
 - Web Worker for CSV parsing
 - Supports ING, ASN Bank formats
 - Generic CSV mapping for other banks
@@ -303,6 +311,7 @@ A comprehensive QA review of the Fluxby application across all platforms (Web/PW
 ## Settings
 
 ### Current State
+
 - Tabbed interface (Active Profile, Manage Profiles, App Settings)
 - Modular settings components
 - Sync settings with QR pairing
@@ -332,6 +341,7 @@ A comprehensive QA review of the Fluxby application across all platforms (Web/PW
 ## Help
 
 ### Current State
+
 - Help articles with markdown content
 - Links to developer documentation
 
@@ -352,6 +362,7 @@ A comprehensive QA review of the Fluxby application across all platforms (Web/PW
 ## Database Layer (OPFS)
 
 ### Current State
+
 - SQLite WASM via @journeyapps/wa-sqlite
 - OPFS for persistent storage
 - Worker-based architecture for non-blocking I/O
@@ -398,6 +409,7 @@ A comprehensive QA review of the Fluxby application across all platforms (Web/PW
 ## Sync Engine (P2P)
 
 ### Current State
+
 - PeerJS for WebRTC connections
 - Last-Write-Wins conflict resolution
 - QR code pairing
@@ -437,6 +449,7 @@ A comprehensive QA review of the Fluxby application across all platforms (Web/PW
 ## Tauri Desktop App
 
 ### Current State
+
 - Minimal Rust wrapper
 - Uses same web codebase
 - SQLite via OPFS (not native SQLite)
@@ -475,6 +488,7 @@ A comprehensive QA review of the Fluxby application across all platforms (Web/PW
 ## Mobile Web (PWA)
 
 ### Current State
+
 - Responsive design with `useIsMobile` hook
 - PWA manifest and service worker
 - Touch-optimized interactions
@@ -515,12 +529,14 @@ A comprehensive QA review of the Fluxby application across all platforms (Web/PW
 ## Cross-Platform Testing Checklist
 
 ### Web (Chrome, Firefox, Safari, Edge)
+
 - [ ] OPFS support verification
 - [ ] Service Worker registration
 - [ ] IndexedDB fallback (if needed)
 - [ ] WebRTC peer connections
 
 ### Mobile Web
+
 - [ ] iOS Safari 16.4+ (OPFS support)
 - [ ] Chrome Android
 - [ ] Touch interactions (swipe, long-press)
@@ -528,6 +544,7 @@ A comprehensive QA review of the Fluxby application across all platforms (Web/PW
 - [ ] PWA install prompt
 
 ### Tauri (macOS, Windows, Linux)
+
 - [ ] Application startup time
 - [ ] File system permissions
 - [ ] System tray integration (if any)
@@ -539,24 +556,28 @@ A comprehensive QA review of the Fluxby application across all platforms (Web/PW
 ## Priority Action Items
 
 ### High Priority (Stability)
+
 1. Add database integrity check on startup
 2. Implement migration rollback
 3. Add OPFS quota checking
 4. Improve TURN server reliability
 
 ### High Priority (Performance)
+
 1. Consolidate Dashboard queries into single endpoint
 2. Split Transactions.tsx into smaller modules
 3. Audit all non-transactional database writes
 4. Add virtualization to Address Book
 
 ### Medium Priority
+
 1. Lazy load settings tabs
 2. Add memory pressure detection for pattern detection
 3. Implement native SQLite for Tauri
 4. Optimize Analytics for multi-year ranges
 
 ### Low Priority
+
 1. Pre-render help pages at build time
 2. Add EXPLAIN QUERY PLAN logging in dev
 3. Implement star topology for multi-device sync
@@ -582,5 +603,5 @@ A comprehensive QA review of the Fluxby application across all platforms (Web/PW
 
 ---
 
-*Generated by QA Review - Claude Opus 4.5*
-*Review Date: January 2026*
+_Generated by QA Review - Claude Opus 4.5_
+_Review Date: January 2026_

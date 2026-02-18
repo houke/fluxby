@@ -9,6 +9,7 @@
 **URL:** https://developers.google.com/search/docs/appearance/visual-elements-gallery#video-result
 
 **Contents:**
+
 - Visual Elements gallery of Google Search
 - Anatomy of a Google Search results page
 - Attribution
@@ -48,7 +49,7 @@ The site address as defined by the domain name. This is the name you chose when 
 
 The trail that shows th
 
-*[Content truncated]*
+_[Content truncated]_
 
 ---
 
@@ -57,6 +58,7 @@ The trail that shows th
 **URL:** https://developers.google.com/search/docs/appearance/visual-elements-gallery#image-result-attribution
 
 **Contents:**
+
 - Visual Elements gallery of Google Search
 - Anatomy of a Google Search results page
 - Attribution
@@ -96,7 +98,7 @@ The site address as defined by the domain name. This is the name you chose when 
 
 The trail that shows th
 
-*[Content truncated]*
+_[Content truncated]_
 
 ---
 
@@ -105,6 +107,7 @@ The trail that shows th
 **URL:** https://developers.google.com/search/docs/appearance/visual-elements-gallery#visible-url
 
 **Contents:**
+
 - Visual Elements gallery of Google Search
 - Anatomy of a Google Search results page
 - Attribution
@@ -144,7 +147,7 @@ The site address as defined by the domain name. This is the name you chose when 
 
 The trail that shows th
 
-*[Content truncated]*
+_[Content truncated]_
 
 ---
 
@@ -153,6 +156,7 @@ The trail that shows th
 **URL:** https://developers.google.com/search/docs/appearance/video#help-google-find
 
 **Contents:**
+
 - Video SEO best practices
 - Help Google find your videos
 - Ensure your videos can be indexed
@@ -188,11 +192,12 @@ To be eligible for video features (including video results on the main search re
 
 A watch page's main purpose is to show users a single video. The following pages are watch pages because watching an individual video is the main reason the user is
 
-*[Content truncated]*
+_[Content truncated]_
 
 **Examples:**
 
 Example 1 (unknown):
+
 ```unknown
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
@@ -204,16 +209,19 @@ Example 1 (unknown):
 ```
 
 Example 2 (unknown):
+
 ```unknown
 <iframe src="https://example.com/videoplayer.php?video=123" width="640" height="360" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>
 ```
 
 Example 3 (unknown):
+
 ```unknown
 "embedUrl": "https://example.com/videoplayer.php?video=123"
 ```
 
 Example 4 (unknown):
+
 ```unknown
 <video:player_loc>https://example.com/videoplayer.php?video=123</video:player_loc>
 ```
@@ -225,6 +233,7 @@ Example 4 (unknown):
 **URL:** https://developers.google.com/search/docs/appearance/structured-data/video
 
 **Contents:**
+
 - Video (VideoObject, Clip, BroadcastEvent) structured data
 - How to add structured data
 - Examples
@@ -268,11 +277,12 @@ If you're adding BroadcastEvent to livestream videos, follow these guidelines:
 
 If your vi
 
-*[Content truncated]*
+_[Content truncated]_
 
 **Examples:**
 
 Example 1 (unknown):
+
 ```unknown
 <html>
   <head>
@@ -287,6 +297,7 @@ Example 1 (unknown):
 ```
 
 Example 2 (unknown):
+
 ```unknown
 <html itemscope itemprop="VideoObject" itemtype="https://schema.org/VideoObject">
 <head>
@@ -300,6 +311,7 @@ Example 2 (unknown):
 ```
 
 Example 3 (unknown):
+
 ```unknown
 <html>
   <head>
@@ -321,6 +333,7 @@ Example 3 (unknown):
 ```
 
 Example 4 (unknown):
+
 ```unknown
 <html itemscope itemprop="VideoObject" itemtype="https://schema.org/VideoObject">
 <head>
@@ -344,6 +357,7 @@ Example 4 (unknown):
 **URL:** https://developers.google.com/search/docs/appearance/google-images#use-descriptive-alt-text
 
 **Contents:**
+
 - Google image SEO best practices
 - Help us discover and index your images
   - Use HTML image elements to embed images
@@ -375,11 +389,12 @@ The srcset attribute allows specifying different versions of the same image, spe
 
 The <picture> element is a container that is used to group different <source> versions of the same image. It offers a fallback approach so the browser can choose the right image depending on device capabilities, like pixel density and screen size. The picture element also comes in handy for using new image formats with built-in graceful degradatio
 
-*[Content truncated]*
+_[Content truncated]_
 
 **Examples:**
 
 Example 1 (unknown):
+
 ```unknown
 <img
   srcset="maine-coon-nap-320w.jpg 320w, maine-coon-nap-480w.jpg 480w, maine-coon-nap-800w.jpg 800w"
@@ -389,6 +404,7 @@ Example 1 (unknown):
 ```
 
 Example 2 (unknown):
+
 ```unknown
 <picture>
   <source type="image/svg+xml" srcset="pyramid.svg">
@@ -398,11 +414,13 @@ Example 2 (unknown):
 ```
 
 Example 3 (unknown):
+
 ```unknown
 <img src="data:image/svg+xml;base64,[data]">
 ```
 
 Example 4 (unknown):
+
 ```unknown
 <svg aria-labelledby="svgtitle1">
   <title id="svgtitle1">Googlebot wearing an apron and chef hat, struggling to make pancakes on the stovetop</title>
@@ -416,6 +434,7 @@ Example 4 (unknown):
 **URL:** https://developers.google.com/search/docs/appearance/title-link#page-titles
 
 **Contents:**
+
 - Influencing your title links in search results
 - Best practices for influencing title links
 - How title links in Google Search are created
@@ -455,7 +474,7 @@ In this example, the page has a large, visible title that says "2021 admissions 
 
 When the <title> elements don't accurately reflect what the page is about. For example,
 
-*[Content truncated]*
+_[Content truncated]_
 
 ---
 
@@ -464,6 +483,7 @@ When the <title> elements don't accurately reflect what the page is about. For e
 **URL:** https://developers.google.com/search/docs/appearance/page-experience
 
 **Contents:**
+
 - Understanding page experience in Google Search results
 - Self-assess your content's page experience
 - Page experience resources
@@ -496,7 +516,7 @@ Here's everything we've announced about page experience on the Google Search Cen
 
 Except as otherwise noted, the content of this page is licensed under the Creative Commons Attribution 4.0 License, and code samples are licensed under the Apache 2.0 License. For d
 
-*[Content truncated]*
+_[Content truncated]_
 
 ---
 
@@ -505,6 +525,7 @@ Except as otherwise noted, the content of this page is licensed under the Creati
 **URL:** https://developers.google.com/search/docs/appearance/visual-elements-gallery#image-thumbnail
 
 **Contents:**
+
 - Visual Elements gallery of Google Search
 - Anatomy of a Google Search results page
 - Attribution
@@ -544,7 +565,7 @@ The site address as defined by the domain name. This is the name you chose when 
 
 The trail that shows th
 
-*[Content truncated]*
+_[Content truncated]_
 
 ---
 
@@ -553,6 +574,7 @@ The trail that shows th
 **URL:** https://developers.google.com/search/docs/appearance/google-images#descriptive-alt-text
 
 **Contents:**
+
 - Google image SEO best practices
 - Help us discover and index your images
   - Use HTML image elements to embed images
@@ -584,11 +606,12 @@ The srcset attribute allows specifying different versions of the same image, spe
 
 The <picture> element is a container that is used to group different <source> versions of the same image. It offers a fallback approach so the browser can choose the right image depending on device capabilities, like pixel density and screen size. The picture element also comes in handy for using new image formats with built-in graceful degradatio
 
-*[Content truncated]*
+_[Content truncated]_
 
 **Examples:**
 
 Example 1 (unknown):
+
 ```unknown
 <img
   srcset="maine-coon-nap-320w.jpg 320w, maine-coon-nap-480w.jpg 480w, maine-coon-nap-800w.jpg 800w"
@@ -598,6 +621,7 @@ Example 1 (unknown):
 ```
 
 Example 2 (unknown):
+
 ```unknown
 <picture>
   <source type="image/svg+xml" srcset="pyramid.svg">
@@ -607,11 +631,13 @@ Example 2 (unknown):
 ```
 
 Example 3 (unknown):
+
 ```unknown
 <img src="data:image/svg+xml;base64,[data]">
 ```
 
 Example 4 (unknown):
+
 ```unknown
 <svg aria-labelledby="svgtitle1">
   <title id="svgtitle1">Googlebot wearing an apron and chef hat, struggling to make pancakes on the stovetop</title>
@@ -625,6 +651,7 @@ Example 4 (unknown):
 **URL:** https://developers.google.com/search/docs/appearance/sitelinks#sitelinks-best-practices
 
 **Contents:**
+
 - Sitelinks
 - Sitelinks best practices
 
@@ -651,6 +678,7 @@ Last updated 2025-02-04 UTC.
 **URL:** https://developers.google.com/search/docs/appearance/structured-data/sd-policies
 
 **Contents:**
+
 - General structured data guidelines
 - Technical guidelines
   - Format
@@ -680,13 +708,14 @@ Your structured data must be a true representation of the page content. Here are
 
 Multiple items on a page means that there is more than one kind of thing on a page. For example, a page could contain a recipe, a video that shows how to make that recipe, and breadcrumb information for how people can discover that recipe. All of this user-visible information can also be marked up with structured data, which makes it easier for search engines like Google Search to understand the information on a page. When you add more items that apply to a page, Google Search has a fuller picture of what the page is about and can display that page in different search features.
 
-Google Search understands multiple items on a page, whether you nest the items or specify each item individually: Nesting: When there is one main item, and additional items are grouped under the main item. This is particularly helpful when grouping related items (for example, 
+Google Search understands multiple items on a page, whether you nest the items or specify each item individually: Nesting: When there is one main item, and additional items are grouped under the main item. This is particularly helpful when grouping related items (for example,
 
-*[Content truncated]*
+_[Content truncated]_
 
 **Examples:**
 
 Example 1 (unknown):
+
 ```unknown
 <html>
   <head>
@@ -710,6 +739,7 @@ Example 1 (unknown):
 ```
 
 Example 2 (unknown):
+
 ```unknown
 <html>
   <head>
@@ -741,6 +771,7 @@ Example 2 (unknown):
 **URL:** https://developers.google.com/search/docs/appearance/structured-data/breadcrumb
 
 **Contents:**
+
 - Breadcrumb (BreadcrumbList) structured data
 - Feature availability
 - How to add structured data
@@ -794,11 +825,12 @@ You must follow these guidelines to be eligible to appear with breadcrumbs in Go
 
 We recommend providing breadcrumbs that represent a typical user path to a page, instead of mirroring the URL structure. It is not required to include a breadcrumb ListItem for the top level path (your sit
 
-*[Content truncated]*
+_[Content truncated]_
 
 **Examples:**
 
 Example 1 (unknown):
+
 ```unknown
 <html>
   <head>
@@ -829,6 +861,7 @@ Example 1 (unknown):
 ```
 
 Example 2 (unknown):
+
 ```unknown
 <html>
   <head>
@@ -851,6 +884,7 @@ Example 2 (unknown):
 ```
 
 Example 3 (unknown):
+
 ```unknown
 <html>
   <head>
@@ -873,6 +907,7 @@ Example 3 (unknown):
 ```
 
 Example 4 (unknown):
+
 ```unknown
 <html>
   <head>
@@ -901,6 +936,7 @@ Example 4 (unknown):
 **URL:** https://developers.google.com/search/docs/appearance/google-images#help-us-discover-all-your-images
 
 **Contents:**
+
 - Google image SEO best practices
 - Help us discover and index your images
   - Use HTML image elements to embed images
@@ -932,11 +968,12 @@ The srcset attribute allows specifying different versions of the same image, spe
 
 The <picture> element is a container that is used to group different <source> versions of the same image. It offers a fallback approach so the browser can choose the right image depending on device capabilities, like pixel density and screen size. The picture element also comes in handy for using new image formats with built-in graceful degradatio
 
-*[Content truncated]*
+_[Content truncated]_
 
 **Examples:**
 
 Example 1 (unknown):
+
 ```unknown
 <img
   srcset="maine-coon-nap-320w.jpg 320w, maine-coon-nap-480w.jpg 480w, maine-coon-nap-800w.jpg 800w"
@@ -946,6 +983,7 @@ Example 1 (unknown):
 ```
 
 Example 2 (unknown):
+
 ```unknown
 <picture>
   <source type="image/svg+xml" srcset="pyramid.svg">
@@ -955,11 +993,13 @@ Example 2 (unknown):
 ```
 
 Example 3 (unknown):
+
 ```unknown
 <img src="data:image/svg+xml;base64,[data]">
 ```
 
 Example 4 (unknown):
+
 ```unknown
 <svg aria-labelledby="svgtitle1">
   <title id="svgtitle1">Googlebot wearing an apron and chef hat, struggling to make pancakes on the stovetop</title>
@@ -973,6 +1013,7 @@ Example 4 (unknown):
 **URL:** https://developers.google.com/search/docs/appearance/visual-elements-gallery#upload-date
 
 **Contents:**
+
 - Visual Elements gallery of Google Search
 - Anatomy of a Google Search results page
 - Attribution
@@ -1012,7 +1053,7 @@ The site address as defined by the domain name. This is the name you chose when 
 
 The trail that shows th
 
-*[Content truncated]*
+_[Content truncated]_
 
 ---
 
@@ -1021,6 +1062,7 @@ The trail that shows th
 **URL:** https://developers.google.com/search/docs/appearance/video#troubleshoot
 
 **Contents:**
+
 - Video SEO best practices
 - Help Google find your videos
 - Ensure your videos can be indexed
@@ -1056,11 +1098,12 @@ To be eligible for video features (including video results on the main search re
 
 A watch page's main purpose is to show users a single video. The following pages are watch pages because watching an individual video is the main reason the user is
 
-*[Content truncated]*
+_[Content truncated]_
 
 **Examples:**
 
 Example 1 (unknown):
+
 ```unknown
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
@@ -1072,16 +1115,19 @@ Example 1 (unknown):
 ```
 
 Example 2 (unknown):
+
 ```unknown
 <iframe src="https://example.com/videoplayer.php?video=123" width="640" height="360" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>
 ```
 
 Example 3 (unknown):
+
 ```unknown
 "embedUrl": "https://example.com/videoplayer.php?video=123"
 ```
 
 Example 4 (unknown):
+
 ```unknown
 <video:player_loc>https://example.com/videoplayer.php?video=123</video:player_loc>
 ```
@@ -1093,6 +1139,7 @@ Example 4 (unknown):
 **URL:** https://developers.google.com/search/docs/appearance/site-names
 
 **Contents:**
+
 - Provide a site name to Google Search
 - Feature availability
 - How site names in Google Search are created
@@ -1132,11 +1179,12 @@ Here's an example of WebSite structured data that includes the required fields:
 
 If you want to provide an alternate version of your site name (for example, an a
 
-*[Content truncated]*
+_[Content truncated]_
 
 **Examples:**
 
 Example 1 (unknown):
+
 ```unknown
 <html>
   <head>
@@ -1156,6 +1204,7 @@ Example 1 (unknown):
 ```
 
 Example 2 (unknown):
+
 ```unknown
 <html>
   <head>
@@ -1171,6 +1220,7 @@ Example 2 (unknown):
 ```
 
 Example 3 (unknown):
+
 ```unknown
 <script type="application/ld+json">
   {
@@ -1184,6 +1234,7 @@ Example 3 (unknown):
 ```
 
 Example 4 (unknown):
+
 ```unknown
 <html>
   <head>
@@ -1210,6 +1261,7 @@ Example 4 (unknown):
 **URL:** https://developers.google.com/search/docs/appearance/visual-elements-gallery#exploration
 
 **Contents:**
+
 - Visual Elements gallery of Google Search
 - Anatomy of a Google Search results page
 - Attribution
@@ -1249,7 +1301,7 @@ The site address as defined by the domain name. This is the name you chose when 
 
 The trail that shows th
 
-*[Content truncated]*
+_[Content truncated]_
 
 ---
 
@@ -1258,6 +1310,7 @@ The trail that shows th
 **URL:** https://developers.google.com/search/docs/appearance/visual-elements-gallery#favicon
 
 **Contents:**
+
 - Visual Elements gallery of Google Search
 - Anatomy of a Google Search results page
 - Attribution
@@ -1297,7 +1350,7 @@ The site address as defined by the domain name. This is the name you chose when 
 
 The trail that shows th
 
-*[Content truncated]*
+_[Content truncated]_
 
 ---
 
@@ -1306,6 +1359,7 @@ The trail that shows th
 **URL:** https://developers.google.com/search/docs/appearance/visual-elements-gallery#video-thumbnail
 
 **Contents:**
+
 - Visual Elements gallery of Google Search
 - Anatomy of a Google Search results page
 - Attribution
@@ -1345,7 +1399,7 @@ The site address as defined by the domain name. This is the name you chose when 
 
 The trail that shows th
 
-*[Content truncated]*
+_[Content truncated]_
 
 ---
 
@@ -1354,6 +1408,7 @@ The trail that shows th
 **URL:** https://developers.google.com/search/docs/appearance/featured-snippets
 
 **Contents:**
+
 - Featured snippets and your website
 - How can I opt out of featured snippets?
   - Block all snippets
@@ -1390,6 +1445,7 @@ Last updated 2025-02-04 UTC.
 **URL:** https://developers.google.com/search/docs/appearance/favicon-in-search
 
 **Contents:**
+
 - Define a favicon to show in search results
 - Implementation
 - Guidelines
@@ -1419,6 +1475,7 @@ Last updated 2025-02-04 UTC.
 **Examples:**
 
 Example 1 (unknown):
+
 ```unknown
 <link rel="icon" href="/path/to/favicon.ico">
 ```
@@ -1430,6 +1487,7 @@ Example 1 (unknown):
 **URL:** https://developers.google.com/search/docs/appearance/visual-elements-gallery#site-name
 
 **Contents:**
+
 - Visual Elements gallery of Google Search
 - Anatomy of a Google Search results page
 - Attribution
@@ -1469,7 +1527,7 @@ The site address as defined by the domain name. This is the name you chose when 
 
 The trail that shows th
 
-*[Content truncated]*
+_[Content truncated]_
 
 ---
 
@@ -1478,6 +1536,7 @@ The trail that shows th
 **URL:** https://developers.google.com/search/docs/appearance/visual-elements-gallery#sitelink
 
 **Contents:**
+
 - Visual Elements gallery of Google Search
 - Anatomy of a Google Search results page
 - Attribution
@@ -1517,7 +1576,7 @@ The site address as defined by the domain name. This is the name you chose when 
 
 The trail that shows th
 
-*[Content truncated]*
+_[Content truncated]_
 
 ---
 
@@ -1526,6 +1585,7 @@ The trail that shows th
 **URL:** https://developers.google.com/search/docs/appearance/visual-elements-gallery#text-result
 
 **Contents:**
+
 - Visual Elements gallery of Google Search
 - Anatomy of a Google Search results page
 - Attribution
@@ -1565,7 +1625,7 @@ The site address as defined by the domain name. This is the name you chose when 
 
 The trail that shows th
 
-*[Content truncated]*
+_[Content truncated]_
 
 ---
 
@@ -1574,6 +1634,7 @@ The trail that shows th
 **URL:** https://developers.google.com/search/docs/appearance/visual-elements-gallery#byline-date
 
 **Contents:**
+
 - Visual Elements gallery of Google Search
 - Anatomy of a Google Search results page
 - Attribution
@@ -1613,7 +1674,7 @@ The site address as defined by the domain name. This is the name you chose when 
 
 The trail that shows th
 
-*[Content truncated]*
+_[Content truncated]_
 
 ---
 
@@ -1622,6 +1683,7 @@ The trail that shows th
 **URL:** https://developers.google.com/search/docs/appearance/structured-data/paywalled-content
 
 **Contents:**
+
 - Structured data for subscription and paywalled content (CreativeWork)
 - Example
 - Guidelines
@@ -1667,13 +1729,14 @@ Here's a list of considerations to keep in mind if you use AMP pages:
 
 AI Overviews and AI Mode offer a preview of a topic or query based on a variety of sources, including web sources. As such, they are subject to Search's preview controls.
 
-If you want Google to crawl and index your content, including the paywalled sections, make 
+If you want Google to crawl and index your content, including the paywalled sections, make
 
-*[Content truncated]*
+_[Content truncated]_
 
 **Examples:**
 
 Example 1 (unknown):
+
 ```unknown
 <html>
   <head>
@@ -1698,6 +1761,7 @@ Example 1 (unknown):
 ```
 
 Example 2 (unknown):
+
 ```unknown
 <body>
 <p>This content is outside a paywall and is visible to all.</p>
@@ -1706,6 +1770,7 @@ Example 2 (unknown):
 ```
 
 Example 3 (unknown):
+
 ```unknown
 {
   "@context": "https://schema.org",
@@ -1725,6 +1790,7 @@ Example 3 (unknown):
 ```
 
 Example 4 (unknown):
+
 ```unknown
 <body>
   <div class="section1">This content is inside a paywall, and requires a subscription or registration.</div>
@@ -1740,6 +1806,7 @@ Example 4 (unknown):
 **URL:** https://developers.google.com/search/docs/appearance/visual-elements-gallery#breadcrumb
 
 **Contents:**
+
 - Visual Elements gallery of Google Search
 - Anatomy of a Google Search results page
 - Attribution
@@ -1779,7 +1846,7 @@ The site address as defined by the domain name. This is the name you chose when 
 
 The trail that shows th
 
-*[Content truncated]*
+_[Content truncated]_
 
 ---
 
@@ -1788,6 +1855,7 @@ The trail that shows th
 **URL:** https://developers.google.com/search/docs/appearance/avoid-intrusive-interstitials
 
 **Contents:**
+
 - Avoid intrusive interstitials and dialogs
 - Create unintrusive dialogs
   - Use banners instead of interstitials
@@ -1813,7 +1881,7 @@ Unless they're legally mandatory, avoid the following common mistakes when desig
 
 Certain sites are required to show an interstitial due to the kind of content they are publishing. For example, a casino site may need to show an age gate, which is a
 
-*[Content truncated]*
+_[Content truncated]_
 
 ---
 
@@ -1822,6 +1890,7 @@ Certain sites are required to show an interstitial due to the kind of content th
 **URL:** https://developers.google.com/search/docs/appearance/visual-elements-gallery#image-result
 
 **Contents:**
+
 - Visual Elements gallery of Google Search
 - Anatomy of a Google Search results page
 - Attribution
@@ -1861,7 +1930,7 @@ The site address as defined by the domain name. This is the name you chose when 
 
 The trail that shows th
 
-*[Content truncated]*
+_[Content truncated]_
 
 ---
 
@@ -1870,6 +1939,7 @@ The trail that shows th
 **URL:** https://developers.google.com/search/docs/guides/generate-structured-data-with-javascript
 
 **Contents:**
+
 - Generate structured data with JavaScript
 - Use Google Tag Manager to generate JSON-LD dynamically
   - Using variables in Google Tag Manager
@@ -1903,16 +1973,18 @@ To make sure Google Search can crawl and index your structured data, test your i
 
 Success: If you did everything correctly and your structured data type is supported in the tool, you will see the message "Page is eligible for rich results". If you are testing a structured data type that is not supported by the Rich Results test, check the rendered HTML. If the rendered HTML contains the structured data, Google Search will
 
-*[Content truncated]*
+_[Content truncated]_
 
 **Examples:**
 
 Example 1 (unknown):
+
 ```unknown
 function() { return document.title; }
 ```
 
 Example 2 (unknown):
+
 ```unknown
 <script type="application/ld+json">
   {
@@ -1929,15 +2001,16 @@ Example 2 (unknown):
 ```
 
 Example 3 (javascript):
+
 ```javascript
 fetch('https://api.example.com/recipes/123')
-.then(response => response.text())
-.then(structuredDataText => {
-  const script = document.createElement('script');
-  script.setAttribute('type', 'application/ld+json');
-  script.textContent = structuredDataText;
-  document.head.appendChild(script);
-});
+  .then((response) => response.text())
+  .then((structuredDataText) => {
+    const script = document.createElement('script');
+    script.setAttribute('type', 'application/ld+json');
+    script.textContent = structuredDataText;
+    document.head.appendChild(script);
+  });
 ```
 
 ---
@@ -1947,6 +2020,7 @@ fetch('https://api.example.com/recipes/123')
 **URL:** https://developers.google.com/search/docs/appearance/video
 
 **Contents:**
+
 - Video SEO best practices
 - Help Google find your videos
 - Ensure your videos can be indexed
@@ -1982,11 +2056,12 @@ To be eligible for video features (including video results on the main search re
 
 A watch page's main purpose is to show users a single video. The following pages are watch pages because watching an individual video is the main reason the user is
 
-*[Content truncated]*
+_[Content truncated]_
 
 **Examples:**
 
 Example 1 (unknown):
+
 ```unknown
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
@@ -1998,16 +2073,19 @@ Example 1 (unknown):
 ```
 
 Example 2 (unknown):
+
 ```unknown
 <iframe src="https://example.com/videoplayer.php?video=123" width="640" height="360" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>
 ```
 
 Example 3 (unknown):
+
 ```unknown
 "embedUrl": "https://example.com/videoplayer.php?video=123"
 ```
 
 Example 4 (unknown):
+
 ```unknown
 <video:player_loc>https://example.com/videoplayer.php?video=123</video:player_loc>
 ```
@@ -2019,6 +2097,7 @@ Example 4 (unknown):
 **URL:** https://developers.google.com/search/docs/appearance/title-link
 
 **Contents:**
+
 - Influencing your title links in search results
 - Best practices for influencing title links
 - How title links in Google Search are created
@@ -2058,7 +2137,7 @@ In this example, the page has a large, visible title that says "2021 admissions 
 
 When the <title> elements don't accurately reflect what the page is about. For example,
 
-*[Content truncated]*
+_[Content truncated]_
 
 ---
 
@@ -2067,6 +2146,7 @@ When the <title> elements don't accurately reflect what the page is about. For e
 **URL:** https://developers.google.com/search/docs/appearance/visual-elements-gallery#sitelinks-group
 
 **Contents:**
+
 - Visual Elements gallery of Google Search
 - Anatomy of a Google Search results page
 - Attribution
@@ -2106,7 +2186,7 @@ The site address as defined by the domain name. This is the name you chose when 
 
 The trail that shows th
 
-*[Content truncated]*
+_[Content truncated]_
 
 ---
 
@@ -2115,6 +2195,7 @@ The trail that shows th
 **URL:** https://developers.google.com/search/docs/appearance/visual-elements-gallery#rich-result
 
 **Contents:**
+
 - Visual Elements gallery of Google Search
 - Anatomy of a Google Search results page
 - Attribution
@@ -2154,7 +2235,7 @@ The site address as defined by the domain name. This is the name you chose when 
 
 The trail that shows th
 
-*[Content truncated]*
+_[Content truncated]_
 
 ---
 
@@ -2163,6 +2244,7 @@ The trail that shows th
 **URL:** https://developers.google.com/search/docs/appearance/visual-elements-gallery#video-result-attribution
 
 **Contents:**
+
 - Visual Elements gallery of Google Search
 - Anatomy of a Google Search results page
 - Attribution
@@ -2202,7 +2284,7 @@ The site address as defined by the domain name. This is the name you chose when 
 
 The trail that shows th
 
-*[Content truncated]*
+_[Content truncated]_
 
 ---
 
@@ -2211,6 +2293,7 @@ The trail that shows th
 **URL:** https://developers.google.com/search/docs/appearance/google-discover
 
 **Contents:**
+
 - Discover and your website
 - How content appears in Discover
 - The Follow feature and your website
@@ -2240,21 +2323,24 @@ By default, the Follow feature uses RSS or Atom feeds on your website. If you do
 
 To help Google understand which feed that you want people to follow for a given page, link your RSS or Atom feed in the <head> section of your hub
 
-*[Content truncated]*
+_[Content truncated]_
 
 **Examples:**
 
 Example 1 (unknown):
+
 ```unknown
 <link rel="alternate" type="application/rss+xml" href="https://example.com/rssfeed">
 ```
 
 Example 2 (unknown):
+
 ```unknown
 <link rel="alternate" type="application/atom+xml" href="https://example.com/atom-feed">
 ```
 
 Example 3 (unknown):
+
 ```unknown
 <html>
   <head>
@@ -2267,6 +2353,7 @@ Example 3 (unknown):
 ```
 
 Example 4 (unknown):
+
 ```unknown
 <html>
   <head>
@@ -2285,6 +2372,7 @@ Example 4 (unknown):
 **URL:** https://developers.google.com/search/docs/appearance/visual-elements-gallery#domain
 
 **Contents:**
+
 - Visual Elements gallery of Google Search
 - Anatomy of a Google Search results page
 - Attribution
@@ -2324,7 +2412,7 @@ The site address as defined by the domain name. This is the name you chose when 
 
 The trail that shows th
 
-*[Content truncated]*
+_[Content truncated]_
 
 ---
 
@@ -2333,6 +2421,7 @@ The trail that shows th
 **URL:** https://developers.google.com/search/docs/appearance/visual-elements-gallery
 
 **Contents:**
+
 - Visual Elements gallery of Google Search
 - Anatomy of a Google Search results page
 - Attribution
@@ -2372,7 +2461,7 @@ The site address as defined by the domain name. This is the name you chose when 
 
 The trail that shows th
 
-*[Content truncated]*
+_[Content truncated]_
 
 ---
 
@@ -2381,6 +2470,7 @@ The trail that shows th
 **URL:** https://developers.google.com/search/docs/appearance/video#watch-page
 
 **Contents:**
+
 - Video SEO best practices
 - Help Google find your videos
 - Ensure your videos can be indexed
@@ -2416,11 +2506,12 @@ To be eligible for video features (including video results on the main search re
 
 A watch page's main purpose is to show users a single video. The following pages are watch pages because watching an individual video is the main reason the user is
 
-*[Content truncated]*
+_[Content truncated]_
 
 **Examples:**
 
 Example 1 (unknown):
+
 ```unknown
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
@@ -2432,16 +2523,19 @@ Example 1 (unknown):
 ```
 
 Example 2 (unknown):
+
 ```unknown
 <iframe src="https://example.com/videoplayer.php?video=123" width="640" height="360" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>
 ```
 
 Example 3 (unknown):
+
 ```unknown
 "embedUrl": "https://example.com/videoplayer.php?video=123"
 ```
 
 Example 4 (unknown):
+
 ```unknown
 <video:player_loc>https://example.com/videoplayer.php?video=123</video:player_loc>
 ```
@@ -2453,6 +2547,7 @@ Example 4 (unknown):
 **URL:** https://developers.google.com/search/docs/appearance/visual-elements-gallery#snippet
 
 **Contents:**
+
 - Visual Elements gallery of Google Search
 - Anatomy of a Google Search results page
 - Attribution
@@ -2492,7 +2587,7 @@ The site address as defined by the domain name. This is the name you chose when 
 
 The trail that shows th
 
-*[Content truncated]*
+_[Content truncated]_
 
 ---
 
@@ -2501,6 +2596,7 @@ The trail that shows th
 **URL:** https://developers.google.com/search/docs/appearance/visual-elements-gallery#text-result-attribution
 
 **Contents:**
+
 - Visual Elements gallery of Google Search
 - Anatomy of a Google Search results page
 - Attribution
@@ -2540,7 +2636,7 @@ The site address as defined by the domain name. This is the name you chose when 
 
 The trail that shows th
 
-*[Content truncated]*
+_[Content truncated]_
 
 ---
 
@@ -2549,6 +2645,7 @@ The trail that shows th
 **URL:** https://developers.google.com/search/docs/appearance/video#video-thumbnail
 
 **Contents:**
+
 - Video SEO best practices
 - Help Google find your videos
 - Ensure your videos can be indexed
@@ -2584,11 +2681,12 @@ To be eligible for video features (including video results on the main search re
 
 A watch page's main purpose is to show users a single video. The following pages are watch pages because watching an individual video is the main reason the user is
 
-*[Content truncated]*
+_[Content truncated]_
 
 **Examples:**
 
 Example 1 (unknown):
+
 ```unknown
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
@@ -2600,16 +2698,19 @@ Example 1 (unknown):
 ```
 
 Example 2 (unknown):
+
 ```unknown
 <iframe src="https://example.com/videoplayer.php?video=123" width="640" height="360" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>
 ```
 
 Example 3 (unknown):
+
 ```unknown
 "embedUrl": "https://example.com/videoplayer.php?video=123"
 ```
 
 Example 4 (unknown):
+
 ```unknown
 <video:player_loc>https://example.com/videoplayer.php?video=123</video:player_loc>
 ```
@@ -2621,6 +2722,7 @@ Example 4 (unknown):
 **URL:** https://developers.google.com/search/docs/appearance/video#remove
 
 **Contents:**
+
 - Video SEO best practices
 - Help Google find your videos
 - Ensure your videos can be indexed
@@ -2656,11 +2758,12 @@ To be eligible for video features (including video results on the main search re
 
 A watch page's main purpose is to show users a single video. The following pages are watch pages because watching an individual video is the main reason the user is
 
-*[Content truncated]*
+_[Content truncated]_
 
 **Examples:**
 
 Example 1 (unknown):
+
 ```unknown
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
@@ -2672,16 +2775,19 @@ Example 1 (unknown):
 ```
 
 Example 2 (unknown):
+
 ```unknown
 <iframe src="https://example.com/videoplayer.php?video=123" width="640" height="360" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>
 ```
 
 Example 3 (unknown):
+
 ```unknown
 "embedUrl": "https://example.com/videoplayer.php?video=123"
 ```
 
 Example 4 (unknown):
+
 ```unknown
 <video:player_loc>https://example.com/videoplayer.php?video=123</video:player_loc>
 ```
@@ -2693,6 +2799,7 @@ Example 4 (unknown):
 **URL:** https://developers.google.com/search/docs/appearance/google-images
 
 **Contents:**
+
 - Google image SEO best practices
 - Help us discover and index your images
   - Use HTML image elements to embed images
@@ -2724,11 +2831,12 @@ The srcset attribute allows specifying different versions of the same image, spe
 
 The <picture> element is a container that is used to group different <source> versions of the same image. It offers a fallback approach so the browser can choose the right image depending on device capabilities, like pixel density and screen size. The picture element also comes in handy for using new image formats with built-in graceful degradatio
 
-*[Content truncated]*
+_[Content truncated]_
 
 **Examples:**
 
 Example 1 (unknown):
+
 ```unknown
 <img
   srcset="maine-coon-nap-320w.jpg 320w, maine-coon-nap-480w.jpg 480w, maine-coon-nap-800w.jpg 800w"
@@ -2738,6 +2846,7 @@ Example 1 (unknown):
 ```
 
 Example 2 (unknown):
+
 ```unknown
 <picture>
   <source type="image/svg+xml" srcset="pyramid.svg">
@@ -2747,11 +2856,13 @@ Example 2 (unknown):
 ```
 
 Example 3 (unknown):
+
 ```unknown
 <img src="data:image/svg+xml;base64,[data]">
 ```
 
 Example 4 (unknown):
+
 ```unknown
 <svg aria-labelledby="svgtitle1">
   <title id="svgtitle1">Googlebot wearing an apron and chef hat, struggling to make pancakes on the stovetop</title>
@@ -2765,6 +2876,7 @@ Example 4 (unknown):
 **URL:** https://developers.google.com/search/docs/appearance/video#monitor
 
 **Contents:**
+
 - Video SEO best practices
 - Help Google find your videos
 - Ensure your videos can be indexed
@@ -2800,11 +2912,12 @@ To be eligible for video features (including video results on the main search re
 
 A watch page's main purpose is to show users a single video. The following pages are watch pages because watching an individual video is the main reason the user is
 
-*[Content truncated]*
+_[Content truncated]_
 
 **Examples:**
 
 Example 1 (unknown):
+
 ```unknown
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
@@ -2816,16 +2929,19 @@ Example 1 (unknown):
 ```
 
 Example 2 (unknown):
+
 ```unknown
 <iframe src="https://example.com/videoplayer.php?video=123" width="640" height="360" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>
 ```
 
 Example 3 (unknown):
+
 ```unknown
 "embedUrl": "https://example.com/videoplayer.php?video=123"
 ```
 
 Example 4 (unknown):
+
 ```unknown
 <video:player_loc>https://example.com/videoplayer.php?video=123</video:player_loc>
 ```
@@ -2837,6 +2953,7 @@ Example 4 (unknown):
 **URL:** https://developers.google.com/search/docs/appearance/structured-data/search-gallery
 
 **Contents:**
+
 - Structured data markup that Google Search supports
 
 Google uses structured data to understand the content on the page and show that content in a richer appearance in search results, which is called a rich result. To make your site eligible for appearance as one of these rich results, follow the guide to learn how to implement structured data on your site. If you're just getting started, visit Understand how structured data works.
@@ -2873,7 +2990,7 @@ Help students, teachers, and others with math problems by adding structured data
 
 The movie carousel helps users explore lists of movies on Google Search (for example, "best movies of 2023"). You can provide details about the movies, such as the title of each movie, director information, and im
 
-*[Content truncated]*
+_[Content truncated]_
 
 ---
 
@@ -2882,6 +2999,7 @@ The movie carousel helps users explore lists of movies on Google Search (for exa
 **URL:** https://developers.google.com/search/docs/appearance/structured-data/intro-structured-data
 
 **Contents:**
+
 - Introduction to structured data markup in Google Search
 - Why add structured data to a page?
 - How structured data works in Google Search
@@ -2907,7 +3025,7 @@ This documentation describes which properties are required, recommended, or opti
 
 Be sure to check your structured data using the Rich Results Test during d
 
-*[Content truncated]*
+_[Content truncated]_
 
 ---
 
@@ -2916,6 +3034,7 @@ Be sure to check your structured data using the Rich Results Test during d
 **URL:** https://developers.google.com/search/docs/appearance/publication-dates
 
 **Contents:**
+
 - Influence your byline dates in Google Search
 - How to provide date information to Google
 - Best practices for influencing byline dates
@@ -2935,6 +3054,7 @@ Last updated 2025-05-09 UTC.
 **Examples:**
 
 Example 1 (unknown):
+
 ```unknown
 <html>
   <head>
@@ -2952,6 +3072,7 @@ Example 1 (unknown):
 ```
 
 Example 2 (unknown):
+
 ```unknown
 <html>
   <head>
@@ -2984,6 +3105,7 @@ Example 2 (unknown):
 **URL:** https://developers.google.com/search/docs/appearance/ranking-systems-guide#link-analysis
 
 **Contents:**
+
 - A guide to Google Search ranking systems
 - BERT
 - Crisis information systems
@@ -3013,7 +3135,7 @@ Deduplication also happens with featured snippets. If a web page listing is elev
 
 Our ranking systems consider the words in domain names as one of many factors
 
-*[Content truncated]*
+_[Content truncated]_
 
 ---
 
@@ -3022,6 +3144,7 @@ Our ranking systems consider the words in domain names as one of many factors
 **URL:** https://developers.google.com/search/docs/appearance/video#enable-search-features
 
 **Contents:**
+
 - Video SEO best practices
 - Help Google find your videos
 - Ensure your videos can be indexed
@@ -3057,11 +3180,12 @@ To be eligible for video features (including video results on the main search re
 
 A watch page's main purpose is to show users a single video. The following pages are watch pages because watching an individual video is the main reason the user is
 
-*[Content truncated]*
+_[Content truncated]_
 
 **Examples:**
 
 Example 1 (unknown):
+
 ```unknown
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
@@ -3073,16 +3197,19 @@ Example 1 (unknown):
 ```
 
 Example 2 (unknown):
+
 ```unknown
 <iframe src="https://example.com/videoplayer.php?video=123" width="640" height="360" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>
 ```
 
 Example 3 (unknown):
+
 ```unknown
 "embedUrl": "https://example.com/videoplayer.php?video=123"
 ```
 
 Example 4 (unknown):
+
 ```unknown
 <video:player_loc>https://example.com/videoplayer.php?video=123</video:player_loc>
 ```
@@ -3094,6 +3221,7 @@ Example 4 (unknown):
 **URL:** https://developers.google.com/search/docs/appearance/visual-elements-gallery#attribution
 
 **Contents:**
+
 - Visual Elements gallery of Google Search
 - Anatomy of a Google Search results page
 - Attribution
@@ -3133,7 +3261,7 @@ The site address as defined by the domain name. This is the name you chose when 
 
 The trail that shows th
 
-*[Content truncated]*
+_[Content truncated]_
 
 ---
 
@@ -3142,6 +3270,7 @@ The trail that shows th
 **URL:** https://developers.google.com/search/docs/appearance/visual-elements-gallery#text-result-title-link
 
 **Contents:**
+
 - Visual Elements gallery of Google Search
 - Anatomy of a Google Search results page
 - Attribution
@@ -3181,7 +3310,7 @@ The site address as defined by the domain name. This is the name you chose when 
 
 The trail that shows th
 
-*[Content truncated]*
+_[Content truncated]_
 
 ---
 
@@ -3190,6 +3319,7 @@ The trail that shows th
 **URL:** https://developers.google.com/search/docs/appearance/snippet#meta-descriptions
 
 **Contents:**
+
 - Control your snippets in search results
 - How snippets are created
 - How to prevent snippets or adjust snippet length
@@ -3215,7 +3345,7 @@ Google will sometimes use the <meta name="description"> tag from a page to gener
 
 If you use a CMS, such as Wix, WordPress, or Blogger, you might not be able to edit your HTML directly, or you might prefer not to. Instead, your CMS might have a search engine settings page o
 
-*[Content truncated]*
+_[Content truncated]_
 
 ---
 
@@ -3224,6 +3354,7 @@ If you use a CMS, such as Wix, WordPress, or Blogger, you might not be able to e
 **URL:** https://developers.google.com/search/docs/guides/generate-structured-data-with-javascript#testing
 
 **Contents:**
+
 - Generate structured data with JavaScript
 - Use Google Tag Manager to generate JSON-LD dynamically
   - Using variables in Google Tag Manager
@@ -3257,16 +3388,18 @@ To make sure Google Search can crawl and index your structured data, test your i
 
 Success: If you did everything correctly and your structured data type is supported in the tool, you will see the message "Page is eligible for rich results". If you are testing a structured data type that is not supported by the Rich Results test, check the rendered HTML. If the rendered HTML contains the structured data, Google Search will
 
-*[Content truncated]*
+_[Content truncated]_
 
 **Examples:**
 
 Example 1 (unknown):
+
 ```unknown
 function() { return document.title; }
 ```
 
 Example 2 (unknown):
+
 ```unknown
 <script type="application/ld+json">
   {
@@ -3283,15 +3416,16 @@ Example 2 (unknown):
 ```
 
 Example 3 (javascript):
+
 ```javascript
 fetch('https://api.example.com/recipes/123')
-.then(response => response.text())
-.then(structuredDataText => {
-  const script = document.createElement('script');
-  script.setAttribute('type', 'application/ld+json');
-  script.textContent = structuredDataText;
-  document.head.appendChild(script);
-});
+  .then((response) => response.text())
+  .then((structuredDataText) => {
+    const script = document.createElement('script');
+    script.setAttribute('type', 'application/ld+json');
+    script.textContent = structuredDataText;
+    document.head.appendChild(script);
+  });
 ```
 
 ---
@@ -3301,6 +3435,7 @@ fetch('https://api.example.com/recipes/123')
 **URL:** https://developers.google.com/search/docs/appearance/flexible-sampling
 
 **Contents:**
+
 - Flexible Sampling general guidance
 - Metering
   - How much content?
@@ -3322,7 +3457,7 @@ As a starting point for your explorations, we encourage you to provide 10 articl
 
 In addition to metering, some p
 
-*[Content truncated]*
+_[Content truncated]_
 
 ---
 
@@ -3331,6 +3466,7 @@ In addition to metering, some p
 **URL:** https://developers.google.com/search/docs/appearance/snippet
 
 **Contents:**
+
 - Control your snippets in search results
 - How snippets are created
 - How to prevent snippets or adjust snippet length
@@ -3356,7 +3492,7 @@ Google will sometimes use the <meta name="description"> tag from a page to gener
 
 If you use a CMS, such as Wix, WordPress, or Blogger, you might not be able to edit your HTML directly, or you might prefer not to. Instead, your CMS might have a search engine settings page o
 
-*[Content truncated]*
+_[Content truncated]_
 
 ---
 
@@ -3365,6 +3501,7 @@ If you use a CMS, such as Wix, WordPress, or Blogger, you might not be able to e
 **URL:** https://developers.google.com/search/docs/appearance/visual-elements-gallery#video-result-title-link
 
 **Contents:**
+
 - Visual Elements gallery of Google Search
 - Anatomy of a Google Search results page
 - Attribution
@@ -3404,6 +3541,6 @@ The site address as defined by the domain name. This is the name you chose when 
 
 The trail that shows th
 
-*[Content truncated]*
+_[Content truncated]_
 
 ---

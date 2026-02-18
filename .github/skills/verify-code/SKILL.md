@@ -86,7 +86,7 @@ function fetch<T>(url: string): Promise<T> {
 // ✅ GOOD: Constrained generics
 function fetchData<T extends Record<string, unknown>>(
   url: string,
-  schema: z.ZodSchema<T>,
+  schema: z.ZodSchema<T>
 ): Promise<T> {
   return fetch(url)
     .then((r) => r.json())

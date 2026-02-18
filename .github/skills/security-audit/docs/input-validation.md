@@ -205,7 +205,7 @@ interface FileValidationOptions {
 
 async function validateUpload(
   file: Express.Multer.File,
-  options: FileValidationOptions,
+  options: FileValidationOptions
 ): Promise<{ valid: boolean; error?: string }> {
   // Size check
   if (file.size > options.maxSize) {

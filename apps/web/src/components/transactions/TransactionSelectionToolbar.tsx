@@ -55,6 +55,7 @@ export const TransactionSelectionToolbar = memo(
         )}
         role='toolbar'
         aria-label={t.bulkDelete?.selectionMode || 'Selection mode'}
+        data-testid='selection-toolbar'
       >
         {/* Left side: Selection count */}
         <div className='flex items-center gap-3'>
@@ -63,7 +64,12 @@ export const TransactionSelectionToolbar = memo(
               {selectionCount}
             </span>
           </div>
-          <span className='text-sm font-medium text-foreground'>
+          <span
+            className='text-sm font-medium text-foreground'
+            data-testid='selection-count'
+            aria-live='polite'
+            aria-atomic='true'
+          >
             {(t.bulkDelete?.selected || '{count} selected').replace(
               '{count}',
               String(selectionCount)
@@ -80,8 +86,10 @@ export const TransactionSelectionToolbar = memo(
             onClick={onCancelSelection}
             disabled={isDeleting}
             className='gap-1.5'
+            data-testid='cancel-selection'
+            aria-label={t.bulkDelete?.cancelSelection || 'Cancel selection'}
           >
-            <X className='h-4 w-4' />
+            <X className='h-4 w-4' aria-hidden='true' />
             <span className='hidden sm:inline'>
               {t.bulkDelete?.cancelSelection || 'Cancel selection'}
             </span>
@@ -99,16 +107,21 @@ export const TransactionSelectionToolbar = memo(
                   className='gap-1.5'
                 >
                   {isDeleting ? (
-                    <Loader2 className='h-4 w-4 animate-spin' />
+                    <Loader2
+                      className='h-4 w-4 animate-spin'
+                      aria-hidden='true'
+                    />
                   ) : (
-                    <Trash2 className='h-4 w-4' />
+                    <Trash2 className='h-4 w-4' aria-hidden='true' />
                   )}
                   <span className='hidden sm:inline'>
                     {isDeleting
                       ? t.bulkDelete?.deleting || 'Deleting...'
                       : t.bulkDelete?.deleteSelected || 'Delete selected'}
                   </span>
-                  {!isDeleting && <ChevronDown className='h-3.5 w-3.5' />}
+                  {!isDeleting && (
+                    <ChevronDown className='h-3.5 w-3.5' aria-hidden='true' />
+                  )}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align='end'>
@@ -117,7 +130,7 @@ export const TransactionSelectionToolbar = memo(
                   disabled={selectionCount === 0}
                   className='gap-2 text-destructive focus:text-destructive'
                 >
-                  <Trash2 className='h-4 w-4' />
+                  <Trash2 className='h-4 w-4' aria-hidden='true' />
                   {(
                     t.bulkDelete?.deleteSelected || 'Delete {count} selected'
                   ).replace('{count}', String(selectionCount))}
@@ -125,8 +138,9 @@ export const TransactionSelectionToolbar = memo(
                 <DropdownMenuItem
                   onClick={onDeleteByDateRange}
                   className='gap-2 text-destructive focus:text-destructive'
+                  data-testid='date-range-delete'
                 >
-                  <Calendar className='h-4 w-4' />
+                  <Calendar className='h-4 w-4' aria-hidden='true' />
                   {t.bulkDelete?.deleteByDateRange || 'Delete by date range'}
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -141,9 +155,9 @@ export const TransactionSelectionToolbar = memo(
               className='gap-1.5'
             >
               {isDeleting ? (
-                <Loader2 className='h-4 w-4 animate-spin' />
+                <Loader2 className='h-4 w-4 animate-spin' aria-hidden='true' />
               ) : (
-                <Trash2 className='h-4 w-4' />
+                <Trash2 className='h-4 w-4' aria-hidden='true' />
               )}
               <span className='hidden sm:inline'>
                 {isDeleting

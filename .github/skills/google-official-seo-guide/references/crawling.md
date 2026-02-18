@@ -9,6 +9,7 @@
 **URL:** https://developers.google.com/search/docs/crawling-indexing/links-crawlable#write-good-anchor-text
 
 **Contents:**
+
 - Link best practices for Google
 - Make your links crawlable
 - Anchor text placement
@@ -48,28 +49,32 @@ Better (more descriptive):
 
 Better (more concise):
 
-Write as naturally as possible, and resist the urge to cram every keyword that's related to the page that you're linking to (remember, keyword stuffing is a violation of our spam policies). Ask yourself, does the reader need these keywords to understand the next page? If it feels like you're forcing keywords into the anchor text, then 
+Write as naturally as possible, and resist the urge to cram every keyword that's related to the page that you're linking to (remember, keyword stuffing is a violation of our spam policies). Ask yourself, does the reader need these keywords to understand the next page? If it feels like you're forcing keywords into the anchor text, then
 
-*[Content truncated]*
+_[Content truncated]_
 
 **Examples:**
 
 Example 1 (unknown):
+
 ```unknown
 <a href="https://example.com">
 ```
 
 Example 2 (unknown):
+
 ```unknown
 <a href="/products/category/shoes">
 ```
 
 Example 3 (unknown):
+
 ```unknown
 <a href="./products/category/shoes">
 ```
 
 Example 4 (unknown):
+
 ```unknown
 <a href="/products/category/shoes" onclick="javascript:goTo('shoes')">
 ```
@@ -81,6 +86,7 @@ Example 4 (unknown):
 **URL:** https://developers.google.com/search/docs/crawling-indexing/mobile
 
 **Contents:**
+
 - Mobile site and mobile-first indexing best practices
 - Create a mobile-friendly site
 - Make sure that Google can access and render your content
@@ -122,11 +128,12 @@ Check hreflang links on separate URLs. When you use rel=hreflang link elements f
 
 Here's an example of hreflang f
 
-*[Content truncated]*
+_[Content truncated]_
 
 **Examples:**
 
 Example 1 (unknown):
+
 ```unknown
 <link rel="canonical" href="https://example.com/">
 <link rel="alternate" hreflang="es" href="https://m.example.com/es/">
@@ -136,6 +143,7 @@ Example 1 (unknown):
 ```
 
 Example 2 (unknown):
+
 ```unknown
 <link rel="canonical" href="https://example.com/">
 <link rel="alternate" media="only screen and (max-width: 640px)" href="https://m.example.com/">
@@ -146,11 +154,13 @@ Example 2 (unknown):
 ```
 
 Example 3 (unknown):
+
 ```unknown
 <link rel="canonical" href="https://example.com/">
 ```
 
 Example 4 (unknown):
+
 ```unknown
 <link rel="canonical" href="https://example.com/">
 <link rel="alternate" media="only screen and (max-width: 640px)" href="https://m.example.com/">
@@ -163,6 +173,7 @@ Example 4 (unknown):
 **URL:** https://developers.google.com/search/docs/crawling-indexing/control-what-you-share#how-to-block-content
 
 **Contents:**
+
 - Control what you share with Google
 - How to block content
   - Remove the content from your site
@@ -207,6 +218,7 @@ Last updated 2025-03-07 UTC.
 **URL:** https://developers.google.com/search/docs/crawling-indexing/crawling-managing-faceted-navigation
 
 **Contents:**
+
 - Managing crawling of faceted navigation URLs
 - Prevent crawling of faceted navigation URLs
 - Ensure the faceted navigation URLs are optimal for the web
@@ -230,11 +242,13 @@ Last updated 2025-02-04 UTC.
 **Examples:**
 
 Example 1 (unknown):
+
 ```unknown
 https://example.com/items.shtm?products=fish&color=radioactive_green&size=tiny
 ```
 
 Example 2 (unknown):
+
 ```unknown
 user-agent: Googlebot
 disallow: /*?*products=
@@ -244,6 +258,7 @@ allow: /*?products=all$
 ```
 
 Example 3 (unknown):
+
 ```unknown
 https://example.com/items.shtm#products=fish&color=radioactive_green&size=tiny
 ```
@@ -255,6 +270,7 @@ https://example.com/items.shtm#products=fish&color=radioactive_green&size=tiny
 **URL:** https://developers.google.com/search/docs/crawling-indexing/sitemaps/overview
 
 **Contents:**
+
 - Learn about sitemaps
 - Do I need a sitemap?
 - Build a sitemap
@@ -282,6 +298,7 @@ Last updated 2025-03-06 UTC.
 **URL:** https://developers.google.com/search/docs/crawling-indexing/ask-google-to-recrawl#use-the-url-inspection-tool-just-a-few-urls
 
 **Contents:**
+
 - Ask Google to recrawl your URLs
 - Use the URL Inspection tool (just a few URLs)
 - Submit a sitemap (many URLs at once)
@@ -307,6 +324,7 @@ Last updated 2025-03-06 UTC.
 **URL:** https://developers.google.com/search/docs/crawling-indexing/control-what-you-share
 
 **Contents:**
+
 - Control what you share with Google
 - How to block content
   - Remove the content from your site
@@ -351,6 +369,7 @@ Last updated 2025-03-07 UTC.
 **URL:** https://developers.google.com/search/docs/crawling-indexing/qualify-outbound-links#sponsored
 
 **Contents:**
+
 - Qualify your outbound links to Google
   - rel="sponsored"
   - rel="ugc"
@@ -386,21 +405,25 @@ Last updated 2025-08-28 UTC.
 **Examples:**
 
 Example 1 (unknown):
+
 ```unknown
 <p>My favorite horse is the <a href="https://horses.example.com/Palomino">palomino</a>.</p>
 ```
 
 Example 2 (unknown):
+
 ```unknown
 <a rel="sponsored" href="https://cheese.example.com/Appenzeller_cheese">Appenzeller</a>
 ```
 
 Example 3 (unknown):
+
 ```unknown
 <a rel="ugc" href="https://cheese.example.com/Appenzeller_cheese">Appenzeller</a>
 ```
 
 Example 4 (unknown):
+
 ```unknown
 <a rel="nofollow" href="https://cheese.example.com/Appenzeller_cheese">Appenzeller</a>
 ```
@@ -412,6 +435,7 @@ Example 4 (unknown):
 **URL:** https://developers.google.com/search/docs/crawling-indexing/http-network-errors#http-status-codes
 
 **Contents:**
+
 - How HTTP status codes, and network and DNS errors affect Google Search
 - HTTP status codes
   - 2xx (success)
@@ -445,21 +469,24 @@ Any content Googlebot received from the redirecting URL is ignored, and the fina
 
 Googlebot follows the redirect, and the indexing pipeline uses the redirect as a strong signal that the redirect target should be canonical
 
-*[Content truncated]*
+_[Content truncated]_
 
 **Examples:**
 
 Example 1 (unknown):
+
 ```unknown
 dig +nocmd example.com a +noall +answer
 ```
 
 Example 2 (unknown):
+
 ```unknown
 dig +nocmd www.example.com cname +noall +answer
 ```
 
 Example 3 (unknown):
+
 ```unknown
 dig +nocmd example.com ns +noall +answer
 example.com.    86400  IN  NS  a.iana-servers.net.
@@ -477,6 +504,7 @@ dig +nocmd @b.iana-servers.net example.com +noall +answer
 **URL:** https://developers.google.com/search/docs/crawling-indexing/consolidate-duplicate-urls#rel-canonical-link-method
 
 **Contents:**
+
 - How to specify a canonical URL with rel="canonical" and other methods
 - Reasons to specify a canonical URL
 - Best practices
@@ -514,13 +542,14 @@ We recommend that you choose one of these and go with that; while supported, usi
 
 A rel="canonical" link element (also known as a canonical element) is an element used in the head section of HTML to indicate that another page is representative of the content on the page.
 
-Suppose you want https://example.com/dresses/green-dresses to be the canonical URL, even though a variety of URLs can 
+Suppose you want https://example.com/dresses/green-dresses to be the canonical URL, even though a variety of URLs can
 
-*[Content truncated]*
+_[Content truncated]_
 
 **Examples:**
 
 Example 1 (unknown):
+
 ```unknown
 <html>
 <head>
@@ -532,6 +561,7 @@ Example 1 (unknown):
 ```
 
 Example 2 (unknown):
+
 ```unknown
 <html>
 <head>
@@ -544,6 +574,7 @@ Example 2 (unknown):
 ```
 
 Example 3 (unknown):
+
 ```unknown
 HTTP/1.1 200 OK
 Content-Length: 19
@@ -559,6 +590,7 @@ Link: <https://www.example.com/downloads/white-paper.pdf>; rel="canonical"
 **URL:** https://developers.google.com/search/docs/crawling-indexing/googlebot
 
 **Contents:**
+
 - Googlebot
 - How Googlebot accesses your site
 - Blocking Googlebot from visiting your site
@@ -584,9 +616,9 @@ If you want to prevent Googlebot from crawling content on your site, you have a 
 
 Blocking Googlebot affects Google Search (including Discover and all Google Search features), as well as other products such as Google Images, Google Video, and Google News.
 
-Before you decide to block Googlebot, be aware that the HTTP user-agent 
+Before you decide to block Googlebot, be aware that the HTTP user-agent
 
-*[Content truncated]*
+_[Content truncated]_
 
 ---
 
@@ -595,6 +627,7 @@ Before you decide to block Googlebot, be aware that the HTTP user-agent
 **URL:** https://developers.google.com/search/docs/crawling-indexing/keep-redacted-information-out
 
 **Contents:**
+
 - Keep redacted information out of Google Search
 - Edit and export images before embedding them
 - Edit or remove unwanted text before moving to a public file format
@@ -616,7 +649,7 @@ Google Search lists images that it finds across the web, both those that are on 
 
 After following the suggestions in this document, export or save the updated images as non-vector or flattened image file formats such as PNG or WEBP. Thi
 
-*[Content truncated]*
+_[Content truncated]_
 
 ---
 
@@ -625,6 +658,7 @@ After following the suggestions in this document, export or save the updated ima
 **URL:** https://developers.google.com/search/docs/crawling-indexing/links-crawlable#crawlable-links
 
 **Contents:**
+
 - Link best practices for Google
 - Make your links crawlable
 - Anchor text placement
@@ -664,28 +698,32 @@ Better (more descriptive):
 
 Better (more concise):
 
-Write as naturally as possible, and resist the urge to cram every keyword that's related to the page that you're linking to (remember, keyword stuffing is a violation of our spam policies). Ask yourself, does the reader need these keywords to understand the next page? If it feels like you're forcing keywords into the anchor text, then 
+Write as naturally as possible, and resist the urge to cram every keyword that's related to the page that you're linking to (remember, keyword stuffing is a violation of our spam policies). Ask yourself, does the reader need these keywords to understand the next page? If it feels like you're forcing keywords into the anchor text, then
 
-*[Content truncated]*
+_[Content truncated]_
 
 **Examples:**
 
 Example 1 (unknown):
+
 ```unknown
 <a href="https://example.com">
 ```
 
 Example 2 (unknown):
+
 ```unknown
 <a href="/products/category/shoes">
 ```
 
 Example 3 (unknown):
+
 ```unknown
 <a href="./products/category/shoes">
 ```
 
 Example 4 (unknown):
+
 ```unknown
 <a href="/products/category/shoes" onclick="javascript:goTo('shoes')">
 ```
@@ -697,6 +735,7 @@ Example 4 (unknown):
 **URL:** https://developers.google.com/search/docs/crawling-indexing/robots/intro
 
 **Contents:**
+
 - Introduction to robots.txt
 - What is a robots.txt file used for?
 - Understand the limitations of a robots.txt file
@@ -722,7 +761,7 @@ Use a robots.txt file to manage crawl traffic, and also to prevent image, video,
 
 Before you create or edit a robots.txt file, you should know the limits of this URL blocking method. Depending on your goals and situati
 
-*[Content truncated]*
+_[Content truncated]_
 
 ---
 
@@ -731,6 +770,7 @@ Before you create or edit a robots.txt file, you should know the limits of this 
 **URL:** https://developers.google.com/search/docs/crawling-indexing/prevent-images-on-your-page
 
 **Contents:**
+
 - Remove images hosted on your site from search results
 - For emergency image removal
 - For non-emergency image removal
@@ -752,27 +792,29 @@ For example, if you want Google to exclude the dogs.jpg image that appears on yo
 
 The next time Google crawls the dogs.jpg image, we'll see this rule and drop your image from our search results.
 
-Rules may include special characters for more flexibility and control. Specifically, the * character matches any sequence of characters which lets you to match multiple image paths with one rule.
+Rules may include special characters for more flexibility and control. Specifically, the \* character matches any sequence of characters which lets you to match multiple image paths with one rule.
 
-To remove multiple images on your site from Google's index, add a disallow rule for each image, or if the images share a common pattern such as a suffix in the filename, use a the * character in the filename. For example:
+To remove multiple images on your site from Google's index, add a disallow rule for each image, or if the images share a common pattern such as a suffix in the filename, use a the \* character in the filename. For example:
 
 To remove all the images on your site from our index, place the following rule in your robots.txt file:
 
 To remove all files of a specific file type (for example, to include .jpg but not .gif images), you'd use the following robots.txt entry:
 
-By specifying Googlebot-Image as the User-agent, the images will be excluded from Google Images. If you would like to exclude 
+By specifying Googlebot-Image as the User-agent, the images will be excluded from Google Images. If you would like to exclude
 
-*[Content truncated]*
+_[Content truncated]_
 
 **Examples:**
 
 Example 1 (unknown):
+
 ```unknown
 User-agent: Googlebot-Image
 Disallow: /images/dogs.jpg
 ```
 
 Example 2 (unknown):
+
 ```unknown
 User-agent: Googlebot-Image
 # Repeated 'disallow' rules for each image:
@@ -790,12 +832,14 @@ Disallow: /images/animal-picture-*.jpg
 ```
 
 Example 3 (unknown):
+
 ```unknown
 User-agent: Googlebot-Image
 Disallow: /
 ```
 
 Example 4 (unknown):
+
 ```unknown
 User-agent: Googlebot-Image
 Disallow: /*.gif$
@@ -808,6 +852,7 @@ Disallow: /*.gif$
 **URL:** https://developers.google.com/search/docs/crawling-indexing/overview-google-crawlers
 
 **Contents:**
+
 - Overview of Google crawlers and fetchers (user agents)
 - Technical properties of Google's crawlers and fetchers
   - Supported transfer protocols
@@ -830,7 +875,7 @@ Google's crawlers and fetchers support the following content encodings (compress
 
 Our goal is to crawl as many pages from your site as we can on each visit without overwhelming your server. If your site is having trouble keeping up with Google's crawling requests, you ca
 
-*[Content truncated]*
+_[Content truncated]_
 
 ---
 
@@ -839,6 +884,7 @@ Our goal is to crawl as many pages from your site as we can on each visit withou
 **URL:** https://developers.google.com/search/docs/crawling-indexing/site-move-with-url-changes
 
 **Contents:**
+
 - How to move a site
 - Overview
 - General best practices for site moves
@@ -878,7 +924,7 @@ Clean up your recently purchased domain; you'll want to make sure it's clean of 
 
 Use web analytics to analyze usage on both the old and new sites. Web analytics software can help with this. Typically, web analytics configuration consists of a p
 
-*[Content truncated]*
+_[Content truncated]_
 
 ---
 
@@ -887,6 +933,7 @@ Use web analytics to analyze usage on both the old and new sites. Web analytics 
 **URL:** https://developers.google.com/search/docs/crawling-indexing/robots-meta-tag
 
 **Contents:**
+
 - Robots meta tag, data-nosnippet, and X-Robots-Tag specifications
 - Using the robots meta tag
 - Using the X-Robots-Tag HTTP header
@@ -922,11 +969,12 @@ To block indexing of non-HTML resources, such as PDF files, video files, or imag
 
 The X-Robots-Tag can be used as an element of the HTTP header response for a given URL. Any rule that can b
 
-*[Content truncated]*
+_[Content truncated]_
 
 **Examples:**
 
 Example 1 (unknown):
+
 ```unknown
 <!DOCTYPE html>
 <html><head>
@@ -938,16 +986,19 @@ Example 1 (unknown):
 ```
 
 Example 2 (unknown):
+
 ```unknown
 <meta name="googlebot" content="nosnippet">
 ```
 
 Example 3 (unknown):
+
 ```unknown
 <meta name="googlebot-news" content="nosnippet">
 ```
 
 Example 4 (unknown):
+
 ```unknown
 <meta name="googlebot" content="notranslate">
 <meta name="googlebot-news" content="nosnippet">
@@ -960,6 +1011,7 @@ Example 4 (unknown):
 **URL:** https://developers.google.com/search/docs/crawling-indexing/remove-information
 
 **Contents:**
+
 - Remove a page hosted on your site from Google
 - Make your removal permanent
 - Remove an image from search results
@@ -989,6 +1041,7 @@ Last updated 2025-02-04 UTC.
 **URL:** https://developers.google.com/search/docs/crawling-indexing/site-move-with-url-changes#troubleshooting
 
 **Contents:**
+
 - How to move a site
 - Overview
 - General best practices for site moves
@@ -1028,7 +1081,7 @@ Clean up your recently purchased domain; you'll want to make sure it's clean of 
 
 Use web analytics to analyze usage on both the old and new sites. Web analytics software can help with this. Typically, web analytics configuration consists of a p
 
-*[Content truncated]*
+_[Content truncated]_
 
 ---
 
@@ -1037,6 +1090,7 @@ Use web analytics to analyze usage on both the old and new sites. Web analytics 
 **URL:** https://developers.google.com/search/docs/crawling-indexing/canonicalization
 
 **Contents:**
+
 - What is canonicalization
   - How Google indexes and chooses the canonical URL
 
@@ -1054,7 +1108,7 @@ Different language versions of a single page are considered duplicates only if t
 
 Google uses the canonical page as the main source to evaluate content and quality. A Google Search result usually points to the canonical page, unless one of the duplicates is explicitly better suited for a search user. For example, the search result will probably point to the mobile page if the user is on a mobile device, even if the desktop
 
-*[Content truncated]*
+_[Content truncated]_
 
 ---
 
@@ -1063,6 +1117,7 @@ Google uses the canonical page as the main source to evaluate content and qualit
 **URL:** https://developers.google.com/search/docs/essentials/technical
 
 **Contents:**
+
 - Google Search technical requirements
 - Googlebot isn't blocked (it can find and access the page)
   - Check if Googlebot can find and access your page
@@ -1092,6 +1147,7 @@ Last updated 2025-02-04 UTC.
 **URL:** https://developers.google.com/search/docs/crawling-indexing/amp
 
 **Contents:**
+
 - AMP on Google Search guidelines
 - Additional AMP topics
 - FAQs
@@ -1117,6 +1173,7 @@ Last updated 2025-02-04 UTC.
 **URL:** https://developers.google.com/search/docs/crawling-indexing/consolidate-duplicate-urls
 
 **Contents:**
+
 - How to specify a canonical URL with rel="canonical" and other methods
 - Reasons to specify a canonical URL
 - Best practices
@@ -1154,13 +1211,14 @@ We recommend that you choose one of these and go with that; while supported, usi
 
 A rel="canonical" link element (also known as a canonical element) is an element used in the head section of HTML to indicate that another page is representative of the content on the page.
 
-Suppose you want https://example.com/dresses/green-dresses to be the canonical URL, even though a variety of URLs can 
+Suppose you want https://example.com/dresses/green-dresses to be the canonical URL, even though a variety of URLs can
 
-*[Content truncated]*
+_[Content truncated]_
 
 **Examples:**
 
 Example 1 (unknown):
+
 ```unknown
 <html>
 <head>
@@ -1172,6 +1230,7 @@ Example 1 (unknown):
 ```
 
 Example 2 (unknown):
+
 ```unknown
 <html>
 <head>
@@ -1184,6 +1243,7 @@ Example 2 (unknown):
 ```
 
 Example 3 (unknown):
+
 ```unknown
 HTTP/1.1 200 OK
 Content-Length: 19
@@ -1199,6 +1259,7 @@ Link: <https://www.example.com/downloads/white-paper.pdf>; rel="canonical"
 **URL:** https://developers.google.com/search/docs/crawling-indexing/ask-google-to-recrawl
 
 **Contents:**
+
 - Ask Google to recrawl your URLs
 - Use the URL Inspection tool (just a few URLs)
 - Submit a sitemap (many URLs at once)
@@ -1224,6 +1285,7 @@ Last updated 2025-03-06 UTC.
 **URL:** https://developers.google.com/search/docs/crawling-indexing/links-crawlable
 
 **Contents:**
+
 - Link best practices for Google
 - Make your links crawlable
 - Anchor text placement
@@ -1263,28 +1325,32 @@ Better (more descriptive):
 
 Better (more concise):
 
-Write as naturally as possible, and resist the urge to cram every keyword that's related to the page that you're linking to (remember, keyword stuffing is a violation of our spam policies). Ask yourself, does the reader need these keywords to understand the next page? If it feels like you're forcing keywords into the anchor text, then 
+Write as naturally as possible, and resist the urge to cram every keyword that's related to the page that you're linking to (remember, keyword stuffing is a violation of our spam policies). Ask yourself, does the reader need these keywords to understand the next page? If it feels like you're forcing keywords into the anchor text, then
 
-*[Content truncated]*
+_[Content truncated]_
 
 **Examples:**
 
 Example 1 (unknown):
+
 ```unknown
 <a href="https://example.com">
 ```
 
 Example 2 (unknown):
+
 ```unknown
 <a href="/products/category/shoes">
 ```
 
 Example 3 (unknown):
+
 ```unknown
 <a href="./products/category/shoes">
 ```
 
 Example 4 (unknown):
+
 ```unknown
 <a href="/products/category/shoes" onclick="javascript:goTo('shoes')">
 ```
@@ -1296,6 +1362,7 @@ Example 4 (unknown):
 **URL:** https://developers.google.com/search/docs/crawling-indexing/pause-online-business
 
 **Contents:**
+
 - Temporarily pause or disable a website
 - Limit your site's functionality (recommended)
 - Not recommended: Disable the whole website
@@ -1327,13 +1394,14 @@ Yes, you can reduce the Googlebot crawl rate, though it's not recommended for mo
 
 To ask Google to recrawl a limited number of pages (for example, the home page), use Search Console. For a larger number of pages (for example, all of your product pages), use sitemaps.
 
-Google generally crawls from 
+Google generally crawls from
 
-*[Content truncated]*
+_[Content truncated]_
 
 **Examples:**
 
 Example 1 (unknown):
+
 ```unknown
 curl -I -X GET "https://www.example.com/"
 HTTP/1.1 503 Service Unavailable
@@ -1349,6 +1417,7 @@ Content-Type: text/html
 **URL:** https://developers.google.com/search/docs/crawling-indexing/qualify-outbound-links#nofollow
 
 **Contents:**
+
 - Qualify your outbound links to Google
   - rel="sponsored"
   - rel="ugc"
@@ -1384,21 +1453,25 @@ Last updated 2025-08-28 UTC.
 **Examples:**
 
 Example 1 (unknown):
+
 ```unknown
 <p>My favorite horse is the <a href="https://horses.example.com/Palomino">palomino</a>.</p>
 ```
 
 Example 2 (unknown):
+
 ```unknown
 <a rel="sponsored" href="https://cheese.example.com/Appenzeller_cheese">Appenzeller</a>
 ```
 
 Example 3 (unknown):
+
 ```unknown
 <a rel="ugc" href="https://cheese.example.com/Appenzeller_cheese">Appenzeller</a>
 ```
 
 Example 4 (unknown):
+
 ```unknown
 <a rel="nofollow" href="https://cheese.example.com/Appenzeller_cheese">Appenzeller</a>
 ```
@@ -1410,6 +1483,7 @@ Example 4 (unknown):
 **URL:** https://developers.google.com/search/docs/crawling-indexing/301-redirects
 
 **Contents:**
+
 - Redirects and Google Search
 - Overview of redirect types
 - Server-side redirects
@@ -1453,11 +1527,12 @@ If you just want to send users to a different page temporarily, use a temporary 
 
 The
 
-*[Content truncated]*
+_[Content truncated]_
 
 **Examples:**
 
 Example 1 (unknown):
+
 ```unknown
 header('HTTP/1.1 301 Moved Permanently');
 header('Location: https://www.example.com/newurl');
@@ -1465,6 +1540,7 @@ exit();
 ```
 
 Example 2 (unknown):
+
 ```unknown
 header('HTTP/1.1 302 Found');
 header('Location: https://www.example.com/newurl');
@@ -1472,6 +1548,7 @@ exit();
 ```
 
 Example 3 (unknown):
+
 ```unknown
 # Permanent redirect:
 Redirect permanent "/old" "https://example.com/new"
@@ -1481,6 +1558,7 @@ Redirect temp "/two-old" "https://example.com/two-new"
 ```
 
 Example 4 (unknown):
+
 ```unknown
 RewriteEngine on
 # redirect the service page to a new page with a permanent redirect
@@ -1497,6 +1575,7 @@ RewriteRule   "^/service$"  "/about/service"  [R]
 **URL:** https://developers.google.com/search/docs/crawling-indexing/large-site-managing-crawl-budget
 
 **Contents:**
+
 - Large site owner's guide to managing your crawl budget
 - Who this guide is for
 - General theory of crawling
@@ -1538,7 +1617,7 @@ Here are the key steps to monitoring your site's crawl profile:
 
 Improving your site availability won't necessarily increase your cra
 
-*[Content truncated]*
+_[Content truncated]_
 
 ---
 
@@ -1547,6 +1626,7 @@ Improving your site availability won't necessarily increase your cra
 **URL:** https://developers.google.com/search/docs/crawling-indexing/indexable-file-types
 
 **Contents:**
+
 - File types indexable by Google
 - Search by file type
 
@@ -1567,10 +1647,11 @@ Last updated 2025-02-04 UTC.
 **URL:** https://developers.google.com/search/docs/crawling-indexing/sitemaps/video-sitemaps
 
 **Contents:**
+
 - Video sitemaps and alternatives
 - Video sitemap best practices
 - Example video sitemap
-    - More examples
+  - More examples
 - Video sitemap reference
   - Deprecated tags and attributes
 - Sitemap alternative: mRSS
@@ -1610,11 +1691,12 @@ A description of the video. Maximum 2048 characters. All HTML entities must be e
 
 A URL pointing to the actual video media file. The file must be o
 
-*[Content truncated]*
+_[Content truncated]_
 
 **Examples:**
 
 Example 1 (unknown):
+
 ```unknown
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
@@ -1633,6 +1715,7 @@ Example 1 (unknown):
 ```
 
 Example 2 (unknown):
+
 ```unknown
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
@@ -1651,6 +1734,7 @@ Example 2 (unknown):
 ```
 
 Example 3 (unknown):
+
 ```unknown
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
@@ -1670,6 +1754,7 @@ Example 3 (unknown):
 ```
 
 Example 4 (unknown):
+
 ```unknown
 <?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:media="http://search.yahoo.com/mrss/" xmlns:dcterms="http://purl.org/dc/terms/">
@@ -1691,6 +1776,7 @@ Example 4 (unknown):
 **URL:** https://developers.google.com/search/docs/crawling-indexing/qualify-outbound-links
 
 **Contents:**
+
 - Qualify your outbound links to Google
   - rel="sponsored"
   - rel="ugc"
@@ -1726,21 +1812,25 @@ Last updated 2025-08-28 UTC.
 **Examples:**
 
 Example 1 (unknown):
+
 ```unknown
 <p>My favorite horse is the <a href="https://horses.example.com/Palomino">palomino</a>.</p>
 ```
 
 Example 2 (unknown):
+
 ```unknown
 <a rel="sponsored" href="https://cheese.example.com/Appenzeller_cheese">Appenzeller</a>
 ```
 
 Example 3 (unknown):
+
 ```unknown
 <a rel="ugc" href="https://cheese.example.com/Appenzeller_cheese">Appenzeller</a>
 ```
 
 Example 4 (unknown):
+
 ```unknown
 <a rel="nofollow" href="https://cheese.example.com/Appenzeller_cheese">Appenzeller</a>
 ```
@@ -1752,6 +1842,7 @@ Example 4 (unknown):
 **URL:** https://developers.google.com/search/docs/crawling-indexing/website-testing
 
 **Contents:**
+
 - Minimize A/B testing impact in Google Search
 - Overview of testing
 - Best practices when testing
@@ -1783,7 +1874,7 @@ Cloaking counts whether you do it by server logic or by robots.txt, or any other
 
 If you're using cookies to control the test, keep in mind that Googlebot generally doesn't support cookies. This means it will only see the content version that's accessible to users with browsers that don't ac
 
-*[Content truncated]*
+_[Content truncated]_
 
 ---
 
@@ -1792,6 +1883,7 @@ If you're using cookies to control the test, keep in mind that Googlebot general
 **URL:** https://developers.google.com/search/docs/crawling-indexing/valid-page-metadata
 
 **Contents:**
+
 - Use valid HTML to specify page metadata
 - Use valid elements in the <head> element
 - Don't use invalid elements in the <head> element
@@ -1815,6 +1907,7 @@ Last updated 2025-02-04 UTC.
 **URL:** https://developers.google.com/search/docs/crawling-indexing/301-redirects#jslocation
 
 **Contents:**
+
 - Redirects and Google Search
 - Overview of redirect types
 - Server-side redirects
@@ -1858,11 +1951,12 @@ If you just want to send users to a different page temporarily, use a temporary 
 
 The
 
-*[Content truncated]*
+_[Content truncated]_
 
 **Examples:**
 
 Example 1 (unknown):
+
 ```unknown
 header('HTTP/1.1 301 Moved Permanently');
 header('Location: https://www.example.com/newurl');
@@ -1870,6 +1964,7 @@ exit();
 ```
 
 Example 2 (unknown):
+
 ```unknown
 header('HTTP/1.1 302 Found');
 header('Location: https://www.example.com/newurl');
@@ -1877,6 +1972,7 @@ exit();
 ```
 
 Example 3 (unknown):
+
 ```unknown
 # Permanent redirect:
 Redirect permanent "/old" "https://example.com/new"
@@ -1886,6 +1982,7 @@ Redirect temp "/two-old" "https://example.com/two-new"
 ```
 
 Example 4 (unknown):
+
 ```unknown
 RewriteEngine on
 # redirect the service page to a new page with a permanent redirect
@@ -1902,6 +1999,7 @@ RewriteRule   "^/service$"  "/about/service"  [R]
 **URL:** https://developers.google.com/search/docs/crawling-indexing
 
 **Contents:**
+
 - Overview of crawling and indexing topics
 
 The topics in this section describe how you can control Google's ability to find and parse your content in order to show it in Search and other Google properties, as well as how to prevent Google from crawling specific content on your site.
@@ -1919,6 +2017,7 @@ Last updated 2025-06-04 UTC.
 **URL:** https://developers.google.com/search/docs/crawling-indexing/sitemaps/build-sitemap
 
 **Contents:**
+
 - Build and submit a sitemap
 - Sitemap best practices
 - XML sitemap
@@ -1950,11 +2049,12 @@ Referenced URLs' properties: Use fully-qualified, absolute URLs in your sitemaps
 
 Include the URLs in your sitemap that you want to see in Google's search results. Google generally shows the canonical URLs in its search results, which you can influence with sitemaps. If you have different URLs for mobile and desktop versions of a page, we recom
 
-*[Content truncated]*
+_[Content truncated]_
 
 **Examples:**
 
 Example 1 (unknown):
+
 ```unknown
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
@@ -1966,17 +2066,20 @@ Example 1 (unknown):
 ```
 
 Example 2 (unknown):
+
 ```unknown
 https://www.example.com/file1.html
 https://www.example.com/file2.html
 ```
 
 Example 3 (unknown):
+
 ```unknown
 Sitemap: https://example.com/my_sitemap.xml
 ```
 
 Example 4 (unknown):
+
 ```unknown
 # robots.txt file of https://example.com/
 sitemap: https://sitemaps.example.com/sitemap-example-com.xml
@@ -1989,6 +2092,7 @@ sitemap: https://sitemaps.example.com/sitemap-example-com.xml
 **URL:** https://developers.google.com/search/docs/crawling-indexing/block-indexing
 
 **Contents:**
+
 - Block Search indexing with noindex
 - Implementing noindex
   - <meta> tag
@@ -2021,21 +2125,24 @@ Read more about the noindex response header.
 
 We have to crawl your page in order to see <meta> tags and HTTP headers. If a page is still appearing in results, it's probably because we haven't crawled the page since you added the noindex rule. Depending on the importance of the page on the internet, it may ta
 
-*[Content truncated]*
+_[Content truncated]_
 
 **Examples:**
 
 Example 1 (unknown):
+
 ```unknown
 <meta name="robots" content="noindex">
 ```
 
 Example 2 (unknown):
+
 ```unknown
 <meta name="googlebot" content="noindex">
 ```
 
 Example 3 (unknown):
+
 ```unknown
 HTTP/1.1 200 OK
 (...)
@@ -2050,6 +2157,7 @@ X-Robots-Tag: noindex
 **URL:** https://developers.google.com/search/docs/crawling-indexing/special-tags
 
 **Contents:**
+
 - meta tags and attributes that Google supports
 - meta tags
   - description
@@ -2087,11 +2195,12 @@ Prevents various Google text-to-speech services from reading aloud web pages usi
 
 You can use this tag on
 
-*[Content truncated]*
+_[Content truncated]_
 
 **Examples:**
 
 Example 1 (unknown):
+
 ```unknown
 <!DOCTYPE html>
   <html>
@@ -2106,16 +2215,19 @@ Example 1 (unknown):
 ```
 
 Example 2 (unknown):
+
 ```unknown
 <meta name="description" content="A description of the page">
 ```
 
 Example 3 (unknown):
+
 ```unknown
 <meta name="robots" content="..., ...">
 ```
 
 Example 4 (unknown):
+
 ```unknown
 <meta name="googlebot" content="..., ...">
 ```
@@ -2127,6 +2239,7 @@ Example 4 (unknown):
 **URL:** https://developers.google.com/search/docs/crawling-indexing/http-network-errors#network-and-dns-errors
 
 **Contents:**
+
 - How HTTP status codes, and network and DNS errors affect Google Search
 - HTTP status codes
   - 2xx (success)
@@ -2160,21 +2273,24 @@ Any content Googlebot received from the redirecting URL is ignored, and the fina
 
 Googlebot follows the redirect, and the indexing pipeline uses the redirect as a strong signal that the redirect target should be canonical
 
-*[Content truncated]*
+_[Content truncated]_
 
 **Examples:**
 
 Example 1 (unknown):
+
 ```unknown
 dig +nocmd example.com a +noall +answer
 ```
 
 Example 2 (unknown):
+
 ```unknown
 dig +nocmd www.example.com cname +noall +answer
 ```
 
 Example 3 (unknown):
+
 ```unknown
 dig +nocmd example.com ns +noall +answer
 example.com.    86400  IN  NS  a.iana-servers.net.
@@ -2192,6 +2308,7 @@ dig +nocmd @b.iana-servers.net example.com +noall +answer
 **URL:** https://developers.google.com/search/docs/crawling-indexing/robots/robots_txt#disallow
 
 **Contents:**
+
 - How Google interprets the robots.txt specification
 - What is a robots.txt file
 - File location and range of validity
@@ -2235,11 +2352,12 @@ Not valid for: https://example.com/
 
 A robots.txt with an IP-address as the hostname is only valid for cra
 
-*[Content truncated]*
+_[Content truncated]_
 
 **Examples:**
 
 Example 1 (unknown):
+
 ```unknown
 # This robots.txt file controls crawling of URLs under https://example.com.
 # All crawlers are disallowed to crawl files in the "includes" directory, such
@@ -2255,16 +2373,19 @@ Sitemap: https://example.com/sitemap.xml
 ```
 
 Example 2 (unknown):
+
 ```unknown
 disallow: [path]
 ```
 
 Example 3 (unknown):
+
 ```unknown
 allow: [path]
 ```
 
 Example 4 (unknown):
+
 ```unknown
 sitemap: [absoluteURL]
 ```
@@ -2276,6 +2397,7 @@ sitemap: [absoluteURL]
 **URL:** https://developers.google.com/search/docs/crawling-indexing/http-network-errors#soft-404-errors
 
 **Contents:**
+
 - How HTTP status codes, and network and DNS errors affect Google Search
 - HTTP status codes
   - 2xx (success)
@@ -2309,21 +2431,24 @@ Any content Googlebot received from the redirecting URL is ignored, and the fina
 
 Googlebot follows the redirect, and the indexing pipeline uses the redirect as a strong signal that the redirect target should be canonical
 
-*[Content truncated]*
+_[Content truncated]_
 
 **Examples:**
 
 Example 1 (unknown):
+
 ```unknown
 dig +nocmd example.com a +noall +answer
 ```
 
 Example 2 (unknown):
+
 ```unknown
 dig +nocmd www.example.com cname +noall +answer
 ```
 
 Example 3 (unknown):
+
 ```unknown
 dig +nocmd example.com ns +noall +answer
 example.com.    86400  IN  NS  a.iana-servers.net.
@@ -2341,6 +2466,7 @@ dig +nocmd @b.iana-servers.net example.com +noall +answer
 **URL:** https://developers.google.com/search/docs/crawling-indexing/http-network-errors
 
 **Contents:**
+
 - How HTTP status codes, and network and DNS errors affect Google Search
 - HTTP status codes
   - 2xx (success)
@@ -2374,21 +2500,24 @@ Any content Googlebot received from the redirecting URL is ignored, and the fina
 
 Googlebot follows the redirect, and the indexing pipeline uses the redirect as a strong signal that the redirect target should be canonical
 
-*[Content truncated]*
+_[Content truncated]_
 
 **Examples:**
 
 Example 1 (unknown):
+
 ```unknown
 dig +nocmd example.com a +noall +answer
 ```
 
 Example 2 (unknown):
+
 ```unknown
 dig +nocmd www.example.com cname +noall +answer
 ```
 
 Example 3 (unknown):
+
 ```unknown
 dig +nocmd example.com ns +noall +answer
 example.com.    86400  IN  NS  a.iana-servers.net.

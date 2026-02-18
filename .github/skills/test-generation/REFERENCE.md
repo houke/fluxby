@@ -264,7 +264,7 @@ http.get('/api/data', () => {
 server.use(
   http.get('/api/users', () => {
     return HttpResponse.json([]);
-  }),
+  })
 );
 ```
 

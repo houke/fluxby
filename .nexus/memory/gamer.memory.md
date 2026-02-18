@@ -10,7 +10,7 @@ Persistent preferences and learned patterns for the **@gamer** agent.
 
 _No preferences recorded yet._
 
-<!-- 
+<!--
 Example entry:
 ### Preferred Mechanics
 - **Preference**: Favor roguelike progression systems

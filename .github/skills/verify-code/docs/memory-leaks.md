@@ -158,7 +158,7 @@ useEffect(() => {
 function useEventListener<K extends keyof WindowEventMap>(
   eventName: K,
   handler: (event: WindowEventMap[K]) => void,
-  element: Window | HTMLElement = window,
+  element: Window | HTMLElement = window
 ) {
   const savedHandler = useRef(handler);
 

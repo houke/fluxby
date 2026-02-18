@@ -94,7 +94,7 @@ export function AccessibleModal({
 
     if (e.key === 'Tab') {
       const focusableElements = modalRef.current?.querySelectorAll(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
       );
 
       if (!focusableElements?.length) return;

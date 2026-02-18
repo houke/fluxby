@@ -54,7 +54,7 @@ function map<T, U, E>(result: Result<T, E>, fn: (value: T) => U): Result<U, E> {
 
 function flatMap<T, U, E>(
   result: Result<T, E>,
-  fn: (value: T) => Result<U, E>,
+  fn: (value: T) => Result<U, E>
 ): Result<U, E> {
   if (result.ok) {
     return fn(result.value);
@@ -88,7 +88,7 @@ class ValidationError extends AppError {
 
   constructor(
     message: string,
-    public readonly field: string,
+    public readonly field: string
   ) {
     super(message);
     this.name = 'ValidationError';
@@ -124,7 +124,7 @@ class InternalError extends AppError {
 
   constructor(
     message: string,
-    public readonly cause?: Error,
+    public readonly cause?: Error
   ) {
     super(message);
     this.name = 'InternalError';
@@ -196,7 +196,7 @@ if (!result.ok) {
 
 ```typescript
 async function fetchMultiple<T>(
-  promises: Promise<T>[],
+  promises: Promise<T>[]
 ): Promise<{ successes: T[]; failures: Error[] }> {
   const results = await Promise.allSettled(promises);
 
@@ -279,7 +279,7 @@ function errorHandler(
   error: Error,
   req: Request,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ) {
   logError(error, { path: req.path, method: req.method });
 

@@ -12,7 +12,7 @@ export interface Database {
   exec(sql: string, params?: any[]): Promise<any[][]>;
   run(
     sql: string,
-    params?: any[],
+    params?: any[]
   ): Promise<{ changes: number; lastInsertRowid: number }>;
   get<T>(sql: string, params?: any[]): Promise<T | undefined>;
   all<T>(sql: string, params?: any[]): Promise<T[]>;
@@ -65,7 +65,7 @@ function createDatabaseWrapper(sqlite3: any, db: number): Database {
         (row: any[]) => {
           results.push(row);
         },
-        params,
+        params
       );
 
       return results;
@@ -73,7 +73,7 @@ function createDatabaseWrapper(sqlite3: any, db: number): Database {
 
     async run(
       sql: string,
-      params: any[] = [],
+      params: any[] = []
     ): Promise<{ changes: number; lastInsertRowid: number }> {
       await sqlite3.exec(db, sql, undefined, params);
 
@@ -106,7 +106,7 @@ function createDatabaseWrapper(sqlite3: any, db: number): Database {
           });
           results.push(obj);
         },
-        params,
+        params
       );
 
       return results;
@@ -165,7 +165,7 @@ function createSqlJsWrapper(db: any): Database {
 
     async run(
       sql: string,
-      params: any[] = [],
+      params: any[] = []
     ): Promise<{ changes: number; lastInsertRowid: number }> {
       db.run(sql, params);
 
@@ -238,7 +238,7 @@ export interface Repository<T extends Entity> {
 
 export function createRepository<T extends Entity>(
   db: Database,
-  tableName: string,
+  tableName: string
 ): Repository<T> {
   return {
     async findById(id: string): Promise<T | undefined> {
@@ -256,7 +256,7 @@ export function createRepository<T extends Entity>(
 
       return db.all<T>(
         `SELECT * FROM ${tableName} WHERE ${conditions}`,
-        values,
+        values
       );
     },
 
@@ -271,7 +271,7 @@ export function createRepository<T extends Entity>(
 
       await db.run(
         `INSERT INTO ${tableName} (${keys.join(', ')}) VALUES (${placeholders})`,
-        values,
+        values
       );
 
       return fullData as T;
@@ -287,7 +287,7 @@ export function createRepository<T extends Entity>(
 
       const result = await db.run(
         `UPDATE ${tableName} SET ${setClause} WHERE id = ?`,
-        values,
+        values
       );
 
       if (result.changes === 0) return undefined;

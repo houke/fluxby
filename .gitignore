@@ -54,6 +54,7 @@ target/
 apps/tauri/target/
 
 # Nexus temporary files
+.nexus/logs/
 .nexus/**/tmp/
 .nexus/**/*.tmp
 .nexus/**/temp/
@@ -63,3 +64,9 @@ apps/tauri/target/
 
 # Agent memory backups (keep originals)
 .nexus/memory/*.backup.md
+
+.nexusrc
+
+test-results/
+
+playwright-report/

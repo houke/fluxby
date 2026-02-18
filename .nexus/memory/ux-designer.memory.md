@@ -10,7 +10,7 @@ Persistent preferences and learned patterns for the **@ux-designer** agent.
 
 _No preferences recorded yet._
 
-<!-- 
+<!--
 Example entry:
 ### Navigation Style
 - **Preference**: Minimal navigation, prefer gestures
