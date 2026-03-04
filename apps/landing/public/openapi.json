@@ -312,6 +312,63 @@
         }
       }
     },
+    "/api/accounts/{id}/recalculate-balance": {
+      "post": {
+        "summary": "Recalculate account balance",
+        "description": "Recalculates the account's current balance based on the latest transaction's\nbalance_after value. If no transactions exist, balance is set to 0.\n",
+        "tags": ["Accounts"],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Account ID"
+          },
+          {
+            "in": "header",
+            "name": "X-Profile-Id",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Balance recalculated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "accountId": {
+                      "type": "string"
+                    },
+                    "previousBalance": {
+                      "type": "number"
+                    },
+                    "newBalance": {
+                      "type": "number"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access denied - account belongs to different profile"
+          },
+          "404": {
+            "description": "Account not found"
+          }
+        }
+      }
+    },
     "/api/addressbook": {
       "get": {
         "summary": "Haal alle adresboek entries op",
@@ -2748,6 +2805,98 @@
         "responses": {
           "200": {
             "description": "Transactie verwijderd"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/transactions/bulk": {
+      "delete": {
+        "summary": "Bulk delete transactions",
+        "description": "Delete multiple transactions at once. Provide either transactionIds (specific IDs)\nor dateRange (delete all in range). Account balances are automatically recalculated.\n",
+        "tags": ["Transactions"],
+        "security": [
+          {
+            "ProfileAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "transactionIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Specific transaction IDs to delete (max 1000)"
+                  },
+                  "dateRange": {
+                    "type": "object",
+                    "properties": {
+                      "start": {
+                        "type": "string",
+                        "format": "date",
+                        "description": "Start date (YYYY-MM-DD)"
+                      },
+                      "end": {
+                        "type": "string",
+                        "format": "date",
+                        "description": "End date (YYYY-MM-DD)"
+                      }
+                    }
+                  },
+                  "accountId": {
+                    "type": "string",
+                    "description": "Limit deletion to specific account"
+                  },
+                  "dryRun": {
+                    "type": "boolean",
+                    "description": "If true, return count without deleting"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Deletion successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "deleted": {
+                      "type": "integer"
+                    },
+                    "affectedAccounts": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "balancesUpdated": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request - missing criteria or validation failed"
+          },
+          "403": {
+            "description": "Access denied - resource belongs to different profile"
           },
           "500": {
             "description": "Server error"

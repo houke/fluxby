@@ -58,10 +58,24 @@ export function useTransactionSelection(): UseTransactionSelectionReturn {
       const start = Math.min(fromIndex, toIndex);
       const end = Math.max(fromIndex, toIndex);
 
+      // Get IDs in the range
+      const rangeIds = allIds.slice(start, end + 1);
+
       setSelectedIds((prev) => {
+        // Check if ANY rows in the range are unchecked
+        const hasUnchecked = rangeIds.some((id) => !prev.has(id));
+
         const next = new Set(prev);
-        for (let i = start; i <= end; i++) {
-          next.add(allIds[i]);
+        if (hasUnchecked) {
+          // If any unchecked, select ALL in range
+          for (const id of rangeIds) {
+            next.add(id);
+          }
+        } else {
+          // If all checked, unselect ALL in range
+          for (const id of rangeIds) {
+            next.delete(id);
+          }
         }
         return next;
       });

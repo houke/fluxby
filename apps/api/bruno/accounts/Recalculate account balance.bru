@@ -1,12 +1,12 @@
 meta {
   name: Recalculate account balance
   type: http
-  seq: 5
+  seq: 8
 }
 
 post {
-  url: {{baseUrl}}/accounts/1/recalculate-balance
-  body: none
+  url: {{baseUrl}}/api/accounts/:id/recalculate-balance
+  body: json
   auth: none
 }
 
@@ -14,38 +14,17 @@ headers {
   X-Profile-Id: {{profileId}}
 }
 
+body:json {
+  {}
+}
+
 docs {
   # Recalculate account balance
   
-  Recalculate an account's current balance based on the latest transaction's 
-  `balance_after` value. If no transactions exist for the account, the balance 
-  is set to 0.
-  
-  This is useful after bulk deletion of transactions to ensure the account 
-  balance reflects the remaining transactions.
+  Recalculates the account's current balance based on the latest transaction's
+balance_after value. If no transactions exist, balance is set to 0.
+
   
   ## Endpoint
-  `POST /api/accounts/:id/recalculate-balance`
-  
-  ## Path Parameters
-  
-  | Parameter | Type | Description |
-  |-----------|------|-------------|
-  | `id` | integer | Account ID |
-  
-  ## Response
-  
-  ```json
-  {
-    "success": true,
-    "accountId": "1",
-    "previousBalance": 1500.00,
-    "newBalance": 1250.50
-  }
-  ```
-  
-  ## Errors
-  
-  - `403`: Account does not belong to the specified profile
-  - `404`: Account not found
+  `POST /api/accounts/{id}/recalculate-balance`
 }

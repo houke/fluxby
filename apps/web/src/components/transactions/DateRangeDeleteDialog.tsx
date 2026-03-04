@@ -68,6 +68,8 @@ export const DateRangeDeleteDialog = memo(function DateRangeDeleteDialog({
   const [selectedAccountId, setSelectedAccountId] = useState<string>('all');
   const [previewCount, setPreviewCount] = useState<number | null>(null);
   const [isLoadingPreview, setIsLoadingPreview] = useState(false);
+  const [startDatePickerOpen, setStartDatePickerOpen] = useState(false);
+  const [endDatePickerOpen, setEndDatePickerOpen] = useState(false);
 
   // Reset state when dialog opens
   useEffect(() => {
@@ -76,6 +78,8 @@ export const DateRangeDeleteDialog = memo(function DateRangeDeleteDialog({
       setEndDate(undefined);
       setSelectedAccountId('all');
       setPreviewCount(null);
+      setStartDatePickerOpen(false);
+      setEndDatePickerOpen(false);
     }
   }, [open]);
 
@@ -150,7 +154,10 @@ export const DateRangeDeleteDialog = memo(function DateRangeDeleteDialog({
             <label className='text-sm font-medium'>
               {t.bulkDelete?.dateRange?.start || 'Start date'}
             </label>
-            <Popover>
+            <Popover
+              open={startDatePickerOpen}
+              onOpenChange={setStartDatePickerOpen}
+            >
               <PopoverTrigger asChild>
                 <Button
                   variant='outline'
@@ -169,11 +176,17 @@ export const DateRangeDeleteDialog = memo(function DateRangeDeleteDialog({
                 <Calendar
                   mode='single'
                   selected={startDate}
-                  onSelect={setStartDate}
+                  onSelect={(date) => {
+                    setStartDate(date);
+                    // After selecting start date, close this picker and open end date picker
+                    setStartDatePickerOpen(false);
+                    setEndDatePickerOpen(true);
+                  }}
                   disabled={(date) =>
                     date > new Date() || (endDate ? date > endDate : false)
                   }
                   initialFocus
+                  numberOfMonths={2}
                 />
               </PopoverContent>
             </Popover>
@@ -184,7 +197,10 @@ export const DateRangeDeleteDialog = memo(function DateRangeDeleteDialog({
             <label className='text-sm font-medium'>
               {t.bulkDelete?.dateRange?.end || 'End date'}
             </label>
-            <Popover>
+            <Popover
+              open={endDatePickerOpen}
+              onOpenChange={setEndDatePickerOpen}
+            >
               <PopoverTrigger asChild>
                 <Button
                   variant='outline'
@@ -203,11 +219,16 @@ export const DateRangeDeleteDialog = memo(function DateRangeDeleteDialog({
                 <Calendar
                   mode='single'
                   selected={endDate}
-                  onSelect={setEndDate}
+                  onSelect={(date) => {
+                    setEndDate(date);
+                    // After selecting end date, close the picker
+                    setEndDatePickerOpen(false);
+                  }}
                   disabled={(date) =>
                     date > new Date() || (startDate ? date < startDate : false)
                   }
                   initialFocus
+                  numberOfMonths={2}
                 />
               </PopoverContent>
             </Popover>

@@ -1868,6 +1868,28 @@ export default function Transactions() {
     [recurringMerchants]
   );
 
+  // Destructure stable methods before useCallback to prevent unnecessary re-renders
+  const { selectRange, toggleSelection, lastSelectedId } = transactionSelection;
+
+  // Shared selection click handler for both row and checkbox
+  const handleSelectionClick = useCallback(
+    (e: React.MouseEvent, txId: string) => {
+      e.stopPropagation();
+
+      if (e.shiftKey) {
+        // Prevent text selection when shift-clicking
+        e.preventDefault();
+        // Get current visible transaction ids
+        const visibleIds =
+          deferredTransactions?.slice(0, visibleCount).map((t) => t.id) || [];
+        selectRange(lastSelectedId || txId, txId, visibleIds);
+      } else {
+        toggleSelection(txId);
+      }
+    },
+    [deferredTransactions, visibleCount, selectRange, toggleSelection, lastSelectedId]
+  );
+
   return (
     <>
       {/* Toasts are handled via ToastContext */}
@@ -2240,22 +2262,7 @@ export default function Transactions() {
                             onClick={(e) => {
                               // Handle selection mode clicks
                               if (transactionSelection.isSelecting) {
-                                e.stopPropagation();
-                                if (e.shiftKey) {
-                                  // Get current visible transaction ids
-                                  const visibleIds =
-                                    deferredTransactions
-                                      ?.slice(0, visibleCount)
-                                      .map((t) => t.id) || [];
-                                  transactionSelection.selectRange(
-                                    transactionSelection.lastSelectedId ||
-                                      tx.id,
-                                    tx.id,
-                                    visibleIds
-                                  );
-                                } else {
-                                  transactionSelection.toggleSelection(tx.id);
-                                }
+                                handleSelectionClick(e, tx.id);
                                 return;
                               }
                               if (recurring) {
@@ -2279,25 +2286,11 @@ export default function Transactions() {
                                     ? 'opacity-100'
                                     : 'opacity-0 group-hover:opacity-100'
                                 )}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  // Support shift-click range selection on checkbox too
-                                  if (
-                                    e.shiftKey &&
-                                    transactionSelection.isSelecting
-                                  ) {
-                                    const visibleIds =
-                                      deferredTransactions
-                                        ?.slice(0, visibleCount)
-                                        .map((t) => t.id) || [];
-                                    transactionSelection.selectRange(
-                                      transactionSelection.lastSelectedId ||
-                                        tx.id,
-                                      tx.id,
-                                      visibleIds
-                                    );
-                                  } else {
-                                    transactionSelection.toggleSelection(tx.id);
+                                style={{ userSelect: 'none' }}
+                                onMouseDown={(e) => {
+                                  // Prevent text selection on shift-click
+                                  if (e.shiftKey) {
+                                    e.preventDefault();
                                   }
                                 }}
                               >
@@ -2306,7 +2299,15 @@ export default function Transactions() {
                                   checked={transactionSelection.isSelected(
                                     tx.id
                                   )}
-                                  // Checkbox is controlled - click handler on parent div
+                                  onChange={() =>
+                                    transactionSelection.toggleSelection(tx.id)
+                                  }
+                                  onClick={(e) => {
+                                    // Intercept shift-click for range selection
+                                    if (e.shiftKey) {
+                                      handleSelectionClick(e, tx.id);
+                                    }
+                                  }}
                                   aria-label={(
                                     t.bulkDelete?.selectTransaction ||
                                     'Select transaction: {description} {amount}'
@@ -4199,19 +4200,21 @@ export default function Transactions() {
           isLoading={bulkDelete.isDeleting}
         />
 
-        {/* Selection Toolbar (sticky bottom) */}
+        {/* Selection Toolbar (sticky bottom, centered in content area) */}
         {transactionSelection.isSelecting && (
-          <div className='fixed bottom-4 left-1/2 z-50 w-full max-w-3xl -translate-x-1/2 px-4'>
-            <TransactionSelectionToolbar
-              selectionCount={transactionSelection.selectionCount}
-              onDeleteSelected={() => setBulkDeleteDialogOpen(true)}
-              onDeleteByDateRange={() => setDateRangeDeleteDialogOpen(true)}
-              onCancelSelection={() => {
-                transactionSelection.clearSelection();
-                transactionSelection.exitSelectionMode();
-              }}
-              isDeleting={bulkDelete.isDeleting}
-            />
+          <div className='fixed right-0 bottom-4 left-0 z-50 flex justify-center px-4 sm:left-[280px]'>
+            <div className='w-full max-w-3xl'>
+              <TransactionSelectionToolbar
+                selectionCount={transactionSelection.selectionCount}
+                onDeleteSelected={() => setBulkDeleteDialogOpen(true)}
+                onDeleteByDateRange={() => setDateRangeDeleteDialogOpen(true)}
+                onCancelSelection={() => {
+                  transactionSelection.clearSelection();
+                  transactionSelection.exitSelectionMode();
+                }}
+                isDeleting={bulkDelete.isDeleting}
+              />
+            </div>
           </div>
         )}
 

@@ -131,9 +131,7 @@ export const TransactionSelectionToolbar = memo(
                   className='gap-2 text-destructive focus:bg-destructive focus:text-white'
                 >
                   <Trash2 className='h-4 w-4' aria-hidden='true' />
-                  {(
-                    t.bulkDelete?.deleteSelected || 'Delete {count} selected'
-                  ).replace('{count}', String(selectionCount))}
+                  {t.common?.delete || 'Verwijderen'}
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={onDeleteByDateRange}
