@@ -1871,7 +1871,7 @@ export default function Transactions() {
   // Destructure stable methods before useCallback to prevent unnecessary re-renders
   const { selectRange, toggleSelection, lastSelectedId } = transactionSelection;
 
-  // Shared selection click handler for both row and checkbox
+  // Shared selection click handler for row clicks (not checkbox)
   const handleSelectionClick = useCallback(
     (e: React.MouseEvent, txId: string) => {
       e.stopPropagation();
@@ -2266,19 +2266,6 @@ export default function Transactions() {
                                 'bg-purple-50 dark:bg-purple-900/20'
                             )}
                             onClick={(e) => {
-                              // Check if click target is the checkbox input or its visual wrapper
-                              const target = e.target as HTMLElement;
-                              if (
-                                target.tagName === 'INPUT' &&
-                                target.getAttribute('type') === 'checkbox'
-                              ) {
-                                return; // Let checkbox handle its own click
-                              }
-                              // Check if click is on checkbox visual wrapper
-                              if (target.closest('[data-testid="transaction-checkbox"]')) {
-                                return;
-                              }
-
                               // Handle selection mode clicks
                               if (transactionSelection.isSelecting) {
                                 handleSelectionClick(e, tx.id);
@@ -2305,12 +2292,24 @@ export default function Transactions() {
                                     ? 'opacity-100'
                                     : 'opacity-0 group-hover:opacity-100'
                                 )}
-                                style={{ userSelect: 'none' }}
-                                onMouseDown={(e) => {
-                                  // Prevent text selection on shift-click
+                                onClickCapture={(e) => {
+                                  // Use capture phase to intercept BEFORE checkbox processes
                                   if (e.shiftKey) {
+                                    //For shift-clicks, prevent checkbox from processing
                                     e.preventDefault();
+                                    e.stopPropagation();
+                                    const visibleIds =
+                                      deferredTransactions
+                                        ?.slice(0, visibleCount)
+                                        .map((t) => t.id) || [];
+                                    selectRange(
+                                      lastSelectedId || tx.id,
+                                      tx.id,
+                                      visibleIds
+                                    );
                                   }
+                                  // For normal clicks, let event continue to checkbox
+                                  // Checkbox will handle it and its stopPropagation will prevent row click
                                 }}
                               >
                                 <Checkbox
@@ -2321,30 +2320,22 @@ export default function Transactions() {
                                   onChange={() =>
                                     transactionSelection.toggleSelection(tx.id)
                                   }
-                                  onClick={(e) => {
-                                    // Stop propagation ONLY for checkbox click to prevent parent row onClick
-                                    e.stopPropagation();
-                                    // Intercept shift-click for range selection
-                                    if (e.shiftKey) {
-                                      handleSelectionClick(e, tx.id);
-                                    }
-                                  }}
-                                    aria-label={(
-                                      t.bulkDelete?.selectTransaction ||
-                                      'Select transaction: {description} {amount}'
+                                  aria-label={(
+                                    t.bulkDelete?.selectTransaction ||
+                                    'Select transaction: {description} {amount}'
+                                  )
+                                    .replace(
+                                      '{description}',
+                                      tx.merchantName ||
+                                        tx.opposingAccountName ||
+                                        tx.description ||
+                                        t.transactions.unknown
                                     )
-                                      .replace(
-                                        '{description}',
-                                        tx.merchantName ||
-                                          tx.opposingAccountName ||
-                                          tx.description ||
-                                          t.transactions.unknown
-                                      )
-                                      .replace(
-                                        '{amount}',
-                                        formatCurrency(tx.amount)
-                                      )}
-                                  />
+                                    .replace(
+                                      '{amount}',
+                                      formatCurrency(tx.amount)
+                                    )}
+                                />
                               </div>
                               <div
                                 className={cn(
