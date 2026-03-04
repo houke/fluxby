@@ -2293,6 +2293,10 @@ export default function Transactions() {
                                     : 'opacity-0 group-hover:opacity-100'
                                 )}
                                 style={{ userSelect: 'none' }}
+                                onClick={(e) => {
+                                  // Stop propagation to prevent parent row onClick from interfering
+                                  e.stopPropagation();
+                                }}
                                 onMouseDown={(e) => {
                                   // Prevent text selection on shift-click
                                   if (e.shiftKey) {
