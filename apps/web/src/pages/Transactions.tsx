@@ -2266,6 +2266,19 @@ export default function Transactions() {
                                 'bg-purple-50 dark:bg-purple-900/20'
                             )}
                             onClick={(e) => {
+                              // Check if click target is the checkbox input or its visual wrapper
+                              const target = e.target as HTMLElement;
+                              if (
+                                target.tagName === 'INPUT' &&
+                                target.getAttribute('type') === 'checkbox'
+                              ) {
+                                return; // Let checkbox handle its own click
+                              }
+                              // Check if click is on checkbox visual wrapper
+                              if (target.closest('[data-testid="transaction-checkbox"]')) {
+                                return;
+                              }
+
                               // Handle selection mode clicks
                               if (transactionSelection.isSelecting) {
                                 handleSelectionClick(e, tx.id);
@@ -2293,10 +2306,6 @@ export default function Transactions() {
                                     : 'opacity-0 group-hover:opacity-100'
                                 )}
                                 style={{ userSelect: 'none' }}
-                                onClick={(e) => {
-                                  // Stop propagation to prevent parent row onClick from interfering
-                                  e.stopPropagation();
-                                }}
                                 onMouseDown={(e) => {
                                   // Prevent text selection on shift-click
                                   if (e.shiftKey) {
@@ -2313,27 +2322,29 @@ export default function Transactions() {
                                     transactionSelection.toggleSelection(tx.id)
                                   }
                                   onClick={(e) => {
+                                    // Stop propagation ONLY for checkbox click to prevent parent row onClick
+                                    e.stopPropagation();
                                     // Intercept shift-click for range selection
                                     if (e.shiftKey) {
                                       handleSelectionClick(e, tx.id);
                                     }
                                   }}
-                                  aria-label={(
-                                    t.bulkDelete?.selectTransaction ||
-                                    'Select transaction: {description} {amount}'
-                                  )
-                                    .replace(
-                                      '{description}',
-                                      tx.merchantName ||
-                                        tx.opposingAccountName ||
-                                        tx.description ||
-                                        t.transactions.unknown
+                                    aria-label={(
+                                      t.bulkDelete?.selectTransaction ||
+                                      'Select transaction: {description} {amount}'
                                     )
-                                    .replace(
-                                      '{amount}',
-                                      formatCurrency(tx.amount)
-                                    )}
-                                />
+                                      .replace(
+                                        '{description}',
+                                        tx.merchantName ||
+                                          tx.opposingAccountName ||
+                                          tx.description ||
+                                          t.transactions.unknown
+                                      )
+                                      .replace(
+                                        '{amount}',
+                                        formatCurrency(tx.amount)
+                                      )}
+                                  />
                               </div>
                               <div
                                 className={cn(
