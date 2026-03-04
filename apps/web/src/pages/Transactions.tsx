@@ -1887,7 +1887,13 @@ export default function Transactions() {
         toggleSelection(txId);
       }
     },
-    [deferredTransactions, visibleCount, selectRange, toggleSelection, lastSelectedId]
+    [
+      deferredTransactions,
+      visibleCount,
+      selectRange,
+      toggleSelection,
+      lastSelectedId,
+    ]
   );
 
   return (
