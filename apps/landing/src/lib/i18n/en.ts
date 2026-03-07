@@ -1926,6 +1926,17 @@ export const en: LandingTranslationKeys = {
     updatesPage: {
       intro:
         "See what's new in Fluxby. Here you'll find all updates and new features.",
+      v180Date: 'March 7, 2026',
+      v180Title: 'Release 1.8.0',
+      v180Description: '3 new features and 9 bug fixes.',
+      v180F1Title: 'Complete code review with 19 fixes',
+      v180F1Desc: 'There\'s more to explore. Discover it yourself!',
+      v180F2Title: 'Bulk transaction deletion with undo support',
+      v180F2Desc: 'This makes Fluxby even better.',
+      v180F3Title: 'IOS PWA installation instructions',
+      v180F3Desc: 'We\'ve got something new for you! Check the release notes for all details.',
+      v180F4Title: 'Bug fixes',
+      v180F4Desc: '9 bugs fixed. See changelog for details.',
       v171Date: 'January 22, 2026',
       v171Title: 'Release 1.7.1',
       v171Description: '3 bug fixes.',

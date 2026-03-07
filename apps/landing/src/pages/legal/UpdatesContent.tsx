@@ -33,6 +33,36 @@ const UpdatesContent = () => {
   const updatesPage = t.legal?.updatesPage;
 
   const releases = [
+        {
+      version: '1.8.0',
+      date: updatesPage?.v180Date || '7 maart 2026',
+      title: updatesPage?.v180Title || 'Release 1.8.0',
+      description:
+        updatesPage?.v180Description ||
+        '3 nieuwe features en 9 bugfixes.',
+      features: [
+        {
+          icon: Wrench,
+          title: updatesPage?.v180F1Title || 'Complete code review with 19 fixes',
+          description: updatesPage?.v180F1Desc || 'We hebben iets nieuws voor je! Bekijk de release notes voor alle details.',
+        },
+        {
+          icon: Globe,
+          title: updatesPage?.v180F2Title || 'Geïmplementeerd bulk transactie deletion with undo ondersteuning toegevoegd voor',
+          description: updatesPage?.v180F2Desc || 'Nieuwe functionaliteit waar je iets aan hebt.',
+        },
+        {
+          icon: Plus,
+          title: updatesPage?.v180F3Title || 'Toegevoegd ios web app installation instructions',
+          description: updatesPage?.v180F3Desc || 'Nieuwe functionaliteit waar je iets aan hebt.',
+        },
+        {
+          icon: Wrench,
+          title: updatesPage?.v180F4Title || 'Bugfixes',
+          description: updatesPage?.v180F4Desc || '9 bugs opgelost. Zie changelog voor details.',
+        },
+      ],
+    },
     {
       version: '1.7.1',
       date: updatesPage?.v171Date || '22 januari 2026',

@@ -2020,6 +2020,17 @@ export const nl: LandingTranslationKeys = {
     updatesPage: {
       intro:
         'Bekijk wat er nieuw is in Fluxby. Hier vind je alle updates en nieuwe features.',
+      v180Date: '7 maart 2026',
+      v180Title: 'Release 1.8.0',
+      v180Description: '3 nieuwe features en 9 bugfixes.',
+      v180F1Title: 'Complete code review with 19 fixes',
+      v180F1Desc: 'We hebben iets nieuws voor je! Bekijk de release notes voor alle details.',
+      v180F2Title: 'Geïmplementeerd bulk transactie deletion with undo ondersteuning toegevoegd voor',
+      v180F2Desc: 'Nieuwe functionaliteit waar je iets aan hebt.',
+      v180F3Title: 'Toegevoegd ios web app installation instructions',
+      v180F3Desc: 'Nieuwe functionaliteit waar je iets aan hebt.',
+      v180F4Title: 'Bugfixes',
+      v180F4Desc: '9 bugs opgelost. Zie changelog voor details.',
       v171Date: '22 januari 2026',
       v171Title: 'Release 1.7.1',
       v171Description: '3 bugfixes.',

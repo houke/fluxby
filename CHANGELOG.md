@@ -1,5 +1,49 @@
 # Changelog
 
+## v1.8.0
+
+**Release Date:** 2026-03-07
+
+### Features
+
+- **bulk-delete:** complete code review with 19 fixes
+- **web:** implement bulk transaction deletion with undo support
+- **help:** add iOS PWA installation instructions
+
+### Bug Fixes
+
+- **web:** fix selection mode edge cases
+- **web:** use event capture to handle checkbox shift-clicks
+- **web:** attempt to fix checkbox and recurring expansion conflicts
+- **web:** resolve checkbox event propagation issue in transaction selection
+- **bulk-delete:** improve UX with sticky toolbar, shift-selection, and better button placement
+- **a11y:** add aria-labels to transaction checkboxes for WCAG compliance
+- **web:** improve address book badge UX and overflow handling
+- resolve linter warnings across apps/api and apps/landing
+- **app:** implement low-effort review fixes for UX and sync
+
+### Performance Improvements
+
+- **web:** optimize handleSelectionClick memoization
+
+### Documentation
+
+- **nexus:** document bulk selection checkbox hotfix
+
+### Other Changes
+
+- formatting
+- small fixes
+
+### Styles
+
+- **web:** fix prettier formatting in Transactions.tsx
+
+### Tests
+
+- **e2e:** add Playwright E2E tests for bulk transaction management
+- **bulk-delete:** add comprehensive tests for bulk transaction deletion feature (98 tests)
+
 ## v1.7.1
 
 **Release Date:** 2026-01-22
