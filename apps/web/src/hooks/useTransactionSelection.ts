@@ -33,19 +33,32 @@ export function useTransactionSelection(): UseTransactionSelectionReturn {
   const [lastSelectedId, setLastSelectedId] = useState<string | null>(null);
 
   const toggleSelection = useCallback((id: string) => {
+    let isAdding = false;
     setSelectedIds((prev) => {
       const next = new Set(prev);
       if (next.has(id)) {
         next.delete(id);
+        isAdding = false;
       } else {
         next.add(id);
+        isAdding = true;
       }
+
+      // Auto-exit selection mode when all items are unchecked
+      if (next.size === 0) {
+        setIsSelecting(false);
+        setLastSelectedId(null);
+      } else {
+        // Auto-enter selection mode when first item is selected
+        setIsSelecting(true);
+        // Only update lastSelectedId when ADDING to selection
+        if (isAdding) {
+          setLastSelectedId(id);
+        }
+      }
+
       return next;
     });
-    setLastSelectedId(id);
-
-    // Auto-enter selection mode when first item is selected
-    setIsSelecting(true);
   }, []);
 
   const selectRange = useCallback(
