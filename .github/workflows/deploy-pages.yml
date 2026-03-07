@@ -30,6 +30,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          # When triggered by a release (tag), always checkout main so the
+          # github-pages environment protection rules (branch-only) are satisfied.
+          ref: ${{ github.event_name == 'release' && 'main' || github.ref }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4

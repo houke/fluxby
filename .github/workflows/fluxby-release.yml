@@ -313,6 +313,7 @@ jobs:
 
       - name: Add Rust targets
         if: matrix.rust-targets != ''
+        shell: bash
         run: |
           for target in $(echo "${{ matrix.rust-targets }}" | tr ',' '\n'); do
             rustup target add $target
