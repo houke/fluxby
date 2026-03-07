@@ -61,13 +61,15 @@ class CheckboxTestPage {
 
   async clickCheckbox(index: number, modifiers: string[] = []) {
     const checkbox = await this.getCheckbox(index);
-    // Use force:true because the checkbox has a visual wrapper
+    // Click the checkbox input - the wrapper now has stopPropagation
+    // to prevent the click from bubbling to the row
     await checkbox.click({ force: true, modifiers });
   }
 
   async isCheckboxChecked(index: number): Promise<boolean> {
     const checkbox = await this.getCheckbox(index);
-    return (await checkbox.getAttribute('aria-checked')) === 'true';
+    // Check the actual checked property of the input
+    return await checkbox.isChecked();
   }
 
   async isSelectionModeActive(): Promise<boolean> {

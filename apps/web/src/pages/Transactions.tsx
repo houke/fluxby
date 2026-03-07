@@ -2292,10 +2292,16 @@ export default function Transactions() {
                                     ? 'opacity-100'
                                     : 'opacity-0 group-hover:opacity-100'
                                 )}
+                                onClick={(e) => {
+                                  // Stop propagation in bubble phase to prevent row click
+                                  // This catches cases where checkbox internal stopPropagation
+                                  // doesn't fire (e.g., clicking hidden input directly in tests)
+                                  e.stopPropagation();
+                                }}
                                 onClickCapture={(e) => {
                                   // Use capture phase to intercept BEFORE checkbox processes
                                   if (e.shiftKey) {
-                                    //For shift-clicks, prevent checkbox from processing
+                                    // For shift-clicks, prevent checkbox from processing
                                     e.preventDefault();
                                     e.stopPropagation();
                                     const visibleIds =
@@ -2309,7 +2315,7 @@ export default function Transactions() {
                                     );
                                   }
                                   // For normal clicks, let event continue to checkbox
-                                  // Checkbox will handle it and its stopPropagation will prevent row click
+                                  // onChange will fire, then onClick above will stop propagation
                                 }}
                               >
                                 <Checkbox

@@ -54,10 +54,7 @@ target/
 apps/tauri/target/
 
 # Nexus temporary files
-.nexus/logs/
-.nexus/**/tmp/
-.nexus/**/*.tmp
-.nexus/**/temp/
+.nexus/
 
 # Nexus local caches
 .nexus/**/.cache/
