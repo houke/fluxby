@@ -1,0 +1,26 @@
+meta {
+  name: Bulk delete transactions
+  type: http
+  seq: 7
+}
+
+delete {
+  url: {{baseUrl}}/api/transactions/bulk
+  body: none
+  auth: none
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+docs {
+  # Bulk delete transactions
+  
+  Delete multiple transactions at once. Provide either transactionIds (specific IDs)
+or dateRange (delete all in range). Account balances are automatically recalculated.
+
+  
+  ## Endpoint
+  `DELETE /api/transactions/bulk`
+}

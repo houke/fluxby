@@ -26,8 +26,6 @@ import {
   Repeat,
   Check,
   PiggyBank,
-  ChevronRight,
-  ChevronLeft,
   Wallet,
   Pencil,
   Info,
@@ -43,6 +41,12 @@ import {
   AlertCircle,
   Loader2,
 } from 'lucide-react';
+import { useTransactionSelection } from '@/hooks/useTransactionSelection';
+import { useBulkDelete } from '@/hooks/useBulkDelete';
+import { TransactionSelectionToolbar } from '@/components/transactions/TransactionSelectionToolbar';
+import { BulkDeleteDialog } from '@/components/transactions/BulkDeleteDialog';
+import { DateRangeDeleteDialog } from '@/components/transactions/DateRangeDeleteDialog';
+import { UndoToast } from '@/components/transactions/UndoToast';
 import {
   useTransactionTotals,
   useTransactionTotalsQuery,
@@ -98,7 +102,12 @@ import { TransactionRowBadges } from '@/components/transactions/TransactionRowBa
 import { TransactionCard } from '@/components/transactions/TransactionCard';
 import { Currency } from '@/components/ui/currency';
 import { api } from '@/lib/api';
-import { formatDate, cn, findSimilarNameGroups } from '@/lib/utils';
+import {
+  formatDate,
+  cn,
+  findSimilarNameGroups,
+  formatCurrency,
+} from '@/lib/utils';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useSuggestions, CategorySuggestion } from '@/hooks/useSuggestions';
 import { useAddressBook } from '@/hooks/useAddressBook';
@@ -338,6 +347,38 @@ export default function Transactions() {
   const queryClient = useQueryClient();
 
   const toast = useToast();
+
+  // Bulk delete hooks and state
+  const transactionSelection = useTransactionSelection();
+  const bulkDelete = useBulkDelete({
+    onSuccess: (result) => {
+      toast.success(
+        (t.bulkDelete?.undoToast || '{count} transacties verwijderd').replace(
+          '{count}',
+          String(result.deletedCount)
+        )
+      );
+      transactionSelection.clearSelection();
+      transactionSelection.exitSelectionMode();
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+    onUndoSuccess: () => {
+      toast.success(
+        t.bulkDelete?.undoSuccess || 'Verwijdering ongedaan gemaakt'
+      );
+    },
+    onUndoExpired: () => {
+      toast.info(
+        t.bulkDelete?.undoExpired || 'Ongedaan maken niet meer mogelijk'
+      );
+    },
+  });
+  const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
+  const [dateRangeDeleteDialogOpen, setDateRangeDeleteDialogOpen] =
+    useState(false);
+  const [lastDeletedCount, setLastDeletedCount] = useState(0);
 
   const typeParam = debouncedType === 'all' ? undefined : debouncedType;
   const categoryIdsParam =
@@ -1006,81 +1047,50 @@ export default function Transactions() {
       }
     },
   });
-
-  const renameCounterpartyMutation = useMutation({
-    mutationFn: ({
-      transactionId,
-      merchantName,
-    }: {
-      transactionId: string;
-      merchantName: string | null;
-    }) => api.renameByCounterparty(transactionId, merchantName),
-    onMutate: () => {
-      // Save scroll position before invalidation
-      saveScrollPosition();
-    },
-    onSuccess: (result) => {
-      queryClient.invalidateQueries({
-        queryKey: ['transactions', activeProfileId],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ['dashboard', activeProfileId],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ['addressbook', activeProfileId],
-      });
-      setEditingLabelId(null);
-      setLabelDraft('');
-      if (result.updated > 0) {
-        toast.success(
-          t.transactions.updatedCount.replace(
-            '{count}',
-            result.updated.toString()
-          )
-        );
-      }
-    },
-    onSettled: () => {
-      // Restore scroll position after mutation completes
-      restoreScrollPosition();
-    },
-  });
-
   const addToAddressBookMutation = {
     ...createContactMutationHook,
-    mutate: (data: any, options?: any) =>
+    mutate: (
+      data: Parameters<typeof createContactMutationHook.mutate>[0],
+      options?: Parameters<typeof createContactMutationHook.mutate>[1]
+    ) =>
       createContactMutationHook.mutate(data, {
         ...options,
-        onSuccess: (res: any, vars: any, ctx: any) => {
+        onSuccess: (res, vars, ctx, mutation) => {
           setAccountModalOpen(false);
           setAccountModalIban('');
           setAccountModalName('');
           toast.success(t.transactions.savedToAddressBook);
-          options?.onSuccess?.(res, vars, ctx);
+          options?.onSuccess?.(res, vars, ctx, mutation);
         },
       }),
   };
 
   const resolveSharedMutation = {
     ...resolveSharedMutationHook,
-    mutate: (data: any, options?: any) =>
+    mutate: (
+      data: Parameters<typeof resolveSharedMutationHook.mutate>[0],
+      options?: Parameters<typeof resolveSharedMutationHook.mutate>[1]
+    ) =>
       resolveSharedMutationHook.mutate(data, {
         ...options,
-        onSuccess: (res: any, vars: any, ctx: any) => {
-          options?.onSuccess?.(res, vars, ctx);
+        onSuccess: (res, vars, ctx, mutation) => {
+          options?.onSuccess?.(res, vars, ctx, mutation);
         },
       }),
   };
 
   const addIbanToContactMutation = {
     ...addIbanToContactHook,
-    mutate: (data: { contactId: string; iban: string }, options?: any) =>
+    mutate: (
+      data: { contactId: string; iban: string },
+      options?: Parameters<typeof addIbanToContactHook.mutate>[1]
+    ) =>
       addIbanToContactHook.mutate(data, {
         ...options,
-        onSuccess: (res: any, vars: any, ctx: any) => {
+        onSuccess: (res, vars, ctx, mutation) => {
           setAssignPopoverOpen(null);
           setAssignSearchTerm('');
-          options?.onSuccess?.(res, vars, ctx);
+          options?.onSuccess?.(res, vars, ctx, mutation);
         },
       }),
   };
@@ -1325,11 +1335,13 @@ export default function Transactions() {
 
   const saveLabel = (txId: string) => {
     const value = labelDraft.trim();
-    // Rename related transactions as well
-    renameCounterpartyMutation.mutate({
-      transactionId: txId,
-      merchantName: value === '' ? null : value,
+    // Only update this single transaction's merchant name
+    updateMutation.mutate({
+      id: txId,
+      data: { merchantName: value === '' ? null : value },
     });
+    setEditingLabelId(null);
+    setLabelDraft('');
   };
 
   const createRuleMutation = useMutation({
@@ -1638,6 +1650,12 @@ export default function Transactions() {
     updateMutation.mutate({ id: tx.id, data: { paymentProvider: provider } });
   };
 
+  // Handle removing a transaction from the address book
+  const handleRemoveFromAddressBook = (tx: Transaction) => {
+    // Unlink the transaction from its address book entry by setting addressBookId to null
+    updateMutation.mutate({ id: tx.id, data: { addressBookId: null } });
+  };
+
   // Available payment methods
   const paymentMethods = [
     {
@@ -1848,6 +1866,34 @@ export default function Transactions() {
       return recurringMerchants.get(key) || [];
     },
     [recurringMerchants]
+  );
+
+  // Destructure stable methods before useCallback to prevent unnecessary re-renders
+  const { selectRange, toggleSelection, lastSelectedId } = transactionSelection;
+
+  // Shared selection click handler for row clicks (not checkbox)
+  const handleSelectionClick = useCallback(
+    (e: React.MouseEvent, txId: string) => {
+      e.stopPropagation();
+
+      if (e.shiftKey) {
+        // Prevent text selection when shift-clicking
+        e.preventDefault();
+        // Get current visible transaction ids
+        const visibleIds =
+          deferredTransactions?.slice(0, visibleCount).map((t) => t.id) || [];
+        selectRange(lastSelectedId || txId, txId, visibleIds);
+      } else {
+        toggleSelection(txId);
+      }
+    },
+    [
+      deferredTransactions,
+      visibleCount,
+      selectRange,
+      toggleSelection,
+      lastSelectedId,
+    ]
   );
 
   return (
@@ -2215,9 +2261,16 @@ export default function Transactions() {
                           <div
                             className={cn(
                               'group flex items-center justify-between p-0 transition-colors hover:bg-muted/50 sm:rounded-lg sm:p-4',
-                              recurring && 'cursor-pointer'
+                              recurring && 'cursor-pointer',
+                              transactionSelection.isSelected(tx.id) &&
+                                'bg-purple-50 dark:bg-purple-900/20'
                             )}
-                            onClick={() => {
+                            onClick={(e) => {
+                              // Handle selection mode clicks
+                              if (transactionSelection.isSelecting) {
+                                handleSelectionClick(e, tx.id);
+                                return;
+                              }
                               if (recurring) {
                                 // Don't use startTransition here - it causes the skeleton to flash
                                 // because isPending becomes true during the transition
@@ -2228,6 +2281,68 @@ export default function Transactions() {
                             }}
                           >
                             <div className='flex min-w-0 flex-1 items-center gap-4 px-3 py-4 sm:p-0'>
+                              {/* Selection checkbox - always visible on desktop, hidden on mobile until selection mode */}
+                              <div
+                                className={cn(
+                                  'flex-shrink-0',
+                                  // On mobile: only show when in selection mode
+                                  // On desktop (sm+): always show, but opacity transitions
+                                  'hidden sm:block',
+                                  transactionSelection.isSelecting
+                                    ? 'opacity-100'
+                                    : 'opacity-0 group-hover:opacity-100'
+                                )}
+                                onClick={(e) => {
+                                  // Stop propagation in bubble phase to prevent row click
+                                  // This catches cases where checkbox internal stopPropagation
+                                  // doesn't fire (e.g., clicking hidden input directly in tests)
+                                  e.stopPropagation();
+                                }}
+                                onClickCapture={(e) => {
+                                  // Use capture phase to intercept BEFORE checkbox processes
+                                  if (e.shiftKey) {
+                                    // For shift-clicks, prevent checkbox from processing
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    const visibleIds =
+                                      deferredTransactions
+                                        ?.slice(0, visibleCount)
+                                        .map((t) => t.id) || [];
+                                    selectRange(
+                                      lastSelectedId || tx.id,
+                                      tx.id,
+                                      visibleIds
+                                    );
+                                  }
+                                  // For normal clicks, let event continue to checkbox
+                                  // onChange will fire, then onClick above will stop propagation
+                                }}
+                              >
+                                <Checkbox
+                                  data-testid='transaction-checkbox'
+                                  checked={transactionSelection.isSelected(
+                                    tx.id
+                                  )}
+                                  onChange={() =>
+                                    transactionSelection.toggleSelection(tx.id)
+                                  }
+                                  aria-label={(
+                                    t.bulkDelete?.selectTransaction ||
+                                    'Select transaction: {description} {amount}'
+                                  )
+                                    .replace(
+                                      '{description}',
+                                      tx.merchantName ||
+                                        tx.opposingAccountName ||
+                                        tx.description ||
+                                        t.transactions.unknown
+                                    )
+                                    .replace(
+                                      '{amount}',
+                                      formatCurrency(tx.amount)
+                                    )}
+                                />
+                              </div>
                               <div
                                 className={cn(
                                   'flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full',
@@ -2490,6 +2605,10 @@ export default function Transactions() {
                                   addressBook={addressBook}
                                   addressBookEntry={addressBookEntry}
                                   isInAddressBook={isInAddressBook(tx)}
+                                  hasDirectAddressBookLink={
+                                    tx.addressBookId !== null &&
+                                    tx.addressBookId !== undefined
+                                  }
                                   onCategorySelect={handleCategorySelect}
                                   onPaymentMethodSelect={
                                     handlePaymentMethodSelect
@@ -2499,6 +2618,9 @@ export default function Transactions() {
                                   }
                                   onAddressBookSelect={handleAddressBookSelect}
                                   onAddToAddressBook={addToAddressBook}
+                                  onRemoveFromAddressBook={
+                                    handleRemoveFromAddressBook
+                                  }
                                   onTransferToggle={handleTransferToggle}
                                   isUpdatePending={updateMutation.isPending}
                                   translations={{
@@ -2513,6 +2635,9 @@ export default function Transactions() {
                                     remove: t.common?.remove || 'Verwijderen',
                                     addToAddressBook:
                                       t.transactions.addToAddressBook,
+                                    unlinkFromContact:
+                                      t.transactions.unlinkFromContact ||
+                                      'Ontkoppelen',
                                     inAddressBook: t.transactions.inAddressBook,
                                     searchContacts:
                                       t.addressBook?.searchContacts ||
@@ -3005,7 +3130,6 @@ export default function Transactions() {
                     addToAddressBookMutation.mutate({
                       iban: createContactTransaction.opposingAccountIban,
                       name: createContactName.trim(),
-                      transactionId: createContactTransaction.id,
                     });
                     setCreateContactModalOpen(false);
                     setCreateContactTransaction(null);
@@ -3623,6 +3747,10 @@ export default function Transactions() {
                                   setSelectedRelatedIds(new Set());
                                 }
                               }}
+                              aria-label={
+                                t.bulkDelete?.selectAllRelated ||
+                                'Select all related transactions'
+                              }
                             />
                           </th>
                           <th className='pb-2'>
@@ -3669,6 +3797,21 @@ export default function Transactions() {
                                   }
                                   setSelectedRelatedIds(newSet);
                                 }}
+                                aria-label={(
+                                  t.bulkDelete?.selectTransaction ||
+                                  'Select transaction: {description} {amount}'
+                                )
+                                  .replace(
+                                    '{description}',
+                                    rt.merchantName ||
+                                      rt.opposingAccountName ||
+                                      rt.description ||
+                                      t.transactions.unknown
+                                  )
+                                  .replace(
+                                    '{amount}',
+                                    formatCurrency(rt.amount)
+                                  )}
                               />
                             </td>
                             <td className='max-w-[200px] py-2'>
@@ -3856,6 +3999,10 @@ export default function Transactions() {
                                 setSelectedTransferRelatedIds(new Set());
                               }
                             }}
+                            aria-label={
+                              t.bulkDelete?.selectAllRelated ||
+                              'Select all related transactions'
+                            }
                           />
                         </th>
                         <th className='pb-2'>{t.categories?.name || 'Naam'}</th>
@@ -3946,6 +4093,18 @@ export default function Transactions() {
                                 }
                                 setSelectedTransferRelatedIds(newSet);
                               }}
+                              aria-label={(
+                                t.bulkDelete?.selectTransaction ||
+                                'Select transaction: {description} {amount}'
+                              )
+                                .replace(
+                                  '{description}',
+                                  rt.merchantName ||
+                                    rt.opposingAccountName ||
+                                    rt.description ||
+                                    t.transactions.unknown
+                                )
+                                .replace('{amount}', formatCurrency(rt.amount))}
                             />
                           </td>
                           <td className='max-w-[200px] py-2'>
@@ -4019,6 +4178,74 @@ export default function Transactions() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* Bulk Delete Confirmation Dialog */}
+        <BulkDeleteDialog
+          open={bulkDeleteDialogOpen}
+          onOpenChange={setBulkDeleteDialogOpen}
+          transactions={
+            deferredTransactions?.filter((tx) =>
+              transactionSelection.isSelected(tx.id)
+            ) || []
+          }
+          onConfirm={async () => {
+            const ids = Array.from(transactionSelection.selectedIds);
+            if (ids.length === 0) return;
+            const result = await bulkDelete.deleteByIds(ids);
+            setLastDeletedCount(result.deletedCount);
+            setBulkDeleteDialogOpen(false);
+          }}
+          isLoading={bulkDelete.isDeleting}
+        />
+
+        {/* Date Range Delete Dialog */}
+        <DateRangeDeleteDialog
+          open={dateRangeDeleteDialogOpen}
+          onOpenChange={setDateRangeDeleteDialogOpen}
+          accounts={accounts || []}
+          onConfirm={async (rangeStart, rangeEnd, accountId) => {
+            const result = await bulkDelete.deleteByDateRange(
+              rangeStart,
+              rangeEnd,
+              accountId
+            );
+            setLastDeletedCount(result.deletedCount);
+            setDateRangeDeleteDialogOpen(false);
+          }}
+          onPreviewCount={(rangeStart, rangeEnd, accountId) =>
+            bulkDelete.previewDateRangeCount(rangeStart, rangeEnd, accountId)
+          }
+          isLoading={bulkDelete.isDeleting}
+        />
+
+        {/* Selection Toolbar (sticky bottom, centered in content area) */}
+        {transactionSelection.isSelecting && (
+          <div className='fixed right-0 bottom-4 left-0 z-50 flex justify-center px-4 sm:left-[280px]'>
+            <div className='w-full max-w-3xl'>
+              <TransactionSelectionToolbar
+                selectionCount={transactionSelection.selectionCount}
+                onDeleteSelected={() => setBulkDeleteDialogOpen(true)}
+                onDeleteByDateRange={() => setDateRangeDeleteDialogOpen(true)}
+                onCancelSelection={() => {
+                  transactionSelection.clearSelection();
+                  transactionSelection.exitSelectionMode();
+                }}
+                isDeleting={bulkDelete.isDeleting}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Undo Toast */}
+        {bulkDelete.canUndo && (
+          <UndoToast
+            timeRemainingMs={bulkDelete.timeRemainingMs}
+            deletedCount={lastDeletedCount}
+            onUndo={bulkDelete.undo}
+            onDismiss={bulkDelete.clearUndo}
+            isUndoing={bulkDelete.isUndoing}
+          />
+        )}
       </div>
     </>
   );

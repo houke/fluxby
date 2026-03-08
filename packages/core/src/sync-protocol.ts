@@ -259,7 +259,7 @@ export interface SyncProtocolConfig {
 
 export const DEFAULT_SYNC_CONFIG: SyncProtocolConfig = {
   heartbeatInterval: 5000,
-  heartbeatTimeout: 15000,
+  heartbeatTimeout: 30000, // Increased from 15s for slow networks
   maxChunkSize: 16 * 1024, // 16KB - safe for WebRTC
   connectionTimeout: 30000,
   autoReconnect: true,

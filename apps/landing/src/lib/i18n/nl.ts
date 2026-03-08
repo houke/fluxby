@@ -19,11 +19,27 @@ export interface LandingTranslationKeys {
       name: string;
       description: string;
       label: string;
+      x64Label: string;
+      arm64Label: string;
     };
     linux: {
       name: string;
       description: string;
       label: string;
+      appimageLabel: string;
+      debLabel: string;
+      rpmLabel: string;
+    };
+    pwa: {
+      name: string;
+      description: string;
+      installButton: string;
+      installedBadge: string;
+      browserInstructions: {
+        ios: string;
+        android: string;
+        desktop: string;
+      };
     };
     note: string;
   };
@@ -219,11 +235,28 @@ export const nl: LandingTranslationKeys = {
       name: 'Windows',
       description: 'Voor Windows 10 en 11',
       label: 'Download voor Windows',
+      x64Label: 'x64',
+      arm64Label: 'ARM64',
     },
     linux: {
       name: 'Linux',
-      description: 'Voor alle grote Linux distributies',
-      label: 'Download .AppImage',
+      description: 'Packages voor alle grote Linux distributies.',
+      label: 'Download',
+      appimageLabel: 'AppImage',
+      debLabel: 'DEB',
+      rpmLabel: 'RPM',
+    },
+    pwa: {
+      name: 'Browser (PWA)',
+      description:
+        'Installeer direct vanuit je browser. Geen download nodig, werkt offline.',
+      installButton: 'Installeren als app',
+      installedBadge: 'Geïnstalleerd',
+      browserInstructions: {
+        ios: 'Tik op het Deel-icoon en dan "Zet op beginscherm"',
+        android: 'Tik op het menu (⋮) en dan "Toevoegen aan startscherm"',
+        desktop: 'Klik op het installatie-icoon in de adresbalk',
+      },
     },
     note: 'Je hoeft niets te installeren om Fluxby te gebruiken; het werkt volledig in je browser. Deze downloads zijn beschikbaar voor gebruikers die de voorkeur geven aan een dedicated applicatie op hun systeem.',
   },
@@ -1304,8 +1337,10 @@ export const nl: LandingTranslationKeys = {
       welcome: 'Welkom',
       bankConnection: 'Bank verbinden',
       firstSteps: 'Eerste stappen',
+      installation: 'Installatie',
       features: 'Functies',
       transactions: 'Transacties',
+      bulkDelete: 'Bulk verwijderen',
       categories: 'Categorieën',
       accounts: 'Rekeningen',
       addressBook: 'Adresboek',
@@ -1376,6 +1411,50 @@ export const nl: LandingTranslationKeys = {
         'Voeg contacten toe in het Adresboek om bij te houden met wie je transacties doet',
       next4:
         'Importeer regelmatig transacties om je gegevens up-to-date te houden',
+    },
+    installation: {
+      title: 'Fluxby installeren',
+      subtitle:
+        'Fluxby werkt in je browser zonder installatie, maar je kunt het ook als app installeren voor een betere ervaring.',
+      desktopTitle: 'Desktop (Windows, macOS, Linux)',
+      desktopText:
+        'Voor de beste ervaring op desktop, download de native app van onze Downloads pagina. Native apps bieden betere prestaties en werken offline.',
+      browserTitle: 'Webbrowser',
+      browserText:
+        'Fluxby werkt direct in je browser. Bezoek de app URL en begin met gebruiken - geen installatie nodig. Je data wordt lokaal in je browser opgeslagen.',
+      iosTitle: 'iPhone & iPad',
+      iosIntro:
+        'Fluxby kan als Progressive Web App (PWA) worden geïnstalleerd op je iPhone of iPad. Dit geeft je een app-achtige ervaring met een beginscherm icoon.',
+      iosStep1Title: 'Open in Safari',
+      iosStep1Text:
+        'Open Fluxby in Safari (niet Chrome of een andere browser). Safari is vereist voor PWA installatie op iOS.',
+      iosStep2Title: 'Tik op de Deel knop',
+      iosStep2Text:
+        'Tik op de Deel knop onderaan Safari (het vierkant met een pijl omhoog).',
+      iosStep3Title: 'Zet op beginscherm',
+      iosStep3Text:
+        'Scroll naar beneden en tik op "Zet op beginscherm". Je moet mogelijk naar rechts scrollen om deze optie te vinden.',
+      iosStep4Title: 'Bevestigen',
+      iosStep4Text:
+        'Tik op "Voeg toe" rechtsboven. Fluxby verschijnt nu op je beginscherm zoals elke andere app.',
+      iosTipTitle: 'Tip',
+      iosTipText:
+        'Eenmaal geïnstalleerd opent Fluxby in volledig scherm zonder de Safari adresbalk. Je data wordt lokaal op je apparaat opgeslagen en synchroniseert tussen je geïnstalleerde apps via peer-to-peer sync.',
+      androidTitle: 'Android',
+      androidIntro:
+        'Op Android kun je Fluxby als PWA installeren vanuit Chrome of andere browsers.',
+      androidStep1Title: 'Open in Chrome',
+      androidStep1Text:
+        'Open Fluxby in Chrome (of een andere compatibele browser zoals Edge).',
+      androidStep2Title: 'Zoek naar de installatieprompt',
+      androidStep2Text:
+        'Chrome kan een "App installeren" banner onderaan tonen. Als je deze ziet, tik op "Installeren".',
+      androidStep3Title: 'Of gebruik het menu',
+      androidStep3Text:
+        'Tik op het drie-puntjes menu in Chrome en selecteer "App installeren" of "Toevoegen aan startscherm".',
+      dataStorageTitle: 'Over je data',
+      dataStorageText:
+        'Ongeacht hoe je Fluxby opent, je data wordt lokaal op je apparaat opgeslagen. Als je Fluxby in een browser gebruikt, wordt je data in die browser opgeslagen. Als je de app installeert, wordt data in de app opgeslagen. Gebruik de sync functie om je data gesynchroniseerd te houden tussen apparaten.',
     },
     bankConnection: {
       title: 'Je bankrekening verbinden',
@@ -1901,8 +1980,11 @@ export const nl: LandingTranslationKeys = {
       },
       linux: {
         name: 'Linux',
-        description: 'Standalone AppImage voor alle distributies.',
+        description: 'Packages voor alle grote Linux distributies.',
         label: 'Download',
+        appimageLabel: 'AppImage',
+        debLabel: 'DEB',
+        rpmLabel: 'RPM',
       },
       note: 'Je hoeft niets te installeren om Fluxby te gebruiken; het werkt volledig in je browser. Deze downloads zijn beschikbaar voor wie de voorkeur geeft aan een dedicated applicatie op hun systeem.',
     },
@@ -1938,10 +2020,25 @@ export const nl: LandingTranslationKeys = {
     updatesPage: {
       intro:
         'Bekijk wat er nieuw is in Fluxby. Hier vind je alle updates en nieuwe features.',
+      v181Date: '8 maart 2026',
+      v181Title: 'Release 1.8.1',
+      v181Description: 'Nieuwe verbeteringen en bugfixes.',
+      v180Date: '7 maart 2026',
+      v180Title: 'Release 1.8.0',
+      v180Description: '3 nieuwe features en 9 bugfixes.',
+      v180F1Title: 'Complete code review with 19 fixes',
+      v180F1Desc: 'We hebben iets nieuws voor je! Bekijk de release notes voor alle details.',
+      v180F2Title: 'Geïmplementeerd bulk transactie deletion with undo ondersteuning toegevoegd voor',
+      v180F2Desc: 'Nieuwe functionaliteit waar je iets aan hebt.',
+      v180F3Title: 'Toegevoegd ios web app installation instructions',
+      v180F3Desc: 'Nieuwe functionaliteit waar je iets aan hebt.',
+      v180F4Title: 'Bugfixes',
+      v180F4Desc: '9 bugs opgelost. Zie changelog voor details.',
       v171Date: '22 januari 2026',
       v171Title: 'Release 1.7.1',
       v171Description: '3 bugfixes.',
-      v171F1Title: 'Enable macos updater ondersteuning toegevoegd voor and opgelost build warnings',
+      v171F1Title:
+        'Enable macos updater ondersteuning toegevoegd voor and opgelost build warnings',
       v171F1Desc: 'Een vervelend probleempje opgelost.',
       v171F2Title: 'Web app verbeteringen',
       v171F2Desc: '2 bugfixes. Bekijk de release op GitHub!',

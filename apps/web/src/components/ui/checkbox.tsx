@@ -42,7 +42,10 @@ const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
             isChecked && 'border-primary bg-primary text-primary-foreground',
             className
           )}
-          onClick={() => combinedRef.current?.click()}
+          onClick={(e) => {
+            e.stopPropagation();
+            combinedRef.current?.click();
+          }}
         >
           {indeterminate ? (
             <Minus className='h-3 w-3 stroke-[3]' />

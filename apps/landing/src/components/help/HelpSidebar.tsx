@@ -54,6 +54,11 @@ export default function HelpSidebar({ isOpen, onClose }: HelpSidebarProps) {
           icon: '🚀',
         },
         {
+          title: t.helpCenter?.userNav?.installation || 'Installation',
+          path: '/help/installation',
+          icon: '📲',
+        },
+        {
           title:
             t.helpCenter?.userNav?.bankConnection || 'Connecting your bank',
           path: '/help/bank-connection',
@@ -68,6 +73,11 @@ export default function HelpSidebar({ isOpen, onClose }: HelpSidebarProps) {
           title: t.helpCenter?.userNav?.transactions || 'Transactions',
           path: '/help/transactions',
           icon: '💸',
+        },
+        {
+          title: t.helpCenter?.userNav?.bulkDelete || 'Bulk delete',
+          path: '/help/bulk-delete',
+          icon: '🗑️',
         },
         {
           title: t.helpCenter?.userNav?.categories || 'Categories',

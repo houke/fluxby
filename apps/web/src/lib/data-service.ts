@@ -4443,22 +4443,9 @@ export function createDataService(db: Database) {
         ]
       );
 
-      // Recalculate account balance from the latest transaction's balance_after
-      const latestBalance = await db.queryOneAsync<{ balance_after: number }>(
-        `SELECT balance_after
-         FROM transactions
-         WHERE account_id = ? AND balance_after IS NOT NULL AND is_deleted = 0
-         ORDER BY date DESC, created_at DESC
-         LIMIT 1`,
-        [options.accountId]
-      );
-      if (latestBalance && typeof latestBalance.balance_after === 'number') {
-        await db.runAsync(
-          `UPDATE accounts SET current_balance = ?, updated_at = ?
-           WHERE id = ?`,
-          [latestBalance.balance_after, now, options.accountId]
-        );
-      }
+      // Recalculate account balance using the centralized method (IMPL-011)
+      // This ensures consistency with balance recalculation after bulk deletions
+      await this.recalculateAccountBalance(options.accountId);
 
       return {
         imported,
@@ -6037,6 +6024,338 @@ export function createDataService(db: Database) {
       return { deleted: result.changes };
     },
 
+    // ============= Bulk Transaction Operations =============
+
+    /**
+     * Result of a bulk delete operation
+     */
+    // Note: BulkDeleteResult type is inline to avoid import changes
+
+    /**
+     * Delete multiple transactions by their IDs.
+     * Uses soft-delete (is_deleted = 1) for sync compatibility.
+     * Wrapped in transactionAsync for OPFS performance (single disk sync).
+     *
+     * @param transactionIds - Array of transaction IDs to delete
+     * @returns BulkDeleteResult with count and affected accounts
+     */
+    async deleteTransactionsByIds(transactionIds: string[]): Promise<{
+      deletedCount: number;
+      affectedAccountIds: string[];
+      undoToken?: string;
+      expiresAt?: string;
+    }> {
+      const pid = profileId();
+      if (!pid) throw new Error('No active profile');
+
+      // Security: Validate input array
+      if (!transactionIds || !Array.isArray(transactionIds)) {
+        return { deletedCount: 0, affectedAccountIds: [] };
+      }
+
+      // Security: Reject empty arrays to prevent accidental mass deletion
+      if (transactionIds.length === 0) {
+        return { deletedCount: 0, affectedAccountIds: [] };
+      }
+
+      // Security: Enforce max 1000 IDs per request to prevent DoS
+      if (transactionIds.length > 1000) {
+        throw new Error('Maximum 1000 transaction IDs per request');
+      }
+
+      const now = Date.now();
+      let deletedCount = 0;
+      const affectedAccountIds = new Set<string>();
+
+      // Use a transaction for OPFS performance (single disk sync)
+      await db.transactionAsync(async () => {
+        // Batch IDs in groups of 500 for SQL IN() clauses
+        const BATCH_SIZE = 500;
+        for (let i = 0; i < transactionIds.length; i += BATCH_SIZE) {
+          const batch = transactionIds.slice(i, i + BATCH_SIZE);
+          const placeholders = batch.map(() => '?').join(',');
+
+          // First, get affected account IDs before deletion
+          const affectedRows = await db.queryAsync<{ account_id: string }>(
+            `SELECT DISTINCT account_id FROM transactions 
+             WHERE id IN (${placeholders}) AND profile_id = ? AND is_deleted = 0`,
+            [...batch, pid]
+          );
+
+          for (const row of affectedRows) {
+            affectedAccountIds.add(row.account_id);
+          }
+
+          // Soft-delete all matching transactions
+          const result = await db.runAsync(
+            `UPDATE transactions 
+             SET is_deleted = 1, updated_at = ? 
+             WHERE id IN (${placeholders}) AND profile_id = ? AND is_deleted = 0`,
+            [now, ...batch, pid]
+          );
+
+          deletedCount += result.changes || 0;
+        }
+      });
+
+      // Recalculate balance for each affected account
+      const accountIdsArray = Array.from(affectedAccountIds);
+      for (const accountId of accountIdsArray) {
+        await this.recalculateAccountBalance(accountId);
+      }
+
+      return {
+        deletedCount,
+        affectedAccountIds: accountIdsArray,
+      };
+    },
+
+    /**
+     * Delete transactions within a date range.
+     * Supports dry-run mode to preview count before actual deletion.
+     * Uses soft-delete (is_deleted = 1) for sync compatibility.
+     *
+     * @param startDate - Start date (inclusive) in YYYY-MM-DD format
+     * @param endDate - End date (inclusive) in YYYY-MM-DD format
+     * @param options - Optional filters and dry-run mode
+     * @returns BulkDeleteResult with count and affected accounts
+     */
+    async deleteTransactionsByDateRange(
+      startDate: string,
+      endDate: string,
+      options?: {
+        accountId?: string;
+        dryRun?: boolean;
+      }
+    ): Promise<{
+      deletedCount: number;
+      affectedAccountIds: string[];
+      undoToken?: string;
+      expiresAt?: string;
+    }> {
+      const pid = profileId();
+      if (!pid) throw new Error('No active profile');
+
+      // Security: Validate date format (YYYY-MM-DD)
+      const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+      if (!dateRegex.test(startDate) || !dateRegex.test(endDate)) {
+        throw new Error('Invalid date format. Use YYYY-MM-DD.');
+      }
+
+      // Security: Validate dates are parseable
+      const startParsed = new Date(startDate);
+      const endParsed = new Date(endDate);
+      if (isNaN(startParsed.getTime()) || isNaN(endParsed.getTime())) {
+        throw new Error('Invalid date value.');
+      }
+
+      // Security: Ensure start date is not after end date
+      if (startDate > endDate) {
+        throw new Error('Start date must be before or equal to end date.');
+      }
+
+      // Security: Prevent deletion of future transactions
+      const today = new Date().toISOString().split('T')[0];
+      if (startDate > today || endDate > today) {
+        throw new Error('Date cannot be in the future.');
+      }
+
+      // Security: Limit date range to 10 years in the past
+      const tenYearsAgo = new Date();
+      tenYearsAgo.setFullYear(tenYearsAgo.getFullYear() - 10);
+      const minDate = tenYearsAgo.toISOString().split('T')[0];
+      if (startDate < minDate) {
+        throw new Error('Start date cannot be more than 10 years ago.');
+      }
+
+      // Build WHERE clause
+      let whereClause =
+        'profile_id = ? AND is_deleted = 0 AND date >= ? AND date <= ?';
+      const params: unknown[] = [pid, startDate, endDate];
+
+      if (options?.accountId) {
+        whereClause += ' AND account_id = ?';
+        params.push(options.accountId);
+      }
+
+      // Dry-run mode: return count without deleting
+      if (options?.dryRun) {
+        const countResult = await db.queryOneAsync<{ count: number }>(
+          `SELECT COUNT(*) as count FROM transactions WHERE ${whereClause}`,
+          params
+        );
+
+        // Get affected account IDs
+        const affectedRows = await db.queryAsync<{ account_id: string }>(
+          `SELECT DISTINCT account_id FROM transactions WHERE ${whereClause}`,
+          params
+        );
+
+        return {
+          deletedCount: countResult?.count || 0,
+          affectedAccountIds: affectedRows.map((r) => r.account_id),
+        };
+      }
+
+      const now = Date.now();
+
+      // Get affected account IDs before deletion
+      const affectedRows = await db.queryAsync<{ account_id: string }>(
+        `SELECT DISTINCT account_id FROM transactions WHERE ${whereClause}`,
+        params
+      );
+      const affectedAccountIds = affectedRows.map((r) => r.account_id);
+
+      // Use a transaction for OPFS performance (single disk sync)
+      let deletedCount = 0;
+      await db.transactionAsync(async () => {
+        const result = await db.runAsync(
+          `UPDATE transactions SET is_deleted = 1, updated_at = ? WHERE ${whereClause}`,
+          [now, ...params]
+        );
+        deletedCount = result.changes || 0;
+      });
+
+      // Recalculate balance for each affected account
+      for (const accountId of affectedAccountIds) {
+        await this.recalculateAccountBalance(accountId);
+      }
+
+      return {
+        deletedCount,
+        affectedAccountIds,
+      };
+    },
+
+    /**
+     * Recalculate the current balance for an account.
+     * Uses the latest transaction's balance_after value (bank-provided balance from CSV).
+     * If no transactions exist, sets balance to 0.
+     *
+     * @param accountId - The account ID to recalculate balance for
+     * @returns BalanceRecalculationResult with previous and new balance
+     */
+    async recalculateAccountBalance(accountId: string): Promise<{
+      accountId: string;
+      previousBalance: number;
+      newBalance: number;
+      calculationMethod: 'latest_balance_after' | 'sum_transactions';
+    }> {
+      const pid = profileId();
+      if (!pid) throw new Error('No active profile');
+
+      // Get current balance
+      const account = await db.queryOneAsync<{ current_balance: number }>(
+        'SELECT current_balance FROM accounts WHERE id = ? AND profile_id = ? AND is_deleted = 0',
+        [accountId, pid]
+      );
+
+      if (!account) {
+        throw new Error(`Account not found: ${accountId}`);
+      }
+
+      const previousBalance = account.current_balance || 0;
+
+      // Find latest transaction with balance_after
+      const latest = await db.queryOneAsync<{ balance_after: number }>(
+        `SELECT balance_after FROM transactions 
+         WHERE account_id = ? AND is_deleted = 0 AND balance_after IS NOT NULL 
+         ORDER BY date DESC, id DESC LIMIT 1`,
+        [accountId]
+      );
+
+      let newBalance: number;
+      let calculationMethod: 'latest_balance_after' | 'sum_transactions';
+
+      if (latest && typeof latest.balance_after === 'number') {
+        // Use the bank-provided balance from the latest transaction
+        newBalance = latest.balance_after;
+        calculationMethod = 'latest_balance_after';
+      } else {
+        // No transactions with balance_after - set to 0
+        newBalance = 0;
+        calculationMethod = 'sum_transactions';
+      }
+
+      // Update the account balance
+      await db.runAsync(
+        'UPDATE accounts SET current_balance = ?, updated_at = ? WHERE id = ? AND profile_id = ?',
+        [newBalance, Date.now(), accountId, pid]
+      );
+
+      return {
+        accountId,
+        previousBalance,
+        newBalance,
+        calculationMethod,
+      };
+    },
+
+    /**
+     * Restore previously soft-deleted transactions.
+     * Used by the undo feature for bulk deletions.
+     *
+     * @param transactionIds - Array of transaction IDs to restore
+     * @returns Number of restored transactions
+     */
+    async restoreTransactions(transactionIds: string[]): Promise<{
+      restoredCount: number;
+      affectedAccountIds: string[];
+    }> {
+      const pid = profileId();
+      if (!pid) throw new Error('No active profile');
+
+      if (!transactionIds || transactionIds.length === 0) {
+        return { restoredCount: 0, affectedAccountIds: [] };
+      }
+
+      const now = Date.now();
+      let restoredCount = 0;
+      const affectedAccountIds = new Set<string>();
+
+      // Use a transaction for OPFS performance (single disk sync)
+      await db.transactionAsync(async () => {
+        // Batch IDs in groups of 500 for SQL IN() clauses
+        const BATCH_SIZE = 500;
+        for (let i = 0; i < transactionIds.length; i += BATCH_SIZE) {
+          const batch = transactionIds.slice(i, i + BATCH_SIZE);
+          const placeholders = batch.map(() => '?').join(',');
+
+          // First, get affected account IDs
+          const affectedRows = await db.queryAsync<{ account_id: string }>(
+            `SELECT DISTINCT account_id FROM transactions 
+             WHERE id IN (${placeholders}) AND profile_id = ? AND is_deleted = 1`,
+            [...batch, pid]
+          );
+
+          for (const row of affectedRows) {
+            affectedAccountIds.add(row.account_id);
+          }
+
+          // Restore all matching transactions
+          const result = await db.runAsync(
+            `UPDATE transactions 
+             SET is_deleted = 0, updated_at = ? 
+             WHERE id IN (${placeholders}) AND profile_id = ? AND is_deleted = 1`,
+            [now, ...batch, pid]
+          );
+
+          restoredCount += result.changes || 0;
+        }
+      });
+
+      // Recalculate balance for each affected account
+      const accountIdsArray = Array.from(affectedAccountIds);
+      for (const accountId of accountIdsArray) {
+        await this.recalculateAccountBalance(accountId);
+      }
+
+      return {
+        restoredCount,
+        affectedAccountIds: accountIdsArray,
+      };
+    },
+
     async createDemoData(
       targetProfileId: string,
       language: 'nl' | 'en' = 'nl'
@@ -7532,6 +7851,106 @@ export function createDataService(db: Database) {
         await db.runAsync('ROLLBACK');
         throw err;
       }
+    },
+
+    // ============= Sync History =============
+    /**
+     * Get sync log entries for displaying sync history to users
+     */
+    async getSyncHistory(limit = 100): Promise<
+      Array<{
+        id: string;
+        tableName: string;
+        rowId: string;
+        action: 'create' | 'update' | 'delete' | 'conflict';
+        localUpdatedAt: number | null;
+        remoteUpdatedAt: number | null;
+        resolution: string | null;
+        errorMessage: string | null;
+        createdAt: number;
+      }>
+    > {
+      return db.queryAsync<{
+        id: string;
+        tableName: string;
+        rowId: string;
+        action: 'create' | 'update' | 'delete' | 'conflict';
+        localUpdatedAt: number | null;
+        remoteUpdatedAt: number | null;
+        resolution: string | null;
+        errorMessage: string | null;
+        createdAt: number;
+      }>(
+        `SELECT
+           id,
+           table_name as tableName,
+           row_id as rowId,
+           action,
+           local_updated_at as localUpdatedAt,
+           remote_updated_at as remoteUpdatedAt,
+           resolution,
+           error_message as errorMessage,
+           created_at as createdAt
+         FROM sync_log
+         ORDER BY created_at DESC
+         LIMIT ?`,
+        [limit]
+      );
+    },
+
+    /**
+     * Clear sync history
+     */
+    async clearSyncHistory(): Promise<void> {
+      await db.runAsync('DELETE FROM sync_log');
+    },
+
+    /**
+     * Get count of sync events by action type
+     */
+    async getSyncHistoryStats(): Promise<{
+      creates: number;
+      updates: number;
+      deletes: number;
+      conflicts: number;
+      total: number;
+    }> {
+      const rows = await db.queryAsync<{
+        action: string;
+        count: number;
+      }>(
+        `SELECT action, COUNT(*) as count
+         FROM sync_log
+         GROUP BY action`
+      );
+
+      const stats = {
+        creates: 0,
+        updates: 0,
+        deletes: 0,
+        conflicts: 0,
+        total: 0,
+      };
+
+      for (const row of rows) {
+        switch (row.action) {
+          case 'create':
+            stats.creates = row.count;
+            break;
+          case 'update':
+            stats.updates = row.count;
+            break;
+          case 'delete':
+            stats.deletes = row.count;
+            break;
+          case 'conflict':
+            stats.conflicts = row.count;
+            break;
+        }
+        stats.total += row.count;
+      }
+
+      return stats;
     },
   };
 }

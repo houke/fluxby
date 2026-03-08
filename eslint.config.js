@@ -18,6 +18,9 @@ export default tseslint.config(
       '**/coverage/**',
       '**/*.d.ts',
       '**/vite.config.js', // Ignore transpiled vite configs
+      '.github/skills/**/examples/**', // Skill reference examples (documentation)
+      '.github/skills/**/templates/**', // Skill templates (documentation)
+      '.github/skills/**/*.tsx', // Skill template files (documentation)
     ],
   },
 

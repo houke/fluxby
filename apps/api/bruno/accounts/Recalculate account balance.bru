@@ -1,0 +1,30 @@
+meta {
+  name: Recalculate account balance
+  type: http
+  seq: 8
+}
+
+post {
+  url: {{baseUrl}}/api/accounts/:id/recalculate-balance
+  body: json
+  auth: none
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+body:json {
+  {}
+}
+
+docs {
+  # Recalculate account balance
+  
+  Recalculates the account's current balance based on the latest transaction's
+balance_after value. If no transactions exist, balance is set to 0.
+
+  
+  ## Endpoint
+  `POST /api/accounts/{id}/recalculate-balance`
+}

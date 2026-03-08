@@ -7,6 +7,7 @@ import {
   SyncQueue,
   ConnectivityMonitor,
   createInitialConnectivityState,
+  PersistentSyncQueue,
 } from '../../packages/database/src/offline.js';
 
 describe('offline', () => {
@@ -213,6 +214,76 @@ describe('offline', () => {
       monitor.startPolling(1000);
       monitor.stopPolling();
       // Should not throw
+    });
+  });
+
+  describe('PersistentSyncQueue', () => {
+    // Note: Full IndexedDB tests require a browser environment or fake-indexeddb
+    // These tests verify the class can be instantiated and basic methods work
+
+    it('should extend SyncQueue', () => {
+      const queue = new PersistentSyncQueue('test-profile-1');
+      expect(queue).toBeInstanceOf(SyncQueue);
+      queue.close();
+    });
+
+    it('should have a ready method', async () => {
+      const queue = new PersistentSyncQueue('test-profile-2');
+      // In Node.js without IndexedDB, ready() should still resolve
+      await expect(queue.ready()).resolves.toBeUndefined();
+      queue.close();
+    });
+
+    it('should have getPendingCount method', () => {
+      const queue = new PersistentSyncQueue('test-profile-3');
+      expect(queue.getPendingCount()).toBe(0);
+      queue.close();
+    });
+
+    it('should have hasPendingChanges method', () => {
+      const queue = new PersistentSyncQueue('test-profile-4');
+      expect(queue.hasPendingChanges()).toBe(false);
+      queue.close();
+    });
+
+    it('should enqueue items like SyncQueue', () => {
+      const queue = new PersistentSyncQueue('test-profile-5');
+      queue.enqueue('transactions', 'tx-1', 'insert', { amount: 100 });
+      expect(queue.getPendingCount()).toBe(1);
+      expect(queue.hasPendingChanges()).toBe(true);
+      queue.close();
+    });
+
+    it('should dequeue items like SyncQueue', () => {
+      const queue = new PersistentSyncQueue('test-profile-6');
+      queue.enqueue('transactions', 'tx-1', 'insert', { amount: 100 });
+      const item = queue.dequeue();
+      expect(item?.rowId).toBe('tx-1');
+      expect(queue.getPendingCount()).toBe(0);
+      queue.close();
+    });
+
+    it('should clear items like SyncQueue', () => {
+      const queue = new PersistentSyncQueue('test-profile-7');
+      queue.enqueue('transactions', 'tx-1', 'insert', { amount: 100 });
+      queue.enqueue('transactions', 'tx-2', 'insert', { amount: 200 });
+      queue.clear();
+      expect(queue.isEmpty()).toBe(true);
+      queue.close();
+    });
+
+    it('should have profile-specific database', () => {
+      const queue1 = new PersistentSyncQueue('profile-a');
+      const queue2 = new PersistentSyncQueue('profile-b');
+
+      queue1.enqueue('transactions', 'tx-1', 'insert', { amount: 100 });
+
+      // Each queue should be independent
+      expect(queue1.getPendingCount()).toBe(1);
+      expect(queue2.getPendingCount()).toBe(0);
+
+      queue1.close();
+      queue2.close();
     });
   });
 });

@@ -1,6 +1,5 @@
 import { Router } from 'express';
-import { query, queryOne, run, runMany } from '../db/index.js';
-import { getCategoryRules } from '../services/categorization.js';
+import { query, queryOne, run } from '../db/index.js';
 import type { Category, CategoryCreate } from '@fluxby/shared';
 import {
   getEffectiveProfileId,
@@ -18,13 +17,6 @@ interface DBCategory {
   color: string | null;
   description: string | null;
   created_at: string;
-}
-
-interface DBTransactionMinimal {
-  id: number;
-  merchant_name: string | null;
-  description: string | null;
-  opposing_account_name: string | null;
 }
 
 function applyRuleToAll(

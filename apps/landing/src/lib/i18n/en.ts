@@ -244,11 +244,28 @@ export const en: LandingTranslationKeys = {
       name: 'Windows',
       description: 'Easy installer for Windows 10 & 11.',
       label: 'Download',
+      x64Label: 'x64',
+      arm64Label: 'ARM64',
     },
     linux: {
       name: 'Linux',
-      description: 'Standalone AppImage for all distributions.',
+      description: 'Packages for all major Linux distributions.',
       label: 'Download',
+      appimageLabel: 'AppImage',
+      debLabel: 'DEB',
+      rpmLabel: 'RPM',
+    },
+    pwa: {
+      name: 'Browser (PWA)',
+      description:
+        'Install directly from your browser. No download needed, works offline.',
+      installButton: 'Install as app',
+      installedBadge: 'Installed',
+      browserInstructions: {
+        ios: 'Tap the Share icon and then "Add to Home Screen"',
+        android: 'Tap the menu (⋮) and then "Add to Home Screen"',
+        desktop: 'Click the install icon in the address bar',
+      },
     },
     note: "You don't need to install anything to use Fluxby — it runs fully in your browser. These downloads are provided for users who prefer a dedicated application on their system.",
   },
@@ -1107,8 +1124,10 @@ export const en: LandingTranslationKeys = {
       welcome: 'Welcome',
       bankConnection: 'Connecting your bank',
       firstSteps: 'First steps',
+      installation: 'Installation',
       features: 'Features',
       transactions: 'Transactions',
+      bulkDelete: 'Bulk delete',
       categories: 'Categories',
       accounts: 'Accounts',
       addressBook: 'Address Book',
@@ -1177,6 +1196,50 @@ export const en: LandingTranslationKeys = {
       next2: 'Create custom categories for better organization',
       next3: 'Add contacts in the Address Book to track who you transact with',
       next4: 'Import transactions regularly to keep your data up to date',
+    },
+    installation: {
+      title: 'Installing Fluxby',
+      subtitle:
+        'Fluxby works in your browser without installation, but you can also install it as an app for a better experience.',
+      desktopTitle: 'Desktop (Windows, macOS, Linux)',
+      desktopText:
+        'For the best experience on desktop, download the native app from our Downloads page. Native apps offer better performance and work offline.',
+      browserTitle: 'Web browser',
+      browserText:
+        'Fluxby works directly in your browser. Just visit the app URL and start using it - no installation required. Your data is stored locally in your browser.',
+      iosTitle: 'iPhone & iPad',
+      iosIntro:
+        'Fluxby can be installed as a Progressive Web App (PWA) on your iPhone or iPad. This gives you an app-like experience with a home screen icon.',
+      iosStep1Title: 'Open in Safari',
+      iosStep1Text:
+        'Open Fluxby in Safari (not Chrome or another browser). Safari is required for PWA installation on iOS.',
+      iosStep2Title: 'Tap the Share button',
+      iosStep2Text:
+        'Tap the Share button at the bottom of Safari (the square with an arrow pointing up).',
+      iosStep3Title: 'Add to Home Screen',
+      iosStep3Text:
+        'Scroll down and tap "Add to Home Screen". You may need to scroll right to find this option.',
+      iosStep4Title: 'Confirm',
+      iosStep4Text:
+        'Tap "Add" in the top right corner. Fluxby will now appear on your home screen like any other app.',
+      iosTipTitle: 'Tip',
+      iosTipText:
+        'Once installed, Fluxby will open in full-screen mode without the Safari address bar. Your data is stored locally on your device and syncs between your installed apps via peer-to-peer sync.',
+      androidTitle: 'Android',
+      androidIntro:
+        'On Android, you can install Fluxby as a PWA from Chrome or other browsers.',
+      androidStep1Title: 'Open in Chrome',
+      androidStep1Text:
+        'Open Fluxby in Chrome (or another compatible browser like Edge).',
+      androidStep2Title: 'Look for the install prompt',
+      androidStep2Text:
+        'Chrome may show an "Install app" banner at the bottom. If you see it, tap "Install".',
+      androidStep3Title: 'Or use the menu',
+      androidStep3Text:
+        'Tap the three-dot menu in Chrome and select "Install app" or "Add to Home screen".',
+      dataStorageTitle: 'About your data',
+      dataStorageText:
+        'Regardless of how you access Fluxby, your data is stored locally on your device. If you use Fluxby in a browser, your data is stored in that browser. If you install the app, data is stored in the app. Use the sync feature to keep your data in sync between devices.',
     },
     bankConnection: {
       title: 'Connecting your bank account',
@@ -1863,11 +1926,25 @@ export const en: LandingTranslationKeys = {
     updatesPage: {
       intro:
         "See what's new in Fluxby. Here you'll find all updates and new features.",
+      v181Date: 'March 8, 2026',
+      v181Title: 'Release 1.8.1',
+      v181Description: 'New improvements and bug fixes.',
+      v180Date: 'March 7, 2026',
+      v180Title: 'Release 1.8.0',
+      v180Description: '3 new features and 9 bug fixes.',
+      v180F1Title: 'Complete code review with 19 fixes',
+      v180F1Desc: 'There\'s more to explore. Discover it yourself!',
+      v180F2Title: 'Bulk transaction deletion with undo support',
+      v180F2Desc: 'This makes Fluxby even better.',
+      v180F3Title: 'IOS PWA installation instructions',
+      v180F3Desc: 'We\'ve got something new for you! Check the release notes for all details.',
+      v180F4Title: 'Bug fixes',
+      v180F4Desc: '9 bugs fixed. See changelog for details.',
       v171Date: 'January 22, 2026',
       v171Title: 'Release 1.7.1',
       v171Description: '3 bug fixes.',
       v171F1Title: 'Enable macOS updater support and fix build warnings',
-      v171F1Desc: 'This shouldn\'t have happened, but it\'s fixed now!',
+      v171F1Desc: "This shouldn't have happened, but it's fixed now!",
       v171F2Title: 'Web app improvements',
       v171F2Desc: '2 bug fixes. Check the release on GitHub!',
       v170Date: 'January 19, 2026',

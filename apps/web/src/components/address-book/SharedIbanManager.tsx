@@ -49,6 +49,7 @@ export const SharedIbanManager: React.FC<SharedIbanManagerProps> = ({
   cleanupRules,
   translations: t,
 }) => {
+  // eslint-disable-next-line no-console
   console.log('[SharedIbanManager] Render:', {
     sharedIbansLength: sharedIbans.length,
     isLoading,

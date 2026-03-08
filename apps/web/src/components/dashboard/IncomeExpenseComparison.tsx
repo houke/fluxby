@@ -13,6 +13,7 @@ import {
 } from 'recharts';
 import { ArrowLeftRight } from 'lucide-react';
 import { useIsMobile } from '@/hooks/useMediaQuery';
+import type { TranslationKeys } from '@/lib/i18n/nl';
 
 interface MonthlyData {
   month: string;
@@ -23,7 +24,7 @@ interface MonthlyData {
 interface IncomeExpenseComparisonProps {
   monthlyData: MonthlyData[];
   monthlyComparisonScrollRef: React.RefObject<HTMLDivElement | null>;
-  t: any;
+  t: TranslationKeys;
   navigate: (path: string) => void;
   suggestedPeriod: { start: Date; end: Date; label: string } | null;
   isViewingSuggestedPeriod: boolean;

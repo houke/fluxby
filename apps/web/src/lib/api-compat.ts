@@ -183,6 +183,46 @@ export const api = {
     return ds.detectTransfers();
   },
 
+  // ============= Bulk Operations =============
+  deleteTransactionsByIds: async (
+    transactionIds: string[]
+  ): Promise<{
+    deletedCount: number;
+    affectedAccountIds: string[];
+    undoToken?: string;
+    expiresAt?: string;
+  }> => {
+    const ds = getDataService();
+    return ds.deleteTransactionsByIds(transactionIds);
+  },
+
+  deleteTransactionsByDateRange: async (
+    startDate: string,
+    endDate: string,
+    options?: {
+      accountId?: string;
+      dryRun?: boolean;
+    }
+  ): Promise<{
+    deletedCount: number;
+    affectedAccountIds: string[];
+    undoToken?: string;
+    expiresAt?: string;
+  }> => {
+    const ds = getDataService();
+    return ds.deleteTransactionsByDateRange(startDate, endDate, options);
+  },
+
+  restoreTransactions: async (
+    transactionIds: string[]
+  ): Promise<{
+    restoredCount: number;
+    affectedAccountIds: string[];
+  }> => {
+    const ds = getDataService();
+    return ds.restoreTransactions(transactionIds);
+  },
+
   // ============= Categories =============
   getCategories: async (withCounts?: boolean) => {
     const ds = getDataService();

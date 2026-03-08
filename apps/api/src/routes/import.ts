@@ -60,17 +60,6 @@ function applyCleanupRules(name: string, rules: { pattern: string }[]): string {
 }
 
 /**
- * Check if an IBAN is a shared IBAN (used by payment processors with multiple merchants)
- */
-function isSharedIban(iban: string): boolean {
-  const shared = queryOne<{ id: number }>(
-    'SELECT id FROM shared_ibans WHERE iban = ?',
-    [iban]
-  );
-  return !!shared;
-}
-
-/**
  * Check if an IBAN has multiple different merchant names in transactions
  * Returns the count of different names
  */
@@ -164,7 +153,6 @@ function batchAddContacts(
   );
 
   let addedCount = 0;
-  const ibansToProcess: string[] = [];
 
   for (const [iban, name] of uniqueIbanMap) {
     const norm = iban.toUpperCase().trim();
@@ -555,11 +543,7 @@ router.post('/csv', upload.single('file'), async (req, res) => {
     }
 
     // Add all unique IBANs to address book in batch
-    const addressBookAdded = batchAddContacts(
-      uniqueIbanMap,
-      cleanupRules,
-      profileId
-    );
+    batchAddContacts(uniqueIbanMap, cleanupRules, profileId);
 
     // Link newly imported transactions to their address book entries
     // This handles both direct IBAN matches and contact_ibans junction table matches

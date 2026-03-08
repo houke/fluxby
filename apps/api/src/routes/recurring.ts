@@ -380,13 +380,16 @@ router.post('/detect', (req, res) => {
       if (!merchantGroups.has(key)) {
         merchantGroups.set(key, []);
       }
-      merchantGroups.get(key)!.push({
-        id: tx.id,
-        opposing_iban: tx.opposing_iban,
-        originalMerchantName: tx.merchant_name,
-        date: tx.date,
-        amount: tx.amount,
-      });
+      const group = merchantGroups.get(key);
+      if (group) {
+        group.push({
+          id: tx.id,
+          opposing_iban: tx.opposing_iban,
+          originalMerchantName: tx.merchant_name,
+          date: tx.date,
+          amount: tx.amount,
+        });
+      }
     }
 
     // Cluster each merchant group by similar amounts

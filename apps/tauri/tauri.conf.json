@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "Fluxby",
-  "version": "1.7.1",
+  "version": "1.8.1",
   "identifier": "com.fluxby.desktop",
   "build": {
     "frontendDist": "../web/dist",
@@ -37,7 +37,8 @@
       "dmg",
       "nsis",
       "appimage",
-      "deb"
+      "deb",
+      "rpm"
     ],
     "createUpdaterArtifacts": true,
     "icon": [
@@ -77,6 +78,10 @@
       },
       "deb": {
         "depends": []
+      },
+      "rpm": {
+        "depends": [],
+        "release": "1"
       }
     }
   },
@@ -87,10 +92,11 @@
     "updater": {
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDk4NkQ1MzhDMTNDNUU2NzUKUldSMTVzVVRqRk50bU5KMmc1NVQzT3hjOUV2SmpLMFdBMGFzdm1mM242K3NwSEgzQ1NBZDFBeHMK",
       "endpoints": [
-        "https://github.com/houke/fluxby/releases/latest/download/latest.json"
+        "https://github.com/houke/fluxby/releases/latest/download/latest.json",
+        "https://cdn.jsdelivr.net/gh/houke/fluxby@latest/latest.json"
       ],
       "windows": {
-        "installMode": "passive"
+        "installMode": "basicUi"
       }
     }
   }

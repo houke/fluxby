@@ -149,6 +149,8 @@ export interface TranslationKeys {
     installComplete: string;
     errorOccurred: string;
     clickToCheck: string;
+    lastChecked: string;
+    backgroundCheckEnabled: string;
   };
   nav: {
     dashboard: string;
@@ -272,6 +274,7 @@ export interface TranslationKeys {
     date: string;
     amount: string;
     addToAddressBook: string;
+    unlinkFromContact: string;
     savedToAddressBook: string;
     createContactError: string;
     inAddressBook: string;
@@ -954,6 +957,32 @@ export interface TranslationKeys {
       syncSuccess: string;
       syncNoChanges: string;
       syncError: string;
+      schemaMismatch: string;
+      protocolMismatch: string;
+      upgradeRequired: string;
+      // Sync history viewer
+      syncHistory: string;
+      syncHistoryDescription: string;
+      syncHistoryLoadError: string;
+      syncHistoryCleared: string;
+      syncHistoryClearError: string;
+      noSyncHistory: string;
+      syncHistoryHint: string;
+      clearHistory: string;
+      clearHistoryTitle: string;
+      clearHistoryDescription: string;
+      actionCreate: string;
+      actionUpdate: string;
+      actionDelete: string;
+      actionConflict: string;
+      created: string;
+      updated: string;
+      deleted: string;
+      conflicts: string;
+      resolution: string;
+      localTime: string;
+      remoteTime: string;
+      showHistory: string;
     };
   };
   help: {
@@ -1087,6 +1116,32 @@ export interface TranslationKeys {
     // Delete confirmations
     deleteRuleTitle: string;
     deleteContactTitle: string;
+  };
+  bulkDelete?: {
+    selectionMode: string;
+    selected: string;
+    cancelSelection: string;
+    deleteSelected: string;
+    deleting: string;
+    deleteByDateRange: string;
+    confirmTitle: string;
+    confirmWarning: string;
+    totalImpact: string;
+    previewListLabel: string;
+    andMore: string;
+    undoToast: string;
+    undo: string;
+    undoSuccess: string;
+    undoExpired: string;
+    selectAll: string;
+    selectTransaction: string;
+    selectAllRelated: string;
+    dateRange: {
+      start: string;
+      end: string;
+      preview: string;
+      noMatches: string;
+    };
   };
   apiErrors: {
     // Generic errors
@@ -1475,6 +1530,8 @@ export const nl: TranslationKeys = {
     installComplete: 'Update geïnstalleerd! Herstarten...',
     errorOccurred: 'Er is een fout opgetreden',
     clickToCheck: 'Klik om te controleren op updates',
+    lastChecked: 'Laatst gecontroleerd: {time}',
+    backgroundCheckEnabled: 'Automatische controle elke 4 uur',
   },
   nav: {
     dashboard: 'Dashboard',
@@ -1600,6 +1657,7 @@ export const nl: TranslationKeys = {
     date: 'Datum',
     amount: 'Bedrag',
     addToAddressBook: 'Toevoegen aan adresboek',
+    unlinkFromContact: 'Ontkoppelen',
     savedToAddressBook: 'Toegevoegd aan adresboek',
     createContactError: 'Fout bij aanmaken contact',
     inAddressBook: 'In adresboek',
@@ -2381,6 +2439,37 @@ export const nl: TranslationKeys = {
       syncSuccess: '{received} ontvangen, {pushed} verzonden',
       syncNoChanges: 'Geen nieuwe wijzigingen om te synchroniseren',
       syncError: 'Synchronisatie mislukt',
+      schemaMismatch:
+        'Dit apparaat heeft een andere app-versie. Update beide apparaten naar de nieuwste versie om te synchroniseren.',
+      protocolMismatch:
+        'Dit apparaat gebruikt een incompatibele sync-versie. Update beide apparaten naar de nieuwste versie.',
+      upgradeRequired: 'App-update vereist',
+      // Sync history viewer
+      syncHistory: 'Synchronisatiegeschiedenis',
+      syncHistoryDescription:
+        'Bekijk recente synchronisatie-events en conflictoplossingen',
+      syncHistoryLoadError: 'Kan synchronisatiegeschiedenis niet laden',
+      syncHistoryCleared: 'Synchronisatiegeschiedenis gewist',
+      syncHistoryClearError: 'Kan synchronisatiegeschiedenis niet wissen',
+      noSyncHistory: 'Nog geen synchronisatiegeschiedenis',
+      syncHistoryHint:
+        'Sync-events verschijnen hier wanneer je synchroniseert met andere apparaten',
+      clearHistory: 'Geschiedenis wissen',
+      clearHistoryTitle: 'Synchronisatiegeschiedenis wissen?',
+      clearHistoryDescription:
+        'Dit verwijdert alle synchronisatie-records. Je gesynchroniseerde gegevens worden niet beïnvloed.',
+      actionCreate: 'Aangemaakt',
+      actionUpdate: 'Bijgewerkt',
+      actionDelete: 'Verwijderd',
+      actionConflict: 'Conflict',
+      created: 'aangemaakt',
+      updated: 'bijgewerkt',
+      deleted: 'verwijderd',
+      conflicts: 'conflicten',
+      resolution: 'Oplossing',
+      localTime: 'Lokaal',
+      remoteTime: 'Extern',
+      showHistory: 'Geschiedenis tonen',
     },
   },
   help: {
@@ -2614,6 +2703,32 @@ export const nl: TranslationKeys = {
     addAsNewContact: 'Toevoegen als nieuw contact',
     enterName: 'Voer naam in...',
     assignedToContact: 'IBAN toegewezen aan contact',
+  },
+  bulkDelete: {
+    selectionMode: 'Selectiemodus',
+    selected: '{count} geselecteerd',
+    cancelSelection: 'Selectie annuleren',
+    deleteSelected: 'Selectie verwijderen',
+    deleting: 'Verwijderen...',
+    deleteByDateRange: 'Verwijderen op datum',
+    confirmTitle: '{count} transactie(s) verwijderen?',
+    confirmWarning: 'Deze actie kan niet ongedaan worden gemaakt na 5 minuten.',
+    totalImpact: 'Totale impact',
+    previewListLabel: 'Te verwijderen transacties',
+    andMore: 'en {count} meer',
+    undoToast: '{count} transacties verwijderd',
+    undo: 'Ongedaan maken',
+    undoSuccess: 'Transacties hersteld',
+    undoExpired: 'Ongedaan maken niet meer mogelijk',
+    selectAll: 'Alles selecteren',
+    selectTransaction: 'Selecteer transactie: {description} {amount}',
+    selectAllRelated: 'Alle gerelateerde transacties selecteren',
+    dateRange: {
+      start: 'Startdatum',
+      end: 'Einddatum',
+      preview: '{count} transacties worden verwijderd',
+      noMatches: 'Geen transacties gevonden',
+    },
   },
   apiErrors: {
     // Generic errors

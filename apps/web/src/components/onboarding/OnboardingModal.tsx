@@ -34,6 +34,7 @@ import { FluxbyWebGL } from '@fluxby/shared';
 import { onboardingChapters } from './onboarding-data';
 import { SpotlightOverlay } from './SpotlightOverlay';
 import { useProfile } from '@/contexts/ProfileContext';
+import { useReducedMotion } from '@/hooks/useMediaQuery';
 // Types are in ./types.ts
 
 // Icon mapping for chapters
@@ -100,6 +101,7 @@ export function OnboardingModal({
 }: OnboardingModalProps) {
   const navigate = useNavigate();
   const { profiles } = useProfile();
+  const prefersReducedMotion = useReducedMotion();
   const [isNavigating, setIsNavigating] = useState(false);
   const [spotlightRect, setSpotlightRect] = useState<SpotlightRect | null>(
     null
@@ -112,6 +114,10 @@ export function OnboardingModal({
     new Set([0])
   );
   const prevChapterRef = useRef<number>(0);
+
+  // Animation durations - reduced when user prefers reduced motion
+  const transitionDuration = prefersReducedMotion ? 0 : 500;
+  const closeAnimationDuration = prefersReducedMotion ? 0 : 700;
 
   const currentChapter = onboardingChapters[currentChapterIndex];
   const currentStep = currentChapter?.steps[currentStepIndex];
@@ -271,9 +277,12 @@ export function OnboardingModal({
         : { top: '16px', left: '80px' };
 
       return {
-        style: targetPosition,
+        style: {
+          ...targetPosition,
+          transitionDuration: `${closeAnimationDuration}ms`,
+        },
         className:
-          'fixed scale-0 opacity-0 -translate-x-1/2 -translate-y-1/2 duration-700',
+          'fixed scale-0 opacity-0 -translate-x-1/2 -translate-y-1/2 transition-all',
       };
     }
 
@@ -384,21 +393,23 @@ export function OnboardingModal({
     isChapterIntro,
     modalState,
     mascotRect,
+    closeAnimationDuration,
   ]);
 
   // Handle close with animation (only if skip is allowed)
   const handleClose = useCallback(() => {
     if (!onSkip) return;
     setModalState('closing');
-    // After shrink animation (700ms), show the "See you later" message
+    // After shrink animation, show the "See you later" message
+    // Skip animation delay if user prefers reduced motion
     setTimeout(() => {
       setModalState('closed');
       // Keep message visible for 2 seconds then close completely
       setTimeout(() => {
         onSkip();
       }, 2000);
-    }, 700);
-  }, [onSkip]);
+    }, closeAnimationDuration);
+  }, [onSkip, closeAnimationDuration]);
 
   // Handle early close of the see you later message
   const handleCloseSeeYouLater = useCallback(() => {
@@ -486,7 +497,7 @@ export function OnboardingModal({
         isActive={isActive && modalState === 'normal'}
         padding={12}
         borderRadius={12}
-        transitionDuration={500}
+        transitionDuration={transitionDuration}
       />
 
       {/* Modal */}
