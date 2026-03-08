@@ -2027,8 +2027,10 @@ export const nl: LandingTranslationKeys = {
       v180Title: 'Release 1.8.0',
       v180Description: '3 nieuwe features en 9 bugfixes.',
       v180F1Title: 'Complete code review with 19 fixes',
-      v180F1Desc: 'We hebben iets nieuws voor je! Bekijk de release notes voor alle details.',
-      v180F2Title: 'Geïmplementeerd bulk transactie deletion with undo ondersteuning toegevoegd voor',
+      v180F1Desc:
+        'We hebben iets nieuws voor je! Bekijk de release notes voor alle details.',
+      v180F2Title:
+        'Geïmplementeerd bulk transactie deletion with undo ondersteuning toegevoegd voor',
       v180F2Desc: 'Nieuwe functionaliteit waar je iets aan hebt.',
       v180F3Title: 'Toegevoegd ios web app installation instructions',
       v180F3Desc: 'Nieuwe functionaliteit waar je iets aan hebt.',

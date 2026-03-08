@@ -130,3 +130,45 @@ export function groupBy<T>(array: T[], key: keyof T): Record<string, T[]> {
     {} as Record<string, T[]>
   );
 }
+
+// ============= Security Utilities =============
+
+/**
+ * UUID v4 validation regex
+ * Matches standard UUID format: 8-4-4-4-12 hex characters
+ * Also accepts demo profile ID format (all zeros with 1 at end)
+ */
+const UUID_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * Validate if a string is a valid UUID v4 format
+ * @param id - The string to validate
+ * @returns true if the string is a valid UUID format
+ */
+export function isValidUUID(id: unknown): id is string {
+  if (typeof id !== 'string') return false;
+  return UUID_REGEX.test(id);
+}
+
+/**
+ * Validate an array of UUIDs
+ * @param ids - Array of strings to validate
+ * @returns true if all strings are valid UUIDs
+ */
+export function areValidUUIDs(ids: unknown[]): ids is string[] {
+  if (!Array.isArray(ids)) return false;
+  return ids.every((id) => isValidUUID(id));
+}
+
+/**
+ * Security constants for bulk operations
+ */
+export const SECURITY_LIMITS = {
+  /** Maximum transaction IDs per bulk delete request */
+  MAX_BULK_DELETE_IDS: 1000,
+  /** Maximum transaction IDs per restore request */
+  MAX_RESTORE_IDS: 1000,
+  /** Maximum date range lookback in years */
+  MAX_DATE_RANGE_YEARS: 10,
+} as const;
