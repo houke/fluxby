@@ -33,7 +33,18 @@ const UpdatesContent = () => {
   const updatesPage = t.legal?.updatesPage;
 
   const releases = [
-        {
+            {
+      version: '1.8.1',
+      date: updatesPage?.v181Date || '8 maart 2026',
+      title: updatesPage?.v181Title || 'Release 1.8.1',
+      description:
+        updatesPage?.v181Description ||
+        'Nieuwe verbeteringen en bugfixes.',
+      features: [
+
+      ],
+    },
+    {
       version: '1.8.0',
       date: updatesPage?.v180Date || '7 maart 2026',
       title: updatesPage?.v180Title || 'Release 1.8.0',

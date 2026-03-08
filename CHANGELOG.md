@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.8.1
+
+**Release Date:** 2026-03-07
+
+### Other Changes
+
+- small release fixes
+
 ## v1.8.0
 
 **Release Date:** 2026-03-07
