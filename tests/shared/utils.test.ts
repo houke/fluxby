@@ -11,6 +11,9 @@ import {
   truncate,
   calculatePercentageChange,
   groupBy,
+  isValidUUID,
+  areValidUUIDs,
+  SECURITY_LIMITS,
 } from '@fluxby/shared';
 
 describe('formatCurrency', () => {
@@ -232,5 +235,92 @@ describe('groupBy', () => {
   it('handles empty array', () => {
     const result = groupBy([], 'key' as never);
     expect(result).toEqual({});
+  });
+});
+
+// ============= Security Utilities =============
+
+describe('isValidUUID', () => {
+  it('accepts valid UUIDs', () => {
+    expect(isValidUUID('12345678-1234-1234-1234-123456789abc')).toBe(true);
+    expect(isValidUUID('ABCDEFAB-ABCD-ABCD-ABCD-ABCDEFABCDEF')).toBe(true);
+    expect(isValidUUID('00000000-0000-0000-0000-000000000001')).toBe(true); // Demo profile ID
+    expect(isValidUUID('a1b2c3d4-e5f6-7890-abcd-ef1234567890')).toBe(true);
+  });
+
+  it('rejects invalid UUID formats', () => {
+    expect(isValidUUID('invalid-id')).toBe(false);
+    expect(isValidUUID('12345')).toBe(false);
+    expect(isValidUUID('')).toBe(false);
+    expect(isValidUUID('tx-1')).toBe(false);
+    expect(isValidUUID('account-1')).toBe(false);
+    // Missing segments
+    expect(isValidUUID('12345678-1234-1234-1234')).toBe(false);
+    // Too many segments
+    expect(isValidUUID('12345678-1234-1234-1234-123456789abc-extra')).toBe(
+      false
+    );
+    // Wrong segment length
+    expect(isValidUUID('1234567-1234-1234-1234-123456789abc')).toBe(false);
+    // Invalid characters
+    expect(isValidUUID('1234567g-1234-1234-1234-123456789abc')).toBe(false);
+  });
+
+  it('rejects SQL injection attempts', () => {
+    expect(isValidUUID("'; DROP TABLE transactions; --")).toBe(false);
+    expect(isValidUUID('1 OR 1=1')).toBe(false);
+    expect(isValidUUID('12345678-1234-1234-1234-123456789abc; DELETE')).toBe(
+      false
+    );
+  });
+
+  it('rejects non-string values', () => {
+    expect(isValidUUID(null)).toBe(false);
+    expect(isValidUUID(undefined)).toBe(false);
+    expect(isValidUUID(123)).toBe(false);
+    expect(isValidUUID({})).toBe(false);
+    expect(isValidUUID([])).toBe(false);
+  });
+});
+
+describe('areValidUUIDs', () => {
+  it('accepts arrays of valid UUIDs', () => {
+    expect(
+      areValidUUIDs([
+        '12345678-1234-1234-1234-123456789abc',
+        'abcdefab-abcd-abcd-abcd-abcdefabcdef',
+      ])
+    ).toBe(true);
+    expect(areValidUUIDs([])).toBe(true); // Empty array is technically valid
+  });
+
+  it('rejects arrays with any invalid UUID', () => {
+    expect(
+      areValidUUIDs(['12345678-1234-1234-1234-123456789abc', 'invalid-id'])
+    ).toBe(false);
+    expect(areValidUUIDs(['12345678-1234-1234-1234-123456789abc', ''])).toBe(
+      false
+    );
+  });
+
+  it('rejects non-array values', () => {
+    expect(areValidUUIDs('12345678-1234-1234-1234-123456789abc' as never)).toBe(
+      false
+    );
+    expect(areValidUUIDs(null as never)).toBe(false);
+  });
+});
+
+describe('SECURITY_LIMITS', () => {
+  it('has correct bulk delete limit', () => {
+    expect(SECURITY_LIMITS.MAX_BULK_DELETE_IDS).toBe(1000);
+  });
+
+  it('has correct restore limit', () => {
+    expect(SECURITY_LIMITS.MAX_RESTORE_IDS).toBe(1000);
+  });
+
+  it('has correct date range limit', () => {
+    expect(SECURITY_LIMITS.MAX_DATE_RANGE_YEARS).toBe(10);
   });
 });

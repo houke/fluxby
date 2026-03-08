@@ -905,15 +905,20 @@ export class Database implements DatabaseConnection {
 
     for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
       try {
-        await this.execAsync('BEGIN TRANSACTION');
+        // Use runAsync (which goes through withLock) instead of execAsync so that
+        // BEGIN/COMMIT/ROLLBACK are serialized through the same operation queue as all
+        // other db calls.  execAsync bypasses the lock, which can cause concurrent WASM
+        // SQLite access when a background query is mid-execution → "memory access out of
+        // bounds" / WASM corruption.
+        await this.runAsync('BEGIN TRANSACTION');
         try {
           const result = await fn();
-          await this.execAsync('COMMIT');
+          await this.runAsync('COMMIT');
           return result;
         } catch (error) {
           // Try to rollback, but don't fail if rollback fails
           try {
-            await this.execAsync('ROLLBACK');
+            await this.runAsync('ROLLBACK');
           } catch (rollbackError) {
             // Log but don't throw - the original error is more important
             wasmLog('Rollback failed:', rollbackError);

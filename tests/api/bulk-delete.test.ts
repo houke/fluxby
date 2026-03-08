@@ -913,3 +913,257 @@ describe('Affected Accounts Tracking', () => {
     expect(getAccountBalance(account2Id)).toBe(900);
   });
 });
+
+// ============================================
+// TESTS: Date Boundary Edge Cases
+// ============================================
+
+describe('Date Boundary Edge Cases', () => {
+  let profileId: number;
+  let accountId: number;
+
+  beforeEach(() => {
+    setupDatabase();
+    profileId = createProfile();
+    accountId = createAccount(profileId);
+  });
+
+  afterEach(() => {
+    db.close();
+  });
+
+  it('accepts dates just inside 10-year boundary', () => {
+    // Use a date 9 years and 364 days ago to be safely within boundary
+    const almostTenYearsAgo = new Date();
+    almostTenYearsAgo.setFullYear(almostTenYearsAgo.getFullYear() - 9);
+    almostTenYearsAgo.setMonth(almostTenYearsAgo.getMonth() - 11);
+    almostTenYearsAgo.setDate(almostTenYearsAgo.getDate() - 20);
+    const dateStr = almostTenYearsAgo.toISOString().split('T')[0];
+
+    // Create transaction within boundary
+    createTransaction(accountId, profileId, { date: dateStr });
+
+    const response = simulateBulkDelete(
+      { dateRange: { start: dateStr, end: dateStr } },
+      profileId
+    );
+
+    // Should succeed - within 10-year boundary
+    expect(response.success).toBe(true);
+    expect(response.deleted).toBe(1);
+  });
+
+  it('rejects dates just beyond 10-year boundary', () => {
+    const elevenYearsAgo = new Date();
+    elevenYearsAgo.setFullYear(elevenYearsAgo.getFullYear() - 11);
+    const elevenYearsAgoStr = elevenYearsAgo.toISOString().split('T')[0];
+
+    const response = simulateBulkDelete(
+      { dateRange: { start: elevenYearsAgoStr, end: elevenYearsAgoStr } },
+      profileId
+    );
+
+    expect(response.success).toBe(false);
+    expect(response.error).toContain('10 years');
+  });
+
+  it('handles transactions on leap year February 29', () => {
+    createTransaction(accountId, profileId, { date: '2024-02-29' });
+
+    const response = simulateBulkDelete(
+      { dateRange: { start: '2024-02-29', end: '2024-02-29' } },
+      profileId
+    );
+
+    expect(response.success).toBe(true);
+    expect(response.deleted).toBe(1);
+  });
+
+  it('handles year boundary deletions (Dec 31 to Jan 1)', () => {
+    createTransaction(accountId, profileId, { date: '2023-12-31' });
+    createTransaction(accountId, profileId, { date: '2024-01-01' });
+
+    const response = simulateBulkDelete(
+      { dateRange: { start: '2023-12-31', end: '2024-01-01' } },
+      profileId
+    );
+
+    expect(response.success).toBe(true);
+    expect(response.deleted).toBe(2);
+  });
+
+  it('handles single-day range correctly', () => {
+    createTransaction(accountId, profileId, { date: '2024-02-15' });
+    createTransaction(accountId, profileId, { date: '2024-02-16' });
+
+    const response = simulateBulkDelete(
+      { dateRange: { start: '2024-02-15', end: '2024-02-15' } },
+      profileId
+    );
+
+    expect(response.success).toBe(true);
+    expect(response.deleted).toBe(1);
+    expect(getTransactionCount(profileId)).toBe(1); // Feb 16 remains
+  });
+
+  it('handles date range with no matching transactions', () => {
+    createTransaction(accountId, profileId, { date: '2024-02-15' });
+
+    const response = simulateBulkDelete(
+      { dateRange: { start: '2024-03-01', end: '2024-03-31' } },
+      profileId
+    );
+
+    expect(response.success).toBe(true);
+    expect(response.deleted).toBe(0);
+    expect(getTransactionCount(profileId)).toBe(1); // Original remains
+  });
+});
+
+// ============================================
+// TESTS: Balance Recalculation Edge Cases
+// ============================================
+
+describe('Balance Recalculation Edge Cases', () => {
+  let profileId: number;
+  let accountId: number;
+
+  beforeEach(() => {
+    setupDatabase();
+    profileId = createProfile();
+    accountId = createAccount(profileId, 'NL00TEST123456789', 1000);
+  });
+
+  afterEach(() => {
+    db.close();
+  });
+
+  it('handles deletion of all transactions in account', () => {
+    const tx1 = createTransaction(accountId, profileId, {
+      date: '2024-02-10',
+      balanceAfter: 900,
+    });
+    const tx2 = createTransaction(accountId, profileId, {
+      date: '2024-02-15',
+      balanceAfter: 800,
+    });
+
+    simulateBulkDelete({ transactionIds: [tx1, tx2] }, profileId);
+
+    // Balance should be 0 when no transactions remain
+    expect(getAccountBalance(accountId)).toBe(0);
+    expect(getTransactionCount(profileId)).toBe(0);
+  });
+
+  it('handles transactions without balance_after values', () => {
+    // Create transactions without balance_after
+    const tx1 = createTransaction(accountId, profileId, {
+      date: '2024-02-10',
+      balanceAfter: null,
+    });
+
+    // Delete it
+    simulateBulkDelete({ transactionIds: [tx1] }, profileId);
+
+    // Balance should be 0 since no balance_after exists
+    expect(getAccountBalance(accountId)).toBe(0);
+  });
+
+  it('uses latest transaction by date for balance calculation', () => {
+    // Insert in non-chronological order
+    createTransaction(accountId, profileId, {
+      date: '2024-02-20',
+      balanceAfter: 500,
+    });
+    const txToDelete = createTransaction(accountId, profileId, {
+      date: '2024-02-25',
+      balanceAfter: 400,
+    });
+    createTransaction(accountId, profileId, {
+      date: '2024-02-10',
+      balanceAfter: 700,
+    });
+
+    // Delete the middle one (Feb 25)
+    simulateBulkDelete({ transactionIds: [txToDelete] }, profileId);
+
+    // Balance should be from Feb 20 (next latest after deletion)
+    expect(getAccountBalance(accountId)).toBe(500);
+  });
+
+  it('handles negative balances correctly', () => {
+    createTransaction(accountId, profileId, {
+      date: '2024-02-10',
+      balanceAfter: -500,
+    });
+    const tx2 = createTransaction(accountId, profileId, {
+      date: '2024-02-15',
+      balanceAfter: -1000,
+    });
+
+    simulateBulkDelete({ transactionIds: [tx2] }, profileId);
+
+    // Negative balance should be preserved
+    expect(getAccountBalance(accountId)).toBe(-500);
+  });
+});
+
+// ============================================
+// TESTS: Transaction Count Edge Cases
+// ============================================
+
+describe('Transaction Count Edge Cases', () => {
+  let profileId: number;
+  let accountId: number;
+
+  beforeEach(() => {
+    setupDatabase();
+    profileId = createProfile();
+    accountId = createAccount(profileId);
+  });
+
+  afterEach(() => {
+    db.close();
+  });
+
+  it('handles bulk delete of exactly MAX limit (1000)', () => {
+    const ids = createManyTransactions(accountId, profileId, 1000);
+
+    const response = simulateBulkDelete({ transactionIds: ids }, profileId);
+
+    expect(response.success).toBe(true);
+    expect(response.deleted).toBe(1000);
+    expect(getTransactionCount(profileId)).toBe(0);
+  });
+
+  it('correctly counts affected accounts with same transaction IDs', () => {
+    // Create multiple transactions in same account
+    const tx1 = createTransaction(accountId, profileId);
+    const tx2 = createTransaction(accountId, profileId);
+    const tx3 = createTransaction(accountId, profileId);
+
+    const response = simulateBulkDelete(
+      { transactionIds: [tx1, tx2, tx3] },
+      profileId
+    );
+
+    // Should only report 1 affected account
+    expect(response.affectedAccounts).toHaveLength(1);
+    expect(response.deleted).toBe(3);
+  });
+
+  it('handles partial success when some IDs do not exist', () => {
+    const tx1 = createTransaction(accountId, profileId);
+    const nonExistentId = 99999;
+
+    // Note: This depends on implementation - our logic rejects if any ID doesn't belong
+    const response = simulateBulkDelete(
+      { transactionIds: [tx1, nonExistentId] },
+      profileId
+    );
+
+    // Our implementation requires all IDs to belong to the profile
+    expect(response.success).toBe(false);
+    expect(response.error).toContain('do not belong');
+  });
+});

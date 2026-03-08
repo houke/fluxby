@@ -86,6 +86,25 @@ describe('wa-sqlite API', () => {
       expect(sourceCode).toContain('.last_insert_id(');
       expect(sourceCode).not.toContain('last_insert_rowid:');
     });
+
+    it('should serialize transaction control statements through runAsync()', async () => {
+      const sourceCode = fs.readFileSync(
+        path.join(
+          import.meta.dirname,
+          '../../packages/database/src/wa-sqlite.ts'
+        ),
+        'utf-8'
+      );
+
+      expect(sourceCode).toContain("await this.runAsync('BEGIN TRANSACTION')");
+      expect(sourceCode).toContain("await this.runAsync('COMMIT')");
+      expect(sourceCode).toContain("await this.runAsync('ROLLBACK')");
+      expect(sourceCode).not.toContain(
+        "await this.execAsync('BEGIN TRANSACTION')"
+      );
+      expect(sourceCode).not.toContain("await this.execAsync('COMMIT')");
+      expect(sourceCode).not.toContain("await this.execAsync('ROLLBACK')");
+    });
   });
 
   describe('compiled output verification', () => {
@@ -142,5 +161,165 @@ describe('wa-sqlite method availability', () => {
 
     // Verify prepare_v2 does NOT exist
     expect(waSqliteApi).not.toContain('sqlite3.prepare_v2');
+  });
+});
+
+// ============================================
+// REGRESSION TESTS: transactionAsync Serialization Fix
+// ============================================
+
+describe('transactionAsync serialization regression tests', () => {
+  it('should use runAsync for BEGIN/COMMIT/ROLLBACK (not execAsync)', async () => {
+    // This is a regression test for a critical bug where using execAsync
+    // for transaction control caused WASM memory corruption when concurrent
+    // queries were running. See wa-sqlite.ts comment for details.
+    const sourceCode = fs.readFileSync(
+      path.join(
+        import.meta.dirname,
+        '../../packages/database/src/wa-sqlite.ts'
+      ),
+      'utf-8'
+    );
+
+    // Verify transaction control uses runAsync (which goes through withLock)
+    expect(sourceCode).toContain("await this.runAsync('BEGIN TRANSACTION')");
+    expect(sourceCode).toContain("await this.runAsync('COMMIT')");
+    expect(sourceCode).toContain("await this.runAsync('ROLLBACK')");
+
+    // Verify execAsync is NOT used for transaction control
+    expect(sourceCode).not.toContain(
+      "await this.execAsync('BEGIN TRANSACTION')"
+    );
+    expect(sourceCode).not.toContain("await this.execAsync('COMMIT')");
+    expect(sourceCode).not.toContain("await this.execAsync('ROLLBACK')");
+  });
+
+  it('should have retry logic for OPFS stream errors', async () => {
+    const sourceCode = fs.readFileSync(
+      path.join(
+        import.meta.dirname,
+        '../../packages/database/src/wa-sqlite.ts'
+      ),
+      'utf-8'
+    );
+
+    // Verify retry logic exists
+    expect(sourceCode).toContain('MAX_RETRIES');
+    expect(sourceCode).toContain(
+      'for (let attempt = 1; attempt <= MAX_RETRIES'
+    );
+
+    // Verify specific OPFS stream error detection
+    expect(sourceCode).toContain('closing writable stream');
+    expect(sourceCode).toContain('disk I/O error');
+
+    // Verify backoff delay between retries
+    expect(sourceCode).toContain('setTimeout(resolve, 100 * attempt)');
+  });
+
+  it('should have rollback error handling that does not mask original errors', async () => {
+    const sourceCode = fs.readFileSync(
+      path.join(
+        import.meta.dirname,
+        '../../packages/database/src/wa-sqlite.ts'
+      ),
+      'utf-8'
+    );
+
+    // The implementation should catch rollback errors separately and log them,
+    // then re-throw the original error
+    expect(sourceCode).toContain('catch (rollbackError)');
+    expect(sourceCode).toContain('Rollback failed:');
+    expect(sourceCode).toContain('throw error'); // Re-throw original error after logging rollback failure
+  });
+
+  it('should not use execAsync which bypasses the operation lock', async () => {
+    const sourceCode = fs.readFileSync(
+      path.join(
+        import.meta.dirname,
+        '../../packages/database/src/wa-sqlite.ts'
+      ),
+      'utf-8'
+    );
+
+    // Count occurrences of execAsync in transactionAsync method
+    // Extract the transactionAsync method body
+    const transactionAsyncMatch = sourceCode.match(
+      /async transactionAsync<T>\(fn: \(\) => Promise<T>\): Promise<T> \{[\s\S]*?^\s{2}\}/m
+    );
+
+    if (transactionAsyncMatch) {
+      const methodBody = transactionAsyncMatch[0];
+      // execAsync should NOT appear in the transactionAsync method body
+      expect(methodBody).not.toContain('this.execAsync');
+      // runAsync SHOULD appear
+      expect(methodBody).toContain('this.runAsync');
+    }
+  });
+
+  describe('retry logic implementation', () => {
+    it('should have MAX_RETRIES set to 3', async () => {
+      const sourceCode = fs.readFileSync(
+        path.join(
+          import.meta.dirname,
+          '../../packages/database/src/wa-sqlite.ts'
+        ),
+        'utf-8'
+      );
+
+      expect(sourceCode).toContain('const MAX_RETRIES = 3');
+    });
+
+    it('should check for recoverable stream errors before retrying', async () => {
+      const sourceCode = fs.readFileSync(
+        path.join(
+          import.meta.dirname,
+          '../../packages/database/src/wa-sqlite.ts'
+        ),
+        'utf-8'
+      );
+
+      // Should check for specific error patterns
+      expect(sourceCode).toContain('isStreamError');
+      expect(sourceCode).toContain(
+        "errorMessage.includes('closing writable stream')"
+      );
+      expect(sourceCode).toContain("errorMessage.includes('disk I/O error')");
+      expect(sourceCode).toContain("errorMessage.includes('cannot rollback')");
+    });
+  });
+});
+
+// ============================================
+// TESTS: Database Type Interface Completeness
+// ============================================
+
+describe('Database interface completeness', () => {
+  it('should export transactionAsync method in type definition', async () => {
+    const sourceCode = fs.readFileSync(
+      path.join(
+        import.meta.dirname,
+        '../../packages/database/src/wa-sqlite.ts'
+      ),
+      'utf-8'
+    );
+
+    // Verify transactionAsync is defined as an async method
+    expect(sourceCode).toContain(
+      'async transactionAsync<T>(fn: () => Promise<T>): Promise<T>'
+    );
+  });
+
+  it('should export synchronous transaction method as well', async () => {
+    const sourceCode = fs.readFileSync(
+      path.join(
+        import.meta.dirname,
+        '../../packages/database/src/wa-sqlite.ts'
+      ),
+      'utf-8'
+    );
+
+    // Verify synchronous transaction method exists
+    expect(sourceCode).toContain('transaction<T>(fn: () => T): T');
   });
 });
