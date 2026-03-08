@@ -189,8 +189,6 @@ export const api = {
   ): Promise<{
     deletedCount: number;
     affectedAccountIds: string[];
-    undoToken?: string;
-    expiresAt?: string;
   }> => {
     const ds = getDataService();
     return ds.deleteTransactionsByIds(transactionIds);
@@ -206,8 +204,6 @@ export const api = {
   ): Promise<{
     deletedCount: number;
     affectedAccountIds: string[];
-    undoToken?: string;
-    expiresAt?: string;
   }> => {
     const ds = getDataService();
     return ds.deleteTransactionsByDateRange(startDate, endDate, options);

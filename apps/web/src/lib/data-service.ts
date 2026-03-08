@@ -34,9 +34,21 @@ import {
   SEED_CATEGORIES,
   DEFAULT_NAME_CLEANUP_RULES,
   DEFAULT_PAYMENT_PROVIDER_RULES,
+  isValidUUID,
+  areValidUUIDs,
+  SECURITY_LIMITS,
 } from '@fluxby/shared';
 import { processINGRow } from './importers/ing-importer';
 import { processASNRow } from './importers/asn-importer';
+
+/**
+ * Batch size for bulk delete/restore operations.
+ * Optimized via benchmarks (see tests/api/bulk-delete-benchmark.test.ts).
+ * - 500 provides the best balance of performance and SQL safety
+ * - Stays well under SQLite's parameter limit (32766)
+ * - Achieves <5s for 10k deletions on typical hardware
+ */
+const BULK_OPERATION_BATCH_SIZE = 500;
 
 /**
  * Get the active profile ID from OPFS settings
@@ -1048,10 +1060,35 @@ export function createDataService(db: Database) {
       const pid = profileId();
       if (!pid) throw new Error('No active profile');
 
-      await db.runAsync(
-        'UPDATE transactions SET is_deleted = 1, updated_at = ? WHERE id = ? AND profile_id = ?',
-        [Date.now(), id, pid]
-      );
+      // Security: Validate UUID format to prevent injection
+      if (!isValidUUID(id)) {
+        throw new Error('Invalid transaction ID format');
+      }
+
+      const now = Date.now();
+      let accountId: string | null = null;
+
+      await db.transactionAsync(async () => {
+        const transaction = await db.queryOneAsync<{ account_id: string }>(
+          'SELECT account_id FROM transactions WHERE id = ? AND profile_id = ? AND is_deleted = 0',
+          [id, pid]
+        );
+
+        if (!transaction) {
+          return;
+        }
+
+        accountId = transaction.account_id;
+
+        await db.runAsync(
+          'UPDATE transactions SET is_deleted = 1, updated_at = ? WHERE id = ? AND profile_id = ? AND is_deleted = 0',
+          [now, id, pid]
+        );
+      });
+
+      if (accountId) {
+        await this.recalculateAccountBalance(accountId);
+      }
     },
 
     async bulkCategorize(
@@ -6036,14 +6073,14 @@ export function createDataService(db: Database) {
      * Uses soft-delete (is_deleted = 1) for sync compatibility.
      * Wrapped in transactionAsync for OPFS performance (single disk sync).
      *
+     * Undo is handled client-side via localStorage in useBulkDelete hook.
+     *
      * @param transactionIds - Array of transaction IDs to delete
      * @returns BulkDeleteResult with count and affected accounts
      */
     async deleteTransactionsByIds(transactionIds: string[]): Promise<{
       deletedCount: number;
       affectedAccountIds: string[];
-      undoToken?: string;
-      expiresAt?: string;
     }> {
       const pid = profileId();
       if (!pid) throw new Error('No active profile');
@@ -6058,9 +6095,16 @@ export function createDataService(db: Database) {
         return { deletedCount: 0, affectedAccountIds: [] };
       }
 
-      // Security: Enforce max 1000 IDs per request to prevent DoS
-      if (transactionIds.length > 1000) {
-        throw new Error('Maximum 1000 transaction IDs per request');
+      // Security: Enforce max IDs per request to prevent DoS
+      if (transactionIds.length > SECURITY_LIMITS.MAX_BULK_DELETE_IDS) {
+        throw new Error(
+          `Maximum ${SECURITY_LIMITS.MAX_BULK_DELETE_IDS} transaction IDs per request`
+        );
+      }
+
+      // Security: Validate all IDs are valid UUIDs to prevent injection
+      if (!areValidUUIDs(transactionIds)) {
+        throw new Error('Invalid transaction ID format in array');
       }
 
       const now = Date.now();
@@ -6069,10 +6113,13 @@ export function createDataService(db: Database) {
 
       // Use a transaction for OPFS performance (single disk sync)
       await db.transactionAsync(async () => {
-        // Batch IDs in groups of 500 for SQL IN() clauses
-        const BATCH_SIZE = 500;
-        for (let i = 0; i < transactionIds.length; i += BATCH_SIZE) {
-          const batch = transactionIds.slice(i, i + BATCH_SIZE);
+        // Batch IDs in groups for SQL IN() clauses
+        for (
+          let i = 0;
+          i < transactionIds.length;
+          i += BULK_OPERATION_BATCH_SIZE
+        ) {
+          const batch = transactionIds.slice(i, i + BULK_OPERATION_BATCH_SIZE);
           const placeholders = batch.map(() => '?').join(',');
 
           // First, get affected account IDs before deletion
@@ -6115,6 +6162,9 @@ export function createDataService(db: Database) {
      * Supports dry-run mode to preview count before actual deletion.
      * Uses soft-delete (is_deleted = 1) for sync compatibility.
      *
+     * Note: Date range deletion does NOT support undo because transaction IDs
+     * are not retrieved for performance reasons. Use with caution.
+     *
      * @param startDate - Start date (inclusive) in YYYY-MM-DD format
      * @param endDate - End date (inclusive) in YYYY-MM-DD format
      * @param options - Optional filters and dry-run mode
@@ -6130,8 +6180,6 @@ export function createDataService(db: Database) {
     ): Promise<{
       deletedCount: number;
       affectedAccountIds: string[];
-      undoToken?: string;
-      expiresAt?: string;
     }> {
       const pid = profileId();
       if (!pid) throw new Error('No active profile');
@@ -6174,6 +6222,10 @@ export function createDataService(db: Database) {
       const params: unknown[] = [pid, startDate, endDate];
 
       if (options?.accountId) {
+        // Security: Validate accountId UUID format
+        if (!isValidUUID(options.accountId)) {
+          throw new Error('Invalid account ID format');
+        }
         whereClause += ' AND account_id = ?';
         params.push(options.accountId);
       }
@@ -6232,6 +6284,11 @@ export function createDataService(db: Database) {
      * Uses the latest transaction's balance_after value (bank-provided balance from CSV).
      * If no transactions exist, sets balance to 0.
      *
+     * NOTE: This method is intentionally called OUTSIDE the delete/restore transaction.
+     * Reason: Including balance recalculation inside the transaction would increase OPFS
+     * sync overhead. If balance recalculation fails, the soft-delete is still valid and
+     * the balance can be recalculated on next page load or manual refresh.
+     *
      * @param accountId - The account ID to recalculate balance for
      * @returns BalanceRecalculationResult with previous and new balance
      */
@@ -6239,7 +6296,7 @@ export function createDataService(db: Database) {
       accountId: string;
       previousBalance: number;
       newBalance: number;
-      calculationMethod: 'latest_balance_after' | 'sum_transactions';
+      calculationMethod: 'latest_balance_after' | 'no_transactions';
     }> {
       const pid = profileId();
       if (!pid) throw new Error('No active profile');
@@ -6265,16 +6322,16 @@ export function createDataService(db: Database) {
       );
 
       let newBalance: number;
-      let calculationMethod: 'latest_balance_after' | 'sum_transactions';
+      let calculationMethod: 'latest_balance_after' | 'no_transactions';
 
       if (latest && typeof latest.balance_after === 'number') {
         // Use the bank-provided balance from the latest transaction
         newBalance = latest.balance_after;
         calculationMethod = 'latest_balance_after';
       } else {
-        // No transactions with balance_after - set to 0
+        // No transactions with balance_after - reset to 0
         newBalance = 0;
-        calculationMethod = 'sum_transactions';
+        calculationMethod = 'no_transactions';
       }
 
       // Update the account balance
@@ -6309,16 +6366,31 @@ export function createDataService(db: Database) {
         return { restoredCount: 0, affectedAccountIds: [] };
       }
 
+      // Security: Enforce max IDs per request to prevent DoS
+      if (transactionIds.length > SECURITY_LIMITS.MAX_RESTORE_IDS) {
+        throw new Error(
+          `Maximum ${SECURITY_LIMITS.MAX_RESTORE_IDS} transaction IDs per restore request`
+        );
+      }
+
+      // Security: Validate all IDs are valid UUIDs to prevent injection
+      if (!areValidUUIDs(transactionIds)) {
+        throw new Error('Invalid transaction ID format in array');
+      }
+
       const now = Date.now();
       let restoredCount = 0;
       const affectedAccountIds = new Set<string>();
 
       // Use a transaction for OPFS performance (single disk sync)
       await db.transactionAsync(async () => {
-        // Batch IDs in groups of 500 for SQL IN() clauses
-        const BATCH_SIZE = 500;
-        for (let i = 0; i < transactionIds.length; i += BATCH_SIZE) {
-          const batch = transactionIds.slice(i, i + BATCH_SIZE);
+        // Batch IDs in groups for SQL IN() clauses
+        for (
+          let i = 0;
+          i < transactionIds.length;
+          i += BULK_OPERATION_BATCH_SIZE
+        ) {
+          const batch = transactionIds.slice(i, i + BULK_OPERATION_BATCH_SIZE);
           const placeholders = batch.map(() => '?').join(',');
 
           // First, get affected account IDs
