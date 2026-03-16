@@ -13,15 +13,15 @@
   },
   "dependencies": {
     "@fluxby/shared": "*",
-    "better-sqlite3": "^12.5.0",
-    "cors": "^2.8.5",
+    "better-sqlite3": "^12.8.0",
+    "cors": "^2.8.6",
     "express": "^5.2.1",
     "express-rate-limit": "^8.3.1",
     "multer": "^2.0.2",
     "papaparse": "^5.4.1",
     "swagger-jsdoc": "^6.2.1",
     "swagger-ui-express": "^5.0.1",
-    "zod": "^4.2.1"
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.12",

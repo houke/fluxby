@@ -35,7 +35,7 @@
   },
   "dependencies": {
     "@fluxby/shared": "*",
-    "@journeyapps/wa-sqlite": "^1.4.1",
+    "@journeyapps/wa-sqlite": "^1.5.0",
     "peerjs": "^1.5.4"
   },
   "peerDependencies": {
