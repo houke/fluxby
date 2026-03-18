@@ -27,7 +27,7 @@
     "@types/better-sqlite3": "^7.6.12",
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.0",
-    "@types/multer": "^2.0.0",
+    "@types/multer": "^2.1.0",
     "@types/papaparse": "^5.3.15",
     "@types/supertest": "^6.0.3",
     "@types/swagger-jsdoc": "^6.0.4",
