@@ -60,7 +60,7 @@ jobs:
         # No VITE_BASE_URL needed - custom domain (fluxby.app) serves from root /
 
       - name: Setup Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v4
