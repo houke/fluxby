@@ -262,7 +262,7 @@ jobs:
 
       - name: Create release
         id: create-release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: v${{ needs.initialize-release.outputs.version }}
           name: Fluxby v${{ needs.initialize-release.outputs.version }}
