@@ -16,7 +16,7 @@
     "better-sqlite3": "^12.9.0",
     "cors": "^2.8.6",
     "express": "^5.2.1",
-    "express-rate-limit": "^8.3.2",
+    "express-rate-limit": "^8.4.1",
     "multer": "^2.0.2",
     "papaparse": "^5.4.1",
     "swagger-jsdoc": "^6.2.1",
