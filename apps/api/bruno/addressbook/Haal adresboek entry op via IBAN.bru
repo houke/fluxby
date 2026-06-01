@@ -1,12 +1,12 @@
 meta {
   name: Haal adresboek entry op via IBAN
   type: http
-  seq: 27
+  seq: 28
 }
 
-get {
-  url: {{baseUrl}}/api/addressbook/by-iban/:iban
-  body: none
+post {
+  url: {{baseUrl}}/api/addressbook/by-iban
+  body: json
   auth: none
 }
 
@@ -14,11 +14,16 @@ headers {
   X-Profile-Id: {{profileId}}
 }
 
+body:json {
+  {}
+}
+
 docs {
   # Haal adresboek entry op via IBAN
   
-  No description provided.
+  Uses POST to avoid exposing sensitive IBAN in URL path/query (CodeQL js/sensitive-get-query).
+
   
   ## Endpoint
-  `GET /api/addressbook/by-iban/{iban}`
+  `POST /api/addressbook/by-iban`
 }

@@ -1,0 +1,28 @@
+meta {
+  name: Zoek merchant mappings voor een specifieke IBAN
+  type: http
+  seq: 14
+}
+
+post {
+  url: {{baseUrl}}/api/addressbook/shared-iban-merchants/search
+  body: json
+  auth: none
+}
+
+headers {
+  X-Profile-Id: {{profileId}}
+}
+
+body:json {
+  {}
+}
+
+docs {
+  # Zoek merchant mappings voor een specifieke IBAN
+  
+  No description provided.
+  
+  ## Endpoint
+  `POST /api/addressbook/shared-iban-merchants/search`
+}
