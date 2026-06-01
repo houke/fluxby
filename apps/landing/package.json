@@ -12,17 +12,17 @@
   "dependencies": {
     "@fluxby/shared": "*",
     "@tailwindcss/typography": "^0.5.19",
-    "@tailwindcss/vite": "^4.2.4",
-    "react": "^19.2.5",
-    "react-dom": "^19.2.5",
-    "react-router-dom": "^7.14.2",
+    "@tailwindcss/vite": "^4.3.0",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
+    "react-router-dom": "^7.15.1",
     "tailwindcss": "^4.2.4"
   },
   "devDependencies": {
-    "@types/react": "^19.2.14",
+    "@types/react": "^19.2.15",
     "@types/react-dom": "^19.0.1",
     "@vitejs/plugin-react": "^5.2.0",
     "typescript": "^5.7.2",
-    "vite": "^7.3.2"
+    "vite": "^7.3.3"
   }
 }
