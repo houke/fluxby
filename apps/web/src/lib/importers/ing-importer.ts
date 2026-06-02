@@ -59,6 +59,9 @@ export async function processINGRow(
       amount = Math.abs(amount);
     }
   }
+  const balanceAfter = mapping.balance
+    ? helpers.parseAmount(row[mapping.balance])
+    : null;
 
   const rawDescription = row[mapping.description] || '';
   const mededelingen = mapping.notes ? row[mapping.notes] : '';
@@ -176,6 +179,7 @@ export async function processINGRow(
       opposingAccountIban: opposingIban,
       opposingAccountName,
       notes: null, // Remove redundant notes, keep only description
+      balanceAfter,
       paymentMethod,
       importHash: hash,
     } as TransactionCreate,

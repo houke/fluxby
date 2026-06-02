@@ -211,6 +211,43 @@ describe('web data-service single transaction delete', () => {
     );
   });
 
+  it('falls back to SUM(amount) when no balance_after is available', async () => {
+    const { createDataService } =
+      await import('../../apps/web/src/lib/data-service');
+
+    const queryOneAsync = vi
+      .fn()
+      .mockResolvedValueOnce({ account_id: VALID_ACCOUNT_ID })
+      .mockResolvedValueOnce({ current_balance: 1000 })
+      .mockResolvedValueOnce(null) // No balance_after available
+      .mockResolvedValueOnce({ total: 375 }); // Fallback SUM(amount)
+
+    const runAsync = vi
+      .fn()
+      .mockResolvedValueOnce({ changes: 1, lastInsertRowId: 0 })
+      .mockResolvedValueOnce({ changes: 1, lastInsertRowId: 0 });
+
+    const db = {
+      queryOneAsync,
+      runAsync,
+      transactionAsync: vi.fn(async (fn: () => Promise<void>) => fn()),
+    };
+
+    const ds = createDataService(db as never);
+
+    await ds.deleteTransaction(VALID_TX_ID);
+
+    expect(runAsync).toHaveBeenNthCalledWith(
+      2,
+      'UPDATE accounts SET current_balance = ?, updated_at = ? WHERE id = ? AND profile_id = ?',
+      expect.arrayContaining([
+        375,
+        VALID_ACCOUNT_ID,
+        '00000000-0000-0000-0000-000000000001',
+      ])
+    );
+  });
+
   it('handles transactionAsync rollback on database error', async () => {
     const { createDataService } =
       await import('../../apps/web/src/lib/data-service');

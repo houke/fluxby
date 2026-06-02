@@ -181,6 +181,13 @@ export async function processASNRow(
   const typeField = mapping.type || 'Type';
   const rawType = row[typeField];
   const paymentMethod = mapASNPaymentType(rawType);
+  const balanceColumn = mapping.balance || 'Saldo voor boeking';
+  const balanceBefore =
+    parseASNAmount(row[balanceColumn] || '') ??
+    helpers.parseAmount(row[balanceColumn] || '') ??
+    null;
+  const balanceAfter =
+    typeof balanceBefore === 'number' ? balanceBefore + amount : null;
 
   // Determine transaction type
   let type: 'income' | 'expense' | 'transfer' =
@@ -223,6 +230,7 @@ export async function processASNRow(
       opposingAccountIban: opposingIban,
       opposingAccountName: merchantName,
       notes: betalingskenmerk || null,
+      balanceAfter,
       paymentMethod,
       importHash: hash,
     } as TransactionCreate,

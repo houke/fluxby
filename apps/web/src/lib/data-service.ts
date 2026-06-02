@@ -4059,8 +4059,12 @@ export function createDataService(db: Database) {
         description:
           preview.headers.find((h) => /desc|omschrijving|name/i.test(h)) ||
           preview.headers[2],
-        iban: preview.headers.find((h) => /iban|tegenrekening/i.test(h)),
-        counterparty: preview.headers.find((h) => /counterparty|naam/i.test(h)),
+        iban: preview.headers.find((h) =>
+          /^(iban|rekening|je rekening)$/i.test(h.trim())
+        ),
+        counterparty: preview.headers.find((h) =>
+          /tegenrekening|counterparty|van\s*\/\s*naar|naam/i.test(h)
+        ),
       };
 
       // Direction column for Af/Bij style CSVs
@@ -4110,12 +4114,26 @@ export function createDataService(db: Database) {
       const transfersCategoryId = transfersCategory?.id || null;
 
       // Get user's own account IBANs (to exclude from address book)
-      const ownAccountsResult = await db.queryAsync<{ iban: string }>(
-        'SELECT iban FROM accounts WHERE profile_id = ? AND is_deleted = 0',
+      // Also build lookup maps so multi-account CSVs can route each row to its own account.
+      const ownAccountsResult = await db.queryAsync<{
+        id: string;
+        iban: string;
+      }>(
+        'SELECT id, iban FROM accounts WHERE profile_id = ? AND is_deleted = 0',
         [pid]
       );
+      const normalizeIban = (value: string | null | undefined): string =>
+        value?.replace(/\s/g, '').toUpperCase() || '';
       const ownAccountIbans = new Set(
-        ownAccountsResult.map((a) => a.iban?.replace(/\s/g, '').toUpperCase())
+        ownAccountsResult.map((a) => normalizeIban(a.iban)).filter(Boolean)
+      );
+      const accountIdByIban = new Map(
+        ownAccountsResult
+          .map((a) => [normalizeIban(a.iban), a.id] as const)
+          .filter(([iban]) => iban.length > 0)
+      );
+      const accountIbanById = new Map(
+        ownAccountsResult.map((a) => [a.id, normalizeIban(a.iban)] as const)
       );
 
       // Fetch all existing hashes for the profile to speed up deduplication
@@ -4166,13 +4184,21 @@ export function createDataService(db: Database) {
           let hash: string;
           let opposingIban: string | null;
           let merchantName: string;
+          const sourceAccountIban = mapping.iban
+            ? normalizeIban(row[mapping.iban])
+            : '';
+          const targetAccountId =
+            accountIdByIban.get(sourceAccountIban) || options.accountId;
+          const targetAccountIban =
+            accountIbanById.get(targetAccountId) ||
+            normalizeIban(account?.iban || '');
 
           if (options.bank?.toLowerCase() === 'ing') {
             const result = await processINGRow(
               db,
               row,
               {
-                accountId: options.accountId,
+                accountId: targetAccountId,
                 profileId: pid,
                 mapping: {
                   date: mapping.date,
@@ -4240,7 +4266,7 @@ export function createDataService(db: Database) {
               db,
               row,
               {
-                accountId: options.accountId,
+                accountId: targetAccountId,
                 profileId: pid,
                 mapping: {
                   date: mapping.date,
@@ -4377,7 +4403,7 @@ export function createDataService(db: Database) {
               date,
               amount,
               rawDescription,
-              account?.iban || ''
+              targetAccountIban
             );
 
             let type: 'income' | 'expense' | 'transfer' =
@@ -4394,10 +4420,13 @@ export function createDataService(db: Database) {
               type,
               description: rawDescription,
               merchantName,
-              accountId: options.accountId,
+              accountId: targetAccountId,
               opposingAccountIban: opposingIban,
               opposingAccountName: rawDescription,
               notes: mededelingen,
+              balanceAfter: mapping.balance
+                ? this._parseFlexibleAmount(row[mapping.balance])
+                : null,
               paymentMethod,
               importHash: hash,
             };
@@ -4488,7 +4517,7 @@ export function createDataService(db: Database) {
       // Each chunk gets its own transaction to allow progress reporting and prevent 30s timeout
       if (transactionsToInsert.length > 0) {
         // Use chunk size of 200 rows for better OPFS performance (fewer syncs)
-        // 200 rows per chunk with 17 params = 3400 params (well under SQLite's 32766 limit)
+        // 200 rows per chunk with 18 params = 3600 params (well under SQLite's 32766 limit)
         const CHUNK_SIZE = 200;
         const totalToInsert = transactionsToInsert.length;
         const chunks: (typeof transactionsToInsert)[] = [];
@@ -4517,7 +4546,9 @@ export function createDataService(db: Database) {
           await db.transactionAsync(async () => {
             // Build bulk INSERT with multiple value sets
             const placeholders = chunk
-              .map(() => '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+              .map(
+                () => '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+              )
               .join(', ');
             const values = chunk.flatMap((item) => [
               item.id,
@@ -4531,6 +4562,7 @@ export function createDataService(db: Database) {
               item.transactionData.opposingAccountName,
               item.categoryId,
               item.transactionData.notes,
+              item.transactionData.balanceAfter ?? null,
               item.transactionData.paymentMethod,
               item.paymentProvider,
               item.hash,
@@ -4541,7 +4573,7 @@ export function createDataService(db: Database) {
 
             await db.runAsync(
               `INSERT INTO transactions (id, date, amount, type, description, merchant_name, account_id, 
-               opposing_account_iban, opposing_account_name, category_id, notes, payment_method, payment_provider, import_hash, profile_id, created_at, updated_at)
+               opposing_account_iban, opposing_account_name, category_id, notes, balance_after, payment_method, payment_provider, import_hash, profile_id, created_at, updated_at)
                VALUES ${placeholders}`,
               values
             );
@@ -4617,9 +4649,15 @@ export function createDataService(db: Database) {
         ]
       );
 
-      // Recalculate account balance using the centralized method (IMPL-011)
-      // This ensures consistency with balance recalculation after bulk deletions
-      await this.recalculateAccountBalance(options.accountId);
+      // Recalculate balances for all affected accounts (supports multi-account imports).
+      const affectedAccountIds = Array.from(
+        new Set(
+          transactionsToInsert.map((item) => item.transactionData.accountId)
+        )
+      );
+      for (const accountId of affectedAccountIds) {
+        await this.recalculateAccountBalance(accountId);
+      }
 
       return {
         imported,
@@ -6435,7 +6473,8 @@ export function createDataService(db: Database) {
 
     /**
      * Recalculate the current balance for an account.
-     * Uses the latest transaction's balance_after value (bank-provided balance from CSV).
+     * Prefers the latest transaction's balance_after value (bank-provided running balance).
+     * If that is unavailable, falls back to the sum of all transaction amounts.
      * If no transactions exist, sets balance to 0.
      *
      * NOTE: This method is intentionally called OUTSIDE the delete/restore transaction.
@@ -6450,7 +6489,10 @@ export function createDataService(db: Database) {
       accountId: string;
       previousBalance: number;
       newBalance: number;
-      calculationMethod: 'latest_balance_after' | 'no_transactions';
+      calculationMethod:
+        | 'latest_balance_after'
+        | 'sum_of_amounts'
+        | 'no_transactions';
     }> {
       const pid = profileId();
       if (!pid) throw new Error('No active profile');
@@ -6476,16 +6518,32 @@ export function createDataService(db: Database) {
       );
 
       let newBalance: number;
-      let calculationMethod: 'latest_balance_after' | 'no_transactions';
+      let calculationMethod:
+        | 'latest_balance_after'
+        | 'sum_of_amounts'
+        | 'no_transactions';
 
       if (latest && typeof latest.balance_after === 'number') {
         // Use the bank-provided balance from the latest transaction
         newBalance = latest.balance_after;
         calculationMethod = 'latest_balance_after';
       } else {
-        // No transactions with balance_after - reset to 0
-        newBalance = 0;
-        calculationMethod = 'no_transactions';
+        // Fallback: derive balance from all non-deleted transaction amounts.
+        const sumResult = await db.queryOneAsync<{ total: number | null }>(
+          `SELECT SUM(amount) as total
+           FROM transactions
+           WHERE account_id = ? AND is_deleted = 0`,
+          [accountId]
+        );
+        const summedAmount = sumResult?.total;
+
+        if (typeof summedAmount === 'number') {
+          newBalance = summedAmount;
+          calculationMethod = 'sum_of_amounts';
+        } else {
+          newBalance = 0;
+          calculationMethod = 'no_transactions';
+        }
       }
 
       // Update the account balance
