@@ -40,6 +40,8 @@ import {
   RotateCcw,
   AlertCircle,
   Loader2,
+  Download,
+  Upload,
 } from 'lucide-react';
 import { useTransactionSelection } from '@/hooks/useTransactionSelection';
 import { useBulkDelete } from '@/hooks/useBulkDelete';
@@ -2661,20 +2663,32 @@ export default function Transactions() {
                             <div className='flex flex-col items-end gap-1 text-right'>
                               <p
                                 className={cn(
-                                  'text-lg font-bold',
+                                  'flex items-center justify-end gap-1 text-lg font-bold',
                                   tx.type === 'transfer'
-                                    ? 'text-blue-600'
+                                    ? tx.amount < 0
+                                      ? 'text-blue-800 dark:text-blue-300'
+                                      : 'text-blue-500 dark:text-blue-400'
                                     : tx.amount > 0
                                       ? 'text-emerald-600'
                                       : 'text-rose-600'
                                 )}
                               >
-                                {tx.type === 'transfer'
-                                  ? ''
-                                  : tx.amount > 0
-                                    ? '+'
-                                    : ''}
-                                <Currency amount={tx.amount} />
+                                {tx.type === 'transfer' ? (
+                                  tx.amount < 0 ? (
+                                    <Download className='h-4 w-4 flex-shrink-0' />
+                                  ) : (
+                                    <Upload className='h-4 w-4 flex-shrink-0' />
+                                  )
+                                ) : tx.amount > 0 ? (
+                                  '+'
+                                ) : null}
+                                <Currency
+                                  amount={
+                                    tx.type === 'transfer'
+                                      ? Math.abs(tx.amount)
+                                      : tx.amount
+                                  }
+                                />
                               </p>
                               {recurring && (
                                 <span
