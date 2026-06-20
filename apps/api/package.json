@@ -17,7 +17,7 @@
     "cors": "^2.8.6",
     "express": "^5.2.1",
     "express-rate-limit": "^8.5.2",
-    "multer": "^2.0.2",
+    "multer": "^2.2.0",
     "papaparse": "^5.4.1",
     "swagger-jsdoc": "^6.3.0",
     "swagger-ui-express": "^5.0.1",
