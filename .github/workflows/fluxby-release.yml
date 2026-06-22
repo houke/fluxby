@@ -23,7 +23,7 @@ jobs:
       dry_run: ${{ github.event.inputs.dry_run || 'false' }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -224,7 +224,7 @@ jobs:
       release_id: ${{ steps.create-release.outputs.id }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Download changelog artifact
         uses: actions/download-artifact@v8
@@ -297,7 +297,7 @@ jobs:
     runs-on: ${{ matrix.platform }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: v${{ needs.initialize-release.outputs.version }}
 
