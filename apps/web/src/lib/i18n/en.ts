@@ -1020,6 +1020,19 @@ export const en: TranslationKeys = {
         'Are you sure you want to delete ALL data? This cannot be undone.',
       deleteAllSuccess: 'All data has been deleted',
       deleteAllError: 'An error occurred while deleting',
+      restoreBackupTitle: 'Restore from backup',
+      restoreBackupDescription:
+        'Restore the database from an automatic backup created before an update',
+      restoreBackupButton: 'Restore backup',
+      restoreBackupDialogTitle: 'Restore backup',
+      restoreBackupDialogDescription:
+        'Select a backup to restore the database. The app will restart after restoring.',
+      restoreBackupConfirm:
+        'Are you sure you want to restore from this backup? All current data will be overwritten.',
+      restoreBackupSuccess: 'Database restored. Restarting app...',
+      restoreBackupError: 'Restore failed',
+      restoreBackupEmpty: 'No backups found',
+      restoreBackupRelaunch: 'Restore and restart',
     },
     profileData: {
       title: 'Delete profile data',

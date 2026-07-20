@@ -79,6 +79,83 @@ export async function createPreUpdateBackup(): Promise<PreUpdateBackupResult> {
   }
 }
 
+export interface BackupEntry {
+  filename: string;
+  timestamp: Date;
+}
+
+/**
+ * List available pre-update backups, newest first.
+ */
+export async function listPreUpdateBackups(): Promise<BackupEntry[]> {
+  try {
+    const fsModule = await import('@tauri-apps/plugin-fs');
+    const pathModule = await import('@tauri-apps/api/path');
+
+    const appDir = await pathModule.appLocalDataDir();
+    const backupDir = await pathModule.join(appDir, 'fluxby', BACKUP_DIR_NAME);
+
+    const dirExists = await fsModule.exists(backupDir);
+    if (!dirExists) return [];
+
+    const entries = await fsModule.readDir(backupDir);
+    return entries
+      .filter(
+        (e): e is typeof e & { name: string } =>
+          typeof e.name === 'string' &&
+          e.name.startsWith('pre-update-backup-') &&
+          e.name.endsWith('.db')
+      )
+      .map((e) => {
+        // filename: pre-update-backup-2026-07-20T21-57-53-679Z.db
+        const raw = e.name
+          .replace('pre-update-backup-', '')
+          .replace('.db', '')
+          // restore colons that were replaced with dashes in ISO positions
+          .replace(/(\d{4}-\d{2}-\d{2}T\d{2})-(\d{2})-(\d{2})-(\d{3}Z)/, '$1:$2:$3.$4');
+        return { filename: e.name, timestamp: new Date(raw) };
+      })
+      .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime()); // newest first
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Restore a pre-update backup by overwriting the active database file.
+ * The caller must relaunch the app after this returns success.
+ */
+export async function restoreFromBackup(
+  filename: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const fsModule = await import('@tauri-apps/plugin-fs');
+    const pathModule = await import('@tauri-apps/api/path');
+
+    const appDir = await pathModule.appLocalDataDir();
+    const fluxbyDir = await pathModule.join(appDir, 'fluxby');
+    const backupPath = await pathModule.join(
+      fluxbyDir,
+      BACKUP_DIR_NAME,
+      filename
+    );
+    const dbPath = await pathModule.join(fluxbyDir, 'fluxby.db');
+
+    const backupExists = await fsModule.exists(backupPath);
+    if (!backupExists) {
+      return { success: false, error: 'Backup file not found' };
+    }
+
+    const backupBytes = await fsModule.readFile(backupPath);
+    await fsModule.writeFile(dbPath, backupBytes);
+
+    return { success: true };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    return { success: false, error: message };
+  }
+}
+
 /**
  * Remove oldest backups so that at most MAX_BACKUPS remain.
  * Files are sorted alphabetically (which matches chronological order

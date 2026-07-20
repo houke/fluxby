@@ -902,6 +902,16 @@ export interface TranslationKeys {
       deleteAllConfirm: string;
       deleteAllSuccess: string;
       deleteAllError: string;
+      restoreBackupTitle: string;
+      restoreBackupDescription: string;
+      restoreBackupButton: string;
+      restoreBackupDialogTitle: string;
+      restoreBackupDialogDescription: string;
+      restoreBackupConfirm: string;
+      restoreBackupSuccess: string;
+      restoreBackupError: string;
+      restoreBackupEmpty: string;
+      restoreBackupRelaunch: string;
     };
     profileData: {
       title: string;
@@ -2406,6 +2416,19 @@ export const nl: TranslationKeys = {
         'Weet je zeker dat je ALLE gegevens wilt verwijderen? Dit kan niet ongedaan worden.',
       deleteAllSuccess: 'Alle gegevens zijn verwijderd',
       deleteAllError: 'Er is een fout opgetreden bij het verwijderen',
+      restoreBackupTitle: 'Herstel vanuit back-up',
+      restoreBackupDescription:
+        'Herstel de database vanuit een automatische back-up die vóór een update is gemaakt',
+      restoreBackupButton: 'Back-up herstellen',
+      restoreBackupDialogTitle: 'Back-up herstellen',
+      restoreBackupDialogDescription:
+        'Selecteer een back-up om de database te herstellen. De app herstart na het herstellen.',
+      restoreBackupConfirm:
+        'Weet je zeker dat je wilt herstellen vanuit deze back-up? Alle huidige gegevens worden overschreven.',
+      restoreBackupSuccess: 'Database hersteld. App herstart...',
+      restoreBackupError: 'Herstellen mislukt',
+      restoreBackupEmpty: 'Geen back-ups gevonden',
+      restoreBackupRelaunch: 'Herstellen en herstarten',
     },
     profileData: {
       title: 'Profielgegevens verwijderen',

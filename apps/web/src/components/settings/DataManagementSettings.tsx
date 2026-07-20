@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { RefreshCcw, Lock, LockOpen, ShieldCheck } from 'lucide-react';
+import { RefreshCcw, Lock, LockOpen, ShieldCheck, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -34,6 +34,12 @@ import {
   getBackupFilename,
   type PlainBackup,
 } from '@/lib/backup-crypto';
+import {
+  listPreUpdateBackups,
+  restoreFromBackup,
+  type BackupEntry,
+} from '@/lib/pre-update-backup';
+import { isRunningInTauri } from '@/lib/tauri-bridge';
 
 export function DataManagementSettings() {
   const { t } = useLanguage();
@@ -45,9 +51,15 @@ export function DataManagementSettings() {
     text: string;
   } | null>(null);
   const [loadingAction, setLoadingAction] = useState<
-    'export' | 'import' | 'delete' | null
+    'export' | 'import' | 'delete' | 'restore' | null
   >(null);
   const [encryptExport, setEncryptExport] = useState(false);
+
+  // Restore-from-backup state (Tauri only)
+  const [restoreDialog, setRestoreDialog] = useState(false);
+  const [backupList, setBackupList] = useState<BackupEntry[]>([]);
+  const [loadingBackups, setLoadingBackups] = useState(false);
+  const [selectedBackup, setSelectedBackup] = useState<string | null>(null);
 
   // Password dialog state for encrypted exports/imports
   const [passwordDialog, setPasswordDialog] = useState<{
@@ -65,6 +77,63 @@ export function DataManagementSettings() {
     const timer = setTimeout(() => setDataNotice(null), delay);
     return () => clearTimeout(timer);
   }, [dataNotice]);
+
+  const handleOpenRestoreDialog = async () => {
+    setRestoreDialog(true);
+    setSelectedBackup(null);
+    setLoadingBackups(true);
+    const backups = await listPreUpdateBackups();
+    setBackupList(backups);
+    setLoadingBackups(false);
+  };
+
+  const handleRestoreBackup = async () => {
+    if (!selectedBackup) return;
+    const isConfirmed = await confirm({
+      title:
+        t.settings.dataManagement?.restoreBackupDialogTitle || 'Restore backup',
+      message:
+        t.settings.dataManagement?.restoreBackupConfirm ||
+        'Are you sure? All current data will be overwritten.',
+      variant: 'danger',
+    });
+    if (!isConfirmed) return;
+
+    setLoadingAction('restore');
+    try {
+      const result = await restoreFromBackup(selectedBackup);
+      if (!result.success) {
+        setDataNotice({
+          type: 'error',
+          text:
+            (t.settings.dataManagement?.restoreBackupError || 'Restore failed') +
+            (result.error ? `: ${result.error}` : ''),
+        });
+        setLoadingAction(null);
+        return;
+      }
+      setRestoreDialog(false);
+      setDataNotice({
+        type: 'success',
+        text:
+          t.settings.dataManagement?.restoreBackupSuccess ||
+          'Database restored. Restarting app...',
+      });
+      // Relaunch after a short delay so the toast is visible
+      setTimeout(async () => {
+        const { relaunch } = await import('@tauri-apps/plugin-process');
+        await relaunch();
+      }, 1500);
+    } catch (err) {
+      setDataNotice({
+        type: 'error',
+        text:
+          (t.settings.dataManagement?.restoreBackupError || 'Restore failed') +
+          (err instanceof Error ? `: ${err.message}` : ''),
+      });
+      setLoadingAction(null);
+    }
+  };
 
   // Handle encrypted export
   const handleEncryptedExport = async (password: string) => {
@@ -452,6 +521,30 @@ export function DataManagementSettings() {
                 {t.settings.dataManagement.deleteAllButton}
               </Button>
             </div>
+
+            {isRunningInTauri() && (
+              <div className='flex items-center justify-between rounded-lg border p-3'>
+                <div className='flex-1'>
+                  <p className='text-sm font-medium'>
+                    {t.settings.dataManagement?.restoreBackupTitle ||
+                      'Restore from backup'}
+                  </p>
+                  <p className='text-xs text-muted-foreground'>
+                    {t.settings.dataManagement?.restoreBackupDescription ||
+                      'Restore the database from an automatic backup created before an update'}
+                  </p>
+                </div>
+                <Button
+                  variant='outline'
+                  disabled={loadingAction !== null}
+                  onClick={handleOpenRestoreDialog}
+                >
+                  <RotateCcw className='mr-2 h-4 w-4' />
+                  {t.settings.dataManagement?.restoreBackupButton ||
+                    'Restore backup'}
+                </Button>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -542,6 +635,80 @@ export function DataManagementSettings() {
               {passwordDialog.mode === 'export'
                 ? t.settings.dataManagement.exportButton
                 : t.settings.dataManagement.importButton}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Restore from pre-update backup dialog (Tauri only) */}
+      <Dialog open={restoreDialog} onOpenChange={setRestoreDialog}>
+        <DialogContent className='sm:max-w-md'>
+          <DialogHeader>
+            <DialogTitle>
+              {t.settings.dataManagement?.restoreBackupDialogTitle ||
+                'Restore backup'}
+            </DialogTitle>
+            <DialogDescription>
+              {t.settings.dataManagement?.restoreBackupDialogDescription ||
+                'Select a backup to restore. The app will restart after restoring.'}
+            </DialogDescription>
+          </DialogHeader>
+          <div className='space-y-2 py-2'>
+            {loadingBackups ? (
+              <div className='flex items-center justify-center py-6 text-sm text-muted-foreground'>
+                <RefreshCcw className='mr-2 h-4 w-4 animate-spin' />
+              </div>
+            ) : backupList.length === 0 ? (
+              <p className='py-4 text-center text-sm text-muted-foreground'>
+                {t.settings.dataManagement?.restoreBackupEmpty ||
+                  'No backups found'}
+              </p>
+            ) : (
+              backupList.map((backup) => (
+                <button
+                  key={backup.filename}
+                  type='button'
+                  onClick={() => setSelectedBackup(backup.filename)}
+                  className={`w-full rounded-lg border px-3 py-2 text-left text-sm transition-colors ${
+                    selectedBackup === backup.filename
+                      ? 'border-primary bg-primary/5'
+                      : 'hover:bg-muted/50'
+                  }`}
+                >
+                  <p className='font-medium'>
+                    {backup.timestamp.toLocaleDateString(undefined, {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                    })}
+                  </p>
+                  <p className='text-xs text-muted-foreground'>
+                    {backup.timestamp.toLocaleTimeString()}
+                  </p>
+                </button>
+              ))
+            )}
+          </div>
+          <DialogFooter>
+            <Button
+              variant='outline'
+              onClick={() => setRestoreDialog(false)}
+              disabled={loadingAction === 'restore'}
+            >
+              {t.common.cancel}
+            </Button>
+            <Button
+              variant='destructive'
+              onClick={handleRestoreBackup}
+              disabled={!selectedBackup || loadingAction === 'restore'}
+            >
+              {loadingAction === 'restore' ? (
+                <RefreshCcw className='mr-2 h-4 w-4 animate-spin' />
+              ) : (
+                <RotateCcw className='mr-2 h-4 w-4' />
+              )}
+              {t.settings.dataManagement?.restoreBackupRelaunch ||
+                'Restore and restart'}
             </Button>
           </DialogFooter>
         </DialogContent>
