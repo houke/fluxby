@@ -35,11 +35,11 @@
   },
   "dependencies": {
     "@fluxby/shared": "*",
-    "@journeyapps/wa-sqlite": "^1.7.0",
+    "@journeyapps/wa-sqlite": "^1.7.2",
     "peerjs": "^1.5.4"
   },
   "peerDependencies": {
-    "@tauri-apps/api": "^2.11.0",
+    "@tauri-apps/api": "^2.11.1",
     "@tauri-apps/plugin-fs": "^2.5.1"
   },
   "peerDependenciesMeta": {
