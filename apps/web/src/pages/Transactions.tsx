@@ -311,6 +311,55 @@ export default function Transactions() {
   >(new Set());
   const [isMarkingAsTransfer, setIsMarkingAsTransfer] = useState(true);
 
+  // Add transaction modal state
+  const [addTransactionModalOpen, setAddTransactionModalOpen] = useState(false);
+  const [addTxType, setAddTxType] = useState<'income' | 'expense' | 'transfer'>(
+    'expense'
+  );
+  const [addTxAmount, setAddTxAmount] = useState('');
+  const [addTxDate, setAddTxDate] = useState(() =>
+    new Date().toISOString().slice(0, 10)
+  );
+  const [addTxDescription, setAddTxDescription] = useState('');
+  const [addTxCategoryId, setAddTxCategoryId] = useState<string | null>(null);
+  const [addTxAccountId, setAddTxAccountId] = useState<string | null>(null);
+  const [addTxPaymentMethod, setAddTxPaymentMethod] = useState<string | null>(
+    null
+  );
+  const [addTxPaymentProcessor, setAddTxPaymentProcessor] = useState<
+    string | null
+  >(null);
+  const [addTxAddressBookId, setAddTxAddressBookId] = useState<string | null>(
+    null
+  );
+  const [addTxCounterparty, setAddTxCounterparty] = useState('');
+  const [addTxAddressBookSearch, setAddTxAddressBookSearch] = useState('');
+  const [addTxAddressBookOpen, setAddTxAddressBookOpen] = useState(false);
+  // For transfers: track direction explicitly (true = outgoing/negative, false = incoming/positive)
+  const [addTxTransferOutgoing, setAddTxTransferOutgoing] = useState(true);
+  // Validation error state
+  const [addTxErrors, setAddTxErrors] = useState<{
+    amount?: string;
+    date?: string;
+  }>({});
+
+  const resetAddTransactionForm = () => {
+    setAddTxType('expense');
+    setAddTxAmount('');
+    setAddTxDate(new Date().toISOString().slice(0, 10));
+    setAddTxDescription('');
+    setAddTxCategoryId(null);
+    setAddTxAccountId(null);
+    setAddTxPaymentMethod(null);
+    setAddTxPaymentProcessor(null);
+    setAddTxAddressBookId(null);
+    setAddTxCounterparty('');
+    setAddTxAddressBookSearch('');
+    setAddTxAddressBookOpen(false);
+    setAddTxTransferOutgoing(true);
+    setAddTxErrors({});
+  };
+
   // Lazy loading state
   const [visibleCount, setVisibleCount] = useState(50);
   const loadMoreRef = useRef<HTMLButtonElement>(null);
@@ -1001,6 +1050,83 @@ export default function Transactions() {
       restoreScrollPosition();
     },
   });
+
+  const createTransactionMutation = useMutation({
+    mutationFn: (data: Parameters<typeof api.createTransaction>[0]) =>
+      api.createTransaction(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['transactions', activeProfileId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['dashboard', activeProfileId],
+      });
+      setAddTransactionModalOpen(false);
+      resetAddTransactionForm();
+      toast.success(t.transactions.transactionAdded || 'Transactie toegevoegd');
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
+
+  const handleAddTransactionSubmit = () => {
+    const errors: { amount?: string; date?: string } = {};
+
+    const raw = addTxAmount.replace(',', '.');
+    const parsed = parseFloat(raw);
+    if (!addTxAmount.trim()) {
+      errors.amount =
+        language === 'nl' ? 'Bedrag is verplicht' : 'Amount is required';
+    } else if (isNaN(parsed) || parsed <= 0) {
+      errors.amount =
+        language === 'nl'
+          ? 'Voer een geldig positief bedrag in'
+          : 'Enter a valid positive amount';
+    }
+
+    if (!addTxDate) {
+      errors.date =
+        language === 'nl' ? 'Datum is verplicht' : 'Date is required';
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setAddTxErrors(errors);
+      return;
+    }
+
+    setAddTxErrors({});
+
+    // For expenses, store as negative; for income as positive; for transfers use direction toggle
+    const absAmount = Math.abs(parsed);
+    const amount =
+      addTxType === 'expense'
+        ? -absAmount
+        : addTxType === 'income'
+          ? absAmount
+          : addTxTransferOutgoing
+            ? -absAmount
+            : absAmount;
+
+    const selectedContact = addTxAddressBookId
+      ? addressBook?.find((e) => e.id === addTxAddressBookId) || null
+      : null;
+
+    createTransactionMutation.mutate({
+      date: addTxDate,
+      amount,
+      type: addTxType,
+      description: addTxDescription || null,
+      merchantName: selectedContact?.name || addTxCounterparty || null,
+      opposingAccountName: selectedContact?.name || addTxCounterparty || null,
+      opposingAccountIban: selectedContact?.iban || null,
+      categoryId: addTxCategoryId || null,
+      accountId: addTxAccountId || null,
+      paymentMethod: addTxPaymentMethod || null,
+      paymentProvider: addTxPaymentProcessor || null,
+      addressBookId: addTxAddressBookId || null,
+    });
+  };
 
   const detectInternalTransfersMutation = useMutation({
     mutationFn: () => api.detectInternalTransfers(),
@@ -4260,6 +4386,436 @@ export default function Transactions() {
             isUndoing={bulkDelete.isUndoing}
           />
         )}
+
+        {/* Floating Add Transaction Button */}
+        {!transactionSelection.isSelecting && (
+          <TooltipProvider delayDuration={100}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={() => {
+                    // Pre-select the first account if none selected yet
+                    if (!addTxAccountId && accounts && accounts.length === 1) {
+                      setAddTxAccountId(accounts[0].id);
+                    }
+                    setAddTransactionModalOpen(true);
+                  }}
+                  className='fixed right-6 bottom-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-purple-600 text-white shadow-lg transition-all hover:scale-105 hover:bg-purple-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2 active:scale-95'
+                  aria-label={
+                    t.transactions.addTransaction || 'Transactie toevoegen'
+                  }
+                >
+                  <Plus className='h-6 w-6' />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side='left'>
+                {t.transactions.addTransaction || 'Transactie toevoegen'}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
+
+        {/* Add Transaction Modal */}
+        <Dialog
+          open={addTransactionModalOpen}
+          onOpenChange={(open) => {
+            setAddTransactionModalOpen(open);
+            if (!open) resetAddTransactionForm();
+          }}
+        >
+          <DialogContent className='flex max-h-[85vh] max-w-lg flex-col'>
+            <DialogHeader className='flex-shrink-0'>
+              <DialogTitle>
+                {t.transactions.addTransaction || 'Transactie toevoegen'}
+              </DialogTitle>
+              <DialogDescription>
+                {t.transactions.addTransactionDescription ||
+                  'Voeg handmatig een transactie toe.'}
+              </DialogDescription>
+            </DialogHeader>
+            <div className='min-h-0 flex-1 overflow-y-auto'>
+              <div className='space-y-4 py-2 pr-1'>
+                {/* Type selector */}
+                <div className='space-y-2'>
+                  <label className='text-sm font-medium'>
+                    {t.transactions.type || 'Type'}
+                  </label>
+                  <div className='flex gap-2'>
+                    {(['income', 'expense', 'transfer'] as const).map(
+                      (type) => (
+                        <button
+                          key={type}
+                          onClick={() => setAddTxType(type)}
+                          className={cn(
+                            'flex-1 rounded-md border px-3 py-2 text-sm font-medium transition-colors',
+                            addTxType === type
+                              ? type === 'income'
+                                ? 'border-emerald-500 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400'
+                                : type === 'expense'
+                                  ? 'border-rose-500 bg-rose-50 text-rose-700 dark:bg-rose-950/30 dark:text-rose-400'
+                                  : 'border-blue-500 bg-blue-50 text-blue-700 dark:bg-blue-950/30 dark:text-blue-400'
+                              : 'border-border text-muted-foreground hover:bg-muted'
+                          )}
+                        >
+                          {type === 'income'
+                            ? t.transactions.income
+                            : type === 'expense'
+                              ? t.transactions.expense
+                              : t.transactions.transfer}
+                        </button>
+                      )
+                    )}
+                  </div>
+                </div>
+
+                {/* Transfer direction toggle — only for transfer type */}
+                {addTxType === 'transfer' && (
+                  <div className='space-y-2'>
+                    <label className='text-sm font-medium'>Richting</label>
+                    <div className='flex gap-2'>
+                      <button
+                        onClick={() => setAddTxTransferOutgoing(true)}
+                        className={cn(
+                          'flex flex-1 items-center justify-center gap-2 rounded-md border px-3 py-2 text-sm font-medium transition-colors',
+                          addTxTransferOutgoing
+                            ? 'border-blue-800 bg-blue-50 text-blue-800 dark:bg-blue-950/30 dark:text-blue-300'
+                            : 'border-border text-muted-foreground hover:bg-muted'
+                        )}
+                      >
+                        <Download className='h-4 w-4' />
+                        {t.transactions.transferDeposit || 'Storting'}
+                      </button>
+                      <button
+                        onClick={() => setAddTxTransferOutgoing(false)}
+                        className={cn(
+                          'flex flex-1 items-center justify-center gap-2 rounded-md border px-3 py-2 text-sm font-medium transition-colors',
+                          !addTxTransferOutgoing
+                            ? 'border-blue-500 bg-blue-50 text-blue-600 dark:bg-blue-950/30 dark:text-blue-400'
+                            : 'border-border text-muted-foreground hover:bg-muted'
+                        )}
+                      >
+                        <Upload className='h-4 w-4' />
+                        {t.transactions.transferWithdrawal || 'Opname'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Amount + Date — two columns */}
+                <div className='grid grid-cols-2 gap-3'>
+                  <div className='space-y-1'>
+                    <label className='flex items-center gap-1 text-sm font-medium'>
+                      {t.transactions.amount || 'Bedrag'}
+                      <span className='text-destructive'>*</span>
+                    </label>
+                    <div className='relative'>
+                      <span className='absolute top-1/2 left-3 -translate-y-1/2 text-muted-foreground'>
+                        €
+                      </span>
+                      <Input
+                        type='text'
+                        inputMode='decimal'
+                        value={addTxAmount}
+                        onChange={(e) => {
+                          // Strip minus signs — direction is controlled by type/toggle
+                          const val = e.target.value.replace(/-/g, '');
+                          setAddTxAmount(val);
+                          if (addTxErrors.amount)
+                            setAddTxErrors((prev) => ({
+                              ...prev,
+                              amount: undefined,
+                            }));
+                        }}
+                        placeholder={t.transactions.amountPlaceholder || '0,00'}
+                        className={cn(
+                          'pl-7',
+                          addTxErrors.amount &&
+                            'border-destructive focus-visible:ring-destructive'
+                        )}
+                        autoFocus
+                      />
+                    </div>
+                    {addTxErrors.amount && (
+                      <p className='flex items-center gap-1 text-xs text-destructive'>
+                        <AlertCircle className='h-3 w-3 flex-shrink-0' />
+                        {addTxErrors.amount}
+                      </p>
+                    )}
+                  </div>
+                  <div className='space-y-1'>
+                    <label className='flex items-center gap-1 text-sm font-medium'>
+                      {t.transactions.date || 'Datum'}
+                      <span className='text-destructive'>*</span>
+                    </label>
+                    <Input
+                      type='date'
+                      value={addTxDate}
+                      onChange={(e) => {
+                        setAddTxDate(e.target.value);
+                        if (addTxErrors.date)
+                          setAddTxErrors((prev) => ({
+                            ...prev,
+                            date: undefined,
+                          }));
+                      }}
+                      className={cn(
+                        addTxErrors.date &&
+                          'border-destructive focus-visible:ring-destructive'
+                      )}
+                    />
+                    {addTxErrors.date && (
+                      <p className='flex items-center gap-1 text-xs text-destructive'>
+                        <AlertCircle className='h-3 w-3 flex-shrink-0' />
+                        {addTxErrors.date}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Description */}
+                <div className='space-y-2'>
+                  <label className='text-sm font-medium'>
+                    {t.transactions.description || 'Omschrijving'}
+                  </label>
+                  <Input
+                    value={addTxDescription}
+                    onChange={(e) => setAddTxDescription(e.target.value)}
+                    placeholder={
+                      t.transactions.descriptionPlaceholder || 'Omschrijving...'
+                    }
+                  />
+                </div>
+
+                {/* Counterparty / Address book */}
+                <div className='space-y-2'>
+                  <label className='text-sm font-medium'>
+                    {t.transactions.manualCounterparty || 'Tegenrekening'}
+                  </label>
+                  {addTxAddressBookId ? (
+                    <div className='flex items-center gap-2 rounded-md border bg-muted/50 px-3 py-2'>
+                      <Users className='h-4 w-4 flex-shrink-0 text-purple-600' />
+                      <span className='flex-1 truncate text-sm'>
+                        {addressBook?.find((e) => e.id === addTxAddressBookId)
+                          ?.name || ''}
+                      </span>
+                      <button
+                        className='text-muted-foreground hover:text-foreground'
+                        onClick={() => setAddTxAddressBookId(null)}
+                      >
+                        <X className='h-4 w-4' />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className='relative'>
+                      <Input
+                        value={addTxCounterparty}
+                        onChange={(e) => setAddTxCounterparty(e.target.value)}
+                        placeholder={
+                          t.transactions.manualCounterpartyPlaceholder ||
+                          'Naam tegenrekening...'
+                        }
+                        className='pr-9'
+                      />
+                      <Popover
+                        open={addTxAddressBookOpen}
+                        onOpenChange={setAddTxAddressBookOpen}
+                      >
+                        <TooltipProvider delayDuration={100}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <PopoverTrigger asChild>
+                                <button
+                                  type='button'
+                                  className='absolute top-1/2 right-2 -translate-y-1/2 rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground'
+                                  onClick={() => {
+                                    setAddTxAddressBookSearch('');
+                                    setAddTxAddressBookOpen(true);
+                                  }}
+                                >
+                                  <Users className='h-4 w-4' />
+                                </button>
+                              </PopoverTrigger>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              {t.transactions.orSelectFromAddressBook ||
+                                'Selecteer uit adresboek'}
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                        <PopoverContent className='w-64 p-2' align='end'>
+                          <Input
+                            placeholder={t.common.search || 'Zoeken...'}
+                            value={addTxAddressBookSearch}
+                            onChange={(e) =>
+                              setAddTxAddressBookSearch(e.target.value)
+                            }
+                            className='mb-2 h-8 text-sm'
+                            autoFocus
+                          />
+                          <div className='max-h-48 overflow-y-auto'>
+                            {addressBook
+                              ?.filter((e) =>
+                                e.name
+                                  .toLowerCase()
+                                  .includes(
+                                    addTxAddressBookSearch.toLowerCase()
+                                  )
+                              )
+                              .sort((a, b) => a.name.localeCompare(b.name))
+                              .map((entry) => (
+                                <button
+                                  key={entry.id}
+                                  className='w-full rounded px-2 py-1.5 text-left text-sm hover:bg-muted'
+                                  onClick={() => {
+                                    setAddTxAddressBookId(entry.id);
+                                    setAddTxCounterparty('');
+                                    setAddTxAddressBookOpen(false);
+                                  }}
+                                >
+                                  <div className='font-medium'>
+                                    {entry.name}
+                                  </div>
+                                  {entry.iban && (
+                                    <div className='truncate text-xs text-muted-foreground'>
+                                      {entry.iban}
+                                    </div>
+                                  )}
+                                </button>
+                              ))}
+                            {(addressBook?.filter((e) =>
+                              e.name
+                                .toLowerCase()
+                                .includes(addTxAddressBookSearch.toLowerCase())
+                            ).length ?? 0) === 0 && (
+                              <div className='py-4 text-center text-sm text-muted-foreground'>
+                                {t.addressBook?.noContactsFound ||
+                                  'Geen contacten gevonden'}
+                              </div>
+                            )}
+                          </div>
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                  )}
+                </div>
+
+                {/* Category */}
+                <div className='space-y-2'>
+                  <label className='text-sm font-medium'>
+                    {t.transactions.categories || 'Categorie'}
+                  </label>
+                  <select
+                    value={addTxCategoryId || ''}
+                    onChange={(e) => setAddTxCategoryId(e.target.value || null)}
+                    className='w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:ring-2 focus:ring-ring focus:outline-none'
+                  >
+                    <option value=''>
+                      {t.transactions.noCategory || 'Geen categorie'}
+                    </option>
+                    {groupedCategories.map((cat) => (
+                      <option key={cat.id} value={cat.id}>
+                        {cat.isChild
+                          ? `  ${cat.icon || ''} ${cat.name}`.trim()
+                          : `${cat.icon || ''} ${cat.name}`.trim()}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Account + Payment method — two columns */}
+                <div className='grid grid-cols-2 gap-3'>
+                  <div className='space-y-2'>
+                    <label className='text-sm font-medium'>
+                      {t.transactions.account || 'Rekening'}
+                    </label>
+                    <select
+                      value={addTxAccountId || ''}
+                      onChange={(e) =>
+                        setAddTxAccountId(e.target.value || null)
+                      }
+                      className='w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:ring-2 focus:ring-ring focus:outline-none'
+                    >
+                      <option value=''>
+                        {t.transactions.noAccount || 'Geen rekening'}
+                      </option>
+                      {accounts?.map((acc) => (
+                        <option key={acc.id} value={acc.id}>
+                          {acc.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className='space-y-2'>
+                    <label className='text-sm font-medium'>
+                      {t.transactions.paymentMethodFilter || 'Betaalmethode'}
+                    </label>
+                    <select
+                      value={addTxPaymentMethod || ''}
+                      onChange={(e) =>
+                        setAddTxPaymentMethod(e.target.value || null)
+                      }
+                      className='w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:ring-2 focus:ring-ring focus:outline-none'
+                    >
+                      <option value=''>
+                        {t.transactions.noPaymentMethod || 'Geen betaalmethode'}
+                      </option>
+                      {paymentMethods.map((m) => (
+                        <option key={m.value} value={m.value}>
+                          {m.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Payment processor */}
+                {paymentProviderRules.length > 0 && (
+                  <div className='space-y-2'>
+                    <label className='text-sm font-medium'>
+                      {t.transactions.paymentProcessorFilter ||
+                        'Betaalverwerker'}
+                    </label>
+                    <select
+                      value={addTxPaymentProcessor || ''}
+                      onChange={(e) =>
+                        setAddTxPaymentProcessor(e.target.value || null)
+                      }
+                      className='w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:ring-2 focus:ring-ring focus:outline-none'
+                    >
+                      <option value=''>
+                        {t.transactions.noPaymentProcessor ||
+                          'Geen betaalverwerker'}
+                      </option>
+                      {paymentProviderRules.map((r) => (
+                        <option key={r.id} value={r.name}>
+                          {r.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+              </div>
+            </div>
+            <DialogFooter className='flex-shrink-0 border-t pt-4'>
+              <Button
+                variant='outline'
+                onClick={() => setAddTransactionModalOpen(false)}
+              >
+                {t.common.cancel}
+              </Button>
+              <Button
+                onClick={handleAddTransactionSubmit}
+                disabled={createTransactionMutation.isPending}
+                className='bg-purple-600 hover:bg-purple-700'
+              >
+                {createTransactionMutation.isPending ? (
+                  <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                ) : null}
+                {t.common.add || 'Toevoegen'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </>
   );

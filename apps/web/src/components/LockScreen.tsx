@@ -64,6 +64,20 @@ export function LockScreen({
     return () => viewport.removeEventListener('resize', handleResize);
   }, []);
 
+  // Dev-mode auto-unlock: if VITE_DEV_PASSWORD is set, auto-submit on mount
+  useEffect(() => {
+    const devPassword = import.meta.env.VITE_DEV_PASSWORD as string | undefined;
+    if (!devPassword || !isEncryptionEnabled || showSetup) return;
+
+    setIsLoading(true);
+    unlock(devPassword).then((success) => {
+      if (!success) {
+        setIsLoading(false);
+      }
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Determine if we're in setup mode
   const isSetupMode = showSetup || !isEncryptionEnabled;
   // NOTE: Biometrics are intentionally not supported on the lock screen.

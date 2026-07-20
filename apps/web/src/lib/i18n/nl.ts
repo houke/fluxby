@@ -362,6 +362,21 @@ export interface TranslationKeys {
     markedMultipleAsTransfer: string;
     removedMultipleTransferMarks: string;
     type: string;
+    addTransaction: string;
+    addTransactionDescription: string;
+    transactionAdded: string;
+    manualCounterparty: string;
+    manualCounterpartyPlaceholder: string;
+    orSelectFromAddressBook: string;
+    account: string;
+    selectAccount: string;
+    amountPlaceholder: string;
+    descriptionPlaceholder: string;
+    datePlaceholder: string;
+    noPaymentMethod: string;
+    noAccount: string;
+    transferDeposit: string;
+    transferWithdrawal: string;
   };
   analytics: {
     title: string;
@@ -1779,6 +1794,22 @@ export const nl: TranslationKeys = {
     removedMultipleTransferMarks:
       'Overboeking markering verwijderd van {count} transacties',
     type: 'Type',
+    addTransaction: 'Transactie toevoegen',
+    addTransactionDescription:
+      'Voeg handmatig een transactie toe aan je overzicht.',
+    transactionAdded: 'Transactie toegevoegd',
+    manualCounterparty: 'Tegenrekening naam',
+    manualCounterpartyPlaceholder: 'Naam van tegenrekening...',
+    orSelectFromAddressBook: 'of selecteer uit adresboek',
+    account: 'Rekening',
+    selectAccount: 'Selecteer rekening',
+    amountPlaceholder: '0,00',
+    descriptionPlaceholder: 'Omschrijving van de transactie...',
+    datePlaceholder: 'Selecteer datum',
+    noPaymentMethod: 'Geen betaalmethode',
+    noAccount: 'Geen rekening',
+    transferDeposit: 'Storting',
+    transferWithdrawal: 'Opname',
   },
   analytics: {
     title: 'Analyse',

@@ -83,7 +83,7 @@ let moduleInitStarted = false;
 let moduleInitError: Error | null = null;
 
 // Reset module state (for testing or error recovery)
-export function resetModuleInitState() {
+function resetModuleInitState() {
   moduleInitStarted = false;
   moduleInitError = null;
 }

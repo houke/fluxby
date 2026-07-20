@@ -34,6 +34,11 @@ export default defineConfig({
   },
   server: {
     port: 5177, // Landing page port
+    // Headers required for SharedArrayBuffer (needed for SQLite WASM in the proxied /app)
+    headers: {
+      'Cross-Origin-Opener-Policy': 'same-origin',
+      'Cross-Origin-Embedder-Policy': 'require-corp',
+    },
     proxy: {
       // Proxy /app to the web app dev server
       // The web app is configured with base: '/app/' so we forward requests directly

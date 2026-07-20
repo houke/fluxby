@@ -122,6 +122,25 @@ export const api = {
     return ds.getTransactions(filters);
   },
 
+  createTransaction: async (data: {
+    date: string;
+    amount: number;
+    type: 'income' | 'expense' | 'transfer';
+    description?: string | null;
+    merchantName?: string | null;
+    accountId?: string | null;
+    opposingAccountIban?: string | null;
+    opposingAccountName?: string | null;
+    categoryId?: string | null;
+    notes?: string | null;
+    paymentMethod?: string | null;
+    paymentProvider?: string | null;
+    addressBookId?: string | null;
+  }): Promise<string> => {
+    const ds = getDataService();
+    return ds.createTransaction(data);
+  },
+
   updateTransaction: async (
     id: string,
     data: {

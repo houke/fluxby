@@ -262,10 +262,11 @@ export class Database implements DatabaseConnection {
       } catch (err) {
         wasmLog('Initialization failed:', err);
 
-        // If we get "file is not a database" error, try to recover by clearing IndexedDB
+        // If we get "file is not a database" or "sqlite3_open_v2" error, try to recover by clearing IndexedDB
         const errorMessage = err instanceof Error ? err.message : String(err);
         if (
-          errorMessage.includes('file is not a database') &&
+          (errorMessage.includes('file is not a database') ||
+            errorMessage.includes('sqlite3_open_v2')) &&
           typeof indexedDB !== 'undefined'
         ) {
           wasmLog(
@@ -432,8 +433,17 @@ export class Database implements DatabaseConnection {
 
       // Try to use OPFS VFS if available (browser with OPFS support)
       // Skip OPFS for Tauri - use IndexedDB instead for better compatibility
+      // Skip OPFS in dev mode - the exclusive FileSystemSyncAccessHandle lock
+      // is not reliably released between page refreshes in development, causing
+      // "xFileControl unexpectedly returned a Promise" errors. IDB doesn't have
+      // this problem and is used as the primary VFS in dev for a smooth DX.
+      const isDevelopment =
+        typeof window !== 'undefined' &&
+        (window.location.hostname === 'localhost' ||
+          window.location.hostname === '127.0.0.1');
       const shouldUseOPFS =
         !isTauri() &&
+        !isDevelopment &&
         typeof navigator !== 'undefined' &&
         'storage' in navigator &&
         'getDirectory' in navigator.storage;
@@ -997,6 +1007,21 @@ export class Database implements DatabaseConnection {
   }
 
   /**
+   * Force-close the database and release OPFS handles.
+   * Only call this during cleanup (HMR, page unload) — not during normal operation.
+   */
+  static async forceClose(): Promise<void> {
+    if (cachedSqlite3 && cachedDbHandle !== null) {
+      try {
+        await cachedSqlite3.close(cachedDbHandle);
+      } catch {
+        // Best-effort — ignore errors during cleanup
+      }
+    }
+    resetSingletonState();
+  }
+
+  /**
    * Ensure database is open
    */
   private ensureOpen(): void {
@@ -1199,6 +1224,40 @@ class WaSqlitePreparedStatement implements PreparedStatement {
 }
 
 export type { DatabaseConnection, DatabaseOptions };
+
+// ── OPFS handle cleanup ───────────────────────────────────────────────────────
+// Release the OPFS access handle when the page/worker unloads or HMR replaces
+// this module. Without this, stale handles prevent the next load from opening
+// the database (causing "xFileControl unexpectedly returned a Promise").
+
+if (typeof window !== 'undefined') {
+  // Page close / navigation
+  window.addEventListener('beforeunload', () => {
+    if (cachedSqlite3 && cachedDbHandle !== null) {
+      // SQLite close is async but beforeunload must be synchronous.
+      // We schedule the close and let the browser attempt it; modern browsers
+      // keep the page alive briefly to let microtasks flush.
+      const sqlite3 = cachedSqlite3;
+      const dbHandle = cachedDbHandle;
+      void (async () => {
+        try {
+          await sqlite3.close(dbHandle);
+        } catch {
+          /* best-effort */
+        }
+      })();
+    }
+  });
+}
+
+// Vite HMR: properly close the database before the module is replaced
+// This guarantees the OPFS FileSystemSyncAccessHandle is released before
+// the next module instance tries to acquire it.
+if (typeof (import.meta as any).hot !== 'undefined') {
+  (import.meta as any).hot.dispose(async () => {
+    await Database.forceClose();
+  });
+}
 
 /**
  * Migrate unencrypted database data to encrypted format

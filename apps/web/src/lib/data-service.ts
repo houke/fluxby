@@ -693,9 +693,9 @@ export function createDataService(db: Database) {
         FROM transactions t
         LEFT JOIN categories c ON t.category_id = c.id
         LEFT JOIN accounts a ON t.account_id = a.id
-        WHERE a.profile_id = ? AND t.is_deleted = 0
+        WHERE (a.profile_id = ? OR t.account_id IS NULL) AND t.profile_id = ? AND t.is_deleted = 0
       `;
-      const params: unknown[] = [pid];
+      const params: unknown[] = [pid, pid];
 
       if (filters) {
         if (filters.startDate) {
@@ -905,9 +905,9 @@ export function createDataService(db: Database) {
           COUNT(*) as count
         FROM transactions t
         LEFT JOIN accounts a ON t.account_id = a.id
-        WHERE a.profile_id = ? AND t.is_deleted = 0
+        WHERE (a.profile_id = ? OR t.account_id IS NULL) AND t.profile_id = ? AND t.is_deleted = 0
       `;
-      const params: unknown[] = [pid];
+      const params: unknown[] = [pid, pid];
 
       if (filters) {
         if (filters.startDate) {
@@ -1042,6 +1042,58 @@ export function createDataService(db: Database) {
         balance: result.income - result.expenses,
         count: result.count,
       };
+    },
+
+    async createTransaction(data: {
+      date: string;
+      amount: number;
+      type: 'income' | 'expense' | 'transfer';
+      description?: string | null;
+      merchantName?: string | null;
+      accountId?: string | null;
+      opposingAccountIban?: string | null;
+      opposingAccountName?: string | null;
+      categoryId?: string | null;
+      notes?: string | null;
+      paymentMethod?: string | null;
+      paymentProvider?: string | null;
+      addressBookId?: string | null;
+    }): Promise<string> {
+      const pid = profileId();
+      if (!pid) throw new Error('No active profile');
+
+      const id = crypto.randomUUID();
+      const now = Date.now();
+
+      await db.runAsync(
+        `INSERT INTO transactions (
+          id, date, amount, type, description, merchant_name, account_id,
+          opposing_account_iban, opposing_account_name, category_id, notes,
+          payment_method, payment_provider, address_book_id, profile_id,
+          updated_at, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          id,
+          data.date,
+          data.amount,
+          data.type,
+          data.description || null,
+          data.merchantName || null,
+          data.accountId || null,
+          data.opposingAccountIban || null,
+          data.opposingAccountName || null,
+          data.categoryId || null,
+          data.notes || null,
+          data.paymentMethod || null,
+          data.paymentProvider || null,
+          data.addressBookId || null,
+          pid,
+          now,
+          now,
+        ]
+      );
+
+      return id;
     },
 
     async updateTransaction(
@@ -1336,10 +1388,10 @@ export function createDataService(db: Database) {
           COALESCE(SUM(CASE WHEN t.type = 'expense' THEN ABS(t.amount) ELSE 0 END), 0) as totalExpenses,
           COUNT(t.id) as transactionCount
         FROM transactions t
-        JOIN accounts a ON t.account_id = a.id
-        WHERE a.profile_id = ? AND t.is_deleted = 0
+        LEFT JOIN accounts a ON t.account_id = a.id
+        WHERE (a.profile_id = ? OR t.account_id IS NULL) AND t.profile_id = ? AND t.is_deleted = 0
       `;
-      const params: unknown[] = [pid];
+      const params: unknown[] = [pid, pid];
 
       if (startDate) {
         sql += ' AND t.date >= ?';
@@ -1371,8 +1423,7 @@ export function createDataService(db: Database) {
       const results = await db.queryAsync<{ year: number }>(
         `SELECT DISTINCT CAST(strftime('%Y', t.date) AS INTEGER) as year
          FROM transactions t
-         JOIN accounts a ON t.account_id = a.id
-         WHERE a.profile_id = ? AND t.is_deleted = 0
+         WHERE t.profile_id = ? AND t.is_deleted = 0
          ORDER BY year DESC`,
         [pid]
       );
@@ -1398,10 +1449,10 @@ export function createDataService(db: Database) {
           COALESCE(SUM(CASE WHEN t.type = 'transfer' AND t.amount < 0 THEN ABS(t.amount) ELSE 0 END), 0) as transferToSavings,
           COALESCE(SUM(CASE WHEN t.type = 'transfer' AND t.amount > 0 THEN t.amount ELSE 0 END), 0) as transferFromSavings
         FROM transactions t
-        JOIN accounts a ON t.account_id = a.id
-        WHERE a.profile_id = ? AND t.is_deleted = 0
+        LEFT JOIN accounts a ON t.account_id = a.id
+        WHERE (a.profile_id = ? OR t.account_id IS NULL) AND t.profile_id = ? AND t.is_deleted = 0
       `;
-      const params: unknown[] = [pid];
+      const params: unknown[] = [pid, pid];
 
       if (startDate) {
         sql += ' AND t.date >= ?';
@@ -1436,8 +1487,7 @@ export function createDataService(db: Database) {
       }>(
         `SELECT MIN(t.date) as minDate, MAX(t.date) as maxDate
          FROM transactions t
-         JOIN accounts a ON t.account_id = a.id
-         WHERE a.profile_id = ? AND t.is_deleted = 0`,
+         WHERE t.profile_id = ? AND t.is_deleted = 0`,
         [pid]
       );
 
@@ -1531,16 +1581,14 @@ export function createDataService(db: Database) {
       const beforeResult = await db.queryOneAsync<{ count: number }>(
         `SELECT COUNT(*) as count
          FROM transactions t
-         JOIN accounts a ON t.account_id = a.id
-         WHERE a.profile_id = ? AND t.is_deleted = 0 AND t.date < ?${filterClause}`,
+         WHERE t.profile_id = ? AND t.is_deleted = 0 AND t.date < ?${filterClause}`,
         [pid, startDate, ...filterParams]
       );
 
       const afterResult = await db.queryOneAsync<{ count: number }>(
         `SELECT COUNT(*) as count
          FROM transactions t
-         JOIN accounts a ON t.account_id = a.id
-         WHERE a.profile_id = ? AND t.is_deleted = 0 AND t.date > ?${filterClause}`,
+         WHERE t.profile_id = ? AND t.is_deleted = 0 AND t.date > ?${filterClause}`,
         [pid, endDate, ...filterParams]
       );
 
