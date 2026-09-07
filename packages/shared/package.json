@@ -18,10 +18,10 @@
     "dev": "tsc --watch"
   },
   "dependencies": {
-    "react": "^19.2.7"
+    "react": "^19.2.8"
   },
   "devDependencies": {
-    "@types/react": "^19.2.17",
+    "@types/react": "^19.2.18",
     "typescript": "^5.7.2"
   }
 }

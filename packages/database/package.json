@@ -40,7 +40,7 @@
   },
   "peerDependencies": {
     "@tauri-apps/api": "^2.11.1",
-    "@tauri-apps/plugin-fs": "^2.5.1"
+    "@tauri-apps/plugin-fs": "^2.5.2"
   },
   "peerDependenciesMeta": {
     "@tauri-apps/api": {
