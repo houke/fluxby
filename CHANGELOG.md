@@ -1,5 +1,114 @@
 # Changelog
 
+## v1.10.0
+
+**Release Date:** 2026-09-08
+
+### Features
+
+- **web:** add restore-from-backup UI for Tauri desktop
+- **web:** add pre-update database backup for Tauri desktop updates
+- **security:** add CSP headers for XSS protection
+- **api:** add centralized ReDoS protection utilities (P2-004)
+- **api:** expand Zod validation to all routes (P2-003)
+- **api:** add Zod validation schemas for all API endpoints
+- **api:** add rate limiting middleware (P2-002)
+- **api:** add rate limiting middleware for API protection
+- **web:** add encrypted backup with checksum verification (P2-001)
+- **web:** add encrypted backup functionality with checksum verification
+- **web:** add Sentry error tracking with privacy config
+- **shared:** add retry utility with exponential backoff
+- **shared:** upgrade import hash to SHA-256
+- **web:** enable OPFS database encryption
+
+### Bug Fixes
+
+- **web:** cast recharts labelFormatter label to string | number
+- **security:** fix 7 npm audit vulnerabilities
+- **web:** correct account balances after import
+- **deps:** update ip-address to 10.2.0 in lock file to fix npm ci
+- **deps:** address 5 moderate security vulnerabilities
+- **agents.md:** remove project structures
+- **test:** relax flaky benchmark timing tolerance to 3x for CI
+- **security:** resolve 6 CodeQL alerts
+- **security:** patch Rust vulnerabilities in Tauri Cargo.lock
+- **security:** bump postcss to >=8.5.10 to fix XSS vulnerability
+- **web:** update pre-update backup tests and openapi spec
+- **api:** use global rate limiter on read-only payment-provider-rules route
+- **security:** resolve CodeQL alerts #37-52
+- **security:** move IBAN lookup to POST body, clarify base64 comment
+- remediate CodeQL security alerts
+- reverse tooltip order
+- **ci:** disable updater artifacts in Tauri debug builds via config override
+- **ci:** remove --bundles flag from Tauri debug build, update deprecated actions
+- **ci:** fix Tauri PR check build - remove invalid --bundles none flag
+- **ci:** remove invalid description field from workflow
+- resolve 77 lint warnings across codebase
+- **database:** declare @fluxby/shared dependency
+- **web:** prevent XSS in error display using DOM APIs
+- **encryption:** implement wrapped master key architecture for password changes
+
+### Chores
+
+- update package-lock.json after npm install
+- **deps:** bump tauri from 2.11.3 to 2.11.5 in /apps/tauri (#100)
+- **deps:** bump tauri-plugin-fs from 2.5.1 to 2.5.2 in /apps/tauri (#125)
+- **deps:** bump tauri-plugin-shell from 2.3.5 to 2.3.6 in /apps/tauri (#126)
+- **deps:** bump tauri-plugin-updater in /apps/tauri (#127)
+- **deps:** bump tauri-plugin-dialog from 2.7.2 to 2.7.3 in /apps/tauri (#128)
+- **deps:** bump body-parser from 2.2.1 to 2.3.0 (#98)
+- **deps:** bump brace-expansion from 1.1.13 to 1.1.18 (#106)
+- **deps:** bump esbuild from 0.27.7 to 0.28.2 (#109)
+- **deps:** bump nanoid from 3.3.11 to 3.3.18 (#112)
+- **deps:** bump fast-uri from 3.1.2 to 3.1.7 (#118)
+- **deps:** bump js-yaml from 4.3.0 to 4.3.2 (#119)
+- **deps:** bump ip-address from 10.2.0 to 10.7.0 (#120)
+- **deps:** bump qs from 6.15.2 to 6.16.0 (#121)
+- **deps:** bump @humanfs/node from 0.16.7 to 0.16.8 (#122)
+- **deps:** bump postcss from 8.5.12 to 8.5.28 (#124)
+- **deps:** bump the dev-dependencies group across 1 directory with 10 updates (#129)
+- **deps:** bump the production-dependencies group across 1 directory with 27 updates (#130)
+- **deps:** bump browserslist from 4.28.6 to 4.28.9 (#131)
+- **deps:** bump the production-dependencies group across 1 directory with 29 updates (#96)
+- **deps:** bump serde_with (#95)
+- **deps:** bump the dev-dependencies group across 1 directory with 16 updates (#93)
+- **deps:** bump tauri-plugin-dialog from 2.7.1 to 2.7.2 in /apps/tauri (#92)
+- **deps:** bump serde from 1.0.228 to 1.0.229 in /apps/tauri (#91)
+- **deps:** bump serde_json from 1.0.150 to 1.0.151 in /apps/tauri (#90)
+- **deps:** bump js-yaml from 4.1.1 to 4.3.0 (#82)
+- **deps:** bump tauri from 2.11.2 to 2.11.3 in /apps/tauri (#79)
+- **deps:** bump tauri-build from 2.6.2 to 2.6.3 in /apps/tauri (#78)
+- **deps:** bump form-data from 4.0.5 to 4.0.6 (#76)
+- **deps:** bump multer from 2.1.1 to 2.2.0 (#75)
+- **deps:** bump esbuild from 0.27.2 to 0.27.7 (#72)
+- **deps:** bump qs from 6.15.0 to 6.15.2 (#63)
+- **api:** update bruno collection and openapi spec; fix package.json
+- **deps:** bump all dependencies from dependabot PRs #51-#64
+- **deps:** bump all dependencies from Dependabot PRs #43, #46, #47
+- consolidate dependency updates and fix CodeQL alerts
+- **deps:** apply all dependabot updates from open PRs
+- **deps:** bump remaining dependabot dependencies (PRs #17, #18)
+- **deps:** bump all dependabot dependencies
+- code review fixes for security audit
+
+### CI/CD
+
+- **deps:** bump actions/setup-node from 6 to 7 (#89)
+- **deps:** bump tauri-apps/tauri-action from 0 to 1 (#85)
+- **deps:** bump actions/checkout from 6 to 7 (#77)
+- **deps:** bump codecov/codecov-action from 6 to 7 (#70)
+- add comprehensive CI/CD configuration for security audit
+- **pr-check:** add lint, typecheck, and tests to PR workflow
+
+### Other Changes
+
+- update transaction row visual
+- formatting
+- update lock
+- remove mcp servers, use nexus as plugin instead
+- fix workflow
+- tests
+
 ## v1.9.0
 
 **Release Date:** 2026-03-08

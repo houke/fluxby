@@ -33,6 +33,41 @@ const UpdatesContent = () => {
   const updatesPage = t.legal?.updatesPage;
 
   const releases = [
+        {
+      version: '1.10.0',
+      date: updatesPage?.v1100Date || '8 september 2026',
+      title: updatesPage?.v1100Title || 'Release 1.10.0',
+      description:
+        updatesPage?.v1100Description ||
+        '14 nieuwe features en 24 bugfixes.',
+      features: [
+        {
+          icon: Globe,
+          title: updatesPage?.v1100F1Title || 'Web app uitbreidingen',
+          description: updatesPage?.v1100F1Desc || '6 nieuwe mogelijkheden om te ontdekken. Bekijk de release notes!',
+        },
+        {
+          icon: Shield,
+          title: updatesPage?.v1100F2Title || 'Toegevoegd csp headers for xss protection',
+          description: updatesPage?.v1100F2Desc || 'We hebben iets nieuws voor je! Bekijk de release notes voor alle details.',
+        },
+        {
+          icon: BookOpen,
+          title: updatesPage?.v1100F3Title || 'API verbeteringen',
+          description: updatesPage?.v1100F3Desc || '5 nieuwe mogelijkheden om te ontdekken. Bekijk de release notes!',
+        },
+        {
+          icon: Share2,
+          title: updatesPage?.v1100F4Title || 'Gedeelde functionaliteit',
+          description: updatesPage?.v1100F4Desc || '2 nieuwe features. Bekijk de release op GitHub!',
+        },
+        {
+          icon: Wrench,
+          title: updatesPage?.v1100F5Title || 'Bugfixes',
+          description: updatesPage?.v1100F5Desc || '24 bugs opgelost. Zie changelog voor details.',
+        },
+      ],
+    },
     {
       version: '1.9.0',
       date: updatesPage?.v190Date || '8 maart 2026',
