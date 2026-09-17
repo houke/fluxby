@@ -110,8 +110,9 @@ export class EncryptionVFS extends FacadeVFS {
 
   /**
    * Check if database is unencrypted on first read.
-   * SECURITY: If unencrypted data is detected, throw an error.
-   * This prevents accidentally exposing unencrypted data.
+   * If unencrypted data is detected, throw an error that triggers the wa-sqlite
+   * recovery path (clears IndexedDB and reloads) so a fresh encrypted database
+   * is created on the next startup.
    */
   private async checkIfLegacy(pFile: number): Promise<void> {
     if (this.legacyChecked) return;
@@ -122,12 +123,12 @@ export class EncryptionVFS extends FacadeVFS {
     const rc = await this.baseVFS.jRead(pFile, header, 0);
 
     if (rc === VFS.SQLITE_OK && this.isUnencryptedSQLite(header)) {
-      // SECURITY: Do NOT run in passthrough mode - this would expose data unencrypted.
-      // The migration in wa-sqlite.ts should have encrypted any legacy data before
-      // we get here. If we still see unencrypted data, something went wrong.
+      // Throw with a message that matches the recovery pattern in wa-sqlite.ts
+      // getSingleton(), which will clear IndexedDB and reload the page so a
+      // fresh encrypted database is created on the next startup.
       throw new Error(
-        'SECURITY ERROR: Unencrypted database detected. ' +
-          'Data migration may have failed. Please reset and recreate your profile.'
+        'file is not a database: unencrypted SQLite data detected on encrypted VFS. ' +
+          'The database needs to be re-encrypted. Clearing storage and reloading.'
       );
     }
   }

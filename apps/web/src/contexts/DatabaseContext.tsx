@@ -102,6 +102,9 @@ export function DatabaseProvider({ children }: DatabaseProviderProps) {
   const [showResetButton, setShowResetButton] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const mountedRef = useRef(true);
+  // Track whether the current DB singleton was opened with an encryption key.
+  // null = not yet opened; false = opened without key; true = opened with key.
+  const dbOpenedWithKeyRef = useRef<boolean | null>(null);
 
   // Create data service when db is ready
   const dataService = useMemo(() => {
@@ -139,12 +142,28 @@ export function DatabaseProvider({ children }: DatabaseProviderProps) {
     // If database already exists, use it immediately
     const existingDatabase = getDatabaseInstance();
     if (existingDatabase) {
-      devLog('Using existing database instance');
-      setDb(existingDatabase);
-      setGlobalDatabase(existingDatabase);
-      setIsReady(true);
-      setIsLoading(false);
-      return;
+      // If encryption was set up AFTER the DB was first opened (e.g. during onboarding),
+      // the existing instance has no encryption. Close it and reopen with the key so
+      // the database file is properly encrypted from the start — avoiding the
+      // "unencrypted DB detected" security error and page-reload loop on every restart.
+      const needsReopen =
+        encryptionKey !== null && dbOpenedWithKeyRef.current === false;
+      if (needsReopen) {
+        devLog(
+          'DB was opened without encryption but key is now set — reinitializing with encryption'
+        );
+        resetDatabase(true);
+        resetModuleInitState();
+        dbOpenedWithKeyRef.current = null;
+        // Fall through to create a new encrypted instance below
+      } else {
+        devLog('Using existing database instance');
+        setDb(existingDatabase);
+        setGlobalDatabase(existingDatabase);
+        setIsReady(true);
+        setIsLoading(false);
+        return;
+      }
     }
 
     // If there was a previous error at module level, show it
@@ -206,6 +225,7 @@ export function DatabaseProvider({ children }: DatabaseProviderProps) {
         if (mountedRef.current) {
           devLog('Database initialization complete');
           if (timeoutRef.current) clearTimeout(timeoutRef.current);
+          dbOpenedWithKeyRef.current = encryptionKey !== null;
           setDb(database);
           setGlobalDatabase(database);
           setIsReady(true);
