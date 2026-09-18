@@ -264,7 +264,13 @@ export class Database implements DatabaseConnection {
 
         // If we get "file is not a database" or "sqlite3_open_v2" error, try to recover by clearing IndexedDB
         const errorMessage = err instanceof Error ? err.message : String(err);
+        // Capture OPFS state before clearing cachedVfsName below.
+        // For OPFS environments, clearing IDB is a no-op (data lives in the OPFS file)
+        // and reloading just recreates the loop indefinitely. Let the error propagate
+        // so DatabaseContext can show an error screen instead.
+        const wasUsingOPFS = cachedVfsName?.startsWith('opfs-') ?? false;
         if (
+          !wasUsingOPFS &&
           (errorMessage.includes('file is not a database') ||
             errorMessage.includes('sqlite3_open_v2')) &&
           typeof indexedDB !== 'undefined'

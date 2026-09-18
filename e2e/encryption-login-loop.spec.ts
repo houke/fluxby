@@ -8,6 +8,20 @@
  *  3. On restart, checkIfLegacy fired on the stale unencrypted IDB data
  *     -> jRead returned SQLITE_IOERR_READ -> DB error -> page reload
  *     -> lock screen reappeared -> infinite loop
+ *
+ * ⚠️  OPFS COVERAGE GAP
+ * This test runs against http://localhost:5177 where `shouldUseOPFS` is false
+ * (localhost is treated as dev mode → IDB is used instead of OPFS).
+ * As a result, EncryptionVFS is never loaded here and the OPFS-specific paths
+ * (needsReopen reload, migrateToEncrypted, jFileControl sync fix, decryptPage
+ * throw-on-auth-failure, getSingleton OPFS no-reload guard) are NOT exercised.
+ *
+ * To test the OPFS path manually:
+ *   1. npm run build (produces dist/app/)
+ *   2. Serve dist/ on a non-localhost origin, e.g.:
+ *      npx serve dist -l 4173
+ *      Then add `127.0.0.2 fluxby-test` to /etc/hosts and browse to http://fluxby-test:4173/app/
+ *   3. OPFS will be active and EncryptionVFS will wrap the OPFS base VFS.
  */
 
 import { test, expect, Page } from '@playwright/test';
