@@ -155,7 +155,81 @@ export function DatabaseProvider({ children }: DatabaseProviderProps) {
         resetDatabase(true);
         resetModuleInitState();
         dbOpenedWithKeyRef.current = null;
-        // Fall through to create a new encrypted instance below
+        setIsLoading(true);
+        setInitStatus('Re-encrypting database...');
+
+        const encKey = encryptionKey;
+
+        // Before reinit, delete all stale IDB databases. On page reload vfsCounter
+        // resets to 0, so "idb-fluxby-base-0" is reopened — if it still contains
+        // unencrypted SQLite data, EncryptionVFS.checkIfLegacy fires and the
+        // lock-screen loop repeats. Clearing IDB here breaks that cycle.
+        // For OPFS environments this is a safe no-op (data lives in OPFS).
+        (async () => {
+          if (typeof indexedDB !== 'undefined') {
+            try {
+              const dbs = await indexedDB.databases?.();
+              if (dbs) {
+                await Promise.all(
+                  dbs
+                    .filter(
+                      (d) =>
+                        d.name &&
+                        (d.name.includes('fluxby') || d.name.includes('idb-'))
+                    )
+                    .map(
+                      (d) =>
+                        new Promise<void>((r) => {
+                          const req = indexedDB.deleteDatabase(d.name!);
+                          req.onsuccess = req.onerror = req.onblocked = () =>
+                            r();
+                        })
+                    )
+                );
+                devLog('Cleared stale IDB databases for encrypted reinit');
+              }
+            } catch {
+              devLog('IDB clearing failed, proceeding');
+            }
+          }
+
+          timeoutRef.current = setTimeout(() => {
+            if (mountedRef.current) setShowResetButton(true);
+          }, 15000);
+
+          createDatabase({
+            dbPath: 'fluxby.db',
+            autoMigrate: true,
+            encryptionKey: encKey ?? undefined,
+          })
+            .then((database) => {
+              if (mountedRef.current) {
+                devLog('Database re-initialization with encryption complete');
+                if (timeoutRef.current) clearTimeout(timeoutRef.current);
+                dbOpenedWithKeyRef.current = encKey !== null;
+                setDb(database);
+                setGlobalDatabase(database);
+                setIsReady(true);
+                setIsLoading(false);
+              }
+            })
+            .catch((err) => {
+              moduleInitError =
+                err instanceof Error ? err : new Error(String(err));
+              if (mountedRef.current) {
+                devLog('Database re-initialization failed:', err);
+                if (timeoutRef.current) clearTimeout(timeoutRef.current);
+                setError(moduleInitError);
+                setIsLoading(false);
+                setShowResetButton(true);
+              }
+            });
+        })();
+
+        return () => {
+          mountedRef.current = false;
+          if (timeoutRef.current) clearTimeout(timeoutRef.current);
+        };
       } else {
         devLog('Using existing database instance');
         setDb(existingDatabase);
