@@ -260,12 +260,11 @@ export class EncryptionVFS extends FacadeVFS {
   async jCheckReservedLock(pFile: number, pResOut: DataView): Promise<number> {
     return Promise.resolve(this.baseVFS.jCheckReservedLock(pFile, pResOut));
   }
-  async jFileControl(
-    pFile: number,
-    op: number,
-    pArg: DataView
-  ): Promise<number> {
-    return Promise.resolve(this.baseVFS.jFileControl(pFile, op, pArg));
+  // FileControl is synchronous in both underlying VFS implementations
+  // (OPFSAnyContextVFS and IDBBatchAtomicVFS), so keep it sync here to
+  // avoid "xFileControl unexpectedly returned a Promise" Asyncify errors.
+  jFileControl(pFile: number, op: number, pArg: DataView): number | Promise<number> {
+    return this.baseVFS.jFileControl(pFile, op, pArg);
   }
   jSectorSize(pFile: number): number {
     return this.baseVFS.jSectorSize(pFile);

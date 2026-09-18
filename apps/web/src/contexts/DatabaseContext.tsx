@@ -146,25 +146,40 @@ export function DatabaseProvider({ children }: DatabaseProviderProps) {
       // the existing instance has no encryption. Close it and reopen with the key so
       // the database file is properly encrypted from the start — avoiding the
       // "unencrypted DB detected" security error and page-reload loop on every restart.
+      // Reload only for OPFS environments: OPFS uses EncryptionVFS, so the
+      // unencrypted file must be migrated on the next load. IDB does NOT use
+      // EncryptionVFS (Asyncify incompatibility), so no reload is needed there.
+      const willUseOPFS =
+        typeof window !== 'undefined' &&
+        !('__TAURI__' in window) &&
+        window.location.hostname !== 'localhost' &&
+        window.location.hostname !== '127.0.0.1' &&
+        typeof navigator !== 'undefined' &&
+        'storage' in navigator &&
+        'getDirectory' in navigator.storage;
+
       const needsReopen =
-        encryptionKey !== null && dbOpenedWithKeyRef.current === false;
+        encryptionKey !== null &&
+        dbOpenedWithKeyRef.current === false &&
+        willUseOPFS;
       if (needsReopen) {
         devLog(
-          'DB was opened without encryption but key is now set — reinitializing with encryption'
+          'DB was opened without encryption but key is now set — reloading for clean encrypted start'
         );
-        resetDatabase(true);
-        resetModuleInitState();
+        // Re-registering a VFS on the same WASM module instance causes
+        // Asyncify state corruption ("xFileControl unexpectedly returned a
+        // Promise", "startAsync(...).then is not a function"). A page reload
+        // is the only reliable way to reinitialize with a fresh WASM module.
+        //
+        // Before reloading: clear stale IDB databases so that on reload the
+        // vfsCounter-0 IDB ("idb-fluxby-base-0") is empty and EncryptionVFS
+        // does not encounter unencrypted SQLite data that would trigger
+        // checkIfLegacy and recreate the login loop.
+        // For OPFS environments this is a safe no-op; the migration in
+        // doFullInitialize re-encrypts the existing OPFS file on the next load.
         dbOpenedWithKeyRef.current = null;
-        setIsLoading(true);
-        setInitStatus('Re-encrypting database...');
+        setInitStatus('Setting up encryption...');
 
-        const encKey = encryptionKey;
-
-        // Before reinit, delete all stale IDB databases. On page reload vfsCounter
-        // resets to 0, so "idb-fluxby-base-0" is reopened — if it still contains
-        // unencrypted SQLite data, EncryptionVFS.checkIfLegacy fires and the
-        // lock-screen loop repeats. Clearing IDB here breaks that cycle.
-        // For OPFS environments this is a safe no-op (data lives in OPFS).
         (async () => {
           if (typeof indexedDB !== 'undefined') {
             try {
@@ -186,49 +201,17 @@ export function DatabaseProvider({ children }: DatabaseProviderProps) {
                         })
                     )
                 );
-                devLog('Cleared stale IDB databases for encrypted reinit');
+                devLog('Cleared stale IDB databases before encryption reload');
               }
             } catch {
-              devLog('IDB clearing failed, proceeding');
+              devLog('IDB clearing failed, reloading anyway');
             }
           }
-
-          timeoutRef.current = setTimeout(() => {
-            if (mountedRef.current) setShowResetButton(true);
-          }, 15000);
-
-          createDatabase({
-            dbPath: 'fluxby.db',
-            autoMigrate: true,
-            encryptionKey: encKey ?? undefined,
-          })
-            .then((database) => {
-              if (mountedRef.current) {
-                devLog('Database re-initialization with encryption complete');
-                if (timeoutRef.current) clearTimeout(timeoutRef.current);
-                dbOpenedWithKeyRef.current = encKey !== null;
-                setDb(database);
-                setGlobalDatabase(database);
-                setIsReady(true);
-                setIsLoading(false);
-              }
-            })
-            .catch((err) => {
-              moduleInitError =
-                err instanceof Error ? err : new Error(String(err));
-              if (mountedRef.current) {
-                devLog('Database re-initialization failed:', err);
-                if (timeoutRef.current) clearTimeout(timeoutRef.current);
-                setError(moduleInitError);
-                setIsLoading(false);
-                setShowResetButton(true);
-              }
-            });
+          window.location.reload();
         })();
 
         return () => {
           mountedRef.current = false;
-          if (timeoutRef.current) clearTimeout(timeoutRef.current);
         };
       } else {
         devLog('Using existing database instance');

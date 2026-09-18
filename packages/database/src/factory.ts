@@ -49,6 +49,22 @@ export function resetDatabase(full = false): void {
 }
 
 /**
+ * Close the current database handle and reset factory singletons without
+ * resetting the WASM module. Use this for same-session re-initialization
+ * (e.g. when encryption is enabled after the DB was first opened without a key)
+ * to avoid Asyncify state corruption that occurs when reloading the WASM module
+ * mid-session.
+ */
+export async function closeAndResetForReinit(): Promise<void> {
+  // eslint-disable-next-line no-console
+  console.log('[DB Factory] Closing handle for reinit (keeping WASM module)');
+  await Database.closeHandleForReinit();
+  dbInstance = null;
+  dbPromise = null;
+  dbPromiseCreatedAt = null;
+}
+
+/**
  * Get the existing database instance (if any)
  * Returns null if not yet created
  */
