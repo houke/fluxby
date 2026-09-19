@@ -1,14 +1,13 @@
 {
   "extraKnownMarketplaces": {
-    my-copilot-plugins": {
+    "nexus": {
       "source": {
         "source": "git",
-        "url": "https://dev.azure.com/my-platform/my-project/_git/My.Copilot.Marketplace"
+        "url": "https://github.com/houke/nexus"
       }
     }
   },
   "enabledPlugins": {
-    "shared@my-copilot-plugins": true,
-    "platform-shared@my-copilot-plugins": true
+    "nexus@nexus": true
   }
 }
