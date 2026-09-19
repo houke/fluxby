@@ -190,7 +190,9 @@ export default function HelpAI() {
         Kost TypeSafe geld?
       </h3>
       <p className='text-gray-600 dark:text-gray-400'>
-        TypeSafe biedt een gratis laag aan. Kijk op{' '}
+        TypeSafe geeft nieuwe accounts $5,- tegoed om mee te starten (op het
+        moment van schrijven). Je kunt daarna zelf extra budget toevoegen.
+        Kijk op{' '}
         <a
           href='https://typesafe.ai'
           target='_blank'
