@@ -321,12 +321,14 @@ export function LockScreen({
         </Card>
 
         <div className='mt-8 text-center'>
-          <a
-            href='/'
-            className='inline-flex items-center text-sm font-medium text-purple-600 transition-colors hover:text-purple-700 hover:underline dark:text-purple-400'
-          >
-            ← {t.common?.backToHomepage || 'Back to homepage'}
-          </a>
+          {!('__TAURI__' in window) && (
+            <a
+              href='https://fluxby.app'
+              className='inline-flex items-center text-sm font-medium text-purple-600 transition-colors hover:text-purple-700 hover:underline dark:text-purple-400'
+            >
+              ← {t.common?.backToHomepage || 'Back to homepage'}
+            </a>
+          )}
         </div>
       </div>
     </div>
