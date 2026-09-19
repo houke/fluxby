@@ -338,7 +338,7 @@ Fluxby optionally uses [TypeSafe AI](https://typesafe.ai) for smarter categorisa
 CSV import parsing, and duplicate detection. All AI features are fully optional and
 gracefully degrade to deterministic logic when no API key is configured.
 
-See [docs/typesafe.md](docs/typesafe.md) for a full explanation of how TypeSafe is
+See [docs/typesafe.md](docs/TYPESAFE-INTEGRATION.md) for a full explanation of how TypeSafe is
 integrated and the design principles behind each use case.
 
 ## 🤝 Contributing

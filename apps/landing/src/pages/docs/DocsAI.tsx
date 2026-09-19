@@ -371,8 +371,8 @@ export default function DocsAI() {
             'https://docs.typesafe.ai/cookbooks/hierarchical_classification',
           ],
           [
-            'Internal reference: docs/typesafe.md',
-            'https://github.com/fluxby-app/fluxby/blob/main/docs/typesafe.md',
+            'Internal reference: docs/TYPESAFE-INTEGRATION.md',
+            'https://github.com/fluxby-app/fluxby/blob/main/docs/TYPESAFE-INTEGRATION.md',
           ],
         ].map(([label, href]) => (
           <li key={href}>
