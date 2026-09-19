@@ -332,7 +332,7 @@ A set of screenshots showing the app inside the OSX-style browser frame (generat
 - ![7.png - Categories](apps/screenshots/7.png) — Screenshot 7: Categories.
 - ![8.png - Import](apps/screenshots/8.png) — Screenshot 8: Import.
 
-## � AI Features (TypeSafe)
+## ✨ AI Features (TypeSafe)
 
 Fluxby optionally uses [TypeSafe AI](https://typesafe.ai) for smarter categorisation,
 CSV import parsing, and duplicate detection. All AI features are fully optional and
@@ -341,7 +341,7 @@ gracefully degrade to deterministic logic when no API key is configured.
 See [docs/typesafe.md](docs/typesafe.md) for a full explanation of how TypeSafe is
 integrated and the design principles behind each use case.
 
-## �🤝 Contributing
+## 🤝 Contributing
 
 Contributions are welcome! Open an issue or pull request for:
 
