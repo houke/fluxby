@@ -1931,7 +1931,8 @@ export const en: LandingTranslationKeys = {
       v1110Title: 'Release 1.11.0',
       v1110Description: '3 new features and 11 bug fixes.',
       v1110F1Title: 'TypeSafe AI docs to developer hub and help center',
-      v1110F1Desc: 'We\'ve got something new for you! Check the release notes for all details.',
+      v1110F1Desc:
+        "We've got something new for you! Check the release notes for all details.",
       v1110F2Title: 'New web app capabilities',
       v1110F2Desc: '2 new features. Check the release on GitHub!',
       v1110F3Title: 'Bug fixes',

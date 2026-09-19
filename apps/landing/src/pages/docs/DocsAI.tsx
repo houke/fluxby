@@ -99,8 +99,8 @@ export default function DocsAI() {
         TypeSafe AI / Jev
       </h1>
       <p className='text-xl text-gray-600 dark:text-gray-400'>
-        How Fluxby uses TypeSafe's System One model (Jev) to replace fragile
-        regex rules with calibrated, structured AI judgments.
+        How Fluxby uses TypeSafe&apos;s System One model (Jev) to replace
+        fragile regex rules with calibrated, structured AI judgments.
       </p>
 
       {/* What is TypeSafe */}
@@ -119,14 +119,15 @@ export default function DocsAI() {
           </a>{' '}
           builds <strong>System One</strong> models — small, fast AI primitives
           that return structured answers instead of generated text.{' '}
-          <strong>Jev</strong> is TypeSafe's flagship model. Given a state (JSON
-          or string) and one or more typed questions, it returns probabilities
-          for Choice, Score, or Noul (yes/no) answers in ~100 ms.
+          <strong>Jev</strong> is TypeSafe&apos;s flagship model. Given a state
+          (JSON or string) and one or more typed questions, it returns
+          probabilities for Choice, Score, or Noul (yes/no) answers in ~100 ms.
         </p>
         <p className='mb-0 text-purple-800 dark:text-purple-300'>
           Code owns the control flow. Jev handles only the parts that require
-          semantic understanding of unstructured text — such as "which category
-          fits this merchant name?" or "is this IBAN a payment intermediary?".
+          semantic understanding of unstructured text &mdash; such as
+          &ldquo;which category fits this merchant name?&rdquo; or &ldquo;is
+          this IBAN a payment intermediary?&rdquo;.
         </p>
       </div>
 
@@ -134,9 +135,9 @@ export default function DocsAI() {
         Architecture
       </h2>
       <p className='text-gray-600 dark:text-gray-400'>
-        Fluxby follows TypeSafe's <em>AI-powered software</em> pattern: keep
-        deterministic work in code, and insert AI only where heuristics break
-        down.
+        Fluxby follows TypeSafe&apos;s <em>AI-powered software</em> pattern:
+        keep deterministic work in code, and insert AI only where heuristics
+        break down.
       </p>
 
       <div className='not-prose mt-6 overflow-x-auto'>
@@ -209,8 +210,8 @@ export default function DocsAI() {
       </h2>
       <p className='text-gray-600 dark:text-gray-400'>
         When the regex-rule engine cannot match a transaction, Fluxby sends the
-        merchant name, description, and amount to Jev alongside the user's own
-        category list. Jev returns a probability for each category.
+        merchant name, description, and amount to Jev alongside the user&apos;s
+        own category list. Jev returns a probability for each category.
       </p>
 
       <h3 className='mt-6 text-lg font-semibold text-gray-900 dark:text-gray-100'>
