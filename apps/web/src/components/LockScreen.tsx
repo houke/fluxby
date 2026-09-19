@@ -64,8 +64,11 @@ export function LockScreen({
     return () => viewport.removeEventListener('resize', handleResize);
   }, []);
 
-  // Dev-mode auto-unlock: if VITE_DEV_PASSWORD is set, auto-submit on mount
+  // Dev-mode auto-unlock: if VITE_DEV_PASSWORD is set, auto-submit on mount.
+  // Guard with import.meta.env.DEV so the password is never used in production
+  // builds (where .env.local VITE_DEV_PASSWORD would otherwise be baked in).
   useEffect(() => {
+    if (!import.meta.env.DEV) return;
     const devPassword = import.meta.env.VITE_DEV_PASSWORD as string | undefined;
     if (!devPassword || !isEncryptionEnabled || showSetup) return;
 
