@@ -9,6 +9,34 @@ import { readFromOPFSSync } from '@fluxby/database';
 const TYPESAFE_API_BASE = 'https://api.typesafe.ai';
 const TYPESAFE_MODEL = 'jev-latest';
 const SETTINGS_KEY = 'typesafe-api-key';
+const MAX_CONCURRENT = 5;
+const REQUEST_TIMEOUT_MS = 15_000;
+
+// Simple semaphore to cap concurrent TypeSafe API requests
+function createSemaphore(max: number) {
+  let active = 0;
+  const queue: (() => void)[] = [];
+  const acquire = (): Promise<void> =>
+    new Promise((resolve) => {
+      if (active < max) {
+        active++;
+        resolve();
+      } else {
+        queue.push(() => {
+          active++;
+          resolve();
+        });
+      }
+    });
+  const release = () => {
+    active--;
+    const next = queue.shift();
+    if (next) next();
+  };
+  return { acquire, release };
+}
+
+const semaphore = createSemaphore(MAX_CONCURRENT);
 
 // ── Question types ────────────────────────────────────────────────────────────
 
@@ -67,21 +95,27 @@ export async function askTypeSafe(
   const key = apiKey ?? getTypeSafeApiKey();
   if (!key) throw new Error('TypeSafe API key not configured');
 
-  const response = await fetch(`${TYPESAFE_API_BASE}/v1/systemone`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${key}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ state, model: TYPESAFE_MODEL, questions }),
-  });
+  await semaphore.acquire();
+  try {
+    const response = await fetch(`${TYPESAFE_API_BASE}/v1/systemone`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${key}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ state, model: TYPESAFE_MODEL, questions }),
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+    });
 
-  if (!response.ok) {
-    const body = await response.text().catch(() => response.statusText);
-    throw new Error(`TypeSafe ${response.status}: ${body}`);
+    if (!response.ok) {
+      const body = await response.text().catch(() => response.statusText);
+      throw new Error(`TypeSafe ${response.status}: ${body}`);
+    }
+
+    return response.json() as Promise<TypeSafeResponse>;
+  } finally {
+    semaphore.release();
   }
-
-  return response.json() as Promise<TypeSafeResponse>;
 }
 
 // ── Answer helpers ────────────────────────────────────────────────────────────
@@ -147,7 +181,8 @@ export async function suggestCategory(params: {
     );
 
     const answer = choiceAnswer(response, 'category');
-    if (answer.choice === 'none' || answer.confidence < 0.7) return null;
+    const knownIds = new Set(categories.map((c) => c.id));
+    if (answer.choice === 'none' || !knownIds.has(answer.choice) || answer.confidence < 0.7) return null;
     return { categoryId: answer.choice, confidence: answer.confidence };
   } catch {
     return null;
@@ -172,7 +207,8 @@ export async function detectDirectionConvention(
     uniqueValues.forEach((value, i) => {
       questions[`v${i}`] = {
         type: 'choice',
-        instructions: `A bank CSV has a direction column whose value is "${value}". Does this mean money is leaving the account or arriving?`,
+        instructions:
+          `In this bank CSV, the direction column contains the value at \`directionValues[${i}]\`. Does this value indicate money leaving the account or money arriving?`,
         criteria: {
           debit:
             'Debit — money leaving the account (payment, expense, withdrawal)',

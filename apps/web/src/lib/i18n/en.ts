@@ -1207,6 +1207,8 @@ export const en: TranslationKeys = {
       duplicateProbability: 'P(duplicate)',
       duplicatesDismiss: 'Close',
       noKeyWarning: 'Add an API key to enable AI features.',
+      dataDisclosure:
+        'These actions send minimal transaction data (merchant names, counterparty IBANs, descriptions) to the TypeSafe API. Full transaction lists are never sent.',
     },
   },
   help: {

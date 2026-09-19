@@ -5201,11 +5201,13 @@ export function createDataService(db: Database) {
            AND ABS(julianday(t1.date) - julianday(t2.date)) <= 1
            AND t1.import_hash != t2.import_hash
          JOIN accounts a ON t1.account_id = a.id
+         JOIN accounts a2 ON t2.account_id = a2.id
          WHERE a.profile_id = ?
+           AND a2.profile_id = ?
            AND t1.is_deleted = 0
            AND t2.is_deleted = 0
          LIMIT 20`,
-        [pid]
+        [pid, pid]
       );
 
       if (candidates.length === 0) return [];

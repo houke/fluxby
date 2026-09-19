@@ -44,7 +44,7 @@ export function TypeSafeSettings() {
   const dataService = useDataService();
   const s = t.settings.typesafeAi;
 
-  const [storedKey, setStoredKey, clearKey] = useOPFSSetting<string>(
+  const [storedKey, setStoredKey, clearKey, isLoadingKey] = useOPFSSetting<string>(
     'typesafe-api-key',
     ''
   );
@@ -55,7 +55,7 @@ export function TypeSafeSettings() {
   const [duplicates, setDuplicates] = useState<DuplicatePair[]>([]);
   const [duplicatesOpen, setDuplicatesOpen] = useState(false);
 
-  const hasKey = !!storedKey;
+  const hasKey = !!storedKey && !isLoadingKey;
 
   const handleStartEdit = () => {
     setEditValue('');
@@ -229,6 +229,9 @@ export function TypeSafeSettings() {
             {/* AI action buttons — only available when key is set */}
             {hasKey ? (
               <div className='space-y-3 border-t pt-4'>
+                <p className='text-muted-foreground text-xs'>
+                  {s.dataDisclosure}
+                </p>
                 <div className='flex items-start justify-between gap-4'>
                   <div className='min-w-0 flex-1'>
                     <p className='text-sm font-medium'>{s.detectProviders}</p>

@@ -1058,6 +1058,7 @@ export interface TranslationKeys {
       duplicateProbability: string;
       duplicatesDismiss: string;
       noKeyWarning: string;
+      dataDisclosure: string;
     };
   };
   help: {
@@ -2635,6 +2636,8 @@ export const nl: TranslationKeys = {
       duplicateProbability: 'P(dubbel)',
       duplicatesDismiss: 'Sluiten',
       noKeyWarning: 'Voeg een API-sleutel toe om AI-functies in te schakelen.',
+      dataDisclosure:
+        'Deze acties sturen minimale transactiegegevens (winkelnamen, IBAN van tegenpartij, omschrijvingen) naar de TypeSafe API. Er worden geen volledige transactielijsten verstuurd.',
     },
   },
   help: {
