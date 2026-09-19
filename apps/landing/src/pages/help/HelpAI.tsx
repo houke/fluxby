@@ -153,7 +153,7 @@ export default function HelpAI() {
       <p className='text-gray-600 dark:text-gray-400'>
         Bekijk het{' '}
         <a
-          href='https://typesafe.ai/legal'
+          href='https://typesafe.ai/legal/privacy-policy'
           target='_blank'
           rel='noopener noreferrer'
           className='inline-flex items-center gap-1'

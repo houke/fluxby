@@ -338,7 +338,7 @@ export default function DocsAI() {
       <p className='text-gray-600 dark:text-gray-400'>
         No TypeSafe calls are made without a user-supplied API key. Review the{' '}
         <a
-          href='https://typesafe.ai/legal'
+          href='https://typesafe.ai/legal/privacy-policy'
           target='_blank'
           rel='noopener noreferrer'
         >
