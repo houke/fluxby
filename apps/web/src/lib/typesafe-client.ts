@@ -182,7 +182,12 @@ export async function suggestCategory(params: {
 
     const answer = choiceAnswer(response, 'category');
     const knownIds = new Set(categories.map((c) => c.id));
-    if (answer.choice === 'none' || !knownIds.has(answer.choice) || answer.confidence < 0.7) return null;
+    if (
+      answer.choice === 'none' ||
+      !knownIds.has(answer.choice) ||
+      answer.confidence < 0.7
+    )
+      return null;
     return { categoryId: answer.choice, confidence: answer.confidence };
   } catch {
     return null;
@@ -207,8 +212,7 @@ export async function detectDirectionConvention(
     uniqueValues.forEach((value, i) => {
       questions[`v${i}`] = {
         type: 'choice',
-        instructions:
-          `In this bank CSV, the direction column contains the value at \`directionValues[${i}]\`. Does this value indicate money leaving the account or money arriving?`,
+        instructions: `In this bank CSV, the direction column contains the value at \`directionValues[${i}]\`. Does this value indicate money leaving the account or money arriving?`,
         criteria: {
           debit:
             'Debit — money leaving the account (payment, expense, withdrawal)',

@@ -44,10 +44,8 @@ export function TypeSafeSettings() {
   const dataService = useDataService();
   const s = t.settings.typesafeAi;
 
-  const [storedKey, setStoredKey, clearKey, isLoadingKey] = useOPFSSetting<string>(
-    'typesafe-api-key',
-    ''
-  );
+  const [storedKey, setStoredKey, clearKey, isLoadingKey] =
+    useOPFSSetting<string>('typesafe-api-key', '');
   const [editValue, setEditValue] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [showKey, setShowKey] = useState(false);
@@ -229,7 +227,7 @@ export function TypeSafeSettings() {
             {/* AI action buttons — only available when key is set */}
             {hasKey ? (
               <div className='space-y-3 border-t pt-4'>
-                <p className='text-muted-foreground text-xs'>
+                <p className='text-xs text-muted-foreground'>
                   {s.dataDisclosure}
                 </p>
                 <div className='flex items-start justify-between gap-4'>
