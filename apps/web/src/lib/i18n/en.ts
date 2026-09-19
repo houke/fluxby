@@ -1190,6 +1190,22 @@ export const en: TranslationKeys = {
       getKeyLink: 'Get your key — console.typesafe.ai',
       keySaved: 'API key saved',
       keyRemoved: 'API key removed',
+      detectProviders: 'Detect payment providers',
+      detectProvidersDescription:
+        'Analyse unknown IBANs to recognise payment platforms the pattern rules missed.',
+      detectProvidersRunning: 'Analysing...',
+      detectProvidersResult: '{count} payment provider(s) detected',
+      detectProvidersNone: 'No new payment providers found',
+      scanDuplicates: 'Scan for duplicate transactions',
+      scanDuplicatesDescription:
+        'Find transactions that appear to be the same payment event entered with a slightly different description.',
+      scanDuplicatesRunning: 'Scanning...',
+      scanDuplicatesNone: 'No potential duplicates found',
+      scanDuplicatesTitle: 'Potential duplicate transactions',
+      duplicatePair: 'Pair {n}',
+      duplicateProbability: 'P(duplicate)',
+      duplicatesDismiss: 'Close',
+      noKeyWarning: 'Add an API key to enable AI features.',
     },
   },
   help: {

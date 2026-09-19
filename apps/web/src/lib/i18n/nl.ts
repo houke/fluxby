@@ -1044,6 +1044,20 @@ export interface TranslationKeys {
       getKeyLink: string;
       keySaved: string;
       keyRemoved: string;
+      detectProviders: string;
+      detectProvidersDescription: string;
+      detectProvidersRunning: string;
+      detectProvidersResult: string;
+      detectProvidersNone: string;
+      scanDuplicates: string;
+      scanDuplicatesDescription: string;
+      scanDuplicatesRunning: string;
+      scanDuplicatesNone: string;
+      scanDuplicatesTitle: string;
+      duplicatePair: string;
+      duplicateProbability: string;
+      duplicatesDismiss: string;
+      noKeyWarning: string;
     };
   };
   help: {
@@ -2605,6 +2619,22 @@ export const nl: TranslationKeys = {
       getKeyLink: 'Haal je sleutel op — console.typesafe.ai',
       keySaved: 'API-sleutel opgeslagen',
       keyRemoved: 'API-sleutel verwijderd',
+      detectProviders: 'Betaalproviders detecteren',
+      detectProvidersDescription:
+        'Analyseer onbekende IBANs om betaalplatforms te herkennen die de patroonregels hebben gemist.',
+      detectProvidersRunning: 'Analyseren...',
+      detectProvidersResult: '{count} betaalprovider(s) gedetecteerd',
+      detectProvidersNone: 'Geen nieuwe betaalproviders gevonden',
+      scanDuplicates: 'Dubbele transacties scannen',
+      scanDuplicatesDescription:
+        'Zoek transacties die op hetzelfde betalingsevent lijken te zijn ingevoerd met een licht afwijkende omschrijving.',
+      scanDuplicatesRunning: 'Scannen...',
+      scanDuplicatesNone: 'Geen mogelijke duplicaten gevonden',
+      scanDuplicatesTitle: 'Mogelijke dubbele transacties',
+      duplicatePair: 'Paar {n}',
+      duplicateProbability: 'P(dubbel)',
+      duplicatesDismiss: 'Sluiten',
+      noKeyWarning: 'Voeg een API-sleutel toe om AI-functies in te schakelen.',
     },
   },
   help: {

@@ -5417,6 +5417,75 @@ export function createDataService(db: Database) {
         });
       }
 
+      // TypeSafe AI: merge groups that share an IBAN but have differently-normalized
+      // names (e.g. "netflix" vs "netflix premium") that represent the same service
+      const tsKeyForRecurring = getTypeSafeApiKey();
+      if (tsKeyForRecurring) {
+        const ibanToKeys = new Map<string, string[]>();
+        for (const key of merchantGroups.keys()) {
+          const colonIdx = key.indexOf(':');
+          const iban = key.slice(0, colonIdx);
+          if (iban === 'null') continue;
+          const existing = ibanToKeys.get(iban) ?? [];
+          existing.push(key);
+          ibanToKeys.set(iban, existing);
+        }
+
+        const mergeCandidates = [...ibanToKeys.entries()].filter(
+          ([, keys]) => keys.length > 1
+        );
+
+        if (mergeCandidates.length > 0) {
+          const mergeResults = await Promise.all(
+            mergeCandidates.map(async ([iban, keys]) => {
+              const names = keys.map((k) => k.slice(iban.length + 1));
+              try {
+                const response = await askTypeSafe(
+                  { iban, merchantNames: names },
+                  {
+                    same_service: {
+                      type: 'noul',
+                      instructions:
+                        'These merchant names all come from the same bank IBAN. Are they all different descriptions of the same recurring subscription or service?',
+                      criteria: {
+                        true: 'All names are the same service with variant descriptions',
+                        false:
+                          'These names represent different services or merchants',
+                      },
+                    },
+                  },
+                  tsKeyForRecurring
+                );
+                const a = response.answers['same_service'];
+                return {
+                  keys,
+                  shouldMerge:
+                    a?.type === 'noul' &&
+                    (a as NoulAnswer).noul >= 0.75,
+                };
+              } catch {
+                return { keys, shouldMerge: false };
+              }
+            })
+          );
+
+          for (const { keys, shouldMerge } of mergeResults) {
+            if (!shouldMerge || keys.length <= 1) continue;
+            const [primaryKey, ...otherKeys] = keys;
+            const primaryGroup = merchantGroups.get(primaryKey);
+            if (!primaryGroup) continue;
+            for (const key of otherKeys) {
+              const group = merchantGroups.get(key);
+              if (group) {
+                primaryGroup.push(...group);
+                merchantGroups.delete(key);
+              }
+            }
+            primaryGroup.sort((a, b) => a.date.localeCompare(b.date));
+          }
+        }
+      }
+
       // Now cluster each merchant group by similar amounts
       interface AmountCluster {
         opposing_iban: string | null;
