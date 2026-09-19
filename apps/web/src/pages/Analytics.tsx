@@ -1341,7 +1341,9 @@ export default function Analytics() {
                                     ];
                                   }}
                                   labelFormatter={(label) => {
-                                    const date = new Date(label as string | number);
+                                    const date = new Date(
+                                      label as string | number
+                                    );
                                     return date.toLocaleDateString();
                                   }}
                                   contentStyle={{
@@ -1556,7 +1558,9 @@ export default function Analytics() {
                                     ];
                                   }}
                                   labelFormatter={(label) => {
-                                    const date = new Date(label as string | number);
+                                    const date = new Date(
+                                      label as string | number
+                                    );
                                     return date.toLocaleDateString();
                                   }}
                                   contentStyle={{

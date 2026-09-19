@@ -569,6 +569,7 @@ export const nl: LandingTranslationKeys = {
       openapi: 'OpenAPI Spec',
       apiReference: 'Swagger Docs',
       helpCenter: 'Helpcentrum',
+      ai: 'TypeSafe AI',
     },
     // Introduction page
     introduction: {
@@ -1351,6 +1352,7 @@ export const nl: LandingTranslationKeys = {
       security: 'Beveiliging & Privacy',
       sync: 'Apparaat synchronisatie',
       dataPrivacy: 'Je data & privacy',
+      ai: 'Slimme AI functies',
     },
     devNav: {
       gettingStarted: 'Aan de slag',
@@ -2024,11 +2026,14 @@ export const nl: LandingTranslationKeys = {
       v1100Title: 'Release 1.10.0',
       v1100Description: '14 nieuwe features en 24 bugfixes.',
       v1100F1Title: 'Web app uitbreidingen',
-      v1100F1Desc: '6 nieuwe mogelijkheden om te ontdekken. Bekijk de release notes!',
+      v1100F1Desc:
+        '6 nieuwe mogelijkheden om te ontdekken. Bekijk de release notes!',
       v1100F2Title: 'Toegevoegd csp headers for xss protection',
-      v1100F2Desc: 'We hebben iets nieuws voor je! Bekijk de release notes voor alle details.',
+      v1100F2Desc:
+        'We hebben iets nieuws voor je! Bekijk de release notes voor alle details.',
       v1100F3Title: 'API verbeteringen',
-      v1100F3Desc: '5 nieuwe mogelijkheden om te ontdekken. Bekijk de release notes!',
+      v1100F3Desc:
+        '5 nieuwe mogelijkheden om te ontdekken. Bekijk de release notes!',
       v1100F4Title: 'Gedeelde functionaliteit',
       v1100F4Desc: '2 nieuwe features. Bekijk de release op GitHub!',
       v1100F5Title: 'Bugfixes',

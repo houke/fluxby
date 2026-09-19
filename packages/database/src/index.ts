@@ -39,6 +39,7 @@ export * from './sync-adapter.js';
 export {
   createDatabase,
   resetDatabase,
+  closeAndResetForReinit,
   getDatabaseInstance,
   getDbPromise,
   isDatabaseInstanceReady,

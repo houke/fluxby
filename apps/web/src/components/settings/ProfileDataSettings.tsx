@@ -169,8 +169,7 @@ export function ProfileDataSettings() {
     fallback: string
   ): string => {
     const profileData = t.settings.profileData as
-      | Record<string, string>
-      | undefined;
+      Record<string, string> | undefined;
     return profileData?.[key] || fallback;
   };
 

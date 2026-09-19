@@ -264,7 +264,13 @@ export class Database implements DatabaseConnection {
 
         // If we get "file is not a database" or "sqlite3_open_v2" error, try to recover by clearing IndexedDB
         const errorMessage = err instanceof Error ? err.message : String(err);
+        // Capture OPFS state before clearing cachedVfsName below.
+        // For OPFS environments, clearing IDB is a no-op (data lives in the OPFS file)
+        // and reloading just recreates the loop indefinitely. Let the error propagate
+        // so DatabaseContext can show an error screen instead.
+        const wasUsingOPFS = cachedVfsName?.startsWith('opfs-') ?? false;
         if (
+          !wasUsingOPFS &&
           (errorMessage.includes('file is not a database') ||
             errorMessage.includes('sqlite3_open_v2')) &&
           typeof indexedDB !== 'undefined'
@@ -515,24 +521,17 @@ export class Database implements DatabaseConnection {
             const idbBaseVfsName = `idb-fluxby-base-${vfsCounter}`;
             vfsCounter++;
 
-            let vfs = await vfsModule.IDBBatchAtomicVFS.create(
+            const vfs = await vfsModule.IDBBatchAtomicVFS.create(
               idbBaseVfsName,
               cachedModule
             );
 
-            // Wrap with encryption VFS if key is provided (use already captured encryptionKey)
-            if (encryptionKey) {
-              wasmLog('Wrapping IndexedDB VFS with EncryptionVFS');
-              const idbEncVfsName = `idb-fluxby-${vfsCounter++}`;
-              const encVfs = new EncryptionVFS(
-                idbEncVfsName,
-                cachedModule,
-                vfs,
-                encryptionKey
-              );
-              await encVfs.initialize();
-              vfs = encVfs;
-            }
+            // NOTE: EncryptionVFS is intentionally NOT applied to IDB.
+            // IDBBatchAtomicVFS + EncryptionVFS causes an Asyncify incompatibility
+            // ("startAsync().then is not a function") because IDB async callbacks
+            // interfere with wa-sqlite's WASM Asyncify state machine.
+            // IDB is only used in Tauri (OS-level security applies) and dev mode.
+            // OPFS (production web) uses EncryptionVFS correctly.
 
             this.sqlite3.vfs_register(vfs, true);
             cachedVfsName = (vfs as any).name;
@@ -557,24 +556,13 @@ export class Database implements DatabaseConnection {
           const idbBaseVfsName = `idb-fluxby-base-${vfsCounter}`;
           vfsCounter++;
 
-          let vfs = await vfsModule.IDBBatchAtomicVFS.create(
+          const vfs = await vfsModule.IDBBatchAtomicVFS.create(
             idbBaseVfsName,
             cachedModule
           );
 
-          // Wrap with encryption VFS if key is provided
-          if (encryptionKey) {
-            wasmLog('Wrapping IndexedDB VFS with EncryptionVFS');
-            const idbEncVfsName = `idb-fluxby-${vfsCounter++}`;
-            const encVfs = new EncryptionVFS(
-              idbEncVfsName,
-              cachedModule,
-              vfs,
-              encryptionKey
-            );
-            await encVfs.initialize();
-            vfs = encVfs;
-          }
+          // NOTE: EncryptionVFS is intentionally NOT applied to IDB.
+          // See the OPFS fallback comment above for the reason.
 
           this.sqlite3.vfs_register(vfs, true);
           cachedVfsName = (vfs as any).name;
@@ -1019,6 +1007,30 @@ export class Database implements DatabaseConnection {
       }
     }
     resetSingletonState();
+  }
+
+  /**
+   * Close the SQLite database handle to release the file lock, but keep the
+   * WASM module alive. Use this before a same-session re-initialization (e.g.
+   * when encryption is set up after the DB was first opened without a key).
+   * Unlike forceClose(), this does NOT reset cachedModule/cachedSqlite3 so the
+   * Asyncify state remains stable across the reinit.
+   */
+  static async closeHandleForReinit(): Promise<void> {
+    if (cachedSqlite3 && cachedDbHandle !== null) {
+      try {
+        await cachedSqlite3.close(cachedDbHandle);
+      } catch {
+        // Best-effort
+      }
+    }
+    cachedDbHandle = null;
+    globalDbInstance = null;
+    globalInitPromise = null;
+    vfsRegistered = false;
+    cachedVfsName = undefined;
+    migrationCompleted = false;
+    // Intentionally NOT clearing cachedModule or cachedSqlite3
   }
 
   /**

@@ -1030,6 +1030,35 @@ export interface TranslationKeys {
       remoteTime: string;
       showHistory: string;
     };
+    typesafeAi: {
+      title: string;
+      description: string;
+      whatIsTypeSafe: string;
+      apiKeyLabel: string;
+      apiKeyPlaceholder: string;
+      addKey: string;
+      changeKey: string;
+      removeKey: string;
+      showKey: string;
+      hideKey: string;
+      getKeyLink: string;
+      keySaved: string;
+      keyRemoved: string;
+      detectProviders: string;
+      detectProvidersDescription: string;
+      detectProvidersRunning: string;
+      detectProvidersResult: string;
+      detectProvidersNone: string;
+      scanDuplicates: string;
+      scanDuplicatesDescription: string;
+      scanDuplicatesRunning: string;
+      scanDuplicatesNone: string;
+      scanDuplicatesTitle: string;
+      duplicatePair: string;
+      duplicateProbability: string;
+      duplicatesDismiss: string;
+      noKeyWarning: string;
+    };
   };
   help: {
     title: string;
@@ -2573,6 +2602,39 @@ export const nl: TranslationKeys = {
       localTime: 'Lokaal',
       remoteTime: 'Extern',
       showHistory: 'Geschiedenis tonen',
+    },
+    typesafeAi: {
+      title: 'TypeSafe AI',
+      description:
+        'Gebruik AI voor slimmere categorisering en detectie van betaalproviders',
+      whatIsTypeSafe:
+        'TypeSafe AI vervangt broze regex-regels door gerichte AI-beslissingen. Het categoriseert transacties op basis van semantisch begrip, niet op exacte tekstovereenkomsten — ook voor onbekende winkels en buitenlandse beschrijvingen.',
+      apiKeyLabel: 'API-sleutel',
+      apiKeyPlaceholder: 'Voer je TypeSafe API-sleutel in',
+      addKey: 'API-sleutel toevoegen',
+      changeKey: 'Wijzigen',
+      removeKey: 'Verwijderen',
+      showKey: 'Tonen',
+      hideKey: 'Verbergen',
+      getKeyLink: 'Haal je sleutel op — console.typesafe.ai',
+      keySaved: 'API-sleutel opgeslagen',
+      keyRemoved: 'API-sleutel verwijderd',
+      detectProviders: 'Betaalproviders detecteren',
+      detectProvidersDescription:
+        'Analyseer onbekende IBANs om betaalplatforms te herkennen die de patroonregels hebben gemist.',
+      detectProvidersRunning: 'Analyseren...',
+      detectProvidersResult: '{count} betaalprovider(s) gedetecteerd',
+      detectProvidersNone: 'Geen nieuwe betaalproviders gevonden',
+      scanDuplicates: 'Dubbele transacties scannen',
+      scanDuplicatesDescription:
+        'Zoek transacties die op hetzelfde betalingsevent lijken te zijn ingevoerd met een licht afwijkende omschrijving.',
+      scanDuplicatesRunning: 'Scannen...',
+      scanDuplicatesNone: 'Geen mogelijke duplicaten gevonden',
+      scanDuplicatesTitle: 'Mogelijke dubbele transacties',
+      duplicatePair: 'Paar {n}',
+      duplicateProbability: 'P(dubbel)',
+      duplicatesDismiss: 'Sluiten',
+      noKeyWarning: 'Voeg een API-sleutel toe om AI-functies in te schakelen.',
     },
   },
   help: {

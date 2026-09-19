@@ -1,11 +1,7 @@
 // Recurring pattern types for subscription detection
 
 export type PatternType =
-  | 'weekly'
-  | 'biweekly'
-  | 'monthly'
-  | 'quarterly'
-  | 'yearly';
+  'weekly' | 'biweekly' | 'monthly' | 'quarterly' | 'yearly';
 
 export interface RecurringPattern {
   id: string;

@@ -100,6 +100,18 @@ async function ensureServiceWorkerReady(): Promise<void> {
     return;
   }
 
+  // Clean up any stale SW registrations at scopes other than our base path.
+  // These accumulate when the app has been served at different paths (e.g. root
+  // vs /app/) and cause harmless but noisy 404 update errors in the console.
+  const allRegistrations = await navigator.serviceWorker.getRegistrations();
+  for (const reg of allRegistrations) {
+    if (!reg.scope.endsWith(basePath)) {
+      // eslint-disable-next-line no-console
+      console.log('[SW] Unregistering stale SW at scope:', reg.scope);
+      await reg.unregister();
+    }
+  }
+
   const swPath = `${basePath}sw.js`;
 
   try {

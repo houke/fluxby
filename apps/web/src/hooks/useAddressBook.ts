@@ -121,8 +121,7 @@ export function useAddressBook(options: { enabled?: boolean } = {}) {
       ]);
 
       const mergedResult = result as
-        | { merged?: boolean; mergeReason?: 'name' | 'iban' }
-        | undefined;
+        { merged?: boolean; mergeReason?: 'name' | 'iban' } | undefined;
       if (mergedResult?.merged) {
         if (mergedResult.mergeReason === 'name') {
           toast.info(
