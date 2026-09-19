@@ -131,7 +131,7 @@ export default function HelpAI() {
               </th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className='divide-y'>
             {[
               ['Categoriseren', 'Winkelnaam, omschrijving, bedrag'],
               ['CSV richting', 'Unieke richting-waarden uit het bestand'],
@@ -140,10 +140,7 @@ export default function HelpAI() {
               ['Abonnementen', 'IBAN en genormaliseerde winkelnamen'],
               ['Dubbele transacties', 'Datum, bedrag, omschrijving per paar'],
             ].map(([feat, data]) => (
-              <tr
-                key={feat}
-                className='border-t last:border-0'
-              >
+              <tr key={feat}>
                 <td className='px-4 py-2 font-medium'>{feat}</td>
                 <td className='px-4 py-2 text-gray-500 dark:text-gray-400'>
                   {data}
