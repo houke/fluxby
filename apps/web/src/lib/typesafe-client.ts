@@ -139,7 +139,7 @@ export async function suggestCategory(params: {
         category: {
           type: 'choice',
           instructions:
-            'Which spending category best fits this bank transaction?',
+            'Which spending category best fits the bank transaction described in `merchant`, `description`, and `amount`?',
           criteria,
         },
       },
@@ -147,7 +147,7 @@ export async function suggestCategory(params: {
     );
 
     const answer = choiceAnswer(response, 'category');
-    if (answer.choice === 'none' || answer.confidence < 0.6) return null;
+    if (answer.choice === 'none' || answer.confidence < 0.7) return null;
     return { categoryId: answer.choice, confidence: answer.confidence };
   } catch {
     return null;
@@ -261,7 +261,7 @@ export async function detectIsPaymentProvider(params: {
         is_provider: {
           type: 'noul',
           instructions:
-            'Is this IBAN used by a payment intermediary (such as PayPal, Tikkie, Mollie, iDEAL, Stripe, Adyen, Buckaroo, SumUp) rather than a direct merchant the user bought from?',
+            'Is `iban` used by a payment intermediary (such as PayPal, Tikkie, Mollie, iDEAL, Stripe, Adyen, Buckaroo, SumUp) rather than a direct merchant the user bought goods or services from?',
           criteria: {
             true: 'IBAN belongs to a payment processor or intermediary platform',
             false: 'IBAN belongs to a direct merchant, person, or organisation',

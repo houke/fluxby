@@ -2639,8 +2639,9 @@ export function createDataService(db: Database) {
         merchant_name: string | null;
         description: string | null;
         opposing_account_name: string | null;
+        amount: number;
       }>(
-        `SELECT t.id, t.merchant_name, t.description, t.opposing_account_name
+        `SELECT t.id, t.merchant_name, t.description, t.opposing_account_name, t.amount
          FROM transactions t
          JOIN accounts a ON t.account_id = a.id
          WHERE t.category_id IS NULL AND a.profile_id = ? AND t.is_deleted = 0`,
@@ -2693,7 +2694,7 @@ export function createDataService(db: Database) {
               suggestCategory({
                 merchantName: tx.merchant_name,
                 description: tx.description,
-                amount: 0,
+                amount: tx.amount,
                 categories,
                 apiKey: tsKey,
               })

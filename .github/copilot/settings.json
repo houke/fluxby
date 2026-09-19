@@ -1,0 +1,14 @@
+{
+  "extraKnownMarketplaces": {
+    my-copilot-plugins": {
+      "source": {
+        "source": "git",
+        "url": "https://dev.azure.com/my-platform/my-project/_git/My.Copilot.Marketplace"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "shared@my-copilot-plugins": true,
+    "platform-shared@my-copilot-plugins": true
+  }
+}
