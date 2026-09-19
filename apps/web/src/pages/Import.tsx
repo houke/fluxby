@@ -795,7 +795,8 @@ export default function Import() {
     uploadMutation.isPending ||
     createAccountsMutation.isPending ||
     isWorkerProcessing ||
-    importGenericMutation.isPending;
+    importGenericMutation.isPending ||
+    importProgress !== null;
 
   const getFieldLabel = (key: string) => {
     switch (key) {

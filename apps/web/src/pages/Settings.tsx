@@ -18,6 +18,15 @@ import { TypeSafeSettings } from '@/components/settings/TypeSafeSettings';
 
 const VALID_TABS = ['active-profile', 'manage-profiles', 'app-settings'];
 
+export const createSettingsTabHandler = (
+  setSearchParams: ReturnType<typeof useSearchParams>[1]
+) => {
+  return (value: string) => {
+    setSearchParams({ tab: value }, { replace: true });
+    window.scrollTo({ top: 0 });
+  };
+};
+
 export default function Settings() {
   const { t } = useLanguage();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -28,9 +37,7 @@ export default function Settings() {
   const activeTab =
     tabParam && VALID_TABS.includes(tabParam) ? tabParam : 'active-profile';
 
-  const handleTabChange = (value: string) => {
-    setSearchParams({ tab: value });
-  };
+  const handleTabChange = createSettingsTabHandler(setSearchParams);
 
   return (
     <div className='space-y-0 sm:space-y-6'>

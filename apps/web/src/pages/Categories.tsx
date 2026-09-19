@@ -52,6 +52,7 @@ import {
 import { useDataService } from '@/contexts/DatabaseContext';
 import { readFromOPFS, writeToOPFS } from '@fluxby/database';
 import { cn } from '@/lib/utils';
+import { normalizeCategoryAmount } from '@/lib/category-signs';
 import { Currency } from '@/components/ui/currency';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useProfile } from '@/contexts/ProfileContext';
@@ -593,7 +594,7 @@ export default function Categories() {
       const parentStats = getStats(
         parent.id,
         parent.transactionCount || 0,
-        parent.totalExpenses || 0
+        normalizeCategoryAmount(parent.totalExpenses || 0)
       );
       let count = parentStats.count;
       let amount = parentStats.amount;
@@ -602,7 +603,7 @@ export default function Categories() {
         const subStats = getStats(
           sub.id,
           sub.transactionCount || 0,
-          sub.totalExpenses || 0
+          normalizeCategoryAmount(sub.totalExpenses || 0)
         );
         count += subStats.count;
         amount += subStats.amount;
@@ -621,7 +622,7 @@ export default function Categories() {
       }
       return {
         count: category.transactionCount || 0,
-        amount: category.totalExpenses || 0,
+        amount: normalizeCategoryAmount(category.totalExpenses || 0),
       };
     },
     [amountMode, periodStats]
@@ -636,20 +637,18 @@ export default function Categories() {
         </span>
       );
     }
-    if (amount > 0) {
-      // Positive amount -> income -> show up green
+    if (amount >= 0) {
       return (
         <span className='flex items-center text-emerald-600'>
           <ArrowUpRight className='mr-1 h-3 w-3' />
-          <Currency amount={amount} />
+          <Currency amount={normalizeCategoryAmount(amount)} />
         </span>
       );
     }
-    // Negative amount -> expense -> show down red
     return (
       <span className='flex items-center text-rose-600'>
         <ArrowDownRight className='mr-1 h-3 w-3' />
-        <Currency amount={Math.abs(amount)} />
+        <Currency amount={normalizeCategoryAmount(amount)} />
       </span>
     );
   };
