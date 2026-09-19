@@ -1,5 +1,51 @@
 # Changelog
 
+## v1.11.0
+
+**Release Date:** 2026-09-19
+
+### Features
+
+- **docs:** add TypeSafe AI docs to developer hub and help center
+- **web:** TypeSafe AI settings UI — action buttons + duplicates dialog + recurring merchant grouping
+- **web:** TypeSafe AI integration — smarter categorisation and import parsing
+
+### Bug Fixes
+
+- **web:** hide 'Back to homepage' in Tauri, link to fluxby.app on web
+- **typesafe:** security and quality fixes from deep review
+- **web:** guard VITE_DEV_PASSWORD auto-unlock to dev mode only
+- **web:** unregister stale service workers at wrong scopes
+- **landing:** correct TypeSafe pricing info in HelpAI
+- **landing:** use divide-y on privacy table tbody in HelpAI
+- **web:** Switch thumb always white to contrast against any track color
+- **database:** prevent OPFS encryption loop on auth failure and corrupted data
+- **web:** fix encryption login loop - complete solution
+- **web:** correctly break encryption login loop on both web and Tauri
+- **web:** fix encryption login loop after database reset
+
+### Documentation
+
+- fix link
+- readme icon fix
+- **typesafe:** rubber duck review fixes + docs/typesafe.md
+
+### Chores
+
+- formatting
+- **deps:** bump the production-dependencies group with 6 updates (#133)
+- **deps:** bump the dev-dependencies group with 2 updates (#132)
+- rename doc
+- linting
+- linting
+- linting
+- use houke-nexus as marketplace key in copilot settings
+- fix copilot settings.json to point to nexus marketplace
+
+### Build System
+
+- **tauri:** add Fluxby - Local build variant
+
 ## v1.10.0
 
 **Release Date:** 2026-09-08

@@ -33,6 +33,31 @@ const UpdatesContent = () => {
   const updatesPage = t.legal?.updatesPage;
 
   const releases = [
+        {
+      version: '1.11.0',
+      date: updatesPage?.v1110Date || '19 september 2026',
+      title: updatesPage?.v1110Title || 'Release 1.11.0',
+      description:
+        updatesPage?.v1110Description ||
+        '3 nieuwe features en 11 bugfixes.',
+      features: [
+        {
+          icon: BookOpen,
+          title: updatesPage?.v1110F1Title || 'Toegevoegd typesafe ai docs to developer hub and help center',
+          description: updatesPage?.v1110F1Desc || 'Er is weer wat bijgekomen. Ontdek het zelf!',
+        },
+        {
+          icon: Globe,
+          title: updatesPage?.v1110F2Title || 'Nieuwe web app mogelijkheden',
+          description: updatesPage?.v1110F2Desc || '2 nieuwe features. Bekijk de release op GitHub!',
+        },
+        {
+          icon: Wrench,
+          title: updatesPage?.v1110F3Title || 'Bugfixes',
+          description: updatesPage?.v1110F3Desc || '11 bugs opgelost. Zie changelog voor details.',
+        },
+      ],
+    },
     {
       version: '1.10.0',
       date: updatesPage?.v1100Date || '8 september 2026',
