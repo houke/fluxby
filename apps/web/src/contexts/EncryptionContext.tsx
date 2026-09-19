@@ -131,6 +131,8 @@ function getInitialLegacyEncryptionSalt(): string | null {
 }
 
 interface EncryptionContextType {
+  /** Whether OPFS settings have finished hydrating from storage */
+  isHydrated: boolean;
   /** Whether password protection is set up (kept as isEncryptionEnabled for compatibility) */
   isEncryptionEnabled: boolean;
   /** Whether the app is currently unlocked */
@@ -188,27 +190,43 @@ export function EncryptionProvider({ children }: EncryptionProviderProps) {
   >(getInitialLegacyEncryptionSalt);
   // The actual 32-byte master key - only in memory, cleared on lock
   const [encryptionKey, setEncryptionKey] = useState<Uint8Array | null>(null);
+  const [isHydrated, setIsHydrated] = useState<boolean>(
+    isSettingsCacheInitialized()
+  );
   const mountedRef = useRef(true);
 
   // Load from OPFS if cache wasn't initialized
   useEffect(() => {
     mountedRef.current = true;
 
-    if (!isSettingsCacheInitialized()) {
-      Promise.all([
-        readFromOPFS<string>(PASSWORD_HASH_KEY),
-        readFromOPFS<string>(PASSWORD_SALT_KEY),
-        readFromOPFS<string>(WRAPPED_KEY_KEY),
-        readFromOPFS<string>(ENCRYPTION_SALT_KEY), // Legacy check
-      ]).then(([hash, salt, wrapped, legacySalt]) => {
+    const hydrate = async () => {
+      if (isSettingsCacheInitialized()) {
+        setIsHydrated(true);
+        return;
+      }
+
+      try {
+        const [hash, salt, wrapped, legacySalt] = await Promise.all([
+          readFromOPFS<string>(PASSWORD_HASH_KEY),
+          readFromOPFS<string>(PASSWORD_SALT_KEY),
+          readFromOPFS<string>(WRAPPED_KEY_KEY),
+          readFromOPFS<string>(ENCRYPTION_SALT_KEY), // Legacy check
+        ]);
+
         if (mountedRef.current) {
           if (hash) setPasswordHash(hash);
           if (salt) setPasswordSalt(salt);
           if (wrapped) setWrappedKeyData(wrapped);
           if (legacySalt) setLegacyEncryptionSalt(legacySalt);
         }
-      });
-    }
+      } finally {
+        if (mountedRef.current) {
+          setIsHydrated(true);
+        }
+      }
+    };
+
+    void hydrate();
 
     return () => {
       mountedRef.current = false;
@@ -415,6 +433,7 @@ export function EncryptionProvider({ children }: EncryptionProviderProps) {
 
   const value = useMemo(
     () => ({
+      isHydrated,
       isEncryptionEnabled,
       isUnlocked,
       encryptionKey,
@@ -427,6 +446,7 @@ export function EncryptionProvider({ children }: EncryptionProviderProps) {
       disableEncryption,
     }),
     [
+      isHydrated,
       isEncryptionEnabled,
       isUnlocked,
       encryptionKey,

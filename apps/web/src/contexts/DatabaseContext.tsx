@@ -90,7 +90,8 @@ function resetModuleInitState() {
 
 export function DatabaseProvider({ children }: DatabaseProviderProps) {
   const { t, language } = useLanguage();
-  const { isEncryptionEnabled, isUnlocked, encryptionKey } = useEncryption();
+  const { isEncryptionEnabled, isUnlocked, encryptionKey, isHydrated } =
+    useEncryption();
 
   // Initialize state from existing database if available
   const existingDb = getDatabaseInstance();
@@ -234,6 +235,16 @@ export function DatabaseProvider({ children }: DatabaseProviderProps) {
       return;
     }
 
+    // Wait until the saved encryption state has finished hydrating. This prevents
+    // creating the database before OPFS readFromOPFS has populated the password hash.
+    if (!isHydrated) {
+      devLog('Waiting for encryption hydration...');
+      setInitStatus('Preparing security settings...');
+      setIsLoading(true);
+      setIsReady(false);
+      return;
+    }
+
     // If password protection is enabled but not unlocked, wait
     if (isEncryptionEnabled && !isUnlocked) {
       devLog('Waiting for unlock...');
@@ -309,7 +320,7 @@ export function DatabaseProvider({ children }: DatabaseProviderProps) {
         clearTimeout(timeoutRef.current);
       }
     };
-  }, [isEncryptionEnabled, isUnlocked, encryptionKey]);
+  }, [isEncryptionEnabled, isUnlocked, encryptionKey, isHydrated]);
 
   // Check if we're in Tauri
   const isTauri = typeof window !== 'undefined' && '__TAURI__' in window;

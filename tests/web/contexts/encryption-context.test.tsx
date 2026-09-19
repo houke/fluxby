@@ -137,6 +137,22 @@ describe('EncryptionContext', () => {
     return contextPromise;
   };
 
+  describe('hydration', () => {
+    it('should mark the provider as hydrated once OPFS settings are loaded', async () => {
+      opfsStore['fluxby.passwordHash'] = 'hash-value';
+      opfsStore['fluxby.passwordSalt'] = 'salt-value';
+      opfsStore['fluxby.wrappedMasterKey'] = 'wrapped-key';
+
+      const ctx = await renderWithProvider();
+
+      await waitFor(() => {
+        expect(contextRef).not.toBeNull();
+        expect(ctx.isHydrated).toBe(true);
+        expect(ctx.isEncryptionEnabled).toBe(true);
+      });
+    });
+  });
+
   describe('setupEncryption', () => {
     it('should generate and store wrapped master key', async () => {
       const ctx = await renderWithProvider();
