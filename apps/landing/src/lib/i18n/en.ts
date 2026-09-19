@@ -1138,6 +1138,7 @@ export const en: LandingTranslationKeys = {
       security: 'Security & Privacy',
       sync: 'Device sync',
       dataPrivacy: 'Your data & privacy',
+      ai: 'Smart AI features',
     },
     devNav: {
       gettingStarted: 'Getting Started',

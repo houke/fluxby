@@ -569,6 +569,7 @@ export const nl: LandingTranslationKeys = {
       openapi: 'OpenAPI Spec',
       apiReference: 'Swagger Docs',
       helpCenter: 'Helpcentrum',
+      ai: 'TypeSafe AI',
     },
     // Introduction page
     introduction: {
@@ -1351,6 +1352,7 @@ export const nl: LandingTranslationKeys = {
       security: 'Beveiliging & Privacy',
       sync: 'Apparaat synchronisatie',
       dataPrivacy: 'Je data & privacy',
+      ai: 'Slimme AI functies',
     },
     devNav: {
       gettingStarted: 'Aan de slag',
