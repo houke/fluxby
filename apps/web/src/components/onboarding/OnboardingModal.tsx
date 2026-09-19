@@ -2,7 +2,7 @@
 // The main modal that displays during onboarding with chapter tabs, step content, and navigation
 
 import { useCallback, useEffect, useState, useMemo, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
   ArrowLeftRight,
@@ -100,6 +100,7 @@ export function OnboardingModal({
   isCreatingDemo = false,
 }: OnboardingModalProps) {
   const navigate = useNavigate();
+  const location = useLocation();
   const { profiles } = useProfile();
   const prefersReducedMotion = useReducedMotion();
   const [isNavigating, setIsNavigating] = useState(false);
@@ -247,23 +248,30 @@ export function OnboardingModal({
     };
   }, []);
 
-  // Handle navigation between chapters (route changes)
+  // Handle navigation between chapters (route changes).
+  // Only fire when the chapter index or active state changes — not on every
+  // render — so that a route change caused by navigate() does not re-trigger this.
   useEffect(() => {
     if (!isActive || !currentChapter) return;
-
     const targetRoute = currentChapter.route;
-    const currentPath = window.location.pathname;
-
-    if (targetRoute !== currentPath) {
+    if (location.pathname !== targetRoute) {
       setIsNavigating(true);
       navigate(targetRoute);
-      // Wait for navigation to complete
-      const timer = setTimeout(() => {
-        setIsNavigating(false);
-      }, 500);
-      return () => clearTimeout(timer);
     }
-  }, [currentChapterIndex, currentChapter, navigate, isActive]);
+    // Intentional: only re-run when the chapter index or active flag changes,
+    // not when location.pathname changes (that is handled by the effect below).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentChapterIndex, isActive]);
+
+  // Arrival detection: clear isNavigating once the correct route has loaded.
+  // This replaces the old fixed-timeout approach which was cancelled by the
+  // useEffect cleanup whenever navigate() caused a re-render.
+  useEffect(() => {
+    if (!isNavigating || !currentChapter) return;
+    if (location.pathname === currentChapter.route) {
+      setIsNavigating(false);
+    }
+  }, [location.pathname, isNavigating, currentChapter]);
 
   // Calculate modal position based on spotlight
   const modalPosition = useMemo(() => {
