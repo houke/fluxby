@@ -105,7 +105,7 @@ export default function DocsAI() {
 
       {/* What is TypeSafe */}
       <div className='mt-8 rounded-xl border border-purple-200 bg-purple-50 p-6 dark:border-purple-800 dark:bg-purple-950/30'>
-        <h3 className='mb-2 mt-0 flex items-center gap-2 text-lg font-semibold text-purple-900 dark:text-purple-200'>
+        <h3 className='mt-0 mb-2 flex items-center gap-2 text-lg font-semibold text-purple-900 dark:text-purple-200'>
           <span>✨</span> What is TypeSafe AI?
         </h3>
         <p className='mb-2 text-purple-800 dark:text-purple-300'>
@@ -119,9 +119,9 @@ export default function DocsAI() {
           </a>{' '}
           builds <strong>System One</strong> models — small, fast AI primitives
           that return structured answers instead of generated text.{' '}
-          <strong>Jev</strong> is TypeSafe's flagship model. Given a state
-          (JSON or string) and one or more typed questions, it returns
-          probabilities for Choice, Score, or Noul (yes/no) answers in ~100 ms.
+          <strong>Jev</strong> is TypeSafe's flagship model. Given a state (JSON
+          or string) and one or more typed questions, it returns probabilities
+          for Choice, Score, or Noul (yes/no) answers in ~100 ms.
         </p>
         <p className='mb-0 text-purple-800 dark:text-purple-300'>
           Code owns the control flow. Jev handles only the parts that require
@@ -152,9 +152,17 @@ export default function DocsAI() {
             {[
               ['Transaction category', 'Choice', 'Regex rule engine fallback'],
               ['CSV date format', 'Choice', 'Fixed-order format guesser'],
-              ['Direction column values', 'Choice', 'Hardcoded af/bij/debit list'],
+              [
+                'Direction column values',
+                'Choice',
+                'Hardcoded af/bij/debit list',
+              ],
               ['Payment provider detection', 'Noul', 'Substring pattern list'],
-              ['Recurring merchant grouping', 'Noul', 'Dutch month-name stripper'],
+              [
+                'Recurring merchant grouping',
+                'Noul',
+                'Dutch month-name stripper',
+              ],
               ['Semantic duplicate check', 'Noul', 'Hash-only deduplication'],
             ].map(([decision, primitive, replaces]) => (
               <tr key={decision} className='border-b last:border-0'>
@@ -162,7 +170,7 @@ export default function DocsAI() {
                   {decision}
                 </td>
                 <td className='py-2 pr-4'>
-                  <span className='rounded bg-purple-100 px-2 py-0.5 text-xs font-mono text-purple-800 dark:bg-purple-900 dark:text-purple-200'>
+                  <span className='rounded bg-purple-100 px-2 py-0.5 font-mono text-xs text-purple-800 dark:bg-purple-900 dark:text-purple-200'>
                     {primitive}
                   </span>
                 </td>
@@ -181,16 +189,16 @@ export default function DocsAI() {
       <p className='text-gray-600 dark:text-gray-400'>
         Every TypeSafe integration checks for an API key before calling the
         service. If the key is absent or the call fails, the existing
-        deterministic logic runs unchanged. Users who do not configure a key
-        see no change in behaviour.
+        deterministic logic runs unchanged. Users who do not configure a key see
+        no change in behaviour.
       </p>
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
         Client implementation
       </h2>
       <p className='text-gray-600 dark:text-gray-400'>
-        Because Fluxby is a local-first web app (no backend server), TypeSafe
-        is called directly from the browser via the HTTP API.{' '}
+        Because Fluxby is a local-first web app (no backend server), TypeSafe is
+        called directly from the browser via the HTTP API.{' '}
         <code>apps/web/src/lib/typesafe-client.ts</code> wraps{' '}
         <code>fetch</code> and exposes domain helpers:
       </p>
@@ -217,9 +225,8 @@ export default function DocsAI() {
 
       <p className='text-gray-600 dark:text-gray-400'>
         Fluxby only applies the suggestion when{' '}
-        <code>confidence &gt;= 0.7</code>. Below that threshold, the
-        transaction remains uncategorised and the user assigns the category
-        manually.
+        <code>confidence &gt;= 0.7</code>. Below that threshold, the transaction
+        remains uncategorised and the user assigns the category manually.
       </p>
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
@@ -227,8 +234,8 @@ export default function DocsAI() {
       </h2>
       <p className='text-gray-600 dark:text-gray-400'>
         For bank exports with non-standard direction column values (e.g. German
-        "Belastung"/"Gutschrift"), Fluxby asks Jev to classify each unique
-        value in one parallel batch before processing rows.
+        "Belastung"/"Gutschrift"), Fluxby asks Jev to classify each unique value
+        in one parallel batch before processing rows.
       </p>
       <CodeBlock language='json' code={directionExample} />
 
@@ -247,12 +254,37 @@ export default function DocsAI() {
           </thead>
           <tbody>
             {[
-              ['Category suggestion', 'Choice confidence', '≥ 0.7', 'Auto-assign category'],
-              ['Date format detection', 'Choice confidence', '≥ 0.8', 'Override parser default'],
-              ['Direction inference', 'Choice', '—', 'Used if answer is not "unknown"'],
-              ['Payment provider', 'Noul', '≥ 0.75', 'Mark as AI-detected provider'],
+              [
+                'Category suggestion',
+                'Choice confidence',
+                '≥ 0.7',
+                'Auto-assign category',
+              ],
+              [
+                'Date format detection',
+                'Choice confidence',
+                '≥ 0.8',
+                'Override parser default',
+              ],
+              [
+                'Direction inference',
+                'Choice',
+                '—',
+                'Used if answer is not "unknown"',
+              ],
+              [
+                'Payment provider',
+                'Noul',
+                '≥ 0.75',
+                'Mark as AI-detected provider',
+              ],
               ['Recurring grouping', 'Noul', '≥ 0.75', 'Merge merchant groups'],
-              ['Duplicate detection', 'Noul', '≥ 0.75', 'Surface for user review'],
+              [
+                'Duplicate detection',
+                'Noul',
+                '≥ 0.75',
+                'Surface for user review',
+              ],
             ].map(([feat, prim, thresh, action]) => (
               <tr key={feat} className='border-b last:border-0'>
                 <td className='py-2 pr-4 font-medium text-gray-900 dark:text-gray-100'>
@@ -299,8 +331,8 @@ export default function DocsAI() {
           names
         </li>
         <li>
-          <strong>Duplicate detection:</strong> date, amount, and description
-          of candidate transaction pairs
+          <strong>Duplicate detection:</strong> date, amount, and description of
+          candidate transaction pairs
         </li>
       </ul>
       <p className='text-gray-600 dark:text-gray-400'>
@@ -325,7 +357,10 @@ export default function DocsAI() {
             'How to build with System One',
             'https://docs.typesafe.ai/concepts/how-to-build-with-system-one',
           ],
-          ['Primitives (Choice, Score, Noul)', 'https://docs.typesafe.ai/primitives'],
+          [
+            'Primitives (Choice, Score, Noul)',
+            'https://docs.typesafe.ai/primitives',
+          ],
           ['Confidence and thresholds', 'https://docs.typesafe.ai/confidence'],
           [
             'Pre-parsed value extraction cookbook',
@@ -335,7 +370,10 @@ export default function DocsAI() {
             'Hierarchical classification cookbook',
             'https://docs.typesafe.ai/cookbooks/hierarchical_classification',
           ],
-          ['Internal reference: docs/typesafe.md', 'https://github.com/fluxby-app/fluxby/blob/main/docs/typesafe.md'],
+          [
+            'Internal reference: docs/typesafe.md',
+            'https://github.com/fluxby-app/fluxby/blob/main/docs/typesafe.md',
+          ],
         ].map(([label, href]) => (
           <li key={href}>
             <a

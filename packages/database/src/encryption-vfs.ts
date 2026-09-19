@@ -263,7 +263,11 @@ export class EncryptionVFS extends FacadeVFS {
   // FileControl is synchronous in both underlying VFS implementations
   // (OPFSAnyContextVFS and IDBBatchAtomicVFS), so keep it sync here to
   // avoid "xFileControl unexpectedly returned a Promise" Asyncify errors.
-  jFileControl(pFile: number, op: number, pArg: DataView): number | Promise<number> {
+  jFileControl(
+    pFile: number,
+    op: number,
+    pArg: DataView
+  ): number | Promise<number> {
     return this.baseVFS.jFileControl(pFile, op, pArg);
   }
   jSectorSize(pFile: number): number {

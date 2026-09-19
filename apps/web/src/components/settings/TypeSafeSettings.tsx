@@ -124,9 +124,9 @@ export function TypeSafeSettings() {
           </div>
         </CardHeader>
 
-        <CardContent className='px-3 pb-3 pt-0 sm:px-6 sm:pb-6'>
+        <CardContent className='px-3 pt-0 pb-3 sm:px-6 sm:pb-6'>
           <div className='space-y-6'>
-            <p className='text-muted-foreground text-sm'>{s.whatIsTypeSafe}</p>
+            <p className='text-sm text-muted-foreground'>{s.whatIsTypeSafe}</p>
 
             {/* API key section */}
             <div className='space-y-2'>
@@ -168,7 +168,7 @@ export function TypeSafeSettings() {
                 <div className='flex flex-wrap items-center gap-2'>
                   {hasKey ? (
                     <>
-                      <div className='flex flex-1 items-center gap-2 rounded-md border bg-muted/40 px-3 py-2 text-sm font-mono'>
+                      <div className='flex flex-1 items-center gap-2 rounded-md border bg-muted/40 px-3 py-2 font-mono text-sm'>
                         <KeyRound className='h-3.5 w-3.5 shrink-0 text-green-500' />
                         <span className='text-muted-foreground'>
                           {showKey
@@ -232,7 +232,7 @@ export function TypeSafeSettings() {
                 <div className='flex items-start justify-between gap-4'>
                   <div className='min-w-0 flex-1'>
                     <p className='text-sm font-medium'>{s.detectProviders}</p>
-                    <p className='text-muted-foreground text-xs'>
+                    <p className='text-xs text-muted-foreground'>
                       {s.detectProvidersDescription}
                     </p>
                   </div>
@@ -255,7 +255,7 @@ export function TypeSafeSettings() {
                 <div className='flex items-start justify-between gap-4'>
                   <div className='min-w-0 flex-1'>
                     <p className='text-sm font-medium'>{s.scanDuplicates}</p>
-                    <p className='text-muted-foreground text-xs'>
+                    <p className='text-xs text-muted-foreground'>
                       {s.scanDuplicatesDescription}
                     </p>
                   </div>
@@ -303,7 +303,7 @@ export function TypeSafeSettings() {
                 className='rounded-lg border p-3'
               >
                 <div className='mb-2 flex items-center justify-between'>
-                  <span className='text-muted-foreground text-xs font-medium uppercase tracking-wide'>
+                  <span className='text-xs font-medium tracking-wide text-muted-foreground uppercase'>
                     {s.duplicatePair.replace('{n}', String(idx + 1))}
                   </span>
                   <Badge variant='outline' className='text-xs'>
@@ -317,14 +317,14 @@ export function TypeSafeSettings() {
                       key={tx.id}
                       className='space-y-1 rounded-md bg-muted/40 p-2 text-xs'
                     >
-                      <div className='text-muted-foreground font-medium uppercase'>
+                      <div className='font-medium text-muted-foreground uppercase'>
                         {txIdx === 0 ? 'A' : 'B'}
                       </div>
                       <div className='text-muted-foreground'>{tx.date}</div>
                       <div className='font-mono font-medium'>
                         <Currency amount={tx.amount} />
                       </div>
-                      <div className='text-muted-foreground line-clamp-2'>
+                      <div className='line-clamp-2 text-muted-foreground'>
                         {tx.description}
                       </div>
                     </div>

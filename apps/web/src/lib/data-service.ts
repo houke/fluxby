@@ -4376,8 +4376,7 @@ export function createDataService(db: Database) {
             .slice(0, 10)
             .map((r) => r[mapping.date]?.trim())
             .filter(
-              (d): d is string =>
-                !!d && /^\d{1,2}\/\d{1,2}\/\d{4}$/.test(d)
+              (d): d is string => !!d && /^\d{1,2}\/\d{1,2}\/\d{4}$/.test(d)
             );
           if (ambiguousDates.length > 0) {
             aiDateFormat = await detectDateFormat(ambiguousDates, tsKey);
@@ -5262,10 +5261,9 @@ export function createDataService(db: Database) {
         })
       );
 
-      return results
-        .filter(
-          (r): r is NonNullable<typeof r> => r !== null && r.probability >= 0.75
-        );
+      return results.filter(
+        (r): r is NonNullable<typeof r> => r !== null && r.probability >= 0.75
+      );
     },
 
     async detectRecurringPatterns(): Promise<{
@@ -5461,8 +5459,7 @@ export function createDataService(db: Database) {
                 return {
                   keys,
                   shouldMerge:
-                    a?.type === 'noul' &&
-                    (a as NoulAnswer).noul >= 0.75,
+                    a?.type === 'noul' && (a as NoulAnswer).noul >= 0.75,
                 };
               } catch {
                 return { keys, shouldMerge: false };
@@ -6905,9 +6902,7 @@ export function createDataService(db: Database) {
       previousBalance: number;
       newBalance: number;
       calculationMethod:
-        | 'latest_balance_after'
-        | 'sum_of_amounts'
-        | 'no_transactions';
+        'latest_balance_after' | 'sum_of_amounts' | 'no_transactions';
     }> {
       const pid = profileId();
       if (!pid) throw new Error('No active profile');
@@ -6934,9 +6929,7 @@ export function createDataService(db: Database) {
 
       let newBalance: number;
       let calculationMethod:
-        | 'latest_balance_after'
-        | 'sum_of_amounts'
-        | 'no_transactions';
+        'latest_balance_after' | 'sum_of_amounts' | 'no_transactions';
 
       if (latest && typeof latest.balance_after === 'number') {
         // Use the bank-provided balance from the latest transaction

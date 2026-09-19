@@ -196,8 +196,10 @@ export function DatabaseProvider({ children }: DatabaseProviderProps) {
                       (d) =>
                         new Promise<void>((r) => {
                           const req = indexedDB.deleteDatabase(d.name!);
-                          req.onsuccess = req.onerror = req.onblocked = () =>
-                            r();
+                          req.onsuccess =
+                            req.onerror =
+                            req.onblocked =
+                              () => r();
                         })
                     )
                 );

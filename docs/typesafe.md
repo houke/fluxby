@@ -2,7 +2,7 @@
 
 Fluxby uses [TypeSafe AI](https://typesafe.ai) to replace fragile regex-and-heuristic
 code with narrow, calibrated AI judgments. The integration follows TypeSafe's
-*AI-powered software* architecture: code owns all control flow, and the model handles
+_AI-powered software_ architecture: code owns all control flow, and the model handles
 only the parts that require semantic understanding.
 
 ## How it works
@@ -45,7 +45,11 @@ user's own category list.
 
 ```json
 {
-  "state": { "merchant": "Albert Heijn", "description": "PIN betaling", "amount": -24.80 },
+  "state": {
+    "merchant": "Albert Heijn",
+    "description": "PIN betaling",
+    "amount": -24.8
+  },
   "questions": {
     "category": {
       "type": "choice",
@@ -87,7 +91,7 @@ or non-Dutch bank exports.
 **Trigger**: Any CSV import that has an explicit debit/credit direction column.
 
 **What it does**: The parser recognises a hardcoded set of direction values (`af`,
-`bij`, `debit`, `credit`, `d`, `c`, `+`, `-`). For any value *not* in that set (e.g.
+`bij`, `debit`, `credit`, `d`, `c`, `+`, `-`). For any value _not_ in that set (e.g.
 `Belastung`, `Débit`, unusual bank codes), TypeSafe classifies each unique value in
 one parallel batch request before the row loop starts.
 
@@ -157,35 +161,35 @@ real-world payment charged twice.
 
 These integrations follow the TypeSafe building guide:
 
-| Principle | How it's applied |
-|---|---|
-| **Code owns control flow** | All routing, thresholds, and database writes are in TypeScript. TypeSafe only returns probabilities. |
-| **Atomic questions** | Each question judges one dimension. `suggestCategory` asks only about category fit; `is_provider` asks only about intermediary status. |
-| **Structured state** | State is a named JSON object with only the fields relevant to the question. |
-| **Backtick path references** | Instructions reference state fields by path (e.g. `` `merchant` ``, `` `iban` ``) where clarity helps. |
-| **Confidence thresholds** | Higher confidence required for higher-consequence actions (0.8 for date format override; 0.7 for category auto-assign). |
-| **Graceful degradation** | Every integration checks for the key first. On API error, existing deterministic behaviour runs unchanged. |
-| **No auto-delete** | Semantic duplicate detection surfaces candidates only — the user decides. |
+| Principle                    | How it's applied                                                                                                                       |
+| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| **Code owns control flow**   | All routing, thresholds, and database writes are in TypeScript. TypeSafe only returns probabilities.                                   |
+| **Atomic questions**         | Each question judges one dimension. `suggestCategory` asks only about category fit; `is_provider` asks only about intermediary status. |
+| **Structured state**         | State is a named JSON object with only the fields relevant to the question.                                                            |
+| **Backtick path references** | Instructions reference state fields by path (e.g. `` `merchant` ``, `` `iban` ``) where clarity helps.                                 |
+| **Confidence thresholds**    | Higher confidence required for higher-consequence actions (0.8 for date format override; 0.7 for category auto-assign).                |
+| **Graceful degradation**     | Every integration checks for the key first. On API error, existing deterministic behaviour runs unchanged.                             |
+| **No auto-delete**           | Semantic duplicate detection surfaces candidates only — the user decides.                                                              |
 
 ## Confidence thresholds reference
 
-| Feature | Primitive | Threshold | Action |
-|---|---|---|---|
-| Category suggestion | Choice confidence | ≥ 0.7 | Auto-assign category |
-| Date format detection | Choice confidence | ≥ 0.8 | Override DD/MM vs MM/DD |
-| Direction inference | Choice (no threshold) | — | Used if non-empty |
-| Payment provider | Noul | ≥ 0.75 | Mark as AI-detected provider |
-| Recurring grouping | Noul | ≥ 0.75 | Merge merchant groups |
-| Duplicate detection | Noul | ≥ 0.75 | Surface for user review |
+| Feature               | Primitive             | Threshold | Action                       |
+| --------------------- | --------------------- | --------- | ---------------------------- |
+| Category suggestion   | Choice confidence     | ≥ 0.7     | Auto-assign category         |
+| Date format detection | Choice confidence     | ≥ 0.8     | Override DD/MM vs MM/DD      |
+| Direction inference   | Choice (no threshold) | —         | Used if non-empty            |
+| Payment provider      | Noul                  | ≥ 0.75    | Mark as AI-detected provider |
+| Recurring grouping    | Noul                  | ≥ 0.75    | Merge merchant groups        |
+| Duplicate detection   | Noul                  | ≥ 0.75    | Surface for user review      |
 
 ## Key files
 
-| File | Role |
-|---|---|
-| `apps/web/src/lib/typesafe-client.ts` | Browser fetch wrapper, question helpers, domain functions |
-| `apps/web/src/components/settings/TypeSafeSettings.tsx` | Settings UI — key input, action buttons, duplicates dialog |
-| `apps/web/src/lib/data-service.ts` | Six integration points |
-| `apps/web/src/lib/api-compat.ts` | Exposes `detectPaymentProvidersWithAI` and `findSemanticDuplicates` to the React layer |
+| File                                                    | Role                                                                                   |
+| ------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| `apps/web/src/lib/typesafe-client.ts`                   | Browser fetch wrapper, question helpers, domain functions                              |
+| `apps/web/src/components/settings/TypeSafeSettings.tsx` | Settings UI — key input, action buttons, duplicates dialog                             |
+| `apps/web/src/lib/data-service.ts`                      | Six integration points                                                                 |
+| `apps/web/src/lib/api-compat.ts`                        | Exposes `detectPaymentProvidersWithAI` and `findSemanticDuplicates` to the React layer |
 
 ## Further reading
 

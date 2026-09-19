@@ -3,13 +3,7 @@ import { createContext, useContext, ReactNode } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 type ModalType =
-  | 'privacy'
-  | 'terms'
-  | 'features'
-  | 'pricing'
-  | 'updates'
-  | 'about'
-  | null;
+  'privacy' | 'terms' | 'features' | 'pricing' | 'updates' | 'about' | null;
 
 interface LegalContextType {
   activeModal: ModalType;

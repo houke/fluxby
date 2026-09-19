@@ -14,7 +14,7 @@ export default function HelpAI() {
 
       {/* What is it */}
       <div className='not-prose mt-8 rounded-xl border border-purple-200 bg-purple-50 p-6 dark:border-purple-800 dark:bg-purple-950/30'>
-        <h3 className='mb-2 mt-0 flex items-center gap-2 text-lg font-semibold text-purple-900 dark:text-purple-200'>
+        <h3 className='mt-0 mb-2 flex items-center gap-2 text-lg font-semibold text-purple-900 dark:text-purple-200'>
           <Sparkles className='h-5 w-5' />
           Wat is TypeSafe AI?
         </h3>
@@ -26,7 +26,8 @@ export default function HelpAI() {
         </p>
         <p className='mb-0 text-purple-800 dark:text-purple-300'>
           <strong>Volledig optioneel.</strong> Zonder API-sleutel werkt Fluxby
-          precies zoals altijd. Met een sleutel worden bepaalde functies slimmer.
+          precies zoals altijd. Met een sleutel worden bepaalde functies
+          slimmer.
         </p>
       </div>
 
@@ -87,8 +88,7 @@ export default function HelpAI() {
       </h2>
       <ol className='text-gray-600 dark:text-gray-400'>
         <li>
-          Ga naar{' '}
-          <strong>Instellingen → App-instellingen → TypeSafe AI</strong>
+          Ga naar <strong>Instellingen → App-instellingen → TypeSafe AI</strong>
         </li>
         <li>
           Haal een gratis API-sleutel op via{' '}
@@ -191,8 +191,8 @@ export default function HelpAI() {
       </h3>
       <p className='text-gray-600 dark:text-gray-400'>
         TypeSafe geeft nieuwe accounts $5,- tegoed om mee te starten (op het
-        moment van schrijven). Je kunt daarna zelf extra budget toevoegen.
-        Kijk op{' '}
+        moment van schrijven). Je kunt daarna zelf extra budget toevoegen. Kijk
+        op{' '}
         <a
           href='https://typesafe.ai'
           target='_blank'

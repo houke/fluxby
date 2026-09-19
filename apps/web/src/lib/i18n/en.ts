@@ -1177,7 +1177,8 @@ export const en: TranslationKeys = {
     },
     typesafeAi: {
       title: 'TypeSafe AI',
-      description: 'Use AI for smarter categorisation and payment provider detection',
+      description:
+        'Use AI for smarter categorisation and payment provider detection',
       whatIsTypeSafe:
         'TypeSafe AI replaces fragile regex rules with focused AI judgments. It categorises transactions based on semantic understanding, not exact text matches — even for unknown merchants and foreign-language descriptions.',
       apiKeyLabel: 'API key',

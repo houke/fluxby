@@ -48,11 +48,7 @@ export function getEffectiveProfileId(req: Request): number {
  */
 export function verifyEntityBelongsToProfile(
   table:
-    | 'accounts'
-    | 'transactions'
-    | 'categories'
-    | 'budgets'
-    | 'category_rules',
+    'accounts' | 'transactions' | 'categories' | 'budgets' | 'category_rules',
   entityId: number,
   profileId: number
 ): boolean {

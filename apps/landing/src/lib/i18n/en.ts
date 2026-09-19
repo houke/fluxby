@@ -1931,11 +1931,13 @@ export const en: LandingTranslationKeys = {
       v1100Title: 'Release 1.10.0',
       v1100Description: '14 new features and 24 bug fixes.',
       v1100F1Title: 'Web app extensions',
-      v1100F1Desc: '6 new capabilities to discover. Check out the release notes!',
+      v1100F1Desc:
+        '6 new capabilities to discover. Check out the release notes!',
       v1100F2Title: 'CSP headers for XSS protection',
-      v1100F2Desc: 'There\'s more to explore. Discover it yourself!',
+      v1100F2Desc: "There's more to explore. Discover it yourself!",
       v1100F3Title: 'API improvements',
-      v1100F3Desc: '5 new capabilities to discover. Check out the release notes!',
+      v1100F3Desc:
+        '5 new capabilities to discover. Check out the release notes!',
       v1100F4Title: 'Shared functionality',
       v1100F4Desc: '2 new features. Check the release on GitHub!',
       v1100F5Title: 'Bug fixes',

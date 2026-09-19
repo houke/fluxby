@@ -10,11 +10,7 @@ import type { SyncChange, SyncableRow } from './sync.js';
 // ============================================================================
 
 export type SyncStatusState =
-  | 'idle'
-  | 'syncing'
-  | 'offline'
-  | 'error'
-  | 'connecting';
+  'idle' | 'syncing' | 'offline' | 'error' | 'connecting';
 
 export interface SyncStatus {
   state: SyncStatusState;

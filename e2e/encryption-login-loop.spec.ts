@@ -40,13 +40,17 @@ async function completeFirstTimeSetup(page: Page) {
   }
 
   // Name entry
-  await page.getByText(/what.*your name|hoe heet je/i).waitFor({ timeout: 15000 });
+  await page
+    .getByText(/what.*your name|hoe heet je/i)
+    .waitFor({ timeout: 15000 });
   await page.fill('input[type="text"]', 'Loop Test');
   await page.getByRole('button', { name: /^next$|^volgende$/i }).click();
   await page.waitForTimeout(500);
 
   // Password setup
-  await page.getByText(/secure your data|beveilig je gegevens/i).waitFor({ timeout: 10000 });
+  await page
+    .getByText(/secure your data|beveilig je gegevens/i)
+    .waitFor({ timeout: 10000 });
   await page.fill('input[placeholder*="password" i]', TEST_PASSWORD);
   await page.fill('input[placeholder*="confirm" i]', TEST_PASSWORD);
   await page.getByRole('button', { name: /get started|aan de slag/i }).click();
@@ -65,7 +69,9 @@ async function completeFirstTimeSetup(page: Page) {
   }
 
   // Now the dashboard should be visible
-  await page.getByRole('link', { name: /dashboard/i }).waitFor({ timeout: 30000 });
+  await page
+    .getByRole('link', { name: /dashboard/i })
+    .waitFor({ timeout: 30000 });
 }
 
 async function unlockApp(page: Page) {
@@ -75,7 +81,9 @@ async function unlockApp(page: Page) {
   await page.getByRole('button', { name: /^unlock$|^ontgrendel$/i }).click();
 }
 
-test('login succeeds after restart without looping on lock screen', async ({ page }) => {
+test('login succeeds after restart without looping on lock screen', async ({
+  page,
+}) => {
   test.setTimeout(120_000);
   await completeFirstTimeSetup(page);
 
@@ -84,13 +92,17 @@ test('login succeeds after restart without looping on lock screen', async ({ pag
   await page.waitForTimeout(2000);
 
   // Lock screen must appear (encryption is configured)
-  await expect(page.getByText(/unlock fluxby/i)).toBeVisible({ timeout: 15000 });
+  await expect(page.getByText(/unlock fluxby/i)).toBeVisible({
+    timeout: 15000,
+  });
 
   // --- LOGIN after restart ---
   await unlockApp(page);
 
   // Dashboard must appear — the DB opened successfully
-  await page.getByRole('link', { name: /dashboard/i }).waitFor({ timeout: 30000 });
+  await page
+    .getByRole('link', { name: /dashboard/i })
+    .waitFor({ timeout: 30000 });
 
   // Lock screen must NOT reappear (this would indicate the loop)
   await page.waitForTimeout(1500);
@@ -99,8 +111,12 @@ test('login succeeds after restart without looping on lock screen', async ({ pag
   // --- SECOND RESTART: confirm stable behaviour ---
   await page.reload();
   await page.waitForTimeout(2000);
-  await expect(page.getByText(/unlock fluxby/i)).toBeVisible({ timeout: 15000 });
+  await expect(page.getByText(/unlock fluxby/i)).toBeVisible({
+    timeout: 15000,
+  });
   await unlockApp(page);
-  await page.getByRole('link', { name: /dashboard/i }).waitFor({ timeout: 30000 });
+  await page
+    .getByRole('link', { name: /dashboard/i })
+    .waitFor({ timeout: 30000 });
   await expect(page.getByText(/unlock fluxby/i)).not.toBeVisible();
 });
