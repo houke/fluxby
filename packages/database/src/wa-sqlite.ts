@@ -521,7 +521,7 @@ export class Database implements DatabaseConnection {
             const idbBaseVfsName = `idb-fluxby-base-${vfsCounter}`;
             vfsCounter++;
 
-            let vfs = await vfsModule.IDBBatchAtomicVFS.create(
+            const vfs = await vfsModule.IDBBatchAtomicVFS.create(
               idbBaseVfsName,
               cachedModule
             );
