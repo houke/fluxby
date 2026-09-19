@@ -4,6 +4,7 @@
  */
 
 import swaggerJsdoc from 'swagger-jsdoc';
+import prettier from 'prettier';
 import {
   writeFileSync,
   mkdirSync,
@@ -65,10 +66,15 @@ const swaggerSpec = swaggerJsdoc(options) as Record<string, unknown>;
 // --- Generate OpenAPI JSON ---
 const landingPublicDir = join(__dirname, '../apps/landing/public');
 mkdirSync(landingPublicDir, { recursive: true });
-writeFileSync(
-  join(landingPublicDir, 'openapi.json'),
-  JSON.stringify(swaggerSpec, null, 2)
-);
+const openApiPath = join(landingPublicDir, 'openapi.json');
+const rawJson = JSON.stringify(swaggerSpec, null, 2);
+const prettierConfig = await prettier.resolveConfig(openApiPath);
+const formatted = await prettier.format(rawJson, {
+  ...prettierConfig,
+  parser: 'json',
+  filepath: openApiPath,
+});
+writeFileSync(openApiPath, formatted);
 console.warn('✅ OpenAPI spec generated at apps/landing/public/openapi.json');
 
 // --- Generate Bruno Collection ---
