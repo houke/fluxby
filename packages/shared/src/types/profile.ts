@@ -8,11 +8,7 @@ export interface UserProfile {
 
 // Tenant profiles (multi-tenant support)
 export type ProfileType =
-  | 'personal'
-  | 'business'
-  | 'shared'
-  | 'savings'
-  | 'investing';
+  'personal' | 'business' | 'shared' | 'savings' | 'investing';
 
 // Reserved ID for demo profile (must use this exact UUID)
 export const DEMO_PROFILE_ID = '00000000-0000-0000-0000-000000000001';

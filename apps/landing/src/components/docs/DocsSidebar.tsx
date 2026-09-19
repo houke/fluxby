@@ -128,6 +128,11 @@ export default function DocsSidebar({ isOpen, onClose }: DocsSidebarProps) {
           icon: '📄',
         },
         {
+          title: t.docs?.nav?.ai || 'TypeSafe AI',
+          path: '/docs/ai',
+          icon: '✨',
+        },
+        {
           title: t.docs?.nav?.helpCenter || 'Helpcentrum',
           path: '/help',
           icon: '❓',

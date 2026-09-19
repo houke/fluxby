@@ -34,6 +34,7 @@ import DocsImport from './pages/docs/DocsImport';
 import DocsData from './pages/docs/DocsData';
 import DocsArchitecture from './pages/docs/DocsArchitecture';
 import DocsOpenAPI from './pages/docs/DocsOpenAPI';
+import DocsAI from './pages/docs/DocsAI';
 import HelpLayout from './components/help/HelpLayout';
 import HelpHome from './pages/help/HelpHome';
 import HelpBankConnection from './pages/help/HelpBankConnection';
@@ -49,6 +50,7 @@ import HelpAccounts from './pages/help/HelpAccounts';
 import HelpAnalytics from './pages/help/HelpAnalytics';
 import HelpAddressBook from './pages/help/HelpAddressBook';
 import HelpSync from './pages/help/HelpSync';
+import HelpAI from './pages/help/HelpAI';
 import { HeadManager } from './components/HeadManager';
 import ScrollToTop from './components/ScrollToTop';
 
@@ -162,6 +164,7 @@ function App() {
                 <Route path='data' element={<DocsData />} />
                 <Route path='architecture' element={<DocsArchitecture />} />
                 <Route path='openapi' element={<DocsOpenAPI />} />
+                <Route path='ai' element={<DocsAI />} />
               </Route>
               <Route path='/help' element={<HelpLayout />}>
                 <Route index element={<HelpHome />} />
@@ -181,6 +184,7 @@ function App() {
                 <Route path='analytics' element={<HelpAnalytics />} />
                 <Route path='sync' element={<HelpSync />} />
                 <Route path='privacy' element={<HelpPrivacy />} />
+                <Route path='ai' element={<HelpAI />} />
               </Route>
               <Route path='*' element={<NotFound />} />
             </Routes>

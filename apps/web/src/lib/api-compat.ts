@@ -420,6 +420,16 @@ export const api = {
     return ds.detectRecurringPatterns();
   },
 
+  detectPaymentProvidersWithAI: async () => {
+    const ds = getDataService();
+    return ds.detectPaymentProvidersWithAI();
+  },
+
+  findSemanticDuplicates: async () => {
+    const ds = getDataService();
+    return ds.findSemanticDuplicates();
+  },
+
   confirmRecurringPattern: async (id: string) => {
     const ds = getDataService();
     await ds.confirmRecurringPattern(id);

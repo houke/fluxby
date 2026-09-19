@@ -1,6 +1,12 @@
 import React, { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { RefreshCcw, Lock, LockOpen, ShieldCheck, RotateCcw } from 'lucide-react';
+import {
+  RefreshCcw,
+  Lock,
+  LockOpen,
+  ShieldCheck,
+  RotateCcw,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -106,8 +112,8 @@ export function DataManagementSettings() {
         setDataNotice({
           type: 'error',
           text:
-            (t.settings.dataManagement?.restoreBackupError || 'Restore failed') +
-            (result.error ? `: ${result.error}` : ''),
+            (t.settings.dataManagement?.restoreBackupError ||
+              'Restore failed') + (result.error ? `: ${result.error}` : ''),
         });
         setLoadingAction(null);
         return;

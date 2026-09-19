@@ -112,7 +112,10 @@ export async function listPreUpdateBackups(): Promise<BackupEntry[]> {
           .replace('pre-update-backup-', '')
           .replace('.db', '')
           // restore colons that were replaced with dashes in ISO positions
-          .replace(/(\d{4}-\d{2}-\d{2}T\d{2})-(\d{2})-(\d{2})-(\d{3}Z)/, '$1:$2:$3.$4');
+          .replace(
+            /(\d{4}-\d{2}-\d{2}T\d{2})-(\d{2})-(\d{2})-(\d{3}Z)/,
+            '$1:$2:$3.$4'
+          );
         return { filename: e.name, timestamp: new Date(raw) };
       })
       .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime()); // newest first

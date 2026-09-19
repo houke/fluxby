@@ -110,8 +110,8 @@ export class EncryptionVFS extends FacadeVFS {
 
   /**
    * Check if database is unencrypted on first read.
-   * SECURITY: If unencrypted data is detected, throw an error.
-   * This prevents accidentally exposing unencrypted data.
+   * Throws to abort the open; caller (jRead) returns SQLITE_IOERR_READ so
+   * SQLite surfaces a clean error rather than silently reading garbage.
    */
   private async checkIfLegacy(pFile: number): Promise<void> {
     if (this.legacyChecked) return;
@@ -122,12 +122,9 @@ export class EncryptionVFS extends FacadeVFS {
     const rc = await this.baseVFS.jRead(pFile, header, 0);
 
     if (rc === VFS.SQLITE_OK && this.isUnencryptedSQLite(header)) {
-      // SECURITY: Do NOT run in passthrough mode - this would expose data unencrypted.
-      // The migration in wa-sqlite.ts should have encrypted any legacy data before
-      // we get here. If we still see unencrypted data, something went wrong.
       throw new Error(
-        'SECURITY ERROR: Unencrypted database detected. ' +
-          'Data migration may have failed. Please reset and recreate your profile.'
+        'SECURITY ERROR: Unencrypted database detected on encrypted VFS. ' +
+          'Data migration may have failed.'
       );
     }
   }
@@ -263,12 +260,15 @@ export class EncryptionVFS extends FacadeVFS {
   async jCheckReservedLock(pFile: number, pResOut: DataView): Promise<number> {
     return Promise.resolve(this.baseVFS.jCheckReservedLock(pFile, pResOut));
   }
-  async jFileControl(
+  // FileControl is synchronous in both underlying VFS implementations
+  // (OPFSAnyContextVFS and IDBBatchAtomicVFS), so keep it sync here to
+  // avoid "xFileControl unexpectedly returned a Promise" Asyncify errors.
+  jFileControl(
     pFile: number,
     op: number,
     pArg: DataView
-  ): Promise<number> {
-    return Promise.resolve(this.baseVFS.jFileControl(pFile, op, pArg));
+  ): number | Promise<number> {
+    return this.baseVFS.jFileControl(pFile, op, pArg);
   }
   jSectorSize(pFile: number): number {
     return this.baseVFS.jSectorSize(pFile);
@@ -329,25 +329,17 @@ export class EncryptionVFS extends FacadeVFS {
   private async decryptPage(block: Uint8Array): Promise<Uint8Array> {
     if (!this.key) throw new Error('VFS not initialized');
 
-    // Check if this looks like unencrypted SQLite data (first page only has the header)
-    // If the data starts with "SQLite format 3", it's unencrypted
+    // checkIfLegacy() in jRead already detects unencrypted databases before
+    // decryptPage is called for page 0. If SQLite magic bytes reach here anyway,
+    // throw rather than silently returning raw data — returning garbage to SQLite
+    // would trigger "sqlite3_open_v2" in getSingleton → reload → infinite loop.
     if (this.isUnencryptedSQLite(block)) {
-      console.warn(
-        'EncryptionVFS: Detected unencrypted SQLite data. Database needs migration.'
+      throw new Error(
+        'EncryptionVFS: Unencrypted SQLite data in decryptPage — checkIfLegacy should have caught this.'
       );
-      // Return the raw data - this allows reading but indicates migration is needed
-      // The data block size for unencrypted is just the page size
-      return block.subarray(0, this.pageSize);
     }
 
     const iv = block.subarray(this.pageSize, this.pageSize + 12);
-    const _ciphertext = block.subarray(0, this.pageSize + 16); // Data + Tag (tag is at the end)
-
-    // In our storage, we put the IV after the pageSize.
-    // So block is: [Data (4096)] [IV (12)] [Tag (16)]
-    // Wait, AES-GCM tag is usually appended to ciphertext.
-    // So let's store: [Ciphertext (4096)] [IV (12)] [Tag (16)]
-
     const tag = block.subarray(this.pageSize + 12, this.pageSize + 28);
     const dataAndTag = new Uint8Array(this.pageSize + 16);
     dataAndTag.set(block.subarray(0, this.pageSize));
@@ -359,16 +351,16 @@ export class EncryptionVFS extends FacadeVFS {
         this.key as any,
         dataAndTag as any
       );
-
       return new Uint8Array(plaintext);
     } catch (err) {
-      // Decryption failed - this could be unencrypted data or corrupted data
-      console.error(
-        'EncryptionVFS: Decryption failed, data may be unencrypted:',
-        err
+      // AES-GCM authentication failure — wrong password or corrupted database block.
+      // Do NOT silently return raw ciphertext: SQLite would choke on garbage,
+      // produce a "sqlite3_open_v2" error, and getSingleton would reload the page
+      // indefinitely (the OPFS file survives every reload, so the loop never breaks).
+      throw new Error(
+        `EncryptionVFS: Decryption failed — wrong password or corrupted database. ` +
+          `(${err instanceof Error ? err.message : String(err)})`
       );
-      // Return the raw page data as fallback (best effort for unencrypted databases)
-      return block.subarray(0, this.pageSize);
     }
   }
 

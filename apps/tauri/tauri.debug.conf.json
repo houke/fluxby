@@ -1,4 +1,13 @@
 {
+  "productName": "Fluxby - Local",
+  "identifier": "com.fluxby.desktop.local",
+  "app": {
+    "windows": [
+      {
+        "title": "Fluxby - Local"
+      }
+    ]
+  },
   "bundle": {
     "createUpdaterArtifacts": false
   }

@@ -1,0 +1,13 @@
+{
+  "extraKnownMarketplaces": {
+    "houke-nexus": {
+      "source": {
+        "source": "git",
+        "url": "https://github.com/houke/nexus"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "nexus@houke-nexus": true
+  }
+}

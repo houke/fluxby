@@ -102,6 +102,9 @@ export function DatabaseProvider({ children }: DatabaseProviderProps) {
   const [showResetButton, setShowResetButton] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const mountedRef = useRef(true);
+  // Track whether the current DB singleton was opened with an encryption key.
+  // null = not yet opened; false = opened without key; true = opened with key.
+  const dbOpenedWithKeyRef = useRef<boolean | null>(null);
 
   // Create data service when db is ready
   const dataService = useMemo(() => {
@@ -139,12 +142,87 @@ export function DatabaseProvider({ children }: DatabaseProviderProps) {
     // If database already exists, use it immediately
     const existingDatabase = getDatabaseInstance();
     if (existingDatabase) {
-      devLog('Using existing database instance');
-      setDb(existingDatabase);
-      setGlobalDatabase(existingDatabase);
-      setIsReady(true);
-      setIsLoading(false);
-      return;
+      // If encryption was set up AFTER the DB was first opened (e.g. during onboarding),
+      // the existing instance has no encryption. Close it and reopen with the key so
+      // the database file is properly encrypted from the start — avoiding the
+      // "unencrypted DB detected" security error and page-reload loop on every restart.
+      // Reload only for OPFS environments: OPFS uses EncryptionVFS, so the
+      // unencrypted file must be migrated on the next load. IDB does NOT use
+      // EncryptionVFS (Asyncify incompatibility), so no reload is needed there.
+      const willUseOPFS =
+        typeof window !== 'undefined' &&
+        !('__TAURI__' in window) &&
+        window.location.hostname !== 'localhost' &&
+        window.location.hostname !== '127.0.0.1' &&
+        typeof navigator !== 'undefined' &&
+        'storage' in navigator &&
+        'getDirectory' in navigator.storage;
+
+      const needsReopen =
+        encryptionKey !== null &&
+        dbOpenedWithKeyRef.current === false &&
+        willUseOPFS;
+      if (needsReopen) {
+        devLog(
+          'DB was opened without encryption but key is now set — reloading for clean encrypted start'
+        );
+        // Re-registering a VFS on the same WASM module instance causes
+        // Asyncify state corruption ("xFileControl unexpectedly returned a
+        // Promise", "startAsync(...).then is not a function"). A page reload
+        // is the only reliable way to reinitialize with a fresh WASM module.
+        //
+        // Before reloading: clear stale IDB databases so that on reload the
+        // vfsCounter-0 IDB ("idb-fluxby-base-0") is empty and EncryptionVFS
+        // does not encounter unencrypted SQLite data that would trigger
+        // checkIfLegacy and recreate the login loop.
+        // For OPFS environments this is a safe no-op; the migration in
+        // doFullInitialize re-encrypts the existing OPFS file on the next load.
+        dbOpenedWithKeyRef.current = null;
+        setInitStatus('Setting up encryption...');
+
+        (async () => {
+          if (typeof indexedDB !== 'undefined') {
+            try {
+              const dbs = await indexedDB.databases?.();
+              if (dbs) {
+                await Promise.all(
+                  dbs
+                    .filter(
+                      (d) =>
+                        d.name &&
+                        (d.name.includes('fluxby') || d.name.includes('idb-'))
+                    )
+                    .map(
+                      (d) =>
+                        new Promise<void>((r) => {
+                          const req = indexedDB.deleteDatabase(d.name!);
+                          req.onsuccess =
+                            req.onerror =
+                            req.onblocked =
+                              () => r();
+                        })
+                    )
+                );
+                devLog('Cleared stale IDB databases before encryption reload');
+              }
+            } catch {
+              devLog('IDB clearing failed, reloading anyway');
+            }
+          }
+          window.location.reload();
+        })();
+
+        return () => {
+          mountedRef.current = false;
+        };
+      } else {
+        devLog('Using existing database instance');
+        setDb(existingDatabase);
+        setGlobalDatabase(existingDatabase);
+        setIsReady(true);
+        setIsLoading(false);
+        return;
+      }
     }
 
     // If there was a previous error at module level, show it
@@ -206,6 +284,7 @@ export function DatabaseProvider({ children }: DatabaseProviderProps) {
         if (mountedRef.current) {
           devLog('Database initialization complete');
           if (timeoutRef.current) clearTimeout(timeoutRef.current);
+          dbOpenedWithKeyRef.current = encryptionKey !== null;
           setDb(database);
           setGlobalDatabase(database);
           setIsReady(true);

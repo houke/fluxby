@@ -131,6 +131,11 @@ export default function HelpSidebar({ isOpen, onClose }: HelpSidebarProps) {
           path: '/help/privacy',
           icon: '🔒',
         },
+        {
+          title: t.helpCenter?.userNav?.ai || 'Slimme AI functies',
+          path: '/help/ai',
+          icon: '✨',
+        },
       ],
     },
     {
