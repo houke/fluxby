@@ -14,6 +14,7 @@ import { ProfileManager } from '@/components/settings/ProfileManager';
 import { OnboardingSettings } from '@/components/settings/OnboardingSettings';
 import { ProfileDataSettings } from '@/components/settings/ProfileDataSettings';
 import { SyncSettings } from '@/components/settings/SyncSettings';
+import { TypeSafeSettings } from '@/components/settings/TypeSafeSettings';
 
 const VALID_TABS = ['active-profile', 'manage-profiles', 'app-settings'];
 
@@ -91,6 +92,7 @@ export default function Settings() {
           <OnboardingSettings />
           <AppSettings />
           <PaymentProcessorSettings />
+          <TypeSafeSettings />
           <SyncSettings />
           <DataManagementSettings />
         </TabsContent>

@@ -1175,6 +1175,22 @@ export const en: TranslationKeys = {
       remoteTime: 'Remote',
       showHistory: 'Show history',
     },
+    typesafeAi: {
+      title: 'TypeSafe AI',
+      description: 'Use AI for smarter categorisation and payment provider detection',
+      whatIsTypeSafe:
+        'TypeSafe AI replaces fragile regex rules with focused AI judgments. It categorises transactions based on semantic understanding, not exact text matches — even for unknown merchants and foreign-language descriptions.',
+      apiKeyLabel: 'API key',
+      apiKeyPlaceholder: 'Enter your TypeSafe API key',
+      addKey: 'Add API key',
+      changeKey: 'Change',
+      removeKey: 'Remove',
+      showKey: 'Show',
+      hideKey: 'Hide',
+      getKeyLink: 'Get your key — console.typesafe.ai',
+      keySaved: 'API key saved',
+      keyRemoved: 'API key removed',
+    },
   },
   help: {
     title: 'Help',

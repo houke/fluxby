@@ -1030,6 +1030,21 @@ export interface TranslationKeys {
       remoteTime: string;
       showHistory: string;
     };
+    typesafeAi: {
+      title: string;
+      description: string;
+      whatIsTypeSafe: string;
+      apiKeyLabel: string;
+      apiKeyPlaceholder: string;
+      addKey: string;
+      changeKey: string;
+      removeKey: string;
+      showKey: string;
+      hideKey: string;
+      getKeyLink: string;
+      keySaved: string;
+      keyRemoved: string;
+    };
   };
   help: {
     title: string;
@@ -2573,6 +2588,23 @@ export const nl: TranslationKeys = {
       localTime: 'Lokaal',
       remoteTime: 'Extern',
       showHistory: 'Geschiedenis tonen',
+    },
+    typesafeAi: {
+      title: 'TypeSafe AI',
+      description:
+        'Gebruik AI voor slimmere categorisering en detectie van betaalproviders',
+      whatIsTypeSafe:
+        'TypeSafe AI vervangt broze regex-regels door gerichte AI-beslissingen. Het categoriseert transacties op basis van semantisch begrip, niet op exacte tekstovereenkomsten — ook voor onbekende winkels en buitenlandse beschrijvingen.',
+      apiKeyLabel: 'API-sleutel',
+      apiKeyPlaceholder: 'Voer je TypeSafe API-sleutel in',
+      addKey: 'API-sleutel toevoegen',
+      changeKey: 'Wijzigen',
+      removeKey: 'Verwijderen',
+      showKey: 'Tonen',
+      hideKey: 'Verbergen',
+      getKeyLink: 'Haal je sleutel op — console.typesafe.ai',
+      keySaved: 'API-sleutel opgeslagen',
+      keyRemoved: 'API-sleutel verwijderd',
     },
   },
   help: {

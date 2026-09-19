@@ -15,6 +15,15 @@ import {
   isSettingsCacheInitialized,
 } from '@fluxby/database';
 import {
+  suggestCategory,
+  detectDirectionConvention,
+  detectDateFormat,
+  detectIsPaymentProvider,
+  getTypeSafeApiKey,
+  askTypeSafe,
+  type NoulAnswer,
+} from './typesafe-client';
+import {
   addDaysToDateOnly,
   addMonthsToDateOnly,
   diffDateOnlyInDays,
@@ -2621,13 +2630,9 @@ export function createDataService(db: Database) {
       if (!pid) return { updated: 0, processed: 0 };
 
       const rules = await this.getCategoryRules();
-      if (!rules || rules.length === 0) return { updated: 0, processed: 0 };
-
-      // Sort rules by pattern length descending to ensure more specific patterns (like 'sparen')
-      // match before shorter, less specific ones (like 'spar')
-      const sortedRules = [...rules].sort(
-        (a, b) => b.pattern.length - a.pattern.length
-      );
+      const sortedRules = rules
+        ? [...rules].sort((a, b) => b.pattern.length - a.pattern.length)
+        : [];
 
       const uncategorized = await db.queryAsync<{
         id: string;
@@ -2645,8 +2650,12 @@ export function createDataService(db: Database) {
       let updated = 0;
       const now = Date.now();
 
+      // Track which transactions the rule engine couldn't match
+      const unmatched: typeof uncategorized = [];
+
       for (const tx of uncategorized) {
         const textToMatch = `${tx.merchant_name || ''} ${tx.description || ''} ${tx.opposing_account_name || ''}`;
+        let matched = false;
 
         for (const rule of sortedRules) {
           try {
@@ -2657,15 +2666,123 @@ export function createDataService(db: Database) {
                 [rule.category_id, now, tx.id]
               );
               updated++;
+              matched = true;
               break;
             }
           } catch {
             continue;
           }
         }
+
+        if (!matched) unmatched.push(tx);
+      }
+
+      // TypeSafe fallback: ask AI to classify transactions that no rule matched
+      const tsKey = getTypeSafeApiKey();
+      if (tsKey && unmatched.length > 0) {
+        const categories = await db.queryAsync<{ id: string; name: string }>(
+          `SELECT id, name FROM categories WHERE profile_id = ? AND is_deleted = 0`,
+          [pid]
+        );
+
+        if (categories.length > 0) {
+          // Cap at 50 per invocation to stay within rate limits
+          const batch = unmatched.slice(0, 50);
+          const suggestions = await Promise.all(
+            batch.map((tx) =>
+              suggestCategory({
+                merchantName: tx.merchant_name,
+                description: tx.description,
+                amount: 0,
+                categories,
+                apiKey: tsKey,
+              })
+            )
+          );
+
+          for (let i = 0; i < batch.length; i++) {
+            const suggestion = suggestions[i];
+            if (suggestion) {
+              await db.runAsync(
+                'UPDATE transactions SET category_id = ?, updated_at = ? WHERE id = ?',
+                [suggestion.categoryId, now, batch[i].id]
+              );
+              updated++;
+            }
+          }
+        }
       }
 
       return { updated, processed: uncategorized.length };
+    },
+
+    /**
+     * Use TypeSafe AI to detect payment providers for IBANs that the pattern
+     * rules couldn't identify. Checks shared IBANs (multiple merchants → same IBAN)
+     * that currently have no payment_provider set.
+     */
+    async detectPaymentProvidersWithAI(): Promise<{ detected: number }> {
+      const pid = profileId();
+      if (!pid) return { detected: 0 };
+
+      const tsKey = getTypeSafeApiKey();
+      if (!tsKey) return { detected: 0 };
+
+      // Find shared IBANs with no payment provider and at least 2 distinct merchant names
+      const candidates = await db.queryAsync<{
+        iban: string;
+        merchant_names: string;
+      }>(
+        `SELECT opposing_account_iban as iban,
+                GROUP_CONCAT(DISTINCT COALESCE(merchant_name, opposing_account_name)) as merchant_names
+         FROM transactions t
+         JOIN accounts a ON t.account_id = a.id
+         WHERE a.profile_id = ?
+           AND t.is_deleted = 0
+           AND t.opposing_account_iban IS NOT NULL
+           AND t.payment_provider IS NULL
+         GROUP BY opposing_account_iban
+         HAVING COUNT(DISTINCT COALESCE(merchant_name, opposing_account_name)) >= 2
+         LIMIT 30`,
+        [pid]
+      );
+
+      if (candidates.length === 0) return { detected: 0 };
+
+      const now = Date.now();
+      let detected = 0;
+
+      // Check each candidate IBAN in parallel
+      const results = await Promise.all(
+        candidates.map(async (c) => {
+          const names = (c.merchant_names ?? '')
+            .split(',')
+            .map((n) => n.trim())
+            .filter(Boolean);
+          const probability = await detectIsPaymentProvider({
+            iban: c.iban,
+            merchantNames: names,
+            apiKey: tsKey,
+          });
+          return { iban: c.iban, probability };
+        })
+      );
+
+      for (const r of results) {
+        if (r.probability !== null && r.probability >= 0.75) {
+          await db.runAsync(
+            `UPDATE transactions SET payment_provider = ?, updated_at = ?
+             WHERE opposing_account_iban = ?
+               AND account_id IN (SELECT id FROM accounts WHERE profile_id = ?)
+               AND is_deleted = 0
+               AND payment_provider IS NULL`,
+            ['AI-detected', now, r.iban, pid]
+          );
+          detected++;
+        }
+      }
+
+      return { detected };
     },
 
     async bulkCategorizeByCounterparty(
@@ -4213,6 +4330,60 @@ export function createDataService(db: Database) {
       }
       const skippedRows: SkippedRow[] = [];
 
+      // TypeSafe AI pre-pass: detect direction convention and date format for ambiguous values
+      const tsKey = getTypeSafeApiKey();
+      let aiDirectionConvention: Map<
+        string,
+        'debit' | 'credit' | 'unknown'
+      > | null = null;
+      let aiDateFormat: 'dmy' | 'mdy' | null = null;
+
+      if (tsKey && preview.rows.length > 0) {
+        // Direction: only ask AI about values not in the hardcoded known set
+        if (directionColumn) {
+          const knownDir = new Set([
+            'af',
+            'bij',
+            'debit',
+            'credit',
+            'd',
+            'c',
+            '+',
+            '-',
+          ]);
+          const unknownDirs = [
+            ...new Set(
+              preview.rows
+                .slice(0, 30)
+                .map((r) => r[directionColumn]?.trim())
+                .filter(
+                  (v): v is string => !!v && !knownDir.has(v.toLowerCase())
+                )
+            ),
+          ];
+          if (unknownDirs.length > 0) {
+            aiDirectionConvention = await detectDirectionConvention(
+              unknownDirs,
+              tsKey
+            );
+          }
+        }
+
+        // Date: only ask AI when sample dates are ambiguous (DD/MM vs MM/DD)
+        if (mapping.date) {
+          const ambiguousDates = preview.rows
+            .slice(0, 10)
+            .map((r) => r[mapping.date]?.trim())
+            .filter(
+              (d): d is string =>
+                !!d && /^\d{1,2}\/\d{1,2}\/\d{4}$/.test(d)
+            );
+          if (ambiguousDates.length > 0) {
+            aiDateFormat = await detectDateFormat(ambiguousDates, tsKey);
+          }
+        }
+      }
+
       // Collect all transactions to insert for batching
       const transactionsToInsert: Array<{
         id: string;
@@ -4379,7 +4550,18 @@ export function createDataService(db: Database) {
           } else {
             // Generic processing
             const dateStr = row[mapping.date];
-            const date = this._parseFlexibleDate(dateStr);
+            // Use AI-detected format for ambiguous DD/MM vs MM/DD dates
+            let date: string | null = null;
+            if (
+              aiDateFormat === 'mdy' &&
+              /^\d{1,2}\/\d{1,2}\/\d{4}$/.test(dateStr ?? '')
+            ) {
+              const parts = (dateStr ?? '').split('/');
+              const d = new Date(+parts[2], +parts[0] - 1, +parts[1]);
+              date = isNaN(d.getTime()) ? null : d.toISOString().slice(0, 10);
+            } else {
+              date = this._parseFlexibleDate(dateStr);
+            }
             if (!date) {
               skippedRows.push({
                 rowIndex: i + 1,
@@ -4422,6 +4604,13 @@ export function createDataService(db: Database) {
                 direction === 'c'
               ) {
                 amount = Math.abs(amount);
+              } else if (aiDirectionConvention) {
+                // AI fallback for direction values not in the hardcoded list
+                const aiDir = aiDirectionConvention.get(
+                  row[directionColumn].trim()
+                );
+                if (aiDir === 'debit') amount = -Math.abs(amount);
+                else if (aiDir === 'credit') amount = Math.abs(amount);
               }
             }
 
@@ -4970,6 +5159,114 @@ export function createDataService(db: Database) {
      * - Consistent interval between transactions (±12 days tolerance)
      * - Only looks at transactions from the last 12 months
      */
+
+    /**
+     * Use TypeSafe AI to find transactions that look like duplicates based on
+     * semantic similarity rather than exact hash matching.
+     * Returns candidate pairs for user review — does not auto-merge.
+     */
+    async findSemanticDuplicates(): Promise<
+      Array<{
+        tx1: { id: string; date: string; amount: number; description: string };
+        tx2: { id: string; date: string; amount: number; description: string };
+        probability: number;
+      }>
+    > {
+      const pid = profileId();
+      if (!pid) return [];
+
+      const tsKey = getTypeSafeApiKey();
+      if (!tsKey) return [];
+
+      // Find pairs with same amount and date within 1 day but different hashes
+      const candidates = await db.queryAsync<{
+        id1: string;
+        date1: string;
+        amount1: number;
+        desc1: string;
+        id2: string;
+        date2: string;
+        amount2: number;
+        desc2: string;
+      }>(
+        `SELECT
+           t1.id as id1, t1.date as date1, t1.amount as amount1,
+           COALESCE(t1.merchant_name, t1.description) as desc1,
+           t2.id as id2, t2.date as date2, t2.amount as amount2,
+           COALESCE(t2.merchant_name, t2.description) as desc2
+         FROM transactions t1
+         JOIN transactions t2
+           ON t1.id < t2.id
+           AND ABS(t1.amount - t2.amount) < 0.01
+           AND ABS(julianday(t1.date) - julianday(t2.date)) <= 1
+           AND t1.import_hash != t2.import_hash
+         JOIN accounts a ON t1.account_id = a.id
+         WHERE a.profile_id = ?
+           AND t1.is_deleted = 0
+           AND t2.is_deleted = 0
+         LIMIT 20`,
+        [pid]
+      );
+
+      if (candidates.length === 0) return [];
+
+      const results = await Promise.all(
+        candidates.map(async (pair) => {
+          try {
+            const response = await askTypeSafe(
+              {
+                tx1: {
+                  date: pair.date1,
+                  amount: pair.amount1,
+                  description: pair.desc1,
+                },
+                tx2: {
+                  date: pair.date2,
+                  amount: pair.amount2,
+                  description: pair.desc2,
+                },
+              },
+              {
+                is_same: {
+                  type: 'noul',
+                  instructions:
+                    'Do these two bank transactions represent the same real-world payment event (i.e. the same charge appearing twice)?',
+                  criteria: {
+                    true: 'Same payment event — one should be removed as a duplicate',
+                    false: 'Two separate legitimate transactions',
+                  },
+                },
+              },
+              tsKey
+            );
+            const a = response.answers['is_same'];
+            return {
+              tx1: {
+                id: pair.id1,
+                date: pair.date1,
+                amount: pair.amount1,
+                description: pair.desc1,
+              },
+              tx2: {
+                id: pair.id2,
+                date: pair.date2,
+                amount: pair.amount2,
+                description: pair.desc2,
+              },
+              probability: a?.type === 'noul' ? (a as NoulAnswer).noul : 0,
+            };
+          } catch {
+            return null;
+          }
+        })
+      );
+
+      return results
+        .filter(
+          (r): r is NonNullable<typeof r> => r !== null && r.probability >= 0.75
+        );
+    },
+
     async detectRecurringPatterns(): Promise<{
       detected: number;
       updated: number;
