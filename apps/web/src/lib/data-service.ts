@@ -2707,30 +2707,40 @@ export function createDataService(db: Database) {
         );
 
         if (categories.length > 0) {
-          // One batched request keeps the UI responsive and reduces API overhead.
-          const batch = unmatched.slice(0, AI_CATEGORY_BATCH_SIZE);
-          const suggestions = await suggestCategories({
-            transactions: batch.map((tx) => ({
-              merchantName: tx.merchant_name,
-              description: tx.description,
-              opposingAccountName: tx.opposing_account_name,
-              amount: tx.amount,
-            })),
-            categories,
-            apiKey: tsKey,
-          });
+          // Process every unmatched transaction in bounded requests. This keeps
+          // each payload manageable while still completing the whole backlog.
+          for (
+            let offset = 0;
+            offset < unmatched.length;
+            offset += AI_CATEGORY_BATCH_SIZE
+          ) {
+            const batch = unmatched.slice(
+              offset,
+              offset + AI_CATEGORY_BATCH_SIZE
+            );
+            const suggestions = await suggestCategories({
+              transactions: batch.map((tx) => ({
+                merchantName: tx.merchant_name,
+                description: tx.description,
+                opposingAccountName: tx.opposing_account_name,
+                amount: tx.amount,
+              })),
+              categories,
+              apiKey: tsKey,
+            });
 
-          await db.transactionAsync(async () => {
-            for (let i = 0; i < batch.length; i++) {
-              const suggestion = suggestions[i];
-              if (!suggestion) continue;
-              await db.runAsync(
-                'UPDATE transactions SET category_id = ?, updated_at = ? WHERE id = ? AND category_id IS NULL',
-                [suggestion.categoryId, now, batch[i].id]
-              );
-              aiApplied++;
-            }
-          });
+            await db.transactionAsync(async () => {
+              for (let i = 0; i < batch.length; i++) {
+                const suggestion = suggestions[i];
+                if (!suggestion) continue;
+                await db.runAsync(
+                  'UPDATE transactions SET category_id = ?, updated_at = ? WHERE id = ? AND category_id IS NULL',
+                  [suggestion.categoryId, now, batch[i].id]
+                );
+                aiApplied++;
+              }
+            });
+          }
         }
       }
 

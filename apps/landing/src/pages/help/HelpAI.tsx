@@ -211,10 +211,10 @@ export default function HelpAI() {
       </p>
 
       <h3 className='mt-6 text-lg font-semibold text-gray-900 dark:text-gray-100'>
-        Wat is "Jev"?
+        Wat is &ldquo;Jev&rdquo;?
       </h3>
       <p className='text-gray-600 dark:text-gray-400'>
-        Jev is TypeSafe's vlaggenschip System One model. Het geeft
+        Jev is TypeSafe&apos;s vlaggenschip System One model. Het geeft
         gestructureerde antwoorden terug (kansen, keuzes) in plaats van vrije
         tekst. Fluxby gebruikt Jev via de TypeSafe HTTP API.
       </p>

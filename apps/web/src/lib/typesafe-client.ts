@@ -143,7 +143,7 @@ export function choiceAnswer(
 /**
  * Suggest a spending category for a single transaction.
  * Returns the best-matching category with confidence, or null when AI is
- * unavailable, the key is missing, or no category clears 0.6 confidence.
+ * unavailable, the key is missing, or no category is above 90% confidence.
  */
 export async function suggestCategory(params: {
   merchantName: string | null;

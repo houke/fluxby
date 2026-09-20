@@ -237,8 +237,8 @@ export default function DocsAI() {
       </h2>
       <p className='text-gray-600 dark:text-gray-400'>
         For bank exports with non-standard direction column values (e.g. German
-        "Belastung"/"Gutschrift"), Fluxby asks Jev to classify each unique value
-        in one parallel batch before processing rows.
+        &ldquo;Belastung&rdquo;/&ldquo;Gutschrift&rdquo;), Fluxby asks Jev to
+        classify each unique value in one parallel batch before processing rows.
       </p>
       <CodeBlock language='json' code={directionExample} />
 
