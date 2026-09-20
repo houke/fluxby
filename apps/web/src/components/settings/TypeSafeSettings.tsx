@@ -2,9 +2,13 @@ import { useEffect, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   ExternalLink,
+  Eye,
+  EyeOff,
   KeyRound,
+  Pencil,
   Sparkles,
   Check,
+  Trash2,
   X,
   AlertTriangle,
   Loader2,
@@ -27,6 +31,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { Badge } from '@/components/ui/badge';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/contexts/ToastContext';
@@ -221,86 +231,126 @@ export function TypeSafeSettings() {
               <label className='text-sm font-medium'>{s.apiKeyLabel}</label>
 
               {isEditing ? (
-                <div className='flex gap-2'>
-                  <Input
-                    type={showKey ? 'text' : 'password'}
-                    placeholder={s.apiKeyPlaceholder}
-                    value={editValue}
-                    onChange={(e) => setEditValue(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') handleSave();
-                      if (e.key === 'Escape') handleCancel();
-                    }}
-                    autoFocus
-                    className='font-mono text-sm'
-                  />
-                  <Button
-                    variant='ghost'
-                    size='icon'
-                    className='rounded-md hover:bg-green-600 hover:text-white'
-                    onClick={handleSave}
-                    disabled={!editValue.trim()}
-                  >
-                    <Check className='h-4 w-4' />
-                  </Button>
-                  <Button
-                    variant='ghost'
-                    size='icon'
-                    className='rounded-md hover:bg-red-600 hover:text-white'
-                    onClick={handleCancel}
-                  >
-                    <X className='h-4 w-4' />
-                  </Button>
-                </div>
+                <TooltipProvider delayDuration={200}>
+                  <div className='flex max-w-full min-w-0 gap-2'>
+                    <Input
+                      type={showKey ? 'text' : 'password'}
+                      placeholder={s.apiKeyPlaceholder}
+                      value={editValue}
+                      onChange={(e) => setEditValue(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') handleSave();
+                        if (e.key === 'Escape') handleCancel();
+                      }}
+                      autoFocus
+                      className='max-w-full min-w-0 flex-1 font-mono text-sm'
+                    />
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant='ghost'
+                          size='icon'
+                          aria-label={t.common.save}
+                          className='rounded-md hover:bg-green-600 hover:text-white'
+                          onClick={handleSave}
+                          disabled={!editValue.trim()}
+                        >
+                          <Check className='h-4 w-4' />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>{t.common.save}</TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant='ghost'
+                          size='icon'
+                          aria-label={t.common.cancel}
+                          className='rounded-md hover:bg-red-600 hover:text-white'
+                          onClick={handleCancel}
+                        >
+                          <X className='h-4 w-4' />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>{t.common.cancel}</TooltipContent>
+                    </Tooltip>
+                  </div>
+                </TooltipProvider>
               ) : (
-                <div className='flex flex-wrap items-center gap-2'>
-                  {hasKey ? (
-                    <>
-                      <div className='flex flex-1 items-center gap-2 rounded-md border bg-muted/40 px-3 py-2 font-mono text-sm'>
-                        <KeyRound className='h-3.5 w-3.5 shrink-0 text-green-500' />
-                        <span className='text-muted-foreground'>
-                          {showKey
-                            ? storedKey
-                            : '••••••••••••••••••••••••••••••••'}
-                        </span>
-                      </div>
+                <TooltipProvider delayDuration={200}>
+                  <div className='flex flex-wrap items-center gap-2'>
+                    {hasKey ? (
+                      <>
+                        <div className='flex max-w-full min-w-0 flex-1 items-center gap-2 overflow-hidden rounded-md border bg-muted/40 px-3 py-2 font-mono text-sm'>
+                          <KeyRound className='h-3.5 w-3.5 shrink-0 text-green-500' />
+                          <span className='max-w-full min-w-0 truncate text-muted-foreground'>
+                            {showKey
+                              ? storedKey
+                              : '••••••••••••••••••••••••••••••••'}
+                          </span>
+                        </div>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant='ghost'
+                              size='icon'
+                              aria-label={showKey ? s.hideKey : s.showKey}
+                              className='shrink-0 rounded-md'
+                              onClick={() => setShowKey((v) => !v)}
+                            >
+                              {showKey ? (
+                                <EyeOff className='h-4 w-4' />
+                              ) : (
+                                <Eye className='h-4 w-4' />
+                              )}
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            {showKey ? s.hideKey : s.showKey}
+                          </TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant='ghost'
+                              size='icon'
+                              aria-label={s.changeKey}
+                              className='shrink-0 rounded-md hover:bg-purple-600 hover:text-white'
+                              onClick={handleStartEdit}
+                            >
+                              <Pencil className='h-4 w-4' />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>{s.changeKey}</TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant='ghost'
+                              size='icon'
+                              aria-label={s.removeKey}
+                              className='shrink-0 rounded-md hover:bg-red-600 hover:text-white'
+                              onClick={handleRemove}
+                            >
+                              <Trash2 className='h-4 w-4' />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>{s.removeKey}</TooltipContent>
+                        </Tooltip>
+                      </>
+                    ) : (
                       <Button
-                        variant='ghost'
+                        variant='outline'
                         size='sm'
-                        className='shrink-0 text-xs'
-                        onClick={() => setShowKey((v) => !v)}
-                      >
-                        {showKey ? s.hideKey : s.showKey}
-                      </Button>
-                      <Button
-                        variant='ghost'
-                        size='sm'
-                        className='shrink-0 rounded-md hover:bg-purple-600 hover:text-white'
                         onClick={handleStartEdit}
+                        className='gap-2'
                       >
-                        {s.changeKey}
+                        <KeyRound className='h-4 w-4' />
+                        {s.addKey}
                       </Button>
-                      <Button
-                        variant='ghost'
-                        size='sm'
-                        className='shrink-0 rounded-md hover:bg-red-600 hover:text-white'
-                        onClick={handleRemove}
-                      >
-                        {s.removeKey}
-                      </Button>
-                    </>
-                  ) : (
-                    <Button
-                      variant='outline'
-                      size='sm'
-                      onClick={handleStartEdit}
-                      className='gap-2'
-                    >
-                      <KeyRound className='h-4 w-4' />
-                      {s.addKey}
-                    </Button>
-                  )}
-                </div>
+                    )}
+                  </div>
+                </TooltipProvider>
               )}
 
               <a

@@ -85,6 +85,31 @@ export class EncryptionVFS extends FacadeVFS {
    * FacadeVFS methods
    */
 
+  // Delegate every VFS method whose async-ness comes from the wrapped VFS.
+  // FacadeVFS supplies synchronous fallback implementations for methods that
+  // the encryption wrapper does not otherwise override. If the wrapped VFS
+  // reports one of those methods as async but the fallback is left in place,
+  // wa-sqlite's Asyncify calls `.then()` on the fallback's numeric result.
+  async jDelete(filename: string, syncDir: number): Promise<number> {
+    return this.baseVFS.jDelete(filename, syncDir);
+  }
+
+  async jAccess(
+    filename: string,
+    flags: number,
+    pResOut: DataView
+  ): Promise<number> {
+    return this.baseVFS.jAccess(filename, flags, pResOut);
+  }
+
+  jFullPathname(filename: string, zOut: Uint8Array): number {
+    return this.baseVFS.jFullPathname(filename, zOut);
+  }
+
+  jGetLastError(zBuf: Uint8Array): number {
+    return this.baseVFS.jGetLastError(zBuf);
+  }
+
   async jOpen(
     filename: string | null,
     pFile: number,

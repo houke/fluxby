@@ -519,8 +519,8 @@ export function OnboardingModal({
       >
         {/* Header */}
         <div className='relative flex flex-col items-center px-4 pt-3 pb-1'>
-          {/* Skip button - always show if onSkip is available (onboarding is always dismissable now) */}
-          {!isLastGlobalStep && onSkip && (
+          {/* The welcome chapter must be completed; later tour steps can be skipped. */}
+          {!isWelcomeChapter && !isLastGlobalStep && onSkip && (
             <button
               onClick={handleClose}
               className='absolute top-2 right-2 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground'

@@ -214,6 +214,10 @@ npm run dev:api
 # Use this for Tauri (it needs the Web dev server)
 npm run dev:web
 
+# Start the app at https://fluxby.local (port 443, production-like origin)
+# Requires the local hostname entry described below and permission to bind 443.
+sudo npm run dev:local
+
 # Start Tauri desktop development
 npm run dev:tauri
 
@@ -278,6 +282,11 @@ npm run release:dry
 - `dev:web` starts only the React PWA in [apps/web](apps/web) on port `5178`.
   - Use it when developing the app UI itself (and for Tauri dev).
   - In normal browser dev, the landing dev server proxies this app under `http://localhost:5177/app/`.
+- `dev:local` starts the web app at `https://fluxby.local/app/` on port `443`.
+  - The Vite config creates a short-lived self-signed certificate in `.certs/` automatically.
+  - Add `127.0.0.1 fluxby.local` and `::1 fluxby.local` to `/etc/hosts` once, then accept/trust the local certificate in your browser.
+  - Port 443 is why the URL does not need an explicit port; the command needs elevated permission because it is a privileged port.
+  - TypeSafe requests use a same-origin development proxy, avoiding CORS failures from local hostnames.
 - `dev` starts the landing server in [apps/landing](apps/landing) (port `5177`) and the web app server in [apps/web](apps/web) (port `5178`) concurrently.
   - Use it for “full UI” development: landing, docs, help center, and the app under `/app/`.
 - `dev:api` starts the optional Express API in [apps/api](apps/api) on port `3001`.

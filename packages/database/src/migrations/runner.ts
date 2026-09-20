@@ -184,11 +184,6 @@ export async function runMigrations(db: MigrationContext): Promise<void> {
     return;
   }
 
-  // Force console log for pending migrations to provide user feedback
-  // eslint-disable-next-line no-console
-  console.log(
-    `[MigrationRunner] Found ${pendingMigrations.length} pending migrations. This may take a moment...`
-  );
   dbLog(
     `[MigrationRunner] Found ${pendingMigrations.length} pending migrations`
   );
@@ -201,11 +196,7 @@ export async function runMigrations(db: MigrationContext): Promise<void> {
       );
 
       try {
-        // Force console log for individual migrations
-        // eslint-disable-next-line no-console
-        console.log(
-          `[MigrationRunner] Applying migration ${migration.version}...`
-        );
+        dbLog(`[MigrationRunner] Applying migration ${migration.version}...`);
         await migration.up(db);
 
         // successful, update version
@@ -228,8 +219,6 @@ export async function runMigrations(db: MigrationContext): Promise<void> {
     }
   });
 
-  // eslint-disable-next-line no-console
-  console.log('[MigrationRunner] All migrations completed successfully.');
   dbLog('[MigrationRunner] All migrations completed successfully');
 
   // Update localStorage with the new database schema version

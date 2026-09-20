@@ -512,7 +512,7 @@ export class Database implements DatabaseConnection {
           wasmLog('VFS registered:', cachedVfsName);
         } catch (err) {
           // OPFS not available, fall back to IDBBatchAtomicVFS
-          console.warn('OPFS VFS not available, trying IndexedDB VFS', err);
+          wasmLog('OPFS VFS not available, trying IndexedDB VFS', err);
           try {
             const vfsModule: any =
               await import('@journeyapps/wa-sqlite/src/examples/IDBBatchAtomicVFS.js');
@@ -538,7 +538,7 @@ export class Database implements DatabaseConnection {
             vfsRegistered = true;
             wasmLog('VFS registered:', cachedVfsName);
           } catch (idbErr) {
-            console.warn(
+            wasmLog(
               'IndexedDB VFS not available, using in-memory storage',
               idbErr
             );
@@ -569,7 +569,7 @@ export class Database implements DatabaseConnection {
           vfsRegistered = true;
           wasmLog('IndexedDB VFS registered:', cachedVfsName);
         } catch (idbErr) {
-          console.warn(
+          wasmLog(
             'IndexedDB VFS not available, using in-memory storage',
             idbErr
           );
@@ -592,10 +592,10 @@ export class Database implements DatabaseConnection {
     }
     this._isOpen = true;
 
-    // Enable WAL mode for better performance
-    // CAUTION: Switched to DELETE to prevent hanging in some WASM/VFS environments
-    await this.execAsync('PRAGMA journal_mode=DELETE');
-    await this.execAsync('PRAGMA synchronous=NORMAL');
+    // Leave SQLite's journal and synchronous modes at their defaults.
+    // With the encrypted async VFS, both PRAGMAs route through Asyncify and
+    // older wa-sqlite builds can call a synchronous VFS callback as though it
+    // returned a Promise ("startAsync(...).then is not a function").
 
     // Run migrations if autoMigrate is enabled
     if (this.options.autoMigrate !== false) {
@@ -676,10 +676,7 @@ export class Database implements DatabaseConnection {
         );
       }
       // Log the error with context but don't crash
-      console.error('Error executing SQL:', {
-        sql: trimmedSql.substring(0, 200),
-        error: err,
-      });
+      console.error('Error executing SQL:', trimmedSql.substring(0, 200), err);
       throw err;
     }
   }

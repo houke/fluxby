@@ -3,6 +3,7 @@ import type { IncomingMessage, ServerResponse } from 'http';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import path from 'path';
+import { getLocalHttpsOptions } from '../../scripts/dev-cert.mjs';
 
 // For GitHub Pages: VITE_BASE_URL is set during CI
 // For local development: use '/app/'
@@ -18,6 +19,10 @@ const base = isTauri
 // This allows hot-reload without needing to rebuild packages
 const isDev = process.env.NODE_ENV !== 'production';
 const packagesPath = path.resolve(__dirname, '../../packages');
+const devHost = process.env.FLUXBY_DEV_HOST;
+const devPort = Number(process.env.FLUXBY_DEV_PORT || 5178);
+const useLocalHttps = process.env.FLUXBY_DEV_HTTPS === 'true';
+const localHttpsOptions = useLocalHttps ? getLocalHttpsOptions() : undefined;
 
 export default defineConfig({
   plugins: [
@@ -76,12 +81,32 @@ export default defineConfig({
     exclude: ['@journeyapps/wa-sqlite'],
   },
   server: {
-    port: 5178, // Web app runs on separate port for dev
+    ...(devHost ? { host: devHost, allowedHosts: [devHost] } : {}),
+    port: devPort, // Web app runs on separate port for dev
     strictPort: true,
+    ...(localHttpsOptions ? { https: localHttpsOptions } : {}),
+    ...(useLocalHttps
+      ? {
+          hmr: {
+            host: devHost,
+            protocol: 'wss',
+            port: devPort,
+          },
+        }
+      : {}),
     // Headers required for SharedArrayBuffer (SQLite WASM)
     headers: {
       'Cross-Origin-Opener-Policy': 'same-origin',
       'Cross-Origin-Embedder-Policy': 'require-corp',
+    },
+    proxy: {
+      // TypeSafe does not allow arbitrary localhost origins in browser CORS.
+      // Keep local development same-origin while production uses the public API.
+      '/typesafe-api': {
+        target: 'https://api.typesafe.ai',
+        changeOrigin: true,
+        rewrite: (requestPath) => requestPath.replace(/^\/typesafe-api/, ''),
+      },
     },
   },
   build: {

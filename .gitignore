@@ -25,6 +25,7 @@ data/
 .env
 .env.local
 .env.*.local
+.certs/
 
 # Exports & imports
 exports/

@@ -8,6 +8,7 @@ import {
   setupGlobalErrorHandlers,
 } from './lib/error-tracking';
 import App from './App';
+import { debugLog, debugWarn } from './lib/debug';
 import './index.css';
 
 // Initialize error tracking before anything else
@@ -95,8 +96,23 @@ async function ensureServiceWorkerReady(): Promise<void> {
 
   // Skip SW in Tauri - it uses native storage
   if (isTauri || !('serviceWorker' in navigator)) {
-    // eslint-disable-next-line no-console
-    console.log('[SW] Skipped (Tauri or no SW support)');
+    debugLog('[SW] Skipped (Tauri or no SW support)');
+    return;
+  }
+
+  // Vite already provides COOP/COEP headers during development. A service
+  // worker is unnecessary there and can turn transient dev-server failures
+  // into noisy FetchEvent errors in the browser console.
+  if (import.meta.env.DEV) {
+    const registrations = await navigator.serviceWorker.getRegistrations();
+    await Promise.all(
+      registrations
+        .filter((registration) =>
+          registration.scope.startsWith(location.origin)
+        )
+        .map((registration) => registration.unregister())
+    );
+    debugLog('[SW] Skipped in development (Vite provides COI headers)');
     return;
   }
 
@@ -106,8 +122,7 @@ async function ensureServiceWorkerReady(): Promise<void> {
   const allRegistrations = await navigator.serviceWorker.getRegistrations();
   for (const reg of allRegistrations) {
     if (!reg.scope.endsWith(basePath)) {
-      // eslint-disable-next-line no-console
-      console.log('[SW] Unregistering stale SW at scope:', reg.scope);
+      debugLog('[SW] Unregistering stale SW at scope:', reg.scope);
       await reg.unregister();
     }
   }
@@ -117,26 +132,22 @@ async function ensureServiceWorkerReady(): Promise<void> {
   try {
     // Check if we already have an active SW controlling this page
     if (navigator.serviceWorker.controller) {
-      // eslint-disable-next-line no-console
-      console.log('[SW] Already controlling page');
+      debugLog('[SW] Already controlling page');
       return;
     }
 
-    // eslint-disable-next-line no-console
-    console.log('[SW] First visit - registering and waiting for activation...');
+    debugLog('[SW] First visit - registering and waiting for activation...');
 
     // Register the service worker
     const registration = await navigator.serviceWorker.register(swPath, {
       scope: basePath,
     });
-    // eslint-disable-next-line no-console
-    console.log('[SW] Registered:', registration.scope);
+    debugLog('[SW] Registered:', registration.scope);
 
     // Wait for the SW to be ready (installed and activated)
     // This ensures COOP/COEP headers will be applied on next navigation
     await navigator.serviceWorker.ready;
-    // eslint-disable-next-line no-console
-    console.log('[SW] Ready');
+    debugLog('[SW] Ready');
 
     // For first-time visitors, the SW won't control the page until reload.
     // Check if we need to reload to get the SW-provided headers.
@@ -146,8 +157,7 @@ async function ensureServiceWorkerReady(): Promise<void> {
       !navigator.serviceWorker.controller;
 
     if (needsCOI) {
-      // eslint-disable-next-line no-console
-      console.log(
+      debugLog(
         '[SW] First visit without COI - reloading to activate SW headers...'
       );
       // Small delay to ensure SW is fully ready
@@ -162,7 +172,7 @@ async function ensureServiceWorkerReady(): Promise<void> {
   } catch (error) {
     // SW registration failed - continue without it
     // This is not fatal, but OPFS performance may be degraded
-    console.warn('[SW] Registration failed:', error);
+    debugWarn('[SW] Registration failed:', error);
   }
 }
 
@@ -172,18 +182,16 @@ async function initializeApp() {
   try {
     // Log environment info
     const isTauri = '__TAURI__' in window;
-    // eslint-disable-next-line no-console
-    console.log('[Init] Environment:', {
+    debugLog('[Init] Environment:', {
       isTauri,
       userAgent: navigator.userAgent,
     });
 
     await initializeSettingsCache();
-    // eslint-disable-next-line no-console
-    console.log('[Init] Settings cache initialized');
+    debugLog('[Init] Settings cache initialized');
   } catch (error) {
     // OPFS might not be available (e.g., in some browsers or Tauri)
-    console.warn('Failed to initialize OPFS settings cache:', error);
+    debugWarn('Failed to initialize OPFS settings cache:', error);
     // Don't show error - this is expected in Tauri
   }
 
@@ -196,8 +204,7 @@ async function initializeApp() {
           </QueryClientProvider>
         </StrictMode>
       );
-      // eslint-disable-next-line no-console
-      console.log('[Init] React app rendered');
+      debugLog('[Init] React app rendered');
     } catch (error) {
       console.error('[Init] Failed to render React app:', error);
       showErrorOnScreen('Failed to render React app', error);

@@ -1,4 +1,5 @@
 import * as Sentry from '@sentry/react';
+import { debugLog } from './debug';
 
 /**
  * Initialize Sentry error tracking with privacy-conscious settings.
@@ -9,15 +10,13 @@ import * as Sentry from '@sentry/react';
 export function initErrorTracking(): void {
   // Only initialize in production
   if (import.meta.env.DEV) {
-    // eslint-disable-next-line no-console
-    console.log('[Sentry] Disabled in development');
+    debugLog('[Sentry] Disabled in development');
     return;
   }
 
   const dsn = import.meta.env.VITE_SENTRY_DSN;
   if (!dsn) {
-    // eslint-disable-next-line no-console
-    console.log('[Sentry] DSN not configured, error tracking disabled');
+    debugLog('[Sentry] DSN not configured, error tracking disabled');
     return;
   }
 
@@ -77,8 +76,7 @@ export function initErrorTracking(): void {
     maxBreadcrumbs: 20,
   });
 
-  // eslint-disable-next-line no-console
-  console.log('[Sentry] Initialized');
+  debugLog('[Sentry] Initialized');
 }
 
 /**

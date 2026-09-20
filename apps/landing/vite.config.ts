@@ -54,6 +54,13 @@ export default defineConfig({
         target: 'http://localhost:3001',
         changeOrigin: true,
       },
+      // Keep TypeSafe requests same-origin during local development. The
+      // provider does not send CORS headers for arbitrary local hostnames.
+      '/typesafe-api': {
+        target: 'https://api.typesafe.ai',
+        changeOrigin: true,
+        rewrite: (requestPath) => requestPath.replace(/^\/typesafe-api/, ''),
+      },
     },
   },
   build: {

@@ -7,6 +7,7 @@
 import { readFromOPFSSync } from '@fluxby/database';
 
 const TYPESAFE_API_BASE = 'https://api.typesafe.ai';
+const TYPESAFE_DEV_PROXY = '/typesafe-api';
 const TYPESAFE_MODEL = 'jev-latest';
 const SETTINGS_KEY = 'typesafe-api-key';
 const TRACE_SETTING_KEY = 'typesafe-ai-trace-enabled';
@@ -39,6 +40,12 @@ function createSemaphore(max: number) {
 }
 
 const semaphore = createSemaphore(MAX_CONCURRENT);
+
+function getRequestEndpoint(): string {
+  return import.meta.env.DEV && typeof window !== 'undefined'
+    ? `${TYPESAFE_DEV_PROXY}/v1/systemone`
+    : `${TYPESAFE_API_BASE}/v1/systemone`;
+}
 
 // ── Question types ────────────────────────────────────────────────────────────
 
@@ -177,7 +184,7 @@ export async function askTypeSafe(
   const startedAt = performance.now();
   const updateTrace = startTrace(state, questions);
   try {
-    const response = await fetch(`${TYPESAFE_API_BASE}/v1/systemone`, {
+    const response = await fetch(getRequestEndpoint(), {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${key}`,

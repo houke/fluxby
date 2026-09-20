@@ -19,6 +19,16 @@ import {
   type SyncJsonWebKey,
 } from './sync-encryption.js';
 
+function peerDebugLog(...args: unknown[]): void {
+  const env = (import.meta as any).env;
+  const runtimeGlobal = globalThis as typeof globalThis & {
+    __TAURI__?: unknown;
+  };
+  const isTauri = '__TAURI__' in runtimeGlobal;
+  if (!env?.DEV && !isTauri) return;
+  console.log(...args);
+}
+
 /**
  * ICE Server Configuration
  *
@@ -69,7 +79,7 @@ export function getDefaultTurnServers(): IceServerConfig[] {
     (import.meta as any).env?.VITE_TURN_CREDENTIAL;
 
   if (customTurnUrl && customTurnUsername && customTurnCredential) {
-    console.log('Using custom TURN server configuration');
+    peerDebugLog('Using custom TURN server configuration');
     return [
       {
         urls: customTurnUrl,
@@ -141,7 +151,7 @@ export function getPeerServerConfig(): PeerServerConfig | undefined {
     typeof import.meta !== 'undefined' &&
     (import.meta as any).env?.VITE_PEERJS_KEY;
 
-  console.log('Using custom PeerJS server:', host);
+  peerDebugLog('Using custom PeerJS server:', host);
 
   return {
     host,
@@ -316,7 +326,7 @@ export class PeerSync {
 
           peer.on('open', (peerId) => {
             if (this.peer !== peer || (peer as any)._ignoreEvents) return;
-            console.log('PeerJS connection opened with ID:', peerId);
+            peerDebugLog('PeerJS connection opened with ID:', peerId);
             clearTimeout(timeout);
             this.isInitialized = true;
             resolve(peerId);
@@ -378,7 +388,7 @@ export class PeerSync {
                     ? `fluxby-${this.options.deviceId}`
                     : `fluxby-${this.options.deviceId}-retry${nextRetryCount}`;
 
-                console.log(
+                peerDebugLog(
                   `Peer ID unavailable, retry ${nextRetryCount}/3 in ${waitTime / 1000}s...`
                 );
                 setTimeout(() => {
@@ -415,7 +425,7 @@ export class PeerSync {
 
           peer.on('connection', (conn) => {
             if (this.peer !== peer || (peer as any)._ignoreEvents) return;
-            console.log('Incoming peer connection from:', conn.peer);
+            peerDebugLog('Incoming peer connection from:', conn.peer);
             this.handleIncomingConnection(conn);
           });
 
@@ -426,7 +436,7 @@ export class PeerSync {
               (peer as any)._ignoreEvents
             )
               return;
-            console.log(
+            peerDebugLog(
               'PeerJS disconnected from server. Attempting reconnect...'
             );
             // Try to reconnect only if peer is not destroyed
@@ -537,7 +547,7 @@ export class PeerSync {
             keyExchangeMsg.publicKey
           );
           this.encryptionSessions.set(conn.peer, updatedSession);
-          console.log('Encryption key exchange completed with:', conn.peer);
+          peerDebugLog('Encryption key exchange completed with:', conn.peer);
         } catch (err) {
           console.error('Failed to complete key exchange:', err);
           this.options.onError?.(
@@ -560,7 +570,7 @@ export class PeerSync {
             type: 'key-exchange',
             publicKey: newSession.localKeyPair.publicKeyJwk,
           });
-          console.log('Encryption key exchange completed with:', conn.peer);
+          peerDebugLog('Encryption key exchange completed with:', conn.peer);
         } catch (err) {
           console.error('Failed to create/complete key exchange:', err);
           this.options.onError?.(
@@ -925,7 +935,10 @@ export class PeerSync {
               );
               this.encryptionSessions.set(conn.peer, updatedSession);
               _keyExchangeComplete = true;
-              console.log('Encryption key exchange completed with:', conn.peer);
+              peerDebugLog(
+                'Encryption key exchange completed with:',
+                conn.peer
+              );
 
               // Now send encrypted pairing request
               await this.sendEncrypted(conn, {

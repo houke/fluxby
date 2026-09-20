@@ -7,6 +7,8 @@
  * Settings are stored as JSON files in a dedicated 'settings' directory within OPFS.
  */
 
+import { dbLog } from './logger.js';
+
 const SETTINGS_DIR = 'fluxby-settings';
 
 /**
@@ -196,8 +198,7 @@ export async function clearAllOPFSSettings(): Promise<void> {
       }
     }
     keysToRemove.forEach((key) => localStorage.removeItem(key));
-    // eslint-disable-next-line no-console
-    console.log('Cleared all localStorage settings (Tauri mode)');
+    dbLog('Cleared all localStorage settings (Tauri mode)');
     return;
   }
 
@@ -210,8 +211,7 @@ export async function clearAllOPFSSettings(): Promise<void> {
 
     try {
       await root.removeEntry(SETTINGS_DIR, { recursive: true });
-      // eslint-disable-next-line no-console
-      console.log('Cleared all OPFS settings');
+      dbLog('Cleared all OPFS settings');
     } catch (error) {
       // Directory might not exist
       if (

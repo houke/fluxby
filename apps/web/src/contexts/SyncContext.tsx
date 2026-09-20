@@ -30,6 +30,7 @@ import {
   writeToOPFSWithCache,
   isSettingsCacheInitialized,
 } from '@fluxby/database';
+import { debugLog } from '@/lib/debug';
 
 // Storage keys (used as OPFS filenames)
 const DEVICE_ID_KEY = 'fluxby.deviceId';
@@ -343,8 +344,7 @@ export function SyncProvider({
       .initialize()
       .then((peerId) => {
         if (!active) return;
-        // eslint-disable-next-line no-console
-        console.log('Sync initialized with Peer ID:', peerId);
+        debugLog('Sync initialized with Peer ID:', peerId);
         setIsInitialized(true);
       })
       .catch((err) => {

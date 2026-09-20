@@ -31,18 +31,11 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { resetAppAndRestartOnboarding } from '@/lib/database-reset';
-
-// Check if we're in development mode OR Tauri (always log in Tauri for debugging)
-const isDev =
-  typeof window !== 'undefined' &&
-  (window.location.hostname === 'localhost' ||
-    window.location.hostname === '127.0.0.1' ||
-    '__TAURI__' in window);
+import { debugLog } from '@/lib/debug';
 
 // Dev mode logger - always log in Tauri for debugging
 function devLog(message: string, ...args: unknown[]) {
-  // eslint-disable-next-line no-console
-  console.log(`[DB Init] ${message}`, ...args);
+  debugLog(`[DB Init] ${message}`, ...args);
 }
 
 interface DatabaseContextType {
@@ -93,6 +86,7 @@ export function DatabaseProvider({ children }: DatabaseProviderProps) {
   const { t, language } = useLanguage();
   const { isEncryptionEnabled, isUnlocked, encryptionKey, isHydrated } =
     useEncryption();
+  const isDev = import.meta.env.DEV;
 
   // Initialize state from existing database if available
   const existingDb = getDatabaseInstance();
@@ -104,6 +98,7 @@ export function DatabaseProvider({ children }: DatabaseProviderProps) {
   const [showResetButton, setShowResetButton] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const mountedRef = useRef(true);
+  const reopenInProgressRef = useRef(false);
   // Track whether the current DB singleton was opened with an encryption key.
   // null = not yet opened; false = opened without key; true = opened with key.
   const dbOpenedWithKeyRef = useRef<boolean | null>(null);
@@ -165,65 +160,66 @@ export function DatabaseProvider({ children }: DatabaseProviderProps) {
         dbOpenedWithKeyRef.current === false &&
         willUseOPFS;
       if (needsReopen) {
+        if (reopenInProgressRef.current) {
+          devLog('Encrypted database reopen already in progress');
+          setInitStatus('Setting up encryption...');
+          setIsLoading(true);
+          setIsReady(false);
+          return () => {
+            mountedRef.current = false;
+          };
+        }
+
+        reopenInProgressRef.current = true;
         devLog(
-          'DB was opened without encryption but key is now set — reloading for clean encrypted start'
+          'DB was opened without encryption but key is now set — reopening with encryption'
         );
-        // Re-registering a VFS on the same WASM module instance causes
-        // Asyncify state corruption ("xFileControl unexpectedly returned a
-        // Promise", "startAsync(...).then is not a function"). A page reload
-        // is the only reliable way to reinitialize with a fresh WASM module.
-        //
-        // Before reloading: clear stale IDB databases so that on reload the
-        // vfsCounter-0 IDB ("idb-fluxby-base-0") is empty and EncryptionVFS
-        // does not encounter unencrypted SQLite data that would trigger
-        // checkIfLegacy and recreate the login loop.
-        // For OPFS environments this is a safe no-op; the migration in
-        // doFullInitialize re-encrypts the existing OPFS file on the next load.
         dbOpenedWithKeyRef.current = null;
         setInitStatus('Setting up encryption...');
+        setIsLoading(true);
+        setIsReady(false);
 
         (async () => {
-          // Onboarding populated the unencrypted database in WAL mode. Flush
-          // the WAL into the main file and release the OPFS handle before the
-          // reload so the next startup can migrate one consistent file.
           try {
-            await existingDatabase.execAsync('PRAGMA wal_checkpoint(TRUNCATE)');
+            // Closing the singleton releases the active VFS handle. An
+            // explicit WAL checkpoint can block while onboarding is still
+            // finishing, so let SQLite finalize it as part of close.
             await closeAndResetForReinit();
-            devLog('Checkpointed and closed database before encryption reload');
-          } catch (checkpointError) {
-            devLog(
-              'Could not fully checkpoint before encryption reload:',
-              checkpointError
-            );
-          }
+            const encryptedDatabase = await createDatabase({
+              dbPath: 'fluxby.db',
+              autoMigrate: true,
+              encryptionKey,
+            });
 
-          if (typeof indexedDB !== 'undefined') {
-            try {
-              const dbs = await indexedDB.databases?.();
-              if (dbs) {
-                await Promise.all(
-                  dbs
-                    .filter(
-                      (d) =>
-                        d.name &&
-                        (d.name.includes('fluxby') || d.name.includes('idb-'))
-                    )
-                    .map((d) => {
-                      const name = d.name;
-                      if (!name) return Promise.resolve();
-                      return new Promise<void>((r) => {
-                        const req = indexedDB.deleteDatabase(name);
-                        req.onsuccess = req.onerror = req.onblocked = () => r();
-                      });
-                    })
-                );
-                devLog('Cleared stale IDB databases before encryption reload');
-              }
-            } catch {
-              devLog('IDB clearing failed, reloading anyway');
+            if (!mountedRef.current) return;
+
+            dbOpenedWithKeyRef.current = true;
+            setDb(encryptedDatabase);
+            setGlobalDatabase(encryptedDatabase);
+            setError(null);
+            setShowResetButton(false);
+            setIsReady(true);
+            setIsLoading(false);
+            devLog('Database reopened with encryption');
+          } catch (reopenError) {
+            moduleInitError =
+              reopenError instanceof Error
+                ? reopenError
+                : new Error(String(reopenError));
+
+            if (mountedRef.current) {
+              devLog('Encrypted database reopen failed:', reopenError);
+              setError(moduleInitError);
+              setIsLoading(false);
+              setShowResetButton(true);
+            }
+          } finally {
+            if (!mountedRef.current) {
+              reopenInProgressRef.current = false;
+            } else if (dbOpenedWithKeyRef.current === true) {
+              reopenInProgressRef.current = false;
             }
           }
-          window.location.reload();
         })();
 
         return () => {

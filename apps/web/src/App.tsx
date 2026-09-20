@@ -34,6 +34,7 @@ import {
 } from './components/onboarding';
 import { SpotlightProvider } from './contexts/SpotlightContext';
 import { MigrationGate } from './components/MigrationGate';
+import { debugLog } from './lib/debug';
 
 // Inner component that can access onboarding context
 function AppContent() {
@@ -77,17 +78,12 @@ function SecurityGate({ children }: { children: React.ReactNode }) {
     useOnboarding();
   const { t } = useLanguage();
 
-  // Debug logging for Tauri
-  const isTauri = typeof window !== 'undefined' && '__TAURI__' in window;
-  if (isTauri) {
-    // eslint-disable-next-line no-console
-    console.log('[SecurityGate] State:', {
-      isEncryptionEnabled,
-      isUnlocked,
-      needsSecuritySetup,
-      isLoadingUser,
-    });
-  }
+  debugLog('[SecurityGate] State:', {
+    isEncryptionEnabled,
+    isUnlocked,
+    needsSecuritySetup,
+    isLoadingUser,
+  });
 
   // 1. Wait until the encrypted settings have finished hydrating from OPFS.
   // Otherwise a fresh page load can decide "no password configured" before the

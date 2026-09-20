@@ -6,6 +6,7 @@
 import { Database, type DatabaseOptions } from './database.js';
 import type { StorageAdapterConfig, RuntimeEnvironment } from './types.js';
 import { detectEnvironment } from './environment.js';
+import { dbLog } from './logger.js';
 
 export interface DatabaseConfig {
   /** Database file path/name */
@@ -40,8 +41,7 @@ export function isDatabaseInstanceReady(): boolean {
  * @param full - If true, also reset the WASM module for clean VFS state (use when encryption key changes)
  */
 export function resetDatabase(full = false): void {
-  // eslint-disable-next-line no-console
-  console.log('[DB Factory] Resetting singletons', { full });
+  dbLog('[DB Factory] Resetting singletons', { full });
   dbInstance = null;
   dbPromise = null;
   dbPromiseCreatedAt = null;
@@ -56,8 +56,7 @@ export function resetDatabase(full = false): void {
  * mid-session.
  */
 export async function closeAndResetForReinit(): Promise<void> {
-  // eslint-disable-next-line no-console
-  console.log('[DB Factory] Closing handle for reinit (keeping WASM module)');
+  dbLog('[DB Factory] Closing handle for reinit (keeping WASM module)');
   await Database.closeHandleForReinit();
   dbInstance = null;
   dbPromise = null;
@@ -104,8 +103,7 @@ export async function createDatabase(
 ): Promise<Database> {
   // Return existing instance immediately if available
   if (dbInstance) {
-    // eslint-disable-next-line no-console
-    console.log('[DB Factory] Returning cached instance');
+    dbLog('[DB Factory] Returning cached instance');
     return dbInstance;
   }
 
@@ -113,18 +111,15 @@ export async function createDatabase(
   if (dbPromise) {
     // Check if promise is stale (stuck from previous failed attempt)
     if (isPromiseStale()) {
-      // eslint-disable-next-line no-console
-      console.log('[DB Factory] Detected stale promise, resetting');
+      dbLog('[DB Factory] Detected stale promise, resetting');
       resetDatabase(true);
     } else if (typeof dbPromise.then !== 'function') {
       // Defensive check - ensure it's actually a Promise
-      // eslint-disable-next-line no-console
-      console.log('[DB Factory] Invalid promise detected, resetting');
+      dbLog('[DB Factory] Invalid promise detected, resetting');
       dbPromise = null;
       dbPromiseCreatedAt = null;
     } else {
-      // eslint-disable-next-line no-console
-      console.log('[DB Factory] Waiting for existing init promise');
+      dbLog('[DB Factory] Waiting for existing init promise');
 
       // Add timeout to prevent infinite wait if the promise is stuck
       const timeoutPromise = new Promise<never>((_, reject) => {
@@ -160,8 +155,7 @@ export async function createDatabase(
   }
 
   // Start initialization - set promise FIRST before any async work
-  // eslint-disable-next-line no-console
-  console.log('[DB Factory] Starting new initialization');
+  dbLog('[DB Factory] Starting new initialization');
 
   // Wrap internal init with timeout
   const internalPromise = createDatabaseInternal(config);
@@ -180,8 +174,7 @@ export async function createDatabase(
 
   try {
     dbInstance = await dbPromise;
-    // eslint-disable-next-line no-console
-    console.log('[DB Factory] Initialization complete');
+    dbLog('[DB Factory] Initialization complete');
     return dbInstance;
   } catch (error) {
     // Reset on failure to allow retry - force full reset to clear potentially corrupted WASM state
