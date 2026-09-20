@@ -33,7 +33,27 @@ const UpdatesContent = () => {
   const updatesPage = t.legal?.updatesPage;
 
   const releases = [
+            {
+      version: '1.12.0',
+      date: updatesPage?.v1120Date || '20 september 2026',
+      title: updatesPage?.v1120Title || 'Release 1.12.0',
+      description:
+        updatesPage?.v1120Description ||
+        '1 nieuwe feature en 4 bugfixes.',
+      features: [
         {
+          icon: Globe,
+          title: updatesPage?.v1120F1Title || 'Opgelost tab scroll reset and categorie sign handling',
+          description: updatesPage?.v1120F1Desc || 'We hebben iets nieuws voor je! Bekijk de release notes voor alle details.',
+        },
+        {
+          icon: Wrench,
+          title: updatesPage?.v1120F2Title || 'Bugfixes',
+          description: updatesPage?.v1120F2Desc || '4 bugs opgelost. Zie changelog voor details.',
+        },
+      ],
+    },
+    {
       version: '1.11.0',
       date: updatesPage?.v1110Date || '19 september 2026',
       title: updatesPage?.v1110Title || 'Release 1.11.0',

@@ -1,5 +1,24 @@
 # Changelog
 
+## v1.12.0
+
+**Release Date:** 2026-09-20
+
+### Features
+
+- **web:** fix tab scroll reset and category sign handling
+
+### Bug Fixes
+
+- **web:** guard startup until encryption hydration completes
+- **web:** fix onboarding tour hanging on 'Even geduld...' in Tauri
+- **landing:** fix JSX unescaped entities in DocsAI and prettier formatting
+- **scripts:** format openapi.json with prettier in generate-api.ts
+
+### Chores
+
+- 1.11.0 fixes
+
 ## v1.11.0
 
 **Release Date:** 2026-09-19
