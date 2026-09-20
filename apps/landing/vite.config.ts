@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
+import { getLocalHttpsOptions } from '../../scripts/dev-cert.mjs';
 
 // Read root package.json for app version
 const rootPackageJson = JSON.parse(
@@ -20,6 +21,12 @@ const base = process.env.VITE_BASE_URL
 // This allows hot-reload without needing to rebuild packages
 const isDev = process.env.NODE_ENV !== 'production';
 const packagesPath = resolve(__dirname, '../../packages');
+const devHost = process.env.FLUXBY_DEV_HOST;
+const devPort = Number(process.env.FLUXBY_DEV_PORT || 5177);
+const useLocalHttps = process.env.FLUXBY_DEV_HTTPS === 'true';
+const localHttpsOptions = useLocalHttps ? getLocalHttpsOptions() : undefined;
+const appProtocol = useLocalHttps ? 'https' : 'http';
+const appHost = devHost || 'localhost';
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -33,7 +40,19 @@ export default defineConfig({
     },
   },
   server: {
-    port: 5177, // Landing page port
+    ...(devHost ? { host: devHost, allowedHosts: [devHost] } : {}),
+    port: devPort, // Landing page port
+    strictPort: true,
+    ...(localHttpsOptions ? { https: localHttpsOptions } : {}),
+    ...(useLocalHttps
+      ? {
+          hmr: {
+            host: devHost,
+            protocol: 'wss',
+            port: devPort,
+          },
+        }
+      : {}),
     // Headers required for SharedArrayBuffer (needed for SQLite WASM in the proxied /app)
     headers: {
       'Cross-Origin-Opener-Policy': 'same-origin',
@@ -43,8 +62,9 @@ export default defineConfig({
       // Proxy /app to the web app dev server
       // The web app is configured with base: '/app/' so we forward requests directly
       '/app': {
-        target: 'http://localhost:5178',
+        target: `${appProtocol}://${appHost}:5178`,
         changeOrigin: true,
+        secure: false,
         // Enable WebSocket proxy for Vite HMR (Hot Module Replacement)
         // Without this, CSS updates via HMR won't work when accessing /app through the proxy
         ws: true,
