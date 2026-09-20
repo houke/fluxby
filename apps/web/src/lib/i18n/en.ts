@@ -962,7 +962,7 @@ export const en: TranslationKeys = {
       exportEncryptedSuccess: 'Encrypted backup saved successfully.',
       encryptExportTitle: 'Encrypt backup',
       encryptExportDescription:
-        'Enter a password to encrypt your backup. You will need this password to restore the backup later.',
+        'Enter your password to encrypt your backup. You will need this password to restore the backup later.',
       decryptImportTitle: 'Decrypt backup',
       decryptImportDescription:
         'Enter the password used to encrypt this backup.',
@@ -1191,6 +1191,21 @@ export const en: TranslationKeys = {
       getKeyLink: 'Get your key — console.typesafe.ai',
       keySaved: 'API key saved',
       keyRemoved: 'API key removed',
+      categorizeTransactions: 'Categorise uncategorized transactions',
+      categorizeTransactionsDescription:
+        'Apply existing rules first, then automatically assign TypeSafe suggestions only above 90% confidence.',
+      categorizeTransactionsRunning: 'Categorising...',
+      categorizeTransactionsResult:
+        '{count} transactions categorised ({rules} by rules, {ai} by AI)',
+      categorizeTransactionsNone:
+        'No transactions matched a rule or cleared the greater-than-90% confidence threshold.',
+      discoverRules: 'Find categorisation rules',
+      discoverRulesDescription:
+        'Find recurring merchants among uncategorized transactions and create rules only above 90% confidence.',
+      discoverRulesRunning: 'Finding rules...',
+      discoverRulesResult:
+        '{rules} rules created and {transactions} transactions categorised',
+      discoverRulesNone: 'No new categorisation rules were confident enough',
       detectProviders: 'Detect payment providers',
       detectProvidersDescription:
         'Analyse unknown IBANs to recognise payment platforms the pattern rules missed.',

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Users, Loader2 } from 'lucide-react';
+import { Users } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
@@ -106,7 +106,11 @@ export const ContactList: React.FC<ContactListProps> = ({
           }
         }
       },
-      { threshold: 0.1, rootMargin: '200px 0px 400px 0px' }
+      {
+        root: document.querySelector('[data-scroll-container="main"]'),
+        threshold: 0,
+        rootMargin: '200px 0px 400px 0px',
+      }
     );
 
     const el = loadMoreSentinelRef.current || loadMoreRef.current;
@@ -269,7 +273,6 @@ export const ContactList: React.FC<ContactListProps> = ({
                     }
                     className='flex items-center gap-2'
                   >
-                    <Loader2 className='h-4 w-4 animate-spin' />
                     {t.transactions?.loadMore || 'Load more'}
                   </Button>
                 </div>

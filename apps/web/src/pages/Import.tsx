@@ -359,6 +359,7 @@ export default function Import() {
   useDocumentTitle(t.import.title);
   const queryClient = useQueryClient();
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [isReadingFile, setIsReadingFile] = useState(false);
 
   // Web Worker for CSV parsing (prevents UI blocking on large files)
   const {
@@ -535,8 +536,15 @@ export default function Import() {
   // This replaces the old parseGenericMutation to prevent UI blocking on large files
   const handleParseCSV = useCallback(
     async (file: File) => {
+      setIsReadingFile(true);
       try {
         resetWorker();
+        // Let React paint the processing state before reading a potentially
+        // large file. File.text() is asynchronous, but without this yield the
+        // picker can still feel frozen until the first worker message arrives.
+        await new Promise<void>((resolve) =>
+          requestAnimationFrame(() => resolve())
+        );
         const csvContent = await file.text();
         const data = await workerParseCSV(csvContent);
 
@@ -558,6 +566,8 @@ export default function Import() {
         setUploadError(
           error instanceof Error ? error.message : 'Failed to parse CSV'
         );
+      } finally {
+        setIsReadingFile(false);
       }
     },
     [workerParseCSV, resetWorker, detectBank, applyBankPreset]
@@ -794,6 +804,7 @@ export default function Import() {
     previewMutation.isPending ||
     uploadMutation.isPending ||
     createAccountsMutation.isPending ||
+    isReadingFile ||
     isWorkerProcessing ||
     importGenericMutation.isPending ||
     importProgress !== null;
@@ -1373,7 +1384,7 @@ export default function Import() {
             >
               <input {...getInputProps()} />
               <div className='flex flex-col items-center gap-4'>
-                {isWorkerProcessing ? (
+                {isReadingFile || isWorkerProcessing ? (
                   <>
                     <Loader2 className='h-12 w-12 animate-spin text-primary' />
                     <div className='w-full max-w-xs'>

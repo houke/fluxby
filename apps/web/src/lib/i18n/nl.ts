@@ -1044,6 +1044,16 @@ export interface TranslationKeys {
       getKeyLink: string;
       keySaved: string;
       keyRemoved: string;
+      categorizeTransactions: string;
+      categorizeTransactionsDescription: string;
+      categorizeTransactionsRunning: string;
+      categorizeTransactionsResult: string;
+      categorizeTransactionsNone: string;
+      discoverRules: string;
+      discoverRulesDescription: string;
+      discoverRulesRunning: string;
+      discoverRulesResult: string;
+      discoverRulesNone: string;
       detectProviders: string;
       detectProvidersDescription: string;
       detectProvidersRunning: string;
@@ -2385,7 +2395,7 @@ export const nl: TranslationKeys = {
       exportEncryptedSuccess: 'Versleutelde backup opgeslagen.',
       encryptExportTitle: 'Backup versleutelen',
       encryptExportDescription:
-        'Voer een wachtwoord in om je backup te versleutelen. Je hebt dit wachtwoord nodig om de backup later te herstellen.',
+        'Voer je wachtwoord in om je backup te versleutelen. Je hebt dit wachtwoord nodig om de backup later te herstellen.',
       decryptImportTitle: 'Backup ontsleutelen',
       decryptImportDescription:
         'Voer het wachtwoord in waarmee deze backup is versleuteld.',
@@ -2620,6 +2630,22 @@ export const nl: TranslationKeys = {
       getKeyLink: 'Haal je sleutel op — console.typesafe.ai',
       keySaved: 'API-sleutel opgeslagen',
       keyRemoved: 'API-sleutel verwijderd',
+      categorizeTransactions: 'Ongecategoriseerde transacties categoriseren',
+      categorizeTransactionsDescription:
+        'Pas eerst bestaande regels toe en wijs daarna TypeSafe-voorstellen alleen automatisch toe bij meer dan 90% zekerheid.',
+      categorizeTransactionsRunning: 'Categoriseren...',
+      categorizeTransactionsResult:
+        '{count} transacties gecategoriseerd ({rules} via regels, {ai} via AI)',
+      categorizeTransactionsNone:
+        'Geen transacties voldeden aan een regel of de zekerheid van meer dan 90%.',
+      discoverRules: 'Categorisatieregels vinden',
+      discoverRulesDescription:
+        'Vind terugkerende winkels in ongecategoriseerde transacties en maak alleen regels bij meer dan 90% zekerheid.',
+      discoverRulesRunning: 'Regels zoeken...',
+      discoverRulesResult:
+        '{rules} regels gemaakt en {transactions} transacties gecategoriseerd',
+      discoverRulesNone:
+        'Geen nieuwe categorisatieregels met voldoende zekerheid gevonden',
       detectProviders: 'Betaalproviders detecteren',
       detectProvidersDescription:
         'Analyseer onbekende IBANs om betaalplatforms te herkennen die de patroonregels hebben gemist.',

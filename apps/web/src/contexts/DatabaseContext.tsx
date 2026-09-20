@@ -12,6 +12,7 @@ import {
   createDatabase,
   getDatabaseInstance,
   resetDatabase,
+  closeAndResetForReinit,
   type Database,
 } from '@fluxby/database';
 import { Loader2, RefreshCw, AlertCircle } from 'lucide-react';
@@ -182,6 +183,20 @@ export function DatabaseProvider({ children }: DatabaseProviderProps) {
         setInitStatus('Setting up encryption...');
 
         (async () => {
+          // Onboarding populated the unencrypted database in WAL mode. Flush
+          // the WAL into the main file and release the OPFS handle before the
+          // reload so the next startup can migrate one consistent file.
+          try {
+            await existingDatabase.execAsync('PRAGMA wal_checkpoint(TRUNCATE)');
+            await closeAndResetForReinit();
+            devLog('Checkpointed and closed database before encryption reload');
+          } catch (checkpointError) {
+            devLog(
+              'Could not fully checkpoint before encryption reload:',
+              checkpointError
+            );
+          }
+
           if (typeof indexedDB !== 'undefined') {
             try {
               const dbs = await indexedDB.databases?.();
@@ -193,16 +208,14 @@ export function DatabaseProvider({ children }: DatabaseProviderProps) {
                         d.name &&
                         (d.name.includes('fluxby') || d.name.includes('idb-'))
                     )
-                    .map(
-                      (d) =>
-                        new Promise<void>((r) => {
-                          const req = indexedDB.deleteDatabase(d.name!);
-                          req.onsuccess =
-                            req.onerror =
-                            req.onblocked =
-                              () => r();
-                        })
-                    )
+                    .map((d) => {
+                      const name = d.name;
+                      if (!name) return Promise.resolve();
+                      return new Promise<void>((r) => {
+                        const req = indexedDB.deleteDatabase(name);
+                        req.onsuccess = req.onerror = req.onblocked = () => r();
+                      });
+                    })
                 );
                 devLog('Cleared stale IDB databases before encryption reload');
               }

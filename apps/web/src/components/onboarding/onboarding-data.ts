@@ -1456,6 +1456,19 @@ export const onboardingChapters: OnboardingChapter[] = [
         placement: 'right',
       },
       {
+        id: 'settings-typesafe-actions',
+        title: {
+          nl: 'Slim categoriseren',
+          en: 'Smart categorisation',
+        },
+        content: {
+          nl: 'Pas bestaande regels toe of laat TypeSafe terugkerende regels en categorieen voorstellen. Automatische AI-keuzes vereisen meer dan 90% zekerheid.',
+          en: 'Apply existing rules or let TypeSafe suggest recurring rules and categories. Automatic AI decisions require greater than 90% confidence.',
+        },
+        selector: '[data-onboarding="settings-typesafe-actions"]',
+        placement: 'right',
+      },
+      {
         id: 'settings-data',
         title: {
           nl: 'Data beheer',

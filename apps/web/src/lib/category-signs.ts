@@ -3,7 +3,9 @@ export function normalizeCategoryAmount(amount: number): number {
   return Math.abs(amount);
 }
 
-export function getCategoryAmountDirection(amount: number): 'income' | 'expense' | 'neutral' {
+export function getCategoryAmountDirection(
+  amount: number
+): 'income' | 'expense' | 'neutral' {
   if (amount > 0) return 'income';
   if (amount < 0) return 'expense';
   return 'neutral';

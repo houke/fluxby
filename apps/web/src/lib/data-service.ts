@@ -15,7 +15,7 @@ import {
   isSettingsCacheInitialized,
 } from '@fluxby/database';
 import {
-  suggestCategory,
+  suggestCategories,
   detectDirectionConvention,
   detectDateFormat,
   detectIsPaymentProvider,
@@ -62,6 +62,11 @@ import { processASNRow } from './importers/asn-importer';
  * - Achieves <5s for 10k deletions on typical hardware
  */
 const BULK_OPERATION_BATCH_SIZE = 500;
+const AI_CATEGORY_BATCH_SIZE = 30;
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
 
 /**
  * Get the active profile ID from OPFS settings
@@ -2627,7 +2632,8 @@ export function createDataService(db: Database) {
     // ============= Transaction Methods =============
     async applyCategoriesToUncategorized() {
       const pid = profileId();
-      if (!pid) return { updated: 0, processed: 0 };
+      if (!pid)
+        return { updated: 0, rulesApplied: 0, aiApplied: 0, processed: 0 };
 
       const rules = await this.getCategoryRules();
       const sortedRules = rules
@@ -2648,12 +2654,15 @@ export function createDataService(db: Database) {
         [pid]
       );
 
-      let updated = 0;
+      let rulesApplied = 0;
+      let aiApplied = 0;
       const now = Date.now();
 
       // Track which transactions the rule engine couldn't match
       const unmatched: typeof uncategorized = [];
 
+      const ruleUpdates: Array<{ transactionId: string; categoryId: string }> =
+        [];
       for (const tx of uncategorized) {
         const textToMatch = `${tx.merchant_name || ''} ${tx.description || ''} ${tx.opposing_account_name || ''}`;
         let matched = false;
@@ -2662,11 +2671,11 @@ export function createDataService(db: Database) {
           try {
             const pattern = new RegExp(rule.pattern, 'i');
             if (pattern.test(textToMatch)) {
-              await db.runAsync(
-                'UPDATE transactions SET category_id = ?, updated_at = ? WHERE id = ?',
-                [rule.category_id, now, tx.id]
-              );
-              updated++;
+              ruleUpdates.push({
+                transactionId: tx.id,
+                categoryId: rule.category_id,
+              });
+              rulesApplied++;
               matched = true;
               break;
             }
@@ -2678,6 +2687,17 @@ export function createDataService(db: Database) {
         if (!matched) unmatched.push(tx);
       }
 
+      if (ruleUpdates.length > 0) {
+        await db.transactionAsync(async () => {
+          for (const update of ruleUpdates) {
+            await db.runAsync(
+              'UPDATE transactions SET category_id = ?, updated_at = ? WHERE id = ? AND category_id IS NULL',
+              [update.categoryId, now, update.transactionId]
+            );
+          }
+        });
+      }
+
       // TypeSafe fallback: ask AI to classify transactions that no rule matched
       const tsKey = getTypeSafeApiKey();
       if (tsKey && unmatched.length > 0) {
@@ -2687,34 +2707,139 @@ export function createDataService(db: Database) {
         );
 
         if (categories.length > 0) {
-          // Cap at 50 per invocation to stay within rate limits
-          const batch = unmatched.slice(0, 50);
-          const suggestions = await Promise.all(
-            batch.map((tx) =>
-              suggestCategory({
-                merchantName: tx.merchant_name,
-                description: tx.description,
-                amount: tx.amount,
-                categories,
-                apiKey: tsKey,
-              })
-            )
-          );
+          // One batched request keeps the UI responsive and reduces API overhead.
+          const batch = unmatched.slice(0, AI_CATEGORY_BATCH_SIZE);
+          const suggestions = await suggestCategories({
+            transactions: batch.map((tx) => ({
+              merchantName: tx.merchant_name,
+              description: tx.description,
+              opposingAccountName: tx.opposing_account_name,
+              amount: tx.amount,
+            })),
+            categories,
+            apiKey: tsKey,
+          });
 
-          for (let i = 0; i < batch.length; i++) {
-            const suggestion = suggestions[i];
-            if (suggestion) {
+          await db.transactionAsync(async () => {
+            for (let i = 0; i < batch.length; i++) {
+              const suggestion = suggestions[i];
+              if (!suggestion) continue;
               await db.runAsync(
-                'UPDATE transactions SET category_id = ?, updated_at = ? WHERE id = ?',
+                'UPDATE transactions SET category_id = ?, updated_at = ? WHERE id = ? AND category_id IS NULL',
                 [suggestion.categoryId, now, batch[i].id]
               );
-              updated++;
+              aiApplied++;
             }
-          }
+          });
         }
       }
 
-      return { updated, processed: uncategorized.length };
+      return {
+        updated: rulesApplied + aiApplied,
+        rulesApplied,
+        aiApplied,
+        processed: uncategorized.length,
+      };
+    },
+
+    /**
+     * Discover reusable exact-merchant category rules. Code extracts the rule
+     * candidates; TypeSafe only chooses among the user's existing categories.
+     * Rules and transaction updates are created only above 90% confidence.
+     */
+    async discoverCategoryRulesWithAI(): Promise<{
+      created: number;
+      categorized: number;
+      reviewed: number;
+    }> {
+      const pid = profileId();
+      const tsKey = getTypeSafeApiKey();
+      if (!pid || !tsKey) return { created: 0, categorized: 0, reviewed: 0 };
+
+      const candidates = await db.queryAsync<{
+        merchant: string;
+        description: string | null;
+        amount: number;
+        transaction_count: number;
+      }>(
+        `SELECT
+           COALESCE(NULLIF(TRIM(merchant_name), ''), NULLIF(TRIM(opposing_account_name), '')) as merchant,
+           MIN(description) as description,
+           AVG(amount) as amount,
+           COUNT(*) as transaction_count
+         FROM transactions
+         WHERE profile_id = ? AND is_deleted = 0 AND category_id IS NULL
+           AND COALESCE(NULLIF(TRIM(merchant_name), ''), NULLIF(TRIM(opposing_account_name), '')) IS NOT NULL
+         GROUP BY LOWER(COALESCE(NULLIF(TRIM(merchant_name), ''), NULLIF(TRIM(opposing_account_name), '')))
+         HAVING COUNT(*) >= 2
+         ORDER BY transaction_count DESC
+         LIMIT ?`,
+        [pid, AI_CATEGORY_BATCH_SIZE]
+      );
+      if (candidates.length === 0) {
+        return { created: 0, categorized: 0, reviewed: 0 };
+      }
+
+      const [categories, existingRules] = await Promise.all([
+        db.queryAsync<{ id: string; name: string }>(
+          'SELECT id, name FROM categories WHERE profile_id = ? AND is_deleted = 0',
+          [pid]
+        ),
+        this.getCategoryRules(),
+      ]);
+      const existingPatterns = new Set(
+        existingRules.map((rule) => rule.pattern.toLowerCase())
+      );
+      const suggestions = await suggestCategories({
+        transactions: candidates.map((candidate) => ({
+          merchantName: candidate.merchant,
+          description: candidate.description,
+          amount: candidate.amount,
+        })),
+        categories,
+        apiKey: tsKey,
+      });
+
+      let created = 0;
+      let categorized = 0;
+      const now = Date.now();
+      await db.transactionAsync(async () => {
+        for (let index = 0; index < candidates.length; index++) {
+          const suggestion = suggestions[index];
+          if (!suggestion) continue;
+
+          const candidate = candidates[index];
+          const pattern = escapeRegExp(candidate.merchant.trim());
+          if (!pattern || existingPatterns.has(pattern.toLowerCase())) continue;
+
+          await db.runAsync(
+            `INSERT INTO category_rules
+               (id, pattern, category_id, priority, profile_id, created_at, updated_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            [
+              crypto.randomUUID(),
+              pattern,
+              suggestion.categoryId,
+              10,
+              pid,
+              now,
+              now,
+            ]
+          );
+          const result = await db.runAsync(
+            `UPDATE transactions
+             SET category_id = ?, updated_at = ?
+             WHERE profile_id = ? AND is_deleted = 0 AND category_id IS NULL
+               AND LOWER(COALESCE(NULLIF(TRIM(merchant_name), ''), NULLIF(TRIM(opposing_account_name), ''))) = LOWER(?)`,
+            [suggestion.categoryId, now, pid, candidate.merchant]
+          );
+          existingPatterns.add(pattern.toLowerCase());
+          created++;
+          categorized += result.changes;
+        }
+      });
+
+      return { created, categorized, reviewed: candidates.length };
     },
 
     /**

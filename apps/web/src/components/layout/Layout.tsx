@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { NavLink, Outlet } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
   LayoutDashboard,
@@ -50,12 +50,19 @@ interface UserProfile {
 }
 
 export default function Layout() {
+  const location = useLocation();
+  const mainScrollRef = useRef<HTMLElement>(null);
   const { t } = useLanguage();
   const { isSwitching } = useProfile();
   const { startOnboarding, state: onboardingState } = useOnboarding();
   const { isPrivacyMode, togglePrivacyMode } = usePrivacy();
   const { open: openSpotlight } = useSpotlight();
   const dataService = useDataService();
+
+  useEffect(() => {
+    mainScrollRef.current?.scrollTo({ top: 0 });
+    window.scrollTo({ top: 0 });
+  }, [location.pathname, location.search]);
 
   // Theme state
   const [isDark, setIsDark] = useState(() =>
@@ -440,7 +447,11 @@ export default function Layout() {
             )}
 
             {/* Page Content - responsive padding (edge-to-edge on mobile) */}
-            <main className='flex-1 overflow-auto pb-20 md:p-6 md:pb-6'>
+            <main
+              ref={mainScrollRef}
+              data-scroll-container='main'
+              className='flex-1 overflow-auto pb-20 md:p-6 md:pb-6'
+            >
               <Outlet />
             </main>
           </div>

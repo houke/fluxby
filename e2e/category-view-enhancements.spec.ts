@@ -8,22 +8,21 @@
  */
 
 import { test, expect, Page } from '@playwright/test';
-import { setupApp } from './fixtures';
+import { dismissOnboardingTour, setupApp } from './fixtures';
 
 /**
  * Navigate to categories page
  */
 async function goToCategoriesPage(page: Page) {
   await setupApp(page);
+  await dismissOnboardingTour(page);
 
-  // Navigate to categories
-  await page.goto('/app/categories', { waitUntil: 'domcontentloaded' });
-  await page.waitForTimeout(1500);
+  await page.getByRole('link', { name: /categories|categorieen/i }).click();
 
   // Wait for categories to load
-  await page.waitForSelector('[data-onboarding="category-list"]', {
-    timeout: 10000,
-  });
+  await page
+    .locator('[data-onboarding="category-list"]')
+    .waitFor({ state: 'visible', timeout: 10000 });
 }
 
 test.describe('Category View Enhancements', () => {

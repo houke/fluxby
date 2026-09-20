@@ -218,7 +218,7 @@ export async function goToTransactionsPage(page: Page) {
  * - Welcome modal with "Let's get started!" button
  * - Tour steps with X (Skip) button in corner
  */
-async function dismissOnboardingTour(page: Page) {
+export async function dismissOnboardingTour(page: Page) {
   // Wait for any modal to fully appear and stabilize
   await page.waitForTimeout(1500);
 

@@ -225,9 +225,11 @@ export default function DocsAI() {
       <CodeBlock language='json' code={exampleResponse} />
 
       <p className='text-gray-600 dark:text-gray-400'>
-        Fluxby only applies the suggestion when{' '}
-        <code>confidence &gt;= 0.7</code>. Below that threshold, the transaction
-        remains uncategorised and the user assigns the category manually.
+        Fluxby batches independent transaction questions in one request and only
+        applies a suggestion when <code>confidence &gt;= 0.7</code>. At or below
+        that threshold, the transaction remains uncategorised for manual review.
+        Repeated merchants can also become escaped, exact-text rules after
+        clearing the same threshold.
       </p>
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
@@ -258,7 +260,7 @@ export default function DocsAI() {
               [
                 'Category suggestion',
                 'Choice confidence',
-                '≥ 0.7',
+                '>= 0.7',
                 'Auto-assign category',
               ],
               [

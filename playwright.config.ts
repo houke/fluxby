@@ -12,8 +12,11 @@ export default defineConfig({
   testDir: './e2e',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 1, // Add retry to handle flaky navigation
-  workers: process.env.CI ? 1 : 2, // Limit workers to reduce flakiness
+  retries: process.env.CI ? 1 : 0,
+  // Each test gets isolated browser storage, so the local-first database can
+  // safely initialize in parallel. Serial CI execution was the main source of
+  // the 30+ minute runtime.
+  workers: process.env.CI ? 2 : 1,
   reporter: [['html', { open: 'never' }], ['list']],
 
   use: {

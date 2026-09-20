@@ -963,7 +963,11 @@ export default function Transactions() {
           }
         }
       },
-      { threshold: 0.1, rootMargin: '200px 0px 800px 0px' }
+      {
+        root: document.querySelector('[data-scroll-container="main"]'),
+        threshold: 0,
+        rootMargin: '200px 0px 800px 0px',
+      }
     );
 
     const el = loadMoreSentinelRef.current || loadMoreRef.current;
@@ -2982,7 +2986,6 @@ export default function Transactions() {
                         onClick={() => setVisibleCount((prev) => prev + 50)}
                         className='flex items-center gap-2'
                       >
-                        <Loader2 className='h-4 w-4 animate-spin' />
                         {t.transactions.loadMore}
                       </Button>
                     </div>

@@ -14,7 +14,7 @@
  */
 
 import { test, expect, Page } from '@playwright/test';
-import { setupApp } from './fixtures';
+import { dismissOnboardingTour, setupApp } from './fixtures';
 
 // Test data-testid locators for sync UI
 const LOCATORS = {
@@ -38,15 +38,11 @@ const LOCATORS = {
  */
 async function goToSyncSettings(page: Page) {
   await setupApp(page);
-
-  // Look for settings link in navigation
-  const settingsLink = page.locator(
-    'a[href*="settings"], [data-testid="settings-link"]'
-  );
-  if (await settingsLink.isVisible({ timeout: 3000 })) {
-    await settingsLink.click();
-    await page.waitForLoadState('networkidle');
-  }
+  await dismissOnboardingTour(page);
+  await page.getByRole('link', { name: /settings|instellingen/i }).click();
+  await page
+    .getByRole('tab', { name: /app settings|app-instellingen/i })
+    .click();
 }
 
 test.describe('Sync Pairing Feature', () => {
@@ -307,9 +303,10 @@ test.describe('Sync Encryption Verification', () => {
     }
 
     // Look for encryption indicator (lock icon, "encrypted" text, etc.)
-    const encryptionIndicator = page.locator(
-      '[aria-label*="encrypt"], [title*="encrypt"], text=/encrypted|secure|e2e/i'
-    );
+    const encryptionIndicator = page
+      .locator('[aria-label*="encrypt" i], [title*="encrypt" i]')
+      .or(page.getByText(/encrypted|secure|e2e/i))
+      .first();
 
     // If sync feature is present, encryption should be indicated
     if (await encryptionIndicator.isVisible({ timeout: 3000 })) {

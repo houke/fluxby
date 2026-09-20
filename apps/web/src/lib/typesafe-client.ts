@@ -70,6 +70,8 @@ export interface ChoiceAnswer {
 
 export type Answer = NoulAnswer | ChoiceAnswer;
 
+export const AUTO_CATEGORY_CONFIDENCE_THRESHOLD = 0.9;
+
 export interface TypeSafeResponse {
   model: string;
   answers: Record<string, Answer>;
@@ -150,47 +152,81 @@ export async function suggestCategory(params: {
   categories: { id: string; name: string }[];
   apiKey?: string;
 }): Promise<{ categoryId: string; confidence: number } | null> {
-  const { merchantName, description, amount, categories, apiKey } = params;
-  if (categories.length === 0) return null;
+  const [suggestion] = await suggestCategories({
+    transactions: [params],
+    categories: params.categories,
+    apiKey: params.apiKey,
+  });
+  return suggestion ?? null;
+}
+
+/**
+ * Classify several transactions in one TypeSafe request. Batching independent
+ * Choice questions is both faster and cheaper than one request per transaction.
+ * Only decisions strictly above the automatic-action threshold are returned.
+ */
+export async function suggestCategories(params: {
+  transactions: Array<{
+    merchantName: string | null;
+    description: string | null;
+    opposingAccountName?: string | null;
+    amount: number;
+  }>;
+  categories: { id: string; name: string }[];
+  apiKey?: string;
+}): Promise<Array<{ categoryId: string; confidence: number } | null>> {
+  const { transactions, categories, apiKey } = params;
+  if (transactions.length === 0 || categories.length === 0) {
+    return transactions.map(() => null);
+  }
 
   const key = apiKey ?? getTypeSafeApiKey();
-  if (!key) return null;
+  if (!key) return transactions.map(() => null);
 
-  const criteria: Record<string, string | null> = {};
-  for (const cat of categories) {
-    criteria[cat.id] = cat.name;
-  }
-  criteria['none'] = 'Does not fit any of these categories';
+  const criteria: Record<string, string | null> = Object.fromEntries(
+    categories.map((category) => [category.id, category.name])
+  );
+  criteria.none = 'The transaction does not clearly fit any listed category';
+
+  const questions: Record<string, Question> = {};
+  transactions.forEach((_, index) => {
+    questions[`transaction_${index}`] = {
+      type: 'choice',
+      instructions: `Which category best fits \`transactions[${index}]\`? Use merchant, description, counterparty, amount, and amount sign together. Choose none when the evidence is insufficient or several categories are similarly plausible.`,
+      criteria,
+    };
+  });
 
   try {
     const response = await askTypeSafe(
       {
-        merchant: merchantName ?? '',
-        description: description ?? '',
-        amount,
+        transactions: transactions.map((transaction) => ({
+          merchant: transaction.merchantName ?? '',
+          description: transaction.description ?? '',
+          counterparty: transaction.opposingAccountName ?? '',
+          amount: transaction.amount,
+        })),
       },
-      {
-        category: {
-          type: 'choice',
-          instructions:
-            'Which spending category best fits the bank transaction described in `merchant`, `description`, and `amount`?',
-          criteria,
-        },
-      },
+      questions,
       key
     );
+    const knownIds = new Set(categories.map((category) => category.id));
 
-    const answer = choiceAnswer(response, 'category');
-    const knownIds = new Set(categories.map((c) => c.id));
-    if (
-      answer.choice === 'none' ||
-      !knownIds.has(answer.choice) ||
-      answer.confidence < 0.7
-    )
-      return null;
-    return { categoryId: answer.choice, confidence: answer.confidence };
+    return transactions.map((_, index) => {
+      const answer = response.answers[`transaction_${index}`];
+      if (
+        !answer ||
+        answer.type !== 'choice' ||
+        answer.choice === 'none' ||
+        !knownIds.has(answer.choice) ||
+        answer.confidence <= AUTO_CATEGORY_CONFIDENCE_THRESHOLD
+      ) {
+        return null;
+      }
+      return { categoryId: answer.choice, confidence: answer.confidence };
+    });
   } catch {
-    return null;
+    return transactions.map(() => null);
   }
 }
 

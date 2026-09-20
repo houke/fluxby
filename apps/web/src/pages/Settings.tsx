@@ -4,6 +4,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useSearchParams } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PageHeader } from '@/components/layout/PageHeader';
+import { createSettingsTabHandler } from '@/lib/settings-tabs';
 
 // Import modular settings components
 import { AccountSettings } from '@/components/settings/AccountSettings';
@@ -17,15 +18,6 @@ import { SyncSettings } from '@/components/settings/SyncSettings';
 import { TypeSafeSettings } from '@/components/settings/TypeSafeSettings';
 
 const VALID_TABS = ['active-profile', 'manage-profiles', 'app-settings'];
-
-export const createSettingsTabHandler = (
-  setSearchParams: ReturnType<typeof useSearchParams>[1]
-) => {
-  return (value: string) => {
-    setSearchParams({ tab: value }, { replace: true });
-    window.scrollTo({ top: 0 });
-  };
-};
 
 export default function Settings() {
   const { t } = useLanguage();

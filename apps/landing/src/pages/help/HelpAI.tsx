@@ -40,7 +40,12 @@ export default function HelpAI() {
           {
             emoji: '🏷️',
             title: 'Automatisch categoriseren',
-            desc: 'Als geen van je regels overeenkomt met een transactie, stelt de AI de beste categorie voor op basis van de winkelnaam, omschrijving en bedrag. Alleen automatisch toegewezen bij voldoende zekerheid (≥70%).',
+            desc: 'Pas bestaande regels toe en laat de AI daarna de beste categorie kiezen op basis van winkelnaam, omschrijving en bedrag. Alleen automatisch toegewezen bij meer dan 90% zekerheid.',
+          },
+          {
+            emoji: '🧠',
+            title: 'Categorisatieregels vinden',
+            desc: 'TypeSafe beoordeelt terugkerende winkels zonder categorie. Fluxby maakt alleen een herbruikbare regel als de categorie met meer dan 90% zekerheid past.',
           },
           {
             emoji: '📥',
@@ -104,8 +109,8 @@ export default function HelpAI() {
         </li>
         <li>Plak de sleutel in het invoerveld en sla op</li>
         <li>
-          Gebruik de knoppen <em>"Betaalplatforms detecteren"</em> en{' '}
-          <em>"Dubbele transacties scannen"</em> wanneer je wilt
+          Gebruik de knoppen voor categoriseren, regels vinden, betaalplatforms
+          detecteren en dubbele transacties scannen wanneer je wilt
         </li>
       </ol>
       <p className='text-gray-600 dark:text-gray-400'>

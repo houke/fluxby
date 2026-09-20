@@ -40,7 +40,7 @@ user's own category list.
 
 **Question type**: Choice  
 **State**: `{ merchant, description, amount }`  
-**Threshold**: confidence ≥ 0.7 to auto-assign; otherwise skipped  
+**Threshold**: confidence > 0.9 to auto-assign; otherwise skipped  
 **Batch size**: up to 50 transactions per invocation, run in parallel
 
 ```json
@@ -164,10 +164,10 @@ These integrations follow the TypeSafe building guide:
 | Principle                    | How it's applied                                                                                                                       |
 | ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
 | **Code owns control flow**   | All routing, thresholds, and database writes are in TypeScript. TypeSafe only returns probabilities.                                   |
-| **Atomic questions**         | Each question judges one dimension. `suggestCategory` asks only about category fit; `is_provider` asks only about intermediary status. |
+| **Atomic questions**         | Each question judges one dimension. `suggestCategories` asks one category-fit Choice per transaction; `is_provider` asks only about intermediary status. |
 | **Structured state**         | State is a named JSON object with only the fields relevant to the question.                                                            |
 | **Backtick path references** | Instructions reference state fields by path (e.g. `` `merchant` ``, `` `iban` ``) where clarity helps.                                 |
-| **Confidence thresholds**    | Higher confidence required for higher-consequence actions (0.8 for date format override; 0.7 for category auto-assign).                |
+| **Confidence thresholds**    | Higher confidence is required for higher-consequence actions (0.8 for date format override; strictly above 0.9 for category auto-assign and generated rules). |
 | **Graceful degradation**     | Every integration checks for the key first. On API error, existing deterministic behaviour runs unchanged.                             |
 | **No auto-delete**           | Semantic duplicate detection surfaces candidates only — the user decides.                                                              |
 
@@ -175,7 +175,7 @@ These integrations follow the TypeSafe building guide:
 
 | Feature               | Primitive             | Threshold | Action                       |
 | --------------------- | --------------------- | --------- | ---------------------------- |
-| Category suggestion   | Choice confidence     | ≥ 0.7     | Auto-assign category         |
+| Category suggestion   | Choice confidence     | > 0.9     | Auto-assign category         |
 | Date format detection | Choice confidence     | ≥ 0.8     | Override DD/MM vs MM/DD      |
 | Direction inference   | Choice (no threshold) | —         | Used if non-empty            |
 | Payment provider      | Noul                  | ≥ 0.75    | Mark as AI-detected provider |

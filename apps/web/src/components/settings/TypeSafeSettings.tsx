@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   ExternalLink,
   KeyRound,
@@ -41,6 +41,7 @@ type DuplicatePair = Awaited<
 export function TypeSafeSettings() {
   const { t } = useLanguage();
   const toast = useToast();
+  const queryClient = useQueryClient();
   const dataService = useDataService();
   const s = t.settings.typesafeAi;
 
@@ -79,6 +80,45 @@ export function TypeSafeSettings() {
     await clearKey();
     toast.info(s.keyRemoved);
   };
+
+  const categorizeMutation = useMutation({
+    mutationFn: () => dataService.applyCategoriesToUncategorized(),
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['categories'] });
+      queryClient.invalidateQueries({ queryKey: ['categoryStatsByPeriod'] });
+      if (result.updated === 0) {
+        toast.info(s.categorizeTransactionsNone);
+        return;
+      }
+      toast.success(
+        s.categorizeTransactionsResult
+          .replace('{count}', String(result.updated))
+          .replace('{rules}', String(result.rulesApplied))
+          .replace('{ai}', String(result.aiApplied))
+      );
+    },
+    onError: (error) => toast.error(error as Error),
+  });
+
+  const discoverRulesMutation = useMutation({
+    mutationFn: () => dataService.discoverCategoryRulesWithAI(),
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['categoryRules'] });
+      queryClient.invalidateQueries({ queryKey: ['categories'] });
+      if (result.created === 0) {
+        toast.info(s.discoverRulesNone);
+        return;
+      }
+      toast.success(
+        s.discoverRulesResult
+          .replace('{rules}', String(result.created))
+          .replace('{transactions}', String(result.categorized))
+      );
+    },
+    onError: (error) => toast.error(error as Error),
+  });
 
   const detectProvidersMutation = useMutation({
     mutationFn: () => dataService.detectPaymentProvidersWithAI(),
@@ -226,10 +266,61 @@ export function TypeSafeSettings() {
 
             {/* AI action buttons — only available when key is set */}
             {hasKey ? (
-              <div className='space-y-3 border-t pt-4'>
+              <div
+                className='space-y-3 border-t pt-4'
+                data-onboarding='settings-typesafe-actions'
+              >
                 <p className='text-xs text-muted-foreground'>
                   {s.dataDisclosure}
                 </p>
+                <div className='flex items-start justify-between gap-4'>
+                  <div className='min-w-0 flex-1'>
+                    <p className='text-sm font-medium'>
+                      {s.categorizeTransactions}
+                    </p>
+                    <p className='text-xs text-muted-foreground'>
+                      {s.categorizeTransactionsDescription}
+                    </p>
+                  </div>
+                  <Button
+                    variant='secondary'
+                    size='sm'
+                    className='shrink-0'
+                    disabled={categorizeMutation.isPending}
+                    onClick={() => categorizeMutation.mutate()}
+                  >
+                    {categorizeMutation.isPending && (
+                      <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                    )}
+                    {categorizeMutation.isPending
+                      ? s.categorizeTransactionsRunning
+                      : s.categorizeTransactions}
+                  </Button>
+                </div>
+
+                <div className='flex items-start justify-between gap-4'>
+                  <div className='min-w-0 flex-1'>
+                    <p className='text-sm font-medium'>{s.discoverRules}</p>
+                    <p className='text-xs text-muted-foreground'>
+                      {s.discoverRulesDescription}
+                    </p>
+                  </div>
+                  <Button
+                    variant='secondary'
+                    size='sm'
+                    className='shrink-0'
+                    disabled={discoverRulesMutation.isPending}
+                    onClick={() => discoverRulesMutation.mutate()}
+                  >
+                    {discoverRulesMutation.isPending && (
+                      <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                    )}
+                    {discoverRulesMutation.isPending
+                      ? s.discoverRulesRunning
+                      : s.discoverRules}
+                  </Button>
+                </div>
+
                 <div className='flex items-start justify-between gap-4'>
                   <div className='min-w-0 flex-1'>
                     <p className='text-sm font-medium'>{s.detectProviders}</p>
