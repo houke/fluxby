@@ -1069,6 +1069,21 @@ export interface TranslationKeys {
       duplicatesDismiss: string;
       noKeyWarning: string;
       dataDisclosure: string;
+      traceToggle: string;
+      traceDescription: string;
+      traceSessionOnly: string;
+      traceClear: string;
+      traceEmpty: string;
+      traceSuccess: string;
+      traceError: string;
+      tracePending: string;
+      testConnection: string;
+      testConnectionDescription: string;
+      testConnectionRunning: string;
+      testConnectionSuccess: string;
+      autoCategorizeAfterImportStarted: string;
+      autoCategorizeAfterImportResult: string;
+      autoCategorizeAfterImportNone: string;
     };
   };
   help: {
@@ -2632,15 +2647,15 @@ export const nl: TranslationKeys = {
       keyRemoved: 'API-sleutel verwijderd',
       categorizeTransactions: 'Ongecategoriseerde transacties categoriseren',
       categorizeTransactionsDescription:
-        'Pas eerst bestaande regels toe en wijs daarna TypeSafe-voorstellen alleen automatisch toe bij meer dan 90% zekerheid.',
+        'Pas eerst bestaande regels toe en wijs daarna TypeSafe-voorstellen alleen automatisch toe bij meer dan 70% zekerheid. Dit gebeurt ook automatisch na een succesvolle import.',
       categorizeTransactionsRunning: 'Categoriseren...',
       categorizeTransactionsResult:
         '{count} transacties gecategoriseerd ({rules} via regels, {ai} via AI)',
       categorizeTransactionsNone:
-        'Geen transacties voldeden aan een regel of de zekerheid van meer dan 90%.',
+        'Geen transacties voldeden aan een regel of de zekerheid van meer dan 70%.',
       discoverRules: 'Categorisatieregels vinden',
       discoverRulesDescription:
-        'Vind terugkerende winkels in ongecategoriseerde transacties en maak alleen regels bij meer dan 90% zekerheid.',
+        'Vind terugkerende winkels in ongecategoriseerde transacties en maak alleen regels bij meer dan 70% zekerheid.',
       discoverRulesRunning: 'Regels zoeken...',
       discoverRulesResult:
         '{rules} regels gemaakt en {transactions} transacties gecategoriseerd',
@@ -2664,6 +2679,28 @@ export const nl: TranslationKeys = {
       noKeyWarning: 'Voeg een API-sleutel toe om AI-functies in te schakelen.',
       dataDisclosure:
         'Deze acties sturen minimale transactiegegevens (winkelnamen, IBAN van tegenpartij, omschrijvingen) naar de TypeSafe API. Er worden geen volledige transactielijsten verstuurd.',
+      traceToggle: 'Jev-trace tonen',
+      traceDescription:
+        'Toon tijdens deze sessie wat naar Jev wordt gestuurd en wat terugkomt. Je API-sleutel wordt nooit vastgelegd.',
+      traceSessionOnly:
+        'Tracegegevens blijven alleen in het geheugen van deze sessie en verdwijnen bij vernieuwen of uitschakelen.',
+      traceClear: 'Trace wissen',
+      traceEmpty:
+        'Nog geen Jev-verzoeken. Schakel de trace in en gebruik daarna een AI-actie hieronder.',
+      traceSuccess: 'Jev antwoord ontvangen',
+      traceError: 'Jev-verzoek mislukt',
+      tracePending: 'Jev-verzoek bezig',
+      testConnection: 'Jev-verbinding testen',
+      testConnectionDescription:
+        'Stuur een onschadelijke testvraag zonder transactiegegevens. Schakel de trace in om het volledige verzoek en antwoord te zien.',
+      testConnectionRunning: 'Jev testen...',
+      testConnectionSuccess: 'Jev-verbinding bevestigd',
+      autoCategorizeAfterImportStarted:
+        'Jev categoriseert ongecategoriseerde transacties op de achtergrond.',
+      autoCategorizeAfterImportResult:
+        'Jev heeft {count} transacties na de import gecategoriseerd.',
+      autoCategorizeAfterImportNone:
+        'Jev vond geen ongecategoriseerde transacties met meer dan 70% zekerheid.',
     },
   },
   help: {

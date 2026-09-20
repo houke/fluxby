@@ -16,12 +16,8 @@
  * (needsReopen reload, migrateToEncrypted, jFileControl sync fix, decryptPage
  * throw-on-auth-failure, getSingleton OPFS no-reload guard) are NOT exercised.
  *
- * To test the OPFS path manually:
- *   1. npm run build (produces dist/app/)
- *   2. Serve dist/ on a non-localhost origin, e.g.:
- *      npx serve dist -l 4173
- *      Then add `127.0.0.2 fluxby-test` to /etc/hosts and browse to http://fluxby-test:4173/app/
- *   3. OPFS will be active and EncryptionVFS will wrap the OPFS base VFS.
+ * To exercise the deployed OPFS path with this test, use the external-target option:
+ *   PLAYWRIGHT_BASE_URL=https://fluxby.app npx playwright test e2e/encryption-login-loop.spec.ts
  */
 
 import { test, expect, Page } from '@playwright/test';
@@ -85,6 +81,11 @@ test('login succeeds after restart without looping on lock screen', async ({
   page,
 }) => {
   test.setTimeout(120_000);
+  if (process.env.PLAYWRIGHT_LOG_BROWSER_CONSOLE) {
+    page.on('console', (message) => {
+      console.log(`[browser:${message.type()}] ${message.text()}`);
+    });
+  }
   await completeFirstTimeSetup(page);
 
   // --- SIMULATE RESTART: reload the page ---

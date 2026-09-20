@@ -2755,7 +2755,7 @@ export function createDataService(db: Database) {
     /**
      * Discover reusable exact-merchant category rules. Code extracts the rule
      * candidates; TypeSafe only chooses among the user's existing categories.
-     * Rules and transaction updates are created only above 90% confidence.
+     * Rules and transaction updates are created only above 70% confidence.
      */
     async discoverCategoryRulesWithAI(): Promise<{
       created: number;

@@ -1,15 +1,29 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+
+const { readFromOPFSSyncMock } = vi.hoisted(() => ({
+  readFromOPFSSyncMock: vi.fn(),
+}));
+
+vi.mock('@fluxby/database', () => ({
+  readFromOPFSSync: readFromOPFSSyncMock,
+}));
+
 import {
   AUTO_CATEGORY_CONFIDENCE_THRESHOLD,
+  askTypeSafe,
+  clearTypeSafeTraceEvents,
+  getTypeSafeTraceEvents,
   suggestCategories,
 } from '@/lib/typesafe-client';
 
 describe('TypeSafe category suggestions', () => {
   afterEach(() => {
     vi.unstubAllGlobals();
+    readFromOPFSSyncMock.mockReset();
+    clearTypeSafeTraceEvents();
   });
 
-  it('batches transactions and only returns choices strictly above 90%', async () => {
+  it('batches transactions and only returns choices strictly above 70%', async () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => ({
@@ -19,14 +33,14 @@ describe('TypeSafe category suggestions', () => {
           transaction_0: {
             type: 'choice',
             choice: 'groceries',
-            probabilities: { groceries: 0.9, none: 0.1 },
+            probabilities: { groceries: 0.7, none: 0.3 },
             confidence: AUTO_CATEGORY_CONFIDENCE_THRESHOLD,
           },
           transaction_1: {
             type: 'choice',
             choice: 'groceries',
-            probabilities: { groceries: 0.95, none: 0.05 },
-            confidence: 0.95,
+            probabilities: { groceries: 0.71, none: 0.29 },
+            confidence: 0.71,
           },
         },
       }),
@@ -54,7 +68,7 @@ describe('TypeSafe category suggestions', () => {
     ]);
     expect(result).toEqual([
       null,
-      { categoryId: 'groceries', confidence: 0.95 },
+      { categoryId: 'groceries', confidence: 0.71 },
     ]);
   });
 
@@ -87,5 +101,38 @@ describe('TypeSafe category suggestions', () => {
         ],
       })
     ).resolves.toEqual([null]);
+  });
+
+  it('records the request and response locally when the trace is enabled', async () => {
+    readFromOPFSSyncMock.mockImplementation((key: string) =>
+      key === 'typesafe-ai-trace-enabled' ? true : ''
+    );
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          model: 'jev-latest',
+          usage: { input_tokens: 3, output_tokens: 1 },
+          answers: { reachable: { type: 'noul', noul: 1 } },
+        }),
+      })
+    );
+
+    await askTypeSafe(
+      { merchant: 'Example merchant' },
+      { reachable: { type: 'noul', instructions: 'Is this a test?' } },
+      'test-key'
+    );
+
+    expect(getTypeSafeTraceEvents()).toHaveLength(1);
+    expect(getTypeSafeTraceEvents()[0]).toMatchObject({
+      status: 'success',
+      request: {
+        endpoint: 'https://api.typesafe.ai/v1/systemone',
+        state: { merchant: 'Example merchant' },
+      },
+      response: { usage: { input_tokens: 3, output_tokens: 1 } },
+    });
   });
 });

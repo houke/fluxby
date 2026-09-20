@@ -9,8 +9,10 @@ import { readFromOPFSSync } from '@fluxby/database';
 const TYPESAFE_API_BASE = 'https://api.typesafe.ai';
 const TYPESAFE_MODEL = 'jev-latest';
 const SETTINGS_KEY = 'typesafe-api-key';
+const TRACE_SETTING_KEY = 'typesafe-ai-trace-enabled';
 const MAX_CONCURRENT = 5;
 const REQUEST_TIMEOUT_MS = 15_000;
+const MAX_TRACE_EVENTS = 20;
 
 // Simple semaphore to cap concurrent TypeSafe API requests
 function createSemaphore(max: number) {
@@ -70,12 +72,86 @@ export interface ChoiceAnswer {
 
 export type Answer = NoulAnswer | ChoiceAnswer;
 
-export const AUTO_CATEGORY_CONFIDENCE_THRESHOLD = 0.9;
+export const AUTO_CATEGORY_CONFIDENCE_THRESHOLD = 0.7;
 
 export interface TypeSafeResponse {
   model: string;
   answers: Record<string, Answer>;
   usage: { input_tokens: number; output_tokens: number };
+}
+
+export interface TypeSafeTraceEvent {
+  id: string;
+  startedAt: string;
+  durationMs?: number;
+  status: 'pending' | 'success' | 'error';
+  request: {
+    endpoint: string;
+    model: string;
+    state: unknown;
+    questions: Record<string, Question>;
+  };
+  response?: TypeSafeResponse;
+  error?: string;
+}
+
+const traceEvents: TypeSafeTraceEvent[] = [];
+const traceListeners = new Set<() => void>();
+
+function notifyTraceListeners() {
+  traceListeners.forEach((listener) => listener());
+}
+
+function traceId() {
+  return globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`;
+}
+
+function isTraceEnabled() {
+  return readFromOPFSSync<boolean>(TRACE_SETTING_KEY) === true;
+}
+
+function startTrace(
+  state: unknown,
+  questions: Record<string, Question>
+): ((update: Partial<TypeSafeTraceEvent>) => void) | null {
+  if (!isTraceEnabled()) return null;
+
+  const id = traceId();
+  traceEvents.unshift({
+    id,
+    startedAt: new Date().toISOString(),
+    status: 'pending',
+    request: {
+      endpoint: `${TYPESAFE_API_BASE}/v1/systemone`,
+      model: TYPESAFE_MODEL,
+      state,
+      questions,
+    },
+  });
+  traceEvents.splice(MAX_TRACE_EVENTS);
+  notifyTraceListeners();
+
+  return (update) => {
+    const index = traceEvents.findIndex((event) => event.id === id);
+    if (index < 0) return;
+    traceEvents[index] = { ...traceEvents[index], ...update };
+    notifyTraceListeners();
+  };
+}
+
+/** Session-only diagnostic events. Event data is never written to OPFS. */
+export function getTypeSafeTraceEvents(): readonly TypeSafeTraceEvent[] {
+  return traceEvents;
+}
+
+export function subscribeToTypeSafeTrace(listener: () => void): () => void {
+  traceListeners.add(listener);
+  return () => traceListeners.delete(listener);
+}
+
+export function clearTypeSafeTraceEvents() {
+  traceEvents.length = 0;
+  notifyTraceListeners();
 }
 
 // ── Core client ───────────────────────────────────────────────────────────────
@@ -98,6 +174,8 @@ export async function askTypeSafe(
   if (!key) throw new Error('TypeSafe API key not configured');
 
   await semaphore.acquire();
+  const startedAt = performance.now();
+  const updateTrace = startTrace(state, questions);
   try {
     const response = await fetch(`${TYPESAFE_API_BASE}/v1/systemone`, {
       method: 'POST',
@@ -114,7 +192,20 @@ export async function askTypeSafe(
       throw new Error(`TypeSafe ${response.status}: ${body}`);
     }
 
-    return response.json() as Promise<TypeSafeResponse>;
+    const result = (await response.json()) as TypeSafeResponse;
+    updateTrace?.({
+      status: 'success',
+      durationMs: Math.round(performance.now() - startedAt),
+      response: result,
+    });
+    return result;
+  } catch (error) {
+    updateTrace?.({
+      status: 'error',
+      durationMs: Math.round(performance.now() - startedAt),
+      error: error instanceof Error ? error.message : String(error),
+    });
+    throw error;
   } finally {
     semaphore.release();
   }
@@ -143,7 +234,7 @@ export function choiceAnswer(
 /**
  * Suggest a spending category for a single transaction.
  * Returns the best-matching category with confidence, or null when AI is
- * unavailable, the key is missing, or no category is above 90% confidence.
+ * unavailable, the key is missing, or no category is above 70% confidence.
  */
 export async function suggestCategory(params: {
   merchantName: string | null;

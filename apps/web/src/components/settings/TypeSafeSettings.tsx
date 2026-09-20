@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   ExternalLink,
@@ -33,6 +33,16 @@ import { useToast } from '@/contexts/ToastContext';
 import { useDataService } from '@/contexts/DatabaseContext';
 import { useOPFSSetting } from '@/hooks/useOPFSSetting';
 import { Currency } from '@/components/ui/currency';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import {
+  askTypeSafe,
+  clearTypeSafeTraceEvents,
+  getTypeSafeTraceEvents,
+  noulAnswer,
+  subscribeToTypeSafeTrace,
+  type TypeSafeTraceEvent,
+} from '@/lib/typesafe-client';
 
 type DuplicatePair = Awaited<
   ReturnType<ReturnType<typeof useDataService>['findSemanticDuplicates']>
@@ -47,14 +57,36 @@ export function TypeSafeSettings() {
 
   const [storedKey, setStoredKey, clearKey, isLoadingKey] =
     useOPFSSetting<string>('typesafe-api-key', '');
+  const [traceEnabled, setTraceEnabled] = useOPFSSetting<boolean>(
+    'typesafe-ai-trace-enabled',
+    false
+  );
   const [editValue, setEditValue] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [showKey, setShowKey] = useState(false);
 
   const [duplicates, setDuplicates] = useState<DuplicatePair[]>([]);
   const [duplicatesOpen, setDuplicatesOpen] = useState(false);
+  const [traceEvents, setTraceEvents] = useState<readonly TypeSafeTraceEvent[]>(
+    () => [...getTypeSafeTraceEvents()]
+  );
 
   const hasKey = !!storedKey && !isLoadingKey;
+
+  useEffect(
+    () =>
+      subscribeToTypeSafeTrace(() => {
+        setTraceEvents([...getTypeSafeTraceEvents()]);
+      }),
+    []
+  );
+
+  const handleTraceToggle = async (enabled: boolean) => {
+    await setTraceEnabled(enabled);
+    if (!enabled) {
+      clearTypeSafeTraceEvents();
+    }
+  };
 
   const handleStartEdit = () => {
     setEditValue('');
@@ -145,6 +177,24 @@ export function TypeSafeSettings() {
       }
     },
     onError: () => toast.error(s.scanDuplicatesNone),
+  });
+
+  const testConnectionMutation = useMutation({
+    mutationFn: async () => {
+      const response = await askTypeSafe(
+        { purpose: 'Fluxby TypeSafe AI connection check' },
+        {
+          connection: {
+            type: 'noul',
+            instructions:
+              'Confirm that this harmless TypeSafe AI connection check was received.',
+          },
+        }
+      );
+      return noulAnswer(response, 'connection');
+    },
+    onSuccess: () => toast.success(s.testConnectionSuccess),
+    onError: (error) => toast.error(error as Error),
   });
 
   return (
@@ -273,6 +323,97 @@ export function TypeSafeSettings() {
                 <p className='text-xs text-muted-foreground'>
                   {s.dataDisclosure}
                 </p>
+                <div className='flex items-start justify-between gap-4'>
+                  <div className='min-w-0 flex-1'>
+                    <p className='text-sm font-medium'>{s.testConnection}</p>
+                    <p className='text-xs text-muted-foreground'>
+                      {s.testConnectionDescription}
+                    </p>
+                  </div>
+                  <Button
+                    variant='secondary'
+                    size='sm'
+                    className='shrink-0'
+                    disabled={testConnectionMutation.isPending}
+                    onClick={() => testConnectionMutation.mutate()}
+                  >
+                    {testConnectionMutation.isPending && (
+                      <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                    )}
+                    {testConnectionMutation.isPending
+                      ? s.testConnectionRunning
+                      : s.testConnection}
+                  </Button>
+                </div>
+                <div className='rounded-lg border border-dashed p-3'>
+                  <div className='flex items-center justify-between gap-3'>
+                    <div>
+                      <Label
+                        htmlFor='typesafe-trace'
+                        className='cursor-pointer text-sm font-medium'
+                      >
+                        {s.traceToggle}
+                      </Label>
+                      <p className='mt-1 text-xs text-muted-foreground'>
+                        {s.traceDescription}
+                      </p>
+                    </div>
+                    <Switch
+                      id='typesafe-trace'
+                      checked={traceEnabled}
+                      onCheckedChange={handleTraceToggle}
+                    />
+                  </div>
+
+                  {traceEnabled && (
+                    <div className='mt-3 space-y-2 border-t pt-3'>
+                      <div className='flex items-center justify-between gap-3'>
+                        <p className='text-xs text-muted-foreground'>
+                          {s.traceSessionOnly}
+                        </p>
+                        <Button
+                          variant='ghost'
+                          size='sm'
+                          className='h-7 text-xs'
+                          disabled={traceEvents.length === 0}
+                          onClick={clearTypeSafeTraceEvents}
+                        >
+                          {s.traceClear}
+                        </Button>
+                      </div>
+                      {traceEvents.length === 0 ? (
+                        <p className='text-xs text-muted-foreground'>
+                          {s.traceEmpty}
+                        </p>
+                      ) : (
+                        <div className='max-h-80 space-y-2 overflow-y-auto'>
+                          {traceEvents.map((event) => (
+                            <details
+                              key={event.id}
+                              className='rounded-md bg-muted/50 p-2 text-xs'
+                            >
+                              <summary className='cursor-pointer font-medium'>
+                                {event.status === 'success'
+                                  ? s.traceSuccess
+                                  : event.status === 'error'
+                                    ? s.traceError
+                                    : s.tracePending}{' '}
+                                {'· '}
+                                {new Date(event.startedAt).toLocaleTimeString()}
+                                {event.durationMs !== undefined
+                                  ? ` · ${event.durationMs} ms`
+                                  : ''}
+                              </summary>
+                              <pre className='mt-2 max-h-64 overflow-auto font-mono text-[11px] leading-relaxed break-words whitespace-pre-wrap'>
+                                {JSON.stringify(event, null, 2)}
+                              </pre>
+                            </details>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
                 <div className='flex items-start justify-between gap-4'>
                   <div className='min-w-0 flex-1'>
                     <p className='text-sm font-medium'>

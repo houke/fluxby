@@ -32,15 +32,20 @@ back to existing deterministic behaviour.
 
 **File**: `apps/web/src/lib/data-service.ts` → `applyCategoriesToUncategorized()`
 
-**Trigger**: "Apply rules" button in the Categories page, or after CSV import.
+**Trigger**: the uncategorized-transactions action in TypeSafe AI Settings, or a
+successful CSV import when a TypeSafe API key is configured.
 
 **What it does**: After the regex-rule engine runs, any transaction that still has no
 category is sent to TypeSafe. The model picks the best-matching category from the
 user's own category list.
 
+Use the **Jev trace** toggle in Settings to inspect a session-only copy of each
+request and response (never the API key). **Test Jev connection** sends one harmless
+typed question without transaction data, useful for verifying console usage.
+
 **Question type**: Choice  
 **State**: `{ merchant, description, amount }`  
-**Threshold**: confidence > 0.9 to auto-assign; otherwise skipped  
+**Threshold**: confidence > 0.7 to auto-assign; otherwise skipped
 **Batch size**: up to 50 transactions per invocation, run in parallel
 
 ```json
@@ -167,7 +172,7 @@ These integrations follow the TypeSafe building guide:
 | **Atomic questions**         | Each question judges one dimension. `suggestCategories` asks one category-fit Choice per transaction; `is_provider` asks only about intermediary status. |
 | **Structured state**         | State is a named JSON object with only the fields relevant to the question.                                                            |
 | **Backtick path references** | Instructions reference state fields by path (e.g. `` `merchant` ``, `` `iban` ``) where clarity helps.                                 |
-| **Confidence thresholds**    | Higher confidence is required for higher-consequence actions (0.8 for date format override; strictly above 0.9 for category auto-assign and generated rules). |
+| **Confidence thresholds**    | Higher confidence is required for higher-consequence actions (0.8 for date format override; strictly above 0.7 for category auto-assign and generated rules). |
 | **Graceful degradation**     | Every integration checks for the key first. On API error, existing deterministic behaviour runs unchanged.                             |
 | **No auto-delete**           | Semantic duplicate detection surfaces candidates only — the user decides.                                                              |
 
@@ -175,7 +180,7 @@ These integrations follow the TypeSafe building guide:
 
 | Feature               | Primitive             | Threshold | Action                       |
 | --------------------- | --------------------- | --------- | ---------------------------- |
-| Category suggestion   | Choice confidence     | > 0.9     | Auto-assign category         |
+| Category suggestion   | Choice confidence     | > 0.7     | Auto-assign category         |
 | Date format detection | Choice confidence     | ≥ 0.8     | Override DD/MM vs MM/DD      |
 | Direction inference   | Choice (no threshold) | —         | Used if non-empty            |
 | Payment provider      | Noul                  | ≥ 0.75    | Mark as AI-detected provider |

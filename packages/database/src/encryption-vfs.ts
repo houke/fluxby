@@ -67,7 +67,6 @@ export class EncryptionVFS extends FacadeVFS {
       'Lock',
       'Unlock',
       'CheckReservedLock',
-      'FileControl',
     ];
 
     if (asyncMethods.includes(methodName)) {

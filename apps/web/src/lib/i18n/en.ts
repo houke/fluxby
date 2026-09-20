@@ -1193,15 +1193,15 @@ export const en: TranslationKeys = {
       keyRemoved: 'API key removed',
       categorizeTransactions: 'Categorise uncategorized transactions',
       categorizeTransactionsDescription:
-        'Apply existing rules first, then automatically assign TypeSafe suggestions only above 90% confidence.',
+        'Apply existing rules first, then automatically assign TypeSafe suggestions only above 70% confidence. This also runs automatically after a successful import.',
       categorizeTransactionsRunning: 'Categorising...',
       categorizeTransactionsResult:
         '{count} transactions categorised ({rules} by rules, {ai} by AI)',
       categorizeTransactionsNone:
-        'No transactions matched a rule or cleared the greater-than-90% confidence threshold.',
+        'No transactions matched a rule or cleared the greater-than-70% confidence threshold.',
       discoverRules: 'Find categorisation rules',
       discoverRulesDescription:
-        'Find recurring merchants among uncategorized transactions and create rules only above 90% confidence.',
+        'Find recurring merchants among uncategorized transactions and create rules only above 70% confidence.',
       discoverRulesRunning: 'Finding rules...',
       discoverRulesResult:
         '{rules} rules created and {transactions} transactions categorised',
@@ -1224,6 +1224,28 @@ export const en: TranslationKeys = {
       noKeyWarning: 'Add an API key to enable AI features.',
       dataDisclosure:
         'These actions send minimal transaction data (merchant names, counterparty IBANs, descriptions) to the TypeSafe API. Full transaction lists are never sent.',
+      traceToggle: 'Show Jev trace',
+      traceDescription:
+        'Show what is sent to Jev and returned during this session. Your API key is never recorded.',
+      traceSessionOnly:
+        'Trace data stays only in this session’s memory and is removed when you refresh or turn tracing off.',
+      traceClear: 'Clear trace',
+      traceEmpty:
+        'No Jev requests yet. Turn tracing on, then run an AI action below.',
+      traceSuccess: 'Jev response received',
+      traceError: 'Jev request failed',
+      tracePending: 'Jev request in progress',
+      testConnection: 'Test Jev connection',
+      testConnectionDescription:
+        'Send a harmless test question without transaction data. Turn tracing on to see the complete request and response.',
+      testConnectionRunning: 'Testing Jev...',
+      testConnectionSuccess: 'Jev connection confirmed',
+      autoCategorizeAfterImportStarted:
+        'Jev is categorizing uncategorized transactions in the background.',
+      autoCategorizeAfterImportResult:
+        'Jev categorized {count} transactions after import.',
+      autoCategorizeAfterImportNone:
+        'Jev found no uncategorized transactions above 70% confidence.',
     },
   },
   help: {

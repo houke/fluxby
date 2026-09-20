@@ -1,5 +1,8 @@
 import { defineConfig, devices } from '@playwright/test';
 
+const baseURL = process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:5177';
+const isExternalTarget = !!process.env.PLAYWRIGHT_BASE_URL;
+
 /**
  * Playwright E2E Test Configuration for Fluxby
  *
@@ -21,7 +24,7 @@ export default defineConfig({
 
   use: {
     // Base URL for the web app (landing page proxies to /app/)
-    baseURL: 'http://localhost:5177',
+    baseURL,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
@@ -49,10 +52,12 @@ export default defineConfig({
   ],
 
   // Start dev server before running tests
-  webServer: {
-    command: 'npm run dev',
-    url: 'http://localhost:5177',
-    reuseExistingServer: !process.env.CI,
-    timeout: 120000,
-  },
+  webServer: isExternalTarget
+    ? undefined
+    : {
+        command: 'npm run dev',
+        url: 'http://localhost:5177',
+        reuseExistingServer: !process.env.CI,
+        timeout: 120000,
+      },
 });

@@ -40,12 +40,12 @@ export default function HelpAI() {
           {
             emoji: '🏷️',
             title: 'Automatisch categoriseren',
-            desc: 'Pas bestaande regels toe en laat de AI daarna de beste categorie kiezen op basis van winkelnaam, omschrijving en bedrag. Alleen automatisch toegewezen bij meer dan 90% zekerheid.',
+            desc: 'Pas bestaande regels toe en laat de AI daarna de beste categorie kiezen op basis van winkelnaam, omschrijving en bedrag. Alleen automatisch toegewezen bij meer dan 70% zekerheid.',
           },
           {
             emoji: '🧠',
             title: 'Categorisatieregels vinden',
-            desc: 'TypeSafe beoordeelt terugkerende winkels zonder categorie. Fluxby maakt alleen een herbruikbare regel als de categorie met meer dan 90% zekerheid past.',
+            desc: 'TypeSafe beoordeelt terugkerende winkels zonder categorie. Fluxby maakt alleen een herbruikbare regel als de categorie met meer dan 70% zekerheid past.',
           },
           {
             emoji: '📥',

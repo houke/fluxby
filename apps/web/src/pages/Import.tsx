@@ -46,7 +46,9 @@ import { formatDate } from '@/lib/utils';
 import { Currency } from '@/components/ui/currency';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useProfile } from '@/contexts/ProfileContext';
+import { useToast } from '@/contexts/ToastContext';
 import { ProfileAvatar } from '@/components/ui/ProfileAvatar';
+import { getTypeSafeApiKey } from '@/lib/typesafe-client';
 
 interface ImportHistorySkippedRow {
   rowIndex?: number;
@@ -354,6 +356,7 @@ function HistoryCard({
 
 export default function Import() {
   const { t } = useLanguage();
+  const toast = useToast();
   const { activeProfileId, activeProfile } = useProfile();
 
   useDocumentTitle(t.import.title);
@@ -393,6 +396,37 @@ export default function Import() {
   const [showSkippedRows, setShowSkippedRows] = useState(false);
   const [selectedBank, setSelectedBank] = useState<string>('');
   const [modalError, setModalError] = useState<string | null>(null);
+
+  const autoCategorizeAfterImport = useCallback(() => {
+    if (!getTypeSafeApiKey()) return;
+
+    const aiText = t.settings.typesafeAi;
+    toast.info(aiText.autoCategorizeAfterImportStarted);
+    void api
+      .applyCategoriesToUncategorized()
+      .then((result) => {
+        queryClient.invalidateQueries({
+          queryKey: ['transactions', activeProfileId],
+        });
+        queryClient.invalidateQueries({
+          queryKey: ['categories'],
+        });
+        queryClient.invalidateQueries({
+          queryKey: ['dashboard', activeProfileId],
+        });
+        if (result.aiApplied > 0) {
+          toast.success(
+            aiText.autoCategorizeAfterImportResult.replace(
+              '{count}',
+              String(result.aiApplied)
+            )
+          );
+        } else {
+          toast.info(aiText.autoCategorizeAfterImportNone);
+        }
+      })
+      .catch((error) => toast.error(error as Error));
+  }, [activeProfileId, queryClient, t.settings.typesafeAi, toast]);
 
   const { data: history, isLoading: historyLoading } = useQuery<
     ImportHistory[]
@@ -632,6 +666,9 @@ export default function Import() {
         .catch((err) =>
           console.error('Failed to detect recurring patterns:', err)
         );
+      if (data.imported > 0) {
+        autoCategorizeAfterImport();
+      }
     },
     onError: (error: Error) => {
       console.error('Import error:', error);
@@ -662,7 +699,7 @@ export default function Import() {
         importId: number;
         imported: number;
       }>,
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({
         queryKey: ['import-history', activeProfileId],
       });
@@ -689,6 +726,9 @@ export default function Import() {
         .catch((err) =>
           console.error('Failed to detect recurring patterns:', err)
         );
+      if (data.imported > 0) {
+        autoCategorizeAfterImport();
+      }
     },
     onError: (error: Error) => {
       setUploadError(error.message);
