@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.12.1
+
+**Release Date:** 2026-09-20
+
+### Bug Fixes
+
+- **web:** repair encrypted web login and trace TypeSafe
+- **web:** process all AI category suggestions
+
 ## v1.12.0
 
 **Release Date:** 2026-09-20
