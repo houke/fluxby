@@ -55,7 +55,7 @@ export default defineConfig({
   webServer: isExternalTarget
     ? undefined
     : {
-        command: 'npm run dev',
+        command: 'npm run dev:localhost',
         url: 'http://localhost:5177',
         reuseExistingServer: !process.env.CI,
         timeout: 120000,
