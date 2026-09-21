@@ -8,6 +8,12 @@ on:
       - 'apps/web/**'
       - 'apps/landing/**'
       - 'packages/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'scripts/build-pages.mjs'
+      - 'scripts/generate-api.ts'
+      - 'eslint.config.js'
+      - 'CNAME'
       - '.github/workflows/deploy-pages.yml'
   release:
     types: [published]
