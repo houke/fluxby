@@ -207,13 +207,16 @@ npm run dev:all
 # Start only the local API server (developer tool)
 npm run dev:api
 
-# Start only the Web app (port 5178)
-# Use this for Tauri (it needs the Web dev server)
+# Start only the Web app's Vite server (internal port 5178)
+# Use this for Tauri or direct web-app development.
+# This is not the normal browser entry point when using `npm run dev`.
 npm run dev:web
 
 # Start UI development with one command and a local HTTPS certificate.
 # Landing site: https://fluxby.local:5177/
 # Web app:      https://fluxby.local:5177/app/
+# The web app's Vite server also listens on https://fluxby.local:5178/app/
+# for the landing server's internal proxy and HMR.
 npm run dev
 
 # Start Tauri desktop development
@@ -281,10 +284,11 @@ npm run release:dry
 ### Dev script differences
 
 - `dev:web` starts only the React PWA in [apps/web](apps/web) on port `5178`.
-  - Use it when developing the app UI itself (and for Tauri dev).
-  - In normal browser dev, the landing dev server proxies this app under `http://localhost:5177/app/`.
-- `dev` starts the landing server at `https://fluxby.local:5177/` and the web app at `https://fluxby.local:5178/app/`.
-  - The landing server proxies `/app` and `/app/*`, so the browser-facing app URL is `https://fluxby.local:5177/app/`.
+  - Use it when developing the app UI directly or for Tauri dev.
+  - When using `npm run dev`, do not open this port directly; use the browser-facing proxy at `https://fluxby.local:5177/app/`.
+- `dev` starts two Vite processes: the landing server at `https://fluxby.local:5177/` and the web app server at `https://fluxby.local:5178/app/`.
+  - The 5178 server is an internal development server required for the web app's source resolution and HMR.
+  - The landing server proxies `/app` and `/app/*`, so the only browser-facing entry point you need is `https://fluxby.local:5177/app/`.
   - It creates a one-year self-signed certificate in the user cache, reuses it until renewal, and trusts it in the macOS login keychain.
   - Linux and Windows users may need to trust the generated certificate manually when their browser first opens the site.
   - Add `127.0.0.1 fluxby.local` and `::1 fluxby.local` to `/etc/hosts` once.

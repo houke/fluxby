@@ -390,10 +390,11 @@ If any tests fail, fix them before proceeding.
 
 ## Development Tips
 
-- Landing page runs at `http://localhost:5177`
-- Web app (OPFS mode) is proxied via landing page at `/app/`
-- Web app dev server runs on port 5178 (proxied through landing page)
-- **For web app dev only**: `npm run dev:web` (runs on port 5178)
+- Landing page runs at `https://fluxby.local:5177/`
+- Web app (OPFS mode) is browser-facing at `https://fluxby.local:5177/app/`
+- The web app's Vite server runs internally on port `5178` and is proxied through the landing page
+- **For web app dev only**: `npm run dev:web` (runs the direct Vite server on port 5178)
+- When using `npm run dev`, use port 5177 in the browser; port 5178 exists for the internal proxy, HMR, and Tauri/direct web-app development
 - **For API dev only**: `npm run dev:api` (runs on port 3001)
 - **API (for developers building custom interfaces)**: `http://localhost:3001/api`
 - **Swagger API Docs**: `http://localhost:3001/api/docs`
