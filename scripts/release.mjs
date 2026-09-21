@@ -1102,6 +1102,30 @@ function updatePackageJsonVersion(newVersion) {
   pkg.version = newVersion;
   writeFileSync(packagePath, JSON.stringify(pkg, null, 2) + '\n');
 
+  // Keep npm's root and workspace metadata aligned without re-resolving
+  // dependency ranges during a release.
+  const packageLockPath = join(ROOT_DIR, 'package-lock.json');
+  const packageLock = JSON.parse(readFileSync(packageLockPath, 'utf-8'));
+  packageLock.version = newVersion;
+  for (const workspacePath of [
+    '',
+    'apps/api',
+    'apps/landing',
+    'apps/tauri',
+    'apps/web',
+    'packages/core',
+    'packages/database',
+    'packages/shared',
+  ]) {
+    if (packageLock.packages?.[workspacePath]) {
+      packageLock.packages[workspacePath].version = newVersion;
+    }
+  }
+  writeFileSync(
+    packageLockPath,
+    JSON.stringify(packageLock, null, 2) + '\n'
+  );
+
   // Update apps/tauri/package.json
   const tauriPackagePath = join(ROOT_DIR, 'apps/tauri/package.json');
   const tauriPkg = JSON.parse(readFileSync(tauriPackagePath, 'utf-8'));
