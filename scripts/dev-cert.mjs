@@ -15,12 +15,6 @@ import os from 'node:os';
 
 const scriptsDirectory = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.resolve(scriptsDirectory, '..');
-const certificateDirectory = path.join(projectRoot, '.certs');
-const keyPath = path.join(certificateDirectory, 'fluxby.local-key.pem');
-const certificatePath = path.join(
-  certificateDirectory,
-  'fluxby.local-cert.pem'
-);
 
 function getOriginalUserInfo() {
   if (process.platform !== 'darwin' || process.getuid?.() !== 0) {
@@ -69,6 +63,15 @@ function getOriginalUserInfo() {
 
 const originalUserInfo = getOriginalUserInfo();
 const loginHome = originalUserInfo?.homedir ?? os.homedir();
+const certificateDirectory =
+  process.platform === 'darwin'
+    ? path.join(loginHome, 'Library', 'Caches', 'Fluxby', 'dev-certs')
+    : path.join(loginHome, '.cache', 'fluxby', 'dev-certs');
+const keyPath = path.join(certificateDirectory, 'fluxby.local-key.pem');
+const certificatePath = path.join(
+  certificateDirectory,
+  'fluxby.local-cert.pem'
+);
 const loginKeychainPath = path.join(
   loginHome,
   'Library',

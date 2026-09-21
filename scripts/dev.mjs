@@ -5,7 +5,7 @@ import {
 } from './dev-cert.mjs';
 
 const command = process.platform === 'win32' ? 'npm.cmd' : 'npm';
-const landingPort = Number(process.env.FLUXBY_DEV_FRONT_PORT || 443);
+const landingPort = Number(process.env.FLUXBY_DEV_FRONT_PORT || 5177);
 
 if (
   landingPort < 1024 &&

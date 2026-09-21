@@ -48,13 +48,10 @@ npm install
 npm run dev
 ```
 
-On macOS and Linux, the HTTPS development site uses privileged port 443. If
-the command reports a permission error, run `sudo npm run dev`.
-
 The application is now available at:
 
-- **Web App:** https://fluxby.local/app/ (local-first, uses browser OPFS storage)
-- **Landing Page:** https://fluxby.local/
+- **Web App:** https://fluxby.local:5177/app/ (local-first, uses browser OPFS storage)
+- **Landing Page:** https://fluxby.local:5177/
 - **API (for developers only):** http://localhost:3001
 
 > **Note:** The web app uses **OPFS (Origin Private File System)** for local-first storage. No backend server is required - the API is only for developers who want to build custom interfaces.
@@ -215,10 +212,9 @@ npm run dev:api
 npm run dev:web
 
 # Start UI development with one command and a trusted local HTTPS certificate.
-# Landing site: https://fluxby.local/
-# Web app:      https://fluxby.local/app/
-# Port 443 requires administrator permission on macOS.
-sudo npm run dev
+# Landing site: https://fluxby.local:5177/
+# Web app:      https://fluxby.local:5177/app/
+npm run dev
 
 # Start Tauri desktop development
 npm run dev:tauri
@@ -284,12 +280,12 @@ npm run release:dry
 - `dev:web` starts only the React PWA in [apps/web](apps/web) on port `5178`.
   - Use it when developing the app UI itself (and for Tauri dev).
   - In normal browser dev, the landing dev server proxies this app under `http://localhost:5177/app/`.
-- `dev` starts the landing server at `https://fluxby.local/` on port `443` and the web app at `https://fluxby.local:5178/app/`.
-  - The landing server proxies `/app` and `/app/*`, so the browser-facing app URL is `https://fluxby.local/app/`.
-  - It creates a fresh one-year self-signed certificate in `.certs/` on every start and trusts it in the macOS login keychain.
+- `dev` starts the landing server at `https://fluxby.local:5177/` and the web app at `https://fluxby.local:5178/app/`.
+  - The landing server proxies `/app` and `/app/*`, so the browser-facing app URL is `https://fluxby.local:5177/app/`.
+  - It creates a fresh one-year self-signed certificate in the user cache on every start and trusts it in the macOS login keychain.
   - Add `127.0.0.1 fluxby.local` and `::1 fluxby.local` to `/etc/hosts` once.
-  - Port 443 is why the browser-facing URL does not need an explicit port; the command needs elevated permission because it is a privileged port.
   - TypeSafe requests use a same-origin development proxy, avoiding CORS failures from local hostnames.
+- To use the portless URL `https://fluxby.local/`, set `FLUXBY_DEV_FRONT_PORT=443` and run with administrator permission.
 - `dev:local` is kept as an alias for `dev`.
 - `dev:localhost` keeps the old plain-HTTP split-port setup for troubleshooting.
 - `dev:api` starts the optional Express API in [apps/api](apps/api) on port `3001`.
