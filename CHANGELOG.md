@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.13.1
+
+**Release Date:** 2026-09-21
+
+### Bug Fixes
+
+- **onboarding:** persist first-run completion and allow Jev
+
 ## v1.13.0
 
 **Release Date:** 2026-09-21
