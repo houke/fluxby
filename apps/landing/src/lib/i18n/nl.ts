@@ -2031,7 +2031,8 @@ export const nl: LandingTranslationKeys = {
       v1120Title: 'Release 1.12.0',
       v1120Description: '1 nieuwe feature en 4 bugfixes.',
       v1120F1Title: 'Opgelost tab scroll reset and categorie sign handling',
-      v1120F1Desc: 'We hebben iets nieuws voor je! Bekijk de release notes voor alle details.',
+      v1120F1Desc:
+        'We hebben iets nieuws voor je! Bekijk de release notes voor alle details.',
       v1120F2Title: 'Bugfixes',
       v1120F2Desc: '4 bugs opgelost. Zie changelog voor details.',
       v1110Date: '19 september 2026',

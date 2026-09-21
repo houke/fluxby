@@ -33,18 +33,18 @@ const UpdatesContent = () => {
   const updatesPage = t.legal?.updatesPage;
 
   const releases = [
-                {
+    {
       version: '1.12.1',
       date: updatesPage?.v1121Date || '20 september 2026',
       title: updatesPage?.v1121Title || 'Release 1.12.1',
-      description:
-        updatesPage?.v1121Description ||
-        '2 bugfixes.',
+      description: updatesPage?.v1121Description || '2 bugfixes.',
       features: [
         {
           icon: Globe,
           title: updatesPage?.v1121F1Title || 'Web app verbeteringen',
-          description: updatesPage?.v1121F1Desc || '2 bugfixes. Bekijk de release op GitHub!',
+          description:
+            updatesPage?.v1121F1Desc ||
+            '2 bugfixes. Bekijk de release op GitHub!',
         },
       ],
     },
@@ -53,18 +53,23 @@ const UpdatesContent = () => {
       date: updatesPage?.v1120Date || '20 september 2026',
       title: updatesPage?.v1120Title || 'Release 1.12.0',
       description:
-        updatesPage?.v1120Description ||
-        '1 nieuwe feature en 4 bugfixes.',
+        updatesPage?.v1120Description || '1 nieuwe feature en 4 bugfixes.',
       features: [
         {
           icon: Globe,
-          title: updatesPage?.v1120F1Title || 'Opgelost tab scroll reset and categorie sign handling',
-          description: updatesPage?.v1120F1Desc || 'We hebben iets nieuws voor je! Bekijk de release notes voor alle details.',
+          title:
+            updatesPage?.v1120F1Title ||
+            'Opgelost tab scroll reset and categorie sign handling',
+          description:
+            updatesPage?.v1120F1Desc ||
+            'We hebben iets nieuws voor je! Bekijk de release notes voor alle details.',
         },
         {
           icon: Wrench,
           title: updatesPage?.v1120F2Title || 'Bugfixes',
-          description: updatesPage?.v1120F2Desc || '4 bugs opgelost. Zie changelog voor details.',
+          description:
+            updatesPage?.v1120F2Desc ||
+            '4 bugs opgelost. Zie changelog voor details.',
         },
       ],
     },
@@ -73,23 +78,30 @@ const UpdatesContent = () => {
       date: updatesPage?.v1110Date || '19 september 2026',
       title: updatesPage?.v1110Title || 'Release 1.11.0',
       description:
-        updatesPage?.v1110Description ||
-        '3 nieuwe features en 11 bugfixes.',
+        updatesPage?.v1110Description || '3 nieuwe features en 11 bugfixes.',
       features: [
         {
           icon: BookOpen,
-          title: updatesPage?.v1110F1Title || 'Toegevoegd typesafe ai docs to developer hub and help center',
-          description: updatesPage?.v1110F1Desc || 'Er is weer wat bijgekomen. Ontdek het zelf!',
+          title:
+            updatesPage?.v1110F1Title ||
+            'Toegevoegd typesafe ai docs to developer hub and help center',
+          description:
+            updatesPage?.v1110F1Desc ||
+            'Er is weer wat bijgekomen. Ontdek het zelf!',
         },
         {
           icon: Globe,
           title: updatesPage?.v1110F2Title || 'Nieuwe web app mogelijkheden',
-          description: updatesPage?.v1110F2Desc || '2 nieuwe features. Bekijk de release op GitHub!',
+          description:
+            updatesPage?.v1110F2Desc ||
+            '2 nieuwe features. Bekijk de release op GitHub!',
         },
         {
           icon: Wrench,
           title: updatesPage?.v1110F3Title || 'Bugfixes',
-          description: updatesPage?.v1110F3Desc || '11 bugs opgelost. Zie changelog voor details.',
+          description:
+            updatesPage?.v1110F3Desc ||
+            '11 bugs opgelost. Zie changelog voor details.',
         },
       ],
     },
