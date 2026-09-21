@@ -96,6 +96,7 @@ export default defineConfig({
       : {}),
     // Headers required for SharedArrayBuffer (SQLite WASM)
     headers: {
+      'Content-Security-Policy': "frame-ancestors 'none'",
       'Cross-Origin-Opener-Policy': 'same-origin',
       'Cross-Origin-Embedder-Policy': 'require-corp',
     },

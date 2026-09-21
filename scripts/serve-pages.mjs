@@ -10,6 +10,10 @@ const root = path.join(__dirname, '..');
 const siteDir = path.join(root, 'dist');
 
 const port = Number(process.env.PORT || 5177);
+const securityHeaders = {
+  'Content-Security-Policy': "frame-ancestors 'none'",
+  'X-Content-Type-Options': 'nosniff',
+};
 
 function contentTypeFor(filePath) {
   const ext = path.extname(filePath).toLowerCase();
@@ -50,6 +54,7 @@ function safeResolvePath(urlPath) {
 function sendFile(res, filePath, statusCode = 200) {
   res.writeHead(statusCode, {
     'Content-Type': contentTypeFor(filePath),
+    ...securityHeaders,
   });
   createReadStream(filePath).pipe(res);
 }
@@ -60,7 +65,10 @@ function send404(res) {
     sendFile(res, notFoundPath, 404);
     return;
   }
-  res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+  res.writeHead(404, {
+    'Content-Type': 'text/plain; charset=utf-8',
+    ...securityHeaders,
+  });
   res.end('404 Not Found');
 }
 
