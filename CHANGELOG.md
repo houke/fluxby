@@ -1,5 +1,33 @@
 # Changelog
 
+## v1.12.2
+
+**Release Date:** 2026-09-21
+
+### Bug Fixes
+
+- **build:** exclude local artifacts from distribution
+- **ci:** expose stable required PR checks
+- **ci:** trigger Pages for build inputs
+- **typecheck:** include landing application
+- **release:** eliminate duplicate build pass
+- **release:** synchronize lockfile versions
+- **build:** make production distribution runnable
+- **web:** prevent stale Vite config shadowing
+- **dev:** reuse local HTTPS certificates safely
+- **e2e:** use localhost development server
+- **dev:** default to unprivileged local HTTPS ports
+- **dev:** simplify trusted local HTTPS workflow
+- **web:** repair encrypted browser onboarding
+
+### Documentation
+
+- **dev:** clarify local browser ports
+
+### Styles
+
+- **landing:** clear release formatting warnings
+
 ## v1.12.1
 
 **Release Date:** 2026-09-20
