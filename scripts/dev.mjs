@@ -7,13 +7,16 @@ import {
 const command = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 const landingPort = Number(process.env.FLUXBY_DEV_FRONT_PORT || 5177);
 
-if (
-  landingPort < 1024 &&
-  process.platform !== 'win32' &&
-  process.getuid?.() !== 0
-) {
+if (process.getuid?.() === 0) {
   console.error(
-    `Port ${landingPort} requires administrator permission. Run: sudo npm run dev`
+    'Do not run the development servers as root. Use an unprivileged port (1024 or higher).'
+  );
+  process.exit(1);
+}
+
+if (landingPort < 1024 && process.platform !== 'win32') {
+  console.error(
+    `Port ${landingPort} requires administrator permission. Choose FLUXBY_DEV_FRONT_PORT=1024 or higher.`
   );
   process.exit(1);
 }
@@ -25,7 +28,7 @@ const sharedEnvironment = {
 };
 
 // Create and trust the certificate once before either Vite process starts.
-getLocalHttpsOptions({ refresh: true });
+getLocalHttpsOptions();
 ensureLocalCertificateTrust();
 
 const apps = [

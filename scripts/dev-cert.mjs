@@ -92,9 +92,8 @@ function runSecurityCommand(args) {
 }
 
 /**
- * Create a fresh one-year certificate for the local production-like hostname.
- * The files are intentionally kept out of git and rotated on each full local
- * development start.
+ * Create a one-year certificate for the local production-like hostname.
+ * The files are intentionally kept out of git and reused until renewal.
  */
 function createCertificate() {
   mkdirSync(certificateDirectory, { recursive: true });
@@ -163,7 +162,27 @@ function restoreOriginalUserOwnership() {
 }
 
 export function getLocalHttpsOptions({ refresh = false } = {}) {
-  if (refresh || !existsSync(keyPath) || !existsSync(certificatePath)) {
+  let certificateNeedsRenewal = refresh;
+  if (!certificateNeedsRenewal && existsSync(certificatePath)) {
+    try {
+      execFileSync('openssl', [
+        'x509',
+        '-checkend',
+        String(30 * 24 * 60 * 60),
+        '-noout',
+        '-in',
+        certificatePath,
+      ], { stdio: 'ignore' });
+    } catch {
+      certificateNeedsRenewal = true;
+    }
+  }
+
+  if (
+    certificateNeedsRenewal ||
+    !existsSync(keyPath) ||
+    !existsSync(certificatePath)
+  ) {
     createCertificate();
     restoreOriginalUserOwnership();
   }
@@ -180,7 +199,12 @@ export function getLocalHttpsOptions({ refresh = false } = {}) {
  * like a normal trusted development site after the first `npm run dev`.
  */
 export function ensureLocalCertificateTrust() {
-  if (process.platform !== 'darwin') return;
+  if (process.platform !== 'darwin') {
+    console.warn(
+      'The local HTTPS certificate is self-signed. Trust it manually in your operating system if the browser shows a certificate warning.'
+    );
+    return;
+  }
 
   try {
     runSecurityCommand(['verify-cert', '-c', certificatePath]);
