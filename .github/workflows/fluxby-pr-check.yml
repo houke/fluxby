@@ -123,3 +123,20 @@ jobs:
       - name: Build Tauri app (debug)
         working-directory: apps/tauri
         run: npx tauri build --debug --config tauri.debug.conf.json
+
+  required-pr-checks:
+    name: Required PR checks
+    runs-on: ubuntu-latest
+    needs: [lint-test, changes, tauri-build]
+    if: always()
+    steps:
+      - name: Verify required jobs
+        env:
+          LINT_TEST_RESULT: ${{ needs.lint-test.result }}
+          TAURI_CHANGED: ${{ needs.changes.outputs.tauri }}
+          TAURI_BUILD_RESULT: ${{ needs.tauri-build.result }}
+        run: |
+          test "$LINT_TEST_RESULT" = "success"
+          if [ "$TAURI_CHANGED" = "true" ]; then
+            test "$TAURI_BUILD_RESULT" = "success"
+          fi
