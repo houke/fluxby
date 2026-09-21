@@ -29,7 +29,7 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
-    "typecheck": "npm run build:packages && npm run typecheck -w apps/web && npm run typecheck -w apps/api",
+    "typecheck": "npm run build:packages && npm run typecheck -w apps/web && npm run typecheck -w apps/api && npm run typecheck -w apps/landing",
     "test": "vitest",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
