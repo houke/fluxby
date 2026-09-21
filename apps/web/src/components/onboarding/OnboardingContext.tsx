@@ -551,26 +551,15 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
     // Trigger re-render to update spotlight position
   }, []);
 
-  // Trigger demo profile setup - called after SecuritySetup completes
-  // Note: SecuritySetup already creates the demo profile and seeds data
-  // This function just needs to start the onboarding tour
-  const triggerDemoSetup = useCallback(async () => {
+  // Refresh the user and profile queries after SecuritySetup completes.
+  // SecuritySetup marks onboarding as seen when the user starts setup, so it
+  // must not reopen the tour after the secure profile has been created.
+  const refreshAfterSecuritySetup = useCallback(async () => {
     try {
-      // Invalidate all queries to get fresh data (user was just created)
+      // The user and demo profile were just created outside React Query.
       await queryClient.invalidateQueries();
-
-      // Small delay to ensure data loads
-      await new Promise((resolve) => setTimeout(resolve, 200));
-
-      // Start the onboarding tour
-      setState((prev) => ({
-        ...prev,
-        isActive: true,
-        currentChapterIndex: 0,
-        currentStepIndex: 0,
-      }));
     } catch {
-      console.error('Failed to start onboarding');
+      console.error('Failed to refresh data after security setup');
     }
   }, [queryClient]);
 
@@ -585,12 +574,13 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
   const needsSecuritySetup =
     isDbTrulyReady && isUserFetched && !isEncryptionEnabled;
 
-  // Onboarding tour needed when user or demo profile doesn't exist
-  // (but encryption is already set up)
+  // Onboarding tour is needed only for a first-time user who has not already
+  // chosen to start using the app from SecuritySetup.
   const needsOnboarding =
     isDbTrulyReady &&
     isUserFetched &&
     isEncryptionEnabled &&
+    !state.hasCompletedOnboarding &&
     (userData === null || !hasDemoProfile);
 
   const value: OnboardingContextType = {
@@ -608,7 +598,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
     goToChapter,
     setLanguage,
     setUserName,
-    triggerDemoSetup,
+    refreshAfterSecuritySetup,
     currentChapter,
     currentStep,
     isFirstStep,

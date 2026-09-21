@@ -39,7 +39,7 @@ export interface OnboardingContextType {
   isLoadingUser: boolean;
   // Navigation
   startOnboarding: (restart?: boolean, startAtCurrentPage?: boolean) => void;
-  completeOnboarding: () => void;
+  completeOnboarding: () => Promise<void>;
   skipOnboarding: () => void;
   dismissOnboarding: () => void;
   nextStep: () => void;
@@ -49,8 +49,8 @@ export interface OnboardingContextType {
   setLanguage: (language: 'nl' | 'en') => void;
   // User name
   setUserName: (name: string) => void;
-  // Trigger demo profile setup after security setup
-  triggerDemoSetup: () => Promise<void>;
+  // Refresh profile and user data after security setup
+  refreshAfterSecuritySetup: () => Promise<void>;
   // Computed values
   currentChapter: OnboardingChapter | null;
   currentStep: OnboardingStep | null;

@@ -27,13 +27,18 @@ import { cn } from '@/lib/utils';
 import { api } from '@/lib/api';
 
 interface SecuritySetupProps {
+  /** Persist that the user chose to start using Fluxby. */
+  onOnboardingSeen: () => Promise<void>;
   /** Callback when setup is complete */
   onSetupComplete: () => void;
 }
 
 type SetupStep = 'language' | 'name' | 'password' | 'loading';
 
-export function SecuritySetup({ onSetupComplete }: SecuritySetupProps) {
+export function SecuritySetup({
+  onOnboardingSeen,
+  onSetupComplete,
+}: SecuritySetupProps) {
   const { language, setLanguage } = useLanguage();
   const { setupEncryption } = useEncryption();
 
@@ -202,6 +207,11 @@ export function SecuritySetup({ onSetupComplete }: SecuritySetupProps) {
       return;
     }
 
+    // The user has chosen "Aan de slag!" / "Let's get started!". Persist
+    // this before the longer profile, demo-data, and encryption work so the
+    // walkthrough is not reopened on a later app start.
+    await onOnboardingSeen();
+
     // Switch to loading step
     setStep('loading');
     setIsLoading(true);
@@ -340,6 +350,7 @@ export function SecuritySetup({ onSetupComplete }: SecuritySetupProps) {
     confirmPassword,
     userName,
     setupEncryption,
+    onOnboardingSeen,
     onSetupComplete,
     texts,
     refreshProfiles,
