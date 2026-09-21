@@ -1927,6 +1927,13 @@ export const en: LandingTranslationKeys = {
     updatesPage: {
       intro:
         "See what's new in Fluxby. Here you'll find all updates and new features.",
+      v1130Date: 'September 21, 2026',
+      v1130Title: 'Release 1.13.0',
+      v1130Description: '1 new feature and 1 bug fix.',
+      v1130F1Title: 'Web proxy and responsive docs fixes',
+      v1130F1Desc: 'New functionality that actually helps.',
+      v1130F2Title: 'Move frame ancestors policy to response headers',
+      v1130F2Desc: 'Bugs eliminated, app improved.',
       v1122Date: 'September 21, 2026',
       v1122Title: 'Release 1.12.2',
       v1122Description: '13 bug fixes.',

@@ -33,7 +33,27 @@ const UpdatesContent = () => {
   const updatesPage = t.legal?.updatesPage;
 
   const releases = [
+            {
+      version: '1.13.0',
+      date: updatesPage?.v1130Date || '21 september 2026',
+      title: updatesPage?.v1130Title || 'Release 1.13.0',
+      description:
+        updatesPage?.v1130Description ||
+        '1 nieuwe feature en 1 bugfix.',
+      features: [
         {
+          icon: Plus,
+          title: updatesPage?.v1130F1Title || 'Toegevoegd web proxy and responsive docs fixes',
+          description: updatesPage?.v1130F1Desc || 'We hebben iets nieuws voor je! Bekijk de release notes voor alle details.',
+        },
+        {
+          icon: Shield,
+          title: updatesPage?.v1130F2Title || 'Move frame ancestors policy to response headers',
+          description: updatesPage?.v1130F2Desc || 'Kleine fix, groot verschil.',
+        },
+      ],
+    },
+    {
       version: '1.12.2',
       date: updatesPage?.v1122Date || '21 september 2026',
       title: updatesPage?.v1122Title || 'Release 1.12.2',

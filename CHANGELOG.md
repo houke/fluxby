@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.13.0
+
+**Release Date:** 2026-09-21
+
+### Features
+
+- **typesafe:** add web proxy and responsive docs fixes
+
+### Bug Fixes
+
+- **security:** move frame ancestors policy to response headers
+
 ## v1.12.2
 
 **Release Date:** 2026-09-21
