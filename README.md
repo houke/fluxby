@@ -238,6 +238,9 @@ npm run build
 # Includes landing at / and the app at /app/
 npm run build:pages
 
+# Assemble a self-installable API + web production folder
+npm run build:dist
+
 # Build and serve the static dist/ folder locally
 npm run serve:pages
 

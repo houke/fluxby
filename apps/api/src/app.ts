@@ -86,8 +86,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// Serve built web app when running from root dist/
-// (frontend keeps working with its relative `/api` calls)
+// Serve the built web app at /app/ when running from root dist/.
 try {
   const webDistDir = join(__dirname, '..', '..', 'web', 'dist');
   const webIndexFile = join(webDistDir, 'index.html');
@@ -95,9 +94,9 @@ try {
     process.env.SERVE_WEB_DIST === '1' || process.env.NODE_ENV === 'production';
 
   if (shouldServeWeb && existsSync(webDistDir) && existsSync(webIndexFile)) {
-    app.use(express.static(webDistDir));
-    app.get('*', globalRateLimiter, (req, res, next) => {
-      if (req.path.startsWith('/api')) return next();
+    app.get('/', (_req, res) => res.redirect('/app/'));
+    app.use('/app', express.static(webDistDir));
+    app.get(/^\/app(?:\/.*)?$/, globalRateLimiter, (_req, res) => {
       res.sendFile(webIndexFile);
     });
   }

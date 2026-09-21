@@ -1,4 +1,4 @@
-import { chmod, cp, mkdir, rm, writeFile } from 'node:fs/promises';
+import { chmod, cp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -75,6 +75,28 @@ async function main() {
     path.join(root, 'packages', 'shared', 'dist'),
     path.join(distRoot, 'packages', 'shared', 'dist')
   );
+  await copyFileIfExists(
+    path.join(root, 'packages', 'shared', 'package.json'),
+    path.join(distRoot, 'packages', 'shared', 'package.json')
+  );
+
+  const apiPackage = JSON.parse(
+    await readFile(path.join(root, 'apps', 'api', 'package.json'), 'utf8')
+  );
+  const runtimePackage = {
+    name: 'fluxby-production',
+    version: apiPackage.version,
+    private: true,
+    type: 'module',
+    dependencies: {
+      ...apiPackage.dependencies,
+      '@fluxby/shared': 'file:packages/shared',
+    },
+  };
+  await writeFile(
+    path.join(distRoot, 'package.json'),
+    `${JSON.stringify(runtimePackage, null, 2)}\n`
+  );
 
   // 4) Copy Tauri installers if they exist
   const tauriBundleDir = path.join(
@@ -120,11 +142,11 @@ async function main() {
     path.join(distRoot, 'data', 'fluxby.db')
   );
 
-  // 5) Start script for production-style runs
+  // 6) Start script for production-style runs
   const startShPath = path.join(distRoot, 'start.sh');
   await writeFile(
     startShPath,
-    `#!/usr/bin/env sh\n\nset -e\n\nDIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"\n\nexport NODE_ENV=production\nexport SERVE_WEB_DIST=1\n\nexec node "$DIR/apps/api/dist/index.js"\n`
+    `#!/usr/bin/env sh\n\nset -e\n\nDIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"\n\nif [ ! -d "$DIR/node_modules" ]; then\n  echo "Missing production dependencies. Run: npm install --omit=dev --prefix $DIR" >&2\n  exit 1\nfi\n\nexport NODE_ENV=production\nexport SERVE_WEB_DIST=1\n\nexec node "$DIR/apps/api/dist/index.js"\n`
   );
   await chmod(startShPath, 0o755);
 

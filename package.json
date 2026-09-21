@@ -23,6 +23,7 @@
     "build:tauri:local": "npm run build -w packages/shared && npm run build -w packages/database && npm run build -w packages/core && cd apps/tauri && tauri build --config tauri.debug.conf.json",
     "prebuild:tauri": "node scripts/check-rust.mjs",
     "build:pages": "node scripts/build-pages.mjs",
+    "build:dist": "node scripts/build-dist.mjs",
     "serve:pages": "npm run build:pages && node scripts/serve-pages.mjs",
     "generate:api": "npx tsx scripts/generate-api.ts",
     "lint": "eslint .",
