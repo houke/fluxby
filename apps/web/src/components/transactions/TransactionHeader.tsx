@@ -127,6 +127,7 @@ export const TransactionHeader = memo(function TransactionHeader({
                     <div
                       key={account.id}
                       className='flex min-w-[12rem] flex-shrink-0 items-center gap-3 rounded-lg border bg-card px-4 py-2 shadow-sm'
+                      data-onboarding='transaction-account-card'
                     >
                       <div className={`rounded-full p-2 ${colors.bg}`}>
                         {account.type === 'checking' && (

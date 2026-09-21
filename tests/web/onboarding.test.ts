@@ -188,6 +188,58 @@ describe('Onboarding Data', () => {
       expect(tabsStep?.selector).toBe('[data-onboarding="settings-tabs"]');
     });
   });
+
+  describe('Feedback targets', () => {
+    it('places subscriptions after the dashboard balance forecast', () => {
+      const dashboard = onboardingChapters.find((ch) => ch.id === 'dashboard');
+      const forecastIndex = dashboard?.steps.findIndex(
+        (step) => step.id === 'dashboard-forecast'
+      );
+      const subscriptionsStep = dashboard?.steps[Number(forecastIndex) + 1];
+
+      expect(subscriptionsStep?.id).toBe('dashboard-subscriptions');
+      expect(subscriptionsStep?.selector).toBe(
+        '[data-onboarding="subscriptions-summary"]'
+      );
+    });
+
+    it('targets the transaction account card instead of the KPI summary', () => {
+      const transactions = onboardingChapters.find(
+        (ch) => ch.id === 'transactions'
+      );
+      const accountStep = transactions?.steps.find(
+        (step) => step.id === 'transactions-accounts'
+      );
+
+      expect(accountStep?.selector).toBe(
+        '[data-onboarding="transaction-account-card"]'
+      );
+    });
+
+    it('targets the analytics expense breakdown card', () => {
+      const analytics = onboardingChapters.find((ch) => ch.id === 'analytics');
+      const expenseStep = analytics?.steps.find(
+        (step) => step.id === 'analytics-expense-breakdown'
+      );
+
+      expect(expenseStep?.selector).toBe(
+        '[data-onboarding="analytics-expense-breakdown"]'
+      );
+    });
+
+    it('uses rendered targets for the first address-book steps', () => {
+      const addressBook = onboardingChapters.find(
+        (ch) => ch.id === 'addressbook'
+      );
+      const firstSteps = addressBook?.steps.slice(0, 3);
+
+      expect(firstSteps?.map((step) => step.selector)).toEqual([
+        '[data-onboarding="nav-addressbook"]',
+        '[data-onboarding="add-contact-toggle"]',
+        '[data-onboarding="addressbook-settings-toggle"]',
+      ]);
+    });
+  });
 });
 
 describe('Onboarding State Logic', () => {

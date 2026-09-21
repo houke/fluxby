@@ -20,7 +20,7 @@ export default function CodeBlock({
   };
 
   return (
-    <div className='w-full overflow-hidden rounded-lg border border-gray-700 bg-gray-900'>
+    <div className='w-full max-w-full overflow-hidden rounded-lg border border-gray-700 bg-gray-900'>
       {title && (
         <div className='flex items-center justify-between border-b border-gray-700 bg-gray-800/50 px-4 py-2'>
           <span className='truncate text-sm text-gray-400'>{title}</span>
@@ -29,8 +29,8 @@ export default function CodeBlock({
           </span>
         </div>
       )}
-      <div className='relative overflow-x-auto'>
-        <pre className='p-4 text-sm'>
+      <div className='relative max-w-full overflow-x-auto'>
+        <pre className='w-max min-w-full p-4 text-sm'>
           <code className='block whitespace-pre text-gray-300'>{code}</code>
         </pre>
         <button

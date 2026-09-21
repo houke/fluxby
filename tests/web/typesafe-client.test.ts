@@ -13,6 +13,7 @@ import {
   askTypeSafe,
   clearTypeSafeTraceEvents,
   getTypeSafeTraceEvents,
+  getTypeSafeRequestEndpoint,
   suggestCategories,
 } from '@/lib/typesafe-client';
 
@@ -129,10 +130,18 @@ describe('TypeSafe category suggestions', () => {
     expect(getTypeSafeTraceEvents()[0]).toMatchObject({
       status: 'success',
       request: {
-        endpoint: 'https://api.typesafe.ai/v1/systemone',
+        endpoint: '/typesafe-api/v1/systemone',
         state: { merchant: 'Example merchant' },
       },
       response: { usage: { input_tokens: 3, output_tokens: 1 } },
     });
+  });
+
+  it('uses the direct TypeSafe endpoint in Tauri', () => {
+    vi.stubGlobal('window', { __TAURI__: true });
+
+    expect(getTypeSafeRequestEndpoint()).toBe(
+      'https://api.typesafe.ai/v1/systemone'
+    );
   });
 });

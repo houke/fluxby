@@ -1,13 +1,18 @@
 /**
- * TypeSafe AI client for browser use.
+ * TypeSafe AI client for Fluxby web and Tauri use.
  *
- * Wraps the TypeSafe HTTP API directly since the official SDK targets Node.js.
+ * Tauri calls the TypeSafe HTTP API directly. Browser builds call the Fluxby
+ * Worker proxy because the TypeSafe API does not allow Fluxby's web origin in
+ * its CORS policy.
  * API reference: https://docs.typesafe.ai/api
  */
 import { readFromOPFSSync } from '@fluxby/database';
 
 const TYPESAFE_API_BASE = 'https://api.typesafe.ai';
 const TYPESAFE_DEV_PROXY = '/typesafe-api';
+const TYPESAFE_WEB_PROXY =
+  import.meta.env.VITE_TYPESAFE_WEB_PROXY_URL ||
+  'https://api.fluxby.app/typesafe/systemone';
 const TYPESAFE_MODEL = 'jev-latest';
 const SETTINGS_KEY = 'typesafe-api-key';
 const TRACE_SETTING_KEY = 'typesafe-ai-trace-enabled';
@@ -41,10 +46,18 @@ function createSemaphore(max: number) {
 
 const semaphore = createSemaphore(MAX_CONCURRENT);
 
-function getRequestEndpoint(): string {
-  return import.meta.env.DEV && typeof window !== 'undefined'
+function isTauriRuntime(): boolean {
+  return typeof window !== 'undefined' && '__TAURI__' in window;
+}
+
+export function getTypeSafeRequestEndpoint(): string {
+  if (isTauriRuntime()) {
+    return `${TYPESAFE_API_BASE}/v1/systemone`;
+  }
+
+  return import.meta.env.DEV
     ? `${TYPESAFE_DEV_PROXY}/v1/systemone`
-    : `${TYPESAFE_API_BASE}/v1/systemone`;
+    : TYPESAFE_WEB_PROXY;
 }
 
 // ── Question types ────────────────────────────────────────────────────────────
@@ -129,7 +142,7 @@ function startTrace(
     startedAt: new Date().toISOString(),
     status: 'pending',
     request: {
-      endpoint: `${TYPESAFE_API_BASE}/v1/systemone`,
+      endpoint: getTypeSafeRequestEndpoint(),
       model: TYPESAFE_MODEL,
       state,
       questions,
@@ -184,7 +197,7 @@ export async function askTypeSafe(
   const startedAt = performance.now();
   const updateTrace = startTrace(state, questions);
   try {
-    const response = await fetch(getRequestEndpoint(), {
+    const response = await fetch(getTypeSafeRequestEndpoint(), {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${key}`,

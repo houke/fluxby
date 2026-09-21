@@ -12,6 +12,14 @@ export default function HelpAI() {
         winkels die je regels nog niet kennen.
       </p>
 
+      <div className='not-prose mt-6 rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900 dark:border-blue-800 dark:bg-blue-950/30 dark:text-blue-200'>
+        TypeSafe AI werkt in de desktop-app en in de web-app. De webversie
+        gebruikt een kleine Fluxby-gateway voor browsercommunicatie; de
+        desktop-app maakt rechtstreeks verbinding. In beide versies moet je
+        eerst je eigen TypeSafe API-sleutel toevoegen. Zonder sleutel worden
+        geen AI-verzoeken gedaan.
+      </div>
+
       {/* What is it */}
       <div className='not-prose mt-8 rounded-xl border border-purple-200 bg-purple-50 p-6 dark:border-purple-800 dark:bg-purple-950/30'>
         <h3 className='mt-0 mb-2 flex items-center gap-2 text-lg font-semibold text-purple-900 dark:text-purple-200'>

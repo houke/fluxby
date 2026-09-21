@@ -670,7 +670,7 @@ export default function Analytics() {
               setActiveExpenseIndex(null);
               setPinnedExpenseIndex(null);
             }}
-            data-onboarding='expense-breakdown'
+            data-onboarding='analytics-expense-breakdown'
           >
             <CardHeader className='flex flex-row items-center justify-between'>
               <CardTitle className='text-base sm:text-lg'>

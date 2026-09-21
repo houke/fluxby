@@ -292,7 +292,7 @@ npm run release:dry
   - It creates a one-year self-signed certificate in the user cache, reuses it until renewal, and trusts it in the macOS login keychain.
   - Linux and Windows users may need to trust the generated certificate manually when their browser first opens the site.
   - Add `127.0.0.1 fluxby.local` and `::1 fluxby.local` to `/etc/hosts` once.
-  - TypeSafe requests use a same-origin development proxy, avoiding CORS failures from local hostnames.
+  - TypeSafe requests use a same-origin development proxy. Tauri calls TypeSafe directly; GitHub Pages web builds use the deployable Cloudflare Worker in `workers/typesafe-proxy`.
 - Development servers must run as a normal user on an unprivileged port.
 - `dev:local` is kept as an alias for `dev`.
 - `dev:localhost` keeps the old plain-HTTP split-port setup for troubleshooting.
@@ -354,8 +354,9 @@ Fluxby optionally uses [TypeSafe AI](https://typesafe.ai) for smarter categorisa
 CSV import parsing, and duplicate detection. All AI features are fully optional and
 gracefully degrade to deterministic logic when no API key is configured.
 
-See [docs/typesafe.md](docs/TYPESAFE-INTEGRATION.md) for a full explanation of how TypeSafe is
-integrated and the design principles behind each use case.
+See [docs/TYPESAFE-INTEGRATION.md](docs/TYPESAFE-INTEGRATION.md) for a full explanation of how TypeSafe is
+integrated and the design principles behind each use case. The GitHub Pages web build also
+requires the optional [TypeSafe Worker](workers/typesafe-proxy/README.md) for browser CORS.
 
 ## 🤝 Contributing
 

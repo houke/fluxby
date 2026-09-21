@@ -84,7 +84,7 @@ const suggestion = await suggestCategory({
   apiKey: key,
 });
 
-if (suggestion && suggestion.confidence >= 0.7) {
+if (suggestion && suggestion.confidence > 0.7) {
   // code owns the write — TypeSafe only returned a probability
   await db.runAsync(
     'UPDATE transactions SET category_id = ? WHERE id = ?',
@@ -198,10 +198,17 @@ export default function DocsAI() {
         Client implementation
       </h2>
       <p className='text-gray-600 dark:text-gray-400'>
-        Because Fluxby is a local-first web app (no backend server), TypeSafe is
-        called directly from the browser via the HTTP API.{' '}
-        <code>apps/web/src/lib/typesafe-client.ts</code> wraps{' '}
-        <code>fetch</code> and exposes domain helpers:
+        Fluxby remains local-first and does not use a shared TypeSafe key. The
+        desktop app calls TypeSafe directly. The GitHub Pages web app sends the
+        same request through the optional Fluxby Cloudflare Worker so the
+        browser can pass CORS preflight safely.{' '}
+        <code>apps/web/src/lib/typesafe-client.ts</code> selects the transport
+        and exposes domain helpers:
+      </p>
+      <p className='text-gray-600 dark:text-gray-400'>
+        The Worker is deployed once for Fluxby, not once per user. Setup is
+        documented in <code>workers/typesafe-proxy/README.md</code>. Users still
+        need to add their own TypeSafe API key before any request is made.
       </p>
       <CodeBlock language='typescript' code={clientExample} />
 
@@ -226,7 +233,7 @@ export default function DocsAI() {
 
       <p className='text-gray-600 dark:text-gray-400'>
         Fluxby batches independent transaction questions in one request and only
-        applies a suggestion when <code>confidence &gt;= 0.7</code>. At or below
+        applies a suggestion when <code>confidence &gt; 0.7</code>. At or below
         that threshold, the transaction remains uncategorised for manual review.
         Repeated merchants can also become escaped, exact-text rules after
         clearing the same threshold.
@@ -260,7 +267,7 @@ export default function DocsAI() {
               [
                 'Category suggestion',
                 'Choice confidence',
-                '>= 0.7',
+                '> 0.7',
                 'Auto-assign category',
               ],
               [

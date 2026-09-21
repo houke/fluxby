@@ -301,6 +301,7 @@ export default function AddressBook() {
               variant='outline'
               onClick={() => setShowCleanupRules(!showCleanupRules)}
               className={cn(showCleanupRules && 'bg-muted')}
+              data-onboarding='addressbook-settings-toggle'
             >
               <Settings2 className='mr-2 h-4 w-4' />
               {t.addressBook?.cleanupRules || 'Cleanup rules'}
@@ -308,6 +309,7 @@ export default function AddressBook() {
             <Button
               className='bg-purple-600 hover:bg-purple-700'
               onClick={() => setShowAddForm(!showAddForm)}
+              data-onboarding='add-contact-toggle'
             >
               <Plus className='mr-2 h-4 w-4' />
               {t.addressBook?.addContact || 'Add contact'}

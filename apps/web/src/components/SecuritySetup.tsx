@@ -17,7 +17,6 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { useEncryption } from '@/contexts/EncryptionContext';
@@ -52,7 +51,6 @@ export function SecuritySetup({ onSetupComplete }: SecuritySetupProps) {
   const [seedMs, setSeedMs] = useState<number | null>(null);
   const [encryptionMs, setEncryptionMs] = useState<number | null>(null);
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
-  const [skipDemoData, setSkipDemoData] = useState(false);
   const [seedingTimedOut, setSeedingTimedOut] = useState(false);
   const [pendingDemoProfile, setPendingDemoProfile] = useState<{
     id: string;
@@ -98,7 +96,6 @@ export function SecuritySetup({ onSetupComplete }: SecuritySetupProps) {
       seedingTimeout:
         'Het laden van demo gegevens duurt langer dan verwacht. Dit kan voorkomen op langzamere apparaten.',
       seedingTimeoutRetry: 'Opnieuw proberen',
-      seedingTimeoutSkip: 'Doorgaan zonder demo gegevens',
       recoveryWarningTitle: 'Wachtwoord kan niet worden hersteld',
       recoveryWarning:
         'Als je dit wachtwoord vergeet, zijn al je gegevens permanent ontoegankelijk. Er is geen manier om je wachtwoord te herstellen of te resetten.',
@@ -121,9 +118,6 @@ export function SecuritySetup({ onSetupComplete }: SecuritySetupProps) {
       elapsed: 'Verstreken',
       seeding: 'Seeden',
       encrypting: 'Versleutelen',
-      skipDemoData: 'Begin met lege database',
-      skipDemoDataDescription:
-        'Sla de voorbeeldgegevens over en begin met een schone lei',
     },
     en: {
       languageTitle: 'Choose your language',
@@ -144,7 +138,6 @@ export function SecuritySetup({ onSetupComplete }: SecuritySetupProps) {
       seedingTimeout:
         'Loading demo data is taking longer than expected. This can happen on slower devices.',
       seedingTimeoutRetry: 'Retry',
-      seedingTimeoutSkip: 'Continue without demo data',
       recoveryWarningTitle: 'Password cannot be recovered',
       recoveryWarning:
         'If you forget this password, all your data will be permanently inaccessible. There is no way to recover or reset your password.',
@@ -166,9 +159,6 @@ export function SecuritySetup({ onSetupComplete }: SecuritySetupProps) {
       elapsed: 'Elapsed',
       seeding: 'Seeding',
       encrypting: 'Encrypting',
-      skipDemoData: 'Start with empty database',
-      skipDemoDataDescription:
-        'Skip the sample data and begin with a clean slate',
     },
   };
 
@@ -249,9 +239,8 @@ export function SecuritySetup({ onSetupComplete }: SecuritySetupProps) {
       setProgressValue(15);
       setPendingDemoProfile(demoProfile);
 
-      // Seed demo data with progress updates (unless user opted out)
-      if (!skipDemoData) {
-        // Use a series of progress updates to show activity during the seeding
+      // Always seed demo data so the onboarding tour has a complete, useful dataset.
+      {
         const seedStart = performance.now();
 
         // Show categories progress, then start seeding
@@ -306,9 +295,6 @@ export function SecuritySetup({ onSetupComplete }: SecuritySetupProps) {
         }
 
         setSeedMs(performance.now() - seedStart);
-      } else {
-        // Skip demo data - just seed default categories
-        await showProgress(texts.progressCategories, 30, 300);
       }
       setProgressValue(70);
 
@@ -359,63 +345,7 @@ export function SecuritySetup({ onSetupComplete }: SecuritySetupProps) {
     refreshProfiles,
     switchProfile,
     language,
-    skipDemoData,
     SEEDING_TIMEOUT_MS,
-  ]);
-
-  // Continue setup after timeout - skip demo data and proceed
-  const handleSkipDemoAfterTimeout = useCallback(async () => {
-    if (!pendingDemoProfile) return;
-
-    setSeedingTimedOut(false);
-    setProgressValue(70);
-
-    try {
-      // Show dashboard preparation as the final step
-      setLoadingProgress(texts.progressDashboard);
-      setProgressValue(80);
-      await new Promise((resolve) => setTimeout(resolve, 200));
-
-      // Refresh profiles to include the new demo profile
-      await refreshProfiles();
-
-      // Switch to demo profile as the active profile
-      switchProfile(pendingDemoProfile.id);
-
-      // Small delay to ensure profile switch is processed
-      await new Promise((resolve) => setTimeout(resolve, 100));
-
-      // Setup encryption
-      setLoadingProgress(texts.progressEncrypting);
-      const encryptionStart = performance.now();
-      await setupEncryption(password);
-      setEncryptionMs(performance.now() - encryptionStart);
-
-      setProgressValue(100);
-      await new Promise((resolve) => setTimeout(resolve, 200));
-
-      // Call onSetupComplete to start onboarding
-      onSetupComplete();
-    } catch (err) {
-      console.error('Setup error after skip:', err);
-      setError(texts.setupError);
-      setStep('password');
-      setIsLoading(false);
-      setLoadingProgress('');
-      setProgressValue(0);
-      setSetupStartedAt(null);
-      setElapsedMs(0);
-      setSeedingTimedOut(false);
-      setPendingDemoProfile(null);
-    }
-  }, [
-    pendingDemoProfile,
-    texts,
-    refreshProfiles,
-    switchProfile,
-    setupEncryption,
-    password,
-    onSetupComplete,
   ]);
 
   // Retry seeding after timeout
@@ -553,7 +483,7 @@ export function SecuritySetup({ onSetupComplete }: SecuritySetupProps) {
                 {loadingProgress}
               </p>
 
-              {/* Timeout message with retry/skip options */}
+              {/* Timeout message with retry option */}
               {seedingTimedOut && (
                 <div className='w-full space-y-4'>
                   <div className='flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50/50 p-4 shadow-sm dark:border-amber-900/50 dark:bg-amber-900/20'>
@@ -562,21 +492,13 @@ export function SecuritySetup({ onSetupComplete }: SecuritySetupProps) {
                       {texts.seedingTimeout}
                     </p>
                   </div>
-                  <div className='flex gap-3'>
-                    <Button
-                      onClick={handleRetrySeedingAfterTimeout}
-                      variant='outline'
-                      className='flex-1'
-                    >
-                      {texts.seedingTimeoutRetry}
-                    </Button>
-                    <Button
-                      onClick={handleSkipDemoAfterTimeout}
-                      className='flex-1 bg-purple-600 hover:bg-purple-700'
-                    >
-                      {texts.seedingTimeoutSkip}
-                    </Button>
-                  </div>
+                  <Button
+                    onClick={handleRetrySeedingAfterTimeout}
+                    variant='outline'
+                    className='w-full'
+                  >
+                    {texts.seedingTimeoutRetry}
+                  </Button>
                 </div>
               )}
 
@@ -709,27 +631,6 @@ export function SecuritySetup({ onSetupComplete }: SecuritySetupProps) {
                   className='h-12 border border-input bg-white/50 text-center text-base focus:ring-purple-500 dark:bg-gray-800/50'
                   autoFocus
                 />
-
-                {/* Skip demo data option */}
-                <div className='flex items-start gap-3 rounded-lg border border-gray-200 bg-gray-50/50 p-3 dark:border-gray-700 dark:bg-gray-800/30'>
-                  <Checkbox
-                    id='skip-demo'
-                    checked={skipDemoData}
-                    onChange={(e) => setSkipDemoData(e.target.checked)}
-                    className='mt-0.5'
-                  />
-                  <label
-                    htmlFor='skip-demo'
-                    className='cursor-pointer space-y-1'
-                  >
-                    <span className='block text-sm font-medium text-foreground'>
-                      {texts.skipDemoData}
-                    </span>
-                    <span className='block text-xs text-muted-foreground'>
-                      {texts.skipDemoDataDescription}
-                    </span>
-                  </label>
-                </div>
 
                 <div className='flex items-center justify-between'>
                   <Button

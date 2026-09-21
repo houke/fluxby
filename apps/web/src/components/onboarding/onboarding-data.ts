@@ -336,6 +336,19 @@ export const onboardingChapters: OnboardingChapter[] = [
         placement: 'left',
       },
       {
+        id: 'dashboard-subscriptions',
+        title: {
+          nl: 'Abonnementen',
+          en: 'Subscriptions',
+        },
+        content: {
+          nl: 'Bekijk je bevestigde abonnementen en verwachte terugkerende uitgaven. Klik door voor het volledige overzicht.',
+          en: 'Review your confirmed subscriptions and expected recurring expenses. Open the subscriptions page for the full overview.',
+        },
+        selector: '[data-onboarding="subscriptions-summary"]',
+        placement: 'left',
+      },
+      {
         id: 'dashboard-recent-transactions',
         title: {
           nl: 'Recente transacties',
@@ -400,7 +413,7 @@ export const onboardingChapters: OnboardingChapter[] = [
           nl: "Bovenaan zie je de huidige saldo's van al je rekeningen.",
           en: 'At the top you can see the current balances of all your accounts.',
         },
-        selector: '[data-onboarding="transaction-accounts"]',
+        selector: '[data-onboarding="transaction-account-card"]',
         placement: 'bottom',
       },
       {
@@ -663,7 +676,7 @@ export const onboardingChapters: OnboardingChapter[] = [
           nl: 'Bekijk hoe je uitgaven zijn verdeeld over categorieën. Klik op een segment om details te zien.',
           en: 'See how your expenses are distributed across categories. Click a segment to see details.',
         },
-        selector: '[data-onboarding="expense-breakdown"]',
+        selector: '[data-onboarding="analytics-expense-breakdown"]',
         placement: 'right',
       },
       {

@@ -26,6 +26,23 @@ require common sense about unstructured data; everything else stays in code.
 All AI features are opt-in. If no key is configured, every integration silently falls
 back to existing deterministic behaviour.
 
+## Web and Tauri transport
+
+The user-supplied key remains the switch that enables the feature. Fluxby never
+ships a shared TypeSafe key.
+
+- **Tauri** sends the request directly to `https://api.typesafe.ai/v1/systemone`.
+- **GitHub Pages web** sends the same request through the optional
+  `api.fluxby.app` Cloudflare Worker. The Worker exists only to handle browser
+  CORS; it forwards the user's key for that request and does not store keys or
+  request bodies. Configure another deployed URL with
+  `VITE_TYPESAFE_WEB_PROXY_URL` when needed.
+- **Development** uses the Vite same-origin `/typesafe-api` proxy.
+
+Deploy the Worker from [`workers/typesafe-proxy/README.md`](../workers/typesafe-proxy/README.md)
+before enabling the production web path. The web build can override its endpoint
+with `VITE_TYPESAFE_WEB_PROXY_URL`.
+
 ## Where TypeSafe is used
 
 ### 1. Transaction categorisation
@@ -191,7 +208,8 @@ These integrations follow the TypeSafe building guide:
 
 | File                                                    | Role                                                                                   |
 | ------------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| `apps/web/src/lib/typesafe-client.ts`                   | Browser fetch wrapper, question helpers, domain functions                              |
+| `apps/web/src/lib/typesafe-client.ts`                   | Web/Tauri transport selection, fetch wrapper, question helpers, domain functions         |
+| `workers/typesafe-proxy/src/index.js`                   | GitHub Pages CORS proxy; forwards user-supplied keys without storing them                |
 | `apps/web/src/components/settings/TypeSafeSettings.tsx` | Settings UI — key input, action buttons, duplicates dialog                             |
 | `apps/web/src/lib/data-service.ts`                      | Six integration points                                                                 |
 | `apps/web/src/lib/api-compat.ts`                        | Exposes `detectPaymentProvidersWithAI` and `findSemanticDuplicates` to the React layer |
@@ -199,6 +217,7 @@ These integrations follow the TypeSafe building guide:
 ## Further reading
 
 - [TypeSafe docs](https://docs.typesafe.ai)
+- [TypeSafe Worker deployment](../workers/typesafe-proxy/README.md)
 - [How to build with System One](https://docs.typesafe.ai/concepts/how-to-build-with-system-one)
 - [Primitives (Choice, Score, Noul)](https://docs.typesafe.ai/primitives)
 - [Confidence and thresholds](https://docs.typesafe.ai/confidence)
