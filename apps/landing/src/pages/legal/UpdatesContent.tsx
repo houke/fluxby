@@ -34,6 +34,21 @@ const UpdatesContent = () => {
   const updatesPage = t.legal?.updatesPage;
 
   const releases = [
+        {
+      version: '1.13.3',
+      date: updatesPage?.v1133Date || '22 september 2026',
+      title: updatesPage?.v1133Title || 'Release 1.13.3',
+      description:
+        updatesPage?.v1133Description ||
+        '1 bugfix.',
+      features: [
+        {
+          icon: Wrench,
+          title: updatesPage?.v1133F1Title || 'Old tauri db ondersteuning toegevoegd voor',
+          description: updatesPage?.v1133F1Desc || 'Dit had niet moeten gebeuren, maar nu is het gefixed!',
+        },
+      ],
+    },
     {
       version: '1.13.2',
       date: updatesPage?.v1132Date || '22 september 2026',

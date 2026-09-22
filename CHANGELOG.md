@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.13.3
+
+**Release Date:** 2026-09-22
+
+### Bug Fixes
+
+- old tauri db support
+
 ## v1.13.2
 
 **Release Date:** 2026-09-22
