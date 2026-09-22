@@ -25,20 +25,16 @@ import { useProfile } from '@/contexts/ProfileContext';
 import { FluxbyWebGL } from '@fluxby/shared';
 import { cn } from '@/lib/utils';
 import { api } from '@/lib/api';
+import { writeToOPFSWithCache } from '@fluxby/database';
 
 interface SecuritySetupProps {
-  /** Persist that the user chose to start using Fluxby. */
-  onOnboardingSeen: () => Promise<void>;
   /** Callback when setup is complete */
   onSetupComplete: () => void;
 }
 
 type SetupStep = 'language' | 'name' | 'password' | 'loading';
 
-export function SecuritySetup({
-  onOnboardingSeen,
-  onSetupComplete,
-}: SecuritySetupProps) {
+export function SecuritySetup({ onSetupComplete }: SecuritySetupProps) {
   const { language, setLanguage } = useLanguage();
   const { setupEncryption } = useEncryption();
 
@@ -207,11 +203,6 @@ export function SecuritySetup({
       return;
     }
 
-    // The user has chosen "Aan de slag!" / "Let's get started!". Persist
-    // this before the longer profile, demo-data, and encryption work so the
-    // walkthrough is not reopened on a later app start.
-    await onOnboardingSeen();
-
     // Switch to loading step
     setStep('loading');
     setIsLoading(true);
@@ -323,6 +314,9 @@ export function SecuritySetup({
       // NOW setup encryption - this will cause the component to unmount
       // but all critical operations are already complete
       const encryptionStart = performance.now();
+      // Encryption can reload the app before onSetupComplete executes.
+      // Persist the pending first tour so that reload still opens welcome.
+      await writeToOPFSWithCache('fluxby-onboarding-restart', true);
       await setupEncryption(password);
       setEncryptionMs(performance.now() - encryptionStart);
 
@@ -350,7 +344,6 @@ export function SecuritySetup({
     confirmPassword,
     userName,
     setupEncryption,
-    onOnboardingSeen,
     onSetupComplete,
     texts,
     refreshProfiles,
@@ -421,6 +414,7 @@ export function SecuritySetup({
 
       setLoadingProgress(texts.progressEncrypting);
       const encryptionStart = performance.now();
+      await writeToOPFSWithCache('fluxby-onboarding-restart', true);
       await setupEncryption(password);
       setEncryptionMs(performance.now() - encryptionStart);
 

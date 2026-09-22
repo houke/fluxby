@@ -88,6 +88,15 @@ test('login succeeds after restart without looping on lock screen', async ({
   }
   await completeFirstTimeSetup(page);
 
+  // The first tour must open automatically after security setup. Its welcome
+  // button acknowledges the tour while continuing it in the current session.
+  const welcome = page.getByRole('heading', {
+    name: /welcome to fluxby|welkom bij fluxby/i,
+  });
+  await expect(welcome).toBeVisible({ timeout: 30000 });
+  await page.getByRole('button', { name: /get started|aan de slag/i }).click();
+  await expect(welcome).not.toBeVisible();
+
   // --- SIMULATE RESTART: reload the page ---
   await page.reload();
   await page.waitForTimeout(2000);
@@ -108,6 +117,7 @@ test('login succeeds after restart without looping on lock screen', async ({
   // Lock screen must NOT reappear (this would indicate the loop)
   await page.waitForTimeout(1500);
   await expect(page.getByText(/unlock fluxby/i)).not.toBeVisible();
+  await expect(welcome).not.toBeVisible();
 
   // --- SECOND RESTART: confirm stable behaviour ---
   await page.reload();
@@ -120,4 +130,5 @@ test('login succeeds after restart without looping on lock screen', async ({
     .getByRole('link', { name: /dashboard/i })
     .waitFor({ timeout: 30000 });
   await expect(page.getByText(/unlock fluxby/i)).not.toBeVisible();
+  await expect(welcome).not.toBeVisible();
 });

@@ -151,6 +151,7 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             commands::get_app_info,
+            commands::typesafe_request,
             commands::show_save_dialog,
             commands::show_open_dialog,
         ])

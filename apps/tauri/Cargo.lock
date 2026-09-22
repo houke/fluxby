@@ -821,8 +821,10 @@ dependencies = [
 
 [[package]]
 name = "fluxby"
-version = "1.10.0"
+version = "1.13.1"
 dependencies = [
+ "reqwest",
+ "rustls",
  "serde",
  "serde_json",
  "tauri",

@@ -435,10 +435,17 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // Navigate to next step
-  const nextStep = useCallback(() => {
+  const nextStep = useCallback(async () => {
     // Calculate the next state first
     const chapter = onboardingChapters[state.currentChapterIndex];
     if (!chapter) return;
+
+    // The welcome modal's "Aan de slag!" starts this session's tour and
+    // acknowledges it permanently. Keep the tour active until closed.
+    if (chapter.id === 'welcome') {
+      await writeToOPFSWithCache(COMPLETED_FLAG_KEY, true);
+      setState((prev) => ({ ...prev, hasCompletedOnboarding: true }));
+    }
 
     // Check if there are more steps in current chapter
     if (state.currentStepIndex < chapter.steps.length - 1) {
@@ -551,13 +558,19 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
     // Trigger re-render to update spotlight position
   }, []);
 
-  // Refresh the user and profile queries after SecuritySetup completes.
-  // SecuritySetup marks onboarding as seen when the user starts setup, so it
-  // must not reopen the tour after the secure profile has been created.
+  // First-time security setup opens the welcome tour once. A later unlock
+  // never calls this callback; persisted acknowledgement suppresses auto-start.
   const refreshAfterSecuritySetup = useCallback(async () => {
     try {
+      await deleteFromOPFSWithCache(RESTART_FLAG_KEY);
       // The user and demo profile were just created outside React Query.
       await queryClient.invalidateQueries();
+      setState((prev) => ({
+        ...prev,
+        isActive: true,
+        currentChapterIndex: 0,
+        currentStepIndex: 0,
+      }));
     } catch {
       console.error('Failed to refresh data after security setup');
     }
@@ -574,8 +587,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
   const needsSecuritySetup =
     isDbTrulyReady && isUserFetched && !isEncryptionEnabled;
 
-  // Onboarding tour is needed only for a first-time user who has not already
-  // chosen to start using the app from SecuritySetup.
+  // A missing demo profile must never reopen an acknowledged tour.
   const needsOnboarding =
     isDbTrulyReady &&
     isUserFetched &&

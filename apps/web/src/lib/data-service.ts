@@ -2782,9 +2782,8 @@ export function createDataService(db: Database) {
            AND COALESCE(NULLIF(TRIM(merchant_name), ''), NULLIF(TRIM(opposing_account_name), '')) IS NOT NULL
          GROUP BY LOWER(COALESCE(NULLIF(TRIM(merchant_name), ''), NULLIF(TRIM(opposing_account_name), '')))
          HAVING COUNT(*) >= 2
-         ORDER BY transaction_count DESC
-         LIMIT ?`,
-        [pid, AI_CATEGORY_BATCH_SIZE]
+         ORDER BY transaction_count DESC`,
+        [pid]
       );
       if (candidates.length === 0) {
         return { created: 0, categorized: 0, reviewed: 0 };

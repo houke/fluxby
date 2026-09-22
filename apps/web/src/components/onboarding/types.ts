@@ -42,14 +42,14 @@ export interface OnboardingContextType {
   completeOnboarding: () => Promise<void>;
   skipOnboarding: () => void;
   dismissOnboarding: () => void;
-  nextStep: () => void;
+  nextStep: () => Promise<void>;
   previousStep: () => void;
   goToChapter: (chapterIndex: number) => void;
   // Language selection
   setLanguage: (language: 'nl' | 'en') => void;
   // User name
   setUserName: (name: string) => void;
-  // Refresh profile and user data after security setup
+  // Refresh data and open the first tour after security setup
   refreshAfterSecuritySetup: () => Promise<void>;
   // Computed values
   currentChapter: OnboardingChapter | null;

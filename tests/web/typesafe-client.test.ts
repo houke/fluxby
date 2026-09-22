@@ -33,13 +33,13 @@ describe('TypeSafe category suggestions', () => {
         answers: {
           transaction_0: {
             type: 'choice',
-            choice: 'groceries',
+            choice: 'c0',
             probabilities: { groceries: 0.7, none: 0.3 },
             confidence: AUTO_CATEGORY_CONFIDENCE_THRESHOLD,
           },
           transaction_1: {
             type: 'choice',
-            choice: 'groceries',
+            choice: 'c0',
             probabilities: { groceries: 0.71, none: 0.29 },
             confidence: 0.71,
           },
@@ -143,5 +143,162 @@ describe('TypeSafe category suggestions', () => {
     expect(getTypeSafeRequestEndpoint()).toBe(
       'https://api.typesafe.ai/v1/systemone'
     );
+  });
+
+  it('uses native IPC in Tauri and preserves HTTP errors without browser fetch', async () => {
+    const invoke = vi
+      .fn()
+      .mockResolvedValue({ status: 401, body: 'invalid key' });
+    const fetch = vi.fn();
+    vi.stubGlobal('window', { __TAURI__: { core: { invoke } } });
+    vi.stubGlobal('fetch', fetch);
+    await expect(
+      askTypeSafe(
+        {},
+        { connection: { type: 'noul', instructions: 'Received?' } },
+        'test-key'
+      )
+    ).rejects.toThrow('TypeSafe 401: invalid key');
+    expect(fetch).not.toHaveBeenCalled();
+    expect(invoke).toHaveBeenCalledWith(
+      'typesafe_request',
+      expect.objectContaining({ apiKey: 'test-key' })
+    );
+    invoke.mockResolvedValue({
+      status: 200,
+      body: JSON.stringify({
+        answers: { connection: { type: 'noul', noul: 1 } },
+      }),
+    });
+    await expect(
+      askTypeSafe(
+        {},
+        { connection: { type: 'noul', instructions: 'Received?' } },
+        'test-key'
+      )
+    ).resolves.toMatchObject({ answers: { connection: { noul: 1 } } });
+  });
+
+  const transactions = Array.from({ length: 13 }, (_, index) => ({
+    merchantName: String(index),
+    description: 'Shop',
+    amount: -index,
+  }));
+  const categories = [
+    { id: 'db-groceries', name: 'Groceries' },
+    { id: 'db-travel', name: 'Travel' },
+  ];
+  const respond = (body: string) => {
+    const request = JSON.parse(body);
+    return {
+      ok: true,
+      json: async () => ({
+        answers: Object.fromEntries(
+          request.state.transactions.map(
+            (tx: { merchant: string }, index: number) => [
+              `transaction_${index}`,
+              {
+                type: 'choice',
+                choice: Number(tx.merchant) % 2 ? 'c1' : 'c0',
+                confidence: 0.99,
+              },
+            ]
+          )
+        ),
+      }),
+    };
+  };
+
+  it('bounds every batch and preserves transaction order and database category IDs', async () => {
+    const fetch = vi
+      .fn()
+      .mockImplementation((_url, options) =>
+        Promise.resolve(respond(options.body))
+      );
+    vi.stubGlobal('fetch', fetch);
+    const results = await suggestCategories({
+      transactions,
+      categories,
+      apiKey: 'test-key',
+    });
+    expect(
+      fetch.mock.calls.map(
+        ([, options]) => JSON.parse(options.body).state.transactions.length
+      )
+    ).toEqual([5, 5, 3]);
+    expect(results.map((result) => result?.categoryId)).toEqual(
+      transactions.map((_, i) => (i % 2 ? 'db-travel' : 'db-groceries'))
+    );
+  });
+
+  it('splits token-rejected batches down to successful single items', async () => {
+    const fetch = vi.fn().mockImplementation((_url, options) => {
+      const count = JSON.parse(options.body).state.transactions.length;
+      return Promise.resolve(
+        count > 1
+          ? {
+              ok: false,
+              status: 400,
+              text: async () =>
+                '{"detail":{"error_type":"max_tokens_exceeded"}}',
+            }
+          : respond(options.body)
+      );
+    });
+    vi.stubGlobal('fetch', fetch);
+    const results = await suggestCategories({
+      transactions: transactions.slice(0, 3),
+      categories,
+      apiKey: 'test-key',
+    });
+    expect(results.map((result) => result?.categoryId)).toEqual([
+      'db-groceries',
+      'db-travel',
+      'db-groceries',
+    ]);
+    expect(fetch).toHaveBeenCalledTimes(5);
+  });
+
+  it('uses payload size as well as item count to split long descriptions', async () => {
+    const fetch = vi
+      .fn()
+      .mockImplementation((_url, options) =>
+        Promise.resolve(respond(options.body))
+      );
+    vi.stubGlobal('fetch', fetch);
+    await suggestCategories({
+      transactions: transactions
+        .slice(0, 3)
+        .map((tx) => ({ ...tx, description: '長'.repeat(2000) })),
+      categories,
+      apiKey: 'test-key',
+    });
+    expect(fetch).toHaveBeenCalledTimes(3);
+  });
+
+  it('surfaces permanent and single-item token failures without endless retries', async () => {
+    const fetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 400,
+      text: async () => 'max_tokens_exceeded',
+    });
+    vi.stubGlobal('fetch', fetch);
+    await expect(
+      suggestCategories({
+        transactions: transactions.slice(0, 1),
+        categories,
+        apiKey: 'test-key',
+      })
+    ).rejects.toThrow('max_tokens_exceeded');
+    expect(fetch).toHaveBeenCalledTimes(1);
+    fetch.mockClear().mockResolvedValue({
+      ok: false,
+      status: 401,
+      text: async () => 'invalid key',
+    });
+    await expect(
+      suggestCategories({ transactions, categories, apiKey: 'test-key' })
+    ).rejects.toThrow('TypeSafe 401');
+    expect(fetch).toHaveBeenCalledTimes(1);
   });
 });

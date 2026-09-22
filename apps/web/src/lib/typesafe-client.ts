@@ -1,12 +1,13 @@
 /**
  * TypeSafe AI client for Fluxby web and Tauri use.
  *
- * Tauri calls the TypeSafe HTTP API directly. Browser builds call the Fluxby
+ * Tauri calls the TypeSafe HTTP API through native Rust networking. Browser builds call the Fluxby
  * Worker proxy because the TypeSafe API does not allow Fluxby's web origin in
  * its CORS policy.
  * API reference: https://docs.typesafe.ai/api
  */
 import { readFromOPFSSync } from '@fluxby/database';
+import { invoke } from './tauri-bridge';
 
 const TYPESAFE_API_BASE = 'https://api.typesafe.ai';
 const TYPESAFE_DEV_PROXY = '/typesafe-api';
@@ -197,15 +198,21 @@ export async function askTypeSafe(
   const startedAt = performance.now();
   const updateTrace = startTrace(state, questions);
   try {
-    const response = await fetch(getTypeSafeRequestEndpoint(), {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${key}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ state, model: TYPESAFE_MODEL, questions }),
-      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-    });
+    const payload = { state, model: TYPESAFE_MODEL, questions };
+    const response = isTauriRuntime()
+      ? await invoke<{ status: number; body: string }>('typesafe_request', {
+          apiKey: key,
+          payload,
+        }).then(({ status, body }) => new Response(body, { status }))
+      : await fetch(getTypeSafeRequestEndpoint(), {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${key}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload),
+          signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+        });
 
     if (!response.ok) {
       const body = await response.text().catch(() => response.statusText);
@@ -294,24 +301,34 @@ export async function suggestCategories(params: {
   const key = apiKey ?? getTypeSafeApiKey();
   if (!key) return transactions.map(() => null);
 
+  if (categories.length > 254) {
+    throw new Error(
+      'TypeSafe categorisation supports at most 254 categories plus none'
+    );
+  }
+
+  // UUIDs repeat in every question and cost many tokens. Map short choices
+  // back to database IDs only after validating the response.
+  const categoryIds = new Map(
+    categories.map((category, index) => [`c${index}`, category.id])
+  );
   const criteria: Record<string, string | null> = Object.fromEntries(
-    categories.map((category) => [category.id, category.name])
+    categories.map((category, index) => [`c${index}`, category.name])
   );
   criteria.none = 'The transaction does not clearly fit any listed category';
 
-  const questions: Record<string, Question> = {};
-  transactions.forEach((_, index) => {
-    questions[`transaction_${index}`] = {
-      type: 'choice',
-      instructions: `Which category best fits \`transactions[${index}]\`? Use merchant, description, counterparty, amount, and amount sign together. Choose none when the evidence is insufficient or several categories are similarly plausible.`,
-      criteria,
-    };
-  });
-
-  try {
-    const response = await askTypeSafe(
-      {
-        transactions: transactions.map((transaction) => ({
+  const buildRequest = (batch: typeof transactions) => {
+    const questions: Record<string, Question> = {};
+    batch.forEach((_, index) => {
+      questions[`transaction_${index}`] = {
+        type: 'choice',
+        instructions: `Which category best fits \`transactions[${index}]\`? Use merchant, description, counterparty, amount, and amount sign together. Choose none when the evidence is insufficient or several categories are similarly plausible.`,
+        criteria,
+      };
+    });
+    return {
+      state: {
+        transactions: batch.map((transaction) => ({
           merchant: transaction.merchantName ?? '',
           description: transaction.description ?? '',
           counterparty: transaction.opposingAccountName ?? '',
@@ -319,26 +336,78 @@ export async function suggestCategories(params: {
         })),
       },
       questions,
-      key
-    );
-    const knownIds = new Set(categories.map((category) => category.id));
+    };
+  };
 
-    return transactions.map((_, index) => {
-      const answer = response.answers[`transaction_${index}`];
+  type Suggestion = { categoryId: string; confidence: number } | null;
+  const classify = async (
+    batch: typeof transactions
+  ): Promise<Suggestion[]> => {
+    const { state, questions } = buildRequest(batch);
+    try {
+      const response = await askTypeSafe(state, questions, key);
+
+      return batch.map((_, index) => {
+        const answer = response.answers[`transaction_${index}`];
+        const categoryId =
+          answer?.type === 'choice'
+            ? categoryIds.get(answer.choice)
+            : undefined;
+        if (
+          !answer ||
+          answer.type !== 'choice' ||
+          answer.choice === 'none' ||
+          !categoryId ||
+          !Number.isFinite(answer.confidence) ||
+          answer.confidence <= AUTO_CATEGORY_CONFIDENCE_THRESHOLD
+        ) {
+          return null;
+        }
+        return {
+          categoryId,
+          confidence: answer.confidence,
+        };
+      });
+    } catch (error) {
+      // Only shrink token-limit failures. Auth/network/service failures must
+      // reach the UI instead of masquerading as "no matching categories".
       if (
-        !answer ||
-        answer.type !== 'choice' ||
-        answer.choice === 'none' ||
-        !knownIds.has(answer.choice) ||
-        answer.confidence <= AUTO_CATEGORY_CONFIDENCE_THRESHOLD
+        batch.length > 1 &&
+        error instanceof Error &&
+        error.message.startsWith('TypeSafe 400:') &&
+        error.message.includes('max_tokens_exceeded')
       ) {
-        return null;
+        const middle = Math.ceil(batch.length / 2);
+        return [
+          ...(await classify(batch.slice(0, middle))),
+          ...(await classify(batch.slice(middle))),
+        ];
       }
-      return { categoryId: answer.choice, confidence: answer.confidence };
-    });
-  } catch {
-    return transactions.map(() => null);
+      throw error;
+    }
+  };
+
+  const results: Suggestion[] = [];
+  let batch: typeof transactions = [];
+  // Conservative byte budget includes repeated criteria and multibyte text.
+  // It is an estimate, so provider token errors still trigger smaller batches.
+  const requestBytes = (items: typeof transactions) =>
+    new TextEncoder().encode(
+      JSON.stringify({ ...buildRequest(items), model: TYPESAFE_MODEL })
+    ).length;
+  for (const transaction of transactions) {
+    const proposed = [...batch, transaction];
+    if (
+      batch.length > 0 &&
+      (proposed.length > 5 || requestBytes(proposed) > 12_000)
+    ) {
+      results.push(...(await classify(batch)));
+      batch = [];
+    }
+    batch.push(transaction);
   }
+  if (batch.length > 0) results.push(...(await classify(batch)));
+  return results;
 }
 
 /**

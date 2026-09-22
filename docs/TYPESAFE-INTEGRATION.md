@@ -31,7 +31,11 @@ back to existing deterministic behaviour.
 The user-supplied key remains the switch that enables the feature. Fluxby never
 ships a shared TypeSafe key.
 
-- **Tauri** sends the request directly to `https://api.typesafe.ai/v1/systemone`.
+- **Tauri** invokes the fixed-endpoint `typesafe_request` Rust command, which
+  sends native HTTPS to `https://api.typesafe.ai/v1/systemone`. Browser fetch
+  inside the webview is still subject to CORS and must not be used here.
+  The command has a 15-second timeout, disables redirects, and returns the
+  provider's HTTP status and body without logging the API key.
 - **GitHub Pages web** sends the same request through the optional
   `api.fluxby.app` Cloudflare Worker. The Worker exists only to handle browser
   CORS; it forwards the user's key for that request and does not store keys or
@@ -63,7 +67,14 @@ typed question without transaction data, useful for verifying console usage.
 **Question type**: Choice  
 **State**: `{ merchant, description, amount }`  
 **Threshold**: confidence > 0.7 to auto-assign; otherwise skipped
-**Batch size**: up to 50 transactions per invocation, run in parallel
+**Batch size**: at most five items, also split at a conservative 12,000-byte
+request estimate. Compact choice IDs replace repeated category UUIDs and are
+mapped back to database IDs after validation. All category options are retained.
+If Jev returns `max_tokens_exceeded`, the batch is halved recursively; a
+single-item failure is surfaced rather than retried indefinitely. Other errors
+are surfaced immediately. The same batching applies to discovered category
+rules, which now review all qualifying merchants rather than only the first 30.
+The provider permits at most 255 choices, including the `none` option.
 
 ```json
 {

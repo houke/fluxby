@@ -74,12 +74,8 @@ function AppContent() {
 // Security gate - shows lock screen if locked, security setup if new user
 function SecurityGate({ children }: { children: React.ReactNode }) {
   const { isEncryptionEnabled, isUnlocked, isHydrated } = useEncryption();
-  const {
-    completeOnboarding,
-    needsSecuritySetup,
-    isLoadingUser,
-    refreshAfterSecuritySetup,
-  } = useOnboarding();
+  const { needsSecuritySetup, isLoadingUser, refreshAfterSecuritySetup } =
+    useOnboarding();
   const { t } = useLanguage();
 
   debugLog('[SecurityGate] State:', {
@@ -150,12 +146,7 @@ function SecurityGate({ children }: { children: React.ReactNode }) {
   // 4. New user needs security setup (no encryption set up yet)
   // This shows the language/name/password setup on the gradient background
   if (needsSecuritySetup) {
-    return (
-      <SecuritySetup
-        onOnboardingSeen={completeOnboarding}
-        onSetupComplete={refreshAfterSecuritySetup}
-      />
-    );
+    return <SecuritySetup onSetupComplete={refreshAfterSecuritySetup} />;
   }
 
   // 5. Fallback: If no encryption and NOT in security setup (should be rare/impossible)
