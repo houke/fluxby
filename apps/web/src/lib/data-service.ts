@@ -63,6 +63,10 @@ import { processASNRow } from './importers/asn-importer';
  */
 const BULK_OPERATION_BATCH_SIZE = 500;
 const AI_CATEGORY_BATCH_SIZE = 30;
+// Older Tauri databases can contain transactions without profile_id and use an
+// empty string for an uncategorised category. Scope through the owning account
+// as a fallback so those rows still reach the categorisation workflow.
+const UNCATEGORIZED_CATEGORY_SQL = `(t.category_id IS NULL OR TRIM(CAST(t.category_id AS TEXT)) = '')`;
 
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -2649,9 +2653,11 @@ export function createDataService(db: Database) {
       }>(
         `SELECT t.id, t.merchant_name, t.description, t.opposing_account_name, t.amount
          FROM transactions t
-         JOIN accounts a ON t.account_id = a.id
-         WHERE t.category_id IS NULL AND a.profile_id = ? AND t.is_deleted = 0`,
-        [pid]
+         LEFT JOIN accounts a ON t.account_id = a.id
+         WHERE (a.profile_id = ? OR t.profile_id = ?)
+           AND ${UNCATEGORIZED_CATEGORY_SQL}
+           AND t.is_deleted = 0`,
+        [pid, pid]
       );
 
       let rulesApplied = 0;
@@ -2773,17 +2779,20 @@ export function createDataService(db: Database) {
         transaction_count: number;
       }>(
         `SELECT
-           COALESCE(NULLIF(TRIM(merchant_name), ''), NULLIF(TRIM(opposing_account_name), '')) as merchant,
-           MIN(description) as description,
-           AVG(amount) as amount,
+           COALESCE(NULLIF(TRIM(t.merchant_name), ''), NULLIF(TRIM(t.opposing_account_name), '')) as merchant,
+           MIN(t.description) as description,
+           AVG(t.amount) as amount,
            COUNT(*) as transaction_count
-         FROM transactions
-         WHERE profile_id = ? AND is_deleted = 0 AND category_id IS NULL
-           AND COALESCE(NULLIF(TRIM(merchant_name), ''), NULLIF(TRIM(opposing_account_name), '')) IS NOT NULL
-         GROUP BY LOWER(COALESCE(NULLIF(TRIM(merchant_name), ''), NULLIF(TRIM(opposing_account_name), '')))
+         FROM transactions t
+         LEFT JOIN accounts a ON t.account_id = a.id
+         WHERE (a.profile_id = ? OR t.profile_id = ?)
+           AND t.is_deleted = 0
+           AND ${UNCATEGORIZED_CATEGORY_SQL}
+           AND COALESCE(NULLIF(TRIM(t.merchant_name), ''), NULLIF(TRIM(t.opposing_account_name), '')) IS NOT NULL
+         GROUP BY LOWER(COALESCE(NULLIF(TRIM(t.merchant_name), ''), NULLIF(TRIM(t.opposing_account_name), '')))
          HAVING COUNT(*) >= 2
          ORDER BY transaction_count DESC`,
-        [pid]
+        [pid, pid]
       );
       if (candidates.length === 0) {
         return { created: 0, categorized: 0, reviewed: 0 };
@@ -2838,9 +2847,14 @@ export function createDataService(db: Database) {
           const result = await db.runAsync(
             `UPDATE transactions
              SET category_id = ?, updated_at = ?
-             WHERE profile_id = ? AND is_deleted = 0 AND category_id IS NULL
+             WHERE (transactions.profile_id = ? OR EXISTS (
+               SELECT 1 FROM accounts a
+               WHERE a.id = transactions.account_id AND a.profile_id = ?
+             ))
+               AND transactions.is_deleted = 0
+               AND (transactions.category_id IS NULL OR TRIM(CAST(transactions.category_id AS TEXT)) = '')
                AND LOWER(COALESCE(NULLIF(TRIM(merchant_name), ''), NULLIF(TRIM(opposing_account_name), ''))) = LOWER(?)`,
-            [suggestion.categoryId, now, pid, candidate.merchant]
+            [suggestion.categoryId, now, pid, pid, candidate.merchant]
           );
           existingPatterns.add(pattern.toLowerCase());
           created++;

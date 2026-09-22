@@ -34,18 +34,19 @@ const UpdatesContent = () => {
   const updatesPage = t.legal?.updatesPage;
 
   const releases = [
-                    {
+    {
       version: '1.13.2',
       date: updatesPage?.v1132Date || '22 september 2026',
       title: updatesPage?.v1132Title || 'Release 1.13.2',
-      description:
-        updatesPage?.v1132Description ||
-        '1 bugfix.',
+      description: updatesPage?.v1132Description || '1 bugfix.',
       features: [
         {
           icon: RotateCcw,
-          title: updatesPage?.v1132F1Title || 'Herstel first tour and use native batched jev requests',
-          description: updatesPage?.v1132F1Desc || 'Een vervelend probleempje opgelost.',
+          title:
+            updatesPage?.v1132F1Title ||
+            'Herstel first tour and use native batched jev requests',
+          description:
+            updatesPage?.v1132F1Desc || 'Een vervelend probleempje opgelost.',
         },
       ],
     },
@@ -53,14 +54,15 @@ const UpdatesContent = () => {
       version: '1.13.1',
       date: updatesPage?.v1131Date || '21 september 2026',
       title: updatesPage?.v1131Title || 'Release 1.13.1',
-      description:
-        updatesPage?.v1131Description ||
-        '1 bugfix.',
+      description: updatesPage?.v1131Description || '1 bugfix.',
       features: [
         {
           icon: Wrench,
-          title: updatesPage?.v1131F1Title || 'Persist first-run completion and allow jev',
-          description: updatesPage?.v1131F1Desc || 'Kleine fix, groot verschil.',
+          title:
+            updatesPage?.v1131F1Title ||
+            'Persist first-run completion and allow jev',
+          description:
+            updatesPage?.v1131F1Desc || 'Kleine fix, groot verschil.',
         },
       ],
     },
@@ -69,18 +71,24 @@ const UpdatesContent = () => {
       date: updatesPage?.v1130Date || '21 september 2026',
       title: updatesPage?.v1130Title || 'Release 1.13.0',
       description:
-        updatesPage?.v1130Description ||
-        '1 nieuwe feature en 1 bugfix.',
+        updatesPage?.v1130Description || '1 nieuwe feature en 1 bugfix.',
       features: [
         {
           icon: Plus,
-          title: updatesPage?.v1130F1Title || 'Toegevoegd web proxy and responsive docs fixes',
-          description: updatesPage?.v1130F1Desc || 'We hebben iets nieuws voor je! Bekijk de release notes voor alle details.',
+          title:
+            updatesPage?.v1130F1Title ||
+            'Toegevoegd web proxy and responsive docs fixes',
+          description:
+            updatesPage?.v1130F1Desc ||
+            'We hebben iets nieuws voor je! Bekijk de release notes voor alle details.',
         },
         {
           icon: Shield,
-          title: updatesPage?.v1130F2Title || 'Move frame ancestors policy to response headers',
-          description: updatesPage?.v1130F2Desc || 'Kleine fix, groot verschil.',
+          title:
+            updatesPage?.v1130F2Title ||
+            'Move frame ancestors policy to response headers',
+          description:
+            updatesPage?.v1130F2Desc || 'Kleine fix, groot verschil.',
         },
       ],
     },
@@ -88,14 +96,14 @@ const UpdatesContent = () => {
       version: '1.12.2',
       date: updatesPage?.v1122Date || '21 september 2026',
       title: updatesPage?.v1122Title || 'Release 1.12.2',
-      description:
-        updatesPage?.v1122Description ||
-        '13 bugfixes.',
+      description: updatesPage?.v1122Description || '13 bugfixes.',
       features: [
         {
           icon: Wrench,
           title: updatesPage?.v1122F1Title || 'Bugfixes',
-          description: updatesPage?.v1122F1Desc || '13 bugs opgelost. Zie changelog voor details.',
+          description:
+            updatesPage?.v1122F1Desc ||
+            '13 bugs opgelost. Zie changelog voor details.',
         },
       ],
     },

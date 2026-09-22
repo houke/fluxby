@@ -194,15 +194,15 @@ real-world payment charged twice.
 
 These integrations follow the TypeSafe building guide:
 
-| Principle                    | How it's applied                                                                                                                       |
-| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| **Code owns control flow**   | All routing, thresholds, and database writes are in TypeScript. TypeSafe only returns probabilities.                                   |
-| **Atomic questions**         | Each question judges one dimension. `suggestCategories` asks one category-fit Choice per transaction; `is_provider` asks only about intermediary status. |
-| **Structured state**         | State is a named JSON object with only the fields relevant to the question.                                                            |
-| **Backtick path references** | Instructions reference state fields by path (e.g. `` `merchant` ``, `` `iban` ``) where clarity helps.                                 |
+| Principle                    | How it's applied                                                                                                                                              |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Code owns control flow**   | All routing, thresholds, and database writes are in TypeScript. TypeSafe only returns probabilities.                                                          |
+| **Atomic questions**         | Each question judges one dimension. `suggestCategories` asks one category-fit Choice per transaction; `is_provider` asks only about intermediary status.      |
+| **Structured state**         | State is a named JSON object with only the fields relevant to the question.                                                                                   |
+| **Backtick path references** | Instructions reference state fields by path (e.g. `` `merchant` ``, `` `iban` ``) where clarity helps.                                                        |
 | **Confidence thresholds**    | Higher confidence is required for higher-consequence actions (0.8 for date format override; strictly above 0.7 for category auto-assign and generated rules). |
-| **Graceful degradation**     | Every integration checks for the key first. On API error, existing deterministic behaviour runs unchanged.                             |
-| **No auto-delete**           | Semantic duplicate detection surfaces candidates only — the user decides.                                                              |
+| **Graceful degradation**     | Every integration checks for the key first. On API error, existing deterministic behaviour runs unchanged.                                                    |
+| **No auto-delete**           | Semantic duplicate detection surfaces candidates only — the user decides.                                                                                     |
 
 ## Confidence thresholds reference
 
@@ -219,8 +219,8 @@ These integrations follow the TypeSafe building guide:
 
 | File                                                    | Role                                                                                   |
 | ------------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| `apps/web/src/lib/typesafe-client.ts`                   | Web/Tauri transport selection, fetch wrapper, question helpers, domain functions         |
-| `workers/typesafe-proxy/src/index.js`                   | GitHub Pages CORS proxy; forwards user-supplied keys without storing them                |
+| `apps/web/src/lib/typesafe-client.ts`                   | Web/Tauri transport selection, fetch wrapper, question helpers, domain functions       |
+| `workers/typesafe-proxy/src/index.js`                   | GitHub Pages CORS proxy; forwards user-supplied keys without storing them              |
 | `apps/web/src/components/settings/TypeSafeSettings.tsx` | Settings UI — key input, action buttons, duplicates dialog                             |
 | `apps/web/src/lib/data-service.ts`                      | Six integration points                                                                 |
 | `apps/web/src/lib/api-compat.ts`                        | Exposes `detectPaymentProvidersWithAI` and `findSemanticDuplicates` to the React layer |

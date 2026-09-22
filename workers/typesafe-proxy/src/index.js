@@ -62,11 +62,19 @@ export default {
     try {
       body = await request.json();
     } catch {
-      return jsonResponse({ error: 'Request body must be valid JSON' }, 400, origin);
+      return jsonResponse(
+        { error: 'Request body must be valid JSON' },
+        400,
+        origin
+      );
     }
 
     if (!body || typeof body !== 'object' || Array.isArray(body)) {
-      return jsonResponse({ error: 'Request body must be a JSON object' }, 400, origin);
+      return jsonResponse(
+        { error: 'Request body must be a JSON object' },
+        400,
+        origin
+      );
     }
 
     try {
