@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.13.2
+
+**Release Date:** 2026-09-22
+
+### Bug Fixes
+
+- restore first tour and use native batched Jev requests
+
 ## v1.13.1
 
 **Release Date:** 2026-09-21

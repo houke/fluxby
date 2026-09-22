@@ -14,6 +14,7 @@ import {
   Plus,
   RefreshCw,
   Rocket,
+  RotateCcw,
   Settings,
   Share2,
   Shield,
@@ -33,7 +34,22 @@ const UpdatesContent = () => {
   const updatesPage = t.legal?.updatesPage;
 
   const releases = [
-                {
+                    {
+      version: '1.13.2',
+      date: updatesPage?.v1132Date || '22 september 2026',
+      title: updatesPage?.v1132Title || 'Release 1.13.2',
+      description:
+        updatesPage?.v1132Description ||
+        '1 bugfix.',
+      features: [
+        {
+          icon: RotateCcw,
+          title: updatesPage?.v1132F1Title || 'Herstel first tour and use native batched jev requests',
+          description: updatesPage?.v1132F1Desc || 'Een vervelend probleempje opgelost.',
+        },
+      ],
+    },
+    {
       version: '1.13.1',
       date: updatesPage?.v1131Date || '21 september 2026',
       title: updatesPage?.v1131Title || 'Release 1.13.1',
