@@ -52,10 +52,6 @@ import {
   getTypeSafeApiKey,
   suggestImportColumnMappings,
 } from '@/lib/typesafe-client';
-import {
-  prepareSpreadsheetImport,
-  SpreadsheetImportError,
-} from '@/lib/importers/spreadsheet-importer';
 
 interface ImportHistorySkippedRow {
   rowIndex?: number;
@@ -595,8 +591,7 @@ export default function Import() {
         await new Promise<void>((resolve) =>
           requestAnimationFrame(() => resolve())
         );
-        const importFile = await prepareSpreadsheetImport(file);
-        const csvContent = await importFile.text();
+        const csvContent = await file.text();
         const data = await workerParseCSV(csvContent);
 
         setCsvParseResult({
@@ -604,7 +599,7 @@ export default function Import() {
           sampleRows: data.sampleRows,
           totalRows: data.totalRows,
         });
-        setPendingFile(importFile);
+        setPendingFile(file);
         setModalError(null);
         setMappingNotice(null);
 
@@ -671,17 +666,9 @@ export default function Import() {
         setColumnMapping(autoMapping);
         setShowMappingDialog(true);
       } catch (error) {
-        if (error instanceof SpreadsheetImportError) {
-          setUploadError(
-            error.code === 'emptySpreadsheet'
-              ? t.import.spreadsheetEmpty
-              : t.import.spreadsheetHeadersMissing
-          );
-        } else {
-          setUploadError(
-            error instanceof Error ? error.message : t.import.parseFileError
-          );
-        }
+        setUploadError(
+          error instanceof Error ? error.message : t.import.parseFileError
+        );
       } finally {
         setIsReadingFile(false);
       }
@@ -845,12 +832,7 @@ export default function Import() {
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
-    accept: {
-      'text/csv': ['.csv'],
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': [
-        '.xlsx',
-      ],
-    },
+    accept: { 'text/csv': ['.csv'] },
     maxFiles: 1,
   });
 

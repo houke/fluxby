@@ -58,7 +58,7 @@ export default function HelpAI() {
           {
             emoji: '📊',
             title: 'Importkolommen voorstellen',
-            desc: 'Als verplichte CSV-velden ontbreken of dubbelzinnig zijn, kan Jev een kolom voorstellen. Controleer de koppeling en het transactievoorbeeld voordat je importeert. Excel-bestanden (.xlsx) worden ook ondersteund.',
+            desc: 'Als verplichte CSV-velden ontbreken of dubbelzinnig zijn, kan Jev een kolom voorstellen. Controleer de koppeling en het transactievoorbeeld voordat je importeert.',
           },
           {
             emoji: '📒',

@@ -638,8 +638,6 @@ export interface TranslationKeys {
     onlyCSV: string;
     jevMappingNotice: string;
     jevMappingUnavailable: string;
-    spreadsheetEmpty: string;
-    spreadsheetHeadersMissing: string;
     parseFileError: string;
     bank: string;
     account: string;
@@ -2189,14 +2187,11 @@ export const nl: TranslationKeys = {
     currentMonthCleared: 'Huidige maand gewist',
     currentMonthCount: 'Aantal huidige maand',
     totalInFile: 'Totaal in bestand',
-    onlyCSV: 'CSV- en Excel-bestanden (.xlsx) worden ondersteund',
+    onlyCSV: 'Alleen CSV-bestanden worden ondersteund',
     jevMappingNotice:
       'Jev heeft kolommen voorgesteld. Controleer de koppelingen en het voorbeeld voordat je importeert.',
     jevMappingUnavailable:
       'Jev kon geen betrouwbare kolomkoppeling voorstellen. Koppel de verplichte velden handmatig.',
-    spreadsheetEmpty: 'Dit Excel-bestand bevat geen leesbaar werkblad.',
-    spreadsheetHeadersMissing:
-      'De transactiekolommen konden niet in dit Excel-bestand worden gevonden.',
     parseFileError: 'Dit bestand kon niet worden gelezen.',
     bank: 'Bank',
     account: 'Rekening',

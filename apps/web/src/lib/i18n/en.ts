@@ -716,14 +716,11 @@ export const en: TranslationKeys = {
     currentMonthCleared: 'Current month cleared',
     currentMonthCount: 'Current month count',
     totalInFile: 'Total in file',
-    onlyCSV: 'CSV and Excel (.xlsx) files are supported',
+    onlyCSV: 'Only CSV files are supported',
     jevMappingNotice:
       'Jev suggested column mappings. Review the mapping and preview before importing.',
     jevMappingUnavailable:
       'Jev could not suggest a reliable mapping. Map the required fields manually.',
-    spreadsheetEmpty: 'This Excel file does not contain a readable worksheet.',
-    spreadsheetHeadersMissing:
-      'The transaction columns could not be found in this Excel file.',
     parseFileError: 'This file could not be read.',
     bank: 'Bank',
     account: 'Account',

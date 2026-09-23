@@ -1,8 +1,8 @@
 # Jev app review and implementation plan
 
-| Status | Review date |
-| --- | --- |
-| Implemented; model evaluation pending | 2026-09-23 |
+| Status                                | Review date |
+| ------------------------------------- | ----------- |
+| Implemented; model evaluation pending | 2026-09-23  |
 
 ## Scope
 
@@ -18,8 +18,7 @@ Fluxby already uses Jev for:
 4. Recurring merchant grouping when names differ for the same IBAN.
 5. Semantic duplicate suggestions in a review dialog.
 6. Missing or ambiguous CSV column mapping suggestions, shown in the existing
-   mapping and preview flow. XLSX workbooks are converted locally and supported
-   by the same import flow.
+   mapping and preview flow.
 7. Address book contact match suggestions, confirmed by the user one at a time.
 8. Possible internal transfer pairs, reviewed and marked by the user.
 
@@ -29,7 +28,7 @@ The user-provided API key remains opt-in, and existing deterministic behavior re
 
 | Area                                | Jev fit                                                                                                                                                                                         | Recommendation and limit                                                                                                                                                                                 |
 | ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Generic CSV and XLSX column mapping | High. Deterministic mappings and Jev-assisted date and direction handling now cover familiar exports; missing or ambiguous required fields can use a closed choice over the file's own headers. | Implemented. Jev prefills only a validated field choice. The user reviews the mapping and parsed preview before importing. XLSX data is converted locally.                                               |
+| Generic CSV column mapping          | High. Deterministic mappings and Jev-assisted date and direction handling now cover familiar exports; missing or ambiguous required fields can use a closed choice over the file's own headers. | Implemented. Jev prefills only a validated field choice. The user reviews the mapping and parsed preview before importing.                                                                               |
 | Address book identity suggestions   | High. Existing IBAN groups and link actions support a user-confirmed identity match.                                                                                                            | Implemented. Jev chooses among a short list of existing contacts plus `none`. IBANs remain local, and each link needs user confirmation.                                                                 |
 | Unmatched internal transfer pairs   | Medium. The existing detector marks transactions whose counterparty IBAN exactly matches one of the user's own accounts.                                                                        | Implemented as an optional review action. Deterministic amount, sign, date, and account checks bound the candidates; Jev prioritizes them. The user confirms the pair before either transaction changes. |
 | Natural-language transaction search | Medium to low. It could interpret questions such as “show my train costs,” but transaction search and category/date filters already cover exact use cases.                                      | Defer until users ask for it. It sends more transaction context, overlaps existing filters, and needs a clear review of privacy and expected behavior.                                                   |
@@ -49,14 +48,13 @@ The user requested a 60% automatic category threshold. The shared client constan
 - Preserve a deterministic/manual path for missing keys, low confidence, timeouts, and provider errors.
 - Before making accuracy claims or expanding automatic actions, measure precision and coverage on representative synthetic or user-approved examples.
 
-### Phase 1: Assisted CSV and XLSX column mapping — implemented
+### Phase 1: Assisted CSV column mapping — implemented
 
 - Reuse the generic import field list and its existing candidate columns.
 - Call Jev only when a required mapping is missing or ambiguous. Ask one Choice question per field in a single request; each question can select an available header or `unmapped`.
 - Include the headers and at most two short samples from date, amount, or description candidate columns. Do not send full files.
 - Validate every returned header against the source headers, then use the existing parser and preview.
 - Require the user to accept the mapping and preview before writing imported transactions.
-- Convert the selected XLSX transaction sheet to CSV in the browser and retain the original filename for import history.
 
 ### Phase 2: Address book match suggestions — implemented
 

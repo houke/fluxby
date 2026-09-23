@@ -190,15 +190,14 @@ real-world payment charged twice.
 
 ---
 
-### 7. CSV and Excel import — column mapping
+### 7. CSV import — column mapping
 
 **File**: `apps/web/src/pages/Import.tsx` → `handleParseCSV()` and
 `apps/web/src/lib/typesafe-client.ts` → `suggestImportColumnMappings()`
 
 **Trigger**: A required date, amount, or description mapping is missing or
-ambiguous, and the user has configured a TypeSafe key. CSV and `.xlsx` files are
-supported; the workbook import reads its first transaction sheet locally and
-passes the converted rows through the existing preview and import path.
+ambiguous, and the user has configured a TypeSafe key. CSV files are parsed
+locally and passed through the existing preview and import path.
 
 **What it does**: Jev chooses only among the file's actual column headers or
 `unmapped`. Fluxby sends the headers and up to two short sample rows containing
