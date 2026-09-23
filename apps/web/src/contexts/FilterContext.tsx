@@ -135,10 +135,11 @@ export function FilterProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  // Reset filters when profile changes
+  // Reset profile-specific filters when the profile changes, but keep the
+  // selected date range active across accounts.
   useEffect(() => {
     if (activeProfileId) {
-      setFilters(defaultFilters);
+      setFilters((prev) => ({ ...defaultFilters, dateRange: prev.dateRange }));
     }
   }, [activeProfileId]);
 
