@@ -93,31 +93,65 @@ export const ContactList: React.FC<ContactListProps> = ({
 
   // Intersection Observer for auto-loading on scroll
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting && !isLoadingMoreRef.current) {
-          const hasMore = visibleCount < contacts.length;
-          if (hasMore) {
-            isLoadingMoreRef.current = true;
-            setVisibleCount((prev) => prev + CONTACTS_PER_PAGE);
-            requestAnimationFrame(() => {
-              isLoadingMoreRef.current = false;
-            });
-          }
-        }
-      },
-      {
-        root: document.querySelector('[data-scroll-container="main"]'),
-        threshold: 0,
-        rootMargin: '200px 0px 400px 0px',
-      }
+    const scrollRoot = document.querySelector<HTMLElement>(
+      '[data-scroll-container="main"]'
     );
+    const loadMore = () => {
+      if (isLoadingMoreRef.current || visibleCount >= contacts.length) return;
+      isLoadingMoreRef.current = true;
+      setVisibleCount((prev) =>
+        Math.min(prev + CONTACTS_PER_PAGE, contacts.length)
+      );
+    };
+    const checkScrollPosition = () => {
+      const sentinel = loadMoreSentinelRef.current;
+      if (!sentinel || visibleCount >= contacts.length) return;
 
+      const rootBounds = scrollRoot?.getBoundingClientRect();
+      const sentinelBounds = sentinel.getBoundingClientRect();
+      const rootTop = rootBounds?.top ?? 0;
+      const rootBottom = rootBounds?.bottom ?? window.innerHeight;
+      const isNearEnd =
+        sentinelBounds.top <= rootBottom + 400 &&
+        sentinelBounds.bottom >= rootTop - 200;
+
+      if (isNearEnd) loadMore();
+    };
+    const observer =
+      typeof IntersectionObserver === 'undefined'
+        ? null
+        : new IntersectionObserver(
+            ([entry]) => {
+              if (entry.isIntersecting) loadMore();
+            },
+            {
+              root: scrollRoot,
+              threshold: 0,
+              rootMargin: '200px 0px 400px 0px',
+            }
+          );
     const el = loadMoreSentinelRef.current || loadMoreRef.current;
-    if (el) observer.observe(el as Element);
+    if (el) observer?.observe(el);
+
+    // The main content uses its own scroll container, so also check the
+    // sentinel's position directly when that container scrolls.
+    scrollRoot?.addEventListener('scroll', checkScrollPosition, {
+      passive: true,
+    });
+    if (!scrollRoot) {
+      window.addEventListener('scroll', checkScrollPosition, { passive: true });
+    }
+    window.addEventListener('resize', checkScrollPosition);
+    checkScrollPosition();
 
     return () => {
-      if (el) observer.unobserve(el as Element);
+      if (el) observer?.unobserve(el);
+      observer?.disconnect();
+      scrollRoot?.removeEventListener('scroll', checkScrollPosition);
+      if (!scrollRoot) {
+        window.removeEventListener('scroll', checkScrollPosition);
+      }
+      window.removeEventListener('resize', checkScrollPosition);
       isLoadingMoreRef.current = false;
     };
   }, [contacts.length, visibleCount]);
