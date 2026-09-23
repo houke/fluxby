@@ -1046,8 +1046,8 @@ export const onboardingChapters: OnboardingChapter[] = [
           en: 'Suggested contacts',
         },
         content: {
-          nl: 'Hier vind je tegenrekeningen uit je transacties die nog niet in je adresboek staan. Voeg ze toe om uitgaven per contact bij te houden.',
-          en: 'Here you find counterparties from your transactions that are not yet in your address book. Add them to track spending per contact.',
+          nl: 'Hier vind je tegenrekeningen uit je transacties die nog niet in je adresboek staan. Met een TypeSafe-sleutel kan Jev mogelijke bestaande contacten voorstellen. Je bevestigt elke koppeling zelf.',
+          en: 'Here you find counterparties from your transactions that are not yet in your address book. With a TypeSafe key, Jev can suggest existing contacts. You confirm each link yourself.',
         },
         selector: '[data-onboarding="suggested-contacts-card"]',
         placement: 'left',

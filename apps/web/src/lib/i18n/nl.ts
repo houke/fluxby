@@ -636,6 +636,11 @@ export interface TranslationKeys {
     currentMonthCount: string;
     totalInFile: string;
     onlyCSV: string;
+    jevMappingNotice: string;
+    jevMappingUnavailable: string;
+    spreadsheetEmpty: string;
+    spreadsheetHeadersMissing: string;
+    parseFileError: string;
     bank: string;
     account: string;
     howToExport: string;
@@ -1068,6 +1073,17 @@ export interface TranslationKeys {
       duplicatePair: string;
       duplicateProbability: string;
       duplicatesDismiss: string;
+      reviewTransfers: string;
+      reviewTransfersDescription: string;
+      reviewTransfersRunning: string;
+      reviewTransfersTitle: string;
+      reviewTransfersNone: string;
+      reviewTransfersReviewed: string;
+      reviewTransferStale: string;
+      transferPair: string;
+      transferProbability: string;
+      markTransferPair: string;
+      markTransferPairSuccess: string;
       noKeyWarning: string;
       dataDisclosure: string;
       traceToggle: string;
@@ -1165,6 +1181,16 @@ export interface TranslationKeys {
     suggestedContacts: string;
     suggestedContactsCollapsed: string;
     suggestedContactsExpanded: string;
+    jevSuggestMatches: string;
+    jevMatchesRunning: string;
+    jevMatchesTitle: string;
+    jevMatchesDescription: string;
+    jevMatchesNone: string;
+    jevMatchesReviewed: string;
+    jevMatchProposed: string;
+    jevTransactions: string;
+    jevMatchConfirm: string;
+    jevMatchSkip: string;
     andMoreSuggested: string;
     addAsNewContact: string;
     enterName: string;
@@ -2163,7 +2189,15 @@ export const nl: TranslationKeys = {
     currentMonthCleared: 'Huidige maand gewist',
     currentMonthCount: 'Aantal huidige maand',
     totalInFile: 'Totaal in bestand',
-    onlyCSV: 'Alleen .csv bestanden worden ondersteund',
+    onlyCSV: 'CSV- en Excel-bestanden (.xlsx) worden ondersteund',
+    jevMappingNotice:
+      'Jev heeft kolommen voorgesteld. Controleer de koppelingen en het voorbeeld voordat je importeert.',
+    jevMappingUnavailable:
+      'Jev kon geen betrouwbare kolomkoppeling voorstellen. Koppel de verplichte velden handmatig.',
+    spreadsheetEmpty: 'Dit Excel-bestand bevat geen leesbaar werkblad.',
+    spreadsheetHeadersMissing:
+      'De transactiekolommen konden niet in dit Excel-bestand worden gevonden.',
+    parseFileError: 'Dit bestand kon niet worden gelezen.',
     bank: 'Bank',
     account: 'Rekening',
     howToExport: 'Hoe exporteer ik mijn transacties?',
@@ -2183,7 +2217,7 @@ export const nl: TranslationKeys = {
     // Generic CSV mapping
     mapHeaders: 'Kolommen koppelen',
     mapHeadersDescription:
-      'Koppel de kolommen uit je CSV bestand aan de juiste velden',
+      'Koppel de kolommen uit je CSV- of Excelbestand aan de juiste velden',
     csvColumn: 'CSV Kolom',
     mapsTo: 'Koppelen aan',
     selectField: 'Selecteer veld...',
@@ -2649,15 +2683,15 @@ export const nl: TranslationKeys = {
       keyRemoved: 'API-sleutel verwijderd',
       categorizeTransactions: 'Ongecategoriseerde transacties categoriseren',
       categorizeTransactionsDescription:
-        'Pas eerst bestaande regels toe en wijs daarna TypeSafe-voorstellen alleen automatisch toe bij meer dan 70% zekerheid. Dit gebeurt ook automatisch na een succesvolle import.',
+        'Pas eerst bestaande regels toe en wijs daarna TypeSafe-voorstellen alleen automatisch toe bij meer dan 60% zekerheid. Dit gebeurt ook automatisch na een succesvolle import.',
       categorizeTransactionsRunning: 'Categoriseren...',
       categorizeTransactionsResult:
         '{count} transacties gecategoriseerd ({rules} via regels, {ai} via AI)',
       categorizeTransactionsNone:
-        'Geen transacties voldeden aan een regel of de zekerheid van meer dan 70%.',
+        'Geen transacties voldeden aan een regel of de zekerheid van meer dan 60%.',
       discoverRules: 'Categorisatieregels vinden',
       discoverRulesDescription:
-        'Vind terugkerende winkels in ongecategoriseerde transacties en maak alleen regels bij meer dan 70% zekerheid.',
+        'Vind terugkerende winkels in ongecategoriseerde transacties en maak alleen regels bij meer dan 60% zekerheid.',
       discoverRulesRunning: 'Regels zoeken...',
       discoverRulesResult:
         '{rules} regels gemaakt en {transactions} transacties gecategoriseerd',
@@ -2678,9 +2712,24 @@ export const nl: TranslationKeys = {
       duplicatePair: 'Paar {n}',
       duplicateProbability: 'P(dubbel)',
       duplicatesDismiss: 'Sluiten',
+      reviewTransfers: 'Mogelijke interne overboekingen controleren',
+      reviewTransfersDescription:
+        'Jev zoekt naar gelijke tegenboekingen op verschillende rekeningen. Controleer de bedragen, datums en omschrijvingen voordat je ze markeert.',
+      reviewTransfersRunning: 'Overboekingen zoeken...',
+      reviewTransfersTitle: 'Mogelijke interne overboekingen',
+      reviewTransfersNone:
+        'Geen waarschijnlijke interne overboekingen gevonden',
+      reviewTransfersReviewed: 'Alle voorstellen zijn beoordeeld.',
+      reviewTransferStale:
+        'Een of beide transacties zijn gewijzigd. Scan opnieuw om actuele voorstellen te bekijken.',
+      transferPair: 'Paar {n}',
+      transferProbability: 'P(overboeking)',
+      markTransferPair: 'Beide als overboeking markeren',
+      markTransferPairSuccess:
+        'Beide transacties zijn als overboeking gemarkeerd.',
       noKeyWarning: 'Voeg een API-sleutel toe om AI-functies in te schakelen.',
       dataDisclosure:
-        'Deze acties sturen minimale transactiegegevens (winkelnamen, IBAN van tegenpartij, omschrijvingen) naar de TypeSafe API. Er worden geen volledige transactielijsten verstuurd.',
+        'Deze acties sturen alleen benodigde gegevens naar de TypeSafe API: namen, bedragen, datums en korte omschrijvingen. Providerherkenning stuurt ook de IBAN van de tegenpartij. Kolomkoppeling stuurt maximaal twee voorbeeldregels. Volledige transactielijsten worden nooit verstuurd en je API-sleutel wordt niet vastgelegd in Jev-traces.',
       traceToggle: 'Jev-trace tonen',
       traceDescription:
         'Toon tijdens deze sessie wat naar Jev wordt gestuurd en wat terugkomt. Je API-sleutel wordt nooit vastgelegd.',
@@ -2702,7 +2751,7 @@ export const nl: TranslationKeys = {
       autoCategorizeAfterImportResult:
         'Jev heeft {count} transacties na de import gecategoriseerd.',
       autoCategorizeAfterImportNone:
-        'Jev vond geen ongecategoriseerde transacties met meer dan 70% zekerheid.',
+        'Jev vond geen ongecategoriseerde transacties met meer dan 60% zekerheid.',
     },
   },
   help: {
@@ -2932,6 +2981,17 @@ export const nl: TranslationKeys = {
       'Tegenpartijen van transacties die nog niet in je adresboek staan. Klik om uit te vouwen.',
     suggestedContactsExpanded:
       'Dit zijn tegenpartijen van je transacties die nog niet in je adresboek staan. Voeg ze toe om uitgaven per contact bij te houden.',
+    jevSuggestMatches: 'Contacten voorstellen met Jev',
+    jevMatchesRunning: 'Matches zoeken...',
+    jevMatchesTitle: 'Jev-contactvoorstellen',
+    jevMatchesDescription:
+      'Controleer elk voorstel. Jev koppelt of voegt contacten niet automatisch samen.',
+    jevMatchesNone: 'Geen waarschijnlijke matches gevonden',
+    jevMatchesReviewed: 'Alle voorstellen zijn beoordeeld.',
+    jevMatchProposed: 'Voorgesteld contact',
+    jevTransactions: 'transacties',
+    jevMatchConfirm: 'Koppelen aan contact',
+    jevMatchSkip: 'Negeren',
     andMoreSuggested: '...en nog {count} meer',
     addAsNewContact: 'Toevoegen als nieuw contact',
     enterName: 'Voer naam in...',

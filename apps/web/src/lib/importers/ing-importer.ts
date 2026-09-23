@@ -48,14 +48,19 @@ export async function processINGRow(
     return { error: `Invalid amount "${row[mapping.amount]}"` };
   }
 
-  // Handle direction column (Af/Bij)
+  // Handle Dutch and English ING direction columns (Af/Bij, Debit/Credit).
   const directionColumn = mapping.direction || 'Af Bij'; // Use mapping or fallback to ING default
   const direction = row[directionColumn];
   if (direction) {
     const dir = direction.toLowerCase().trim();
-    if (dir === 'af') {
+    if (dir === 'af' || dir === 'debit' || dir === 'd' || dir === '-') {
       amount = -Math.abs(amount);
-    } else if (dir === 'bij') {
+    } else if (
+      dir === 'bij' ||
+      dir === 'credit' ||
+      dir === 'c' ||
+      dir === '+'
+    ) {
       amount = Math.abs(amount);
     }
   }
@@ -76,6 +81,7 @@ export async function processINGRow(
     // Map to lowercase payment method values that match the transaction badge filter
     const methodMap: Record<string, string> = {
       betaalautomaat: 'pin',
+      'payment terminal': 'pin',
       pin: 'pin',
       overschrijving: 'overschrijving', // Keep as overschrijving to match badge filter
       overboeking: 'overschrijving',
@@ -85,6 +91,7 @@ export async function processINGRow(
       storting: 'storting',
       ideal: 'ideal',
       'online bankieren': 'overschrijving',
+      'online banking': 'overschrijving',
     };
     paymentMethod = methodMap[methodLower] || methodLower || 'overig';
   }

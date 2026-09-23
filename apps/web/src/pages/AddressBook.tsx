@@ -7,10 +7,10 @@ import {
   useCallback,
   useDeferredValue,
 } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/contexts/ToastContext';
-import { Plus, Settings2 } from 'lucide-react';
+import { Check, Loader2, Plus, Settings2, Sparkles, X } from 'lucide-react';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useProfile } from '@/contexts/ProfileContext';
@@ -23,10 +23,22 @@ import {
 import { useSharedIbans } from '@/hooks/useSharedIbans';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Input } from '@/components/ui/input';
 import { api } from '@/lib/api';
 import { useConfirm } from '@/contexts/ConfirmContext';
+import {
+  getTypeSafeApiKey,
+  suggestAddressBookMatches,
+} from '@/lib/typesafe-client';
 
 import { AddressBookFilters } from '@/components/address-book/AddressBookFilters';
 import { CleanupRulesManager } from '@/components/address-book/CleanupRulesManager';
@@ -41,6 +53,9 @@ import {
 import type { AddressBookEntry, SharedIban } from '@fluxby/shared';
 
 type SortOption = 'name' | 'transactionCount' | 'totalAmount' | 'recent';
+type ContactMatchSuggestion = Awaited<
+  ReturnType<typeof suggestAddressBookMatches>
+>[number];
 
 export default function AddressBook() {
   const { t } = useLanguage();
@@ -113,6 +128,10 @@ export default function AddressBook() {
   >(null);
   const [suggestedContactEditName, setSuggestedContactEditName] = useState('');
   const [suggestedContactSearch, setSuggestedContactSearch] = useState('');
+  const [contactMatchSuggestions, setContactMatchSuggestions] = useState<
+    ContactMatchSuggestion[]
+  >([]);
+  const [contactMatchDialogOpen, setContactMatchDialogOpen] = useState(false);
 
   // Shared IBAN edit modal state
   const [sharedIbanEditModalOpen, setSharedIbanEditModalOpen] = useState(false);
@@ -147,6 +166,39 @@ export default function AddressBook() {
 
   // Toast
   const toast = useToast();
+  const hasTypeSafeKey = !!getTypeSafeApiKey();
+
+  const contactMatchMutation = useMutation({
+    mutationFn: () => {
+      const unlinkedByIban = new Map<
+        string,
+        NonNullable<typeof suggestedContacts>[number]
+      >();
+      for (const candidate of suggestedContacts ?? []) {
+        if (!unlinkedByIban.has(candidate.iban)) {
+          unlinkedByIban.set(candidate.iban, candidate);
+        }
+      }
+      return suggestAddressBookMatches({
+        unlinked: [...unlinkedByIban.values()].slice(0, 40),
+        contacts: (addressBook ?? []).map((contact) => ({
+          id: contact.id,
+          name: contact.name,
+          originalName: contact.originalName,
+          originalNames: contact.originalNames,
+        })),
+      });
+    },
+    onSuccess: (suggestions) => {
+      if (suggestions.length === 0) {
+        toast.info(t.addressBook.jevMatchesNone);
+        return;
+      }
+      setContactMatchSuggestions(suggestions);
+      setContactMatchDialogOpen(true);
+    },
+    onError: (error) => toast.error(error as Error),
+  });
 
   // Refs for indicator
   const indicatorRef = useRef<HTMLDivElement | null>(null);
@@ -297,6 +349,27 @@ export default function AddressBook() {
         }
         actions={
           <div className='flex gap-2'>
+            {hasTypeSafeKey && (
+              <Button
+                variant='secondary'
+                onClick={() => contactMatchMutation.mutate()}
+                disabled={
+                  contactMatchMutation.isPending ||
+                  !suggestedContacts?.length ||
+                  !addressBook?.length
+                }
+                data-onboarding='addressbook-jev-contact-suggestions'
+              >
+                {contactMatchMutation.isPending ? (
+                  <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                ) : (
+                  <Sparkles className='mr-2 h-4 w-4' />
+                )}
+                {contactMatchMutation.isPending
+                  ? t.addressBook.jevMatchesRunning
+                  : t.addressBook.jevSuggestMatches}
+              </Button>
+            )}
             <Button
               variant='outline'
               onClick={() => setShowCleanupRules(!showCleanupRules)}
@@ -608,6 +681,99 @@ export default function AddressBook() {
         }}
         translations={t}
       />
+
+      <Dialog
+        open={contactMatchDialogOpen}
+        onOpenChange={setContactMatchDialogOpen}
+      >
+        <DialogContent className='max-w-2xl'>
+          <DialogHeader>
+            <DialogTitle>{t.addressBook.jevMatchesTitle}</DialogTitle>
+            <DialogDescription>
+              {t.addressBook.jevMatchesDescription}
+            </DialogDescription>
+          </DialogHeader>
+          <div className='max-h-96 space-y-3 overflow-y-auto py-1'>
+            {contactMatchSuggestions.length === 0 ? (
+              <p className='py-8 text-center text-sm text-muted-foreground'>
+                {t.addressBook.jevMatchesReviewed}
+              </p>
+            ) : (
+              contactMatchSuggestions.map((suggestion) => (
+                <div
+                  key={suggestion.iban}
+                  className='flex flex-wrap items-center justify-between gap-3 rounded-lg border p-3'
+                >
+                  <div className='min-w-0 flex-1'>
+                    <p className='truncate text-sm font-medium'>
+                      {suggestion.name}
+                    </p>
+                    <p className='text-xs text-muted-foreground'>
+                      {suggestion.iban} · {suggestion.transactionCount}{' '}
+                      {t.addressBook.jevTransactions}
+                    </p>
+                    <p className='mt-1 text-sm'>
+                      {t.addressBook.jevMatchProposed}:{' '}
+                      <span className='font-medium'>
+                        {suggestion.contactName}
+                      </span>
+                      {' · '}
+                      {Math.round(suggestion.confidence * 100)}%
+                    </p>
+                  </div>
+                  <div className='flex shrink-0 gap-2'>
+                    <Button
+                      variant='outline'
+                      size='sm'
+                      className='rounded-md'
+                      onClick={() =>
+                        setContactMatchSuggestions((current) =>
+                          current.filter(
+                            (item) => item.iban !== suggestion.iban
+                          )
+                        )
+                      }
+                      aria-label={t.addressBook.jevMatchSkip}
+                    >
+                      <X className='mr-1 h-4 w-4' />
+                      {t.addressBook.jevMatchSkip}
+                    </Button>
+                    <Button
+                      size='sm'
+                      className='rounded-md'
+                      disabled={addIbanToContactHook.isPending}
+                      onClick={() =>
+                        addIbanToContactHook.mutate(
+                          {
+                            contactId: suggestion.contactId,
+                            iban: suggestion.iban,
+                          },
+                          {
+                            onSuccess: () =>
+                              setContactMatchSuggestions((current) =>
+                                current.filter(
+                                  (item) => item.iban !== suggestion.iban
+                                )
+                              ),
+                          }
+                        )
+                      }
+                    >
+                      <Check className='mr-1 h-4 w-4' />
+                      {t.addressBook.jevMatchConfirm}
+                    </Button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setContactMatchDialogOpen(false)}>
+              {t.common.close}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

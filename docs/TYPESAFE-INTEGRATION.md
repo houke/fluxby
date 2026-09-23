@@ -66,7 +66,7 @@ typed question without transaction data, useful for verifying console usage.
 
 **Question type**: Choice  
 **State**: `{ merchant, description, amount }`  
-**Threshold**: confidence > 0.7 to auto-assign; otherwise skipped
+**Threshold**: confidence > 0.6 to auto-assign; otherwise skipped
 **Batch size**: at most five items, also split at a conservative 12,000-byte
 request estimate. Compact choice IDs replace repeated category UUIDs and are
 mapped back to database IDs after validation. All category options are retained.
@@ -182,11 +182,75 @@ day apart but different import hashes (meaning the hash-based deduplication skip
 them). TypeSafe evaluates each pair to decide whether they represent the same
 real-world payment charged twice.
 
-**Question type**: Noul  
-**State**: `{ tx1: {date, amount, description}, tx2: {date, amount, description} }`  
-**Threshold**: P(same_event) ≥ 0.75 → surfaced in the review dialog  
-**Cap**: 20 candidate pairs per scan  
-**Action**: read-only review — never auto-deletes
+- **Question type**: Noul
+- **State**: `{ tx1: {date, amount, description}, tx2: {date, amount, description} }`
+- **Threshold**: P(same_event) ≥ 0.75 → surfaced in the review dialog
+- **Cap**: 20 candidate pairs per scan
+- **Action**: read-only review — never auto-deletes
+
+---
+
+### 7. CSV and Excel import — column mapping
+
+**File**: `apps/web/src/pages/Import.tsx` → `handleParseCSV()` and
+`apps/web/src/lib/typesafe-client.ts` → `suggestImportColumnMappings()`
+
+**Trigger**: A required date, amount, or description mapping is missing or
+ambiguous, and the user has configured a TypeSafe key. CSV and `.xlsx` files are
+supported; the workbook import reads its first transaction sheet locally and
+passes the converted rows through the existing preview and import path.
+
+**What it does**: Jev chooses only among the file's actual column headers or
+`unmapped`. Fluxby sends the headers and up to two short sample rows containing
+date, amount, or description candidate columns. The mapping appears in the
+existing review form; the user must inspect the mapping and transaction preview
+before importing. Invalid header choices are rejected.
+
+- **Question type**: Choice (one per unresolved required field)
+- **Threshold**: confidence ≥ 0.6 to prefill; lower confidence stays manual
+- **Safety**: no workbook or full transaction list is uploaded
+
+---
+
+### 8. Address book identity suggestions
+
+**File**: `apps/web/src/pages/AddressBook.tsx` → contact match review and
+`apps/web/src/lib/typesafe-client.ts` → `suggestAddressBookMatches()`
+
+**Trigger**: the user chooses **Suggest contact matches with Jev** in the
+Address Book. The user key is required.
+
+**What it does**: Fluxby deduplicates the unlinked IBAN groups locally and uses
+name similarity to build a short list of existing contact candidates. Jev sees
+counterparty/contact names and transaction counts, but no IBAN. A closed Choice
+question always includes `none`. The address book shows proposed matches and
+confidence; linking an IBAN uses the existing contact-link action only after
+the user confirms each row. Jev never creates or merges contacts.
+
+- **Question type**: Choice (one per counterparty)
+- **Threshold**: confidence ≥ 0.6 to show a suggestion
+- **Cap**: 40 unlinked IBANs per run; at most 24 similar contact candidates per counterparty
+
+---
+
+### 9. Possible internal transfer review
+
+**File**: `apps/web/src/lib/data-service.ts` →
+`findPossibleInternalTransfers()` and `markTransactionsAsTransfers()`
+
+**Trigger**: the user chooses **Review possible internal transfers** in TypeSafe
+AI Settings. The existing exact own-IBAN detector remains unchanged.
+
+**What it does**: deterministic code finds equal, opposite-sign transactions on
+different user accounts within three days, excluding entries whose counterparty
+IBAN already matches one of the user's own accounts. Jev evaluates those
+candidates and orders a review list. The user explicitly marks both entries;
+the two updates run together in one database transaction.
+
+- **Question type**: Noul (one per candidate pair)
+- **Threshold**: P(transfer) ≥ 0.5 to surface for review
+- **Cap**: 30 candidate pairs per run
+- **State**: account names, dates, amounts, and short descriptions; no IBANs
 
 ---
 
@@ -200,20 +264,23 @@ These integrations follow the TypeSafe building guide:
 | **Atomic questions**         | Each question judges one dimension. `suggestCategories` asks one category-fit Choice per transaction; `is_provider` asks only about intermediary status.      |
 | **Structured state**         | State is a named JSON object with only the fields relevant to the question.                                                                                   |
 | **Backtick path references** | Instructions reference state fields by path (e.g. `` `merchant` ``, `` `iban` ``) where clarity helps.                                                        |
-| **Confidence thresholds**    | Higher confidence is required for higher-consequence actions (0.8 for date format override; strictly above 0.7 for category auto-assign and generated rules). |
+| **Confidence thresholds**    | Higher confidence is required for higher-consequence actions (0.8 for date format override; strictly above 0.6 for category auto-assign and generated rules). |
 | **Graceful degradation**     | Every integration checks for the key first. On API error, existing deterministic behaviour runs unchanged.                                                    |
 | **No auto-delete**           | Semantic duplicate detection surfaces candidates only — the user decides.                                                                                     |
 
 ## Confidence thresholds reference
 
-| Feature               | Primitive             | Threshold | Action                       |
-| --------------------- | --------------------- | --------- | ---------------------------- |
-| Category suggestion   | Choice confidence     | > 0.7     | Auto-assign category         |
-| Date format detection | Choice confidence     | ≥ 0.8     | Override DD/MM vs MM/DD      |
-| Direction inference   | Choice (no threshold) | —         | Used if non-empty            |
-| Payment provider      | Noul                  | ≥ 0.75    | Mark as AI-detected provider |
-| Recurring grouping    | Noul                  | ≥ 0.75    | Merge merchant groups        |
-| Duplicate detection   | Noul                  | ≥ 0.75    | Surface for user review      |
+| Feature               | Primitive             | Threshold | Action                        |
+| --------------------- | --------------------- | --------- | ----------------------------- |
+| Category suggestion   | Choice confidence     | > 0.6     | Auto-assign category          |
+| Date format detection | Choice confidence     | ≥ 0.8     | Override DD/MM vs MM/DD       |
+| Direction inference   | Choice (no threshold) | —         | Used if non-empty             |
+| Import column mapping | Choice confidence     | ≥ 0.6     | Prefill for user review       |
+| Address book matching | Choice confidence     | ≥ 0.6     | Surface link for confirmation |
+| Payment provider      | Noul                  | ≥ 0.75    | Mark as AI-detected provider  |
+| Recurring grouping    | Noul                  | ≥ 0.75    | Merge merchant groups         |
+| Duplicate detection   | Noul                  | ≥ 0.75    | Surface for user review       |
+| Transfer pair review  | Noul                  | ≥ 0.5     | Surface pair for review       |
 
 ## Key files
 
@@ -221,8 +288,8 @@ These integrations follow the TypeSafe building guide:
 | ------------------------------------------------------- | -------------------------------------------------------------------------------------- |
 | `apps/web/src/lib/typesafe-client.ts`                   | Web/Tauri transport selection, fetch wrapper, question helpers, domain functions       |
 | `workers/typesafe-proxy/src/index.js`                   | GitHub Pages CORS proxy; forwards user-supplied keys without storing them              |
-| `apps/web/src/components/settings/TypeSafeSettings.tsx` | Settings UI — key input, action buttons, duplicates dialog                             |
-| `apps/web/src/lib/data-service.ts`                      | Six integration points                                                                 |
+| `apps/web/src/components/settings/TypeSafeSettings.tsx` | Settings UI — key input, actions, duplicate and transfer review dialogs                |
+| `apps/web/src/lib/data-service.ts`                      | Eight domain integration points                                                        |
 | `apps/web/src/lib/api-compat.ts`                        | Exposes `detectPaymentProvidersWithAI` and `findSemanticDuplicates` to the React layer |
 
 ## Further reading

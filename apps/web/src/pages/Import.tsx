@@ -48,7 +48,14 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useProfile } from '@/contexts/ProfileContext';
 import { useToast } from '@/contexts/ToastContext';
 import { ProfileAvatar } from '@/components/ui/ProfileAvatar';
-import { getTypeSafeApiKey } from '@/lib/typesafe-client';
+import {
+  getTypeSafeApiKey,
+  suggestImportColumnMappings,
+} from '@/lib/typesafe-client';
+import {
+  prepareSpreadsheetImport,
+  SpreadsheetImportError,
+} from '@/lib/importers/spreadsheet-importer';
 
 interface ImportHistorySkippedRow {
   rowIndex?: number;
@@ -171,15 +178,20 @@ const BANK_PRESETS: Record<
   ing: {
     name: 'ING',
     mapping: {
-      date: ['Datum'],
-      amount: ['Bedrag (EUR)', 'Bedrag'],
-      description: ['Naam / Omschrijving', 'Omschrijving'],
-      iban: ['Rekening'],
-      counterparty: ['Tegenrekening'],
-      balance: ['Saldo na mutatie', 'Saldo'],
-      direction: ['Af Bij'],
-      paymentMethod: ['Mutatiesoort'],
-      notes: ['Mededelingen'],
+      date: ['Datum', 'Date'],
+      amount: ['Bedrag (EUR)', 'Bedrag', 'Amount (EUR)', 'Amount'],
+      description: [
+        'Naam / Omschrijving',
+        'Omschrijving',
+        'Name / Description',
+        'Description',
+      ],
+      iban: ['Rekening', 'Account'],
+      counterparty: ['Tegenrekening', 'Counterparty'],
+      balance: ['Saldo na mutatie', 'Saldo', 'Resulting balance'],
+      direction: ['Af Bij', 'Debit/credit', 'Debit / credit'],
+      paymentMethod: ['Mutatiesoort', 'Transaction type'],
+      notes: ['Mededelingen', 'Notifications'],
     },
   },
   asn: {
@@ -396,6 +408,7 @@ export default function Import() {
   const [showSkippedRows, setShowSkippedRows] = useState(false);
   const [selectedBank, setSelectedBank] = useState<string>('');
   const [modalError, setModalError] = useState<string | null>(null);
+  const [mappingNotice, setMappingNotice] = useState<string | null>(null);
 
   const autoCategorizeAfterImport = useCallback(() => {
     if (!getTypeSafeApiKey()) return;
@@ -446,7 +459,7 @@ export default function Import() {
         description: '',
       };
 
-      const headersLower = headers.map((h) => h.toLowerCase());
+      const headersLower = headers.map((h) => h.trim().toLowerCase());
       headersLower.forEach((h, idx) => {
         const original = headers[idx];
         if (
@@ -472,7 +485,7 @@ export default function Import() {
           if (!autoMapping.description) autoMapping.description = original;
         }
         if (
-          (h.includes('rekening') || h.includes('iban')) &&
+          (h.includes('rekening') || h.includes('iban') || h === 'account') &&
           !h.includes('tegen')
         ) {
           if (!autoMapping.iban) autoMapping.iban = original;
@@ -527,7 +540,7 @@ export default function Import() {
 
   // Detect bank from headers
   const detectBank = useCallback((headers: string[]): string => {
-    const headersLower = headers.map((h) => h.toLowerCase());
+    const headersLower = headers.map((h) => h.trim().toLowerCase());
 
     // ASN Bank specific headers - check for both signature columns
     // ASN uses: "Saldo voor boeking" and "Bedrag bij / af"
@@ -542,7 +555,10 @@ export default function Import() {
     if (
       headersLower.includes('af bij') ||
       headersLower.includes('mutatiesoort') ||
-      headers.includes('Naam / Omschrijving')
+      headersLower.includes('naam / omschrijving') ||
+      (headersLower.includes('debit/credit') &&
+        headersLower.includes('transaction type') &&
+        headersLower.includes('name / description'))
     ) {
       return 'ing';
     }
@@ -579,7 +595,8 @@ export default function Import() {
         await new Promise<void>((resolve) =>
           requestAnimationFrame(() => resolve())
         );
-        const csvContent = await file.text();
+        const importFile = await prepareSpreadsheetImport(file);
+        const csvContent = await importFile.text();
         const data = await workerParseCSV(csvContent);
 
         setCsvParseResult({
@@ -587,24 +604,89 @@ export default function Import() {
           sampleRows: data.sampleRows,
           totalRows: data.totalRows,
         });
-        setPendingFile(file);
+        setPendingFile(importFile);
         setModalError(null);
+        setMappingNotice(null);
 
         // Detect bank and apply preset
         const detectedBank = detectBank(data.headers);
         setSelectedBank(detectedBank);
         const autoMapping = applyBankPreset(detectedBank, data.headers);
+
+        const requiredFields = ['date', 'amount', 'description'] as const;
+        const preset = BANK_PRESETS[detectedBank];
+        const needsSuggestion = requiredFields.filter((field) => {
+          const aliases = preset?.mapping[field];
+          const matches = aliases
+            ? data.headers.filter((header) =>
+                aliases.some(
+                  (alias) =>
+                    alias.trim().toLowerCase() === header.trim().toLowerCase()
+                )
+              )
+            : data.headers.filter((header) => {
+                const value = header.trim();
+                if (field === 'date')
+                  return /^(date|datum|booking date|transaction date|boekdatum|transactiedatum)$/i.test(
+                    value
+                  );
+                if (field === 'amount')
+                  return /^(amount(?:\s*\([^)]*\))?|bedrag(?:\s*\([^)]*\))?|waarde)$/i.test(
+                    value
+                  );
+                return /^(name\s*\/\s*description|naam\s*\/\s*omschrijving|description|omschrijving|merchant|payee)$/i.test(
+                  value
+                );
+              });
+
+          if (matches.length === 1) {
+            autoMapping[field] = matches[0];
+            return false;
+          }
+          if (matches.length > 1) autoMapping[field] = '';
+          return matches.length > 1 || !autoMapping[field];
+        });
+
+        if (getTypeSafeApiKey() && needsSuggestion.length > 0) {
+          try {
+            const suggestions = await suggestImportColumnMappings({
+              headers: data.headers,
+              sampleRows: data.sampleRows,
+              fields: needsSuggestion,
+            });
+            for (const field of needsSuggestion) {
+              const suggestion = suggestions[field];
+              if (suggestion) autoMapping[field] = suggestion.header;
+            }
+            setMappingNotice(
+              Object.keys(suggestions).length > 0
+                ? t.import.jevMappingNotice
+                : t.import.jevMappingUnavailable
+            );
+          } catch {
+            setMappingNotice(t.import.jevMappingUnavailable);
+          }
+        }
+
         setColumnMapping(autoMapping);
         setShowMappingDialog(true);
       } catch (error) {
-        setUploadError(
-          error instanceof Error ? error.message : 'Failed to parse CSV'
-        );
+        if (error instanceof SpreadsheetImportError) {
+          setUploadError(
+            error.code === 'emptySpreadsheet'
+              ? t.import.spreadsheetEmpty
+              : t.import.spreadsheetHeadersMissing
+          );
+        } else {
+          setUploadError(
+            error instanceof Error ? error.message : t.import.parseFileError
+          );
+        }
       } finally {
         setIsReadingFile(false);
       }
     },
-    [workerParseCSV, resetWorker, detectBank, applyBankPreset]
+    [workerParseCSV, resetWorker, detectBank, applyBankPreset, t.import]
   );
 
   // Generic CSV import mutation
@@ -765,6 +847,9 @@ export default function Import() {
     onDrop,
     accept: {
       'text/csv': ['.csv'],
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': [
+        '.xlsx',
+      ],
     },
     maxFiles: 1,
   });
@@ -932,7 +1017,7 @@ export default function Import() {
 
             {/* Bank Selector - Show First */}
             <div className='space-y-3'>
-              <label className='text-sm font-medium'>Selecteer je bank</label>
+              <label className='text-sm font-medium'>{t.import.bank}</label>
               <div className='grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-5'>
                 {DUTCH_BANKS.map((bank) => (
                   <button
@@ -971,79 +1056,83 @@ export default function Import() {
               </div>
             </div>
 
-            {/* Column Mapping - Only show for generic */}
-            {selectedBank === 'generic' && (
-              <>
-                <h3 className='font-medium'>{t.import.requiredFields}</h3>
-                <div className='grid gap-4 md:grid-cols-3'>
-                  {MAPPING_FIELDS.filter((f) => f.required).map((field) => (
-                    <div key={field.key} className='space-y-2'>
-                      <label className='text-sm font-medium'>
-                        {getFieldLabel(field.key)} *
-                      </label>
-                      <Select
-                        value={
-                          columnMapping[field.key as keyof ColumnMapping] || ''
-                        }
-                        onValueChange={(v) =>
-                          setColumnMapping((prev) => ({
-                            ...prev,
-                            [field.key]: v,
-                          }))
-                        }
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder={t.import.selectField} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {csvParseResult?.headers.map((header) => (
-                            <SelectItem key={header} value={header}>
-                              {header}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  ))}
-                </div>
-
-                <h3 className='pt-4 font-medium'>{t.import.optionalFields}</h3>
-                <div className='grid gap-4 md:grid-cols-3'>
-                  {MAPPING_FIELDS.filter((f) => !f.required).map((field) => (
-                    <div key={field.key} className='space-y-2'>
-                      <label className='text-sm font-medium'>
-                        {getFieldLabel(field.key)}
-                      </label>
-                      <Select
-                        value={
-                          columnMapping[field.key as keyof ColumnMapping] || ''
-                        }
-                        onValueChange={(v) =>
-                          setColumnMapping((prev) => ({
-                            ...prev,
-                            [field.key]: v === 'none' ? undefined : v,
-                          }))
-                        }
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder={t.import.selectField} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value='none'>
-                            {t.import.notMapped}
-                          </SelectItem>
-                          {csvParseResult?.headers.map((header) => (
-                            <SelectItem key={header} value={header}>
-                              {header}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  ))}
-                </div>
-              </>
+            {/* Review and edit mapped fields before importing. */}
+            {mappingNotice && (
+              <div className='rounded-md border border-purple-200 bg-purple-50 px-3 py-2 text-sm text-purple-900 dark:border-purple-900 dark:bg-purple-950 dark:text-purple-100'>
+                {mappingNotice}
+              </div>
             )}
+
+            <>
+              <h3 className='font-medium'>{t.import.requiredFields}</h3>
+              <div className='grid gap-4 md:grid-cols-3'>
+                {MAPPING_FIELDS.filter((f) => f.required).map((field) => (
+                  <div key={field.key} className='space-y-2'>
+                    <label className='text-sm font-medium'>
+                      {getFieldLabel(field.key)} *
+                    </label>
+                    <Select
+                      value={
+                        columnMapping[field.key as keyof ColumnMapping] || ''
+                      }
+                      onValueChange={(v) =>
+                        setColumnMapping((prev) => ({
+                          ...prev,
+                          [field.key]: v,
+                        }))
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder={t.import.selectField} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {csvParseResult?.headers.map((header) => (
+                          <SelectItem key={header} value={header}>
+                            {header}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                ))}
+              </div>
+
+              <h3 className='pt-4 font-medium'>{t.import.optionalFields}</h3>
+              <div className='grid gap-4 md:grid-cols-3'>
+                {MAPPING_FIELDS.filter((f) => !f.required).map((field) => (
+                  <div key={field.key} className='space-y-2'>
+                    <label className='text-sm font-medium'>
+                      {getFieldLabel(field.key)}
+                    </label>
+                    <Select
+                      value={
+                        columnMapping[field.key as keyof ColumnMapping] || ''
+                      }
+                      onValueChange={(v) =>
+                        setColumnMapping((prev) => ({
+                          ...prev,
+                          [field.key]: v === 'none' ? undefined : v,
+                        }))
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder={t.import.selectField} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value='none'>
+                          {t.import.notMapped}
+                        </SelectItem>
+                        {csvParseResult?.headers.map((header) => (
+                          <SelectItem key={header} value={header}>
+                            {header}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                ))}
+              </div>
+            </>
 
             {/* Preview - Show for all banks when mapping is complete and not importing */}
             {selectedBank && isMappingComplete && importProgress === null && (

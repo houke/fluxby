@@ -7,9 +7,9 @@ export default function HelpAI() {
         Slimme AI functies
       </h1>
       <p className='text-xl text-gray-600 dark:text-gray-400'>
-        Fluxby kan optioneel gebruik maken van TypeSafe AI om je transacties
-        beter te categoriseren en betaalplatforms te herkennen — zelfs voor
-        winkels die je regels nog niet kennen.
+        Fluxby kan TypeSafe AI optioneel gebruiken om transacties te
+        categoriseren, onbekende importkolommen te herkennen, mogelijke
+        adresboekmatches te vinden en betaalplatforms te herkennen.
       </p>
 
       <div className='not-prose mt-6 rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900 dark:border-blue-800 dark:bg-blue-950/30 dark:text-blue-200'>
@@ -48,12 +48,22 @@ export default function HelpAI() {
           {
             emoji: '🏷️',
             title: 'Automatisch categoriseren',
-            desc: 'Pas bestaande regels toe en laat de AI daarna de beste categorie kiezen op basis van winkelnaam, omschrijving en bedrag. Alleen automatisch toegewezen bij meer dan 70% zekerheid.',
+            desc: 'Pas bestaande regels toe en laat de AI daarna een categorie kiezen op basis van winkelnaam, omschrijving en bedrag. Alleen automatisch toegewezen bij meer dan 60% zekerheid.',
           },
           {
             emoji: '🧠',
             title: 'Categorisatieregels vinden',
-            desc: 'TypeSafe beoordeelt terugkerende winkels zonder categorie. Fluxby maakt alleen een herbruikbare regel als de categorie met meer dan 70% zekerheid past.',
+            desc: 'TypeSafe beoordeelt terugkerende winkels zonder categorie. Fluxby maakt alleen een herbruikbare regel als de categorie met meer dan 60% zekerheid past.',
+          },
+          {
+            emoji: '📊',
+            title: 'Importkolommen voorstellen',
+            desc: 'Als verplichte CSV-velden ontbreken of dubbelzinnig zijn, kan Jev een kolom voorstellen. Controleer de koppeling en het transactievoorbeeld voordat je importeert. Excel-bestanden (.xlsx) worden ook ondersteund.',
+          },
+          {
+            emoji: '📒',
+            title: 'Adresboekmatches voorstellen',
+            desc: 'Jev vergelijkt onbekende tegenpartijen met bestaande contacten. Jij bevestigt elke IBAN-koppeling; contacten worden nooit automatisch samengevoegd.',
           },
           {
             emoji: '📥',
@@ -79,6 +89,11 @@ export default function HelpAI() {
             emoji: '🔍',
             title: 'Dubbele transacties opsporen',
             desc: 'Transacties met hetzelfde bedrag en bijna dezelfde datum maar een licht afwijkende omschrijving worden ter review aangeboden. Fluxby verwijdert nooit automatisch — jij beslist.',
+          },
+          {
+            emoji: '🔄',
+            title: 'Interne overboekingen controleren',
+            desc: 'Jev beoordeelt mogelijke tegenboekingen op verschillende rekeningen. Jij bevestigt een paar voordat Fluxby beide transacties als overboeking markeert.',
           },
         ].map((item) => (
           <div
@@ -118,7 +133,9 @@ export default function HelpAI() {
         <li>Plak de sleutel in het invoerveld en sla op</li>
         <li>
           Gebruik de knoppen voor categoriseren, regels vinden, betaalplatforms
-          detecteren en dubbele transacties scannen wanneer je wilt
+          detecteren, dubbele transacties en mogelijke overboekingen
+          controleren. Jev kan ook kolommen voorstellen tijdens het importeren
+          en contactmatches voorstellen in het adresboek.
         </li>
       </ol>
       <p className='text-gray-600 dark:text-gray-400'>
@@ -131,8 +148,9 @@ export default function HelpAI() {
       </h2>
       <p className='text-gray-600 dark:text-gray-400'>
         Fluxby verstuurt alleen de minimale gegevens die nodig zijn voor de
-        beslissing. Er worden nooit volledige transactielijsten of
-        accountnummers verstuurd zonder directe actie van jou.
+        beslissing. Volledige transactielijsten worden nooit verstuurd. Je
+        persoonlijke IBAN&apos;s blijven lokaal; providerherkenning kan wel een
+        tegenpartij-IBAN meesturen wanneer je die actie start.
       </p>
       <div className='not-prose mt-4 overflow-x-auto rounded-lg border'>
         <table className='w-full border-collapse text-sm'>
@@ -149,9 +167,21 @@ export default function HelpAI() {
               ['Categoriseren', 'Winkelnaam, omschrijving, bedrag'],
               ['CSV richting', 'Unieke richting-waarden uit het bestand'],
               ['CSV datum', 'Max. 10 datumstrings uit de CSV'],
+              [
+                'CSV-kolommen',
+                'Kolomnamen en maximaal twee beperkte voorbeeldregels',
+              ],
               ['Betaalplatform', 'IBAN en winkelnamen'],
+              [
+                'Adresboekmatch',
+                'Tegenpartijnaam, aantal transacties en mogelijke contactnamen; geen IBAN',
+              ],
               ['Abonnementen', 'IBAN en genormaliseerde winkelnamen'],
               ['Dubbele transacties', 'Datum, bedrag, omschrijving per paar'],
+              [
+                'Overboekingen',
+                'Rekeningnamen, datum, bedrag en omschrijving per paar',
+              ],
             ].map(([feat, data]) => (
               <tr key={feat}>
                 <td className='px-4 py-2 font-medium'>{feat}</td>

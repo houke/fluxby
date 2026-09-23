@@ -716,7 +716,15 @@ export const en: TranslationKeys = {
     currentMonthCleared: 'Current month cleared',
     currentMonthCount: 'Current month count',
     totalInFile: 'Total in file',
-    onlyCSV: 'Only .csv files are supported',
+    onlyCSV: 'CSV and Excel (.xlsx) files are supported',
+    jevMappingNotice:
+      'Jev suggested column mappings. Review the mapping and preview before importing.',
+    jevMappingUnavailable:
+      'Jev could not suggest a reliable mapping. Map the required fields manually.',
+    spreadsheetEmpty: 'This Excel file does not contain a readable worksheet.',
+    spreadsheetHeadersMissing:
+      'The transaction columns could not be found in this Excel file.',
+    parseFileError: 'This file could not be read.',
     bank: 'Bank',
     account: 'Account',
     howToExport: 'How do I export my transactions?',
@@ -736,7 +744,7 @@ export const en: TranslationKeys = {
     // Generic CSV mapping
     mapHeaders: 'Map columns',
     mapHeadersDescription:
-      'Map the columns from your CSV file to the correct fields',
+      'Map the columns from your CSV or Excel file to the correct fields',
     csvColumn: 'CSV Column',
     mapsTo: 'Maps to',
     selectField: 'Select field...',
@@ -1194,15 +1202,15 @@ export const en: TranslationKeys = {
       keyRemoved: 'API key removed',
       categorizeTransactions: 'Categorise uncategorized transactions',
       categorizeTransactionsDescription:
-        'Apply existing rules first, then automatically assign TypeSafe suggestions only above 70% confidence. This also runs automatically after a successful import.',
+        'Apply existing rules first, then automatically assign TypeSafe suggestions only above 60% confidence. This also runs automatically after a successful import.',
       categorizeTransactionsRunning: 'Categorising...',
       categorizeTransactionsResult:
         '{count} transactions categorised ({rules} by rules, {ai} by AI)',
       categorizeTransactionsNone:
-        'No transactions matched a rule or cleared the greater-than-70% confidence threshold.',
+        'No transactions matched a rule or cleared the greater-than-60% confidence threshold.',
       discoverRules: 'Find categorisation rules',
       discoverRulesDescription:
-        'Find recurring merchants among uncategorized transactions and create rules only above 70% confidence.',
+        'Find recurring merchants among uncategorized transactions and create rules only above 60% confidence.',
       discoverRulesRunning: 'Finding rules...',
       discoverRulesResult:
         '{rules} rules created and {transactions} transactions categorised',
@@ -1222,9 +1230,22 @@ export const en: TranslationKeys = {
       duplicatePair: 'Pair {n}',
       duplicateProbability: 'P(duplicate)',
       duplicatesDismiss: 'Close',
+      reviewTransfers: 'Review possible internal transfers',
+      reviewTransfersDescription:
+        'Jev looks for matching entries across different accounts. Review the amounts, dates, and descriptions before marking them.',
+      reviewTransfersRunning: 'Finding transfers...',
+      reviewTransfersTitle: 'Possible internal transfers',
+      reviewTransfersNone: 'No likely internal transfers found',
+      reviewTransfersReviewed: 'All suggestions have been reviewed.',
+      reviewTransferStale:
+        'One or both transactions changed. Scan again to review current suggestions.',
+      transferPair: 'Pair {n}',
+      transferProbability: 'P(transfer)',
+      markTransferPair: 'Mark both as transfers',
+      markTransferPairSuccess: 'Both transactions were marked as transfers.',
       noKeyWarning: 'Add an API key to enable AI features.',
       dataDisclosure:
-        'These actions send minimal transaction data (merchant names, counterparty IBANs, descriptions) to the TypeSafe API. Full transaction lists are never sent.',
+        'These actions send only the data they need to the TypeSafe API: names, amounts, dates, and short descriptions. Payment provider detection also sends the counterparty IBAN. Column mapping sends at most two sample rows. Full transaction lists are never sent, and your API key is never recorded in Jev traces.',
       traceToggle: 'Show Jev trace',
       traceDescription:
         'Show what is sent to Jev and returned during this session. Your API key is never recorded.',
@@ -1246,7 +1267,7 @@ export const en: TranslationKeys = {
       autoCategorizeAfterImportResult:
         'Jev categorized {count} transactions after import.',
       autoCategorizeAfterImportNone:
-        'Jev found no uncategorized transactions above 70% confidence.',
+        'Jev found no uncategorized transactions above 60% confidence.',
     },
   },
   help: {
@@ -1474,6 +1495,17 @@ export const en: TranslationKeys = {
       'Transaction counterparties not yet in your address book. Click to expand.',
     suggestedContactsExpanded:
       'These are counterparties from your transactions that are not yet in your address book. Add them to track expenses per contact.',
+    jevSuggestMatches: 'Suggest contact matches with Jev',
+    jevMatchesRunning: 'Finding matches...',
+    jevMatchesTitle: 'Jev contact suggestions',
+    jevMatchesDescription:
+      'Review each suggestion. Jev does not link or merge contacts automatically.',
+    jevMatchesNone: 'No likely matches found',
+    jevMatchesReviewed: 'All suggestions have been reviewed.',
+    jevMatchProposed: 'Suggested contact',
+    jevTransactions: 'transactions',
+    jevMatchConfirm: 'Link to contact',
+    jevMatchSkip: 'Dismiss',
     andMoreSuggested: '...and {count} more',
     addAsNewContact: 'Add as new contact',
     enterName: 'Enter name...',

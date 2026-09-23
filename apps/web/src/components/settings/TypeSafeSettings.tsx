@@ -57,6 +57,9 @@ import {
 type DuplicatePair = Awaited<
   ReturnType<ReturnType<typeof useDataService>['findSemanticDuplicates']>
 >[number];
+type TransferPair = Awaited<
+  ReturnType<ReturnType<typeof useDataService>['findPossibleInternalTransfers']>
+>[number];
 
 export function TypeSafeSettings() {
   const { t } = useLanguage();
@@ -77,6 +80,8 @@ export function TypeSafeSettings() {
 
   const [duplicates, setDuplicates] = useState<DuplicatePair[]>([]);
   const [duplicatesOpen, setDuplicatesOpen] = useState(false);
+  const [transferPairs, setTransferPairs] = useState<TransferPair[]>([]);
+  const [transferPairsOpen, setTransferPairsOpen] = useState(false);
   const [traceEvents, setTraceEvents] = useState<readonly TypeSafeTraceEvent[]>(
     () => [...getTypeSafeTraceEvents()]
   );
@@ -187,6 +192,39 @@ export function TypeSafeSettings() {
       }
     },
     onError: () => toast.error(s.scanDuplicatesNone),
+  });
+
+  const reviewTransfersMutation = useMutation({
+    mutationFn: () => dataService.findPossibleInternalTransfers(),
+    onSuccess: (results) => {
+      if (results.length === 0) {
+        toast.info(s.reviewTransfersNone);
+        return;
+      }
+      setTransferPairs(results);
+      setTransferPairsOpen(true);
+    },
+    onError: (error) => toast.error(error as Error),
+  });
+
+  const markTransferPairMutation = useMutation({
+    mutationFn: (pair: TransferPair) =>
+      dataService.markTransactionsAsTransfers([pair.tx1.id, pair.tx2.id]),
+    onSuccess: (updated, pair) => {
+      const acceptedIds = new Set([pair.tx1.id, pair.tx2.id]);
+      setTransferPairs((current) =>
+        current.filter(
+          (item) =>
+            !acceptedIds.has(item.tx1.id) && !acceptedIds.has(item.tx2.id)
+        )
+      );
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      queryClient.invalidateQueries({ queryKey: ['categoryStatsByPeriod'] });
+      if (updated === 2) toast.success(s.markTransferPairSuccess);
+      else toast.info(s.reviewTransferStale);
+    },
+    onError: (error) => toast.error(error as Error),
   });
 
   const testConnectionMutation = useMutation({
@@ -557,6 +595,29 @@ export function TypeSafeSettings() {
                       : s.scanDuplicates}
                   </Button>
                 </div>
+
+                <div className='flex items-start justify-between gap-4'>
+                  <div className='min-w-0 flex-1'>
+                    <p className='text-sm font-medium'>{s.reviewTransfers}</p>
+                    <p className='text-xs text-muted-foreground'>
+                      {s.reviewTransfersDescription}
+                    </p>
+                  </div>
+                  <Button
+                    variant='secondary'
+                    size='sm'
+                    className='shrink-0'
+                    disabled={reviewTransfersMutation.isPending}
+                    onClick={() => reviewTransfersMutation.mutate()}
+                  >
+                    {reviewTransfersMutation.isPending && (
+                      <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                    )}
+                    {reviewTransfersMutation.isPending
+                      ? s.reviewTransfersRunning
+                      : s.reviewTransfers}
+                  </Button>
+                </div>
               </div>
             ) : (
               <div className='flex items-center gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200'>
@@ -619,6 +680,75 @@ export function TypeSafeSettings() {
 
           <DialogFooter>
             <Button onClick={() => setDuplicatesOpen(false)}>
+              {s.duplicatesDismiss}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={transferPairsOpen} onOpenChange={setTransferPairsOpen}>
+        <DialogContent className='max-w-2xl'>
+          <DialogHeader>
+            <DialogTitle>{s.reviewTransfersTitle}</DialogTitle>
+            <DialogDescription>
+              {s.reviewTransfersDescription}
+            </DialogDescription>
+          </DialogHeader>
+          <div className='max-h-96 space-y-4 overflow-y-auto py-1'>
+            {transferPairs.length === 0 ? (
+              <p className='py-8 text-center text-sm text-muted-foreground'>
+                {s.reviewTransfersReviewed}
+              </p>
+            ) : (
+              transferPairs.map((pair, idx) => (
+                <div
+                  key={`${pair.tx1.id}-${pair.tx2.id}`}
+                  className='rounded-lg border p-3'
+                >
+                  <div className='mb-2 flex items-center justify-between gap-3'>
+                    <span className='text-xs font-medium tracking-wide text-muted-foreground uppercase'>
+                      {s.transferPair.replace('{n}', String(idx + 1))}
+                    </span>
+                    <Badge variant='outline' className='text-xs'>
+                      {s.transferProbability}{' '}
+                      {Math.round(pair.probability * 100)}%
+                    </Badge>
+                  </div>
+                  <div className='grid grid-cols-2 gap-3'>
+                    {[pair.tx1, pair.tx2].map((tx) => (
+                      <div
+                        key={tx.id}
+                        className='space-y-1 rounded-md bg-muted/40 p-2 text-xs'
+                      >
+                        <div className='font-medium'>{tx.accountName}</div>
+                        <div className='text-muted-foreground'>{tx.date}</div>
+                        <div className='font-mono font-medium'>
+                          <Currency amount={tx.amount} />
+                        </div>
+                        <div className='line-clamp-2 text-muted-foreground'>
+                          {tx.description}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className='mt-3 flex justify-end'>
+                    <Button
+                      size='sm'
+                      disabled={markTransferPairMutation.isPending}
+                      onClick={() => markTransferPairMutation.mutate(pair)}
+                    >
+                      {markTransferPairMutation.isPending && (
+                        <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                      )}
+                      {s.markTransferPair}
+                    </Button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setTransferPairsOpen(false)}>
               {s.duplicatesDismiss}
             </Button>
           </DialogFooter>

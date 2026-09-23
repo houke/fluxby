@@ -93,7 +93,7 @@ export interface ChoiceAnswer {
 
 export type Answer = NoulAnswer | ChoiceAnswer;
 
-export const AUTO_CATEGORY_CONFIDENCE_THRESHOLD = 0.7;
+export const AUTO_CATEGORY_CONFIDENCE_THRESHOLD = 0.6;
 
 export interface TypeSafeResponse {
   model: string;
@@ -261,7 +261,7 @@ export function choiceAnswer(
 /**
  * Suggest a spending category for a single transaction.
  * Returns the best-matching category with confidence, or null when AI is
- * unavailable, the key is missing, or no category is above 70% confidence.
+ * unavailable, the key is missing, or no category is above 60% confidence.
  */
 export async function suggestCategory(params: {
   merchantName: string | null;
@@ -408,6 +408,237 @@ export async function suggestCategories(params: {
   }
   if (batch.length > 0) results.push(...(await classify(batch)));
   return results;
+}
+
+export type ImportMappingField = 'date' | 'amount' | 'description';
+
+export interface ImportMappingSuggestion {
+  header: string;
+  confidence: number;
+}
+
+/** Suggest missing CSV columns from a closed set of the file's own headers. */
+export async function suggestImportColumnMappings(params: {
+  headers: string[];
+  sampleRows: Array<Record<string, string>>;
+  fields: ImportMappingField[];
+  apiKey?: string;
+}): Promise<Partial<Record<ImportMappingField, ImportMappingSuggestion>>> {
+  const { headers, sampleRows, fields, apiKey } = params;
+  const key = apiKey ?? getTypeSafeApiKey();
+  if (
+    !key ||
+    headers.length === 0 ||
+    headers.length > 254 ||
+    fields.length === 0
+  )
+    return {};
+
+  const headerByChoice = new Map(
+    headers.map((header, index) => [`h${index}`, header])
+  );
+  const criteria: Record<string, string | null> = Object.fromEntries(
+    headers.map((header, index) => [`h${index}`, header])
+  );
+  criteria.unmapped = 'No available column contains this information';
+
+  const fieldNames: Record<ImportMappingField, string> = {
+    date: 'transaction date',
+    amount: 'transaction amount',
+    description: 'merchant or transaction description',
+  };
+  const questions: Record<string, Question> = {};
+  for (const field of fields) {
+    questions[field] = {
+      type: 'choice',
+      instructions: `Which source column contains the ${fieldNames[field]}? Choose unmapped when none fits.`,
+      criteria,
+    };
+  }
+
+  const samplePatterns: Record<ImportMappingField, RegExp> = {
+    date: /date|datum|boek/i,
+    amount: /amount|bedrag|waarde|saldo|balance|total/i,
+    description: /name|naam|description|omschrijving|merchant|payee/i,
+  };
+  const sampleHeaders = headers.filter((header) =>
+    fields.some((field) => samplePatterns[field].test(header))
+  );
+  const boundedSamples = sampleRows
+    .slice(0, 2)
+    .map((row) =>
+      Object.fromEntries(
+        sampleHeaders.map((header) => [
+          header,
+          String(row[header] ?? '').slice(0, 80),
+        ])
+      )
+    );
+  const response = await askTypeSafe(
+    { headers, sampleRows: boundedSamples },
+    questions,
+    key
+  );
+
+  const suggestions: Partial<
+    Record<ImportMappingField, ImportMappingSuggestion>
+  > = {};
+  for (const field of fields) {
+    const answer = response.answers[field];
+    const header =
+      answer?.type === 'choice' ? headerByChoice.get(answer.choice) : undefined;
+    const confidence =
+      answer?.type === 'choice' ? answer.confidence : Number.NaN;
+    if (!header || !Number.isFinite(confidence) || confidence < 0.6) {
+      continue;
+    }
+    suggestions[field] = { header, confidence };
+  }
+  return suggestions;
+}
+
+export interface UnlinkedCounterparty {
+  iban: string;
+  name: string;
+  transactionCount: number;
+}
+
+export interface AddressBookMatchSuggestion {
+  iban: string;
+  name: string;
+  transactionCount: number;
+  contactId: string;
+  contactName: string;
+  confidence: number;
+}
+
+function normalizedNameTokens(value: string): string[] {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .split(/[^a-z0-9]+/)
+    .filter((token) => token.length > 1);
+}
+
+function contactNameSimilarity(left: string, right: string): number {
+  const leftValue = normalizedNameTokens(left).join(' ');
+  const rightValue = normalizedNameTokens(right).join(' ');
+  if (!leftValue || !rightValue) return 0;
+  if (leftValue === rightValue) return 1;
+  if (leftValue.includes(rightValue) || rightValue.includes(leftValue))
+    return 0.8;
+  const leftTokens = new Set(leftValue.split(' '));
+  const rightTokens = new Set(rightValue.split(' '));
+  const overlap = [...leftTokens].filter((token) =>
+    rightTokens.has(token)
+  ).length;
+  return overlap / Math.max(leftTokens.size, rightTokens.size);
+}
+
+/**
+ * Suggest links for unlinked IBAN/name groups. IBANs remain local; Jev only sees
+ * counterparty names, transaction counts, and the bounded existing contact list.
+ */
+export async function suggestAddressBookMatches(params: {
+  unlinked: UnlinkedCounterparty[];
+  contacts: Array<{
+    id: string;
+    name: string;
+    originalName?: string | null;
+    originalNames?: string[];
+  }>;
+  apiKey?: string;
+}): Promise<AddressBookMatchSuggestion[]> {
+  const key = params.apiKey ?? getTypeSafeApiKey();
+  if (!key || params.unlinked.length === 0 || params.contacts.length === 0)
+    return [];
+
+  const matches: AddressBookMatchSuggestion[] = [];
+  for (let start = 0; start < params.unlinked.length; start += 5) {
+    const batch = params.unlinked.slice(start, start + 5);
+    const optionSets = batch.map((counterparty) => {
+      const ranked = params.contacts
+        .map((contact) => {
+          const aliases = [
+            contact.originalName,
+            ...(contact.originalNames ?? []),
+          ].filter((alias): alias is string => !!alias);
+          const similarity = Math.max(
+            contactNameSimilarity(counterparty.name, contact.name),
+            ...aliases.map((alias) =>
+              contactNameSimilarity(counterparty.name, alias)
+            ),
+            0
+          );
+          return { contact, similarity };
+        })
+        .filter((entry) => entry.similarity > 0)
+        .sort((a, b) => b.similarity - a.similarity)
+        .slice(0, 24);
+      return ranked.map((entry) => entry.contact);
+    });
+
+    const questions: Record<string, Question> = {};
+    const choiceMaps = optionSets.map((contacts, index) => {
+      const contactByChoice = new Map(
+        contacts.map((contact, contactIndex) => [`c${contactIndex}`, contact])
+      );
+      const criteria: Record<string, string | null> = Object.fromEntries(
+        contacts.map((contact, contactIndex) => [
+          `c${contactIndex}`,
+          contact.name,
+        ])
+      );
+      criteria.none = 'No existing contact matches this counterparty';
+      questions[`counterparty_${index}`] = {
+        type: 'choice',
+        instructions: `Does \`unlinked[${index}]\` appear to be the same counterparty as one existing contact? Choose none when the name evidence is weak or ambiguous.`,
+        criteria,
+      };
+      return contactByChoice;
+    });
+
+    if (optionSets.every((options) => options.length === 0)) continue;
+
+    const response = await askTypeSafe(
+      {
+        unlinked: batch.map(({ name, transactionCount }) => ({
+          name,
+          transactionCount,
+        })),
+        candidateContacts: optionSets.map((options) =>
+          options.map(({ id, name, originalName }) => ({
+            id,
+            name,
+            originalName: originalName ?? '',
+          }))
+        ),
+      },
+      questions,
+      key
+    );
+
+    batch.forEach((counterparty, index) => {
+      const answer = response.answers[`counterparty_${index}`];
+      const contact =
+        answer?.type === 'choice'
+          ? choiceMaps[index].get(answer.choice)
+          : undefined;
+      const confidence =
+        answer?.type === 'choice' ? answer.confidence : Number.NaN;
+      if (!contact || !Number.isFinite(confidence) || confidence < 0.6) {
+        return;
+      }
+      matches.push({
+        ...counterparty,
+        contactId: contact.id,
+        contactName: contact.name,
+        confidence,
+      });
+    });
+  }
+  return matches;
 }
 
 /**

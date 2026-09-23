@@ -22,6 +22,7 @@ import {
   getTypeSafeApiKey,
   askTypeSafe,
   type NoulAnswer,
+  type Question,
 } from './typesafe-client';
 import {
   addDaysToDateOnly,
@@ -2761,7 +2762,7 @@ export function createDataService(db: Database) {
     /**
      * Discover reusable exact-merchant category rules. Code extracts the rule
      * candidates; TypeSafe only chooses among the user's existing categories.
-     * Rules and transaction updates are created only above 70% confidence.
+     * Rules and transaction updates are created only above 60% confidence.
      */
     async discoverCategoryRulesWithAI(): Promise<{
       created: number;
@@ -3054,6 +3055,204 @@ export function createDataService(db: Database) {
       );
 
       return { markedAsTransfer: result.changes };
+    },
+
+    /** Find likely opposite-side transfers and return them for user review. */
+    async findPossibleInternalTransfers(): Promise<
+      Array<{
+        tx1: {
+          id: string;
+          date: string;
+          amount: number;
+          description: string;
+          accountName: string;
+        };
+        tx2: {
+          id: string;
+          date: string;
+          amount: number;
+          description: string;
+          accountName: string;
+        };
+        probability: number;
+      }>
+    > {
+      const pid = profileId();
+      const tsKey = getTypeSafeApiKey();
+      if (!pid || !tsKey) return [];
+
+      const accounts = await this.getAccounts();
+      const accountIbans = accounts
+        .map((account) => account.iban.trim().toUpperCase())
+        .filter(Boolean);
+      if (accountIbans.length === 0) return [];
+
+      const placeholders = accountIbans.map(() => '?').join(',');
+      const candidates = await db.queryAsync<{
+        id1: string;
+        date1: string;
+        amount1: number;
+        description1: string;
+        account1: string;
+        id2: string;
+        date2: string;
+        amount2: number;
+        description2: string;
+        account2: string;
+      }>(
+        `SELECT
+           t1.id as id1, t1.date as date1, t1.amount as amount1,
+           COALESCE(NULLIF(t1.merchant_name, ''), t1.description, t1.opposing_account_name, '') as description1,
+           a1.name as account1,
+           t2.id as id2, t2.date as date2, t2.amount as amount2,
+           COALESCE(NULLIF(t2.merchant_name, ''), t2.description, t2.opposing_account_name, '') as description2,
+           a2.name as account2
+         FROM transactions t1
+         JOIN accounts a1 ON a1.id = t1.account_id
+         JOIN transactions t2
+           ON t1.id < t2.id
+           AND t1.account_id != t2.account_id
+           AND ((t1.amount < 0 AND t2.amount > 0) OR (t1.amount > 0 AND t2.amount < 0))
+           AND ABS(ABS(t1.amount) - ABS(t2.amount)) < 0.01
+           AND ABS(julianday(t1.date) - julianday(t2.date)) <= 3
+         JOIN accounts a2 ON a2.id = t2.account_id
+         WHERE a1.profile_id = ? AND a2.profile_id = ?
+           AND t1.is_deleted = 0 AND t2.is_deleted = 0
+           AND t1.type != 'transfer' AND t2.type != 'transfer'
+           AND (t1.opposing_account_iban IS NULL OR TRIM(t1.opposing_account_iban) = ''
+             OR UPPER(t1.opposing_account_iban) NOT IN (${placeholders}))
+           AND (t2.opposing_account_iban IS NULL OR TRIM(t2.opposing_account_iban) = ''
+             OR UPPER(t2.opposing_account_iban) NOT IN (${placeholders}))
+         ORDER BY ABS(julianday(t1.date) - julianday(t2.date)), t1.date DESC
+         LIMIT 30`,
+        [pid, pid, ...accountIbans, ...accountIbans]
+      );
+      if (candidates.length === 0) return [];
+
+      const judgedBatches = await Promise.all(
+        Array.from(
+          { length: Math.ceil(candidates.length / 5) },
+          async (_, batchIndex) => {
+            const batch = candidates.slice(batchIndex * 5, batchIndex * 5 + 5);
+            const questions: Record<string, Question> = {};
+            batch.forEach((_, index) => {
+              questions[`pair_${index}`] = {
+                type: 'noul',
+                instructions: `Do \`candidates[${index}]\` look like the two account-side entries of one internal transfer? Consider the opposite equal amounts, dates, account names, and descriptions.`,
+                criteria: {
+                  true: 'Both entries appear to be sides of one transfer between the user accounts',
+                  false:
+                    'They are separate transactions that only happen to have similar amounts and dates',
+                },
+              };
+            });
+
+            const response = await askTypeSafe(
+              {
+                candidates: batch.map((candidate) => ({
+                  date1: candidate.date1,
+                  amount1: candidate.amount1,
+                  description1: candidate.description1.slice(0, 160),
+                  account1: candidate.account1,
+                  date2: candidate.date2,
+                  amount2: candidate.amount2,
+                  description2: candidate.description2.slice(0, 160),
+                  account2: candidate.account2,
+                })),
+              },
+              questions,
+              tsKey
+            );
+
+            return batch.flatMap((candidate, index) => {
+              const answer = response.answers[`pair_${index}`];
+              const probability =
+                answer?.type === 'noul' ? answer.noul : Number.NaN;
+              if (
+                !Number.isFinite(probability) ||
+                probability < 0.5 ||
+                probability > 1
+              ) {
+                return [];
+              }
+              return [
+                {
+                  tx1: {
+                    id: candidate.id1,
+                    date: candidate.date1,
+                    amount: candidate.amount1,
+                    description: candidate.description1,
+                    accountName: candidate.account1,
+                  },
+                  tx2: {
+                    id: candidate.id2,
+                    date: candidate.date2,
+                    amount: candidate.amount2,
+                    description: candidate.description2,
+                    accountName: candidate.account2,
+                  },
+                  probability,
+                },
+              ];
+            });
+          }
+        )
+      );
+      return judgedBatches.flat();
+    },
+
+    /** Apply a confirmed transfer pair atomically within the active profile. */
+    async markTransactionsAsTransfers(ids: string[]): Promise<number> {
+      const pid = profileId();
+      const uniqueIds = [...new Set(ids)];
+      if (!pid || uniqueIds.length !== 2) return 0;
+
+      const placeholders = uniqueIds.map(() => '?').join(',');
+      const eligible = await db.queryAsync<{
+        id: string;
+        account_id: string;
+        amount: number;
+        type: string;
+      }>(
+        `SELECT t.id, t.account_id, t.amount, t.type FROM transactions t
+         JOIN accounts a ON a.id = t.account_id
+         WHERE t.id IN (${placeholders}) AND a.profile_id = ?
+           AND t.is_deleted = 0`,
+        [...uniqueIds, pid]
+      );
+      if (
+        eligible.length !== 2 ||
+        eligible[0].account_id === eligible[1].account_id ||
+        eligible[0].amount * eligible[1].amount >= 0 ||
+        Math.abs(Math.abs(eligible[0].amount) - Math.abs(eligible[1].amount)) >=
+          0.01 ||
+        eligible.some((transaction) => transaction.type === 'transfer')
+      ) {
+        return 0;
+      }
+
+      const category = await db.queryOneAsync<{ id: string }>(
+        `SELECT id FROM categories
+         WHERE profile_id = ? AND is_deleted = 0
+           AND (LOWER(name) = 'overboekingen' OR LOWER(name) = 'internal transfers')
+         LIMIT 1`,
+        [pid]
+      );
+      const now = Date.now();
+      let updated = 0;
+      await db.transactionAsync(async () => {
+        for (const id of uniqueIds) {
+          const result = await db.runAsync(
+            `UPDATE transactions SET type = 'transfer',
+               category_id = COALESCE(?, category_id), updated_at = ?
+             WHERE id = ? AND is_deleted = 0
+               AND account_id IN (SELECT id FROM accounts WHERE profile_id = ?)`,
+            [category?.id ?? null, now, id, pid]
+          );
+          updated += result.changes;
+        }
+      });
+      return updated;
     },
 
     // ============= Category Methods =============

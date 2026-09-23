@@ -14,7 +14,9 @@ import {
   clearTypeSafeTraceEvents,
   getTypeSafeTraceEvents,
   getTypeSafeRequestEndpoint,
+  suggestAddressBookMatches,
   suggestCategories,
+  suggestImportColumnMappings,
 } from '@/lib/typesafe-client';
 
 describe('TypeSafe category suggestions', () => {
@@ -24,7 +26,7 @@ describe('TypeSafe category suggestions', () => {
     clearTypeSafeTraceEvents();
   });
 
-  it('batches transactions and only returns choices strictly above 70%', async () => {
+  it('batches transactions and only returns choices strictly above 60%', async () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => ({
@@ -34,14 +36,14 @@ describe('TypeSafe category suggestions', () => {
           transaction_0: {
             type: 'choice',
             choice: 'c0',
-            probabilities: { groceries: 0.7, none: 0.3 },
+            probabilities: { groceries: 0.6, none: 0.4 },
             confidence: AUTO_CATEGORY_CONFIDENCE_THRESHOLD,
           },
           transaction_1: {
             type: 'choice',
             choice: 'c0',
-            probabilities: { groceries: 0.71, none: 0.29 },
-            confidence: 0.71,
+            probabilities: { groceries: 0.61, none: 0.39 },
+            confidence: 0.61,
           },
         },
       }),
@@ -69,8 +71,124 @@ describe('TypeSafe category suggestions', () => {
     ]);
     expect(result).toEqual([
       null,
-      { categoryId: 'groceries', confidence: 0.71 },
+      { categoryId: 'groceries', confidence: 0.61 },
     ]);
+  });
+
+  it('prefills only validated CSV headers with sufficient confidence', async () => {
+    const fetch = vi.fn().mockImplementation((_url, options) => {
+      const request = JSON.parse(options.body as string);
+      expect(request.state.headers).toEqual([
+        'Date',
+        'Name / Description',
+        'Account',
+        'Amount (EUR)',
+        'Notifications',
+      ]);
+      expect(request.state.sampleRows[0]).toEqual({
+        Date: '20260918',
+        'Name / Description': 'Market',
+        'Amount (EUR)': '9.52',
+      });
+      expect(request.questions.amount.criteria.unmapped).toBe(
+        'No available column contains this information'
+      );
+      return Promise.resolve({
+        ok: true,
+        json: async () => ({
+          answers: {
+            date: { type: 'choice', choice: 'h0', confidence: 0.61 },
+            amount: { type: 'choice', choice: 'unmapped', confidence: 0.99 },
+            description: { type: 'choice', choice: 'h1', confidence: 0.6 },
+          },
+        }),
+      });
+    });
+    vi.stubGlobal('fetch', fetch);
+
+    const result = await suggestImportColumnMappings({
+      apiKey: 'test-key',
+      headers: [
+        'Date',
+        'Name / Description',
+        'Account',
+        'Amount (EUR)',
+        'Notifications',
+      ],
+      sampleRows: [
+        {
+          Date: '20260918',
+          'Name / Description': 'Market',
+          Account: 'NL00TEST0000000000',
+          'Amount (EUR)': '9.52',
+          Notifications: 'Private details',
+        },
+      ],
+      fields: ['date', 'amount', 'description'],
+    });
+
+    expect(result).toEqual({
+      date: { header: 'Date', confidence: 0.61 },
+      description: { header: 'Name / Description', confidence: 0.6 },
+    });
+    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(JSON.stringify(fetch.mock.calls[0][1])).not.toContain(
+      'NL00TEST0000000000'
+    );
+    expect(JSON.stringify(fetch.mock.calls[0][1])).not.toContain(
+      'Private details'
+    );
+  });
+
+  it('suggests address book matches without sending IBANs and includes no match', async () => {
+    const fetch = vi.fn().mockImplementation((_url, options) => {
+      const request = JSON.parse(options.body as string);
+      expect(request.state.unlinked).toEqual([
+        { name: 'Acme Market', transactionCount: 4 },
+      ]);
+      expect(request.questions.counterparty_0.criteria.none).toBe(
+        'No existing contact matches this counterparty'
+      );
+      return Promise.resolve({
+        ok: true,
+        json: async () => ({
+          answers: {
+            counterparty_0: {
+              type: 'choice',
+              choice: 'c0',
+              confidence: 0.8,
+            },
+          },
+        }),
+      });
+    });
+    vi.stubGlobal('fetch', fetch);
+
+    const results = await suggestAddressBookMatches({
+      apiKey: 'test-key',
+      unlinked: [
+        {
+          iban: 'NL00TEST0000000000',
+          name: 'Acme Market',
+          transactionCount: 4,
+        },
+      ],
+      contacts: [{ id: 'contact-1', name: 'Acme' }],
+    });
+
+    expect(results).toEqual([
+      {
+        iban: 'NL00TEST0000000000',
+        name: 'Acme Market',
+        transactionCount: 4,
+        contactId: 'contact-1',
+        contactName: 'Acme',
+        confidence: 0.8,
+      },
+    ]);
+    expect(JSON.stringify(fetch.mock.calls[0][1])).not.toContain(
+      'NL00TEST0000000000'
+    );
   });
 
   it('rejects none and unknown category choices', async () => {
