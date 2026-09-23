@@ -257,6 +257,7 @@ export interface TranslationKeys {
     transfer: string;
     categories: string;
     noCategory: string;
+    categoryRemoved: string;
     unknownCategory: string;
     addressBook: string;
     contacts: string;
@@ -1742,6 +1743,7 @@ export const nl: TranslationKeys = {
     transfer: 'Overboekingen',
     categories: 'Categorieën',
     noCategory: 'Geen categorie',
+    categoryRemoved: 'Categorie verwijderd',
     unknownCategory: 'Onbekende categorie',
     addressBook: 'Adresboek',
     contacts: 'Contact',

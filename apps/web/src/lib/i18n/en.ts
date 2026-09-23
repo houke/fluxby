@@ -300,6 +300,7 @@ export const en: TranslationKeys = {
     transfer: 'Transfers',
     categories: 'Categories',
     noCategory: 'No category',
+    categoryRemoved: 'Category removed',
     unknownCategory: 'Unknown category',
     addressBook: 'Address Book',
     contacts: 'Contact',

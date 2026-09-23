@@ -67,7 +67,7 @@ interface TransactionRowBadgesProps {
   isInAddressBook: boolean;
   hasDirectAddressBookLink: boolean;
 
-  onCategorySelect: (tx: Transaction, categoryId: string) => void;
+  onCategorySelect: (tx: Transaction, categoryId: string | null) => void;
   onPaymentMethodSelect: (tx: Transaction, method: string | null) => void;
   onPaymentProcessorSelect: (tx: Transaction, processor: string | null) => void;
   onAddressBookSelect: (
@@ -80,6 +80,7 @@ interface TransactionRowBadgesProps {
   isUpdatePending: boolean;
   translations: {
     searchCategories: string;
+    noCategory: string;
     paymentMethods: {
       other: string;
     };
@@ -166,7 +167,7 @@ export const TransactionRowBadges = memo(function TransactionRowBadges({
 
   // Handlers
   const handleCategorySelect = useCallback(
-    (categoryId: string) => {
+    (categoryId: string | null) => {
       onCategorySelect(tx, categoryId);
       setCategoryOpen(false);
       setCategorySearch('');
@@ -254,6 +255,21 @@ export const TransactionRowBadges = memo(function TransactionRowBadges({
               autoFocus
             />
             <div className='space-y-1'>
+              <button
+                className={cn(
+                  'flex w-full items-center gap-2 rounded px-2 py-1.5 text-sm transition-colors hover:bg-muted',
+                  tx.categoryId === null && 'bg-muted'
+                )}
+                onClick={() => handleCategorySelect(null)}
+              >
+                <span className='flex h-6 w-6 flex-shrink-0 items-center justify-center rounded text-muted-foreground'>
+                  <X className='h-4 w-4' />
+                </span>
+                <span className='whitespace-nowrap'>{t.noCategory}</span>
+                {tx.categoryId === null && (
+                  <Check className='ml-auto h-3 w-3 flex-shrink-0 text-primary' />
+                )}
+              </button>
               {groupedCategories.map(({ parent, children }) => (
                 <div key={parent.id}>
                   <div className='flex items-center gap-2 py-1.5'>

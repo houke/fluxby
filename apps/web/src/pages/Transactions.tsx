@@ -1408,8 +1408,18 @@ export default function Transactions() {
   };
 
   // Helper function to categorize transaction and all related transactions (same counterparty)
-  const handleCategorySelect = (tx: Transaction, categoryId: string) => {
+  const handleCategorySelect = (tx: Transaction, categoryId: string | null) => {
     // Note: popover is managed by TransactionRowBadges component internally
+
+    if (categoryId === null) {
+      updateMutation.mutate(
+        { id: tx.id, data: { categoryId: null } },
+        {
+          onSuccess: () => toast.success(t.transactions.categoryRemoved),
+        }
+      );
+      return;
+    }
 
     // Find related transactions (same counterparty/merchant or same IBAN)
     const txName = tx.merchantName || tx.opposingAccountName || '';
@@ -2764,6 +2774,7 @@ export default function Transactions() {
                                     searchCategories:
                                       t.categories?.searchCategories ||
                                       'Zoek categorie...',
+                                    noCategory: t.transactions.noCategory,
                                     paymentMethods: {
                                       other:
                                         t.transactions.paymentMethods.other ||
