@@ -1058,13 +1058,18 @@ export default function Transactions() {
   const createTransactionMutation = useMutation({
     mutationFn: (data: Parameters<typeof api.createTransaction>[0]) =>
       api.createTransaction(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['transactions', activeProfileId],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ['dashboard', activeProfileId],
-      });
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: ['transactions', activeProfileId],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ['transactions-all', activeProfileId],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ['dashboard', activeProfileId],
+        }),
+      ]);
       setAddTransactionModalOpen(false);
       resetAddTransactionForm();
       toast.success(t.transactions.transactionAdded || 'Transactie toegevoegd');
