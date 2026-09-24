@@ -33,6 +33,14 @@ export default function HelpSubscriptions() {
         {t.helpCenter?.subscriptions?.detectionText ||
           'Wanneer je transacties importeert, analyseert Fluxby de patronen in je betalingen. Als een betaling regelmatig terugkeert (wekelijks, maandelijks, per kwartaal of jaarlijks), wordt deze automatisch herkend als een abonnement.'}
       </p>
+      <h2>
+        {t.helpCenter?.subscriptions?.jevReviewTitle ||
+          'Gewijzigde betalingen controleren met Jev'}
+      </h2>
+      <p>
+        {t.helpCenter?.subscriptions?.jevReviewText ||
+          'Jev kan een terugkerende betaling herkennen als de naam, IBAN of het bedrag is veranderd. Je krijgt een voorstel om deze betalingen aan een bestaand abonnement toe te voegen. Controleer en bevestig elke match zelf; Jev wijzigt je abonnementen niet automatisch.'}
+      </p>
       <ol>
         <li>
           {t.helpCenter?.subscriptions?.step1 ||

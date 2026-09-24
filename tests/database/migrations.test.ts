@@ -66,6 +66,7 @@ function createMockDb() {
     categories: [],
     profiles: [],
     recurring_patterns: [],
+    recurring_pattern_source_decisions: [],
   };
 
   const tableColumns: Record<string, string[]> = {
@@ -74,6 +75,19 @@ function createMockDb() {
     categories: ['id', 'name', 'icon'],
     profiles: ['id', 'name', 'user_id'],
     recurring_patterns: ['id', 'name', 'pattern'], // Note: is_dismissed NOT included initially
+    recurring_pattern_source_decisions: [
+      'id',
+      'pattern_id',
+      'source_key',
+      'opposing_iban',
+      'merchant_name',
+      'status',
+      'profile_id',
+      'created_at',
+      'updated_at',
+      'is_deleted',
+      'device_id',
+    ],
     schema_version: ['version', 'applied_at'],
   };
 
@@ -268,6 +282,16 @@ describe('Migration System', () => {
       db.removeTable('recurring_patterns');
       const missingAfter = await verifyTablesExist(db, 5);
       expect(missingAfter).toContain('recurring_patterns');
+    });
+
+    it('should verify recurring pattern source decisions for version 14', async () => {
+      const db = createMockDb();
+      expect(await verifyTablesExist(db, 14)).toEqual([]);
+
+      db.removeTable('recurring_pattern_source_decisions');
+      expect(await verifyTablesExist(db, 14)).toContain(
+        'recurring_pattern_source_decisions'
+      );
     });
   });
 

@@ -39,10 +39,12 @@ import {
   type RecurringPattern,
   type RecurringCalendarEntry,
   type RecurringStats,
+  type RecurringPatternSourceSuggestion,
   type PatternType,
   PATTERN_INTERVALS,
   MIN_TRANSACTIONS_FOR_PATTERN,
   AMOUNT_VARIANCE_THRESHOLD,
+  PRICE_CHANGE_THRESHOLD,
   DATE_TOLERANCE_DAYS,
   flattenCategoriesForDB,
   SEED_CATEGORIES,
@@ -68,6 +70,236 @@ const AI_CATEGORY_BATCH_SIZE = 30;
 // empty string for an uncategorised category. Scope through the owning account
 // as a fallback so those rows still reach the categorisation workflow.
 const UNCATEGORIZED_CATEGORY_SQL = `(t.category_id IS NULL OR TRIM(CAST(t.category_id AS TEXT)) = '')`;
+
+const RECURRING_MATCH_CONFIDENCE_THRESHOLD = 0.55;
+const MAX_RECURRING_MERGE_CANDIDATES = 12;
+
+function normalizeRecurringMerchantName(name: string | null): string {
+  if (!name) return 'null';
+  let normalized = name.toLowerCase().trim();
+
+  const periodeIndex = normalized.indexOf('periode:');
+  if (periodeIndex > 0) {
+    normalized = normalized.substring(0, periodeIndex).trim();
+  }
+
+  const periodIndex = normalized.indexOf('period:');
+  if (periodIndex > 0) {
+    normalized = normalized.substring(0, periodIndex).trim();
+  }
+
+  return normalized
+    .replace(
+      /\s+(januari|februari|maart|april|mei|juni|juli|augustus|september|oktober|november|december)\s*\d{4}.*$/i,
+      ''
+    )
+    .replace(
+      /\s+(january|february|march|april|may|june|july|august|september|october|november|december)\s*\d{4}.*$/i,
+      ''
+    )
+    .replace(/\s+\d{4}[-/]\d{2}.*$/, '')
+    .replace(/\s+\d{2}[-/]\d{4}.*$/, '')
+    .trim();
+}
+
+function recurringSourceKey(
+  opposingIban: string | null,
+  merchantName: string | null
+): string {
+  const normalizedIban = opposingIban?.trim().toUpperCase() || 'null';
+  return `${normalizedIban}:${normalizeRecurringMerchantName(merchantName)}`;
+}
+
+function parseRecurringSourceKey(sourceKey: string): {
+  opposingIban: string | null;
+  merchantName: string | null;
+} {
+  const separatorIndex = sourceKey.indexOf(':');
+  const iban = sourceKey.slice(0, separatorIndex);
+  const merchantName = sourceKey.slice(separatorIndex + 1);
+  return {
+    opposingIban: iban === 'null' ? null : iban,
+    merchantName: merchantName === 'null' ? null : merchantName,
+  };
+}
+
+interface RecurringPatternSource {
+  opposing_iban: string | null;
+  merchant_name: string | null;
+}
+
+function recurringSourceCondition(
+  source: RecurringPatternSource
+): { sql: string; params: unknown[] } | null {
+  if (source.opposing_iban && source.merchant_name) {
+    return {
+      sql: `UPPER(opposing_account_iban) = UPPER(?) AND LOWER(COALESCE(merchant_name, opposing_account_name)) LIKE ?`,
+      params: [source.opposing_iban, `${source.merchant_name.toLowerCase()}%`],
+    };
+  }
+  if (source.opposing_iban) {
+    return {
+      sql: 'UPPER(opposing_account_iban) = UPPER(?)',
+      params: [source.opposing_iban],
+    };
+  }
+  if (source.merchant_name) {
+    return {
+      sql: 'LOWER(COALESCE(merchant_name, opposing_account_name)) LIKE ?',
+      params: [`${source.merchant_name.toLowerCase()}%`],
+    };
+  }
+  return null;
+}
+
+async function getTransactionsForRecurringPattern(
+  db: Database,
+  profileId: string,
+  patternId: string
+): Promise<Transaction[]> {
+  const patterns = await db.queryAsync<RecurringPatternSource>(
+    `SELECT opposing_iban, merchant_name FROM recurring_patterns
+     WHERE id = ? AND profile_id = ? AND is_deleted = 0`,
+    [patternId, profileId]
+  );
+  if (patterns.length === 0) return [];
+
+  const approvedSources = await db.queryAsync<RecurringPatternSource>(
+    `SELECT opposing_iban, merchant_name FROM recurring_pattern_source_decisions
+     WHERE pattern_id = ? AND profile_id = ? AND status = 'accepted' AND is_deleted = 0`,
+    [patternId, profileId]
+  );
+  const sources = [
+    ...new Map(
+      [patterns[0], ...approvedSources].map((source) => [
+        recurringSourceKey(source.opposing_iban, source.merchant_name),
+        source,
+      ])
+    ).values(),
+  ];
+
+  const conditions = sources
+    .map(recurringSourceCondition)
+    .filter(
+      (condition): condition is NonNullable<typeof condition> => !!condition
+    );
+  if (conditions.length === 0) return [];
+
+  const rows = await db.queryAsync<{
+    id: string;
+    date: string;
+    amount: number;
+    description: string;
+    merchant_name: string | null;
+    opposing_account_name: string | null;
+    opposing_account_iban: string | null;
+    category_id: string | null;
+    type: string;
+    account_id: string;
+    notes: string | null;
+    payment_method: string | null;
+    raw_data: string | null;
+    import_hash: string;
+    payment_provider: string | null;
+    address_book_id: string | null;
+    created_at: string;
+  }>(
+    `SELECT id, date, amount, description, merchant_name, opposing_account_name,
+            opposing_account_iban, category_id, type, account_id, notes, payment_method,
+            raw_data, import_hash, payment_provider, address_book_id, created_at
+     FROM transactions
+     WHERE profile_id = ? AND is_deleted = 0
+       AND (${conditions.map((condition) => `(${condition.sql})`).join(' OR ')})
+     ORDER BY date DESC`,
+    [profileId, ...conditions.flatMap((condition) => condition.params)]
+  );
+
+  return rows.map((row) => ({
+    id: row.id,
+    date: row.date,
+    amount: row.amount,
+    description: row.description,
+    merchantName: row.merchant_name,
+    opposingAccountName: row.opposing_account_name,
+    opposingAccountIban: row.opposing_account_iban,
+    categoryId: row.category_id,
+    type: (row.type || 'expense') as 'income' | 'expense' | 'transfer',
+    accountId: row.account_id || '',
+    notes: row.notes,
+    paymentMethod: row.payment_method,
+    rawData: row.raw_data,
+    importHash: row.import_hash || '',
+    paymentProvider: row.payment_provider,
+    addressBookId: row.address_book_id,
+    createdAt: row.created_at || '',
+  }));
+}
+
+async function refreshRecurringPatternMetrics(
+  db: Database,
+  profileId: string,
+  patternId: string
+): Promise<void> {
+  const pattern = await db.queryOneAsync<{ pattern_type: PatternType }>(
+    `SELECT pattern_type FROM recurring_patterns
+     WHERE id = ? AND profile_id = ? AND is_deleted = 0`,
+    [patternId, profileId]
+  );
+  if (!pattern) return;
+
+  const transactions = await getTransactionsForRecurringPattern(
+    db,
+    profileId,
+    patternId
+  );
+  if (transactions.length === 0) return;
+
+  const chronological = [...transactions].sort((a, b) =>
+    a.date.localeCompare(b.date)
+  );
+  const amounts = chronological.map((transaction) => transaction.amount);
+  const averageAmount =
+    amounts.reduce((sum, amount) => sum + amount, 0) / amounts.length;
+  const absoluteAverage = Math.abs(averageAmount);
+  const intervals = chronological
+    .slice(1)
+    .map((transaction, index) =>
+      diffDateOnlyInDays(chronological[index].date, transaction.date)
+    );
+  const averageInterval =
+    intervals.length > 0
+      ? intervals.reduce((sum, interval) => sum + interval, 0) /
+        intervals.length
+      : (PATTERN_INTERVALS[pattern.pattern_type].min +
+          PATTERN_INTERVALS[pattern.pattern_type].max) /
+        2;
+  const lastTransaction = chronological[chronological.length - 1];
+  const isVariable =
+    absoluteAverage > 0 &&
+    amounts.some(
+      (amount) =>
+        Math.abs(Math.abs(amount) - absoluteAverage) / absoluteAverage >
+        AMOUNT_VARIANCE_THRESHOLD
+    );
+
+  await db.runAsync(
+    `UPDATE recurring_patterns SET
+       avg_amount = ?, last_amount = ?, last_date = ?, next_expected_date = ?,
+       is_variable = ?, transaction_count = ?, updated_at = ?
+     WHERE id = ? AND profile_id = ? AND is_deleted = 0`,
+    [
+      averageAmount,
+      lastTransaction.amount,
+      lastTransaction.date,
+      addDaysToDateOnly(lastTransaction.date, Math.round(averageInterval)),
+      isVariable ? 1 : 0,
+      chronological.length,
+      Date.now(),
+      patternId,
+      profileId,
+    ]
+  );
+}
 
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -5615,6 +5847,427 @@ export function createDataService(db: Database) {
       );
     },
 
+    async findRecurringPatternSourceSuggestions(): Promise<
+      RecurringPatternSourceSuggestion[]
+    > {
+      const pid = profileId();
+      if (!pid) return [];
+
+      const tsKey = getTypeSafeApiKey();
+      if (!tsKey) throw new Error('TypeSafe API key not configured');
+
+      const patterns = await db.queryAsync<{
+        id: string;
+        opposing_iban: string | null;
+        merchant_name: string | null;
+        pattern_type: PatternType;
+        avg_amount: number;
+        last_amount: number;
+        last_date: string;
+        next_expected_date: string | null;
+        transaction_count: number;
+        is_confirmed: number;
+      }>(
+        `SELECT id, opposing_iban, merchant_name, pattern_type, avg_amount,
+                last_amount, last_date, next_expected_date, transaction_count,
+                is_confirmed
+         FROM recurring_patterns
+         WHERE profile_id = ? AND is_deleted = 0 AND is_dismissed = 0 AND is_active = 1`,
+        [pid]
+      );
+      if (patterns.length === 0) return [];
+
+      const twelveMonthsAgo = addMonthsToDateOnly(
+        formatDateISO(new Date()),
+        -12
+      );
+      const transactions = await db.queryAsync<{
+        id: string;
+        date: string;
+        amount: number;
+        description: string;
+        merchant_name: string | null;
+        opposing_account_name: string | null;
+        opposing_iban: string | null;
+      }>(
+        `SELECT t.id, t.date, t.amount, t.description,
+                LOWER(TRIM(COALESCE(t.merchant_name, t.opposing_account_name))) as merchant_name,
+                t.opposing_account_name,
+                t.opposing_account_iban as opposing_iban
+         FROM transactions t
+         JOIN accounts a ON t.account_id = a.id
+         WHERE a.profile_id = ? AND t.is_deleted = 0 AND t.type = 'expense'
+           AND t.date >= ?
+         ORDER BY t.date DESC`,
+        [pid, twelveMonthsAgo]
+      );
+      if (transactions.length === 0) return [];
+
+      const decisions = await db.queryAsync<{
+        pattern_id: string;
+        source_key: string;
+        status: 'accepted' | 'dismissed';
+      }>(
+        `SELECT d.pattern_id, d.source_key, d.status
+         FROM recurring_pattern_source_decisions d
+         JOIN recurring_patterns p ON p.id = d.pattern_id
+         WHERE d.profile_id = ? AND d.is_deleted = 0
+           AND p.profile_id = ? AND p.is_deleted = 0 AND p.is_dismissed = 0`,
+        [pid, pid]
+      );
+      const decisionsByPair = new Map<string, 'accepted' | 'dismissed'>();
+      const acceptedSourceOwners = new Map<string, string>();
+      for (const decision of decisions) {
+        decisionsByPair.set(
+          JSON.stringify([decision.pattern_id, decision.source_key]),
+          decision.status
+        );
+        if (decision.status === 'accepted') {
+          acceptedSourceOwners.set(decision.source_key, decision.pattern_id);
+        }
+      }
+
+      type CandidateGroup = {
+        sourceKey: string;
+        sourceIban: string | null;
+        sourceMerchantName: string | null;
+        payments: Map<string, (typeof transactions)[number]>;
+        patterns: Map<string, (typeof patterns)[number]>;
+      };
+      const candidateGroups = new Map<string, CandidateGroup>();
+
+      for (const pattern of patterns) {
+        const patternName = normalizeRecurringMerchantName(
+          pattern.merchant_name
+        );
+        const patternIban = pattern.opposing_iban?.trim().toUpperCase() || null;
+        const nextDate = pattern.next_expected_date;
+        const storedInterval = nextDate
+          ? diffDateOnlyInDays(pattern.last_date, nextDate)
+          : 0;
+        const typeInterval = PATTERN_INTERVALS[pattern.pattern_type];
+        const intervalDays =
+          storedInterval > 0
+            ? storedInterval
+            : Math.round((typeInterval.min + typeInterval.max) / 2);
+        const baselineAmount = Math.abs(
+          pattern.last_amount || pattern.avg_amount
+        );
+
+        for (const transaction of transactions) {
+          if (transaction.date <= pattern.last_date) continue;
+
+          const elapsedDays = diffDateOnlyInDays(
+            pattern.last_date,
+            transaction.date
+          );
+          const cycleCount = Math.max(
+            1,
+            Math.round(elapsedDays / intervalDays)
+          );
+          if (
+            cycleCount > 12 ||
+            Math.abs(elapsedDays - cycleCount * intervalDays) >
+              DATE_TOLERANCE_DAYS
+          ) {
+            continue;
+          }
+
+          const transactionName = normalizeRecurringMerchantName(
+            transaction.merchant_name
+          );
+          const transactionIban =
+            transaction.opposing_iban?.trim().toUpperCase() || null;
+          const sameName =
+            patternName !== 'null' &&
+            transactionName !== 'null' &&
+            patternName === transactionName;
+          const sameIban = !!patternIban && patternIban === transactionIban;
+          const changedName =
+            transactionName !== 'null' && patternName !== transactionName;
+          const changedIban =
+            patternIban !== transactionIban &&
+            (!!patternIban || !!transactionIban);
+          const amountDifference =
+            baselineAmount > 0
+              ? Math.abs(Math.abs(transaction.amount) - baselineAmount) /
+                baselineAmount
+              : 1;
+          const amountStable = amountDifference <= PRICE_CHANGE_THRESHOLD;
+          const amountChanged = amountDifference > PRICE_CHANGE_THRESHOLD;
+          const identityChangedAtStablePrice =
+            ((sameIban && changedName) || (sameName && changedIban)) &&
+            amountStable;
+          const priceChangedWithKnownIdentity =
+            amountChanged && (sameIban || sameName);
+
+          if (!identityChangedAtStablePrice && !priceChangedWithKnownIdentity) {
+            continue;
+          }
+
+          const sourceKey = recurringSourceKey(
+            transactionIban,
+            transactionName === 'null' ? null : transactionName
+          );
+          const priorDecision = decisionsByPair.get(
+            JSON.stringify([pattern.id, sourceKey])
+          );
+          if (priorDecision) continue;
+
+          const acceptedOwner = acceptedSourceOwners.get(sourceKey);
+          if (acceptedOwner && acceptedOwner !== pattern.id) continue;
+
+          let candidate = candidateGroups.get(sourceKey);
+          if (!candidate) {
+            candidate = {
+              sourceKey,
+              sourceIban: transactionIban,
+              sourceMerchantName:
+                transactionName === 'null' ? null : transactionName,
+              payments: new Map(),
+              patterns: new Map(),
+            };
+            candidateGroups.set(sourceKey, candidate);
+          }
+          candidate.payments.set(transaction.id, transaction);
+          candidate.patterns.set(pattern.id, pattern);
+        }
+      }
+
+      const shortlist = [...candidateGroups.values()]
+        .filter((candidate) => candidate.patterns.size > 0)
+        .sort((a, b) => {
+          const latestA = Math.max(
+            ...[...a.payments.values()].map((payment) =>
+              new Date(payment.date).getTime()
+            )
+          );
+          const latestB = Math.max(
+            ...[...b.payments.values()].map((payment) =>
+              new Date(payment.date).getTime()
+            )
+          );
+          return latestB - latestA;
+        })
+        .slice(0, MAX_RECURRING_MERGE_CANDIDATES);
+      if (shortlist.length === 0) return [];
+
+      const questions: Record<string, Question> = {};
+      const optionPatterns = new Map<
+        string,
+        Map<string, (typeof patterns)[number]>
+      >();
+      const candidateState = shortlist.map((candidate, index) => {
+        const questionId = `source_${index}`;
+        const options = [...candidate.patterns.values()];
+        const criteria: Record<string, string> = {
+          none: 'A different service, a new subscription, or not enough evidence to safely group it.',
+        };
+        const optionMap = new Map<string, (typeof patterns)[number]>();
+        options.forEach((pattern, optionIndex) => {
+          const optionId = `subscription_${optionIndex}`;
+          criteria[optionId] =
+            `${pattern.merchant_name || 'Unnamed subscription'}; ${pattern.pattern_type}; usual amount ${Math.abs(pattern.avg_amount).toFixed(2)}; last payment ${pattern.last_date}`;
+          optionMap.set(optionId, pattern);
+        });
+        optionPatterns.set(questionId, optionMap);
+        questions[questionId] = {
+          type: 'choice',
+          instructions: `Does payment series ${index + 1} continue one of the listed subscriptions? A merchant name or IBAN may change while the amount and timing remain consistent, or the amount may change while the merchant or IBAN stays the same. Use the listed payment details and subscription history. Choose none if the evidence is weak or this is a different service.`,
+          criteria,
+        };
+
+        return {
+          series: index + 1,
+          sourceMerchantName: candidate.sourceMerchantName,
+          sourceHasIban: !!candidate.sourceIban,
+          payments: [...candidate.payments.values()]
+            .sort((a, b) => b.date.localeCompare(a.date))
+            .slice(0, 6)
+            .map((payment) => ({
+              date: payment.date,
+              amount: payment.amount,
+              merchantName: payment.merchant_name,
+              opposingAccountName: payment.opposing_account_name,
+              description: payment.description,
+            })),
+          possibleSubscriptions: options.map((pattern) => ({
+            merchantName: pattern.merchant_name,
+            patternType: pattern.pattern_type,
+            avgAmount: pattern.avg_amount,
+            lastAmount: pattern.last_amount,
+            lastDate: pattern.last_date,
+            nextExpectedDate: pattern.next_expected_date,
+            sharesIban:
+              !!candidate.sourceIban &&
+              candidate.sourceIban ===
+                (pattern.opposing_iban?.trim().toUpperCase() || null),
+            sharesMerchantName:
+              !!candidate.sourceMerchantName &&
+              candidate.sourceMerchantName ===
+                normalizeRecurringMerchantName(pattern.merchant_name),
+          })),
+        };
+      });
+
+      const response = await askTypeSafe(
+        { paymentSeries: candidateState },
+        questions,
+        tsKey
+      );
+
+      const suggestions: RecurringPatternSourceSuggestion[] = [];
+      shortlist.forEach((candidate, index) => {
+        const answer = response.answers[`source_${index}`];
+        if (
+          answer?.type !== 'choice' ||
+          answer.choice === 'none' ||
+          answer.confidence < RECURRING_MATCH_CONFIDENCE_THRESHOLD
+        ) {
+          return;
+        }
+
+        const pattern = optionPatterns
+          .get(`source_${index}`)
+          ?.get(answer.choice);
+        if (!pattern) return;
+
+        const payments = [...candidate.payments.values()]
+          .sort((a, b) => b.date.localeCompare(a.date))
+          .slice(0, 6)
+          .map((payment) => ({
+            id: payment.id,
+            date: payment.date,
+            amount: payment.amount,
+            merchantName: payment.merchant_name,
+            opposingAccountName: payment.opposing_account_name,
+            description: payment.description,
+          }));
+        suggestions.push({
+          sourceIban: candidate.sourceIban,
+          sourceMerchantName: candidate.sourceMerchantName,
+          paymentCount: candidate.payments.size,
+          payments,
+          targetPattern: {
+            id: pattern.id,
+            merchantName: pattern.merchant_name,
+            opposingIban: pattern.opposing_iban,
+            patternType: pattern.pattern_type,
+            avgAmount: pattern.avg_amount,
+            lastAmount: pattern.last_amount,
+            lastDate: pattern.last_date,
+          },
+          confidence: answer.confidence,
+        });
+      });
+
+      return suggestions;
+    },
+
+    async decideRecurringPatternSource(data: {
+      patternId: string;
+      sourceIban: string | null;
+      sourceMerchantName: string | null;
+      decision: 'accepted' | 'dismissed';
+    }): Promise<void> {
+      const pid = profileId();
+      if (!pid) throw new Error('No active profile');
+
+      const sourceIban = data.sourceIban?.trim().toUpperCase() || null;
+      const sourceMerchantName = data.sourceMerchantName
+        ? normalizeRecurringMerchantName(data.sourceMerchantName)
+        : null;
+      if (!sourceIban && !sourceMerchantName) {
+        throw new Error('A merchant name or IBAN is required');
+      }
+
+      const pattern = await db.queryOneAsync<{ id: string }>(
+        `SELECT id FROM recurring_patterns
+         WHERE id = ? AND profile_id = ? AND is_deleted = 0 AND is_dismissed = 0`,
+        [data.patternId, pid]
+      );
+      if (!pattern) throw new Error('Subscription could not be found');
+
+      const sourceKey = recurringSourceKey(sourceIban, sourceMerchantName);
+      if (data.decision === 'accepted') {
+        const existingOwner = await db.queryOneAsync<{ pattern_id: string }>(
+          `SELECT pattern_id FROM recurring_pattern_source_decisions
+           WHERE profile_id = ? AND source_key = ? AND status = 'accepted'
+             AND is_deleted = 0 AND pattern_id != ?
+           LIMIT 1`,
+          [pid, sourceKey, data.patternId]
+        );
+        if (existingOwner) {
+          throw new Error('This payment series is already bundled elsewhere');
+        }
+      }
+
+      const now = Date.now();
+      const pendingDuplicateRows =
+        data.decision === 'accepted'
+          ? await db.queryAsync<{
+              id: string;
+              opposing_iban: string | null;
+              merchant_name: string | null;
+              is_confirmed: number;
+            }>(
+              `SELECT id, opposing_iban, merchant_name, is_confirmed
+               FROM recurring_patterns
+               WHERE profile_id = ? AND is_deleted = 0 AND is_dismissed = 0`,
+              [pid]
+            )
+          : [];
+      const duplicatePatternIds = pendingDuplicateRows
+        .filter(
+          (row) =>
+            row.id !== data.patternId &&
+            row.is_confirmed !== 1 &&
+            recurringSourceKey(row.opposing_iban, row.merchant_name) ===
+              sourceKey
+        )
+        .map((row) => row.id);
+
+      await db.transactionAsync(async () => {
+        await db.runAsync(
+          `INSERT INTO recurring_pattern_source_decisions (
+             id, pattern_id, source_key, opposing_iban, merchant_name, status,
+             profile_id, created_at, updated_at, is_deleted
+           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
+           ON CONFLICT(profile_id, pattern_id, source_key) DO UPDATE SET
+             opposing_iban = excluded.opposing_iban,
+             merchant_name = excluded.merchant_name,
+             status = excluded.status,
+             updated_at = excluded.updated_at,
+             is_deleted = 0`,
+          [
+            crypto.randomUUID(),
+            data.patternId,
+            sourceKey,
+            sourceIban,
+            sourceMerchantName,
+            data.decision,
+            pid,
+            now,
+            now,
+          ]
+        );
+
+        for (const duplicatePatternId of duplicatePatternIds) {
+          await db.runAsync(
+            `UPDATE recurring_patterns
+             SET is_dismissed = 1, is_active = 0, updated_at = ?
+             WHERE id = ? AND profile_id = ? AND is_confirmed = 0
+               AND is_deleted = 0 AND is_dismissed = 0`,
+            [now, duplicatePatternId, pid]
+          );
+        }
+      });
+
+      if (data.decision === 'accepted') {
+        await refreshRecurringPatternMetrics(db, pid, data.patternId);
+      }
+    },
+
     async detectRecurringPatterns(): Promise<{
       detected: number;
       updated: number;
@@ -5653,43 +6306,6 @@ export function createDataService(db: Database) {
       const now = Date.now();
       const MIN_MONTHS_SPAN_DAYS = 180; // 6 months minimum span (allows up to ~200 days for flexibility)
       const AMOUNT_CLUSTERING_THRESHOLD = 0.15; // 15% - group amounts within this threshold
-
-      // Normalize merchant names for better grouping
-      // Bank fees often include period info like "Kosten klantonderzoek Periode: november 2022"
-      // This function extracts a clean, groupable name
-      const normalizeMerchantName = (name: string | null): string => {
-        if (!name) return 'null';
-        let normalized = name.toLowerCase().trim();
-
-        // Remove "periode:" and everything after it (common in Dutch bank fees)
-        const periodeIndex = normalized.indexOf('periode:');
-        if (periodeIndex > 0) {
-          normalized = normalized.substring(0, periodeIndex).trim();
-        }
-
-        // Also handle "period:" variant
-        const periodIndex = normalized.indexOf('period:');
-        if (periodIndex > 0) {
-          normalized = normalized.substring(0, periodIndex).trim();
-        }
-
-        // Remove trailing date patterns like "november 2022", "2024-01", etc.
-        // Common patterns: month names, YYYY-MM, MM-YYYY
-        normalized = normalized
-          .replace(
-            /\s+(januari|februari|maart|april|mei|juni|juli|augustus|september|oktober|november|december)\s*\d{4}.*$/i,
-            ''
-          )
-          .replace(
-            /\s+(january|february|march|april|may|june|july|august|september|october|november|december)\s*\d{4}.*$/i,
-            ''
-          )
-          .replace(/\s+\d{4}[-/]\d{2}.*$/, '') // 2024-01
-          .replace(/\s+\d{2}[-/]\d{4}.*$/, '') // 01-2024
-          .trim();
-
-        return normalized;
-      };
 
       // Only analyze transactions from the last 12 months for pattern detection
       // This improves performance and focuses on recent recurring patterns
@@ -5749,8 +6365,7 @@ export function createDataService(db: Database) {
 
       for (const tx of allTransactions) {
         // Use normalized merchant name for grouping key
-        const normalizedName = normalizeMerchantName(tx.merchant_name);
-        const key = `${tx.opposing_iban || 'null'}:${normalizedName}`;
+        const key = recurringSourceKey(tx.opposing_iban, tx.merchant_name);
         let group = merchantGroups.get(key);
         if (!group) {
           group = [];
@@ -5763,6 +6378,79 @@ export function createDataService(db: Database) {
           date: tx.date,
           amount: tx.amount,
         });
+      }
+
+      // Reuse source signatures that the user previously approved for a pattern.
+      // This keeps later payments under a changed name or IBAN with that same subscription.
+      const acceptedSourceRows = await db.queryAsync<{
+        source_iban: string | null;
+        source_merchant_name: string | null;
+        pattern_id: string;
+        target_iban: string | null;
+        target_merchant_name: string | null;
+      }>(
+        `SELECT d.opposing_iban as source_iban,
+                d.merchant_name as source_merchant_name,
+                p.id as pattern_id,
+                p.opposing_iban as target_iban,
+                p.merchant_name as target_merchant_name
+         FROM recurring_pattern_source_decisions d
+         JOIN recurring_patterns p ON p.id = d.pattern_id
+         WHERE d.profile_id = ? AND d.status = 'accepted' AND d.is_deleted = 0
+           AND p.profile_id = ? AND p.is_deleted = 0 AND p.is_dismissed = 0`,
+        [pid, pid]
+      );
+      const allExistingPatterns = await db.queryAsync<{
+        id: string;
+        merchant_name: string | null;
+        is_dismissed: number;
+        avg_amount: number;
+        last_amount: number;
+        last_date: string;
+        opposing_iban: string | null;
+      }>(
+        `SELECT id, merchant_name, is_dismissed, avg_amount, last_amount,
+                last_date, opposing_iban
+         FROM recurring_patterns
+         WHERE profile_id = ? AND is_deleted = 0`,
+        [pid]
+      );
+      const existingRecurringSourceKeys = new Set(
+        allExistingPatterns
+          .filter((pattern) => pattern.is_dismissed !== 1)
+          .map((pattern) =>
+            recurringSourceKey(pattern.opposing_iban, pattern.merchant_name)
+          )
+      );
+      const approvedPatternByCanonicalKey = new Map<
+        string,
+        { id: string; is_dismissed: number }
+      >();
+      const approvedPatternIds = new Set<string>();
+
+      for (const row of acceptedSourceRows) {
+        const sourceKey = recurringSourceKey(
+          row.source_iban,
+          row.source_merchant_name
+        );
+        const canonicalKey = recurringSourceKey(
+          row.target_iban,
+          row.target_merchant_name
+        );
+        approvedPatternByCanonicalKey.set(canonicalKey, {
+          id: row.pattern_id,
+          is_dismissed: 0,
+        });
+        approvedPatternIds.add(row.pattern_id);
+
+        if (sourceKey === canonicalKey) continue;
+        const sourceGroup = merchantGroups.get(sourceKey);
+        if (!sourceGroup) continue;
+        const canonicalGroup = merchantGroups.get(canonicalKey) ?? [];
+        canonicalGroup.push(...sourceGroup);
+        canonicalGroup.sort((a, b) => a.date.localeCompare(b.date));
+        merchantGroups.set(canonicalKey, canonicalGroup);
+        merchantGroups.delete(sourceKey);
       }
 
       // TypeSafe AI: merge groups that share an IBAN but have differently-normalized
@@ -5818,7 +6506,15 @@ export function createDataService(db: Database) {
 
           for (const { keys, shouldMerge } of mergeResults) {
             if (!shouldMerge || keys.length <= 1) continue;
+            // Leave a changed merchant label attached to a known subscription
+            // for Jev to review instead of merging it automatically.
+            if (keys.some((key) => existingRecurringSourceKeys.has(key))) {
+              continue;
+            }
             const [primaryKey, ...otherKeys] = keys;
+            const approvedPattern = keys
+              .map((key) => approvedPatternByCanonicalKey.get(key))
+              .find((pattern) => !!pattern);
             const primaryGroup = merchantGroups.get(primaryKey);
             if (!primaryGroup) continue;
             for (const key of otherKeys) {
@@ -5827,6 +6523,10 @@ export function createDataService(db: Database) {
                 primaryGroup.push(...group);
                 merchantGroups.delete(key);
               }
+              approvedPatternByCanonicalKey.delete(key);
+            }
+            if (approvedPattern) {
+              approvedPatternByCanonicalKey.set(primaryKey, approvedPattern);
             }
             primaryGroup.sort((a, b) => a.date.localeCompare(b.date));
           }
@@ -5835,6 +6535,7 @@ export function createDataService(db: Database) {
 
       // Now cluster each merchant group by similar amounts
       interface AmountCluster {
+        source_key: string;
         opposing_iban: string | null;
         merchant_name: string | null;
         dates: string[];
@@ -5844,7 +6545,26 @@ export function createDataService(db: Database) {
       const groups: AmountCluster[] = [];
 
       for (const [key, transactions] of merchantGroups.entries()) {
-        const [opposing_iban, merchant_name] = key.split(':');
+        const { opposingIban, merchantName } = parseRecurringSourceKey(key);
+        const approvedPattern = approvedPatternByCanonicalKey.get(key);
+
+        if (approvedPattern) {
+          const pairs = transactions
+            .map((transaction) => ({
+              date: transaction.date,
+              amount: transaction.amount,
+            }))
+            .sort((a, b) => a.date.localeCompare(b.date));
+          groups.push({
+            source_key: key,
+            opposing_iban: opposingIban,
+            merchant_name: merchantName,
+            dates: pairs.map((pair) => pair.date),
+            amounts: pairs.map((pair) => pair.amount),
+          });
+          continue;
+        }
+
         const clusters: AmountCluster[] = [];
 
         for (const tx of transactions) {
@@ -5873,8 +6593,9 @@ export function createDataService(db: Database) {
           if (!foundCluster) {
             // Create new cluster
             clusters.push({
-              opposing_iban: opposing_iban === 'null' ? null : opposing_iban,
-              merchant_name: merchant_name === 'null' ? null : merchant_name,
+              source_key: key,
+              opposing_iban: opposingIban,
+              merchant_name: merchantName,
               dates: [tx.date],
               amounts: [tx.amount],
             });
@@ -5909,20 +6630,6 @@ export function createDataService(db: Database) {
       let detected = 0;
       let updated = 0;
 
-      // Pre-fetch ALL existing patterns for this profile in one query to avoid repeated queries
-      const allExistingPatterns = await db.queryAsync<{
-        id: string;
-        merchant_name: string | null;
-        is_dismissed: number;
-        avg_amount: number;
-        opposing_iban: string | null;
-      }>(
-        `SELECT id, LOWER(TRIM(merchant_name)) as merchant_name, is_dismissed, avg_amount, opposing_iban 
-         FROM recurring_patterns 
-         WHERE profile_id = ? AND is_deleted = 0`,
-        [pid]
-      );
-
       // Create a map for fast lookups
       const existingPatternsMap = new Map<
         string,
@@ -5930,11 +6637,13 @@ export function createDataService(db: Database) {
           id: string;
           is_dismissed: number;
           avg_amount: number;
+          last_amount: number;
+          last_date: string;
           opposing_iban: string | null;
         }>
       >();
       for (const pattern of allExistingPatterns) {
-        const key = pattern.merchant_name || 'null';
+        const key = normalizeRecurringMerchantName(pattern.merchant_name);
         let patternList = existingPatternsMap.get(key);
         if (!patternList) {
           patternList = [];
@@ -5944,6 +6653,8 @@ export function createDataService(db: Database) {
           id: pattern.id,
           is_dismissed: pattern.is_dismissed,
           avg_amount: pattern.avg_amount,
+          last_amount: pattern.last_amount,
+          last_date: pattern.last_date,
           opposing_iban: pattern.opposing_iban,
         });
       }
@@ -6059,8 +6770,9 @@ export function createDataService(db: Database) {
             );
 
             // Look up existing patterns from pre-fetched map
-            const merchantKey =
-              group.merchant_name?.toLowerCase().trim() || 'null';
+            const merchantKey = normalizeRecurringMerchantName(
+              group.merchant_name
+            );
             const existingPatterns = existingPatternsMap.get(merchantKey) || [];
 
             if (existingPatterns.length > 0) {
@@ -6074,25 +6786,32 @@ export function createDataService(db: Database) {
               );
             }
 
-            // Find existing pattern with similar amount (within 20%) and compatible IBAN
-            let existing: { id: string; is_dismissed: number } | null = null;
-            for (const pattern of existingPatterns) {
-              // Check IBAN compatibility: match if both NULL, both same, or one is NULL
-              const ibanMatch =
-                pattern.opposing_iban === group.opposing_iban ||
-                pattern.opposing_iban === null ||
-                group.opposing_iban === null;
+            // Find an existing pattern with a close amount and the same IBAN.
+            let existing: {
+              id: string;
+              is_dismissed: number;
+              last_amount?: number;
+              last_date?: string;
+            } | null =
+              approvedPatternByCanonicalKey.get(group.source_key) ?? null;
+            if (!existing) {
+              for (const pattern of existingPatterns) {
+                // Do not silently absorb a changed or newly available IBAN;
+                // leave that identity change for Jev and the user's review.
+                const ibanMatch = pattern.opposing_iban === group.opposing_iban;
 
-              if (!ibanMatch) continue;
+                if (!ibanMatch) continue;
 
-              const absExisting = Math.abs(pattern.avg_amount);
-              const absNew = Math.abs(avgAmount);
-              if (
-                absExisting > 0 &&
-                Math.abs(absNew - absExisting) / absExisting <= 0.2
-              ) {
-                existing = pattern;
-                break;
+                const absExisting = Math.abs(pattern.avg_amount);
+                const absNew = Math.abs(avgAmount);
+                if (
+                  absExisting > 0 &&
+                  Math.abs(absNew - absExisting) / absExisting <=
+                    PRICE_CHANGE_THRESHOLD
+                ) {
+                  existing = pattern;
+                  break;
+                }
               }
             }
 
@@ -6103,6 +6822,23 @@ export function createDataService(db: Database) {
                 console.log(
                   `[detectRecurringPatterns] Skip ${group.merchant_name}: existing pattern is dismissed`
                 );
+                continue;
+              }
+
+              // New charges with a material price change should remain visible
+              // to Jev for review before updating this subscription's metrics.
+              if (
+                !approvedPatternByCanonicalKey.has(group.source_key) &&
+                !!existing.last_date &&
+                existing.last_amount !== undefined &&
+                lastDate > existing.last_date &&
+                Math.abs(existing.last_amount) > 0 &&
+                Math.abs(
+                  Math.abs(lastAmount) - Math.abs(existing.last_amount)
+                ) /
+                  Math.abs(existing.last_amount) >
+                  PRICE_CHANGE_THRESHOLD
+              ) {
                 continue;
               }
 
@@ -6177,6 +6913,12 @@ export function createDataService(db: Database) {
           }
         }); // End of batch transaction
       } // End of batch loop
+
+      // Recalculate approved bundles from their full source history so a small
+      // new source group cannot replace the subscription's older totals.
+      for (const patternId of approvedPatternIds) {
+        await refreshRecurringPatternMetrics(db, pid, patternId);
+      }
 
       return { detected, updated };
     },
@@ -6493,15 +7235,14 @@ export function createDataService(db: Database) {
       let pendingConfirmation = 0;
 
       for (const row of rows) {
-        // Only count patterns that are active and have a valid amount
-        // This matches the UI filtering: p.isActive && typeof p.avgAmount === 'number'
+        // Pending patterns belong only in pendingConfirmation. Only confirmed,
+        // active subscriptions contribute to the other subscription KPIs.
         if (row.is_active !== 1 || row.avg_amount === null) continue;
 
-        const multiplier = multipliers[row.pattern_type] || 1;
-        totalMonthlySpend += row.avg_amount * multiplier;
-        activeSubscriptions++;
-
         if (row.is_confirmed === 1) {
+          const multiplier = multipliers[row.pattern_type] || 1;
+          totalMonthlySpend += row.avg_amount * multiplier;
+          activeSubscriptions++;
           confirmedSubscriptions++;
         } else {
           pendingConfirmation++;
@@ -6524,8 +7265,14 @@ export function createDataService(db: Database) {
         let total = 0;
 
         for (const pattern of rows) {
-          // Skip patterns with null avg_amount
-          if (pattern.avg_amount === null) continue;
+          // Project only active subscriptions the user has confirmed.
+          if (
+            pattern.is_active !== 1 ||
+            pattern.is_confirmed !== 1 ||
+            pattern.avg_amount === null
+          ) {
+            continue;
+          }
 
           let nextDate = pattern.last_date;
           const interval = intervalDays[pattern.pattern_type];
@@ -6685,92 +7432,7 @@ export function createDataService(db: Database) {
     async getTransactionsForPattern(patternId: string): Promise<Transaction[]> {
       const pid = profileId();
       if (!pid) return [];
-
-      // First get the pattern to know what to match
-      const patterns = await db.queryAsync<{
-        opposing_iban: string | null;
-        merchant_name: string | null;
-      }>(
-        `SELECT opposing_iban, merchant_name FROM recurring_patterns
-         WHERE id = ? AND profile_id = ?`,
-        [patternId, pid]
-      );
-
-      if (patterns.length === 0) return [];
-      const pattern = patterns[0];
-
-      let whereClause = '';
-      const queryParams: unknown[] = [pid];
-
-      if (pattern.opposing_iban && pattern.merchant_name) {
-        // Match by IBAN and merchant name that starts with the pattern name
-        // This handles normalized names like "kosten klantonderzoek houke b.v." matching
-        // transactions with names like "Kosten klantonderzoek Houke B.V. Periode: november 2022"
-        whereClause =
-          'AND opposing_account_iban = ? AND LOWER(COALESCE(merchant_name, opposing_account_name)) LIKE ?';
-        queryParams.push(
-          pattern.opposing_iban,
-          pattern.merchant_name.toLowerCase() + '%'
-        );
-      } else if (pattern.opposing_iban) {
-        whereClause = 'AND opposing_account_iban = ?';
-        queryParams.push(pattern.opposing_iban);
-      } else if (pattern.merchant_name) {
-        // Match merchant name that starts with the pattern name (handles normalized names)
-        whereClause =
-          'AND LOWER(COALESCE(merchant_name, opposing_account_name)) LIKE ?';
-        queryParams.push(pattern.merchant_name.toLowerCase() + '%');
-      } else {
-        return [];
-      }
-
-      const rows = await db.queryAsync<{
-        id: string;
-        date: string;
-        amount: number;
-        description: string;
-        merchant_name: string | null;
-        opposing_account_name: string | null;
-        opposing_account_iban: string | null;
-        category_id: string | null;
-        type: string;
-        account_id: string;
-        notes: string | null;
-        payment_method: string | null;
-        raw_data: string | null;
-        import_hash: string;
-        payment_provider: string | null;
-        address_book_id: string | null;
-        created_at: string;
-      }>(
-        `SELECT id, date, amount, description, merchant_name, opposing_account_name,
-                opposing_account_iban, category_id, type, account_id, notes, payment_method,
-                raw_data, import_hash, payment_provider, address_book_id, created_at
-         FROM transactions
-         WHERE profile_id = ? AND is_deleted = 0 ${whereClause}
-         ORDER BY date DESC`,
-        queryParams
-      );
-
-      return rows.map((row) => ({
-        id: row.id,
-        date: row.date,
-        amount: row.amount,
-        description: row.description,
-        merchantName: row.merchant_name,
-        opposingAccountName: row.opposing_account_name,
-        opposingAccountIban: row.opposing_account_iban,
-        categoryId: row.category_id,
-        type: (row.type || 'expense') as 'income' | 'expense' | 'transfer',
-        accountId: row.account_id || '',
-        notes: row.notes,
-        paymentMethod: row.payment_method,
-        rawData: row.raw_data,
-        importHash: row.import_hash || '',
-        paymentProvider: row.payment_provider,
-        addressBookId: row.address_book_id,
-        createdAt: row.created_at || '',
-      }));
+      return getTransactionsForRecurringPattern(db, pid, patternId);
     },
 
     /**

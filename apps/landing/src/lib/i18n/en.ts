@@ -1302,6 +1302,9 @@ export const en: LandingTranslationKeys = {
       detectionTitle: 'How does automatic detection work?',
       detectionText:
         'When you import transactions, Fluxby analyzes the patterns in your payments. If a payment recurs regularly (weekly, monthly, quarterly, or yearly), it is automatically recognized as a subscription.',
+      jevReviewTitle: 'Review changed payments with Jev',
+      jevReviewText:
+        'Jev can recognize recurring payments when the merchant name, IBAN, or amount changes. It suggests adding those payments to an existing subscription. Review and confirm each match yourself; Jev never changes subscriptions automatically.',
       step1: 'Import your transactions via the Import page',
       step2: 'Fluxby automatically analyzes recurring patterns',
       step3: 'Confirm detected subscriptions or dismiss them',
@@ -1931,7 +1934,7 @@ export const en: LandingTranslationKeys = {
       v1133Title: 'Release 1.13.3',
       v1133Description: '1 bug fix.',
       v1133F1Title: 'Old tauri db support',
-      v1133F1Desc: 'This shouldn\'t have happened, but it\'s fixed now!',
+      v1133F1Desc: "This shouldn't have happened, but it's fixed now!",
       v1132Date: 'September 22, 2026',
       v1132Title: 'Release 1.13.2',
       v1132Description: '1 bug fix.',

@@ -1517,6 +1517,9 @@ export const nl: LandingTranslationKeys = {
       detectionTitle: 'Hoe werkt automatische detectie?',
       detectionText:
         'Wanneer je transacties importeert, analyseert Fluxby de patronen in je betalingen. Als een betaling regelmatig terugkeert (wekelijks, maandelijks, per kwartaal of jaarlijks), wordt deze automatisch herkend als een abonnement.',
+      jevReviewTitle: 'Gewijzigde betalingen controleren met Jev',
+      jevReviewText:
+        'Jev kan een terugkerende betaling herkennen als de naam, IBAN of het bedrag is veranderd. Je krijgt een voorstel om deze betalingen aan een bestaand abonnement toe te voegen. Controleer en bevestig elke match zelf; Jev wijzigt je abonnementen niet automatisch.',
       step1: 'Importeer je transacties via de Import pagina',
       step2: 'Fluxby analyseert automatisch terugkerende patronen',
       step3: 'Bevestig gedetecteerde abonnementen of wijs ze af',

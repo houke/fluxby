@@ -23,6 +23,31 @@ export interface RecurringPattern {
   priceHistory?: { date: string; amount: number }[];
 }
 
+export interface RecurringPatternSourceSuggestion {
+  sourceIban: string | null;
+  sourceMerchantName: string | null;
+  paymentCount: number;
+  payments: Array<{
+    id: string;
+    date: string;
+    amount: number;
+    merchantName: string | null;
+    opposingAccountName: string | null;
+    description: string;
+  }>;
+  targetPattern: Pick<
+    RecurringPattern,
+    | 'id'
+    | 'merchantName'
+    | 'opposingIban'
+    | 'patternType'
+    | 'avgAmount'
+    | 'lastAmount'
+    | 'lastDate'
+  >;
+  confidence: number;
+}
+
 export interface RecurringPatternCreate {
   opposingIban?: string | null;
   merchantName?: string | null;

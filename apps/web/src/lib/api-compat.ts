@@ -420,6 +420,21 @@ export const api = {
     return ds.detectRecurringPatterns();
   },
 
+  findRecurringPatternSourceSuggestions: async () => {
+    const ds = getDataService();
+    return ds.findRecurringPatternSourceSuggestions();
+  },
+
+  decideRecurringPatternSource: async (data: {
+    patternId: string;
+    sourceIban: string | null;
+    sourceMerchantName: string | null;
+    decision: 'accepted' | 'dismissed';
+  }) => {
+    const ds = getDataService();
+    await ds.decideRecurringPatternSource(data);
+  },
+
   detectPaymentProvidersWithAI: async () => {
     const ds = getDataService();
     return ds.detectPaymentProvidersWithAI();

@@ -597,6 +597,23 @@ export const en: TranslationKeys = {
     noConfirmedSubscriptions: 'No active subscriptions',
     noConfirmedDescription:
       'Accept suggested subscriptions above to start tracking them here',
+    jevReview: 'Review changes with Jev',
+    jevReviewing: 'Jev is checking...',
+    jevKeyRequired: 'Add your TypeSafe API key in Settings to use Jev',
+    jevNoMatches: 'Jev found no likely changes to existing subscriptions',
+    jevSuggestionsTitle: 'Possible subscription matches',
+    jevSuggestionsDescription:
+      'Jev found payment changes that may belong to an existing subscription. Review each suggestion before bundling it.',
+    jevPaymentCount: 'Jev found {count} recent payments in this series.',
+    jevSuggestedTarget: 'May belong to',
+    jevConfidence: 'match confidence',
+    jevBundle: 'Bundle into subscription',
+    jevNotSame: 'Not the same',
+    jevBundleConfirmTitle: 'Add these payments to the subscription?',
+    jevBundleConfirmDescription:
+      'This payment source will be added to {name}. Any matching unconfirmed suggestion will be combined with it, and future payments from this source will be grouped too.',
+    jevBundled: 'Payments added to the subscription',
+    jevSuggestionDismissed: 'Suggestion dismissed',
   },
   categories: {
     title: 'Categories',

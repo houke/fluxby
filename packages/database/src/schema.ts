@@ -289,6 +289,28 @@ CREATE INDEX IF NOT EXISTS idx_recurring_patterns_profile ON recurring_patterns(
 CREATE INDEX IF NOT EXISTS idx_recurring_patterns_updated_at ON recurring_patterns(updated_at);
 CREATE INDEX IF NOT EXISTS idx_recurring_patterns_merchant ON recurring_patterns(opposing_iban, merchant_name);
 
+-- User-reviewed merchant/account/amount variants that belong to a subscription
+CREATE TABLE IF NOT EXISTS recurring_pattern_source_decisions (
+    id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+    pattern_id TEXT NOT NULL REFERENCES recurring_patterns(id) ON DELETE CASCADE,
+    source_key TEXT NOT NULL,
+    opposing_iban TEXT,
+    merchant_name TEXT,
+    status TEXT NOT NULL CHECK(status IN ('accepted', 'dismissed')),
+    profile_id TEXT NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+    created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now') * 1000),
+    updated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now') * 1000),
+    is_deleted INTEGER NOT NULL DEFAULT 0,
+    device_id TEXT,
+    UNIQUE(profile_id, pattern_id, source_key)
+);
+
+CREATE INDEX IF NOT EXISTS idx_recurring_pattern_source_decisions_pattern
+ON recurring_pattern_source_decisions(pattern_id, profile_id, status, is_deleted);
+
+CREATE INDEX IF NOT EXISTS idx_recurring_pattern_source_decisions_source
+ON recurring_pattern_source_decisions(profile_id, source_key, status, is_deleted);
+
 -- Indexes for performance
 CREATE INDEX IF NOT EXISTS idx_transactions_date ON transactions(date);
 CREATE INDEX IF NOT EXISTS idx_transactions_category ON transactions(category_id);

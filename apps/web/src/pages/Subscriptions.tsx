@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -45,6 +45,7 @@ import {
 } from '@/components/ui/tooltip';
 import { Badge } from '@/components/ui/badge';
 import { api } from '@/lib/api';
+import { getTypeSafeApiKey } from '@/lib/typesafe-client';
 import { cn } from '@/lib/utils';
 import { Currency } from '@/components/ui/currency';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -56,6 +57,7 @@ import type {
   RecurringPattern,
   RecurringStats,
   RecurringCalendarEntry,
+  RecurringPatternSourceSuggestion,
   PatternType,
 } from '@fluxby/shared';
 
@@ -117,6 +119,14 @@ export default function Subscriptions() {
 
   // View state
   const [view, setView] = useState<'list' | 'calendar'>('list');
+  const [mergeSuggestions, setMergeSuggestions] = useState<
+    RecurringPatternSourceSuggestion[]
+  >([]);
+  const hasTypeSafeKey = !!getTypeSafeApiKey();
+
+  useEffect(() => {
+    setMergeSuggestions([]);
+  }, [activeProfileId]);
 
   // Get current month dates for calendar
   const now = new Date();
@@ -173,6 +183,23 @@ export default function Subscriptions() {
   });
 
   // Mutations
+  const jevReviewMutation = useMutation({
+    mutationFn: (_options: { notifyNoMatches: boolean }) =>
+      api.findRecurringPatternSourceSuggestions(),
+    onSuccess: (suggestions, options) => {
+      setMergeSuggestions(suggestions);
+      if (suggestions.length === 0 && options.notifyNoMatches) {
+        toast.info(
+          t.subscriptions?.jevNoMatches ||
+            'Jev did not find likely changes to an existing subscription'
+        );
+      }
+    },
+    onError: (error) => {
+      toast.error(error);
+    },
+  });
+
   const detectMutation = useMutation({
     mutationFn: async () => {
       // Cancel all pending queries to free up database resources
@@ -197,6 +224,58 @@ export default function Subscriptions() {
       });
       toast.success(
         `${result.detected} ${t.subscriptions?.detected || 'new patterns detected'}, ${result.updated} ${t.subscriptions?.updated || 'patterns updated'}`
+      );
+      if (hasTypeSafeKey) {
+        jevReviewMutation.mutate({ notifyNoMatches: false });
+      }
+    },
+    onError: (error) => {
+      toast.error(error);
+    },
+  });
+
+  const bundleSourceMutation = useMutation({
+    mutationFn: api.decideRecurringPatternSource,
+    onSuccess: (_result, input) => {
+      setMergeSuggestions((current) =>
+        current.filter(
+          (suggestion) =>
+            suggestion.targetPattern.id !== input.patternId ||
+            suggestion.sourceIban !== input.sourceIban ||
+            suggestion.sourceMerchantName !== input.sourceMerchantName
+        )
+      );
+      queryClient.invalidateQueries({
+        queryKey: ['recurring-patterns', activeProfileId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['recurring-stats', activeProfileId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['pattern-transactions'],
+      });
+      toast.success(
+        t.subscriptions?.jevBundled || 'Payments added to the subscription'
+      );
+    },
+    onError: (error) => {
+      toast.error(error);
+    },
+  });
+
+  const dismissSourceMutation = useMutation({
+    mutationFn: api.decideRecurringPatternSource,
+    onSuccess: (_result, input) => {
+      setMergeSuggestions((current) =>
+        current.filter(
+          (suggestion) =>
+            suggestion.targetPattern.id !== input.patternId ||
+            suggestion.sourceIban !== input.sourceIban ||
+            suggestion.sourceMerchantName !== input.sourceMerchantName
+        )
+      );
+      toast.info(
+        t.subscriptions?.jevSuggestionDismissed || 'Suggestion dismissed'
       );
     },
     onError: (error) => {
@@ -294,6 +373,31 @@ export default function Subscriptions() {
   // Handlers
   const handleConfirm = (id: string) => {
     confirmMutation.mutate(id);
+  };
+
+  const handleBundleSource = async (
+    suggestion: RecurringPatternSourceSuggestion
+  ) => {
+    const confirmed = await confirm({
+      title:
+        t.subscriptions?.jevBundleConfirmTitle ||
+        'Add these payments to the subscription?',
+      message: (
+        t.subscriptions?.jevBundleConfirmDescription ||
+        'This will include the matching payment source in {name} and group future payments with it.'
+      ).replace(
+        '{name}',
+        capitalizeFirst(suggestion.targetPattern.merchantName)
+      ),
+    });
+    if (!confirmed) return;
+
+    bundleSourceMutation.mutate({
+      patternId: suggestion.targetPattern.id,
+      sourceIban: suggestion.sourceIban,
+      sourceMerchantName: suggestion.sourceMerchantName,
+      decision: 'accepted',
+    });
   };
 
   const handleEdit = useCallback(
@@ -555,7 +659,7 @@ export default function Subscriptions() {
         subtitle={t.subscriptions?.subtitle || 'Manage your recurring payments'}
         dataOnboarding='subscriptions-greeting'
         actions={
-          <div className='flex items-center gap-2'>
+          <div className='flex flex-wrap items-center gap-2'>
             {/* View toggle */}
             <div
               className='flex rounded-md border'
@@ -605,10 +709,36 @@ export default function Subscriptions() {
               </TooltipProvider>
             </div>
 
+            <Button
+              variant='outline'
+              onClick={() => {
+                if (!hasTypeSafeKey) {
+                  toast.info(
+                    t.subscriptions?.jevKeyRequired ||
+                      'Add your TypeSafe API key in Settings to use Jev'
+                  );
+                  return;
+                }
+                setMergeSuggestions([]);
+                jevReviewMutation.mutate({ notifyNoMatches: true });
+              }}
+              disabled={jevReviewMutation.isPending || detectMutation.isPending}
+              data-onboarding='subscriptions-jev-review'
+            >
+              {jevReviewMutation.isPending ? (
+                <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+              ) : (
+                <Sparkles className='mr-2 h-4 w-4' />
+              )}
+              {jevReviewMutation.isPending
+                ? t.subscriptions?.jevReviewing || 'Checking with Jev...'
+                : t.subscriptions?.jevReview || 'Review changes with Jev'}
+            </Button>
+
             {/* Detect button */}
             <Button
               onClick={() => detectMutation.mutate()}
-              disabled={detectMutation.isPending}
+              disabled={detectMutation.isPending || jevReviewMutation.isPending}
               data-onboarding='detect-patterns-button'
             >
               <RefreshCw
@@ -624,6 +754,108 @@ export default function Subscriptions() {
           </div>
         }
       />
+
+      {mergeSuggestions.length > 0 && (
+        <Card data-onboarding='subscriptions-jev-suggestions'>
+          <CardHeader>
+            <CardTitle>
+              {t.subscriptions?.jevSuggestionsTitle ||
+                'Possible subscription matches'}
+            </CardTitle>
+            <CardDescription>
+              {t.subscriptions?.jevSuggestionsDescription ||
+                'Jev found payment changes that may belong to an existing subscription. Review each suggestion before bundling it.'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className='space-y-3'>
+            {mergeSuggestions.map((suggestion) => {
+              const firstPayment = suggestion.payments[0];
+              const sourceName =
+                suggestion.sourceMerchantName || firstPayment?.merchantName;
+              const sourceLabel = sourceName
+                ? capitalizeFirst(sourceName)
+                : suggestion.sourceIban
+                  ? `IBAN •••• ${suggestion.sourceIban.slice(-4)}`
+                  : 'Unknown';
+              const isMutating =
+                bundleSourceMutation.isPending ||
+                dismissSourceMutation.isPending;
+
+              return (
+                <div
+                  key={`${suggestion.targetPattern.id}:${suggestion.sourceIban}:${suggestion.sourceMerchantName}`}
+                  className='rounded-lg border p-4'
+                >
+                  <div className='flex flex-col justify-between gap-3 sm:flex-row sm:items-start'>
+                    <div className='min-w-0 space-y-1'>
+                      <p className='font-medium'>{sourceLabel}</p>
+                      <p className='text-sm text-muted-foreground'>
+                        {(
+                          t.subscriptions?.jevPaymentCount ||
+                          'Jev found {count} recent payments in this series.'
+                        ).replace('{count}', String(suggestion.paymentCount))}
+                      </p>
+                      <p className='text-sm'>
+                        {t.subscriptions?.jevSuggestedTarget || 'May belong to'}{' '}
+                        <span className='font-medium'>
+                          {capitalizeFirst(
+                            suggestion.targetPattern.merchantName
+                          )}
+                        </span>
+                        <span className='text-muted-foreground'>
+                          {' '}
+                          ·{' '}
+                          {getFrequencyLabel(
+                            suggestion.targetPattern.patternType,
+                            t
+                          )}
+                          {' · '}
+                          {Math.round(suggestion.confidence * 100)}%{' '}
+                          {t.subscriptions?.jevConfidence || 'match confidence'}
+                        </span>
+                      </p>
+                      <div className='flex flex-wrap gap-x-4 gap-y-1 pt-1 text-sm text-muted-foreground'>
+                        {suggestion.payments.slice(0, 3).map((payment) => (
+                          <span key={payment.id} className='inline-flex gap-1'>
+                            <span>{formatDate(payment.date)}</span>
+                            <Currency amount={Math.abs(payment.amount)} />
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                    <div className='flex shrink-0 gap-2'>
+                      <Button
+                        size='sm'
+                        onClick={() => handleBundleSource(suggestion)}
+                        disabled={isMutating}
+                      >
+                        <Check className='mr-2 h-4 w-4' />
+                        {t.subscriptions?.jevBundle ||
+                          'Bundle into subscription'}
+                      </Button>
+                      <Button
+                        size='sm'
+                        variant='ghost'
+                        onClick={() =>
+                          dismissSourceMutation.mutate({
+                            patternId: suggestion.targetPattern.id,
+                            sourceIban: suggestion.sourceIban,
+                            sourceMerchantName: suggestion.sourceMerchantName,
+                            decision: 'dismissed',
+                          })
+                        }
+                        disabled={isMutating}
+                      >
+                        {t.subscriptions?.jevNotSame || 'Not the same'}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Stats Cards */}
       <div

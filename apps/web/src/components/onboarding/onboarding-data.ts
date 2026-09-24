@@ -881,6 +881,19 @@ export const onboardingChapters: OnboardingChapter[] = [
         placement: 'bottom',
       },
       {
+        id: 'subscriptions-jev-review',
+        title: {
+          nl: 'Gewijzigde betalingen controleren met Jev',
+          en: 'Review changed payments with Jev',
+        },
+        content: {
+          nl: 'Jev kan betalingen vinden waarbij de naam, IBAN of het bedrag is veranderd. Controleer het voorstel en bevestig zelf of de betaling bij een bestaand abonnement hoort.',
+          en: 'Jev can find payments where the name, IBAN, or amount changed. Review the suggestion and decide whether to add those payments to an existing subscription.',
+        },
+        selector: '[data-onboarding="subscriptions-jev-review"]',
+        placement: 'bottom',
+      },
+      {
         id: 'subscriptions-alerts',
         title: {
           nl: 'Aandachtspunten',

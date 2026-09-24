@@ -525,6 +525,21 @@ export interface TranslationKeys {
     noPendingDescription: string;
     noConfirmedSubscriptions: string;
     noConfirmedDescription: string;
+    jevReview: string;
+    jevReviewing: string;
+    jevKeyRequired: string;
+    jevNoMatches: string;
+    jevSuggestionsTitle: string;
+    jevSuggestionsDescription: string;
+    jevPaymentCount: string;
+    jevSuggestedTarget: string;
+    jevConfidence: string;
+    jevBundle: string;
+    jevNotSame: string;
+    jevBundleConfirmTitle: string;
+    jevBundleConfirmDescription: string;
+    jevBundled: string;
+    jevSuggestionDismissed: string;
   };
   categories: {
     title: string;
@@ -2067,6 +2082,25 @@ export const nl: TranslationKeys = {
     noConfirmedSubscriptions: 'Geen actieve abonnementen',
     noConfirmedDescription:
       'Accepteer voorgestelde abonnementen hierboven om ze hier te volgen',
+    jevReview: 'Wijzigingen met Jev controleren',
+    jevReviewing: 'Jev controleert...',
+    jevKeyRequired:
+      'Voeg je TypeSafe API-sleutel toe via Instellingen om Jev te gebruiken',
+    jevNoMatches:
+      'Jev heeft geen waarschijnlijke wijzigingen bij bestaande abonnementen gevonden',
+    jevSuggestionsTitle: 'Mogelijke matches met abonnementen',
+    jevSuggestionsDescription:
+      'Jev vond betalingswijzigingen die bij een bestaand abonnement kunnen horen. Controleer elke suggestie voordat je deze toevoegt.',
+    jevPaymentCount: 'Jev vond {count} recente betalingen in deze reeks.',
+    jevSuggestedTarget: 'Hoort mogelijk bij',
+    jevConfidence: 'matchzekerheid',
+    jevBundle: 'Toevoegen aan abonnement',
+    jevNotSame: 'Is niet hetzelfde',
+    jevBundleConfirmTitle: 'Deze betalingen toevoegen aan het abonnement?',
+    jevBundleConfirmDescription:
+      'De betaalbron wordt toegevoegd aan {name}. Eventuele onbevestigde dubbele suggesties worden hiermee samengevoegd. Toekomstige betalingen van deze betaalbron worden ook gegroepeerd.',
+    jevBundled: 'Betalingen toegevoegd aan het abonnement',
+    jevSuggestionDismissed: 'Suggestie genegeerd',
   },
   categories: {
     title: 'Categorieën',

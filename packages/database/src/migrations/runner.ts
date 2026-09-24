@@ -337,6 +337,7 @@ export function getLatestMigrationVersion(): number {
 const CRITICAL_TABLES_BY_VERSION: Record<number, string[]> = {
   1: ['accounts', 'transactions', 'categories', 'profiles', 'schema_version'],
   5: ['recurring_patterns'],
+  14: ['recurring_pattern_source_decisions'],
 };
 
 /**
