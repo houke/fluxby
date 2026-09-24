@@ -1148,6 +1148,52 @@ export const PROPOSED_CONTACT_DEMO = {
   amount: -45.0,
 };
 
+/** Recent expenses without a category or an existing merchant rule, for Jev demos. */
+export const DEMO_UNCATEGORIZED_EXPENSES = [
+  {
+    daysAgo: 5,
+    name: 'Salon Nova',
+    iban: 'NL00DEMO0096000001',
+    description: 'Knipbeurt',
+    amount: -38,
+  },
+  {
+    daysAgo: 35,
+    name: 'Salon Nova',
+    iban: 'NL00DEMO0096000001',
+    description: 'Knipbeurt',
+    amount: -38,
+  },
+  {
+    daysAgo: 65,
+    name: 'Salon Nova',
+    iban: 'NL00DEMO0096000001',
+    description: 'Knipbeurt',
+    amount: -42,
+  },
+  {
+    daysAgo: 9,
+    name: 'Bistro Kora',
+    iban: 'NL00DEMO0096000002',
+    description: 'Avondmenu',
+    amount: -54,
+  },
+  {
+    daysAgo: 39,
+    name: 'Bistro Kora',
+    iban: 'NL00DEMO0096000002',
+    description: 'Avondmenu',
+    amount: -47,
+  },
+  {
+    daysAgo: 69,
+    name: 'Bistro Kora',
+    iban: 'NL00DEMO0096000002',
+    description: 'Avondmenu',
+    amount: -51,
+  },
+] as const;
+
 /**
  * Demo recurring patterns for subscriptions feature
  * These are seeded when creating demo data to show subscription management

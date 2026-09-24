@@ -20,10 +20,13 @@ vi.mock('../../apps/web/src/lib/typesafe-client', () => ({
 }));
 
 import { createDataService } from '../../apps/web/src/lib/data-service';
+import { getTypeSafeApiKey } from '../../apps/web/src/lib/typesafe-client';
 
 const PROFILE_ID = '00000000-0000-0000-0000-000000000001';
 
-function createLegacyTauriFixture() {
+function createLegacyTauriFixture(
+  rules: { pattern: string; category_id: string; priority: number }[] = []
+) {
   Object.defineProperty(globalThis, 'window', {
     value: {},
     configurable: true,
@@ -41,7 +44,7 @@ function createLegacyTauriFixture() {
   };
   const db = {
     queryAsync: vi.fn(async (sql: string) => {
-      if (sql.includes('FROM category_rules')) return [];
+      if (sql.includes('FROM category_rules')) return rules;
       if (sql.includes('transaction_count')) {
         return [
           {
@@ -73,6 +76,26 @@ describe('Tauri TypeSafe categorisation database gates', () => {
     suggestCategoriesMock.mockResolvedValue([
       { categoryId: 'category-placeholder', confidence: 0.99 },
     ]);
+  });
+
+  it('still applies deterministic category rules without a Jev key', async () => {
+    vi.mocked(getTypeSafeApiKey).mockReturnValueOnce('');
+    const { db, dataService, category } = createLegacyTauriFixture([
+      {
+        pattern: 'Legacy supermarket',
+        category_id: 'category-groceries',
+        priority: 0,
+      },
+    ]);
+
+    const result = await dataService.applyCategoriesToUncategorized();
+
+    expect(result).toMatchObject({ rulesApplied: 1, aiApplied: 0 });
+    expect(db.runAsync).toHaveBeenCalledWith(
+      expect.stringContaining('UPDATE transactions SET category_id'),
+      expect.arrayContaining([category.id])
+    );
+    expect(suggestCategoriesMock).not.toHaveBeenCalled();
   });
 
   it('sends uncategorised legacy rows to Jev even without transaction profile_id', async () => {

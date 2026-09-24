@@ -429,6 +429,7 @@ export const api = {
     patternId: string;
     sourceIban: string | null;
     sourceMerchantName: string | null;
+    reviewedAmount?: number;
     decision: 'accepted' | 'dismissed';
   }) => {
     const ds = getDataService();

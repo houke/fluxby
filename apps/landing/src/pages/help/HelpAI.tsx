@@ -28,9 +28,10 @@ export default function HelpAI() {
         </h3>
         <p className='mb-2 text-purple-800 dark:text-purple-300'>
           TypeSafe AI is een dienst die gerichte AI-beslissingen teruggeeft als
-          gestructureerde antwoorden — geen chatbot, geen automatische acties.
-          Fluxby gebruikt het als intelligente vervanger voor de fragiele
-          regex-regels die je transacties proberen te matchen.
+          gestructureerde antwoorden. Fluxby past bestaande regels eerst toe;
+          Jev helpt daarna bij betalingen die nog geen match hebben. Sommige
+          categorie- en betaalprovideracties passen een betrouwbaar voorstel
+          automatisch toe wanneer je ze start.
         </p>
         <p className='mb-0 text-purple-800 dark:text-purple-300'>
           <strong>Volledig optioneel.</strong> Zonder API-sleutel werkt Fluxby
@@ -141,6 +142,11 @@ export default function HelpAI() {
       <p className='text-gray-600 dark:text-gray-400'>
         Je kunt de sleutel op elk moment verwijderen. Daarna worden er geen
         AI-verzoeken meer gedaan.
+      </p>
+      <p className='text-gray-600 dark:text-gray-400'>
+        In nieuwe demogegevens blijven betalingen van Salon Nova en Bistro Kora
+        zonder categorie. Gebruik ze om Jev-categorisering en het vinden van
+        terugkerende categorisatieregels te proberen.
       </p>
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>

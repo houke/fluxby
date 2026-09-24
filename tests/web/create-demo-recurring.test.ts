@@ -1,9 +1,41 @@
 import { describe, it, expect } from 'vitest';
 
 // Lightweight test that verifies insertDemoRecurringPatterns uses the latest tx when present
-import { insertDemoRecurringPatterns } from '../../apps/web/src/lib/data-service';
+import {
+  createDataService,
+  insertDemoRecurringPatterns,
+} from '../../apps/web/src/lib/data-service';
+import { DEMO_UNCATEGORIZED_EXPENSES } from '@fluxby/shared';
 
 describe('web createDemoData recurring patterns', () => {
+  it('seeds the shared uncategorized Jev examples', async () => {
+    const transactionRows: unknown[][] = [];
+    const fakeDb = {
+      queryOneAsync: async () => null,
+      runAsync: async (sql: string, params: unknown[]) => {
+        if (sql.includes('INSERT INTO transactions')) {
+          for (let index = 0; index < params.length; index += 17) {
+            transactionRows.push(params.slice(index, index + 17));
+          }
+        }
+        return { changes: 1 };
+      },
+    };
+
+    await createDataService(fakeDb as never).createDemoData('demo-profile');
+
+    for (const expense of DEMO_UNCATEGORIZED_EXPENSES) {
+      expect(
+        transactionRows.some(
+          (row) =>
+            row[5] === expense.name &&
+            row[2] === expense.amount &&
+            row[9] === null
+        )
+      ).toBe(true);
+    }
+  });
+
   it('uses latest transaction date/amount for Netflix (fake db)', async () => {
     const inserts: Array<{ sql: string; params: any[] }> = [];
 

@@ -396,6 +396,7 @@ export default function Subscriptions() {
       patternId: suggestion.targetPattern.id,
       sourceIban: suggestion.sourceIban,
       sourceMerchantName: suggestion.sourceMerchantName,
+      reviewedAmount: suggestion.payments[0]?.amount,
       decision: 'accepted',
     });
   };
@@ -841,6 +842,7 @@ export default function Subscriptions() {
                             patternId: suggestion.targetPattern.id,
                             sourceIban: suggestion.sourceIban,
                             sourceMerchantName: suggestion.sourceMerchantName,
+                            reviewedAmount: suggestion.payments[0]?.amount,
                             decision: 'dismissed',
                           })
                         }

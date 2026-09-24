@@ -3,6 +3,7 @@ import { randomInt, randomUUID } from 'node:crypto';
 import { query, queryOne, run, runMany } from '../db/index.js';
 import {
   buildRecurringPatternFromTemplate,
+  DEMO_UNCATEGORIZED_EXPENSES,
   type Profile,
   type ProfileType,
 } from '@fluxby/shared';
@@ -486,7 +487,7 @@ const INCOME_SOURCES = [
  *           type: integer
  *     responses:
  *       200:
- *         description: Demo data seeded successfully
+ *         description: Demo data seeded, including uncategorized expenses for Jev categorization
  *       404:
  *         description: Profile not found
  */
@@ -1003,6 +1004,23 @@ router.post('/:id/seed-demo', (req, res) => {
       category_id: null,
       payment_method: 'iDEAL',
     });
+
+    for (const expense of DEMO_UNCATEGORIZED_EXPENSES) {
+      transactions.push({
+        date: new Date(Date.now() - expense.daysAgo * 86_400_000)
+          .toISOString()
+          .split('T')[0],
+        amount: expense.amount,
+        type: 'expense',
+        description: expense.description,
+        merchant_name: expense.name,
+        account_id: mainAccountId,
+        opposing_iban: expense.iban,
+        opposing_name: expense.name,
+        category_id: null,
+        payment_method: 'Pinpas',
+      });
+    }
 
     // Sanitize transactions: clamp future dates to today and ensure at most 2 transactions for the current date
     let todayCount = 0;

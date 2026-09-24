@@ -21,6 +21,7 @@ import {
   detectIsPaymentProvider,
   getTypeSafeApiKey,
   askTypeSafe,
+  type Answer,
   type NoulAnswer,
   type Question,
 } from './typesafe-client';
@@ -73,6 +74,8 @@ const UNCATEGORIZED_CATEGORY_SQL = `(t.category_id IS NULL OR TRIM(CAST(t.catego
 
 const RECURRING_MATCH_CONFIDENCE_THRESHOLD = 0.55;
 const MAX_RECURRING_MERGE_CANDIDATES = 12;
+const MAX_RECURRING_OPTIONS_PER_SOURCE = 5;
+const RECURRING_REVIEW_BATCH_SIZE = 3;
 
 function normalizeRecurringMerchantName(name: string | null): string {
   if (!name) return 'null';
@@ -108,6 +111,16 @@ function recurringSourceKey(
 ): string {
   const normalizedIban = opposingIban?.trim().toUpperCase() || 'null';
   return `${normalizedIban}:${normalizeRecurringMerchantName(merchantName)}`;
+}
+
+function recurringReviewDecisionKey(
+  patternSourceKey: string,
+  paymentSourceKey: string,
+  amount: number
+): string {
+  return patternSourceKey === paymentSourceKey
+    ? `amount:${paymentSourceKey}:${Math.abs(amount).toFixed(2)}`
+    : paymentSourceKey;
 }
 
 function parseRecurringSourceKey(sourceKey: string): {
@@ -207,11 +220,17 @@ async function getTransactionsForRecurringPattern(
     `SELECT id, date, amount, description, merchant_name, opposing_account_name,
             opposing_account_iban, category_id, type, account_id, notes, payment_method,
             raw_data, import_hash, payment_provider, address_book_id, created_at
-     FROM transactions
-     WHERE profile_id = ? AND is_deleted = 0
+     FROM transactions t
+     WHERE (t.profile_id = ? OR EXISTS (
+       SELECT 1 FROM accounts a WHERE a.id = t.account_id AND a.profile_id = ?
+     )) AND t.is_deleted = 0
        AND (${conditions.map((condition) => `(${condition.sql})`).join(' OR ')})
-     ORDER BY date DESC`,
-    [profileId, ...conditions.flatMap((condition) => condition.params)]
+     ORDER BY t.date DESC`,
+    [
+      profileId,
+      profileId,
+      ...conditions.flatMap((condition) => condition.params),
+    ]
   );
 
   return rows.map((row) => ({
@@ -5917,7 +5936,21 @@ export function createDataService(db: Database) {
       );
       const decisionsByPair = new Map<string, 'accepted' | 'dismissed'>();
       const acceptedSourceOwners = new Map<string, string>();
+      const canonicalSourceByPatternId = new Map(
+        patterns.map((pattern) => [
+          pattern.id,
+          recurringSourceKey(pattern.opposing_iban, pattern.merchant_name),
+        ])
+      );
       for (const decision of decisions) {
+        // Older price reviews used the canonical source key. Their decision
+        // cannot safely apply to every future amount from that same source.
+        if (
+          canonicalSourceByPatternId.get(decision.pattern_id) ===
+          decision.source_key
+        ) {
+          continue;
+        }
         decisionsByPair.set(
           JSON.stringify([decision.pattern_id, decision.source_key]),
           decision.status
@@ -6009,8 +6042,13 @@ export function createDataService(db: Database) {
             transactionIban,
             transactionName === 'null' ? null : transactionName
           );
+          const decisionKey = recurringReviewDecisionKey(
+            recurringSourceKey(patternIban, patternName),
+            sourceKey,
+            transaction.amount
+          );
           const priorDecision = decisionsByPair.get(
-            JSON.stringify([pattern.id, sourceKey])
+            JSON.stringify([pattern.id, decisionKey])
           );
           if (priorDecision) continue;
 
@@ -6059,7 +6097,32 @@ export function createDataService(db: Database) {
       >();
       const candidateState = shortlist.map((candidate, index) => {
         const questionId = `source_${index}`;
-        const options = [...candidate.patterns.values()];
+        const latestPayment = [...candidate.payments.values()].sort((a, b) =>
+          b.date.localeCompare(a.date)
+        )[0];
+        const options = [...candidate.patterns.values()]
+          .sort((a, b) => {
+            const identityScore = (pattern: typeof a) =>
+              Number(
+                normalizeRecurringMerchantName(pattern.merchant_name) ===
+                  candidate.sourceMerchantName
+              ) *
+                2 +
+              Number(
+                !!candidate.sourceIban &&
+                  candidate.sourceIban ===
+                    (pattern.opposing_iban?.trim().toUpperCase() || null)
+              );
+            const identityDifference = identityScore(b) - identityScore(a);
+            if (identityDifference !== 0) return identityDifference;
+            return (
+              Math.abs(
+                Math.abs(a.last_amount) - Math.abs(latestPayment.amount)
+              ) -
+              Math.abs(Math.abs(b.last_amount) - Math.abs(latestPayment.amount))
+            );
+          })
+          .slice(0, MAX_RECURRING_OPTIONS_PER_SOURCE);
         const criteria: Record<string, string> = {
           none: 'A different service, a new subscription, or not enough evidence to safely group it.',
         };
@@ -6067,7 +6130,7 @@ export function createDataService(db: Database) {
         options.forEach((pattern, optionIndex) => {
           const optionId = `subscription_${optionIndex}`;
           criteria[optionId] =
-            `${pattern.merchant_name || 'Unnamed subscription'}; ${pattern.pattern_type}; usual amount ${Math.abs(pattern.avg_amount).toFixed(2)}; last payment ${pattern.last_date}`;
+            `${(pattern.merchant_name || 'Unnamed subscription').slice(0, 120)}; ${pattern.pattern_type}; usual amount ${Math.abs(pattern.avg_amount).toFixed(2)}; last payment ${pattern.last_date}`;
           optionMap.set(optionId, pattern);
         });
         optionPatterns.set(questionId, optionMap);
@@ -6079,7 +6142,7 @@ export function createDataService(db: Database) {
 
         return {
           series: index + 1,
-          sourceMerchantName: candidate.sourceMerchantName,
+          sourceMerchantName: candidate.sourceMerchantName?.slice(0, 120),
           sourceHasIban: !!candidate.sourceIban,
           payments: [...candidate.payments.values()]
             .sort((a, b) => b.date.localeCompare(a.date))
@@ -6087,12 +6150,12 @@ export function createDataService(db: Database) {
             .map((payment) => ({
               date: payment.date,
               amount: payment.amount,
-              merchantName: payment.merchant_name,
-              opposingAccountName: payment.opposing_account_name,
-              description: payment.description,
+              merchantName: payment.merchant_name?.slice(0, 120),
+              opposingAccountName: payment.opposing_account_name?.slice(0, 120),
+              description: payment.description?.slice(0, 160),
             })),
           possibleSubscriptions: options.map((pattern) => ({
-            merchantName: pattern.merchant_name,
+            merchantName: pattern.merchant_name?.slice(0, 120),
             patternType: pattern.pattern_type,
             avgAmount: pattern.avg_amount,
             lastAmount: pattern.last_amount,
@@ -6110,19 +6173,39 @@ export function createDataService(db: Database) {
         };
       });
 
-      const response = await askTypeSafe(
-        { paymentSeries: candidateState },
-        questions,
-        tsKey
-      );
+      const answers: Record<string, Answer> = {};
+      for (
+        let offset = 0;
+        offset < shortlist.length;
+        offset += RECURRING_REVIEW_BATCH_SIZE
+      ) {
+        const batch = candidateState.slice(
+          offset,
+          offset + RECURRING_REVIEW_BATCH_SIZE
+        );
+        const batchQuestions = Object.fromEntries(
+          batch.map((_, batchIndex) => {
+            const questionId = `source_${offset + batchIndex}`;
+            return [questionId, questions[questionId]];
+          })
+        );
+        const response = await askTypeSafe(
+          { paymentSeries: batch },
+          batchQuestions,
+          tsKey
+        );
+        Object.assign(answers, response.answers);
+      }
 
       const suggestions: RecurringPatternSourceSuggestion[] = [];
       shortlist.forEach((candidate, index) => {
-        const answer = response.answers[`source_${index}`];
+        const answer = answers[`source_${index}`];
         if (
           answer?.type !== 'choice' ||
           answer.choice === 'none' ||
-          answer.confidence < RECURRING_MATCH_CONFIDENCE_THRESHOLD
+          !Number.isFinite(answer.confidence) ||
+          answer.confidence < RECURRING_MATCH_CONFIDENCE_THRESHOLD ||
+          answer.confidence > 1
         ) {
           return;
         }
@@ -6168,6 +6251,7 @@ export function createDataService(db: Database) {
       patternId: string;
       sourceIban: string | null;
       sourceMerchantName: string | null;
+      reviewedAmount?: number;
       decision: 'accepted' | 'dismissed';
     }): Promise<void> {
       const pid = profileId();
@@ -6181,21 +6265,42 @@ export function createDataService(db: Database) {
         throw new Error('A merchant name or IBAN is required');
       }
 
-      const pattern = await db.queryOneAsync<{ id: string }>(
-        `SELECT id FROM recurring_patterns
+      const pattern = await db.queryOneAsync<{
+        id: string;
+        opposing_iban: string | null;
+        merchant_name: string | null;
+      }>(
+        `SELECT id, opposing_iban, merchant_name FROM recurring_patterns
          WHERE id = ? AND profile_id = ? AND is_deleted = 0 AND is_dismissed = 0`,
         [data.patternId, pid]
       );
       if (!pattern) throw new Error('Subscription could not be found');
 
       const sourceKey = recurringSourceKey(sourceIban, sourceMerchantName);
-      if (data.decision === 'accepted') {
+      const patternSourceKey = recurringSourceKey(
+        pattern.opposing_iban,
+        pattern.merchant_name
+      );
+      const isPriceReview = sourceKey === patternSourceKey;
+      if (
+        isPriceReview &&
+        (data.reviewedAmount === undefined ||
+          !Number.isFinite(data.reviewedAmount))
+      ) {
+        throw new Error('The reviewed payment amount is required');
+      }
+      const decisionKey = recurringReviewDecisionKey(
+        patternSourceKey,
+        sourceKey,
+        data.reviewedAmount ?? 0
+      );
+      if (data.decision === 'accepted' && !isPriceReview) {
         const existingOwner = await db.queryOneAsync<{ pattern_id: string }>(
           `SELECT pattern_id FROM recurring_pattern_source_decisions
            WHERE profile_id = ? AND source_key = ? AND status = 'accepted'
              AND is_deleted = 0 AND pattern_id != ?
            LIMIT 1`,
-          [pid, sourceKey, data.patternId]
+          [pid, decisionKey, data.patternId]
         );
         if (existingOwner) {
           throw new Error('This payment series is already bundled elsewhere');
@@ -6204,7 +6309,7 @@ export function createDataService(db: Database) {
 
       const now = Date.now();
       const pendingDuplicateRows =
-        data.decision === 'accepted'
+        data.decision === 'accepted' && !isPriceReview
           ? await db.queryAsync<{
               id: string;
               opposing_iban: string | null;
@@ -6242,7 +6347,7 @@ export function createDataService(db: Database) {
           [
             crypto.randomUUID(),
             data.patternId,
-            sourceKey,
+            decisionKey,
             sourceIban,
             sourceMerchantName,
             data.decision,
@@ -6397,6 +6502,7 @@ export function createDataService(db: Database) {
          FROM recurring_pattern_source_decisions d
          JOIN recurring_patterns p ON p.id = d.pattern_id
          WHERE d.profile_id = ? AND d.status = 'accepted' AND d.is_deleted = 0
+           AND d.source_key NOT LIKE 'amount:%'
            AND p.profile_id = ? AND p.is_deleted = 0 AND p.is_dismissed = 0`,
         [pid, pid]
       );
@@ -6437,13 +6543,14 @@ export function createDataService(db: Database) {
           row.target_iban,
           row.target_merchant_name
         );
+        // A decision for the canonical source was a price review, not an
+        // approved identity alias. Older rows used this same source key.
+        if (sourceKey === canonicalKey) continue;
         approvedPatternByCanonicalKey.set(canonicalKey, {
           id: row.pattern_id,
           is_dismissed: 0,
         });
         approvedPatternIds.add(row.pattern_id);
-
-        if (sourceKey === canonicalKey) continue;
         const sourceGroup = merchantGroups.get(sourceKey);
         if (!sourceGroup) continue;
         const canonicalGroup = merchantGroups.get(canonicalKey) ?? [];
@@ -6786,7 +6893,8 @@ export function createDataService(db: Database) {
               );
             }
 
-            // Find an existing pattern with a close amount and the same IBAN.
+            // Preserve the original deterministic matching when Jev is not
+            // configured. Its review threshold only applies to opt-in reviews.
             let existing: {
               id: string;
               is_dismissed: number;
@@ -6796,9 +6904,11 @@ export function createDataService(db: Database) {
               approvedPatternByCanonicalKey.get(group.source_key) ?? null;
             if (!existing) {
               for (const pattern of existingPatterns) {
-                // Do not silently absorb a changed or newly available IBAN;
-                // leave that identity change for Jev and the user's review.
-                const ibanMatch = pattern.opposing_iban === group.opposing_iban;
+                const ibanMatch = tsKeyForRecurring
+                  ? pattern.opposing_iban === group.opposing_iban
+                  : pattern.opposing_iban === group.opposing_iban ||
+                    pattern.opposing_iban === null ||
+                    group.opposing_iban === null;
 
                 if (!ibanMatch) continue;
 
@@ -6807,7 +6917,7 @@ export function createDataService(db: Database) {
                 if (
                   absExisting > 0 &&
                   Math.abs(absNew - absExisting) / absExisting <=
-                    PRICE_CHANGE_THRESHOLD
+                    (tsKeyForRecurring ? PRICE_CHANGE_THRESHOLD : 0.2)
                 ) {
                   existing = pattern;
                   break;
@@ -6828,6 +6938,7 @@ export function createDataService(db: Database) {
               // New charges with a material price change should remain visible
               // to Jev for review before updating this subscription's metrics.
               if (
+                tsKeyForRecurring &&
                 !approvedPatternByCanonicalKey.has(group.source_key) &&
                 !!existing.last_date &&
                 existing.last_amount !== undefined &&
@@ -8075,6 +8186,7 @@ export function createDataService(db: Database) {
         DEFAULT_DEMO_BUDGETS,
         DEFAULT_PAYMENT_PROVIDER_RULES,
         PROPOSED_CONTACT_DEMO,
+        DEMO_UNCATEGORIZED_EXPENSES,
         DEMO_RECURRING_PATTERNS,
       } = await import('@fluxby/shared');
 
@@ -8705,6 +8817,24 @@ export function createDataService(db: Database) {
           payment_method: 'iDEAL',
           payment_provider: null,
         });
+
+        for (const expense of DEMO_UNCATEGORIZED_EXPENSES) {
+          transactions.push({
+            date: new Date(Date.now() - expense.daysAgo * 86_400_000)
+              .toISOString()
+              .split('T')[0],
+            amount: expense.amount,
+            type: 'expense',
+            description: expense.description,
+            merchant_name: expense.name,
+            account_id: mainAccountId,
+            opposing_iban: expense.iban,
+            opposing_name: expense.name,
+            category_id: null,
+            payment_method: 'Pinpas',
+            payment_provider: null,
+          });
+        }
 
         // Sanitize transactions: ensure at most 2 transactions for today
         let todayCount = 0;

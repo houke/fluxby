@@ -1,6 +1,7 @@
 import request from 'supertest';
 import app from '../../apps/api/src/app';
-import { run, queryOne } from '../../apps/api/src/db/index.js';
+import { run, query, queryOne } from '../../apps/api/src/db/index.js';
+import { DEMO_UNCATEGORIZED_EXPENSES } from '@fluxby/shared';
 
 describe('Seed demo recurring patterns integration', () => {
   it('should set recurring pattern last_amount to latest transaction amount for Netflix', async () => {
@@ -16,6 +17,21 @@ describe('Seed demo recurring patterns integration', () => {
       .post(`/api/profiles/${profileId}/seed-demo`)
       .send();
     expect(seedRes.status).toBe(200);
+
+    const uncategorizedExamples = query<{
+      merchant_name: string;
+      category_id: number | null;
+    }>(
+      `SELECT merchant_name, category_id FROM transactions
+       WHERE profile_id = ? AND merchant_name IN ('Salon Nova', 'Bistro Kora')`,
+      [profileId]
+    );
+    expect(uncategorizedExamples).toHaveLength(
+      DEMO_UNCATEGORIZED_EXPENSES.length
+    );
+    expect(uncategorizedExamples.every((row) => row.category_id === null)).toBe(
+      true
+    );
 
     // Insert a new Netflix transaction AFTER seed-demo so it's definitely the latest
     const accountRow = queryOne<{ id: number }>(
