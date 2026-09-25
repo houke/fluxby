@@ -1562,7 +1562,7 @@ export const nl: LandingTranslationKeys = {
         'Wanneer je handmatig een transactie categoriseert, kan Fluxby voorstellen een regel te maken voor vergelijkbare toekomstige transacties.',
       supportedTitle: 'Beschikbare CSV-opties',
       supportedText:
-        'Er zijn presets voor ING en ASN Bank. Kies voor andere CSV-bestanden Andere / handmatig en koppel de verplichte kolommen Datum, Bedrag en Omschrijving. Controleer het voorbeeld en eventuele overgeslagen regels voordat je de import bevestigt. IBAN, tegenpartij en saldo zijn optionele kolommen.',
+        'Er zijn presets voor ING en ASN Bank. Kies voor andere CSV-bestanden Andere / handmatig en koppel de verplichte kolommen Datum, Bedrag en Omschrijving. Controleer het voorbeeld en eventuele overgeslagen regels voordat je de import bevestigt. Optionele velden zijn IBAN, tegenpartij, saldo, richting, betaalmethode en notities.',
     },
     budgeting: {
       title: 'Maandbudgetten beheren',
@@ -1600,9 +1600,10 @@ export const nl: LandingTranslationKeys = {
         'Na een import controleert Fluxby op wekelijkse, maandelijkse, kwartaal- en jaarpatronen. Je kunt de detectie ook zelf starten op de pagina Abonnementen. Beoordeel de resultaten, want niet elk patroon is een abonnement.',
       jevReviewTitle: 'Gewijzigde betalingen controleren met Jev',
       jevReviewText:
-        'Jev kan een terugkerende betaling herkennen als de naam, IBAN of het bedrag is veranderd. Je krijgt een voorstel om deze betalingen aan een bestaand abonnement toe te voegen. Controleer en bevestig elke match zelf; Jev wijzigt je abonnementen niet automatisch.',
+        'Als je TypeSafe hebt ingesteld, kan Jev matches voorstellen wanneer de naam, IBAN of het bedrag van een terugkerende betaling verandert. Beoordeel en bevestig elke match zelf; Jev wijzigt abonnementen niet automatisch.',
       step1: 'Importeer je transacties via de Import pagina',
-      step2: 'Bekijk gevonden patronen op de pagina Abonnementen en start daar zo nodig de detectie',
+      step2:
+        'Bekijk gevonden patronen op de pagina Abonnementen en start daar zo nodig de detectie',
       step3: 'Bevestig gedetecteerde abonnementen of wijs ze af',
       step4: 'Bekijk je totale maandelijkse vaste lasten in het overzicht',
       confirmTitle: 'Abonnementen bevestigen of afwijzen',
@@ -1618,7 +1619,7 @@ export const nl: LandingTranslationKeys = {
         'Bevestig alleen echte abonnementen die je wilt volgen. Dit houdt je overzicht overzichtelijk en je maandelijkse totaal nauwkeurig.',
       priceAlertsTitle: 'Prijs- en betaalalerts beoordelen',
       priceAlertsText:
-        'Op de pagina Abonnementen toont Fluxby alerts voor prijswijzigingen, gemiste betalingen en verouderde patronen. Dit zijn meldingen in de app, geen pushmeldingen. Je kunt ze beoordelen en accepteren of wegklikken.',
+        'Bekijk op de pagina Abonnementen meldingen over prijswijzigingen, gemiste betalingen en verouderde patronen. Gebruik de beschikbare actie om een prijswijziging te accepteren of een melding te negeren.',
       priceIncreaseTitle: 'Prijsstijging',
       priceIncreaseText:
         'Een rood pijltje omhoog geeft aan dat een abonnement duurder is geworden. Dit kan betekenen dat de dienst haar prijzen heeft verhoogd.',
@@ -1642,8 +1643,8 @@ export const nl: LandingTranslationKeys = {
       localFirstTitle: 'Lokale opslag',
       localFirstText:
         'Je transacties, budgetten en categorieën staan standaard in een lokale database. Als je apparaten synchroniseert, worden gegevens tussen die apparaten gedeeld. Als je optionele TypeSafe AI gebruikt, worden beperkte gegevens voor die aanvraag naar TypeSafe gestuurd; zie Slimme AI-functies.',
-      noCloud: 'Geen cloud opslag',
-      noCloudDesc: 'Geen centrale opslag van je financiële database',
+      noCloud: 'Geen centrale database',
+      noCloudDesc: 'Je financiële database wordt niet centraal opgeslagen',
       noTracking: 'Geen advertentietracking',
       noTrackingDesc:
         'Je financiële gegevens worden niet voor advertenties gebruikt',
@@ -2824,8 +2825,7 @@ Object.assign(nl, {
       overviewText:
         'Beheer rekeningen via Instellingen > Rekeningen. Rekeningkaarten en saldi zijn ook zichtbaar op het Dashboard en de pagina Transacties.',
       addTitle: 'Een rekening toevoegen',
-      addText:
-        'Zo voeg je zelf een rekening toe via Instellingen > Rekeningen:',
+      addText: 'Zo voeg je handmatig een rekening toe:',
       addStep1: 'Ga naar Instellingen > Rekeningen',
       addStep2: 'Klik op Rekening toevoegen',
       addStep3: 'Vul een naam en rekeningtype in; de IBAN is optioneel',
@@ -3070,9 +3070,9 @@ Object.assign(nl, {
         {
           question: 'Kost TypeSafe geld?',
           answerPrefix:
-            'Tegoed en tarieven van TypeSafe kunnen veranderen. Controleer de actuele voorwaarden en prijzen bij',
+            'Tegoed en tarieven van TypeSafe kunnen veranderen. Controleer de actuele informatie op',
           linkLabel: 'typesafe.ai',
-          answerSuffix: 'voor de actuele prijzen.',
+          answerSuffix: '.',
         },
         {
           question: 'Wat is “Jev”?',

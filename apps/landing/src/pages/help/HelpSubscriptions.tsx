@@ -66,6 +66,9 @@ export default function HelpSubscriptions() {
       <h2>{t.helpCenter?.subscriptions?.monthlyOverviewTitle}</h2>
       <p>{t.helpCenter?.subscriptions?.monthlyOverviewText}</p>
 
+      <h2>{t.helpCenter?.subscriptions?.viewsTitle}</h2>
+      <p>{t.helpCenter?.subscriptions?.viewsText}</p>
+
       <div className='not-prose rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-900/20'>
         <h4 className='mb-2 flex items-center gap-2 text-green-800 dark:text-green-200'>
           <span>✅</span>
@@ -75,9 +78,6 @@ export default function HelpSubscriptions() {
           {t.helpCenter?.subscriptions?.bestPracticeText}
         </p>
       </div>
-
-      <h2>{t.helpCenter?.subscriptions?.viewsTitle}</h2>
-      <p>{t.helpCenter?.subscriptions?.viewsText}</p>
     </article>
   );
 }

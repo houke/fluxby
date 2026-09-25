@@ -1326,7 +1326,7 @@ export const en: LandingTranslationKeys = {
         'After you categorize a transaction manually, Fluxby may offer to create a rule for similar future transactions.',
       supportedTitle: 'Available CSV options',
       supportedText:
-        'Presets are available for ING and ASN Bank. For other CSV files, choose Other / Manual and map the required Date, Amount, and Description columns. Review the preview and any skipped rows before confirming. IBAN, counterparty, and balance columns are optional.',
+        'Presets are available for ING and ASN Bank. For other CSV files, choose Other / Manual and map the required Date, Amount, and Description columns. Review the preview and any skipped rows before confirming. Optional fields include IBAN, counterparty, balance, direction, payment method, and notes.',
     },
     budgeting: {
       title: 'Managing monthly budgets',
@@ -1362,9 +1362,10 @@ export const en: LandingTranslationKeys = {
         'After an import, Fluxby checks for weekly, monthly, quarterly, and yearly patterns. You can also run detection from the Subscriptions page. Review the results because not every pattern is a subscription.',
       jevReviewTitle: 'Review changed payments with Jev',
       jevReviewText:
-        'Jev can recognize recurring payments when the merchant name, IBAN, or amount changes. It suggests adding those payments to an existing subscription. Review and confirm each match yourself; Jev never changes subscriptions automatically.',
+        'With TypeSafe set up, Jev can suggest matches when a recurring payment’s merchant name, IBAN, or amount changes. Review and confirm each match yourself; Jev does not change subscriptions automatically.',
       step1: 'Import your transactions via the Import page',
-      step2: 'Review detected patterns on the Subscriptions page; run detection there if needed',
+      step2:
+        'Review detected patterns on the Subscriptions page; run detection there if needed',
       step3: 'Confirm detected subscriptions or dismiss them',
       step4: 'View your total monthly fixed costs in the overview',
       confirmTitle: 'Confirming or dismissing subscriptions',
@@ -1379,7 +1380,7 @@ export const en: LandingTranslationKeys = {
         'Only confirm actual subscriptions you want to track. This keeps your overview clean and your monthly total accurate.',
       priceAlertsTitle: 'Review price and payment alerts',
       priceAlertsText:
-        'The Subscriptions page shows alerts for price changes, missed payments, and stale patterns. These are in-app alerts, not push notifications. Review and accept or dismiss them there.',
+        'Review alerts for price changes, missed payments, and stale patterns on the Subscriptions page. Use the available action to accept a price change or dismiss an alert.',
       priceIncreaseTitle: 'Price increase',
       priceIncreaseText:
         'A red arrow up indicates that a subscription has become more expensive. This may mean the service has raised its prices.',
@@ -1403,8 +1404,8 @@ export const en: LandingTranslationKeys = {
       localFirstTitle: 'Local storage',
       localFirstText:
         'Your transactions, budgets, and categories are stored in a local database by default. Sync shares data between paired devices. Optional TypeSafe AI sends limited data to TypeSafe for the request; see Smart AI features.',
-      noCloud: 'No cloud storage',
-      noCloudDesc: 'No central storage for your financial database',
+      noCloud: 'No central database',
+      noCloudDesc: 'Your financial database is not stored centrally',
       noTracking: 'No ad tracking',
       noTrackingDesc: 'Your financial data is not used for advertising',
       fullControl: 'Full control',
@@ -1572,8 +1573,7 @@ export const en: LandingTranslationKeys = {
       overviewText:
         'Manage accounts in Settings > Accounts. Account cards and balances also appear on the Dashboard and Transactions pages.',
       addTitle: 'Adding an account',
-      addText:
-        'To add an account manually, open Settings > Accounts:',
+      addText: 'To add an account manually:',
       addStep1: 'Go to Settings > Accounts',
       addStep2: 'Click "Add Account"',
       addStep3: 'Enter a name and account type; the IBAN is optional',
@@ -2612,10 +2612,10 @@ Object.assign(en, {
       ...en.helpCenter?.transactions,
       manualMethod: 'Manual',
       manualMethodDesc:
-        'Open a transaction, then choose a category from the category menu.',
+        'Click the transaction’s category label and choose a category.',
       autoMethod: 'Automatic categorization',
       autoMethodDesc:
-        'Create rules that assign categories based on transaction descriptions.',
+        'Create rules that assign categories based on words in transaction descriptions. Existing rules run on future transactions.',
       proTip: 'Tip',
       proTipText:
         'After you categorize a transaction, Fluxby can offer to create a rule for similar future imports.',
@@ -2908,9 +2908,9 @@ Object.assign(en, {
         {
           question: 'Does TypeSafe cost money?',
           answerPrefix:
-            'TypeSafe credits and pricing can change. Check the current terms and pricing at',
+            'TypeSafe credits and pricing can change. Check the current details at',
           linkLabel: 'typesafe.ai',
-          answerSuffix: 'for current pricing.',
+          answerSuffix: '.',
         },
         {
           question: 'What is “Jev”?',
