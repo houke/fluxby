@@ -141,11 +141,7 @@ export function SpotlightProvider({ children }: SpotlightProviderProps) {
       title: t.nav.dashboard,
       icon: LayoutDashboard,
       group: 'pages',
-      keywords: t.spotlight?.keywords?.dashboard || [
-        'home',
-        'overview',
-        'main',
-      ],
+      keywords: t.spotlight.keywords.dashboard,
       onSelect: () => navigate('/dashboard'),
     },
     {
@@ -153,11 +149,7 @@ export function SpotlightProvider({ children }: SpotlightProviderProps) {
       title: t.nav.transactions,
       icon: ArrowLeftRight,
       group: 'pages',
-      keywords: t.spotlight?.keywords?.transactions || [
-        'payments',
-        'history',
-        'betalingen',
-      ],
+      keywords: t.spotlight.keywords.transactions,
       onSelect: () => navigate('/transactions'),
     },
     {
@@ -165,12 +157,7 @@ export function SpotlightProvider({ children }: SpotlightProviderProps) {
       title: t.nav.analytics,
       icon: BarChart3,
       group: 'pages',
-      keywords: t.spotlight?.keywords?.analytics || [
-        'charts',
-        'reports',
-        'statistics',
-        'grafieken',
-      ],
+      keywords: t.spotlight.keywords.analytics,
       onSelect: () => navigate('/analytics'),
     },
     {
@@ -178,37 +165,23 @@ export function SpotlightProvider({ children }: SpotlightProviderProps) {
       title: t.nav.budgets,
       icon: Wallet,
       group: 'pages',
-      keywords: t.spotlight?.keywords?.budgets || [
-        'spending',
-        'limits',
-        'budget',
-      ],
+      keywords: t.spotlight.keywords.budgets,
       onSelect: () => navigate('/budgets'),
     },
     {
       id: 'page-subscriptions',
-      title: t.nav.subscriptions || 'Subscriptions',
+      title: t.nav.subscriptions,
       icon: CalendarClock,
       group: 'pages',
-      keywords: t.spotlight?.keywords?.subscriptions || [
-        'recurring',
-        'patterns',
-        'abonnementen',
-        'herhalend',
-      ],
+      keywords: t.spotlight.keywords.subscriptions,
       onSelect: () => navigate('/subscriptions'),
     },
     {
       id: 'page-addressbook',
-      title: t.nav.addressBook || 'Address Book',
+      title: t.nav.addressBook,
       icon: BookUser,
       group: 'pages',
-      keywords: t.spotlight?.keywords?.addressBook || [
-        'contacts',
-        'people',
-        'accounts',
-        'contacten',
-      ],
+      keywords: t.spotlight.keywords.addressBook,
       onSelect: () => navigate('/addressbook'),
     },
     {
@@ -216,11 +189,7 @@ export function SpotlightProvider({ children }: SpotlightProviderProps) {
       title: t.nav.categories,
       icon: Tags,
       group: 'pages',
-      keywords: t.spotlight?.keywords?.categories || [
-        'labels',
-        'tags',
-        'categorieën',
-      ],
+      keywords: t.spotlight.keywords.categories,
       onSelect: () => navigate('/categories'),
     },
     {
@@ -228,11 +197,7 @@ export function SpotlightProvider({ children }: SpotlightProviderProps) {
       title: t.nav.import,
       icon: Upload,
       group: 'pages',
-      keywords: t.spotlight?.keywords?.import || [
-        'csv',
-        'upload',
-        'importeren',
-      ],
+      keywords: t.spotlight.keywords.import,
       onSelect: () => navigate('/import'),
     },
     {
@@ -240,11 +205,7 @@ export function SpotlightProvider({ children }: SpotlightProviderProps) {
       title: t.nav.settings,
       icon: Settings,
       group: 'pages',
-      keywords: t.spotlight?.keywords?.settings || [
-        'preferences',
-        'options',
-        'instellingen',
-      ],
+      keywords: t.spotlight.keywords.settings,
       onSelect: () => navigate('/settings'),
     },
     {
@@ -252,90 +213,56 @@ export function SpotlightProvider({ children }: SpotlightProviderProps) {
       title: t.nav.help,
       icon: HelpCircle,
       group: 'pages',
-      keywords: t.spotlight?.keywords?.help || [
-        'support',
-        'faq',
-        'docs',
-        'hulp',
-      ],
+      keywords: t.spotlight.keywords.help,
       onSelect: () => navigate('/help'),
     },
     // Actions
     {
       id: 'action-toggle-theme',
-      title: t.spotlight?.toggleDarkMode || 'Toggle dark mode',
+      title: t.spotlight.toggleDarkMode,
       subtitle: isDarkMode()
-        ? t.spotlight?.switchToLight || 'Switch to light mode'
-        : t.spotlight?.switchToDark || 'Switch to dark mode',
+        ? t.spotlight.switchToLight
+        : t.spotlight.switchToDark,
       icon: isDarkMode() ? Sun : Moon,
       group: 'actions',
-      keywords: t.spotlight?.keywords?.theme || [
-        'dark',
-        'light',
-        'theme',
-        'mode',
-        'thema',
-      ],
+      keywords: t.spotlight.keywords.theme,
       shortcut: '⇧⌘D',
       onSelect: toggleTheme,
     },
     {
       id: 'action-toggle-privacy',
-      title: t.spotlight?.togglePrivacy || 'Toggle privacy mode',
+      title: t.spotlight.togglePrivacy,
       subtitle: isPrivacyMode
-        ? t.common?.disablePrivacy || 'Show sensitive data'
-        : t.common?.enablePrivacy || 'Hide sensitive data',
+        ? t.common.disablePrivacy
+        : t.common.enablePrivacy,
       icon: isPrivacyMode ? Eye : EyeOff,
       group: 'actions',
-      keywords: t.spotlight?.keywords?.privacy || [
-        'privacy',
-        'blur',
-        'hide',
-        'show',
-      ],
+      keywords: t.spotlight.keywords.privacy,
       shortcut: '⇧⌘P',
       onSelect: togglePrivacyMode,
     },
     {
       id: 'action-add-budget',
-      title: t.spotlight?.addBudget || 'Add budget',
+      title: t.spotlight.addBudget,
       icon: Plus,
       group: 'actions',
-      keywords: t.spotlight?.keywords?.budget || [
-        'new',
-        'create',
-        'budget',
-        'toevoegen',
-      ],
+      keywords: t.spotlight.keywords.budget,
       onSelect: () => navigate('/budgets?action=add'),
     },
     {
       id: 'action-add-category',
-      title: t.spotlight?.addCategory || 'Add category',
+      title: t.spotlight.addCategory,
       icon: Plus,
       group: 'actions',
-      keywords: t.spotlight?.keywords?.category || [
-        'new',
-        'create',
-        'category',
-        'categorie',
-        'toevoegen',
-      ],
+      keywords: t.spotlight.keywords.category,
       onSelect: () => navigate('/categories'),
     },
     {
       id: 'action-add-address',
-      title: t.spotlight?.addContact || 'Add contact',
+      title: t.spotlight.addContact,
       icon: Plus,
       group: 'actions',
-      keywords: t.spotlight?.keywords?.contact || [
-        'new',
-        'create',
-        'contact',
-        'address',
-        'adresboek',
-        'toevoegen',
-      ],
+      keywords: t.spotlight.keywords.contact,
       onSelect: () => navigate('/addressbook'),
     },
   ];

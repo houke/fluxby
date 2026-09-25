@@ -16,6 +16,7 @@ import {
   type PatternType,
 } from '@fluxby/shared';
 import { readFromOPFSSync, isSettingsCacheInitialized } from '@fluxby/database';
+import { getStoredLanguage, translations } from './i18n';
 
 // Note: getApiBaseUrl/setApiBaseUrl are only needed for HTTP API mode (api-http.ts)
 // The local-first OPFS mode doesn't need these functions
@@ -1270,7 +1271,14 @@ export const api = {
       }
     ).db?.runAsync?.(
       'INSERT OR REPLACE INTO shared_ibans (id, iban, provider_name, created_at, updated_at) VALUES (?, ?, ?, ?, ?)',
-      [id, iban, providerName || 'Unknown Provider', now, now]
+      [
+        id,
+        iban,
+        providerName ||
+          translations[getStoredLanguage()].common.unknownProvider,
+        now,
+        now,
+      ]
     );
     return { success: true };
   },

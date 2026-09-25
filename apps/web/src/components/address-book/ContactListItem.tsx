@@ -132,9 +132,7 @@ export const ContactListItem = memo(function ContactListItem({
             <Input
               value={editContactDescription}
               onChange={(e) => setEditContactDescription(e.target.value)}
-              placeholder={
-                t.settings.addressBook.descriptionPlaceholder || 'Omschrijving'
-              }
+              placeholder={t.settings.addressBook.descriptionPlaceholder}
               className='flex-1'
             />
             <Popover
@@ -159,8 +157,7 @@ export const ContactListItem = memo(function ContactListItem({
                     </PopoverTrigger>
                   </TooltipTrigger>
                   <TooltipContent>
-                    {t.addressBook?.assignToExisting ||
-                      'Assign to existing contact'}
+                    {t.addressBook?.assignToExisting}
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -172,9 +169,7 @@ export const ContactListItem = memo(function ContactListItem({
               >
                 <div className='space-y-2'>
                   <Input
-                    placeholder={
-                      t.addressBook?.searchContacts || 'Search contacts...'
-                    }
+                    placeholder={t.addressBook?.searchContacts}
                     value={assignSearchTerm}
                     onChange={(e) => setAssignSearchTerm(e.target.value)}
                     className='h-8 text-sm'
@@ -220,8 +215,7 @@ export const ContactListItem = memo(function ContactListItem({
                           ))
                         ) : (
                           <div className='py-4 text-center text-sm text-muted-foreground'>
-                            {t.addressBook?.noContactsFound ||
-                              'No contacts found'}
+                            {t.addressBook?.noContactsFound}
                           </div>
                         );
                       })()}
@@ -287,7 +281,7 @@ export const ContactListItem = memo(function ContactListItem({
                   {contact.iban}
                   {isMergedWithMultipleIbans && (
                     <span className='ml-1 font-medium text-purple-500'>
-                      {(t.addressBook?.moreIbans || '+{count} more').replace(
+                      {t.addressBook?.moreIbans?.replace(
                         '{count}',
                         String((contact.ibans?.length || 0) - 1)
                       )}
@@ -297,12 +291,12 @@ export const ContactListItem = memo(function ContactListItem({
                 <div className='mt-1 flex items-center gap-2'>
                   {contact.isMerged && (
                     <span className='rounded bg-purple-100 px-1.5 py-0.5 text-xs font-medium text-purple-700 dark:bg-purple-900/30 dark:text-purple-400'>
-                      {t.addressBook?.mergedBadge || 'Samengevoegd'}
+                      {t.addressBook?.mergedBadge}
                     </span>
                   )}
                   {hasSharedIban && (
                     <span className='rounded bg-amber-100 px-1.5 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'>
-                      {t.addressBook?.sharedIban || 'Gedeelde IBAN'}
+                      {t.addressBook?.sharedIban}
                     </span>
                   )}
                 </div>
@@ -381,7 +375,7 @@ export const ContactListItem = memo(function ContactListItem({
                 >
                   <div className='min-w-0 flex-1'>
                     <p className='font-medium break-words'>
-                      {tx.description || t.transactions?.unknown || 'Onbekend'}
+                      {tx.description || t.transactions?.unknown}
                     </p>
                     <p className='text-xs text-muted-foreground'>
                       {new Date(tx.date).toLocaleDateString()}
@@ -401,7 +395,7 @@ export const ContactListItem = memo(function ContactListItem({
             </div>
           ) : (
             <div className='py-4 text-center text-sm text-muted-foreground'>
-              {t.addressBook?.noTransactions || 'No transactions found'}
+              {t.addressBook?.noTransactions}
             </div>
           )}
         </div>

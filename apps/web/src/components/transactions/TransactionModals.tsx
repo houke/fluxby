@@ -70,6 +70,7 @@ export interface CreateContactModalProps {
     common: {
       cancel: string;
       add?: string;
+      iban: string;
     };
   };
 }
@@ -92,12 +93,9 @@ export const CreateContactModal = memo(function CreateContactModal({
     >
       <DialogContent className='max-w-md'>
         <DialogHeader>
-          <DialogTitle>
-            {t.addressBook?.createNewContact || 'Nieuw contact aanmaken'}
-          </DialogTitle>
+          <DialogTitle>{t.addressBook?.createNewContact}</DialogTitle>
           <DialogDescription>
-            {t.addressBook?.createNewContactWithIban ||
-              'Nieuw contact aanmaken met IBAN'}
+            {t.addressBook?.createNewContactWithIban}
           </DialogDescription>
         </DialogHeader>
         {transaction && (
@@ -105,12 +103,12 @@ export const CreateContactModal = memo(function CreateContactModal({
             {/* Transaction details card */}
             <div className='rounded-lg border bg-muted/50 p-3'>
               <p className='mb-2 text-xs font-medium text-muted-foreground'>
-                {t.addressBook?.transactionDetails || 'Transactiegegevens'}
+                {t.addressBook?.transactionDetails}
               </p>
               <div className='space-y-1.5 text-sm'>
                 <div className='flex justify-between'>
                   <span className='text-muted-foreground'>
-                    {t.transactions?.date || 'Datum'}:
+                    {t.transactions?.date}:
                   </span>
                   <span className='font-medium'>
                     {formatDate(transaction.date)}
@@ -118,7 +116,7 @@ export const CreateContactModal = memo(function CreateContactModal({
                 </div>
                 <div className='flex justify-between'>
                   <span className='text-muted-foreground'>
-                    {t.transactions?.amount || 'Bedrag'}:
+                    {t.transactions?.amount}:
                   </span>
                   <span
                     className={cn(
@@ -132,14 +130,16 @@ export const CreateContactModal = memo(function CreateContactModal({
                   </span>
                 </div>
                 <div className='flex justify-between gap-2'>
-                  <span className='text-muted-foreground'>IBAN:</span>
+                  <span className='text-muted-foreground'>
+                    {t.common.iban}:
+                  </span>
                   <span className='truncate text-xs'>
                     {transaction.opposingAccountIban}
                   </span>
                 </div>
                 <div className='flex justify-between gap-2'>
                   <span className='text-muted-foreground'>
-                    {t.transactions?.counterparty || 'Tegenrekening'}:
+                    {t.transactions?.counterparty}:
                   </span>
                   <span className='truncate text-right'>
                     {transaction.opposingAccountName ||
@@ -150,7 +150,7 @@ export const CreateContactModal = memo(function CreateContactModal({
                 {(transaction.notes || transaction.description) && (
                   <div className='flex justify-between gap-2'>
                     <span className='text-muted-foreground'>
-                      {t.transactions?.details || 'Details'}:
+                      {t.transactions?.details}:
                     </span>
                     <span className='max-w-[200px] truncate text-right text-xs'>
                       {transaction.notes || transaction.description}
@@ -162,12 +162,12 @@ export const CreateContactModal = memo(function CreateContactModal({
             {/* Name input */}
             <div className='space-y-2'>
               <label className='text-sm font-medium'>
-                {t.settings?.addressBook?.namePlaceholder || 'Naam'}
+                {t.settings?.addressBook?.namePlaceholder}
               </label>
               <Input
                 value={contactName}
                 onChange={(e) => onContactNameChange(e.target.value)}
-                placeholder={t.settings?.addressBook?.namePlaceholder || 'Naam'}
+                placeholder={t.settings?.addressBook?.namePlaceholder}
                 autoFocus
               />
             </div>
@@ -178,7 +178,7 @@ export const CreateContactModal = memo(function CreateContactModal({
             {t.common.cancel}
           </Button>
           <Button onClick={onSubmit} disabled={!contactName.trim()}>
-            {t.common.add || 'Toevoegen'}
+            {t.common.add}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -214,7 +214,7 @@ export interface SharedIbanModalProps {
   t: {
     transactions: {
       addToAddressBookTitle?: string;
-      addToAddressBookDescription?: string;
+      addToAddressBookDescription: string;
       allNamesProcessed?: string;
       addButton?: string;
       possiblySameGroup?: string;
@@ -272,16 +272,14 @@ export const SharedIbanModal = memo(function SharedIbanModal({
     >
       <DialogContent className='max-h-[80vh] max-w-2xl overflow-y-auto'>
         <DialogHeader>
-          <DialogTitle>
-            {t.transactions.addToAddressBookTitle || 'Add to address book'}
-          </DialogTitle>
+          <DialogTitle>{t.transactions.addToAddressBookTitle}</DialogTitle>
           <DialogDescription>
             {selectedSharedIban && (
               <>
-                {(
-                  t.transactions.addToAddressBookDescription ||
-                  'Add names from {iban} to your address book. Similar names are grouped.'
-                ).replace('{iban}', '')}
+                {t.transactions.addToAddressBookDescription.replace(
+                  '{iban}',
+                  ''
+                )}
                 <span>{selectedSharedIban.iban}</span>
               </>
             )}
@@ -291,10 +289,7 @@ export const SharedIbanModal = memo(function SharedIbanModal({
           {groups.length === 0 ? (
             <div className='py-8 text-center text-muted-foreground'>
               <Check className='mx-auto mb-2 h-12 w-12 text-green-500' />
-              <p>
-                {t.transactions.allNamesProcessed ||
-                  'All names have been processed!'}
-              </p>
+              <p>{t.transactions.allNamesProcessed}</p>
             </div>
           ) : (
             groups.map((group) => {
@@ -337,10 +332,7 @@ export const SharedIbanModal = memo(function SharedIbanModal({
                                 })
                               }
                               className='h-8 text-sm'
-                              placeholder={
-                                t.transactions?.nameForAddressBook ||
-                                'Naam voor adresboek'
-                              }
+                              placeholder={t.transactions?.nameForAddressBook}
                             />
                           </div>
                         </div>
@@ -372,8 +364,7 @@ export const SharedIbanModal = memo(function SharedIbanModal({
                                 </PopoverTrigger>
                               </TooltipTrigger>
                               <TooltipContent>
-                                {t.addressBook?.assignToExisting ||
-                                  'Assign to existing contact'}
+                                {t.addressBook?.assignToExisting}
                               </TooltipContent>
                             </Tooltip>
                           </TooltipProvider>
@@ -384,10 +375,7 @@ export const SharedIbanModal = memo(function SharedIbanModal({
                           >
                             <div className='space-y-2'>
                               <Input
-                                placeholder={
-                                  t.addressBook?.searchContacts ||
-                                  'Search contacts...'
-                                }
+                                placeholder={t.addressBook?.searchContacts}
                                 value={assignSearchTerm}
                                 onChange={(e) =>
                                   onAssignSearchTermChange(e.target.value)
@@ -479,8 +467,7 @@ export const SharedIbanModal = memo(function SharedIbanModal({
                                       ))
                                     ) : (
                                       <div className='py-4 text-center text-sm text-muted-foreground'>
-                                        {t.addressBook?.noContactsFound ||
-                                          'No contacts found'}
+                                        {t.addressBook?.noContactsFound}
                                       </div>
                                     );
                                   })()}
@@ -530,8 +517,7 @@ export const SharedIbanModal = memo(function SharedIbanModal({
                               </Button>
                             </TooltipTrigger>
                             <TooltipContent>
-                              {t.addressBook?.addToAddressBook ||
-                                'Add to address book'}
+                              {t.addressBook?.addToAddressBook}
                             </TooltipContent>
                           </Tooltip>
                         </TooltipProvider>
@@ -552,12 +538,10 @@ export const SharedIbanModal = memo(function SharedIbanModal({
                       <div className='flex items-center gap-2'>
                         <Users className='h-4 w-4 text-purple-600' />
                         <span className='text-sm font-medium text-purple-700 dark:text-purple-300'>
-                          {t.transactions?.possiblySameGroup ||
-                            'Mogelijk dezelfde'}{' '}
-                          ({group.entries.length}{' '}
-                          {t.transactions?.variants || 'varianten'},{' '}
+                          {t.transactions?.possiblySameGroup} (
+                          {group.entries.length} {t.transactions?.variants},{' '}
                           {totalTransactions}{' '}
-                          {t.transactions?.transactionsPlural || 'transacties'})
+                          {t.transactions?.transactionsPlural})
                         </span>
                       </div>
                       <Button
@@ -573,7 +557,7 @@ export const SharedIbanModal = memo(function SharedIbanModal({
                         }}
                       >
                         <Scissors className='mr-1 h-4 w-4' />
-                        {t.transactions?.split || 'Splitsen'}
+                        {t.transactions?.split}
                       </Button>
                     </div>
 
@@ -606,10 +590,7 @@ export const SharedIbanModal = memo(function SharedIbanModal({
                           );
                         }}
                         className='h-9 flex-1'
-                        placeholder={
-                          t.transactions?.nameForAddressBook ||
-                          'Naam voor adresboek'
-                        }
+                        placeholder={t.transactions?.nameForAddressBook}
                       />
                       <Button
                         className='bg-purple-600 hover:bg-purple-700'
@@ -631,15 +612,15 @@ export const SharedIbanModal = memo(function SharedIbanModal({
                         disabled={!group.editedName.trim() || isResolving}
                       >
                         <Merge className='mr-1 h-4 w-4' />
-                        {t.transactions?.merge || 'Samenvoegen'}
+                        {t.transactions?.merge}
                       </Button>
                     </div>
 
                     <p className='mt-2 text-xs text-muted-foreground'>
-                      {(
-                        t.transactions?.allVariantsMergedInfo ||
-                        'Alle {count} varianten worden samengevoegd onder deze naam.'
-                      ).replace('{count}', String(group.entries.length))}
+                      {t.transactions?.allVariantsMergedInfo?.replace(
+                        '{count}',
+                        String(group.entries.length)
+                      )}
                     </p>
                   </div>
                 );
@@ -659,8 +640,8 @@ export const SharedIbanModal = memo(function SharedIbanModal({
                       <span className='text-xs text-muted-foreground'>
                         ({group.entries[0].transactionCount}{' '}
                         {group.entries[0].transactionCount === 1
-                          ? t.transactions?.transaction || 'transactie'
-                          : t.transactions?.transactionsPlural || 'transacties'}
+                          ? t.transactions?.transaction
+                          : t.transactions?.transactionsPlural}
                         )
                       </span>
                     </div>
@@ -677,10 +658,7 @@ export const SharedIbanModal = memo(function SharedIbanModal({
                           );
                         }}
                         className='h-8 text-sm'
-                        placeholder={
-                          t.transactions?.nameForAddressBook ||
-                          'Naam voor adresboek'
-                        }
+                        placeholder={t.transactions?.nameForAddressBook}
                       />
                     </div>
                   </div>
@@ -700,7 +678,7 @@ export const SharedIbanModal = memo(function SharedIbanModal({
                     disabled={!group.editedName.trim() || isResolving}
                   >
                     <Plus className='mr-1 h-4 w-4' />
-                    {t.transactions.addButton || 'Add'}
+                    {t.transactions.addButton}
                   </Button>
                 </div>
               );
@@ -715,7 +693,7 @@ export const SharedIbanModal = memo(function SharedIbanModal({
               onGroupsChange([]);
             }}
           >
-            {t.transactions?.close || t.common?.close || 'Sluiten'}
+            {t.transactions?.close || t.common?.close}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -746,8 +724,8 @@ export interface RuleModalProps {
       searchPattern?: string;
       searchPatternPlaceholder?: string;
       searchPatternHelp?: string;
-      ruleExistsInCategory?: string;
-      unknownCategory?: string;
+      ruleExistsInCategory: string;
+      unknownCategory: string;
       applyWithoutRule?: string;
       skipButton?: string;
       createRuleButton?: string;
@@ -797,12 +775,9 @@ export const RuleModal = memo(function RuleModal({
     >
       <DialogContent className='max-w-lg'>
         <DialogHeader>
-          <DialogTitle>
-            {t.transactions.createRuleTitle || 'Create category rule'}
-          </DialogTitle>
+          <DialogTitle>{t.transactions.createRuleTitle}</DialogTitle>
           <DialogDescription>
-            {t.transactions.createRuleDescription ||
-              'Would you like to create a rule so transactions with a similar name are automatically categorized?'}
+            {t.transactions.createRuleDescription}
           </DialogDescription>
         </DialogHeader>
         <div className='space-y-4 py-4'>
@@ -811,21 +786,19 @@ export const RuleModal = memo(function RuleModal({
             <div className='space-y-3 rounded-lg border bg-muted/30 p-4'>
               <div className='flex items-center justify-between'>
                 <span className='text-sm font-medium'>
-                  {(
-                    t.transactions?.applyToRelated ||
-                    'Ook toepassen op {count} gerelateerde transacties'
-                  ).replace('{count}', String(relatedTransactions.length))}
+                  {t.transactions?.applyToRelated?.replace(
+                    '{count}',
+                    String(relatedTransactions.length)
+                  )}
                 </span>
                 {selectedRelatedIds.size > 0 && (
                   <span className='text-xs text-muted-foreground'>
-                    {selectedRelatedIds.size}{' '}
-                    {t.common?.selected || 'geselecteerd'}
+                    {selectedRelatedIds.size} {t.common?.selected}
                   </span>
                 )}
               </div>
               <p className='text-xs text-muted-foreground'>
-                {t.transactions?.relatedTransactionsDescription ||
-                  'Deze transacties hebben dezelfde tegenrekening of naam. Selecteer welke je ook wilt categoriseren.'}
+                {t.transactions?.relatedTransactionsDescription}
               </p>
               <div className='max-h-64 space-y-2 overflow-y-auto'>
                 <table className='w-full'>
@@ -853,13 +826,11 @@ export const RuleModal = memo(function RuleModal({
                           }}
                         />
                       </th>
-                      <th className='pb-2'>{t.categories?.name || 'Naam'}</th>
+                      <th className='pb-2'>{t.categories?.name}</th>
                       <th className='pb-2 text-right'>
                         {t.transactions.amount}
                       </th>
-                      <th className='w-24 pb-2'>
-                        {t.budgets?.category || 'Categorie'}
-                      </th>
+                      <th className='w-24 pb-2'>{t.budgets?.category}</th>
                     </tr>
                   </thead>
                   <tbody className='divide-y divide-border/50'>
@@ -905,7 +876,7 @@ export const RuleModal = memo(function RuleModal({
                             </span>
                           ) : (
                             <span className='text-xs text-muted-foreground italic'>
-                              {t.common?.none || 'Geen'}
+                              {t.common?.none}
                             </span>
                           )}
                         </td>
@@ -920,19 +891,15 @@ export const RuleModal = memo(function RuleModal({
           {/* Rule pattern section */}
           <div className='space-y-2'>
             <label className='text-sm font-medium'>
-              {t.transactions.searchPattern || 'Search pattern'}
+              {t.transactions.searchPattern}
             </label>
             <Input
               value={rulePattern}
               onChange={(e) => onRulePatternChange(e.target.value)}
-              placeholder={
-                t.transactions.searchPatternPlaceholder ||
-                'Search pattern for merchant name...'
-              }
+              placeholder={t.transactions.searchPatternPlaceholder}
             />
             <p className='text-xs text-muted-foreground'>
-              {t.transactions.searchPatternHelp ||
-                'Transactions with this pattern in the name will be automatically categorized'}
+              {t.transactions.searchPatternHelp}
             </p>
 
             {/* Existing rule indicator */}
@@ -940,16 +907,11 @@ export const RuleModal = memo(function RuleModal({
               <div className='flex items-center gap-2 rounded-md bg-amber-50 px-3 py-2 text-amber-800 dark:bg-amber-900/20 dark:text-amber-200'>
                 <AlertCircle className='h-4 w-4 flex-shrink-0' />
                 <span className='text-xs'>
-                  {(
-                    t.transactions.ruleExistsInCategory ||
-                    'A rule for "{pattern}" already exists in {category}'
-                  )
+                  {t.transactions.ruleExistsInCategory
                     .replace('{pattern}', rulePattern)
                     .replace(
                       '{category}',
-                      existingCategory?.name ||
-                        t.transactions?.unknownCategory ||
-                        'Unknown category'
+                      existingCategory?.name || t.transactions?.unknownCategory
                     )}
                 </span>
               </div>
@@ -959,14 +921,14 @@ export const RuleModal = memo(function RuleModal({
         <DialogFooter className='flex gap-2'>
           <Button variant='outline' onClick={onSkipRule}>
             {relatedTransactions.length > 0 && selectedRelatedIds.size > 0
-              ? t.transactions?.applyWithoutRule || 'Toepassen zonder regel'
-              : t.transactions.skipButton || 'Skip'}
+              ? t.transactions?.applyWithoutRule
+              : t.transactions.skipButton}
           </Button>
           <Button
             onClick={onCreateRule}
             disabled={isCreating || !rulePattern.trim() || !!existingRule}
           >
-            {t.transactions.createRuleButton || 'Create rule'}
+            {t.transactions.createRuleButton}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -1039,32 +1001,27 @@ export const TransferModal = memo(function TransferModal({
         <DialogHeader>
           <DialogTitle>
             {isMarkingAsTransfer
-              ? t.transactions?.markAsTransferTitle ||
-                'Markeren als overboeking'
-              : t.transactions?.removeTransferTitle ||
-                'Overboeking markering verwijderen'}
+              ? t.transactions?.markAsTransferTitle
+              : t.transactions?.removeTransferTitle}
           </DialogTitle>
           <DialogDescription>
             {isMarkingAsTransfer
-              ? t.transactions?.markAsTransferDescription ||
-                'Er zijn gerelateerde transacties gevonden. Wil je deze ook markeren als overboeking?'
-              : t.transactions?.removeTransferDescription ||
-                'Er zijn gerelateerde transacties gevonden. Wil je de overboeking markering ook verwijderen?'}
+              ? t.transactions?.markAsTransferDescription
+              : t.transactions?.removeTransferDescription}
           </DialogDescription>
         </DialogHeader>
         <div className='space-y-4 py-4'>
           <div className='space-y-3 rounded-lg border bg-muted/30 p-4'>
             <div className='flex items-center justify-between'>
               <span className='text-sm font-medium'>
-                {(
-                  t.transactions?.relatedTransactionsFound ||
-                  '{count} gerelateerde transacties gevonden'
-                ).replace('{count}', String(relatedTransactions.length))}
+                {t.transactions?.relatedTransactionsFound?.replace(
+                  '{count}',
+                  String(relatedTransactions.length)
+                )}
               </span>
               {selectedRelatedIds.size > 0 && (
                 <span className='text-xs text-muted-foreground'>
-                  {selectedRelatedIds.size}{' '}
-                  {t.common?.selected || 'geselecteerd'}
+                  {selectedRelatedIds.size} {t.common?.selected}
                 </span>
               )}
             </div>
@@ -1093,13 +1050,11 @@ export const TransferModal = memo(function TransferModal({
                         }}
                       />
                     </th>
-                    <th className='pb-2'>{t.categories?.name || 'Naam'}</th>
+                    <th className='pb-2'>{t.categories?.name}</th>
                     <th className='pb-2 text-right'>
                       {t.transactions?.amount}
                     </th>
-                    <th className='w-20 pb-2'>
-                      {t.transactions?.type || 'Type'}
-                    </th>
+                    <th className='w-20 pb-2'>{t.transactions?.type}</th>
                   </tr>
                 </thead>
                 <tbody className='divide-y divide-border/50'>
@@ -1141,10 +1096,10 @@ export const TransferModal = memo(function TransferModal({
                           )}
                         >
                           {pendingTransaction.type === 'transfer'
-                            ? t.transactions?.transfer || 'Overboeking'
+                            ? t.transactions?.transfer
                             : pendingTransaction.type === 'income'
-                              ? t.transactions?.income || 'Inkomst'
-                              : t.transactions?.expense || 'Uitgave'}
+                              ? t.transactions?.income
+                              : t.transactions?.expense}
                         </span>
                       </td>
                     </tr>
@@ -1201,10 +1156,10 @@ export const TransferModal = memo(function TransferModal({
                           )}
                         >
                           {rt.type === 'transfer'
-                            ? t.transactions?.transfer || 'Overboeking'
+                            ? t.transactions?.transfer
                             : rt.type === 'income'
-                              ? t.transactions?.income || 'Inkomst'
-                              : t.transactions?.expense || 'Uitgave'}
+                              ? t.transactions?.income
+                              : t.transactions?.expense}
                         </span>
                       </td>
                     </tr>
@@ -1221,14 +1176,14 @@ export const TransferModal = memo(function TransferModal({
               onClick={onDetectAll}
               disabled={isDetecting}
             >
-              {t.transactions?.applyToAllData || 'Toepassen op alle data'}
+              {t.transactions?.applyToAllData}
             </Button>
           )}
           <Button onClick={onApply} disabled={isPending}>
-            {(
-              t.transactions?.applyToSelected ||
-              'Toepassen op {count} transacties'
-            ).replace('{count}', String(1 + selectedRelatedIds.size))}
+            {t.transactions?.applyToSelected?.replace(
+              '{count}',
+              String(1 + selectedRelatedIds.size)
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -479,7 +479,7 @@ export function SecurityProvider({ children }: SecurityProviderProps) {
             user: {
               id: crypto.getRandomValues(new Uint8Array(16)),
               name: 'fluxby-user',
-              displayName: t.common?.user || 'Fluxby User',
+              displayName: t.common?.user,
             },
             pubKeyCredParams: [
               { alg: -7, type: 'public-key' }, // ES256

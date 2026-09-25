@@ -69,9 +69,7 @@ export function PaymentProcessorSettings() {
       queryClient.invalidateQueries({ queryKey: ['paymentProcessorRules'] });
       setNewRuleName('');
       setNewRulePatterns('');
-      toast.success(
-        t.settings.paymentProcessors?.ruleAdded || 'Rule added successfully'
-      );
+      toast.success(t.settings.paymentProcessors?.ruleAdded);
     },
   });
 
@@ -92,9 +90,7 @@ export function PaymentProcessorSettings() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['paymentProcessorRules'] });
       setEditingRuleId(null);
-      toast.success(
-        t.settings.paymentProcessors?.ruleUpdated || 'Rule updated'
-      );
+      toast.success(t.settings.paymentProcessors?.ruleUpdated);
     },
   });
 
@@ -102,9 +98,7 @@ export function PaymentProcessorSettings() {
     mutationFn: (id: string) => api.deletePaymentProviderRule(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['paymentProcessorRules'] });
-      toast.success(
-        t.settings.paymentProcessors?.ruleDeleted || 'Rule deleted'
-      );
+      toast.success(t.settings.paymentProcessors?.ruleDeleted);
     },
   });
 
@@ -119,20 +113,19 @@ export function PaymentProcessorSettings() {
       const count = data?.updated || 0;
       if (count > 0) {
         toast.success(
-          (
-            t.settings.paymentProcessors?.rulesApplied ||
-            '{count} transactions updated with payment processor'
-          ).replace('{count}', String(count))
+          t.settings.paymentProcessors?.rulesApplied?.replace(
+            '{count}',
+            String(count)
+          )
         );
       } else {
-        toast.info(
-          t.settings.paymentProcessors?.noTransactionsUpdated ||
-            'No transactions needed updating'
-        );
+        toast.info(t.settings.paymentProcessors?.noTransactionsUpdated);
       }
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to apply rules');
+      toast.error(
+        error.message || t.settings.paymentProcessors?.failedToApplyRules
+      );
     },
   });
 
@@ -146,12 +139,10 @@ export function PaymentProcessorSettings() {
           <div className='flex items-start justify-between gap-4'>
             <div className='flex-1'>
               <CardTitle className='text-base sm:text-lg'>
-                {t.settings.paymentProcessors?.rulesTitle ||
-                  'Payment processor regels'}
+                {t.settings.paymentProcessors?.rulesTitle}
               </CardTitle>
               <CardDescription className='text-xs sm:text-sm'>
-                {t.settings.paymentProcessors?.rulesDescription ||
-                  'Definieer regels om payment processors te detecteren op basis van transactiegegevens. Voeg komma-gescheiden patronen toe die gematcht worden op IBAN, beschrijving of naam.'}
+                {t.settings.paymentProcessors?.rulesDescription}
               </CardDescription>
             </div>
             <Button
@@ -167,8 +158,7 @@ export function PaymentProcessorSettings() {
               ) : (
                 <RefreshCw className='mr-2 h-4 w-4' />
               )}
-              {t.settings.paymentProcessors?.applyToTransactions ||
-                'Apply to transactions'}
+              {t.settings.paymentProcessors?.applyToTransactions}
             </Button>
           </div>
         </CardHeader>
@@ -177,19 +167,13 @@ export function PaymentProcessorSettings() {
             {/* Add new rule form */}
             <div className='flex gap-2'>
               <Input
-                placeholder={
-                  t.settings.paymentProcessors?.namePlaceholder ||
-                  'Naam (bijv. Adyen)'
-                }
+                placeholder={t.settings.paymentProcessors?.namePlaceholder}
                 value={newRuleName}
                 onChange={(e) => setNewRuleName(e.target.value)}
                 className='w-40'
               />
               <Input
-                placeholder={
-                  t.settings.paymentProcessors?.patternsPlaceholder ||
-                  'Patronen (bijv. ADYB,ic. Adyen)'
-                }
+                placeholder={t.settings.paymentProcessors?.patternsPlaceholder}
                 value={newRulePatterns}
                 onChange={(e) => setNewRulePatterns(e.target.value)}
                 className='flex-1'
@@ -209,7 +193,7 @@ export function PaymentProcessorSettings() {
                 }
               >
                 <Plus className='mr-1 h-4 w-4' />
-                {t.common?.add || 'Toevoegen'}
+                {t.common?.add}
               </Button>
             </div>
 
@@ -221,8 +205,7 @@ export function PaymentProcessorSettings() {
               </div>
             ) : providerRules.length === 0 ? (
               <p className='py-4 text-center text-sm text-muted-foreground'>
-                {t.settings.paymentProcessors?.noRules ||
-                  'Geen payment processor regels geconfigureerd'}
+                {t.settings.paymentProcessors?.noRules}
               </p>
             ) : (
               <TooltipProvider>
@@ -303,7 +286,7 @@ export function PaymentProcessorSettings() {
                                 </Button>
                               </TooltipTrigger>
                               <TooltipContent>
-                                <p>{t.common?.edit || 'Bewerken'}</p>
+                                <p>{t.common?.edit}</p>
                               </TooltipContent>
                             </Tooltip>
                             <Tooltip>
@@ -316,11 +299,10 @@ export function PaymentProcessorSettings() {
                                     const isConfirmed = await confirm({
                                       title:
                                         t.settings.paymentProcessors
-                                          ?.deleteRuleTitle || 'Delete rule',
+                                          ?.deleteRuleTitle,
                                       message: `${
                                         t.settings.paymentProcessors
-                                          ?.deleteConfirm ||
-                                        'Are you sure you want to delete the rule'
+                                          ?.deleteConfirm
                                       } "${rule.name}"${
                                         t.settings.paymentProcessors
                                           ?.deleteConfirm2
@@ -340,7 +322,7 @@ export function PaymentProcessorSettings() {
                                 </Button>
                               </TooltipTrigger>
                               <TooltipContent>
-                                <p>{t.common?.delete || 'Verwijderen'}</p>
+                                <p>{t.common?.delete}</p>
                               </TooltipContent>
                             </Tooltip>
                           </div>

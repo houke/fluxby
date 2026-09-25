@@ -38,6 +38,13 @@ export default function HelpBankConnection() {
           {t.helpCenter?.bankConnection?.tipText}
         </p>
       </div>
+
+      <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
+        {t.helpCenter?.bankConnection?.supportedTitle}
+      </h2>
+      <p className='text-gray-600 dark:text-gray-400'>
+        {t.helpCenter?.bankConnection?.supportedText}
+      </p>
     </article>
   );
 }

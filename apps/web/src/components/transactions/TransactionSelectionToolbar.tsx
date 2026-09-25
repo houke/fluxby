@@ -54,7 +54,7 @@ export const TransactionSelectionToolbar = memo(
           isVisible ? 'translate-y-0 opacity-100' : '-translate-y-2 opacity-0'
         )}
         role='toolbar'
-        aria-label={t.bulkDelete?.selectionMode || 'Selection mode'}
+        aria-label={t.bulkDelete.selectionMode}
         data-testid='selection-toolbar'
       >
         {/* Left side: Selection count */}
@@ -70,10 +70,7 @@ export const TransactionSelectionToolbar = memo(
             aria-live='polite'
             aria-atomic='true'
           >
-            {(t.bulkDelete?.selected || '{count} selected').replace(
-              '{count}',
-              String(selectionCount)
-            )}
+            {t.bulkDelete.selected.replace('{count}', String(selectionCount))}
           </span>
         </div>
 
@@ -87,11 +84,11 @@ export const TransactionSelectionToolbar = memo(
             disabled={isDeleting}
             className='gap-1.5'
             data-testid='cancel-selection'
-            aria-label={t.bulkDelete?.cancelSelection || 'Cancel selection'}
+            aria-label={t.bulkDelete.cancelSelection}
           >
             <X className='h-4 w-4' aria-hidden='true' />
             <span className='hidden sm:inline'>
-              {t.bulkDelete?.cancelSelection || 'Cancel selection'}
+              {t.bulkDelete.cancelSelection}
             </span>
           </Button>
 
@@ -116,8 +113,8 @@ export const TransactionSelectionToolbar = memo(
                   )}
                   <span className='hidden sm:inline'>
                     {isDeleting
-                      ? t.bulkDelete?.deleting || 'Deleting...'
-                      : t.bulkDelete?.deleteSelected || 'Delete selected'}
+                      ? t.bulkDelete.deleting
+                      : t.bulkDelete.deleteSelected}
                   </span>
                   {!isDeleting && (
                     <ChevronDown className='h-3.5 w-3.5' aria-hidden='true' />
@@ -131,7 +128,7 @@ export const TransactionSelectionToolbar = memo(
                   className='gap-2 text-destructive focus:bg-destructive focus:text-white'
                 >
                   <Trash2 className='h-4 w-4' aria-hidden='true' />
-                  {t.common?.delete || 'Verwijderen'}
+                  {t.common?.delete}
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={onDeleteByDateRange}
@@ -139,7 +136,7 @@ export const TransactionSelectionToolbar = memo(
                   data-testid='date-range-delete'
                 >
                   <Calendar className='h-4 w-4' aria-hidden='true' />
-                  {t.bulkDelete?.deleteByDateRange || 'Delete by date range'}
+                  {t.bulkDelete.deleteByDateRange}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -159,8 +156,8 @@ export const TransactionSelectionToolbar = memo(
               )}
               <span className='hidden sm:inline'>
                 {isDeleting
-                  ? t.bulkDelete?.deleting || 'Deleting...'
-                  : t.bulkDelete?.deleteSelected || 'Delete selected'}
+                  ? t.bulkDelete.deleting
+                  : t.bulkDelete.deleteSelected}
               </span>
             </Button>
           )}

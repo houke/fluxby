@@ -114,18 +114,16 @@ export function SpotlightDialog() {
         shouldFilter={false} // We handle filtering ourselves
       >
         <CommandInput
-          placeholder={t.spotlight?.searchPlaceholder || 'Search...'}
+          placeholder={t.spotlight.searchPlaceholder}
           value={search}
           onValueChange={setSearch}
         />
         <CommandList className='max-h-[400px]'>
-          <CommandEmpty>
-            {t.spotlight?.noResults || 'No results found.'}
-          </CommandEmpty>
+          <CommandEmpty>{t.spotlight.noResults}</CommandEmpty>
 
           {/* Pages Group */}
           {pages.length > 0 && (
-            <CommandGroup heading={t.spotlight?.pages || 'Pages'}>
+            <CommandGroup heading={t.spotlight.pages}>
               {pages.map((command) => (
                 <CommandItem
                   key={command.id}
@@ -151,7 +149,7 @@ export function SpotlightDialog() {
           {actions.length > 0 && (
             <>
               {pages.length > 0 && <CommandSeparator />}
-              <CommandGroup heading={t.spotlight?.actions || 'Actions'}>
+              <CommandGroup heading={t.spotlight.actions}>
                 {actions.map((command) => (
                   <CommandItem
                     key={command.id}
@@ -185,9 +183,7 @@ export function SpotlightDialog() {
           {filteredTransactions.length > 0 && (
             <>
               <CommandSeparator />
-              <CommandGroup
-                heading={t.spotlight?.transactions || 'Transactions'}
-              >
+              <CommandGroup heading={t.spotlight.transactions}>
                 {filteredTransactions.map((command) => (
                   <CommandItem
                     key={command.id}
@@ -224,7 +220,7 @@ export function SpotlightDialog() {
           {filteredContacts.length > 0 && (
             <>
               <CommandSeparator />
-              <CommandGroup heading={t.spotlight?.contacts || 'Contacts'}>
+              <CommandGroup heading={t.spotlight.contacts}>
                 {filteredContacts.map((command) => (
                   <CommandItem
                     key={command.id}
@@ -260,9 +256,7 @@ export function SpotlightDialog() {
 
         {/* Footer with keyboard hint */}
         <div className='flex items-center justify-between border-t px-3 py-2 text-xs text-muted-foreground'>
-          <span>
-            {t.spotlight?.hint || 'Type to search, use arrow keys to navigate'}
-          </span>
+          <span>{t.spotlight.hint}</span>
           <span className='flex items-center gap-1'>
             <kbd className='rounded border bg-muted px-1.5 py-0.5 font-mono text-[10px]'>
               {isMac ? '⌘' : 'Ctrl'}

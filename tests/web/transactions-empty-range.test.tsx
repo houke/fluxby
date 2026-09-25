@@ -8,6 +8,7 @@ import Transactions from '@/pages/Transactions';
 import { api } from '@/lib/api';
 import { ToastProvider } from '@/contexts/ToastContext';
 import * as lang from '@/contexts/LanguageContext';
+import { en } from '@/lib/i18n/en';
 import * as filters from '@/contexts/FilterContext';
 import { ProfileProvider } from '@/contexts/ProfileContext';
 import * as profile from '@/contexts/ProfileContext';
@@ -39,31 +40,7 @@ describe('Transactions empty state when period has no matches but full data does
     } as any);
 
     vi.spyOn(lang, 'useLanguage').mockReturnValue({
-      t: {
-        nav: { transactions: 'Transactions' },
-        dashboard: {
-          income: 'Income',
-          expenses: 'Expenses',
-          jumpToPeriod: 'Jump to {period}',
-        },
-        transactions: {
-          noTransactionsInRangeTitle: 'No transactions found in this period',
-          noTransactionsInRangeDescription:
-            'No transactions found in the selected period, but there are matching transactions in your full data.',
-          viewAllData: 'View all data',
-          noTransactionsFound: 'No transactions found',
-          adjustFilters: 'Adjust your filters or search query',
-          paymentMethods: {
-            pin: 'PIN',
-            ideal: 'iDEAL',
-            transfer: 'Transfer',
-            incasso: 'Direct Debit',
-            atm: 'ATM',
-            other: 'Other',
-          },
-        },
-        common: { months: [], monthsShort: [], total: 'Total' },
-      },
+      t: en,
       language: 'en',
     } as any);
 

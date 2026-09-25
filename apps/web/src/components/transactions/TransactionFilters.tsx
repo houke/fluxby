@@ -333,7 +333,7 @@ export const TransactionFilters = memo(function TransactionFilters({
                     <div className='relative'>
                       <Search className='absolute top-1/2 left-2 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
                       <Input
-                        placeholder={t.common.search || 'Zoeken...'}
+                        placeholder={t.common.search}
                         value={categorySearch}
                         onChange={(e) => onCategorySearchChange(e.target.value)}
                         className='h-8 pl-8'
@@ -343,7 +343,7 @@ export const TransactionFilters = memo(function TransactionFilters({
                   <div className='max-h-[300px] space-y-1 overflow-y-auto p-2'>
                     {/* Uncategorized option */}
                     {(!categorySearch ||
-                      (t.transactions.noCategory || 'Geen categorie')
+                      t.transactions.noCategory
                         .toLowerCase()
                         .includes(categorySearch.toLowerCase())) && (
                       <button
@@ -461,7 +461,7 @@ export const TransactionFilters = memo(function TransactionFilters({
                   <div className='relative'>
                     <Search className='absolute top-1/2 left-2 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
                     <Input
-                      placeholder={t.common.search || 'Zoeken...'}
+                      placeholder={t.common.search}
                       value={addressBookSearch}
                       onChange={(e) =>
                         onAddressBookSearchChange(e.target.value)
@@ -531,7 +531,7 @@ export const TransactionFilters = memo(function TransactionFilters({
                           ))}
                           {filteredAddressBook.length > visible.length && (
                             <div className='py-2 text-center text-xs text-muted-foreground'>
-                              {t.common?.loading || 'Laden...'}
+                              {t.common?.loading}
                             </div>
                           )}
                         </>
@@ -539,7 +539,7 @@ export const TransactionFilters = memo(function TransactionFilters({
                     })()
                   ) : addressBook && addressBook.length > 0 ? (
                     <div className='px-2 py-4 text-center text-sm text-muted-foreground'>
-                      {t.common?.noResults || 'Geen resultaten'}
+                      {t.common?.noResults}
                     </div>
                   ) : (
                     <div className='px-2 py-4 text-center text-sm text-muted-foreground'>

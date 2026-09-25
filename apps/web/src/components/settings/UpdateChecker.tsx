@@ -169,7 +169,7 @@ export function UpdateChecker() {
                 setWebUpdateAvailable(true);
                 setStatus('available');
                 setUpdateInfo({
-                  version: t.updater?.newVersion || 'New version',
+                  version: t.updater?.newVersion,
                   currentVersion: currentAppVersion || '?',
                 });
               }
@@ -182,7 +182,7 @@ export function UpdateChecker() {
           setWebUpdateAvailable(true);
           setStatus('available');
           setUpdateInfo({
-            version: t.updater?.newVersion || 'New version',
+            version: t.updater?.newVersion,
             currentVersion: currentAppVersion || '?',
           });
         }
@@ -228,15 +228,13 @@ export function UpdateChecker() {
           setStatus('available');
         } else {
           setStatus('up-to-date');
-          toast.success(
-            t.updater?.upToDate || 'You are running the latest version'
-          );
+          toast.success(t.updater?.upToDate);
         }
       } catch (err) {
         console.error('Update check failed:', err);
         setError(err instanceof Error ? err.message : String(err));
         setStatus('error');
-        toast.error(t.updater?.checkFailed || 'Failed to check for updates');
+        toast.error(t.updater?.checkFailed);
       }
     } else if ('serviceWorker' in navigator) {
       // Web: Check for service worker updates
@@ -251,7 +249,7 @@ export function UpdateChecker() {
             setWebUpdateAvailable(true);
             setStatus('available');
             setUpdateInfo({
-              version: t.updater?.newVersion || 'New version',
+              version: t.updater?.newVersion,
               currentVersion: currentAppVersion || '?',
             });
           } else if (registration.installing) {
@@ -265,7 +263,7 @@ export function UpdateChecker() {
                 setWebUpdateAvailable(true);
                 setStatus('available');
                 setUpdateInfo({
-                  version: t.updater?.newVersion || 'New version',
+                  version: t.updater?.newVersion,
                   currentVersion: currentAppVersion || '?',
                 });
               }
@@ -274,16 +272,12 @@ export function UpdateChecker() {
             setTimeout(() => {
               if (status === 'checking') {
                 setStatus('up-to-date');
-                toast.success(
-                  t.updater?.upToDate || 'You are running the latest version'
-                );
+                toast.success(t.updater?.upToDate);
               }
             }, 3000);
           } else {
             setStatus('up-to-date');
-            toast.success(
-              t.updater?.upToDate || 'You are running the latest version'
-            );
+            toast.success(t.updater?.upToDate);
           }
         } else {
           setStatus('up-to-date');
@@ -339,9 +333,7 @@ export function UpdateChecker() {
         });
 
         // Prompt to relaunch
-        toast.success(
-          t.updater?.installComplete || 'Update installed! Restarting...'
-        );
+        toast.success(t.updater?.installComplete);
 
         // Small delay to show the success message
         setTimeout(async () => {
@@ -351,7 +343,7 @@ export function UpdateChecker() {
         console.error('Update download/install failed:', err);
         setError(err instanceof Error ? err.message : String(err));
         setStatus('error');
-        toast.error(t.updater?.installFailed || 'Failed to install update');
+        toast.error(t.updater?.installFailed);
       }
     } else if (webUpdateAvailable && swRegistration?.waiting) {
       // Web: Tell SW to skip waiting and activate
@@ -369,11 +361,9 @@ export function UpdateChecker() {
 
       const result = await createPreUpdateBackup();
       if (!result.success) {
-        setBackupError(result.error ?? 'Unknown error');
+        setBackupError(result.error ?? t.common.unknownError);
         setStatus('backup-failed');
-        toast.error(
-          t.updater?.backupFailed || 'Database backup failed. Update cancelled.'
-        );
+        toast.error(t.updater?.backupFailed);
         return;
       }
     }
@@ -446,11 +436,11 @@ export function UpdateChecker() {
   // For web: customize labels
   const isWeb = !isTauri;
   const installButtonLabel = isWeb
-    ? t.updater?.refreshNow || 'Refresh now'
-    : t.updater?.installUpdate || 'Install update';
+    ? t.updater?.refreshNow
+    : t.updater?.installUpdate;
   const descriptionText = isWeb
-    ? t.updater?.webDescription || 'Check for app updates'
-    : t.updater?.description || 'Check for and install app updates';
+    ? t.updater?.webDescription
+    : t.updater?.description;
 
   // Format last checked time
   const formatLastChecked = (date: Date): string => {
@@ -464,22 +454,19 @@ export function UpdateChecker() {
           <div className='flex items-center justify-between'>
             <div>
               <CardTitle className='text-base sm:text-lg'>
-                {t.updater?.title || 'Software updates'}
+                {t.updater?.title}
               </CardTitle>
               <CardDescription className='text-xs sm:text-sm'>
                 {descriptionText}
                 {isTauri && (
                   <span className='ml-1 text-xs text-muted-foreground'>
-                    (
-                    {t.updater?.backgroundCheckEnabled ||
-                      'Auto-check every 4 hours'}
-                    )
+                    ({t.updater?.backgroundCheckEnabled})
                   </span>
                 )}
               </CardDescription>
               {lastChecked && (
                 <p className='mt-1 text-xs text-muted-foreground'>
-                  {(t.updater?.lastChecked || 'Last checked: {time}').replace(
+                  {t.updater?.lastChecked?.replace(
                     '{time}',
                     formatLastChecked(lastChecked)
                   )}
@@ -500,16 +487,14 @@ export function UpdateChecker() {
                 {status === 'checking' && (
                   <>
                     <Loader2 className='h-5 w-5 animate-spin text-purple-600' />
-                    <span className='text-sm'>
-                      {t.updater?.checking || 'Checking for updates...'}
-                    </span>
+                    <span className='text-sm'>{t.updater?.checking}</span>
                   </>
                 )}
                 {status === 'idle' && (
                   <>
                     <RefreshCw className='h-5 w-5 text-muted-foreground' />
                     <span className='text-sm text-muted-foreground'>
-                      {t.updater?.clickToCheck || 'Click to check for updates'}
+                      {t.updater?.clickToCheck}
                     </span>
                   </>
                 )}
@@ -517,8 +502,7 @@ export function UpdateChecker() {
                   <>
                     <CheckCircle className='h-5 w-5 text-green-600' />
                     <span className='text-sm text-green-700 dark:text-green-400'>
-                      {t.updater?.upToDate ||
-                        'You are running the latest version'}
+                      {t.updater?.upToDate}
                     </span>
                   </>
                 )}
@@ -528,19 +512,18 @@ export function UpdateChecker() {
                     <div>
                       <span className='text-sm font-medium'>
                         {isWeb
-                          ? t.updater?.webUpdateAvailable ||
-                            'A new version is available'
-                          : (
-                              t.updater?.newVersionAvailable ||
-                              'Version {version} is available'
-                            ).replace('{version}', updateInfo.version)}
+                          ? t.updater?.webUpdateAvailable
+                          : t.updater?.newVersionAvailable?.replace(
+                              '{version}',
+                              updateInfo.version
+                            )}
                       </span>
                       {!isWeb && localizedReleaseNotes && (
                         <button
                           onClick={() => setShowReleaseNotes(true)}
                           className='ml-2 text-xs text-purple-600 hover:underline'
                         >
-                          {t.updater?.viewReleaseNotes || 'View release notes'}
+                          {t.updater?.viewReleaseNotes}
                         </button>
                       )}
                     </div>
@@ -549,9 +532,7 @@ export function UpdateChecker() {
                 {status === 'backing-up' && (
                   <>
                     <Loader2 className='h-5 w-5 animate-spin text-purple-600' />
-                    <span className='text-sm'>
-                      {t.updater?.backingUp || 'Backing up database...'}
-                    </span>
+                    <span className='text-sm'>{t.updater?.backingUp}</span>
                   </>
                 )}
                 {status === 'backup-failed' && (
@@ -559,8 +540,7 @@ export function UpdateChecker() {
                     <ShieldAlert className='h-5 w-5 text-orange-500' />
                     <div>
                       <span className='text-sm text-orange-700 dark:text-orange-400'>
-                        {t.updater?.backupFailed ||
-                          'Database backup failed. Update cancelled.'}
+                        {t.updater?.backupFailed}
                       </span>
                       {backupError && (
                         <p className='mt-0.5 text-xs text-muted-foreground'>
@@ -574,9 +554,7 @@ export function UpdateChecker() {
                   <>
                     <Loader2 className='h-5 w-5 animate-spin text-purple-600' />
                     <div className='flex-1'>
-                      <span className='text-sm'>
-                        {t.updater?.downloading || 'Downloading update...'}
-                      </span>
+                      <span className='text-sm'>{t.updater?.downloading}</span>
                       {downloadProgress && downloadProgress.total > 0 && (
                         <div className='mt-2 space-y-1'>
                           <Progress
@@ -599,8 +577,7 @@ export function UpdateChecker() {
                   <>
                     <CheckCircle className='h-5 w-5 text-green-600' />
                     <span className='text-sm text-green-700 dark:text-green-400'>
-                      {t.updater?.readyToRestart ||
-                        'Update ready. Restarting...'}
+                      {t.updater?.readyToRestart}
                     </span>
                   </>
                 )}
@@ -608,7 +585,7 @@ export function UpdateChecker() {
                   <>
                     <AlertCircle className='h-5 w-5 text-red-600' />
                     <span className='text-sm text-red-700 dark:text-red-400'>
-                      {error || t.updater?.errorOccurred || 'An error occurred'}
+                      {error || t.updater?.errorOccurred}
                     </span>
                   </>
                 )}
@@ -621,7 +598,7 @@ export function UpdateChecker() {
                   status === 'error') && (
                   <Button variant='outline' size='sm' onClick={checkForUpdates}>
                     <RefreshCw className='mr-2 h-4 w-4' />
-                    {t.updater?.checkNow || 'Check now'}
+                    {t.updater?.checkNow}
                   </Button>
                 )}
                 {status === 'available' && (
@@ -645,20 +622,17 @@ export function UpdateChecker() {
                       size='sm'
                       onClick={() => setStatus('available')}
                     >
-                      {t.common?.cancel || 'Cancel'}
+                      {t.common?.cancel}
                     </Button>
                     <Button
                       variant='destructive'
                       size='sm'
                       onClick={async () => {
                         const confirmed = await confirm({
-                          title: t.updater?.installAnyway || 'Install anyway',
-                          message:
-                            t.updater?.installAnywayConfirm ||
-                            'Are you sure? The update will proceed without a database backup.',
+                          title: t.updater?.installAnyway,
+                          message: t.updater?.installAnywayConfirm,
                           variant: 'danger',
-                          confirmLabel:
-                            t.updater?.installAnyway || 'Install anyway',
+                          confirmLabel: t.updater?.installAnyway,
                         });
                         if (confirmed) {
                           installAnyway();
@@ -666,7 +640,7 @@ export function UpdateChecker() {
                       }}
                     >
                       <ShieldAlert className='mr-2 h-4 w-4' />
-                      {t.updater?.installAnyway || 'Install anyway'}
+                      {t.updater?.installAnyway}
                     </Button>
                   </div>
                 )}
@@ -681,9 +655,10 @@ export function UpdateChecker() {
         <DialogContent className='max-w-lg'>
           <DialogHeader>
             <DialogTitle>
-              {(
-                t.updater?.releaseNotesTitle || 'Release notes for {version}'
-              ).replace('{version}', updateInfo?.version || '')}
+              {t.updater?.releaseNotesTitle?.replace(
+                '{version}',
+                updateInfo?.version || ''
+              )}
             </DialogTitle>
             <DialogDescription>
               {updateInfo?.date && (
@@ -703,7 +678,7 @@ export function UpdateChecker() {
               variant='outline'
               onClick={() => setShowReleaseNotes(false)}
             >
-              {t.common?.close || 'Close'}
+              {t.common?.close}
             </Button>
             <Button
               onClick={() => {

@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { formatDate, cn } from '@/lib/utils';
 import { Currency } from '@/components/ui/currency';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 import type { Transaction, Category, AddressBookEntry } from '@fluxby/shared';
 
@@ -32,9 +33,13 @@ export const TransactionCard = memo(function TransactionCard({
   isRecurring,
   onClick,
 }: TransactionCardProps) {
+  const { t } = useLanguage();
   // Get display name
   const displayName =
-    tx.merchantName || tx.opposingAccountName || tx.description || 'Unknown';
+    tx.merchantName ||
+    tx.opposingAccountName ||
+    tx.description ||
+    t.transactions.unknown;
 
   // Get description - use address book description if available
   const description = addressBookEntry?.description || tx.notes || null;

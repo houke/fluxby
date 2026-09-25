@@ -251,18 +251,12 @@ export function ProfileManager() {
         setCreateStep('accounts');
         setCreatedAccounts([]);
       } else {
-        toast.error(
-          t.settings?.profileManager?.createError ||
-            'Er ging iets mis bij het aanmaken van het profiel.'
-        );
+        toast.error(t.settings?.profileManager?.createError);
         setIsCreateOpen(false);
       }
     } catch (error) {
       console.error('Failed to create profile', error);
-      toast.error(
-        t.settings?.profileManager?.createError ||
-          'Er ging iets mis bij het aanmaken van het profiel.'
-      );
+      toast.error(t.settings?.profileManager?.createError);
       setIsCreateOpen(false);
     } finally {
       setIsCreating(false);
@@ -338,12 +332,11 @@ export function ProfileManager() {
 
     // Show different confirmation for demo profile
     const confirmMessage = isDemoProfile
-      ? t.settings?.profileManager?.deleteDemoConfirm ||
-        'Are you sure you want to delete the Demo profile? Note: Restarting the onboarding will create a new Demo account with fresh data.'
+      ? t.settings?.profileManager?.deleteDemoConfirm
       : t.settings.profileManager.deleteConfirm;
 
     const isConfirmed = await confirm({
-      title: t.settings?.profileManager?.deleteProfileTitle || 'Delete profile',
+      title: t.settings?.profileManager?.deleteProfileTitle,
       message: confirmMessage,
       variant: 'danger',
     });
@@ -351,10 +344,7 @@ export function ProfileManager() {
       try {
         await deleteProfile(id);
         if (isDemoProfile) {
-          toast.success(
-            t.settings?.profileManager?.demoDeleted ||
-              'Demo profile deleted. Restart onboarding to create a new one.'
-          );
+          toast.success(t.settings?.profileManager?.demoDeleted);
         }
       } catch (error) {
         console.error('Failed to delete profile', error);
@@ -388,10 +378,7 @@ export function ProfileManager() {
     try {
       await navigator.clipboard.writeText(profileId);
       setCopiedProfileId(profileId);
-      toast.success(
-        t.settings?.profileManager?.idCopied ||
-          'ID successfully copied to clipboard'
-      );
+      toast.success(t.settings?.profileManager?.idCopied);
       setTimeout(() => setCopiedProfileId(null), 2000);
     } catch (error) {
       console.error('Failed to copy profile ID', error);
@@ -574,12 +561,10 @@ export function ProfileManager() {
               <>
                 <DialogHeader>
                   <DialogTitle>
-                    {t.settings?.profileManager?.addAccountsTitle ||
-                      'Rekeningen toevoegen'}
+                    {t.settings?.profileManager?.addAccountsTitle}
                   </DialogTitle>
                   <DialogDescription>
-                    {t.settings?.profileManager?.addAccountsDescription ||
-                      'Voeg bankrekeningen toe aan je nieuwe profiel. Je kunt dit ook later doen via Instellingen.'}
+                    {t.settings?.profileManager?.addAccountsDescription}
                   </DialogDescription>
                 </DialogHeader>
                 <div className='space-y-4 py-4'>
@@ -598,8 +583,7 @@ export function ProfileManager() {
                   {createdAccounts.length > 0 && (
                     <div className='space-y-2'>
                       <p className='text-sm font-medium'>
-                        {t.settings?.profileManager?.addedAccounts ||
-                          'Toegevoegde rekeningen:'}
+                        {t.settings?.profileManager?.addedAccounts}
                       </p>
                       <div className='space-y-2'>
                         {createdAccounts.map((acc) => {
@@ -626,15 +610,12 @@ export function ProfileManager() {
                   {/* Add account form */}
                   <div className='space-y-3 border-t pt-4'>
                     <p className='text-sm font-medium'>
-                      {t.settings?.accounts?.addTitle || 'Nieuwe rekening'}
+                      {t.settings?.accounts?.addTitle}
                     </p>
                     <div className='flex flex-col gap-3'>
                       <div className='flex flex-col gap-3 sm:flex-row sm:gap-2'>
                         <Input
-                          placeholder={
-                            t.settings?.accounts?.ibanPlaceholder ||
-                            'NL00BANK0123456789'
-                          }
+                          placeholder={t.settings?.accounts?.ibanPlaceholder}
                           value={newAccountIban}
                           onChange={(e) =>
                             setNewAccountIban(
@@ -644,10 +625,7 @@ export function ProfileManager() {
                           className='w-full sm:flex-1'
                         />
                         <Input
-                          placeholder={
-                            t.settings?.accounts?.namePlaceholder ||
-                            'Naam rekening'
-                          }
+                          placeholder={t.settings?.accounts?.namePlaceholder}
                           value={newAccountName}
                           onChange={(e) => setNewAccountName(e.target.value)}
                           className='w-full sm:flex-1'
@@ -688,7 +666,7 @@ export function ProfileManager() {
                           className='w-full sm:w-auto'
                         >
                           <Plus className='mr-2 h-4 w-4' />
-                          {t.settings?.accounts?.add || 'Toevoegen'}
+                          {t.settings?.accounts?.add}
                         </Button>
                       </div>
                     </div>
@@ -696,7 +674,7 @@ export function ProfileManager() {
                 </div>
                 <DialogFooter>
                   <Button onClick={handleCloseCreateDialog}>
-                    {t.common?.done || 'Klaar'}
+                    {t.common?.done}
                   </Button>
                 </DialogFooter>
               </>
@@ -755,7 +733,7 @@ export function ProfileManager() {
               <CardContent className='pb-3'>
                 <div className='flex items-center justify-between'>
                   <div className='text-sm text-muted-foreground'>
-                    {t.settings.profileManager.profileId || 'Profile ID'}:{' '}
+                    {t.settings.profileManager.profileId}:{' '}
                     <code className='rounded bg-muted px-1 py-0.5 font-mono text-xs'>
                       {profile.id}
                     </code>
@@ -783,16 +761,15 @@ export function ProfileManager() {
                       <TooltipContent>
                         <p>
                           {copiedProfileId === profile.id
-                            ? t.common.copied || 'Copied!'
-                            : t.settings.profileManager.copyProfileId ||
-                              'Copy Profile ID'}
+                            ? t.common.copied
+                            : t.settings.profileManager.copyProfileId}
                         </p>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
                 </div>
                 <div className='mt-1 text-sm text-muted-foreground'>
-                  {t.settings.profileManager.createdOn || 'Created on'}{' '}
+                  {t.settings.profileManager.createdOn}{' '}
                   {new Date(
                     profile.createdAt || Date.now()
                   ).toLocaleDateString()}
@@ -802,7 +779,7 @@ export function ProfileManager() {
                 {/* Hide switch button for hidden profiles and when active */}
                 {profile.isHidden ? (
                   <span className='text-xs text-muted-foreground'>
-                    {t.settings?.profileManager?.hidden || 'Hidden'}
+                    {t.settings?.profileManager?.hidden}
                   </span>
                 ) : (
                   <Button
@@ -1003,10 +980,8 @@ export function ProfileManager() {
                         <TooltipContent>
                           <p>
                             {profile.isHidden
-                              ? t.settings?.profileManager?.showProfile ||
-                                'Show profile'
-                              : t.settings?.profileManager?.hideProfile ||
-                                'Hide profile'}
+                              ? t.settings?.profileManager?.showProfile
+                              : t.settings?.profileManager?.hideProfile}
                           </p>
                         </TooltipContent>
                       </Tooltip>

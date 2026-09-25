@@ -168,7 +168,7 @@ export const ContactList: React.FC<ContactListProps> = ({
       >
         <CardHeader className='px-3 py-3 sm:px-6 sm:py-4'>
           <CardTitle className='text-base sm:text-lg'>
-            {t.addressBook?.contactsTitle || 'Contacts'}
+            {t.addressBook?.contactsTitle}
           </CardTitle>
         </CardHeader>
         <CardContent className='px-3 pt-0 pb-3 sm:px-6 sm:pt-0 sm:pb-6'>
@@ -183,13 +183,12 @@ export const ContactList: React.FC<ContactListProps> = ({
               icon={Users}
               title={
                 search
-                  ? t.addressBook?.noResults || 'No contacts found'
+                  ? t.addressBook?.noResults
                   : t.settings.addressBook.emptyTitle
               }
               description={
                 search
-                  ? t.addressBook?.tryDifferentSearch ||
-                    'Try a different search term'
+                  ? t.addressBook?.tryDifferentSearch
                   : t.settings.addressBook.emptyDescription
               }
               action={
@@ -198,7 +197,7 @@ export const ContactList: React.FC<ContactListProps> = ({
                     onClick={onAddContact}
                     className='text-sm text-purple-600 hover:text-purple-700 hover:underline dark:text-purple-400 dark:hover:text-purple-300'
                   >
-                    {t.addressBook?.addContact || 'Add contact'}
+                    {t.addressBook?.addContact}
                   </button>
                 )
               }
@@ -307,7 +306,7 @@ export const ContactList: React.FC<ContactListProps> = ({
                     }
                     className='flex items-center gap-2'
                   >
-                    {t.transactions?.loadMore || 'Load more'}
+                    {t.transactions?.loadMore}
                   </Button>
                 </div>
               )}

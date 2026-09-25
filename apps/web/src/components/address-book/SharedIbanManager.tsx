@@ -77,7 +77,7 @@ export const SharedIbanManager: React.FC<SharedIbanManagerProps> = ({
         <div className='flex items-center justify-between'>
           <CardTitle className='flex items-center gap-2 text-amber-700 dark:text-amber-400'>
             <AlertTriangle className='h-5 w-5' />
-            {t.addressBook?.sharedIbans || 'Shared IBANs'}
+            {t.addressBook?.sharedIbans}
             <span className='rounded-full bg-amber-200 px-2 py-0.5 text-xs font-normal dark:bg-amber-800'>
               {sharedIbans.length}
             </span>
@@ -106,24 +106,19 @@ export const SharedIbanManager: React.FC<SharedIbanManagerProps> = ({
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
-                <p>
-                  {t.addressBook?.rescanSharedIbans ||
-                    'Rescan for shared IBANs'}
-                </p>
+                <p>{t.addressBook?.rescanSharedIbans}</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
         </div>
         {!showSharedIbans && (
           <CardDescription>
-            {t.addressBook?.sharedIbansCollapsed ||
-              'IBANs with multiple different names in transactions. Click to expand.'}
+            {t.addressBook?.sharedIbansCollapsed}
           </CardDescription>
         )}
         {showSharedIbans && (
           <CardDescription>
-            {t.addressBook?.sharedIbansExpanded ||
-              'IBANs with multiple different names in transactions (payment processors like Adyen, Mollie, etc.). These are not automatically added to the address book.'}
+            {t.addressBook?.sharedIbansExpanded}
           </CardDescription>
         )}
       </CardHeader>
@@ -153,10 +148,10 @@ export const SharedIbanManager: React.FC<SharedIbanManagerProps> = ({
                         )}
                       </div>
                       <div className='mt-1 text-xs text-muted-foreground'>
-                        {(
-                          t.addressBook?.differentNames ||
-                          '{count} different names:'
-                        ).replace('{count}', String(shared.merchantCount))}
+                        {t.addressBook?.differentNames?.replace(
+                          '{count}',
+                          String(shared.merchantCount)
+                        )}
                       </div>
                       <div className='mt-1.5 flex flex-wrap gap-1.5'>
                         {(() => {
@@ -200,14 +195,11 @@ export const SharedIbanManager: React.FC<SharedIbanManagerProps> = ({
                                   <p className='font-medium'>{m.name}</p>
                                   <p className='text-xs text-muted-foreground'>
                                     {m.transactionCount}{' '}
-                                    {t.addressBook?.transactions ||
-                                      'transactions'}
+                                    {t.addressBook?.transactions}
                                   </p>
                                   {isInSimilarGroup && (
                                     <p className='mt-1 text-xs text-purple-400'>
-                                      ⚡{' '}
-                                      {t.addressBook?.possiblySamePerson ||
-                                        'Possibly the same person/organization'}
+                                      ⚡ {t.addressBook?.possiblySamePerson}
                                     </p>
                                   )}
                                 </TooltipContent>

@@ -49,13 +49,13 @@ export function BottomNav() {
     {
       to: '/subscriptions',
       icon: CalendarClock,
-      label: t.nav.subscriptions || 'Subscriptions',
+      label: t.nav.subscriptions,
     },
     { to: '/categories', icon: Tags, label: t.nav.categories },
     {
       to: '/addressbook',
       icon: BookUser,
-      label: t.nav.addressBook || 'Address Book',
+      label: t.nav.addressBook,
     },
   ];
 
@@ -98,9 +98,7 @@ export function BottomNav() {
           )}
         >
           <MoreHorizontal className='h-5 w-5' />
-          <span className='text-[10px] font-medium'>
-            {t.bottomNav?.more || 'More'}
-          </span>
+          <span className='text-[10px] font-medium'>{t.bottomNav?.more}</span>
         </button>
       </nav>
 
@@ -111,9 +109,7 @@ export function BottomNav() {
           className='h-auto max-h-[80vh] rounded-t-2xl pb-8'
         >
           <SheetHeader className='text-left'>
-            <SheetTitle>
-              {t.bottomNav?.moreOptions || 'More options'}
-            </SheetTitle>
+            <SheetTitle>{t.bottomNav?.moreOptions}</SheetTitle>
           </SheetHeader>
 
           <div className='mt-6 space-y-1'>

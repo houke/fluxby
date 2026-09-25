@@ -200,7 +200,7 @@ const SortableAccountItem = React.memo(function SortableAccountItem({
                 </TooltipTrigger>
                 <TooltipContent>
                   {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                  <p>{(t.common as any)?.save || 'Opslaan'}</p>
+                  <p>{(t.common as any)?.save}</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
@@ -218,7 +218,7 @@ const SortableAccountItem = React.memo(function SortableAccountItem({
                 </TooltipTrigger>
                 <TooltipContent>
                   {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                  <p>{(t.common as any)?.cancel || 'Annuleren'}</p>
+                  <p>{(t.common as any)?.cancel}</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
@@ -283,7 +283,7 @@ const SortableAccountItem = React.memo(function SortableAccountItem({
                   </TooltipTrigger>
                   <TooltipContent>
                     {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                    <p>{(t.common as any)?.edit || 'Bewerken'}</p>
+                    <p>{(t.common as any)?.edit}</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -310,7 +310,7 @@ const SortableAccountItem = React.memo(function SortableAccountItem({
                   </TooltipTrigger>
                   <TooltipContent>
                     {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                    <p>{(t.common as any)?.delete || 'Verwijderen'}</p>
+                    <p>{(t.common as any)?.delete}</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>

@@ -96,7 +96,7 @@ export function MigrationPrompt({
       console.error('Migration failed:', err);
       // Clear the trigger flag on error so user can retry
       sessionStorage.removeItem('fluxby-migration-triggered');
-      setError(err instanceof Error ? err.message : 'Unknown error');
+      setError(err instanceof Error ? err.message : t.common.unknownError);
       setMigrationState('error');
     }
   };
@@ -128,15 +128,15 @@ export function MigrationPrompt({
       case 'pending':
         // Different message for stale code vs new migrations
         if (isStale) {
-          return t.migrations?.updateRequired || 'Update required';
+          return t.migrations?.updateRequired;
         }
-        return t.migrations?.updateAvailable || 'Update available';
+        return t.migrations?.updateAvailable;
       case 'running':
-        return t.migrations?.applyingUpdate || 'Applying update...';
+        return t.migrations?.applyingUpdate;
       case 'completed':
-        return t.migrations?.updateComplete || 'Update complete';
+        return t.migrations?.updateComplete;
       case 'error':
-        return t.migrations?.updateFailed || 'Update failed';
+        return t.migrations?.updateFailed;
     }
   };
 
@@ -144,37 +144,18 @@ export function MigrationPrompt({
     switch (migrationState) {
       case 'pending':
         if (isStale) {
-          return (
-            t.migrations?.staleCodeDescription ||
-            'A newer version of Fluxby has been installed. Refreshing automatically to load the latest version...'
-          );
+          return t.migrations?.staleCodeDescription;
         }
         if (hasNewMigrations) {
-          return (
-            t.migrations?.newMigrationsDescription ||
-            'A database update is required. Click "Apply update" to update your database and enable new features.'
-          );
+          return t.migrations?.newMigrationsDescription;
         }
-        return (
-          t.migrations?.updateDescriptionAction ||
-          'A new version of Fluxby is available. Click "Apply update" to install the latest features and improvements.'
-        );
+        return t.migrations?.updateDescriptionAction;
       case 'running':
-        return (
-          t.migrations?.applyingDescription ||
-          'Please wait while we update your database. This will only take a moment...'
-        );
+        return t.migrations?.applyingDescription;
       case 'completed':
-        return (
-          t.migrations?.completedDescription ||
-          'Update successfully applied. Reloading application...'
-        );
+        return t.migrations?.completedDescription;
       case 'error':
-        return (
-          error ||
-          t.migrations?.errorDescription ||
-          'An error occurred during the update.'
-        );
+        return error || t.migrations?.errorDescription;
     }
   };
 
@@ -208,7 +189,7 @@ export function MigrationPrompt({
                 className='flex flex-1 items-center justify-center gap-2 rounded-md bg-purple-600 px-4 py-2 text-sm font-medium text-white ring-2 hover:bg-purple-700 focus:ring-purple-500 focus:ring-offset-2 focus:outline-none'
               >
                 <RefreshCw className='h-4 w-4' />
-                {t.migrations?.applyUpdate || 'Apply update'}
+                {t.migrations?.applyUpdate}
               </button>
             </div>
           )}
@@ -228,7 +209,7 @@ export function MigrationPrompt({
                 className='flex flex-1 items-center justify-center gap-2 rounded-md bg-purple-600 px-4 py-2 text-sm font-medium text-white ring-2 hover:bg-purple-700 focus:ring-purple-500 focus:ring-offset-2 focus:outline-none'
               >
                 <RefreshCw className='h-4 w-4' />
-                {t.migrations?.retry || t.common?.retry || 'Retry'}
+                {t.migrations?.retry || t.common?.retry}
               </button>
             </div>
           )}

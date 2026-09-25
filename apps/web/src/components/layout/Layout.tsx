@@ -129,14 +129,14 @@ export default function Layout() {
     {
       to: '/subscriptions',
       icon: CalendarClock,
-      label: t.nav.subscriptions || 'Subscriptions',
+      label: t.nav.subscriptions,
       onboarding: 'nav-subscriptions',
       menuKey: 'subscriptions',
     },
     {
       to: '/addressbook',
       icon: BookUser,
-      label: t.nav.addressBook || 'Address Book',
+      label: t.nav.addressBook,
       onboarding: 'nav-addressbook',
       menuKey: 'addressbook',
     },
@@ -223,7 +223,7 @@ export default function Layout() {
                 <div className='flex flex-col items-center gap-4'>
                   <div className='h-12 w-12 animate-spin rounded-full border-4 border-muted border-t-purple-600' />
                   <p className='text-sm font-medium text-foreground'>
-                    {t.common?.preparingOnboarding || 'Switching profiles...'}
+                    {t.common?.preparingOnboarding}
                   </p>
                 </div>
               </div>
@@ -360,11 +360,9 @@ export default function Layout() {
                   </TooltipTrigger>
                   <TooltipContent>
                     <div className='text-center'>
-                      <p className='font-medium'>
-                        {t.spotlight?.openSearch || 'Search'}
-                      </p>
+                      <p className='font-medium'>{t.spotlight.openSearch}</p>
                       <p className='text-xs text-muted-foreground'>
-                        {t.spotlight?.openSearchTooltip || 'Press ⌘K'}
+                        {t.spotlight.openSearchTooltip}
                       </p>
                     </div>
                   </TooltipContent>
@@ -390,11 +388,11 @@ export default function Layout() {
                     <div className='text-center'>
                       <p className='font-medium'>
                         {isPrivacyMode
-                          ? t.common?.disablePrivacy || 'Show sensitive data'
-                          : t.common?.enablePrivacy || 'Hide sensitive data'}
+                          ? t.common?.disablePrivacy
+                          : t.common?.enablePrivacy}
                       </p>
                       <p className='text-xs text-muted-foreground'>
-                        {t.spotlight?.togglePrivacyTooltip || 'Press ⇧⌘P'}
+                        {t.spotlight.togglePrivacyTooltip}
                       </p>
                     </div>
                   </TooltipContent>
@@ -420,11 +418,11 @@ export default function Layout() {
                     <div className='text-center'>
                       <p className='font-medium'>
                         {isDark
-                          ? t.spotlight?.switchToLight || 'Switch to light mode'
-                          : t.spotlight?.switchToDark || 'Switch to dark mode'}
+                          ? t.spotlight.switchToLight
+                          : t.spotlight.switchToDark}
                       </p>
                       <p className='text-xs text-muted-foreground'>
-                        {t.spotlight?.toggleDarkModeTooltip || 'Press ⇧⌘D'}
+                        {t.spotlight.toggleDarkModeTooltip}
                       </p>
                     </div>
                   </TooltipContent>

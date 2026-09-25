@@ -94,11 +94,11 @@ export function LockScreen({
     try {
       const success = await unlock(password);
       if (!success) {
-        setError(t.security?.wrongPassword || 'Incorrect password');
+        setError(t.security?.wrongPassword);
         setPassword('');
       }
     } catch {
-      setError(t.security?.unlockError || 'Failed to unlock');
+      setError(t.security?.unlockError);
     } finally {
       setIsLoading(false);
     }
@@ -109,14 +109,12 @@ export function LockScreen({
     setError(null);
 
     if (password.length < 8) {
-      setError(
-        t.security?.passwordTooShort || 'Password must be at least 8 characters'
-      );
+      setError(t.security?.passwordTooShort);
       return;
     }
 
     if (password !== confirmPassword) {
-      setError(t.security?.passwordsNoMatch || 'Passwords do not match');
+      setError(t.security?.passwordsNoMatch);
       return;
     }
 
@@ -126,7 +124,7 @@ export function LockScreen({
       await setupEncryption(password);
       onSetupComplete?.();
     } catch {
-      setError(t.security?.setupError || 'Failed to setup master password');
+      setError(t.security?.setupError);
     } finally {
       setIsLoading(false);
     }
@@ -165,16 +163,12 @@ export function LockScreen({
               <FluxbyWebGL width={95} height={95} />
             </div>
             <CardTitle className='text-2xl font-bold tracking-tight'>
-              {isSetupMode
-                ? t.security?.setupTitle || 'Set up master password'
-                : t.security?.unlockTitle || 'Unlock Fluxby'}
+              {isSetupMode ? t.security?.setupTitle : t.security?.unlockTitle}
             </CardTitle>
             <p className='mt-2 text-sm text-muted-foreground'>
               {isSetupMode
-                ? t.security?.setupDescription ||
-                  'Create a master password to protect your data. This password cannot be recovered if lost.'
-                : t.security?.unlockDescription ||
-                  'Enter your master password to access your data.'}
+                ? t.security?.setupDescription
+                : t.security?.unlockDescription}
             </p>
           </CardHeader>
           <CardContent>
@@ -183,8 +177,7 @@ export function LockScreen({
               <div className='mb-6 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50/50 p-4 shadow-sm dark:border-amber-900/50 dark:bg-amber-900/20'>
                 <AlertCircle className='mt-0.5 h-5 w-5 flex-shrink-0 text-amber-600 dark:text-amber-400' />
                 <p className='text-sm leading-relaxed text-amber-800 dark:text-amber-200'>
-                  {t.security?.recoveryWarning ||
-                    'Warning: Your password cannot be recovered. If you forget it, all your data will be permanently inaccessible.'}
+                  {t.security?.recoveryWarning}
                 </p>
               </div>
             )}
@@ -207,8 +200,8 @@ export function LockScreen({
                     type={showPassword ? 'text' : 'password'}
                     placeholder={
                       isSetupMode
-                        ? t.security?.newPassword || 'Create password'
-                        : t.security?.enterPassword || 'Enter password'
+                        ? t.security?.newPassword
+                        : t.security?.enterPassword
                     }
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -232,9 +225,7 @@ export function LockScreen({
                 {isSetupMode && (
                   <Input
                     type={showPassword ? 'text' : 'password'}
-                    placeholder={
-                      t.security?.confirmPassword || 'Confirm password'
-                    }
+                    placeholder={t.security?.confirmPassword}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     disabled={isLoading}
@@ -248,10 +239,10 @@ export function LockScreen({
                   disabled={isLoading}
                 >
                   {isLoading
-                    ? t.common?.loading || 'Loading...'
+                    ? t.common?.loading
                     : isSetupMode
-                      ? t.security?.createPassword || 'Create password'
-                      : t.security?.unlock || 'Unlock'}
+                      ? t.security?.createPassword
+                      : t.security?.unlock}
                 </Button>
               </div>
             </form>
@@ -270,26 +261,23 @@ export function LockScreen({
                       className='h-auto px-0 text-sm text-muted-foreground'
                       disabled={isLoading}
                     >
-                      {t.security?.forgotPassword || 'Forgot password?'}
+                      {t.security?.forgotPassword}
                     </Button>
                   </DialogTrigger>
                   <DialogContent>
                     <DialogHeader>
                       <DialogTitle>
-                        {t.security?.forgotPasswordDialogTitle ||
-                          'Reset your local data?'}
+                        {t.security?.forgotPasswordDialogTitle}
                       </DialogTitle>
                       <DialogDescription>
-                        {t.security?.forgotPasswordDialogDescription ||
-                          'Fluxby cannot recover your master password. Resetting will delete your local database and restart onboarding.'}
+                        {t.security?.forgotPasswordDialogDescription}
                       </DialogDescription>
                     </DialogHeader>
 
                     <div className='flex items-start gap-3 rounded-lg border border-destructive/20 bg-destructive/10 p-4'>
                       <AlertCircle className='mt-0.5 h-5 w-5 flex-shrink-0 text-destructive' />
                       <p className='text-sm text-foreground'>
-                        {t.security?.forgotPasswordDialogWarning ||
-                          'This action cannot be undone.'}
+                        {t.security?.forgotPasswordDialogWarning}
                       </p>
                     </div>
 
@@ -300,7 +288,7 @@ export function LockScreen({
                         onClick={() => setIsForgotDialogOpen(false)}
                         disabled={isLoading}
                       >
-                        {t.common?.cancel || 'Cancel'}
+                        {t.common?.cancel}
                       </Button>
                       <Button
                         type='button'
@@ -308,9 +296,7 @@ export function LockScreen({
                         onClick={handleForgotPasswordReset}
                         disabled={isLoading}
                       >
-                        {t.security?.resetDatabase ||
-                          t.errors?.resetDatabase ||
-                          'Reset database'}
+                        {t.security?.resetDatabase || t.errors?.resetDatabase}
                       </Button>
                     </DialogFooter>
                   </DialogContent>
@@ -326,7 +312,7 @@ export function LockScreen({
               href='https://fluxby.app'
               className='inline-flex items-center text-sm font-medium text-purple-600 transition-colors hover:text-purple-700 hover:underline dark:text-purple-400'
             >
-              ← {t.common?.backToHomepage || 'Back to homepage'}
+              ← {t.common?.backToHomepage}
             </a>
           )}
         </div>

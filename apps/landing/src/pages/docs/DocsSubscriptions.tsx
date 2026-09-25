@@ -591,7 +591,7 @@ fetch('http://localhost:3001/api/recurring/{id}/dismiss', {
           <thead className='bg-gray-50 dark:bg-gray-800'>
             <tr>
               <th className='px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100'>
-                Type
+                {t.docs.common.type}
               </th>
               <th className='px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100'>
                 {t.docs.subscriptions?.intervalColumn}
@@ -671,10 +671,10 @@ fetch('http://localhost:3001/api/recurring/{id}/dismiss', {
           <thead className='bg-gray-50 dark:bg-gray-800'>
             <tr>
               <th className='px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100'>
-                Method
+                {t.docs.common.method}
               </th>
               <th className='px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100'>
-                Endpoint
+                {t.docs.common.endpoint}
               </th>
               <th className='px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100'>
                 {t.docs.common?.tableDescription}

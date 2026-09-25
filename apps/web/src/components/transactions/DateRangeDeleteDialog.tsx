@@ -139,20 +139,15 @@ export const DateRangeDeleteDialog = memo(function DateRangeDeleteDialog({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className='sm:max-w-[440px]'>
         <DialogHeader>
-          <DialogTitle>
-            {t.bulkDelete?.deleteByDateRange || 'Delete by date range'}
-          </DialogTitle>
-          <DialogDescription>
-            {t.bulkDelete?.confirmWarning ||
-              'This action cannot be undone after 5 minutes.'}
-          </DialogDescription>
+          <DialogTitle>{t.bulkDelete.deleteByDateRange}</DialogTitle>
+          <DialogDescription>{t.bulkDelete.confirmWarning}</DialogDescription>
         </DialogHeader>
 
         <div className='space-y-4 py-4'>
           {/* Start date picker */}
           <div className='space-y-2'>
             <label className='text-sm font-medium'>
-              {t.bulkDelete?.dateRange?.start || 'Start date'}
+              {t.bulkDelete.dateRange.start}
             </label>
             <Popover
               open={startDatePickerOpen}
@@ -169,7 +164,7 @@ export const DateRangeDeleteDialog = memo(function DateRangeDeleteDialog({
                   <CalendarIcon className='mr-2 h-4 w-4' />
                   {startDate
                     ? format(startDate, 'PPP', { locale })
-                    : t.bulkDelete?.dateRange?.start || 'Pick a start date'}
+                    : t.bulkDelete.dateRange.start}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className='w-auto p-0' align='start'>
@@ -195,7 +190,7 @@ export const DateRangeDeleteDialog = memo(function DateRangeDeleteDialog({
           {/* End date picker */}
           <div className='space-y-2'>
             <label className='text-sm font-medium'>
-              {t.bulkDelete?.dateRange?.end || 'End date'}
+              {t.bulkDelete.dateRange.end}
             </label>
             <Popover
               open={endDatePickerOpen}
@@ -212,7 +207,7 @@ export const DateRangeDeleteDialog = memo(function DateRangeDeleteDialog({
                   <CalendarIcon className='mr-2 h-4 w-4' />
                   {endDate
                     ? format(endDate, 'PPP', { locale })
-                    : t.bulkDelete?.dateRange?.end || 'Pick an end date'}
+                    : t.bulkDelete.dateRange.end}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className='w-auto p-0' align='start'>
@@ -238,20 +233,17 @@ export const DateRangeDeleteDialog = memo(function DateRangeDeleteDialog({
           {accounts.length > 1 && (
             <div className='space-y-2'>
               <label className='text-sm font-medium'>
-                {t.import?.account || 'Account'} (
-                {t.common?.optional || 'optional'})
+                {t.import?.account} ({t.common?.optional})
               </label>
               <Select
                 value={selectedAccountId}
                 onValueChange={setSelectedAccountId}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder={t.common?.all || 'All accounts'} />
+                  <SelectValue placeholder={t.common?.all} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value='all'>
-                    {t.common?.all || 'All accounts'}
-                  </SelectItem>
+                  <SelectItem value='all'>{t.common?.all}</SelectItem>
                   {accounts.map((account) => (
                     <SelectItem key={account.id} value={account.id}>
                       {account.name}
@@ -267,28 +259,25 @@ export const DateRangeDeleteDialog = memo(function DateRangeDeleteDialog({
             {isLoadingPreview ? (
               <div className='flex items-center justify-center gap-2 text-muted-foreground'>
                 <Loader2 className='h-4 w-4 animate-spin' />
-                <span className='text-sm'>
-                  {t.common?.loading || 'Loading...'}
-                </span>
+                <span className='text-sm'>{t.common?.loading}</span>
               </div>
             ) : previewCount === null ? (
               <span className='text-sm text-muted-foreground'>
-                {t.bulkDelete?.dateRange?.noMatches ||
-                  'Select dates to see preview'}
+                {t.bulkDelete.dateRange.noMatches}
               </span>
             ) : previewCount === 0 ? (
               <span className='text-sm text-muted-foreground'>
-                {t.bulkDelete?.dateRange?.noMatches || 'No transactions found'}
+                {t.bulkDelete.dateRange.noMatches}
               </span>
             ) : (
               <span
                 className='text-sm font-medium text-destructive'
                 data-testid='delete-preview-count'
               >
-                {(
-                  t.bulkDelete?.dateRange?.preview ||
-                  '{count} transactions will be deleted'
-                ).replace('{count}', String(previewCount))}
+                {t.bulkDelete.dateRange.preview.replace(
+                  '{count}',
+                  String(previewCount)
+                )}
               </span>
             )}
           </div>
@@ -300,7 +289,7 @@ export const DateRangeDeleteDialog = memo(function DateRangeDeleteDialog({
             onClick={() => onOpenChange(false)}
             disabled={isLoading}
           >
-            {t.common?.cancel || 'Cancel'}
+            {t.common?.cancel}
           </Button>
           <Button
             variant='destructive'
@@ -313,7 +302,7 @@ export const DateRangeDeleteDialog = memo(function DateRangeDeleteDialog({
             ) : (
               <Trash2 className='h-4 w-4' />
             )}
-            {t.common?.delete || 'Delete'}
+            {t.common?.delete}
           </Button>
         </DialogFooter>
       </DialogContent>

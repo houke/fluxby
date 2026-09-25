@@ -5,9 +5,14 @@ import {
   deleteFromOPFSWithCache,
   isSettingsCacheInitialized,
 } from '@fluxby/database';
+import { getStoredLanguage, translations } from './i18n';
 
 const API_STORAGE_KEY = 'finance.apiBaseUrl';
 const PROFILE_KEY = 'fluxby.activeProfileId';
+
+function getApiErrorMessages() {
+  return translations[getStoredLanguage()];
+}
 
 export function getApiBaseUrl(): string {
   if (typeof window === 'undefined') return '';
@@ -68,10 +73,9 @@ async function fetchAPI<T>(
   });
 
   if (!response.ok) {
-    const error = await response
-      .json()
-      .catch(() => ({ error: 'Request failed' }));
-    const message = error.error || 'Request failed';
+    const requestFailed = getApiErrorMessages().common.requestFailed;
+    const error = await response.json().catch(() => ({ error: requestFailed }));
+    const message = error.error || requestFailed;
 
     // Log technical details only in development
     const isDevelopment =
@@ -108,10 +112,9 @@ async function fetchAPIWithProfile<T>(
   });
 
   if (!response.ok) {
-    const error = await response
-      .json()
-      .catch(() => ({ error: 'Request failed' }));
-    const message = error.error || 'Request failed';
+    const requestFailed = getApiErrorMessages().common.requestFailed;
+    const error = await response.json().catch(() => ({ error: requestFailed }));
+    const message = error.error || requestFailed;
     throw new Error(message);
   }
 
@@ -461,10 +464,11 @@ export const api = {
     });
 
     if (!response.ok) {
+      const uploadFailed = getApiErrorMessages().import.uploadFailed;
       const error = await response
         .json()
-        .catch(() => ({ error: 'Upload mislukt' }));
-      throw new Error(error.error || 'Upload mislukt');
+        .catch(() => ({ error: uploadFailed }));
+      throw new Error(error.error || uploadFailed);
     }
 
     const data = await response.json();
@@ -487,10 +491,11 @@ export const api = {
     });
 
     if (!response.ok) {
+      const previewFailed = getApiErrorMessages().import.previewFailed;
       const error = await response
         .json()
-        .catch(() => ({ error: 'Preview mislukt' }));
-      throw new Error(error.error || 'Preview mislukt');
+        .catch(() => ({ error: previewFailed }));
+      throw new Error(error.error || previewFailed);
     }
 
     const data = await response.json();
@@ -515,10 +520,11 @@ export const api = {
     });
 
     if (!response.ok) {
+      const parsingFailed = getApiErrorMessages().import.parsingFailed;
       const error = await response
         .json()
-        .catch(() => ({ error: 'Parsing failed' }));
-      throw new Error(error.error || 'Parsing failed');
+        .catch(() => ({ error: parsingFailed }));
+      throw new Error(error.error || parsingFailed);
     }
 
     const data = await response.json();
@@ -559,12 +565,16 @@ export const api = {
     });
 
     if (!response.ok) {
-      let errorMessage = 'Import failed';
+      const importMessages = getApiErrorMessages().import;
+      let errorMessage = importMessages.importFailed;
       try {
         const errorData = await response.json();
         errorMessage = errorData.error || errorData.message || errorMessage;
       } catch {
-        errorMessage = `Import failed with status ${response.status}`;
+        errorMessage = importMessages.importFailedWithStatus.replace(
+          '{status}',
+          String(response.status)
+        );
       }
       throw new Error(errorMessage);
     }
@@ -761,7 +771,7 @@ export const api = {
     const data = await response.json();
 
     if (!response.ok || !data.success) {
-      throw new Error(data.error || 'Request failed');
+      throw new Error(data.error || getApiErrorMessages().common.requestFailed);
     }
 
     return data.data;

@@ -203,8 +203,7 @@ export function CategorySpendingChart({
                             </p>
                           ))}
                         <p className='mt-1 border-t pt-1 text-sm font-semibold'>
-                          {t.analytics?.total || 'Total'}:{' '}
-                          <Currency amount={total} />
+                          {t.analytics?.total}: <Currency amount={total} />
                         </p>
                       </div>
                     );
@@ -246,7 +245,7 @@ export function CategorySpendingChart({
       <div
         className='flex flex-wrap gap-2 border-t pt-4'
         role='group'
-        aria-label={t.analytics?.legendLabel || 'Category filter'}
+        aria-label={t.analytics?.legendLabel}
       >
         {categoriesWithData.map((cat) => {
           const isDisabled = disabledCategories.has(cat.name);

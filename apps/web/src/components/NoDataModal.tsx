@@ -86,7 +86,7 @@ export function NoDataModal() {
       return {
         start: lastMonthStart,
         end: lastMonthEnd,
-        label: t.common?.filters?.lastMonth || 'Last month',
+        label: t.common?.filters?.lastMonth,
       };
     }
 
@@ -190,13 +190,13 @@ export function NoDataModal() {
               <FluxbyWebGL width={80} height={80} />
             </div>
             <DialogTitle className='text-center'>
-              {t.dashboard?.noDataForPeriod || 'No data for this period'}
+              {t.dashboard?.noDataForPeriod}
             </DialogTitle>
             <DialogDescription className='text-center'>
-              {(
-                t.dashboard?.noDataDescription ||
-                'No transactions found for {period}. Would you like to view a period with data?'
-              ).replace('{period}', formatCurrentPeriod())}
+              {t.dashboard?.noDataDescription?.replace(
+                '{period}',
+                formatCurrentPeriod()
+              )}
             </DialogDescription>
           </DialogHeader>
           <div className='flex gap-3 border-t border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/50'>
@@ -204,13 +204,13 @@ export function NoDataModal() {
               onClick={handleDismiss}
               className='flex-1 rounded-lg border-0 px-4 py-2.5 font-medium text-gray-700 transition-colors hover:bg-gray-100 hover:text-purple-600 focus:ring-0 focus:outline-none focus-visible:ring-0 dark:text-gray-300 dark:hover:bg-purple-900/10'
             >
-              {t.common?.dismiss || 'Dismiss'}
+              {t.common?.dismiss}
             </button>
             <button
               onClick={handleJumpToPeriod}
               className='rounded-lg bg-purple-600 px-4 py-2.5 font-medium text-white transition-colors hover:bg-purple-700 focus:ring-2 focus:ring-purple-500 focus:outline-none'
             >
-              {(t.dashboard?.jumpToPeriod || 'Jump to {period}').replace(
+              {t.dashboard?.jumpToPeriod?.replace(
                 '{period}',
                 suggestedPeriod.label
               )}

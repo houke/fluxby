@@ -278,8 +278,7 @@ export const TransactionRow = memo(function TransactionRow({
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent>
-                            {t.transactions?.resetToOriginal ||
-                              'Terugzetten naar origineel'}
+                            {t.transactions?.resetToOriginal}
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
@@ -477,9 +476,7 @@ export const TransactionRow = memo(function TransactionRow({
                 >
                   <div className='space-y-2'>
                     <Input
-                      placeholder={
-                        t.categories?.searchCategories || 'Zoek categorie...'
-                      }
+                      placeholder={t.categories?.searchCategories}
                       value={categoryPopoverSearch}
                       onChange={(e) => onCategoryPopoverSearch(e.target.value)}
                       className='h-8 text-sm'
@@ -573,7 +570,7 @@ export const TransactionRow = memo(function TransactionRow({
                     {paymentInfo.icon || <CreditCard className='h-3.5 w-3.5' />}
                     {tx.paymentMethod
                       ? paymentInfo.label
-                      : t.transactions.paymentMethods.other || 'Onbekend'}
+                      : t.transactions.paymentMethods.other}
                   </button>
                 </PopoverTrigger>
                 <PopoverContent
@@ -616,9 +613,7 @@ export const TransactionRow = memo(function TransactionRow({
                           <span className='flex h-6 w-6 flex-shrink-0 items-center justify-center rounded bg-red-100 dark:bg-red-900/30'>
                             <X className='h-3.5 w-3.5' />
                           </span>
-                          <span className='truncate'>
-                            {t.common?.remove || 'Verwijderen'}
-                          </span>
+                          <span className='truncate'>{t.common?.remove}</span>
                         </button>
                       </>
                     )}
@@ -659,9 +654,7 @@ export const TransactionRow = memo(function TransactionRow({
                         <span className='flex h-6 w-6 flex-shrink-0 items-center justify-center rounded bg-gray-100 text-gray-500'>
                           <X className='h-3.5 w-3.5' />
                         </span>
-                        <span className='truncate'>
-                          {t.common?.remove || 'Verwijderen'}
-                        </span>
+                        <span className='truncate'>{t.common?.remove}</span>
                         {!tx.paymentProvider && (
                           <Check className='ml-auto h-3 w-3 text-primary' />
                         )}
@@ -724,9 +717,7 @@ export const TransactionRow = memo(function TransactionRow({
                   >
                     <div className='space-y-2'>
                       <Input
-                        placeholder={
-                          t.addressBook?.searchContacts || 'Zoek contact...'
-                        }
+                        placeholder={t.addressBook?.searchContacts}
                         value={addressBookPopoverSearch}
                         onChange={(e) =>
                           onAddressBookPopoverSearch(e.target.value)
@@ -774,8 +765,7 @@ export const TransactionRow = memo(function TransactionRow({
                               ))
                             ) : (
                               <div className='py-2 text-center text-sm text-muted-foreground'>
-                                {t.addressBook?.noContactsFound ||
-                                  'Geen contacten gevonden'}
+                                {t.addressBook?.noContactsFound}
                               </div>
                             );
                           })()}
@@ -818,16 +808,13 @@ export const TransactionRow = memo(function TransactionRow({
                     >
                       <ArrowLeftRight className='h-3 w-3' />
                       {tx.type === 'transfer' &&
-                        (t.transactions.internalTransfer ||
-                          'Internal transfer')}
+                        t.transactions.internalTransfer}
                     </button>
                   </TooltipTrigger>
                   <TooltipContent>
                     {tx.type === 'transfer'
-                      ? t.transactions.removeTransferMark ||
-                        'Remove internal transfer mark'
-                      : t.transactions.markAsTransfer ||
-                        'Mark as internal transfer'}
+                      ? t.transactions.removeTransferMark
+                      : t.transactions.markAsTransfer}
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -933,10 +920,8 @@ export const TransactionRow = memo(function TransactionRow({
                       <span>
                         {hiddenBefore}{' '}
                         {hiddenBefore === 1
-                          ? t.transactions?.laterTransaction ||
-                            'latere transactie'
-                          : t.transactions?.laterTransactions ||
-                            'latere transacties'}
+                          ? t.transactions?.laterTransaction
+                          : t.transactions?.laterTransactions}
                       </span>
                       <span className='flex-1 border-b border-dashed' />
                     </div>
@@ -963,10 +948,8 @@ export const TransactionRow = memo(function TransactionRow({
                       <span>
                         {hiddenAfter}{' '}
                         {hiddenAfter === 1
-                          ? t.transactions?.earlierTransaction ||
-                            'eerdere transactie'
-                          : t.transactions?.earlierTransactions ||
-                            'eerdere transacties'}
+                          ? t.transactions?.earlierTransaction
+                          : t.transactions?.earlierTransactions}
                       </span>
                       <span className='flex-1 border-b border-dashed' />
                     </div>

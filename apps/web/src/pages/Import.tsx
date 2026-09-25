@@ -276,7 +276,7 @@ function HistoryCard({
               {item.bank && ` • ${getBankDisplayName(item.bank)}`}
               {totalSkipped > 0 && (
                 <span className='ml-2 text-amber-600 dark:text-amber-400'>
-                  • {totalSkipped} {t.import?.skipped || 'overgeslagen'}
+                  • {totalSkipped} {t.import?.skipped}
                 </span>
               )}
             </p>
@@ -339,7 +339,7 @@ function HistoryCard({
                       className={`rounded px-1.5 py-0.5 text-xs ${getReasonBadgeStyle(row.reason || row.error || '')}`}
                     >
                       {getErrorLabel(
-                        row.reason || row.error || 'Unknown error'
+                        row.reason || row.error || t.common.unknownError
                       )}
                     </span>
                   </div>
@@ -380,7 +380,11 @@ export default function Import() {
     isProcessing: isWorkerProcessing,
     error: workerError,
     reset: resetWorker,
-  } = useImportWorker();
+  } = useImportWorker({
+    unknownError: t.common.unknownError,
+    error: t.common.error,
+    importCancelled: t.import.importCancelled,
+  });
 
   // Generic CSV state
   const [pendingFile, setPendingFile] = useState<File | null>(null);
@@ -741,7 +745,7 @@ export default function Import() {
     },
     onError: (error: Error) => {
       console.error('Import error:', error);
-      setModalError(error.message || 'Import failed');
+      setModalError(error.message || t.import.importError);
       setImportProgress(null);
     },
   });
@@ -931,11 +935,11 @@ export default function Import() {
       case 'balance':
         return t.import.balanceColumn;
       case 'direction':
-        return t.import.directionColumn || 'Af/Bij';
+        return t.import.directionColumn;
       case 'paymentMethod':
-        return t.import.paymentMethodColumn || 'Betaalmethode';
+        return t.import.paymentMethodColumn;
       case 'notes':
-        return t.import.notesColumn || 'Mededelingen';
+        return t.import.notesColumn;
       default:
         return key;
     }
@@ -1227,12 +1231,9 @@ export default function Import() {
                 <div className='text-center'>
                   {importProgress.phase === 'analyzing' && (
                     <>
-                      <p className='font-medium'>
-                        {t.import?.analyzingFile || 'Analyzing file...'}
-                      </p>
+                      <p className='font-medium'>{t.import?.analyzingFile}</p>
                       <p className='mt-1 text-xs text-muted-foreground'>
-                        {t.import?.analyzingFileDesc ||
-                          'Please wait while we process your file'}
+                        {t.import?.analyzingFileDesc}
                       </p>
                     </>
                   )}
@@ -1243,10 +1244,7 @@ export default function Import() {
                         {importProgress.current}/{importProgress.total}
                       </p>
                       <p className='text-xs text-muted-foreground'>
-                        {(
-                          t.import.savingToDatabase ||
-                          'Saving to database: {current} of {total}'
-                        )
+                        {t.import.savingToDatabase
                           .replace(
                             '{current}',
                             String(importProgress.current || 0)
@@ -1260,12 +1258,9 @@ export default function Import() {
                   )}
                   {importProgress.phase === 'finishing' && (
                     <>
-                      <p className='font-medium'>
-                        {t.import?.finishingUp || 'Finishing up...'}
-                      </p>
+                      <p className='font-medium'>{t.import?.finishingUp}</p>
                       <p className='mt-1 text-xs text-muted-foreground'>
-                        {t.import?.finishingUpDesc ||
-                          'Almost done, just a moment longer'}
+                        {t.import?.finishingUpDesc}
                       </p>
                     </>
                   )}
@@ -1283,7 +1278,7 @@ export default function Import() {
               />
               <div className='min-w-0 text-left'>
                 <p className='truncate text-[10px] tracking-wider text-muted-foreground uppercase'>
-                  {t.import?.importingTo || 'Importeren naar'}
+                  {t.import?.importingTo}
                 </p>
                 <p className='truncate text-sm font-semibold'>
                   {activeProfile?.name}

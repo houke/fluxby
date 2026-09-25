@@ -29,14 +29,6 @@ export default function HelpBudgeting() {
         <li>{t.helpCenter?.budgeting?.step5}</li>
       </ol>
 
-      <h2>{t.helpCenter?.budgeting?.typesTitle}</h2>
-
-      <h3>{t.helpCenter?.budgeting?.categoryBudgetTitle}</h3>
-      <p>{t.helpCenter?.budgeting?.categoryBudgetText}</p>
-
-      <h3>{t.helpCenter?.budgeting?.totalBudgetTitle}</h3>
-      <p>{t.helpCenter?.budgeting?.totalBudgetText}</p>
-
       <div className='not-prose rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-900/20'>
         <h4 className='mb-2 flex items-center gap-2 text-green-800 dark:text-green-200'>
           <span>✅</span>
@@ -50,7 +42,8 @@ export default function HelpBudgeting() {
       <h2>{t.helpCenter?.budgeting?.trackingTitle}</h2>
       <p>{t.helpCenter?.budgeting?.trackingText}</p>
 
-      <HelpAnimation type='budget' />
+      <h2>{t.helpCenter?.budgeting?.suggestedTitle}</h2>
+      <p>{t.helpCenter?.budgeting?.suggestedText}</p>
     </article>
   );
 }

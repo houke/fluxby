@@ -86,14 +86,11 @@ export const BulkDeleteDialog = memo(function BulkDeleteDialog({
           </div>
 
           <DialogTitle className='text-xl font-semibold'>
-            {(
-              t.bulkDelete?.confirmTitle || 'Delete {count} transaction(s)?'
-            ).replace('{count}', String(count))}
+            {t.bulkDelete.confirmTitle.replace('{count}', String(count))}
           </DialogTitle>
 
           <DialogDescription className='text-sm text-muted-foreground'>
-            {t.bulkDelete?.confirmWarning ||
-              'This action cannot be undone after 5 minutes.'}
+            {t.bulkDelete.confirmWarning}
           </DialogDescription>
         </DialogHeader>
 
@@ -103,9 +100,7 @@ export const BulkDeleteDialog = memo(function BulkDeleteDialog({
             <ul
               className='space-y-2'
               role='list'
-              aria-label={
-                t.bulkDelete?.previewListLabel || 'Transactions to be deleted'
-              }
+              aria-label={t.bulkDelete.previewListLabel}
             >
               {previewItems.map((tx) => (
                 <li
@@ -141,7 +136,7 @@ export const BulkDeleteDialog = memo(function BulkDeleteDialog({
                   className='pt-1 text-center text-sm text-muted-foreground'
                   role='listitem'
                 >
-                  {(t.bulkDelete?.andMore || 'and {count} more').replace(
+                  {t.bulkDelete.andMore.replace(
                     '{count}',
                     String(remainingCount)
                   )}
@@ -157,7 +152,7 @@ export const BulkDeleteDialog = memo(function BulkDeleteDialog({
           data-testid='delete-preview-count'
         >
           <span className='text-sm font-medium'>
-            {t.bulkDelete?.totalImpact || 'Total impact'}
+            {t.bulkDelete.totalImpact}
           </span>
           <span
             className={cn(
@@ -191,9 +186,7 @@ export const BulkDeleteDialog = memo(function BulkDeleteDialog({
             ) : (
               <Trash2 className='h-4 w-4' aria-hidden='true' />
             )}
-            {(
-              t.bulkDelete?.deleteSelected || 'Delete {count} transactions'
-            ).replace('{count}', String(count))}
+            {t.bulkDelete.deleteSelected.replace('{count}', String(count))}
           </Button>
         </DialogFooter>
       </DialogContent>

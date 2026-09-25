@@ -57,6 +57,7 @@ import {
 } from '@fluxby/shared';
 import { processINGRow } from './importers/ing-importer';
 import { processASNRow } from './importers/asn-importer';
+import { getStoredLanguage, translations } from './i18n';
 
 /**
  * Batch size for bulk delete/restore operations.
@@ -358,7 +359,7 @@ export function createDataService(db: Database) {
     await db.runAsync(
       `INSERT INTO users (id, name, created_at, updated_at)
        VALUES (?, ?, ?, ?)`,
-      [userId, 'Gebruiker', now, now]
+      [userId, translations[getStoredLanguage()].common.user, now, now]
     );
 
     return userId;
@@ -3509,104 +3510,83 @@ export function createDataService(db: Database) {
     // ============= Category Methods =============
     async getSeedCategories(language: 'nl' | 'en' = 'nl') {
       // Return a basic set of seed categories for local use
+      const copy = translations[language].categories.seedDefaults;
       const categories = [
         {
-          name: language === 'nl' ? 'Wonen & Huisvesting' : 'Housing & Living',
+          name: copy.housing.name,
           icon: '🏠',
           color: '#1E40AF',
-          description: language === 'nl' ? 'Woonlasten' : 'Housing costs',
+          description: copy.housing.description,
           subcategories: [],
         },
         {
-          name: language === 'nl' ? 'Boodschappen' : 'Groceries',
+          name: copy.groceries.name,
           icon: '🛒',
           color: '#34D399',
-          description:
-            language === 'nl'
-              ? 'Supermarkt en dagelijkse boodschappen'
-              : 'Supermarket and daily groceries',
+          description: copy.groceries.description,
           subcategories: [],
         },
         {
-          name: language === 'nl' ? 'Vervoer' : 'Transport',
+          name: copy.transport.name,
           icon: '🚗',
           color: '#93C5FD',
-          description:
-            language === 'nl'
-              ? 'Auto, OV en reizen'
-              : 'Car, public transport and travel',
+          description: copy.transport.description,
           subcategories: [],
         },
         {
-          name: language === 'nl' ? 'Uit eten' : 'Dining Out',
+          name: copy.dining.name,
           icon: '🍽️',
           color: '#FCD34D',
-          description:
-            language === 'nl'
-              ? 'Restaurants en eten bestellen'
-              : 'Restaurants and food delivery',
+          description: copy.dining.description,
           subcategories: [],
         },
         {
-          name: language === 'nl' ? 'Entertainment' : 'Entertainment',
+          name: copy.entertainment.name,
           icon: '🎬',
           color: '#F9A8D4',
-          description:
-            language === 'nl'
-              ? 'Uitgaan en vrije tijd'
-              : 'Going out and leisure',
+          description: copy.entertainment.description,
           subcategories: [],
         },
         {
-          name: language === 'nl' ? 'Gezondheid' : 'Health',
+          name: copy.health.name,
           icon: '💊',
           color: '#FCA5A5',
-          description:
-            language === 'nl' ? 'Medische kosten' : 'Medical expenses',
+          description: copy.health.description,
           subcategories: [],
         },
         {
-          name: language === 'nl' ? 'Winkelen' : 'Shopping',
+          name: copy.shopping.name,
           icon: '🛍️',
           color: '#C4B5FD',
-          description:
-            language === 'nl'
-              ? 'Kleding en overig winkelen'
-              : 'Clothing and other shopping',
+          description: copy.shopping.description,
           subcategories: [],
         },
         {
-          name: language === 'nl' ? 'Abonnementen' : 'Subscriptions',
+          name: copy.subscriptions.name,
           icon: '📱',
           color: '#DDD6FE',
-          description:
-            language === 'nl'
-              ? 'Maandelijkse abonnementen'
-              : 'Monthly subscriptions',
+          description: copy.subscriptions.description,
           subcategories: [],
         },
         {
-          name: language === 'nl' ? 'Salaris' : 'Salary',
+          name: copy.salary.name,
           icon: '💰',
           color: '#6EE7B7',
-          description:
-            language === 'nl' ? 'Inkomen uit werk' : 'Income from work',
+          description: copy.salary.description,
           subcategories: [],
         },
         {
-          name: language === 'nl' ? 'Overboekingen' : 'Transfers',
+          name: copy.transfers.name,
           icon: '↔️',
           color: '#A5B4FC',
-          description:
-            language === 'nl' ? 'Interne overboekingen' : 'Internal transfers',
+          description: copy.transfers.description,
           subcategories: [],
         },
         {
-          name: language === 'nl' ? 'Overig' : 'Other',
+          name: copy.other.name,
           icon: '📦',
           color: '#E5E7EB',
-          description:
-            language === 'nl' ? 'Overige uitgaven' : 'Other expenses',
+          description: copy.other.description,
           subcategories: [],
         },
       ];
@@ -4913,6 +4893,11 @@ export function createDataService(db: Database) {
 
       let imported = 0;
       const errors: string[] = [];
+      const locale = translations[getStoredLanguage()];
+      const formatRowError = (row: number, error: string) =>
+        locale.import.rowError
+          .replace('{row}', String(row))
+          .replace('{error}', error);
       const now = Date.now();
 
       // Track imported transaction IDs and unique IBANs for post-processing
@@ -5053,7 +5038,16 @@ export function createDataService(db: Database) {
                     ? 'invalidAmount'
                     : 'parseError',
               });
-              errors.push(`Row ${i + 1}: ${errorMsg}`);
+              errors.push(
+                formatRowError(
+                  i + 1,
+                  errorMsg.toLowerCase().includes('date')
+                    ? locale.import.invalidDate
+                    : errorMsg.toLowerCase().includes('amount')
+                      ? locale.import.invalidAmount
+                      : locale.import.parsingFailed
+                )
+              );
               continue;
             }
 
@@ -5070,7 +5064,9 @@ export function createDataService(db: Database) {
                 description: row[mapping.description] || '',
                 reason: 'parseError',
               });
-              errors.push(`Row ${i + 1}: Failed to process row`);
+              errors.push(
+                formatRowError(i + 1, locale.import.failedToProcessRow)
+              );
               continue;
             }
 
@@ -5120,7 +5116,16 @@ export function createDataService(db: Database) {
                     ? 'invalidAmount'
                     : 'parseError',
               });
-              errors.push(`Row ${i + 1}: ${errorMsg}`);
+              errors.push(
+                formatRowError(
+                  i + 1,
+                  errorMsg.toLowerCase().includes('date')
+                    ? locale.import.invalidDate
+                    : errorMsg.toLowerCase().includes('amount')
+                      ? locale.import.invalidAmount
+                      : locale.import.parsingFailed
+                )
+              );
               continue;
             }
 
@@ -5137,7 +5142,9 @@ export function createDataService(db: Database) {
                 description: row[mapping.description] || '',
                 reason: 'parseError',
               });
-              errors.push(`Row ${i + 1}: Failed to process row`);
+              errors.push(
+                formatRowError(i + 1, locale.import.failedToProcessRow)
+              );
               continue;
             }
 
@@ -5168,7 +5175,12 @@ export function createDataService(db: Database) {
                 description: row[mapping.description] || '',
                 reason: 'invalidDate',
               });
-              errors.push(`Row ${i + 1}: Invalid date "${dateStr}"`);
+              errors.push(
+                formatRowError(
+                  i + 1,
+                  `${locale.import.invalidDate}: ${dateStr}`
+                )
+              );
               continue;
             }
 
@@ -5182,7 +5194,10 @@ export function createDataService(db: Database) {
                 reason: 'invalidAmount',
               });
               errors.push(
-                `Row ${i + 1}: Invalid amount "${row[mapping.amount]}"`
+                formatRowError(
+                  i + 1,
+                  `${locale.import.invalidAmount}: ${row[mapping.amount]}`
+                )
               );
               continue;
             }
@@ -5339,7 +5354,10 @@ export function createDataService(db: Database) {
             reason: 'parseError',
           });
           errors.push(
-            `Row ${i + 1}: ${err instanceof Error ? err.message : 'Unknown error'}`
+            formatRowError(
+              i + 1,
+              err instanceof Error ? err.message : locale.common.unknownError
+            )
           );
         }
 
@@ -5471,7 +5489,8 @@ export function createDataService(db: Database) {
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           importId,
-          options.filename || 'CSV Import',
+          options.filename ||
+            translations[getStoredLanguage()].import.csvImport,
           options.bank || 'generic',
           imported,
           'completed',
@@ -6130,7 +6149,7 @@ export function createDataService(db: Database) {
         options.forEach((pattern, optionIndex) => {
           const optionId = `subscription_${optionIndex}`;
           criteria[optionId] =
-            `${(pattern.merchant_name || 'Unnamed subscription').slice(0, 120)}; ${pattern.pattern_type}; usual amount ${Math.abs(pattern.avg_amount).toFixed(2)}; last payment ${pattern.last_date}`;
+            `${(pattern.merchant_name || translations[getStoredLanguage()].transactions.unknown).slice(0, 120)}; ${pattern.pattern_type}; usual amount ${Math.abs(pattern.avg_amount).toFixed(2)}; last payment ${pattern.last_date}`;
           optionMap.set(optionId, pattern);
         });
         optionPatterns.set(questionId, optionMap);
@@ -9349,7 +9368,8 @@ export function createDataService(db: Database) {
              VALUES (?, ?, ?, ?, ?, ?, ?)`,
             [
               pick<string>(u, 'id') ?? crypto.randomUUID(),
-              pick<string>(u, 'name') ?? 'Gebruiker',
+              pick<string>(u, 'name') ??
+                translations[getStoredLanguage()].common.user,
               pick<string | null>(u, 'avatar') ?? null,
               toMs(pick(u, 'updated_at', 'updatedAt'), now),
               Number(pick<number>(u, 'is_deleted', 'isDeleted') ?? 0),
@@ -9370,7 +9390,8 @@ export function createDataService(db: Database) {
             [
               pick<string>(pr, 'id') ?? crypto.randomUUID(),
               pick<string>(pr, 'user_id', 'userId') ?? ensuredUserId,
-              pick<string>(pr, 'name') ?? 'Profiel',
+              pick<string>(pr, 'name') ??
+                translations[getStoredLanguage()].common.profile,
               pick<string>(pr, 'type') ?? 'personal',
               pick<string | null>(pr, 'avatar_url', 'avatarUrl') ?? null,
               toMs(pick(pr, 'updated_at', 'updatedAt'), now),

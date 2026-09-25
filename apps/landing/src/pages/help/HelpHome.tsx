@@ -20,7 +20,7 @@ export default function HelpHome() {
       <div className='grid gap-6 md:grid-cols-2'>
         {/* User Guide Card */}
         <Link
-          to='/help/bank-connection'
+          to='/help/first-steps'
           className='group rounded-xl border-2 border-purple-200 bg-gradient-to-br from-purple-50 to-pink-50 p-8 transition-all hover:border-purple-400 hover:shadow-lg dark:border-purple-800 dark:from-purple-900/20 dark:to-pink-900/20 dark:hover:border-purple-600'
         >
           <div className='mb-4 text-5xl'>👋</div>

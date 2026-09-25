@@ -486,13 +486,12 @@ function DatabaseErrorScreen({
 
           {/* Title */}
           <h2 className='mb-2 text-xl font-semibold'>
-            {t.errors?.databaseError || 'Database fout'}
+            {t.errors?.databaseError}
           </h2>
 
           {/* Description */}
           <p className='mb-4 text-muted-foreground'>
-            {t.errors?.databaseErrorDescription ||
-              'Er is een fout opgetreden bij het initialiseren van de database.'}
+            {t.errors?.databaseErrorDescription}
           </p>
 
           {/* Error details - only in development */}
@@ -508,7 +507,7 @@ function DatabaseErrorScreen({
               onClick={() => window.location.reload()}
               className='rounded-lg bg-muted px-4 py-2 font-medium transition-colors hover:bg-muted/80'
             >
-              {t.common?.retry || 'Opnieuw proberen'}
+              {t.common?.retry}
             </button>
 
             <Dialog
@@ -517,26 +516,23 @@ function DatabaseErrorScreen({
             >
               <DialogTrigger asChild>
                 <button className='rounded-lg bg-purple-600 px-4 py-2 font-medium text-white transition-colors hover:bg-purple-700'>
-                  {t.errors?.resetDatabase || 'Reset database'}
+                  {t.errors?.resetDatabase}
                 </button>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
                   <DialogTitle>
-                    {t.security?.forgotPasswordDialogTitle ||
-                      'Reset your local data?'}
+                    {t.security?.forgotPasswordDialogTitle}
                   </DialogTitle>
                   <DialogDescription>
-                    {t.security?.forgotPasswordDialogDescription ||
-                      'Resetting will delete your local database and restart onboarding. This action cannot be undone.'}
+                    {t.security?.forgotPasswordDialogDescription}
                   </DialogDescription>
                 </DialogHeader>
 
                 <div className='flex items-start gap-3 rounded-lg border border-destructive/20 bg-destructive/10 p-4'>
                   <AlertCircle className='mt-0.5 h-5 w-5 flex-shrink-0 text-destructive' />
                   <p className='text-sm text-foreground'>
-                    {t.security?.forgotPasswordDialogWarning ||
-                      'This action cannot be undone.'}
+                    {t.security?.forgotPasswordDialogWarning}
                   </p>
                 </div>
 
@@ -547,7 +543,7 @@ function DatabaseErrorScreen({
                     onClick={() => setIsResetDialogOpen(false)}
                     disabled={isResetting}
                   >
-                    {t.common?.cancel || 'Cancel'}
+                    {t.common?.cancel}
                   </Button>
                   <Button
                     type='button'
@@ -555,9 +551,7 @@ function DatabaseErrorScreen({
                     onClick={handleReset}
                     disabled={isResetting}
                   >
-                    {isResetting
-                      ? t.common?.loading || 'Loading...'
-                      : t.errors?.resetDatabase || 'Reset database'}
+                    {isResetting ? t.common?.loading : t.errors?.resetDatabase}
                   </Button>
                 </DialogFooter>
               </DialogContent>

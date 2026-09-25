@@ -56,7 +56,7 @@ export function QRPairingDialog({ trigger }: QRPairingDialogProps) {
         {trigger || (
           <Button variant='outline' disabled={!isInitialized}>
             <QrCode className='mr-2 h-4 w-4' />
-            {t.settings?.sync?.showQRCode || 'Show QR code'}
+            {t.settings?.sync?.showQRCode}
           </Button>
         )}
       </DialogTrigger>
@@ -64,11 +64,10 @@ export function QRPairingDialog({ trigger }: QRPairingDialogProps) {
         <DialogHeader>
           <DialogTitle className='flex items-center gap-2'>
             <Smartphone className='h-5 w-5' />
-            {t.settings?.sync?.pairDevice || 'Pair a device'}
+            {t.settings?.sync?.pairDevice}
           </DialogTitle>
           <DialogDescription>
-            {t.settings?.sync?.qrCodeDescription ||
-              'Scan this QR code with another device running Fluxby to sync your data.'}
+            {t.settings?.sync?.qrCodeDescription}
           </DialogDescription>
         </DialogHeader>
 
@@ -101,8 +100,7 @@ export function QRPairingDialog({ trigger }: QRPairingDialogProps) {
           {/* Manual Code */}
           <div className='w-full space-y-2'>
             <p className='text-center text-sm text-muted-foreground'>
-              {t.settings?.sync?.orEnterManually ||
-                'Or enter this code manually:'}
+              {t.settings?.sync?.orEnterManually}
             </p>
             <div className='flex items-center justify-center gap-2'>
               <code
@@ -137,14 +135,13 @@ export function QRPairingDialog({ trigger }: QRPairingDialogProps) {
               disabled={!isInitialized}
             >
               <RefreshCw className='mr-2 h-3 w-3' />
-              {t.settings?.sync?.newCode || 'New code'}
+              {t.settings?.sync?.newCode}
             </Button>
           </div>
 
           {/* Help Text */}
           <p className='text-center text-xs text-muted-foreground'>
-            {t.settings?.sync?.qrCodeValid ||
-              'This code remains valid until you generate a new one.'}
+            {t.settings?.sync?.qrCodeValid}
           </p>
         </div>
       </DialogContent>

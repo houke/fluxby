@@ -46,7 +46,11 @@ export interface UseImportWorkerReturn extends UseImportWorkerState {
  * const result = await parseWithMapping(fileContent, mapping, 'ing');
  * ```
  */
-export function useImportWorker(): UseImportWorkerReturn {
+export function useImportWorker(messages: {
+  unknownError: string;
+  error: string;
+  importCancelled: string;
+}): UseImportWorkerReturn {
   const [state, setState] = useState<UseImportWorkerState>({
     isProcessing: false,
     progress: 0,
@@ -96,7 +100,7 @@ export function useImportWorker(): UseImportWorkerReturn {
               ...prev,
               isProcessing: false,
               progress: 100,
-              stage: 'Complete',
+              stage: '',
             }));
             resolveRef.current?.(data);
             break;
@@ -105,9 +109,9 @@ export function useImportWorker(): UseImportWorkerReturn {
             setState((prev) => ({
               ...prev,
               isProcessing: false,
-              error: error ?? 'Unknown error',
+              error: error || messages.unknownError,
             }));
-            rejectRef.current?.(new Error(error ?? 'Unknown error'));
+            rejectRef.current?.(new Error(error || messages.unknownError));
             break;
         }
       };
@@ -116,14 +120,14 @@ export function useImportWorker(): UseImportWorkerReturn {
         setState((prev) => ({
           ...prev,
           isProcessing: false,
-          error: error.message || 'Worker error',
+          error: error.message || messages.error,
         }));
         rejectRef.current?.(error);
       };
     }
 
     return workerRef.current;
-  }, []);
+  }, [messages.error, messages.unknownError]);
 
   /**
    * Parse CSV and return preview (headers + sample rows)
@@ -137,7 +141,7 @@ export function useImportWorker(): UseImportWorkerReturn {
         setState({
           isProcessing: true,
           progress: 0,
-          stage: 'Starting...',
+          stage: '',
           error: null,
         });
 
@@ -169,7 +173,7 @@ export function useImportWorker(): UseImportWorkerReturn {
         setState({
           isProcessing: true,
           progress: 0,
-          stage: 'Starting...',
+          stage: '',
           error: null,
         });
 
@@ -196,12 +200,12 @@ export function useImportWorker(): UseImportWorkerReturn {
       setState((prev) => ({
         ...prev,
         isProcessing: false,
-        error: 'Aborted',
+        error: messages.importCancelled,
       }));
 
-      rejectRef.current?.(new Error('Aborted'));
+      rejectRef.current?.(new Error(messages.importCancelled));
     }
-  }, []);
+  }, [messages.importCancelled]);
 
   /**
    * Reset state for new import

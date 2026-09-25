@@ -29,13 +29,13 @@ export const AddressBookFilters: React.FC<AddressBookFiltersProps> = ({
   switchOuterRef,
 }) => {
   const sortOptions: { key: SortOption; label: string }[] = [
-    { key: 'name', label: t.addressBook?.sortName || 'Name' },
+    { key: 'name', label: t.addressBook?.sortName },
     {
       key: 'transactionCount',
-      label: t.addressBook?.sortTransactions || 'Transactions',
+      label: t.addressBook?.sortTransactions,
     },
-    { key: 'totalAmount', label: t.addressBook?.sortAmount || 'Amount' },
-    { key: 'recent', label: t.addressBook?.sortRecent || 'Recent' },
+    { key: 'totalAmount', label: t.addressBook?.sortAmount },
+    { key: 'recent', label: t.addressBook?.sortRecent },
   ];
 
   return (
@@ -50,7 +50,7 @@ export const AddressBookFilters: React.FC<AddressBookFiltersProps> = ({
             <div className='relative flex-1'>
               <Search className='absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
               <Input
-                placeholder={t.addressBook?.searchPlaceholder || 'Search...'}
+                placeholder={t.addressBook?.searchPlaceholder}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className='pl-10'
@@ -60,7 +60,7 @@ export const AddressBookFilters: React.FC<AddressBookFiltersProps> = ({
             {/* Sort Switch */}
             <div className='flex items-center justify-between'>
               <span className='text-sm text-muted-foreground'>
-                {filteredCount} {t.addressBook?.contactsCount || 'contacts'}
+                {filteredCount} {t.addressBook?.contactsCount}
               </span>
               <div
                 ref={switchOuterRef}

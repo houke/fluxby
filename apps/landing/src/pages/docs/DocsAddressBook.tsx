@@ -393,7 +393,7 @@ fetch('http://localhost:3001/api/addressbook/shared-ibans', {
         <CodeBlock
           code={cleanupRulesCode}
           language='javascript'
-          title='Create Cleanup Rule'
+          title={t.docs.addressBook.cleanupEndpoints.create}
         />
       </div>
 
@@ -492,7 +492,7 @@ fetch('http://localhost:3001/api/addressbook/shared-ibans', {
         <CodeBlock
           code={sharedIbanCode}
           language='javascript'
-          title='Add Shared IBAN'
+          title={t.docs.addressBook.sharedIbanExampleTitle}
         />
       </div>
 
@@ -569,7 +569,7 @@ fetch('http://localhost:3001/api/addressbook/shared-ibans', {
         <CodeBlock
           code={mergeContactsCode}
           language='javascript'
-          title='Merge Contacts'
+          title={t.docs.addressBook.mergeEndpoints.merge}
         />
       </div>
 

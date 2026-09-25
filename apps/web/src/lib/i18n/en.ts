@@ -13,6 +13,9 @@ export const en: TranslationKeys = {
     filter: 'Filter',
     loading: 'Loading...',
     error: 'An error occurred',
+    unknownError: 'Unknown error',
+    unknownDevice: 'Unknown device',
+    requestFailed: 'Request failed',
     success: 'Success',
     confirm: 'Confirm',
     back: 'Back',
@@ -103,12 +106,20 @@ export const en: TranslationKeys = {
       loadingDatabase: 'Loading database...',
     },
     user: 'User',
+    profile: 'Profile',
+    iban: 'IBAN',
+    identifier: 'ID',
+    unknownProvider: 'Unknown provider',
     backToHomepage: 'Back to homepage',
     loadingUserData: 'Loading user data...',
     prepareDashboard: 'Please wait while we prepare your dashboard',
     enablePrivacy: 'Hide sensitive data',
     disablePrivacy: 'Show sensitive data',
     collapse: 'Collapse',
+    languageNames: {
+      dutch: 'Nederlands',
+      english: 'English',
+    },
     environment: 'Environment',
   },
   errors: {
@@ -240,6 +251,42 @@ export const en: TranslationKeys = {
     resetDatabase: 'Reset database and delete all data',
     passwordChangedSuccess:
       'Your master password has been successfully changed.',
+    initialSetup: {
+      languageTitle: 'Choose your language',
+      languageDescription: 'Select the language you want to use Fluxby in.',
+      nameTitle: "What's your name?",
+      nameDescription:
+        "We'll use your name to personalize your Fluxby experience.",
+      namePlaceholder: 'Your name...',
+      passwordTitle: 'Secure your data',
+      passwordDescription:
+        'Choose a master password to encrypt your financial data. This password is not stored and cannot be recovered. Remember it well!',
+      passwordPlaceholder: 'Master password...',
+      confirmPlaceholder: 'Confirm password...',
+      passwordHint: 'Minimum 8 characters. This password cannot be recovered!',
+      seedingTimeout:
+        'Loading demo data is taking longer than expected. This can happen on slower devices.',
+      seedingTimeoutRetry: 'Retry',
+      recoveryWarningTitle: 'Password cannot be recovered',
+      recoveryWarningSetup:
+        'If you forget this password, all your data will be permanently inaccessible. There is no way to recover or reset your password.',
+      finish: "Let's get started!",
+      settingUp: 'Setting up security...',
+      loadingTitle: 'Setting up your account...',
+      loadingDescription: "We're preparing your personal environment.",
+      loadingWarning: "Please don't close this tab until setup is complete.",
+      progressDemoAccount: 'Preparing demo account...',
+      progressTransactions: 'Creating transactions...',
+      progressBudgets: 'Creating budgets...',
+      progressCategories: 'Creating categories...',
+      progressAddressBook: 'Filling address book...',
+      progressEncrypting: 'Setting up encryption...',
+      progressFinalizing: 'Preparing onboarding...',
+      progressDashboard: 'Preparing dashboard, please wait...',
+      elapsed: 'Elapsed',
+      seeding: 'Seeding',
+      encrypting: 'Encrypting',
+    },
   },
   updater: {
     title: 'Software updates',
@@ -696,6 +743,52 @@ export const en: TranslationKeys = {
     jevSuggestionDismissed: 'Suggestion dismissed',
   },
   categories: {
+    seedDefaults: {
+      housing: {
+        name: 'Housing & Living',
+        description: 'Housing costs',
+      },
+      groceries: {
+        name: 'Groceries',
+        description: 'Supermarket and daily groceries',
+      },
+      transport: {
+        name: 'Transport',
+        description: 'Car, public transport and travel',
+      },
+      dining: {
+        name: 'Dining Out',
+        description: 'Restaurants and food delivery',
+      },
+      entertainment: {
+        name: 'Entertainment',
+        description: 'Going out and leisure',
+      },
+      health: {
+        name: 'Health',
+        description: 'Medical expenses',
+      },
+      shopping: {
+        name: 'Shopping',
+        description: 'Clothing and other shopping',
+      },
+      subscriptions: {
+        name: 'Subscriptions',
+        description: 'Monthly subscriptions',
+      },
+      salary: {
+        name: 'Salary',
+        description: 'Income from work',
+      },
+      transfers: {
+        name: 'Transfers',
+        description: 'Internal transfers',
+      },
+      other: {
+        name: 'Other',
+        description: 'Other expenses',
+      },
+    },
     title: 'Categories',
     subtitle: 'Manage how your transactions are classified',
     newCategory: 'New Category',
@@ -802,9 +895,18 @@ export const en: TranslationKeys = {
     importSuccess: 'Import successful!',
     importSuccessDescription: 'Successfully imported {count} transactions.',
     importError: 'Import error',
+    importCancelled: 'Import cancelled',
+    uploadFailed: 'Upload failed',
+    previewFailed: 'Preview failed',
+    parsingFailed: 'Parsing failed',
+    importFailed: 'Import failed',
+    importFailedWithStatus: 'Import failed with status {status}',
+    rowError: 'Row {row}: {error}',
+    failedToProcessRow: 'The row could not be processed',
     importHistory: 'Import history',
     noHistory: 'No import history yet',
     filename: 'Filename',
+    csvImport: 'CSV import',
     date: 'Date',
     transactions: 'Transactions',
     status: 'Status',
@@ -1053,6 +1155,7 @@ export const en: TranslationKeys = {
       rulesApplied: '{count} transactions updated',
       noTransactionsUpdated: 'No transactions updated',
       applyToTransactions: 'Apply to transactions',
+      failedToApplyRules: 'Failed to apply payment processor rules',
     },
     dataManagement: {
       title: 'Data Management',
@@ -1141,6 +1244,7 @@ export const en: TranslationKeys = {
     profileData: {
       title: 'Delete profile data',
       description: 'Delete data from {profile}',
+      profileNameFallback: 'this profile',
       deleteTransactionsTitle: 'Delete transactions',
       deleteTransactionsDescription:
         'Delete all transactions from this profile',
@@ -1555,6 +1659,11 @@ export const en: TranslationKeys = {
     errorAddingContact: 'Error adding contact',
     errorAddingIban: 'Error adding IBAN',
     errorMergingContacts: 'Error merging contacts',
+    updateContactError: 'Error updating contact',
+    deleteContactError: 'Error deleting contact',
+    createRuleError: 'Error creating cleanup rule',
+    deleteRuleError: 'Error deleting cleanup rule',
+    assignIbanError: 'Error assigning IBAN',
     ruleAdded: 'Cleanup rule added',
     ruleAppliedAuto:
       'Rule added and applied: {addressBook} contacts, {transactions} transactions updated',

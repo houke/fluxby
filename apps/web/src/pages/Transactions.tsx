@@ -404,10 +404,7 @@ export default function Transactions() {
   const bulkDelete = useBulkDelete({
     onSuccess: (result) => {
       toast.success(
-        (t.bulkDelete?.undoToast || '{count} transacties verwijderd').replace(
-          '{count}',
-          String(result.deletedCount)
-        )
+        t.bulkDelete.undoToast.replace('{count}', String(result.deletedCount))
       );
       transactionSelection.clearSelection();
       transactionSelection.exitSelectionMode();
@@ -416,14 +413,10 @@ export default function Transactions() {
       toast.error(error.message);
     },
     onUndoSuccess: () => {
-      toast.success(
-        t.bulkDelete?.undoSuccess || 'Verwijdering ongedaan gemaakt'
-      );
+      toast.success(t.bulkDelete.undoSuccess);
     },
     onUndoExpired: () => {
-      toast.info(
-        t.bulkDelete?.undoExpired || 'Ongedaan maken niet meer mogelijk'
-      );
+      toast.info(t.bulkDelete.undoExpired);
     },
   });
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
@@ -1072,7 +1065,7 @@ export default function Transactions() {
       ]);
       setAddTransactionModalOpen(false);
       resetAddTransactionForm();
-      toast.success(t.transactions.transactionAdded || 'Transactie toegevoegd');
+      toast.success(t.transactions.transactionAdded);
     },
     onError: (error) => {
       toast.error(error.message);
@@ -1146,10 +1139,10 @@ export default function Transactions() {
       setTransferRelatedTransactions([]);
       setSelectedTransferRelatedIds(new Set());
       toast.success(
-        (
-          t.transactions?.internalTransfersDetected ||
-          '{count} transacties gemarkeerd als interne overboeking'
-        ).replace('{count}', String(result.markedAsTransfer))
+        t.transactions?.internalTransfersDetected?.replace(
+          '{count}',
+          String(result.markedAsTransfer)
+        )
       );
     },
   });
@@ -1620,9 +1613,8 @@ export default function Transactions() {
           onSuccess: () => {
             toast.success(
               newType === 'transfer'
-                ? t.transactions?.markedAsTransfer ||
-                    'Marked as internal transfer'
-                : t.transactions?.transferMarkRemoved || 'Transfer mark removed'
+                ? t.transactions?.markedAsTransfer
+                : t.transactions?.transferMarkRemoved
             );
           },
         }
@@ -1679,14 +1671,14 @@ export default function Transactions() {
     const totalUpdated = 1 + selectedTransferRelatedIds.size;
     toast.success(
       isMarkingAsTransfer
-        ? (
-            t.transactions?.markedMultipleAsTransfer ||
-            '{count} transactions marked as transfer'
-          ).replace('{count}', String(totalUpdated))
-        : (
-            t.transactions?.removedMultipleTransferMarks ||
-            'Transfer mark removed from {count} transactions'
-          ).replace('{count}', String(totalUpdated))
+        ? t.transactions?.markedMultipleAsTransfer?.replace(
+            '{count}',
+            String(totalUpdated)
+          )
+        : t.transactions?.removedMultipleTransferMarks?.replace(
+            '{count}',
+            String(totalUpdated)
+          )
     );
 
     // Close modal and reset state
@@ -1862,7 +1854,7 @@ export default function Transactions() {
       },
       other: {
         iconType: null,
-        label: t.transactions.paymentMethods.other || '',
+        label: t.transactions.paymentMethods.other,
         color: 'text-gray-500 bg-gray-50',
       },
     }),
@@ -2167,8 +2159,8 @@ export default function Transactions() {
                     onChange={setCategories}
                     translations={{
                       categories: t.transactions.categories,
-                      noCategory: t.transactions.noCategory || 'Geen categorie',
-                      search: t.common.search || 'Zoeken...',
+                      noCategory: t.transactions.noCategory,
+                      search: t.common.search,
                       clearAll: t.common.clearAll,
                     }}
                   />
@@ -2200,9 +2192,9 @@ export default function Transactions() {
                     data-onboarding='transaction-addressbook-filter'
                     translations={{
                       addressBook: t.transactions.addressBook,
-                      search: t.common.search || 'Zoeken...',
+                      search: t.common.search,
                       clearAll: t.common.clearAll,
-                      loading: t.common?.loading || 'Laden...',
+                      loading: t.common?.loading,
                       noContacts: t.transactions.noContacts,
                       contacts: t.transactions.contacts,
                       contactsPlural: t.transactions.contactsPlural,
@@ -2468,10 +2460,7 @@ export default function Transactions() {
                                   onChange={() =>
                                     transactionSelection.toggleSelection(tx.id)
                                   }
-                                  aria-label={(
-                                    t.bulkDelete?.selectTransaction ||
-                                    'Select transaction: {description} {amount}'
-                                  )
+                                  aria-label={t.bulkDelete.selectTransaction
                                     .replace(
                                       '{description}',
                                       tx.merchantName ||
@@ -2538,9 +2527,10 @@ export default function Transactions() {
                                                 </Button>
                                               </TooltipTrigger>
                                               <TooltipContent>
-                                                {t.transactions
-                                                  ?.resetToOriginal ||
-                                                  'Terugzetten naar origineel'}
+                                                {
+                                                  t.transactions
+                                                    ?.resetToOriginal
+                                                }
                                               </TooltipContent>
                                             </Tooltip>
                                           </TooltipProvider>
@@ -2767,36 +2757,28 @@ export default function Transactions() {
                                   isUpdatePending={updateMutation.isPending}
                                   translations={{
                                     searchCategories:
-                                      t.categories?.searchCategories ||
-                                      'Zoek categorie...',
+                                      t.categories?.searchCategories,
                                     noCategory: t.transactions.noCategory,
                                     paymentMethods: {
                                       other:
-                                        t.transactions.paymentMethods.other ||
-                                        'Onbekend',
+                                        t.transactions.paymentMethods.other,
                                     },
-                                    remove: t.common?.remove || 'Verwijderen',
+                                    remove: t.common?.remove,
                                     addToAddressBook:
                                       t.transactions.addToAddressBook,
                                     unlinkFromContact:
-                                      t.transactions.unlinkFromContact ||
-                                      'Ontkoppelen',
+                                      t.transactions.unlinkFromContact,
                                     inAddressBook: t.transactions.inAddressBook,
                                     searchContacts:
-                                      t.addressBook?.searchContacts ||
-                                      'Zoek contact...',
+                                      t.addressBook?.searchContacts,
                                     noContactsFound:
-                                      t.addressBook?.noContactsFound ||
-                                      'Geen contacten gevonden',
+                                      t.addressBook?.noContactsFound,
                                     internalTransfer:
-                                      t.transactions.internalTransfer ||
-                                      'Internal transfer',
+                                      t.transactions.internalTransfer,
                                     removeTransferMark:
-                                      t.transactions.removeTransferMark ||
-                                      'Remove internal transfer mark',
+                                      t.transactions.removeTransferMark,
                                     markAsTransfer:
-                                      t.transactions.markAsTransfer ||
-                                      'Mark as internal transfer',
+                                      t.transactions.markAsTransfer,
                                   }}
                                 />
                               </div>
@@ -2933,12 +2915,9 @@ export default function Transactions() {
                                           <span>
                                             {hiddenBefore}{' '}
                                             {hiddenBefore === 1
-                                              ? t.transactions
-                                                  ?.laterTransaction ||
-                                                'latere transactie'
+                                              ? t.transactions?.laterTransaction
                                               : t.transactions
-                                                  ?.laterTransactions ||
-                                                'latere transacties'}
+                                                  ?.laterTransactions}
                                           </span>
                                           <span className='flex-1 border-b border-dashed' />
                                         </div>
@@ -2967,11 +2946,9 @@ export default function Transactions() {
                                             {hiddenAfter}{' '}
                                             {hiddenAfter === 1
                                               ? t.transactions
-                                                  ?.earlierTransaction ||
-                                                'eerdere transactie'
+                                                  ?.earlierTransaction
                                               : t.transactions
-                                                  ?.earlierTransactions ||
-                                                'eerdere transacties'}
+                                                  ?.earlierTransactions}
                                           </span>
                                           <span className='flex-1 border-b border-dashed' />
                                         </div>
@@ -3010,10 +2987,7 @@ export default function Transactions() {
                       <div className='mt-4 rounded-lg border border-purple-200 bg-purple-50 p-4 dark:border-purple-800 dark:bg-purple-900/20'>
                         <div className='flex items-center justify-between'>
                           <div className='text-sm text-purple-700 dark:text-purple-300'>
-                            {(
-                              t.transactions?.transactionsOutsideRange ||
-                              '{count} more transactions outside this date range'
-                            ).replace(
+                            {t.transactions?.transactionsOutsideRange?.replace(
                               '{count}',
                               String(outsideRangeCount.total)
                             )}
@@ -3029,8 +3003,7 @@ export default function Transactions() {
                               );
                             }}
                           >
-                            {t.transactions?.expandDateRange ||
-                              'Expand date range'}
+                            {t.transactions?.expandDateRange}
                           </Button>
                         </div>
                       </div>
@@ -3043,13 +3016,9 @@ export default function Transactions() {
                 (transactionsAllData?.length || 0) > 0 ? (
                   <EmptyState
                     icon={Search}
-                    title={
-                      t.transactions.noTransactionsInRangeTitle ||
-                      'No transactions found in this period'
-                    }
+                    title={t.transactions.noTransactionsInRangeTitle}
                     description={
-                      t.transactions.noTransactionsInRangeDescription ||
-                      'No transactions found in the selected period, but there are matching transactions in your full data.'
+                      t.transactions.noTransactionsInRangeDescription
                     }
                     action={
                       <div className='flex items-center gap-2'>
@@ -3074,7 +3043,7 @@ export default function Transactions() {
                             setSelectedPaymentProcessors([]);
                           }}
                         >
-                          {t.addressBook?.clearFilters || 'Filters wissen'}
+                          {t.addressBook?.clearFilters}
                         </Button>
                         <Button
                           onClick={() => {
@@ -3091,7 +3060,7 @@ export default function Transactions() {
                             }
                           }}
                         >
-                          {t.transactions.viewAllData || 'View all data'}
+                          {t.transactions.viewAllData}
                         </Button>
                       </div>
                     }
@@ -3123,7 +3092,7 @@ export default function Transactions() {
                           setSelectedPaymentProcessors([]);
                         }}
                       >
-                        {t.addressBook?.clearFilters || 'Filters wissen'}
+                        {t.addressBook?.clearFilters}
                       </Button>
                     }
                   />
@@ -3132,20 +3101,15 @@ export default function Transactions() {
                 // Empty state when NO filters are active - show "Import" CTA
                 <EmptyState
                   icon={History}
-                  title={
-                    t.transactions.noTransactions || 'Nog geen transacties'
-                  }
-                  description={
-                    t.transactions.importTransactions ||
-                    'Importeer je eerste transacties om te beginnen.'
-                  }
+                  title={t.transactions.noTransactions}
+                  description={t.transactions.importTransactions}
                   action={
                     <div className='flex flex-wrap items-center justify-center gap-x-2'>
                       <button
                         onClick={() => navigate('/import/')}
                         className='text-sm text-primary hover:underline'
                       >
-                        {t.transactions.goToImport || 'Ga naar importeren'}
+                        {t.transactions.goToImport}
                       </button>
                       {suggestedPeriod && !isViewingSuggestedPeriod && (
                         <>
@@ -3156,9 +3120,10 @@ export default function Transactions() {
                             onClick={handleJumpToPeriod}
                             className='text-sm text-primary hover:underline'
                           >
-                            {(
-                              t.dashboard?.jumpToPeriod || 'Jump to {period}'
-                            ).replace('{period}', suggestedPeriod.label)}
+                            {t.dashboard?.jumpToPeriod?.replace(
+                              '{period}',
+                              suggestedPeriod.label
+                            )}
                           </button>
                         </>
                       )}
@@ -3183,12 +3148,9 @@ export default function Transactions() {
         >
           <DialogContent className='max-w-md'>
             <DialogHeader>
-              <DialogTitle>
-                {t.addressBook?.createNewContact || 'Nieuw contact aanmaken'}
-              </DialogTitle>
+              <DialogTitle>{t.addressBook?.createNewContact}</DialogTitle>
               <DialogDescription>
-                {t.addressBook?.createNewContactWithIban ||
-                  'Nieuw contact aanmaken met IBAN'}
+                {t.addressBook?.createNewContactWithIban}
               </DialogDescription>
             </DialogHeader>
             {createContactTransaction && (
@@ -3196,12 +3158,12 @@ export default function Transactions() {
                 {/* Transaction details card */}
                 <div className='rounded-lg border bg-muted/50 p-3'>
                   <p className='mb-2 text-xs font-medium text-muted-foreground'>
-                    {t.addressBook?.transactionDetails || 'Transactiegegevens'}
+                    {t.addressBook?.transactionDetails}
                   </p>
                   <div className='space-y-1.5 text-sm'>
                     <div className='flex justify-between'>
                       <span className='text-muted-foreground'>
-                        {t.transactions.date || 'Datum'}:
+                        {t.transactions.date}:
                       </span>
                       <span className='font-medium'>
                         {formatDate(createContactTransaction.date)}
@@ -3209,7 +3171,7 @@ export default function Transactions() {
                     </div>
                     <div className='flex justify-between'>
                       <span className='text-muted-foreground'>
-                        {t.transactions.amount || 'Bedrag'}:
+                        {t.transactions.amount}:
                       </span>
                       <span
                         className={cn(
@@ -3230,7 +3192,7 @@ export default function Transactions() {
                     </div>
                     <div className='flex justify-between gap-2'>
                       <span className='text-muted-foreground'>
-                        {t.transactions?.counterparty || 'Tegenrekening'}:
+                        {t.transactions?.counterparty}:
                       </span>
                       <span className='truncate text-right'>
                         {createContactTransaction.opposingAccountName ||
@@ -3242,7 +3204,7 @@ export default function Transactions() {
                       createContactTransaction.description) && (
                       <div className='flex justify-between gap-2'>
                         <span className='text-muted-foreground'>
-                          {t.transactions?.details || 'Details'}:
+                          {t.transactions?.details}:
                         </span>
                         <span className='max-w-[200px] truncate text-right text-xs'>
                           {createContactTransaction.notes ||
@@ -3255,14 +3217,12 @@ export default function Transactions() {
                 {/* Name input */}
                 <div className='space-y-2'>
                   <label className='text-sm font-medium'>
-                    {t.settings?.addressBook?.namePlaceholder || 'Naam'}
+                    {t.settings?.addressBook?.namePlaceholder}
                   </label>
                   <Input
                     value={createContactName}
                     onChange={(e) => setCreateContactName(e.target.value)}
-                    placeholder={
-                      t.settings?.addressBook?.namePlaceholder || 'Naam'
-                    }
+                    placeholder={t.settings?.addressBook?.namePlaceholder}
                     autoFocus
                   />
                 </div>
@@ -3292,7 +3252,7 @@ export default function Transactions() {
                 }}
                 disabled={!createContactName.trim()}
               >
-                {t.common.add || 'Toevoegen'}
+                {t.common.add}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -3311,16 +3271,14 @@ export default function Transactions() {
         >
           <DialogContent className='max-h-[80vh] max-w-2xl overflow-y-auto'>
             <DialogHeader>
-              <DialogTitle>
-                {t.transactions.addToAddressBookTitle || 'Add to address book'}
-              </DialogTitle>
+              <DialogTitle>{t.transactions.addToAddressBookTitle}</DialogTitle>
               <DialogDescription>
                 {selectedSharedIban && (
                   <>
-                    {(
-                      t.transactions.addToAddressBookDescription ||
-                      'Add names from {iban} to your address book. Similar names are grouped.'
-                    ).replace('{iban}', '')}
+                    {t.transactions.addToAddressBookDescription.replace(
+                      '{iban}',
+                      ''
+                    )}
                     <span>{selectedSharedIban.iban}</span>
                   </>
                 )}
@@ -3330,10 +3288,7 @@ export default function Transactions() {
               {sharedIbanGroups.length === 0 ? (
                 <div className='py-8 text-center text-muted-foreground'>
                   <Check className='mx-auto mb-2 h-12 w-12 text-green-500' />
-                  <p>
-                    {t.transactions.allNamesProcessed ||
-                      'All names have been processed!'}
-                  </p>
+                  <p>{t.transactions.allNamesProcessed}</p>
                 </div>
               ) : (
                 sharedIbanGroups.map((group) => {
@@ -3414,8 +3369,7 @@ export default function Transactions() {
                                     </PopoverTrigger>
                                   </TooltipTrigger>
                                   <TooltipContent>
-                                    {t.addressBook?.assignToExisting ||
-                                      'Assign to existing contact'}
+                                    {t.addressBook?.assignToExisting}
                                   </TooltipContent>
                                 </Tooltip>
                               </TooltipProvider>
@@ -3426,10 +3380,7 @@ export default function Transactions() {
                               >
                                 <div className='space-y-2'>
                                   <Input
-                                    placeholder={
-                                      t.addressBook?.searchContacts ||
-                                      'Search contacts...'
-                                    }
+                                    placeholder={t.addressBook?.searchContacts}
                                     value={assignSearchTerm}
                                     onChange={(e) =>
                                       setAssignSearchTerm(e.target.value)
@@ -3551,8 +3502,7 @@ export default function Transactions() {
                                           ))
                                         ) : (
                                           <div className='py-4 text-center text-sm text-muted-foreground'>
-                                            {t.addressBook?.noContactsFound ||
-                                              'No contacts found'}
+                                            {t.addressBook?.noContactsFound}
                                           </div>
                                         );
                                       })()}
@@ -3621,8 +3571,7 @@ export default function Transactions() {
                                   </Button>
                                 </TooltipTrigger>
                                 <TooltipContent>
-                                  {t.addressBook?.addToAddressBook ||
-                                    'Add to address book'}
+                                  {t.addressBook?.addToAddressBook}
                                 </TooltipContent>
                               </Tooltip>
                             </TooltipProvider>
@@ -3819,7 +3768,7 @@ export default function Transactions() {
                         }
                       >
                         <Plus className='mr-1 h-4 w-4' />
-                        {t.transactions.addButton || 'Add'}
+                        {t.transactions.addButton}
                       </Button>
                     </div>
                   );
@@ -3855,12 +3804,9 @@ export default function Transactions() {
         >
           <DialogContent className='max-w-lg'>
             <DialogHeader>
-              <DialogTitle>
-                {t.transactions.createRuleTitle || 'Create category rule'}
-              </DialogTitle>
+              <DialogTitle>{t.transactions.createRuleTitle}</DialogTitle>
               <DialogDescription>
-                {t.transactions.createRuleDescription ||
-                  'Would you like to create a rule so transactions with a similar name are automatically categorized?'}
+                {t.transactions.createRuleDescription}
               </DialogDescription>
             </DialogHeader>
             <div className='space-y-4 py-4'>
@@ -3869,21 +3815,19 @@ export default function Transactions() {
                 <div className='space-y-3 rounded-lg border bg-muted/30 p-4'>
                   <div className='flex items-center justify-between'>
                     <span className='text-sm font-medium'>
-                      {(
-                        t.transactions?.applyToRelated ||
-                        'Ook toepassen op {count} gerelateerde transacties'
-                      ).replace('{count}', String(relatedTransactions.length))}
+                      {t.transactions?.applyToRelated?.replace(
+                        '{count}',
+                        String(relatedTransactions.length)
+                      )}
                     </span>
                     {selectedRelatedIds.size > 0 && (
                       <span className='text-xs text-muted-foreground'>
-                        {selectedRelatedIds.size}{' '}
-                        {t.common?.selected || 'geselecteerd'}
+                        {selectedRelatedIds.size} {t.common?.selected}
                       </span>
                     )}
                   </div>
                   <p className='text-xs text-muted-foreground'>
-                    {t.transactions?.relatedTransactionsDescription ||
-                      'Deze transacties hebben dezelfde tegenrekening of naam. Selecteer welke je ook wilt categoriseren.'}
+                    {t.transactions?.relatedTransactionsDescription}
                   </p>
                   <div className='max-h-64 space-y-2 overflow-y-auto'>
                     <table className='w-full'>
@@ -3912,20 +3856,15 @@ export default function Transactions() {
                                   setSelectedRelatedIds(new Set());
                                 }
                               }}
-                              aria-label={
-                                t.bulkDelete?.selectAllRelated ||
-                                'Select all related transactions'
-                              }
+                              aria-label={t.bulkDelete.selectAllRelated}
                             />
                           </th>
-                          <th className='pb-2'>
-                            {t.categories?.name || 'Naam'}
-                          </th>
+                          <th className='pb-2'>{t.categories?.name}</th>
                           <th className='pb-2 text-right'>
                             {t.transactions.amount}
                           </th>
                           <th className='w-24 pb-2 text-right'>
-                            {t.budgets?.category || 'Categorie'}
+                            {t.budgets?.category}
                           </th>
                         </tr>
                       </thead>
@@ -3962,10 +3901,7 @@ export default function Transactions() {
                                   }
                                   setSelectedRelatedIds(newSet);
                                 }}
-                                aria-label={(
-                                  t.bulkDelete?.selectTransaction ||
-                                  'Select transaction: {description} {amount}'
-                                )
+                                aria-label={t.bulkDelete.selectTransaction
                                   .replace(
                                     '{description}',
                                     rt.merchantName ||
@@ -4007,7 +3943,7 @@ export default function Transactions() {
                                 </span>
                               ) : (
                                 <span className='text-xs text-muted-foreground italic'>
-                                  {t.common?.none || 'Geen'}
+                                  {t.common?.none}
                                 </span>
                               )}
                             </td>
@@ -4022,19 +3958,15 @@ export default function Transactions() {
               {/* Rule pattern section */}
               <div className='space-y-2'>
                 <label className='text-sm font-medium'>
-                  {t.transactions.searchPattern || 'Search pattern'}
+                  {t.transactions.searchPattern}
                 </label>
                 <Input
                   value={rulePattern}
                   onChange={(e) => setRulePattern(e.target.value)}
-                  placeholder={
-                    t.transactions.searchPatternPlaceholder ||
-                    'Search pattern for merchant name...'
-                  }
+                  placeholder={t.transactions.searchPatternPlaceholder}
                 />
                 <p className='text-xs text-muted-foreground'>
-                  {t.transactions.searchPatternHelp ||
-                    'Transactions with this pattern in the name will be automatically categorized'}
+                  {t.transactions.searchPatternHelp}
                 </p>
 
                 {/* Existing rule indicator */}
@@ -4048,16 +3980,12 @@ export default function Transactions() {
                       <div className='flex items-center gap-2 rounded-md bg-amber-50 px-3 py-2 text-amber-800 dark:bg-amber-900/20 dark:text-amber-200'>
                         <AlertCircle className='h-4 w-4 flex-shrink-0' />
                         <span className='text-xs'>
-                          {(
-                            t.transactions.ruleExistsInCategory ||
-                            'A rule for "{pattern}" already exists in {category}'
-                          )
+                          {t.transactions.ruleExistsInCategory
                             .replace('{pattern}', rulePattern)
                             .replace(
                               '{category}',
                               existingCategory?.name ||
-                                t.transactions?.unknownCategory ||
-                                'Unknown category'
+                                t.transactions?.unknownCategory
                             )}
                         </span>
                       </div>
@@ -4070,8 +3998,8 @@ export default function Transactions() {
             <DialogFooter className='flex gap-2'>
               <Button variant='outline' onClick={handleSkipRule}>
                 {relatedTransactions.length > 0 && selectedRelatedIds.size > 0
-                  ? t.transactions?.applyWithoutRule || 'Toepassen zonder regel'
-                  : t.transactions.skipButton || 'Skip'}
+                  ? t.transactions?.applyWithoutRule
+                  : t.transactions.skipButton}
               </Button>
               <Button
                 onClick={handleCreateRule}
@@ -4081,7 +4009,7 @@ export default function Transactions() {
                   !!findExistingRule(rulePattern)
                 }
               >
-                {t.transactions.createRuleButton || 'Create rule'}
+                {t.transactions.createRuleButton}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -4103,35 +4031,27 @@ export default function Transactions() {
             <DialogHeader>
               <DialogTitle>
                 {isMarkingAsTransfer
-                  ? t.transactions?.markAsTransferTitle ||
-                    'Markeren als overboeking'
-                  : t.transactions?.removeTransferTitle ||
-                    'Overboeking markering verwijderen'}
+                  ? t.transactions?.markAsTransferTitle
+                  : t.transactions?.removeTransferTitle}
               </DialogTitle>
               <DialogDescription>
                 {isMarkingAsTransfer
-                  ? t.transactions?.markAsTransferDescription ||
-                    'Er zijn gerelateerde transacties gevonden. Wil je deze ook markeren als overboeking?'
-                  : t.transactions?.removeTransferDescription ||
-                    'Er zijn gerelateerde transacties gevonden. Wil je de overboeking markering ook verwijderen?'}
+                  ? t.transactions?.markAsTransferDescription
+                  : t.transactions?.removeTransferDescription}
               </DialogDescription>
             </DialogHeader>
             <div className='space-y-4 py-4'>
               <div className='space-y-3 rounded-lg border bg-muted/30 p-4'>
                 <div className='flex items-center justify-between'>
                   <span className='text-sm font-medium'>
-                    {(
-                      t.transactions?.relatedTransactionsFound ||
-                      '{count} gerelateerde transacties gevonden'
-                    ).replace(
+                    {t.transactions?.relatedTransactionsFound?.replace(
                       '{count}',
                       String(transferRelatedTransactions.length)
                     )}
                   </span>
                   {selectedTransferRelatedIds.size > 0 && (
                     <span className='text-xs text-muted-foreground'>
-                      {selectedTransferRelatedIds.size}{' '}
-                      {t.common?.selected || 'geselecteerd'}
+                      {selectedTransferRelatedIds.size} {t.common?.selected}
                     </span>
                   )}
                 </div>
@@ -4164,19 +4084,14 @@ export default function Transactions() {
                                 setSelectedTransferRelatedIds(new Set());
                               }
                             }}
-                            aria-label={
-                              t.bulkDelete?.selectAllRelated ||
-                              'Select all related transactions'
-                            }
+                            aria-label={t.bulkDelete.selectAllRelated}
                           />
                         </th>
-                        <th className='pb-2'>{t.categories?.name || 'Naam'}</th>
+                        <th className='pb-2'>{t.categories?.name}</th>
                         <th className='pb-2 text-right'>
                           {t.transactions.amount}
                         </th>
-                        <th className='w-20 pb-2'>
-                          {t.transactions?.type || 'Type'}
-                        </th>
+                        <th className='w-20 pb-2'>{t.transactions?.type}</th>
                       </tr>
                     </thead>
                     <tbody className='divide-y divide-border/50'>
@@ -4220,10 +4135,10 @@ export default function Transactions() {
                               )}
                             >
                               {pendingTransferTransaction.type === 'transfer'
-                                ? t.transactions?.transfer || 'Overboeking'
+                                ? t.transactions?.transfer
                                 : pendingTransferTransaction.type === 'income'
-                                  ? t.transactions?.income || 'Inkomst'
-                                  : t.transactions?.expense || 'Uitgave'}
+                                  ? t.transactions?.income
+                                  : t.transactions?.expense}
                             </span>
                           </td>
                         </tr>
@@ -4258,10 +4173,7 @@ export default function Transactions() {
                                 }
                                 setSelectedTransferRelatedIds(newSet);
                               }}
-                              aria-label={(
-                                t.bulkDelete?.selectTransaction ||
-                                'Select transaction: {description} {amount}'
-                              )
+                              aria-label={t.bulkDelete.selectTransaction
                                 .replace(
                                   '{description}',
                                   rt.merchantName ||
@@ -4305,10 +4217,10 @@ export default function Transactions() {
                               )}
                             >
                               {rt.type === 'transfer'
-                                ? t.transactions?.transfer || 'Overboeking'
+                                ? t.transactions?.transfer
                                 : rt.type === 'income'
-                                  ? t.transactions?.income || 'Inkomst'
-                                  : t.transactions?.expense || 'Uitgave'}
+                                  ? t.transactions?.income
+                                  : t.transactions?.expense}
                             </span>
                           </td>
                         </tr>
@@ -4325,17 +4237,14 @@ export default function Transactions() {
                   onClick={() => detectInternalTransfersMutation.mutate()}
                   disabled={detectInternalTransfersMutation.isPending}
                 >
-                  {t.transactions?.applyToAllData || 'Toepassen op alle data'}
+                  {t.transactions?.applyToAllData}
                 </Button>
               )}
               <Button
                 onClick={handleApplyTransferToRelated}
                 disabled={updateMutation.isPending}
               >
-                {(
-                  t.transactions?.applyToSelected ||
-                  'Toepassen op {count} transacties'
-                ).replace(
+                {t.transactions?.applyToSelected?.replace(
                   '{count}',
                   String(1 + selectedTransferRelatedIds.size)
                 )}
@@ -4426,15 +4335,13 @@ export default function Transactions() {
                     setAddTransactionModalOpen(true);
                   }}
                   className='fixed right-6 bottom-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-purple-600 text-white shadow-lg transition-all hover:scale-105 hover:bg-purple-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2 active:scale-95'
-                  aria-label={
-                    t.transactions.addTransaction || 'Transactie toevoegen'
-                  }
+                  aria-label={t.transactions.addTransaction}
                 >
                   <Plus className='h-6 w-6' />
                 </button>
               </TooltipTrigger>
               <TooltipContent side='left'>
-                {t.transactions.addTransaction || 'Transactie toevoegen'}
+                {t.transactions.addTransaction}
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -4450,12 +4357,9 @@ export default function Transactions() {
         >
           <DialogContent className='flex max-h-[85vh] max-w-lg flex-col'>
             <DialogHeader className='flex-shrink-0'>
-              <DialogTitle>
-                {t.transactions.addTransaction || 'Transactie toevoegen'}
-              </DialogTitle>
+              <DialogTitle>{t.transactions.addTransaction}</DialogTitle>
               <DialogDescription>
-                {t.transactions.addTransactionDescription ||
-                  'Voeg handmatig een transactie toe.'}
+                {t.transactions.addTransactionDescription}
               </DialogDescription>
             </DialogHeader>
             <div className='min-h-0 flex-1 overflow-y-auto'>
@@ -4463,7 +4367,7 @@ export default function Transactions() {
                 {/* Type selector */}
                 <div className='space-y-2'>
                   <label className='text-sm font-medium'>
-                    {t.transactions.type || 'Type'}
+                    {t.transactions.type}
                   </label>
                   <div className='flex gap-2'>
                     {(['income', 'expense', 'transfer'] as const).map(
@@ -4510,7 +4414,7 @@ export default function Transactions() {
                         )}
                       >
                         <Download className='h-4 w-4' />
-                        {t.transactions.transferDeposit || 'Storting'}
+                        {t.transactions.transferDeposit}
                       </button>
                       <button
                         onClick={() => setAddTxTransferOutgoing(false)}
@@ -4522,7 +4426,7 @@ export default function Transactions() {
                         )}
                       >
                         <Upload className='h-4 w-4' />
-                        {t.transactions.transferWithdrawal || 'Opname'}
+                        {t.transactions.transferWithdrawal}
                       </button>
                     </div>
                   </div>
@@ -4532,7 +4436,7 @@ export default function Transactions() {
                 <div className='grid grid-cols-2 gap-3'>
                   <div className='space-y-1'>
                     <label className='flex items-center gap-1 text-sm font-medium'>
-                      {t.transactions.amount || 'Bedrag'}
+                      {t.transactions.amount}
                       <span className='text-destructive'>*</span>
                     </label>
                     <div className='relative'>
@@ -4553,7 +4457,7 @@ export default function Transactions() {
                               amount: undefined,
                             }));
                         }}
-                        placeholder={t.transactions.amountPlaceholder || '0,00'}
+                        placeholder={t.transactions.amountPlaceholder}
                         className={cn(
                           'pl-7',
                           addTxErrors.amount &&
@@ -4571,7 +4475,7 @@ export default function Transactions() {
                   </div>
                   <div className='space-y-1'>
                     <label className='flex items-center gap-1 text-sm font-medium'>
-                      {t.transactions.date || 'Datum'}
+                      {t.transactions.date}
                       <span className='text-destructive'>*</span>
                     </label>
                     <Input
@@ -4602,21 +4506,19 @@ export default function Transactions() {
                 {/* Description */}
                 <div className='space-y-2'>
                   <label className='text-sm font-medium'>
-                    {t.transactions.description || 'Omschrijving'}
+                    {t.transactions.description}
                   </label>
                   <Input
                     value={addTxDescription}
                     onChange={(e) => setAddTxDescription(e.target.value)}
-                    placeholder={
-                      t.transactions.descriptionPlaceholder || 'Omschrijving...'
-                    }
+                    placeholder={t.transactions.descriptionPlaceholder}
                   />
                 </div>
 
                 {/* Counterparty / Address book */}
                 <div className='space-y-2'>
                   <label className='text-sm font-medium'>
-                    {t.transactions.manualCounterparty || 'Tegenrekening'}
+                    {t.transactions.manualCounterparty}
                   </label>
                   {addTxAddressBookId ? (
                     <div className='flex items-center gap-2 rounded-md border bg-muted/50 px-3 py-2'>
@@ -4638,8 +4540,7 @@ export default function Transactions() {
                         value={addTxCounterparty}
                         onChange={(e) => setAddTxCounterparty(e.target.value)}
                         placeholder={
-                          t.transactions.manualCounterpartyPlaceholder ||
-                          'Naam tegenrekening...'
+                          t.transactions.manualCounterpartyPlaceholder
                         }
                         className='pr-9'
                       />
@@ -4664,14 +4565,13 @@ export default function Transactions() {
                               </PopoverTrigger>
                             </TooltipTrigger>
                             <TooltipContent>
-                              {t.transactions.orSelectFromAddressBook ||
-                                'Selecteer uit adresboek'}
+                              {t.transactions.orSelectFromAddressBook}
                             </TooltipContent>
                           </Tooltip>
                         </TooltipProvider>
                         <PopoverContent className='w-64 p-2' align='end'>
                           <Input
-                            placeholder={t.common.search || 'Zoeken...'}
+                            placeholder={t.common.search}
                             value={addTxAddressBookSearch}
                             onChange={(e) =>
                               setAddTxAddressBookSearch(e.target.value)
@@ -4715,8 +4615,7 @@ export default function Transactions() {
                                 .includes(addTxAddressBookSearch.toLowerCase())
                             ).length ?? 0) === 0 && (
                               <div className='py-4 text-center text-sm text-muted-foreground'>
-                                {t.addressBook?.noContactsFound ||
-                                  'Geen contacten gevonden'}
+                                {t.addressBook?.noContactsFound}
                               </div>
                             )}
                           </div>
@@ -4729,16 +4628,14 @@ export default function Transactions() {
                 {/* Category */}
                 <div className='space-y-2'>
                   <label className='text-sm font-medium'>
-                    {t.transactions.categories || 'Categorie'}
+                    {t.transactions.categories}
                   </label>
                   <select
                     value={addTxCategoryId || ''}
                     onChange={(e) => setAddTxCategoryId(e.target.value || null)}
                     className='w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:ring-2 focus:ring-ring focus:outline-none'
                   >
-                    <option value=''>
-                      {t.transactions.noCategory || 'Geen categorie'}
-                    </option>
+                    <option value=''>{t.transactions.noCategory}</option>
                     {groupedCategories.map((cat) => (
                       <option key={cat.id} value={cat.id}>
                         {cat.isChild
@@ -4753,7 +4650,7 @@ export default function Transactions() {
                 <div className='grid grid-cols-2 gap-3'>
                   <div className='space-y-2'>
                     <label className='text-sm font-medium'>
-                      {t.transactions.account || 'Rekening'}
+                      {t.transactions.account}
                     </label>
                     <select
                       value={addTxAccountId || ''}
@@ -4762,9 +4659,7 @@ export default function Transactions() {
                       }
                       className='w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:ring-2 focus:ring-ring focus:outline-none'
                     >
-                      <option value=''>
-                        {t.transactions.noAccount || 'Geen rekening'}
-                      </option>
+                      <option value=''>{t.transactions.noAccount}</option>
                       {accounts?.map((acc) => (
                         <option key={acc.id} value={acc.id}>
                           {acc.name}
@@ -4774,7 +4669,7 @@ export default function Transactions() {
                   </div>
                   <div className='space-y-2'>
                     <label className='text-sm font-medium'>
-                      {t.transactions.paymentMethodFilter || 'Betaalmethode'}
+                      {t.transactions.paymentMethodFilter}
                     </label>
                     <select
                       value={addTxPaymentMethod || ''}
@@ -4783,9 +4678,7 @@ export default function Transactions() {
                       }
                       className='w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:ring-2 focus:ring-ring focus:outline-none'
                     >
-                      <option value=''>
-                        {t.transactions.noPaymentMethod || 'Geen betaalmethode'}
-                      </option>
+                      <option value=''>{t.transactions.noPaymentMethod}</option>
                       {paymentMethods.map((m) => (
                         <option key={m.value} value={m.value}>
                           {m.label}
@@ -4799,8 +4692,7 @@ export default function Transactions() {
                 {paymentProviderRules.length > 0 && (
                   <div className='space-y-2'>
                     <label className='text-sm font-medium'>
-                      {t.transactions.paymentProcessorFilter ||
-                        'Betaalverwerker'}
+                      {t.transactions.paymentProcessorFilter}
                     </label>
                     <select
                       value={addTxPaymentProcessor || ''}
@@ -4810,8 +4702,7 @@ export default function Transactions() {
                       className='w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:ring-2 focus:ring-ring focus:outline-none'
                     >
                       <option value=''>
-                        {t.transactions.noPaymentProcessor ||
-                          'Geen betaalverwerker'}
+                        {t.transactions.noPaymentProcessor}
                       </option>
                       {paymentProviderRules.map((r) => (
                         <option key={r.id} value={r.name}>
@@ -4838,7 +4729,7 @@ export default function Transactions() {
                 {createTransactionMutation.isPending ? (
                   <Loader2 className='mr-2 h-4 w-4 animate-spin' />
                 ) : null}
-                {t.common.add || 'Toevoegen'}
+                {t.common.add}
               </Button>
             </DialogFooter>
           </DialogContent>

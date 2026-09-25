@@ -227,9 +227,7 @@ export function IncomeExpenseComparison({
         ) : (
           <div className='flex h-[300px] flex-col items-center justify-center text-center'>
             <ArrowLeftRight className='mb-4 h-12 w-12 text-muted-foreground/50' />
-            <p className='text-muted-foreground'>
-              {t.dashboard.noComparison || 'Geen data beschikbaar'}
-            </p>
+            <p className='text-muted-foreground'>{t.dashboard.noComparison}</p>
             <p className='mt-1 text-sm text-muted-foreground'>
               {t.dashboard.importTransactions}
             </p>
@@ -247,7 +245,7 @@ export function IncomeExpenseComparison({
                     onClick={handleJumpToPeriod}
                     className='text-sm text-primary hover:underline'
                   >
-                    {(t.dashboard?.jumpToPeriod || 'Jump to {period}').replace(
+                    {t.dashboard?.jumpToPeriod?.replace(
                       '{period}',
                       suggestedPeriod.label
                     )}

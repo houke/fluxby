@@ -236,7 +236,7 @@ export function SpendingPieChart({
                   }}
                 >
                   <List className='h-4 w-4' />
-                  {t.dashboard?.showCategories || 'Categories'}
+                  {t.dashboard?.showCategories}
                 </Button>
               )}
 
@@ -248,8 +248,7 @@ export function SpendingPieChart({
                 >
                   <div className='flex items-center justify-between border-b p-3'>
                     <span className='font-medium'>
-                      {t.dashboard?.expensesByCategory ||
-                        'Expenses by category'}
+                      {t.dashboard?.expensesByCategory}
                     </span>
                     <Button
                       variant='ghost'
@@ -324,9 +323,10 @@ export function SpendingPieChart({
                       onClick={handleJumpToPeriod}
                       className='text-sm text-primary hover:underline'
                     >
-                      {(
-                        t.dashboard?.jumpToPeriod || 'Jump to {period}'
-                      ).replace('{period}', suggestedPeriod.label)}
+                      {t.dashboard?.jumpToPeriod?.replace(
+                        '{period}',
+                        suggestedPeriod.label
+                      )}
                     </button>
                   </>
                 )}

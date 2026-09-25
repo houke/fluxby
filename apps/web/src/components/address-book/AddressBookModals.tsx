@@ -231,8 +231,7 @@ export const AddressBookModals = React.memo<AddressBookModalsProps>(
                                   <TooltipContent
                                     collisionBoundary={modalContentElement}
                                   >
-                                    {t.addressBook?.assignToExisting ||
-                                      'Assign to existing contact'}
+                                    {t.addressBook?.assignToExisting}
                                   </TooltipContent>
                                 </Tooltip>
                               </TooltipProvider>
@@ -243,10 +242,7 @@ export const AddressBookModals = React.memo<AddressBookModalsProps>(
                               >
                                 <div className='space-y-2'>
                                   <Input
-                                    placeholder={
-                                      t.addressBook?.searchContacts ||
-                                      'Search contacts...'
-                                    }
+                                    placeholder={t.addressBook?.searchContacts}
                                     value={assignSearchTerm}
                                     onChange={(e) =>
                                       setAssignSearchTerm(e.target.value)
@@ -383,10 +379,7 @@ export const AddressBookModals = React.memo<AddressBookModalsProps>(
                           <div className='flex items-center gap-2'>
                             <Users className='h-4 w-4 text-purple-600' />
                             <span className='text-sm font-medium text-purple-700 dark:text-purple-300'>
-                              {(
-                                t.addressBook?.possibleDuplicates ||
-                                'Duplicates ({count})'
-                              ).replace(
+                              {t.addressBook?.possibleDuplicates?.replace(
                                 '{count}',
                                 String(group.entries.length)
                               )}
@@ -407,7 +400,7 @@ export const AddressBookModals = React.memo<AddressBookModalsProps>(
                             }
                           >
                             <Scissors className='mr-1 h-4 w-4' />
-                            {t.addressBook?.split || 'Split'}
+                            {t.addressBook?.split}
                           </Button>
                         </div>
                         <div className='mb-3 flex flex-wrap gap-1.5'>
@@ -463,7 +456,7 @@ export const AddressBookModals = React.memo<AddressBookModalsProps>(
                             }
                           >
                             <Merge className='mr-1 h-4 w-4' />
-                            {t.addressBook?.merge || 'Merge'}
+                            {t.addressBook?.merge}
                           </Button>
                         </div>
                       </div>
@@ -481,7 +474,8 @@ export const AddressBookModals = React.memo<AddressBookModalsProps>(
                             {group.entries[0].name}
                           </span>
                           <span className='text-xs text-muted-foreground'>
-                            ({group.entries[0].transactionCount} tx)
+                            ({group.entries[0].transactionCount}{' '}
+                            {t.common.transactions})
                           </span>
                         </div>
                         <div className='mt-2'>
@@ -556,12 +550,9 @@ export const AddressBookModals = React.memo<AddressBookModalsProps>(
         >
           <DialogContent className='max-w-2xl'>
             <DialogHeader>
-              <DialogTitle>
-                {t.addressBook?.splitContact || 'Split contact'}
-              </DialogTitle>
+              <DialogTitle>{t.addressBook?.splitContact}</DialogTitle>
               <DialogDescription>
-                {t.addressBook?.splitContactDescription ||
-                  'Split the contact into separate contacts per IBAN.'}
+                {t.addressBook?.splitContactDescription}
               </DialogDescription>
             </DialogHeader>
             <div className='space-y-4 py-3'>
@@ -615,13 +606,13 @@ export const AddressBookModals = React.memo<AddressBookModalsProps>(
                   } catch (err) {
                     const message =
                       err instanceof Error
-                        ? err.message
-                        : String(err) || 'Error splitting contact';
+                        ? err.message || t.addressBook.errorSplitting
+                        : t.addressBook.errorSplitting;
                     setSplitNameWarning(message);
                   }
                 }}
               >
-                {t.addressBook?.split || 'Split'}
+                {t.addressBook?.split}
               </Button>
             </DialogFooter>
           </DialogContent>

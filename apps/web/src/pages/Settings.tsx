@@ -50,16 +50,16 @@ export default function Settings() {
             value='active-profile'
             data-onboarding='settings-profile-tab'
           >
-            {t.settings.tabs?.activeProfile || 'Active Profile'}
+            {t.settings.tabs?.activeProfile}
           </TabsTrigger>
           <TabsTrigger
             value='manage-profiles'
             data-onboarding='settings-manage-tab'
           >
-            {t.settings.tabs?.manageProfiles || 'Manage Profiles'}
+            {t.settings.tabs?.manageProfiles}
           </TabsTrigger>
           <TabsTrigger value='app-settings' data-onboarding='settings-app-tab'>
-            {t.settings.tabs?.appSettings || 'App Settings'}
+            {t.settings.tabs?.appSettings}
           </TabsTrigger>
         </TabsList>
 

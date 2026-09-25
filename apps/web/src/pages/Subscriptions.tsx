@@ -63,8 +63,8 @@ import type {
 
 // Helper to capitalize merchant name (first letter of first word only)
 // Handles lowercased names like "kosten klantonderzoek houke b.v." → "Kosten klantonderzoek houke b.v."
-function capitalizeFirst(name: string | null | undefined): string {
-  if (!name) return 'Unknown';
+function capitalizeFirst(name: string | null | undefined): string | null {
+  if (!name) return null;
   return name.charAt(0).toUpperCase() + name.slice(1);
 }
 
@@ -84,11 +84,11 @@ function getFrequencyLabel(
   t: ReturnType<typeof useLanguage>['t']
 ): string {
   const labels: Record<PatternType, string> = {
-    weekly: t.subscriptions?.weekly || 'Weekly',
-    biweekly: t.subscriptions?.biweekly || 'Bi-weekly',
-    monthly: t.subscriptions?.monthly || 'Monthly',
-    quarterly: t.subscriptions?.quarterly || 'Quarterly',
-    yearly: t.subscriptions?.yearly || 'Yearly',
+    weekly: t.subscriptions?.weekly,
+    biweekly: t.subscriptions?.biweekly,
+    monthly: t.subscriptions?.monthly,
+    quarterly: t.subscriptions?.quarterly,
+    yearly: t.subscriptions?.yearly,
   };
   return labels[type];
 }
@@ -115,7 +115,7 @@ export default function Subscriptions() {
   const confirm = useConfirm();
   const queryClient = useQueryClient();
 
-  useDocumentTitle(t.subscriptions?.title || 'Subscriptions');
+  useDocumentTitle(t.subscriptions?.title);
 
   // View state
   const [view, setView] = useState<'list' | 'calendar'>('list');
@@ -189,10 +189,7 @@ export default function Subscriptions() {
     onSuccess: (suggestions, options) => {
       setMergeSuggestions(suggestions);
       if (suggestions.length === 0 && options.notifyNoMatches) {
-        toast.info(
-          t.subscriptions?.jevNoMatches ||
-            'Jev did not find likely changes to an existing subscription'
-        );
+        toast.info(t.subscriptions?.jevNoMatches);
       }
     },
     onError: (error) => {
@@ -223,7 +220,7 @@ export default function Subscriptions() {
         queryKey: ['recurring-stats', activeProfileId],
       });
       toast.success(
-        `${result.detected} ${t.subscriptions?.detected || 'new patterns detected'}, ${result.updated} ${t.subscriptions?.updated || 'patterns updated'}`
+        `${result.detected} ${t.subscriptions?.detected}, ${result.updated} ${t.subscriptions?.updated}`
       );
       if (hasTypeSafeKey) {
         jevReviewMutation.mutate({ notifyNoMatches: false });
@@ -254,9 +251,7 @@ export default function Subscriptions() {
       queryClient.invalidateQueries({
         queryKey: ['pattern-transactions'],
       });
-      toast.success(
-        t.subscriptions?.jevBundled || 'Payments added to the subscription'
-      );
+      toast.success(t.subscriptions?.jevBundled);
     },
     onError: (error) => {
       toast.error(error);
@@ -274,9 +269,7 @@ export default function Subscriptions() {
             suggestion.sourceMerchantName !== input.sourceMerchantName
         )
       );
-      toast.info(
-        t.subscriptions?.jevSuggestionDismissed || 'Suggestion dismissed'
-      );
+      toast.info(t.subscriptions?.jevSuggestionDismissed);
     },
     onError: (error) => {
       toast.error(error);
@@ -292,7 +285,7 @@ export default function Subscriptions() {
       queryClient.invalidateQueries({
         queryKey: ['recurring-stats', activeProfileId],
       });
-      toast.success(t.subscriptions?.confirmed || 'Subscription confirmed');
+      toast.success(t.subscriptions?.confirmed);
     },
     onError: (error) => {
       toast.error(error);
@@ -308,7 +301,7 @@ export default function Subscriptions() {
       queryClient.invalidateQueries({
         queryKey: ['recurring-stats', activeProfileId],
       });
-      toast.success(t.subscriptions?.dismissed || 'Subscription dismissed');
+      toast.success(t.subscriptions?.dismissed);
     },
     onError: (error) => {
       toast.error(error);
@@ -324,7 +317,7 @@ export default function Subscriptions() {
       queryClient.invalidateQueries({
         queryKey: ['recurring-stats', activeProfileId],
       });
-      toast.success(t.subscriptions?.deleted || 'Subscription deleted');
+      toast.success(t.subscriptions?.deleted);
     },
     onError: (error) => {
       toast.error(error);
@@ -347,7 +340,7 @@ export default function Subscriptions() {
       queryClient.invalidateQueries({
         queryKey: ['recurring-patterns', activeProfileId],
       });
-      toast.success(t.subscriptions?.updated || 'Subscription updated');
+      toast.success(t.subscriptions?.updated);
     },
     onError: (error) => {
       toast.error(error);
@@ -379,15 +372,11 @@ export default function Subscriptions() {
     suggestion: RecurringPatternSourceSuggestion
   ) => {
     const confirmed = await confirm({
-      title:
-        t.subscriptions?.jevBundleConfirmTitle ||
-        'Add these payments to the subscription?',
-      message: (
-        t.subscriptions?.jevBundleConfirmDescription ||
-        'This will include the matching payment source in {name} and group future payments with it.'
-      ).replace(
+      title: t.subscriptions?.jevBundleConfirmTitle,
+      message: t.subscriptions?.jevBundleConfirmDescription?.replace(
         '{name}',
-        capitalizeFirst(suggestion.targetPattern.merchantName)
+        capitalizeFirst(suggestion.targetPattern.merchantName) ||
+          t.transactions.unknown
       ),
     });
     if (!confirmed) return;
@@ -421,10 +410,8 @@ export default function Subscriptions() {
 
   const handleDismiss = async (id: string) => {
     const confirmed = await confirm({
-      title: t.subscriptions?.dismissPattern || 'Dismiss pattern',
-      message:
-        t.subscriptions?.dismissPatternDescription ||
-        'This is not a subscription, hide this pattern',
+      title: t.subscriptions?.dismissPattern,
+      message: t.subscriptions?.dismissPatternDescription,
     });
     if (confirmed) {
       dismissMutation.mutate(id);
@@ -433,12 +420,10 @@ export default function Subscriptions() {
 
   const handleDelete = async (id: string, isStale = false) => {
     const confirmed = await confirm({
-      title: t.subscriptions?.delete || 'Delete',
+      title: t.subscriptions?.delete,
       message: isStale
-        ? t.subscriptions?.deleteStaleDescription ||
-          'This subscription appears to be no longer active and will be removed from your profile.'
-        : t.subscriptions?.deleteConfirmDescription ||
-          'Are you sure you want to delete this subscription?',
+        ? t.subscriptions?.deleteStaleDescription
+        : t.subscriptions?.deleteConfirmDescription,
       variant: 'danger',
     });
     if (confirmed) {
@@ -462,9 +447,7 @@ export default function Subscriptions() {
       queryClient.invalidateQueries({
         queryKey: ['dismissed-alerts', activeProfileId],
       });
-      toast.success(
-        t.subscriptions?.priceUpdated || 'Subscription amount updated'
-      );
+      toast.success(t.subscriptions?.priceUpdated);
     },
     onError: (error) => {
       toast.error(error);
@@ -486,7 +469,7 @@ export default function Subscriptions() {
       queryClient.invalidateQueries({
         queryKey: ['dismissed-alerts', activeProfileId],
       });
-      toast.success(t.subscriptions?.alertDismissed || 'Alert dismissed');
+      toast.success(t.subscriptions?.alertDismissed);
     },
     onError: (error) => {
       toast.error(error);
@@ -603,10 +586,8 @@ export default function Subscriptions() {
           type: 'price_change',
           pattern,
           message: isIncrease
-            ? t.subscriptions?.priceIncreaseDetected ||
-              'Price increase detected. Would you like to update the subscription amount?'
-            : t.subscriptions?.priceDecreaseDetected ||
-              'Price decrease detected. Would you like to update the subscription amount?',
+            ? t.subscriptions?.priceIncreaseDetected
+            : t.subscriptions?.priceDecreaseDetected,
           newAmount: pattern.lastAmount,
           isIncrease,
         });
@@ -623,9 +604,7 @@ export default function Subscriptions() {
           id: `missed-${pattern.id}`,
           type: 'missed_payment',
           pattern,
-          message:
-            t.subscriptions?.missedPaymentDescription ||
-            'Expected date has passed',
+          message: t.subscriptions?.missedPaymentDescription,
         });
       }
 
@@ -640,9 +619,7 @@ export default function Subscriptions() {
           id: `stale-${pattern.id}`,
           type: 'stale',
           pattern,
-          message:
-            t.subscriptions?.staleDescription ||
-            'No transactions in 2+ months. Consider removing.',
+          message: t.subscriptions?.staleDescription,
         });
       }
     }
@@ -656,8 +633,8 @@ export default function Subscriptions() {
     <div className='space-y-6'>
       {/* Header */}
       <PageHeader
-        title={t.subscriptions?.title || 'Subscriptions'}
-        subtitle={t.subscriptions?.subtitle || 'Manage your recurring payments'}
+        title={t.subscriptions?.title}
+        subtitle={t.subscriptions?.subtitle}
         dataOnboarding='subscriptions-greeting'
         actions={
           <div className='flex flex-wrap items-center gap-2'>
@@ -682,9 +659,7 @@ export default function Subscriptions() {
                       <List className='h-4 w-4' />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent>
-                    {t.subscriptions?.listView || 'List view'}
-                  </TooltipContent>
+                  <TooltipContent>{t.subscriptions?.listView}</TooltipContent>
                 </Tooltip>
               </TooltipProvider>
               <TooltipProvider>
@@ -704,7 +679,7 @@ export default function Subscriptions() {
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
-                    {t.subscriptions?.calendarView || 'Calendar view'}
+                    {t.subscriptions?.calendarView}
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -714,10 +689,7 @@ export default function Subscriptions() {
               variant='outline'
               onClick={() => {
                 if (!hasTypeSafeKey) {
-                  toast.info(
-                    t.subscriptions?.jevKeyRequired ||
-                      'Add your TypeSafe API key in Settings to use Jev'
-                  );
+                  toast.info(t.subscriptions?.jevKeyRequired);
                   return;
                 }
                 setMergeSuggestions([]);
@@ -732,8 +704,8 @@ export default function Subscriptions() {
                 <Sparkles className='mr-2 h-4 w-4' />
               )}
               {jevReviewMutation.isPending
-                ? t.subscriptions?.jevReviewing || 'Checking with Jev...'
-                : t.subscriptions?.jevReview || 'Review changes with Jev'}
+                ? t.subscriptions?.jevReviewing
+                : t.subscriptions?.jevReview}
             </Button>
 
             {/* Detect button */}
@@ -749,8 +721,8 @@ export default function Subscriptions() {
                 )}
               />
               {detectMutation.isPending
-                ? t.subscriptions?.detecting || 'Detecting...'
-                : t.subscriptions?.detectPatterns || 'Detect patterns'}
+                ? t.subscriptions?.detecting
+                : t.subscriptions?.detectPatterns}
             </Button>
           </div>
         }
@@ -759,13 +731,9 @@ export default function Subscriptions() {
       {mergeSuggestions.length > 0 && (
         <Card data-onboarding='subscriptions-jev-suggestions'>
           <CardHeader>
-            <CardTitle>
-              {t.subscriptions?.jevSuggestionsTitle ||
-                'Possible subscription matches'}
-            </CardTitle>
+            <CardTitle>{t.subscriptions?.jevSuggestionsTitle}</CardTitle>
             <CardDescription>
-              {t.subscriptions?.jevSuggestionsDescription ||
-                'Jev found payment changes that may belong to an existing subscription. Review each suggestion before bundling it.'}
+              {t.subscriptions?.jevSuggestionsDescription}
             </CardDescription>
           </CardHeader>
           <CardContent className='space-y-3'>
@@ -777,7 +745,7 @@ export default function Subscriptions() {
                 ? capitalizeFirst(sourceName)
                 : suggestion.sourceIban
                   ? `IBAN •••• ${suggestion.sourceIban.slice(-4)}`
-                  : 'Unknown';
+                  : t.transactions.unknown;
               const isMutating =
                 bundleSourceMutation.isPending ||
                 dismissSourceMutation.isPending;
@@ -791,17 +759,17 @@ export default function Subscriptions() {
                     <div className='min-w-0 space-y-1'>
                       <p className='font-medium'>{sourceLabel}</p>
                       <p className='text-sm text-muted-foreground'>
-                        {(
-                          t.subscriptions?.jevPaymentCount ||
-                          'Jev found {count} recent payments in this series.'
-                        ).replace('{count}', String(suggestion.paymentCount))}
+                        {t.subscriptions?.jevPaymentCount?.replace(
+                          '{count}',
+                          String(suggestion.paymentCount)
+                        )}
                       </p>
                       <p className='text-sm'>
-                        {t.subscriptions?.jevSuggestedTarget || 'May belong to'}{' '}
+                        {t.subscriptions?.jevSuggestedTarget}{' '}
                         <span className='font-medium'>
                           {capitalizeFirst(
                             suggestion.targetPattern.merchantName
-                          )}
+                          ) || t.transactions.unknown}
                         </span>
                         <span className='text-muted-foreground'>
                           {' '}
@@ -812,7 +780,7 @@ export default function Subscriptions() {
                           )}
                           {' · '}
                           {Math.round(suggestion.confidence * 100)}%{' '}
-                          {t.subscriptions?.jevConfidence || 'match confidence'}
+                          {t.subscriptions?.jevConfidence}
                         </span>
                       </p>
                       <div className='flex flex-wrap gap-x-4 gap-y-1 pt-1 text-sm text-muted-foreground'>
@@ -831,8 +799,7 @@ export default function Subscriptions() {
                         disabled={isMutating}
                       >
                         <Check className='mr-2 h-4 w-4' />
-                        {t.subscriptions?.jevBundle ||
-                          'Bundle into subscription'}
+                        {t.subscriptions?.jevBundle}
                       </Button>
                       <Button
                         size='sm'
@@ -848,7 +815,7 @@ export default function Subscriptions() {
                         }
                         disabled={isMutating}
                       >
-                        {t.subscriptions?.jevNotSame || 'Not the same'}
+                        {t.subscriptions?.jevNotSame}
                       </Button>
                     </div>
                   </div>
@@ -868,7 +835,7 @@ export default function Subscriptions() {
           <CardContent className='relative z-10 flex h-full flex-col justify-between p-4 sm:p-6'>
             <div className='flex-1'>
               <p className='text-sm font-medium text-muted-foreground'>
-                {t.subscriptions?.totalMonthlySpend || 'Total monthly spend'}
+                {t.subscriptions?.totalMonthlySpend}
               </p>
               {loadingStats ? (
                 <Skeleton className='mt-2 h-8 w-24' />
@@ -888,7 +855,7 @@ export default function Subscriptions() {
           <CardContent className='relative z-10 flex h-full flex-col justify-between p-4 sm:p-6'>
             <div className='flex-1'>
               <p className='text-sm font-medium text-muted-foreground'>
-                {t.subscriptions?.activeSubscriptions || 'Active subscriptions'}
+                {t.subscriptions?.activeSubscriptions}
               </p>
               {loadingStats ? (
                 <Skeleton className='mt-2 h-8 w-16' />
@@ -908,7 +875,7 @@ export default function Subscriptions() {
           <CardContent className='relative z-10 flex h-full flex-col justify-between p-4 sm:p-6'>
             <div className='flex-1'>
               <p className='text-sm font-medium text-muted-foreground'>
-                {t.subscriptions?.confirmedSubscriptions || 'Confirmed'}
+                {t.subscriptions?.confirmedSubscriptions}
               </p>
               {loadingStats ? (
                 <Skeleton className='mt-2 h-8 w-16' />
@@ -928,7 +895,7 @@ export default function Subscriptions() {
           <CardContent className='relative z-10 flex h-full flex-col justify-between p-4 sm:p-6'>
             <div className='flex-1'>
               <p className='text-sm font-medium text-muted-foreground'>
-                {t.subscriptions?.pendingConfirmation || 'Pending confirmation'}
+                {t.subscriptions?.pendingConfirmation}
               </p>
               {loadingStats ? (
                 <Skeleton className='mt-2 h-8 w-16' />
@@ -951,7 +918,7 @@ export default function Subscriptions() {
           <CardHeader>
             <CardTitle className='flex items-center gap-2'>
               <AlertTriangle className='h-5 w-5 text-orange-500' />
-              {t.subscriptions?.alerts || 'Alerts'}
+              {t.subscriptions?.alerts}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -975,7 +942,8 @@ export default function Subscriptions() {
                     )}
                     <div>
                       <p className='font-medium'>
-                        {capitalizeFirst(alert.pattern.merchantName)}
+                        {capitalizeFirst(alert.pattern.merchantName) ||
+                          t.transactions.unknown}
                         {alert.type === 'price_change' && alert.newAmount && (
                           <span
                             className={`ml-2 text-sm ${alert.isIncrease ? 'text-orange-600' : 'text-emerald-600'}`}
@@ -1015,8 +983,7 @@ export default function Subscriptions() {
                               </Button>
                             </TooltipTrigger>
                             <TooltipContent>
-                              {t.subscriptions?.updateAmount ||
-                                'Update subscription amount'}
+                              {t.subscriptions?.updateAmount}
                             </TooltipContent>
                           </Tooltip>
                         </TooltipProvider>
@@ -1040,7 +1007,7 @@ export default function Subscriptions() {
                               </Button>
                             </TooltipTrigger>
                             <TooltipContent>
-                              {t.subscriptions?.dismissAlert || 'Dismiss alert'}
+                              {t.subscriptions?.dismissAlert}
                             </TooltipContent>
                           </Tooltip>
                         </TooltipProvider>
@@ -1062,7 +1029,7 @@ export default function Subscriptions() {
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent>
-                            {t.subscriptions?.dismissAlert || 'Dismiss alert'}
+                            {t.subscriptions?.dismissAlert}
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
@@ -1083,8 +1050,7 @@ export default function Subscriptions() {
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent>
-                            {t.subscriptions?.removeStale ||
-                              'Remove inactive subscription'}
+                            {t.subscriptions?.removeStale}
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
@@ -1111,16 +1077,11 @@ export default function Subscriptions() {
           <CardContent className='pt-6'>
             <EmptyState
               icon={Calendar}
-              title={
-                t.subscriptions?.noSubscriptions ||
-                'No subscriptions detected yet'
-              }
+              title={t.subscriptions?.noSubscriptions}
               description={
                 hasTransactions
-                  ? t.subscriptions?.noSubscriptionsDescriptionWithData ||
-                    'Detect recurring patterns from your imported transactions'
-                  : t.subscriptions?.noSubscriptionsDescription ||
-                    'Import transactions to automatically detect recurring payments'
+                  ? t.subscriptions?.noSubscriptionsDescriptionWithData
+                  : t.subscriptions?.noSubscriptionsDescription
               }
               action={
                 hasTransactions ? (
@@ -1130,15 +1091,15 @@ export default function Subscriptions() {
                     className='text-sm text-purple-600 hover:text-purple-700 hover:underline disabled:opacity-50 dark:text-purple-400 dark:hover:text-purple-300'
                   >
                     {detectMutation.isPending
-                      ? t.common?.loading || 'Loading...'
-                      : t.subscriptions?.detectPatterns || 'Detect patterns'}
+                      ? t.common?.loading
+                      : t.subscriptions?.detectPatterns}
                   </button>
                 ) : (
                   <Link
                     to='/import'
                     className='text-sm text-purple-600 hover:text-purple-700 hover:underline dark:text-purple-400 dark:hover:text-purple-300'
                   >
-                    {t.dashboard?.goToImport || 'Go to import'}
+                    {t.dashboard?.goToImport}
                   </Link>
                 )
               }
@@ -1153,12 +1114,10 @@ export default function Subscriptions() {
               <CardHeader>
                 <CardTitle className='flex items-center gap-2'>
                   <Sparkles className='h-5 w-5 text-purple-500' />
-                  {t.subscriptions?.suggestedSubscriptions ||
-                    'Suggested subscriptions'}
+                  {t.subscriptions?.suggestedSubscriptions}
                 </CardTitle>
                 <CardDescription>
-                  {t.subscriptions?.suggestedDescription ||
-                    'We detected these recurring payments. Accept to track them or dismiss to hide.'}
+                  {t.subscriptions?.suggestedDescription}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -1192,10 +1151,7 @@ export default function Subscriptions() {
           {confirmedPatterns.length > 0 ? (
             <Card data-onboarding='subscriptions-confirmed'>
               <CardHeader>
-                <CardTitle>
-                  {t.subscriptions?.activeSubscriptions ||
-                    'Active subscriptions'}
-                </CardTitle>
+                <CardTitle>{t.subscriptions?.activeSubscriptions}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className='space-y-3'>
@@ -1228,11 +1184,9 @@ export default function Subscriptions() {
         /* Calendar View */
         <Card>
           <CardHeader>
-            <CardTitle>
-              {t.subscriptions?.expectedPayments || 'Expected payments'}
-            </CardTitle>
+            <CardTitle>{t.subscriptions?.expectedPayments}</CardTitle>
             <CardDescription>
-              {t.common?.months?.[now.getMonth()] || ''} {now.getFullYear()}
+              {t.common?.months?.[now.getMonth()]} {now.getFullYear()}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -1249,14 +1203,17 @@ export default function Subscriptions() {
                           {new Date(entry.date).getDate()}
                         </span>
                         <span className='text-muted-foreground'>
-                          {t.common?.monthsShort?.[
-                            new Date(entry.date).getMonth()
-                          ] || ''}
+                          {
+                            t.common?.monthsShort?.[
+                              new Date(entry.date).getMonth()
+                            ]
+                          }
                         </span>
                       </div>
                       <div>
                         <p className='font-medium'>
-                          {capitalizeFirst(entry.merchantName)}
+                          {capitalizeFirst(entry.merchantName) ||
+                            t.transactions.unknown}
                         </p>
                         <p className='text-sm text-muted-foreground'>
                           {getFrequencyLabel(entry.patternType, t)}
@@ -1273,7 +1230,7 @@ export default function Subscriptions() {
               </div>
             ) : (
               <p className='text-center text-muted-foreground'>
-                {t.subscriptions?.noAlerts || 'No expected payments this month'}
+                {t.subscriptions?.noAlerts}
               </p>
             )}
           </CardContent>
@@ -1387,12 +1344,13 @@ function SubscriptionCard({
                 value={editName}
                 onChange={(e) => setEditName(e.target.value)}
                 className='h-8 w-48'
-                placeholder={t.subscriptions?.merchantName || 'Merchant name'}
+                placeholder={t.subscriptions?.merchantName}
                 autoFocus
               />
             ) : (
               <p className='font-medium'>
-                {capitalizeFirst(pattern.merchantName)}
+                {capitalizeFirst(pattern.merchantName) ||
+                  t.transactions.unknown}
               </p>
             )}
             {pattern.isVariable && (
@@ -1400,12 +1358,11 @@ function SubscriptionCard({
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Badge variant='outline' className='cursor-help text-xs'>
-                      {t.subscriptions?.variable || 'Variable'}
+                      {t.subscriptions?.variable}
                     </Badge>
                   </TooltipTrigger>
                   <TooltipContent>
-                    {t.subscriptions?.variableTooltip ||
-                      'Amount varies between payments'}
+                    {t.subscriptions?.variableTooltip}
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -1419,12 +1376,11 @@ function SubscriptionCard({
                       className='cursor-help text-xs'
                     >
                       <AlertTriangle className='mr-1 h-3 w-3' />
-                      {t.subscriptions?.stale || 'Inactive'}
+                      {t.subscriptions?.stale}
                     </Badge>
                   </TooltipTrigger>
                   <TooltipContent>
-                    {t.subscriptions?.staleTooltip ||
-                      'No transactions in 2+ months. Consider removing.'}
+                    {t.subscriptions?.staleTooltip}
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -1441,19 +1397,19 @@ function SubscriptionCard({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value='weekly'>
-                    {t.subscriptions?.weekly || 'Weekly'}
+                    {t.subscriptions?.weekly}
                   </SelectItem>
                   <SelectItem value='biweekly'>
-                    {t.subscriptions?.biweekly || 'Bi-weekly'}
+                    {t.subscriptions?.biweekly}
                   </SelectItem>
                   <SelectItem value='monthly'>
-                    {t.subscriptions?.monthly || 'Monthly'}
+                    {t.subscriptions?.monthly}
                   </SelectItem>
                   <SelectItem value='quarterly'>
-                    {t.subscriptions?.quarterly || 'Quarterly'}
+                    {t.subscriptions?.quarterly}
                   </SelectItem>
                   <SelectItem value='yearly'>
-                    {t.subscriptions?.yearly || 'Yearly'}
+                    {t.subscriptions?.yearly}
                   </SelectItem>
                 </SelectContent>
               </Select>
@@ -1463,7 +1419,7 @@ function SubscriptionCard({
             <span className='text-muted-foreground/60'>•</span>
             {isEditing ? (
               <span className='flex items-center gap-1'>
-                <span>{t.subscriptions?.avgAmount || 'Avg.'}:</span>
+                <span>{t.subscriptions?.avgAmount}:</span>
                 <Input
                   type='number'
                   step='0.01'
@@ -1474,7 +1430,7 @@ function SubscriptionCard({
               </span>
             ) : (
               <span>
-                {t.subscriptions?.avgAmount || 'Avg.'}:{' '}
+                {t.subscriptions?.avgAmount}:{' '}
                 <Currency amount={Math.abs(pattern.avgAmount)} />
               </span>
             )}
@@ -1487,15 +1443,16 @@ function SubscriptionCard({
                 onToggleExpand?.();
               }}
             >
-              {(
-                t.subscriptions?.transactionsCount || '{count} transactions'
-              ).replace('{count}', String(pattern.transactionCount))}
+              {t.subscriptions?.transactionsCount?.replace(
+                '{count}',
+                String(pattern.transactionCount)
+              )}
             </button>
           </div>
           {pattern.nextExpectedDate && (
             <p className='mt-1 text-sm'>
               <span className='text-muted-foreground'>
-                {t.subscriptions?.nextPayment || 'Next payment'}:{' '}
+                {t.subscriptions?.nextPayment}:{' '}
               </span>
               <span
                 className={cn(
@@ -1507,12 +1464,12 @@ function SubscriptionCard({
                 {formatDate(pattern.nextExpectedDate)}
                 {showAwaiting ? (
                   <span className='ml-1 text-xs'>
-                    ({t.subscriptions?.awaitingTransaction || 'awaiting'})
+                    ({t.subscriptions?.awaitingTransaction})
                   </span>
                 ) : (
                   overdue && (
                     <span className='ml-1 text-xs'>
-                      ({t.subscriptions?.overdue || 'overdue'})
+                      ({t.subscriptions?.overdue})
                     </span>
                   )
                 )}
@@ -1543,7 +1500,7 @@ function SubscriptionCard({
                       <Check className='h-4 w-4' />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent>{t.common?.save || 'Save'}</TooltipContent>
+                  <TooltipContent>{t.common?.save}</TooltipContent>
                 </Tooltip>
               </TooltipProvider>
               <TooltipProvider>
@@ -1558,9 +1515,7 @@ function SubscriptionCard({
                       <X className='h-4 w-4' />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent>
-                    {t.common?.cancel || 'Cancel'}
-                  </TooltipContent>
+                  <TooltipContent>{t.common?.cancel}</TooltipContent>
                 </Tooltip>
               </TooltipProvider>
             </>
@@ -1579,9 +1534,7 @@ function SubscriptionCard({
                         <Check className='h-4 w-4' />
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent>
-                      {t.subscriptions?.confirm || 'Confirm'}
-                    </TooltipContent>
+                    <TooltipContent>{t.subscriptions?.confirm}</TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
               )}
@@ -1599,9 +1552,7 @@ function SubscriptionCard({
                         <X className='h-4 w-4' />
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent>
-                      {t.subscriptions?.dismiss || 'Dismiss'}
-                    </TooltipContent>
+                    <TooltipContent>{t.subscriptions?.dismiss}</TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
               )}
@@ -1619,7 +1570,7 @@ function SubscriptionCard({
                         <Pencil className='h-4 w-4' />
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent>{t.common?.edit || 'Edit'}</TooltipContent>
+                    <TooltipContent>{t.common?.edit}</TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
               )}
@@ -1637,9 +1588,7 @@ function SubscriptionCard({
                         <Trash2 className='h-4 w-4' />
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent>
-                      {t.subscriptions?.delete || 'Delete'}
-                    </TooltipContent>
+                    <TooltipContent>{t.subscriptions?.delete}</TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
               )}
@@ -1663,9 +1612,8 @@ function SubscriptionCard({
                     </TooltipTrigger>
                     <TooltipContent>
                       {isExpanded
-                        ? t.common?.collapse || 'Collapse'
-                        : t.subscriptions?.showTransactions ||
-                          'Show transactions'}
+                        ? t.common?.collapse
+                        : t.subscriptions?.showTransactions}
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
@@ -1685,7 +1633,7 @@ function SubscriptionCard({
           ) : transactions && transactions.length > 0 ? (
             <div className='space-y-1'>
               <h4 className='mb-2 text-sm font-medium'>
-                {t.subscriptions?.transactionHistory || 'Transaction history'}
+                {t.subscriptions?.transactionHistory}
               </h4>
               <div className='max-h-64 overflow-y-auto'>
                 {transactions.map((tx) => (
@@ -1710,7 +1658,7 @@ function SubscriptionCard({
             </div>
           ) : (
             <p className='text-center text-sm text-muted-foreground'>
-              {t.subscriptions?.noTransactionsFound || 'No transactions found'}
+              {t.subscriptions?.noTransactionsFound}
             </p>
           )}
         </div>

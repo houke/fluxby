@@ -75,6 +75,9 @@ export default function HelpSubscriptions() {
           {t.helpCenter?.subscriptions?.bestPracticeText}
         </p>
       </div>
+
+      <h2>{t.helpCenter?.subscriptions?.viewsTitle}</h2>
+      <p>{t.helpCenter?.subscriptions?.viewsText}</p>
     </article>
   );
 }

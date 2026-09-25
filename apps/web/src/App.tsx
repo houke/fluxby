@@ -97,11 +97,10 @@ function SecurityGate({ children }: { children: React.ReactNode }) {
               <User className='h-8 w-8 text-purple-600 dark:text-purple-400' />
             </div>
             <h2 className='mb-2 text-xl font-semibold'>
-              {t.common?.loadingUserData || 'Loading your data...'}
+              {t.common?.loadingUserData}
             </h2>
             <p className='text-sm text-muted-foreground'>
-              {t.common?.prepareDashboard ||
-                'Please wait while we prepare your dashboard'}
+              {t.common?.prepareDashboard}
             </p>
           </div>
         </div>
@@ -129,13 +128,12 @@ function SecurityGate({ children }: { children: React.ReactNode }) {
 
             {/* Title */}
             <h2 className='mb-2 text-xl font-semibold'>
-              {t.common?.loadingUserData || 'Loading your data...'}
+              {t.common?.loadingUserData}
             </h2>
 
             {/* Description */}
             <p className='text-sm text-muted-foreground'>
-              {t.common?.prepareDashboard ||
-                'Please wait while we prepare your dashboard'}
+              {t.common?.prepareDashboard}
             </p>
           </div>
         </div>

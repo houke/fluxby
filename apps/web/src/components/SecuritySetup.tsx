@@ -35,7 +35,7 @@ interface SecuritySetupProps {
 type SetupStep = 'language' | 'name' | 'password' | 'loading';
 
 export function SecuritySetup({ onSetupComplete }: SecuritySetupProps) {
-  const { language, setLanguage } = useLanguage();
+  const { language, setLanguage, t } = useLanguage();
   const { setupEncryption } = useEncryption();
 
   const [step, setStep] = useState<SetupStep>('language');
@@ -77,93 +77,7 @@ export function SecuritySetup({ onSetupComplete }: SecuritySetupProps) {
     return () => viewport.removeEventListener('resize', handleResize);
   }, []);
 
-  const t = {
-    nl: {
-      languageTitle: 'Kies je taal',
-      languageDescription: 'Selecteer de taal waarin je Fluxby wilt gebruiken.',
-      nameTitle: 'Hoe heet je?',
-      nameDescription: 'We gebruiken je naam om Fluxby persoonlijker te maken.',
-      namePlaceholder: 'Je naam...',
-      passwordTitle: 'Beveilig je gegevens',
-      passwordDescription:
-        'Kies een master wachtwoord om je financiële gegevens te versleutelen. Dit wachtwoord wordt niet opgeslagen en kan niet worden hersteld - onthoud het goed!',
-      passwordPlaceholder: 'Master wachtwoord...',
-      confirmPlaceholder: 'Bevestig wachtwoord...',
-      passwordHint:
-        'Minimaal 8 tekens. Dit wachtwoord kan niet worden hersteld!',
-      passwordTooShort: 'Wachtwoord moet minimaal 8 tekens zijn',
-      passwordsNoMatch: 'Wachtwoorden komen niet overeen',
-      setupError: 'Fout bij opzetten van versleuteling',
-      seedingTimeout:
-        'Het laden van demo gegevens duurt langer dan verwacht. Dit kan voorkomen op langzamere apparaten.',
-      seedingTimeoutRetry: 'Opnieuw proberen',
-      recoveryWarningTitle: 'Wachtwoord kan niet worden hersteld',
-      recoveryWarning:
-        'Als je dit wachtwoord vergeet, zijn al je gegevens permanent ontoegankelijk. Er is geen manier om je wachtwoord te herstellen of te resetten.',
-      next: 'Volgende',
-      back: 'Vorige',
-      finish: 'Aan de slag!',
-      settingUp: 'Bezig met beveiligen...',
-      loadingTitle: 'Account instellen...',
-      loadingDescription: 'We bereiden je persoonlijke omgeving voor.',
-      loadingWarning:
-        'Sluit dit tabblad niet af totdat het instellen is voltooid.',
-      progressDemoAccount: 'Demo account voorbereiden...',
-      progressTransactions: 'Transacties aanmaken...',
-      progressBudgets: 'Budgetten aanmaken...',
-      progressCategories: 'Categorieën aanmaken...',
-      progressAddressBook: 'Adresboek vullen...',
-      progressEncrypting: 'Versleuteling instellen...',
-      progressFinalizing: 'Onboarding voorbereiden...',
-      progressDashboard: 'Dashboard voorbereiden, even geduld...',
-      elapsed: 'Verstreken',
-      seeding: 'Seeden',
-      encrypting: 'Versleutelen',
-    },
-    en: {
-      languageTitle: 'Choose your language',
-      languageDescription: 'Select the language you want to use Fluxby in.',
-      nameTitle: "What's your name?",
-      nameDescription:
-        "We'll use your name to personalize your Fluxby experience.",
-      namePlaceholder: 'Your name...',
-      passwordTitle: 'Secure your data',
-      passwordDescription:
-        'Choose a master password to encrypt your financial data. This password is not stored and cannot be recovered - remember it well!',
-      passwordPlaceholder: 'Master password...',
-      confirmPlaceholder: 'Confirm password...',
-      passwordHint: 'Minimum 8 characters. This password cannot be recovered!',
-      passwordTooShort: 'Password must be at least 8 characters',
-      passwordsNoMatch: 'Passwords do not match',
-      setupError: 'Failed to setup encryption',
-      seedingTimeout:
-        'Loading demo data is taking longer than expected. This can happen on slower devices.',
-      seedingTimeoutRetry: 'Retry',
-      recoveryWarningTitle: 'Password cannot be recovered',
-      recoveryWarning:
-        'If you forget this password, all your data will be permanently inaccessible. There is no way to recover or reset your password.',
-      next: 'Next',
-      back: 'Back',
-      finish: "Let's get started!",
-      settingUp: 'Setting up security...',
-      loadingTitle: 'Setting up your account...',
-      loadingDescription: "We're preparing your personal environment.",
-      loadingWarning: "Please don't close this tab until setup is complete.",
-      progressDemoAccount: 'Preparing demo account...',
-      progressTransactions: 'Creating transactions...',
-      progressBudgets: 'Creating budgets...',
-      progressCategories: 'Creating categories...',
-      progressAddressBook: 'Filling address book...',
-      progressEncrypting: 'Setting up encryption...',
-      progressFinalizing: 'Preparing onboarding...',
-      progressDashboard: 'Preparing dashboard, please wait...',
-      elapsed: 'Elapsed',
-      seeding: 'Seeding',
-      encrypting: 'Encrypting',
-    },
-  };
-
-  const texts = t[language] || t.en;
+  const texts = t.security.initialSetup;
 
   const formatDuration = (ms: number) => `${(ms / 1000).toFixed(1)}s`;
 
@@ -194,12 +108,12 @@ export function SecuritySetup({ onSetupComplete }: SecuritySetupProps) {
     setError(null);
 
     if (password.length < 8) {
-      setError(texts.passwordTooShort);
+      setError(t.security.passwordTooShort);
       return;
     }
 
     if (password !== confirmPassword) {
-      setError(texts.passwordsNoMatch);
+      setError(t.security.passwordsNoMatch);
       return;
     }
 
@@ -330,7 +244,7 @@ export function SecuritySetup({ onSetupComplete }: SecuritySetupProps) {
       onSetupComplete();
     } catch (err) {
       console.error('Setup error:', err);
-      setError(texts.setupError);
+      setError(t.security.setupError);
       setStep('password'); // Go back to password step on error
       setIsLoading(false);
       setLoadingProgress('');
@@ -350,6 +264,9 @@ export function SecuritySetup({ onSetupComplete }: SecuritySetupProps) {
     switchProfile,
     language,
     SEEDING_TIMEOUT_MS,
+    t.security.passwordTooShort,
+    t.security.passwordsNoMatch,
+    t.security.setupError,
   ]);
 
   // Retry seeding after timeout
@@ -424,7 +341,7 @@ export function SecuritySetup({ onSetupComplete }: SecuritySetupProps) {
       onSetupComplete();
     } catch (err) {
       console.error('Setup error during retry:', err);
-      setError(texts.setupError);
+      setError(t.security.setupError);
       setStep('password');
       setIsLoading(false);
       setLoadingProgress('');
@@ -444,6 +361,7 @@ export function SecuritySetup({ onSetupComplete }: SecuritySetupProps) {
     password,
     onSetupComplete,
     SEEDING_TIMEOUT_MS,
+    t.security.setupError,
   ]);
 
   const isPasswordValid = password.length >= 8 && password === confirmPassword;
@@ -603,7 +521,7 @@ export function SecuritySetup({ onSetupComplete }: SecuritySetupProps) {
                   )}
                   onClick={() => handleLanguageSelect('nl')}
                 >
-                  🇳🇱 Nederlands
+                  🇳🇱 {t.common.languageNames.dutch}
                 </Button>
                 <Button
                   size='lg'
@@ -614,7 +532,7 @@ export function SecuritySetup({ onSetupComplete }: SecuritySetupProps) {
                   )}
                   onClick={() => handleLanguageSelect('en')}
                 >
-                  🇬🇧 English
+                  🇬🇧 {t.common.languageNames.english}
                 </Button>
               </div>
             )}
@@ -646,7 +564,7 @@ export function SecuritySetup({ onSetupComplete }: SecuritySetupProps) {
                     className='gap-1'
                   >
                     <ChevronLeft className='h-3.5 w-3.5' />
-                    {texts.back}
+                    {t.common.back}
                   </Button>
                   <Button
                     type='submit'
@@ -654,7 +572,7 @@ export function SecuritySetup({ onSetupComplete }: SecuritySetupProps) {
                     disabled={!userName.trim()}
                     className='gap-1 bg-purple-600 hover:bg-purple-700'
                   >
-                    {texts.next}
+                    {t.common.next}
                     <ChevronRight className='h-3.5 w-3.5' />
                   </Button>
                 </div>
@@ -682,7 +600,7 @@ export function SecuritySetup({ onSetupComplete }: SecuritySetupProps) {
                       {texts.recoveryWarningTitle}
                     </p>
                     <p className='text-sm leading-relaxed text-red-700 dark:text-red-300'>
-                      {texts.recoveryWarning}
+                      {texts.recoveryWarningSetup}
                     </p>
                   </div>
                 </div>
@@ -750,7 +668,7 @@ export function SecuritySetup({ onSetupComplete }: SecuritySetupProps) {
                     className='gap-1'
                   >
                     <ChevronLeft className='h-3.5 w-3.5' />
-                    {texts.back}
+                    {t.common.back}
                   </Button>
                   <Button
                     type='submit'

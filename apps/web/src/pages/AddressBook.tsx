@@ -344,9 +344,7 @@ export default function AddressBook() {
     <div className='space-y-0 sm:space-y-6'>
       <PageHeader
         title={t.addressBook?.title || t.settings.addressBook.title}
-        subtitle={
-          t.addressBook?.subtitle || 'Beheer je adresboek en opschoonregels.'
-        }
+        subtitle={t.addressBook?.subtitle}
         actions={
           <div className='flex gap-2'>
             {hasTypeSafeKey && (
@@ -377,7 +375,7 @@ export default function AddressBook() {
               data-onboarding='addressbook-settings-toggle'
             >
               <Settings2 className='mr-2 h-4 w-4' />
-              {t.addressBook?.cleanupRules || 'Cleanup rules'}
+              {t.addressBook?.cleanupRules}
             </Button>
             <Button
               className='bg-purple-600 hover:bg-purple-700'
@@ -385,7 +383,7 @@ export default function AddressBook() {
               data-onboarding='add-contact-toggle'
             >
               <Plus className='mr-2 h-4 w-4' />
-              {t.addressBook?.addContact || 'Add contact'}
+              {t.addressBook?.addContact}
             </Button>
           </div>
         }
@@ -395,14 +393,14 @@ export default function AddressBook() {
         <Card className='border-purple-100 bg-purple-50/30 dark:border-purple-900/30 dark:bg-purple-900/10'>
           <CardHeader>
             <CardTitle className='text-base sm:text-lg'>
-              {t.addressBook?.createNewContact || 'Nieuw contact toevoegen'}
+              {t.addressBook?.createNewContact}
             </CardTitle>
           </CardHeader>
           <CardContent className='space-y-4'>
             <div className='grid gap-4 sm:grid-cols-2'>
               <div className='space-y-2'>
                 <label className='text-sm font-medium'>
-                  {t.settings?.profile?.nameLabel || 'Naam'}
+                  {t.settings?.profile?.nameLabel}
                 </label>
                 <Input
                   placeholder={t.settings?.addressBook?.namePlaceholder}
@@ -411,9 +409,9 @@ export default function AddressBook() {
                 />
               </div>
               <div className='space-y-2'>
-                <label className='text-sm font-medium'>IBAN</label>
+                <label className='text-sm font-medium'>{t.common.iban}</label>
                 <Input
-                  placeholder='NL00 BANK 0000 0000 00'
+                  placeholder={t.settings?.accounts?.ibanPlaceholder}
                   value={newContactIban}
                   onChange={(e) => setNewContactIban(e.target.value)}
                 />
@@ -421,14 +419,10 @@ export default function AddressBook() {
             </div>
             <div className='space-y-2'>
               <label className='text-sm font-medium'>
-                {t.settings?.addressBook?.descriptionPlaceholder ||
-                  'Omschrijving'}
+                {t.settings?.addressBook?.descriptionPlaceholder}
               </label>
               <Input
-                placeholder={
-                  t.settings?.addressBook?.descriptionPlaceholder ||
-                  'Bijv. Werkgever, Huur, etc.'
-                }
+                placeholder={t.settings?.addressBook?.descriptionPlaceholder}
                 value={newContactDescription}
                 onChange={(e) => setNewContactDescription(e.target.value)}
               />
@@ -580,7 +574,7 @@ export default function AddressBook() {
         }}
         onDeleteContact={async (id) => {
           const isConfirmed = await confirm({
-            title: t.addressBook?.deleteContactTitle || 'Delete contact',
+            title: t.addressBook?.deleteContactTitle,
             message: t.settings.addressBook.deleteConfirm,
             variant: 'danger',
           });
@@ -673,9 +667,10 @@ export default function AddressBook() {
             queryKey: ['sharedIbans', activeProfileId],
           });
           toast.success(
-            (
-              t.addressBook?.contactSplit || 'Contact split ({count} created)'
-            ).replace('{count}', String(result.newContacts.length))
+            t.addressBook?.contactSplit?.replace(
+              '{count}',
+              String(result.newContacts.length)
+            )
           );
           return result;
         }}

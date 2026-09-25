@@ -31,6 +31,7 @@ import {
   isSettingsCacheInitialized,
 } from '@fluxby/database';
 import { debugLog } from '@/lib/debug';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 // Storage keys (used as OPFS filenames)
 const DEVICE_ID_KEY = 'fluxby.deviceId';
@@ -133,8 +134,8 @@ function getOrCreateDeviceId(): string {
 }
 
 // Get stored device name from OPFS cache
-function getDeviceName(): string {
-  if (typeof window === 'undefined') return 'Unknown Device';
+function getDeviceName(unknownDevice: string): string {
+  if (typeof window === 'undefined') return unknownDevice;
 
   if (isSettingsCacheInitialized()) {
     const stored = readFromOPFSSync<string>(DEVICE_NAME_KEY);
@@ -142,7 +143,7 @@ function getDeviceName(): string {
   }
 
   // Generate a default name based on browser/platform
-  const platform = navigator.platform || 'Unknown';
+  const platform = navigator.platform || unknownDevice;
   const browser = getBrowserName();
   return `${browser} on ${platform}`;
 }
@@ -191,8 +192,11 @@ export function SyncProvider({
   onSyncReceived,
   onSyncRequested,
 }: SyncProviderProps) {
+  const { t } = useLanguage();
   const [deviceId] = useState(getOrCreateDeviceId);
-  const [deviceName, setDeviceNameState] = useState(getDeviceName);
+  const [deviceName, setDeviceNameState] = useState(() =>
+    getDeviceName(t.common.unknownDevice)
+  );
   const [isInitialized, setIsInitialized] = useState(false);
   const [pairingCode, setPairingCode] = useState<string | null>(null);
   const [pairedDevices, setPairedDevices] = useState<PeerDevice[]>(

@@ -2,6 +2,45 @@
 import type { LandingTranslationKeys } from './nl';
 
 export const en: LandingTranslationKeys = {
+  metadata: {
+    default: {
+      title: 'Fluxby - Makes money management fun',
+      description:
+        'Discover Fluxby, the cutest way to manage your finances. Track transactions, budgets, and more with our adorable digital mascot.',
+    },
+    pages: {
+      features: {
+        title: 'Features / Fluxby',
+        description:
+          'Discover why Fluxby is more than just a finance app. Your financial mascot who makes money management delightful and stress-free.',
+      },
+      pricing: {
+        title: 'Pricing / Fluxby',
+        description:
+          'Fluxby is and remains completely free. No hidden costs, no premium version, no subscription.',
+      },
+      updates: {
+        title: 'Updates / Fluxby',
+        description:
+          'Stay up to date with the latest developments and improvements in Fluxby.',
+      },
+      about: {
+        title: 'About / Fluxby',
+        description:
+          '1 developer, 2.5 weeks, 4 LLM models, 375 prompts, 0 lines of code',
+      },
+      docs: {
+        title: 'API Documentation / Fluxby',
+        description:
+          'Complete API documentation for Fluxby. Learn how to build integrations with our local finance API.',
+      },
+      help: {
+        title: 'Help Center / Fluxby',
+        description:
+          'Find answers to your questions about Fluxby. User guides, tutorials, and developer documentation.',
+      },
+    },
+  },
   // Navigation
   nav: {
     features: 'Features',
@@ -1020,6 +1059,7 @@ export const en: LandingTranslationKeys = {
         delete: 'Remove shared IBAN',
         detect: 'Auto-detect shared IBANs',
       },
+      sharedIbanExampleTitle: 'Add a shared IBAN',
       mergeEndpoints: {
         merge: 'Merge contacts into one',
         duplicates: 'Auto-detect and merge duplicates',
@@ -1145,7 +1185,7 @@ export const en: LandingTranslationKeys = {
     userNav: {
       gettingStarted: 'Getting Started',
       welcome: 'Welcome',
-      bankConnection: 'Connecting your bank',
+      bankConnection: 'Importing bank transactions',
       firstSteps: 'First steps',
       installation: 'Installation',
       features: 'Features',
@@ -1180,8 +1220,8 @@ export const en: LandingTranslationKeys = {
       userGuideTitle: 'User Guide',
       userGuideDesc:
         'Learn how to manage your money, set budgets, and track expenses with Fluxby.',
-      userItem1: 'Connect your bank account',
-      userItem2: 'Create budgets & goals',
+      userItem1: 'Import bank transactions',
+      userItem2: 'Create monthly category budgets',
       userItem3: 'Understand your privacy',
       devHubTitle: 'Developer Hub',
       devHubDesc:
@@ -1189,8 +1229,8 @@ export const en: LandingTranslationKeys = {
       getStarted: 'Get started',
       viewDocs: 'View documentation',
       popularArticles: 'Popular articles',
-      article1: 'Connecting your bank',
-      article1Desc: 'Learn how to import your transactions',
+      article1: 'Importing bank transactions',
+      article1Desc: 'Import a CSV file from your bank',
       article2: 'Creating a budget',
       article2Desc: 'Set up your first monthly budget',
       article3: 'API documentation',
@@ -1199,24 +1239,24 @@ export const en: LandingTranslationKeys = {
     firstSteps: {
       title: 'First steps with Fluxby',
       subtitle:
-        'Get started with Fluxby in just a few minutes. This guide walks you through the new onboarding flow.',
-      step1Title: 'Step 1: Log in & onboarding',
+        'Set up Fluxby, import a CSV file, and explore your financial overview.',
+      step1Title: 'Step 1: Set up Fluxby',
       step1Text:
-        'When you open Fluxby for the first time, you will be guided through a short onboarding wizard. You can log in, set a password, and create your first profile (e.g., "Personal" or "Family").',
+        'Choose a language, enter your name, and set a password of at least 8 characters. Fluxby creates a local demo profile with sample transactions, then opens the tour. You do not need an online Fluxby account.',
       step2Title: 'Step 2: Export from your bank',
       step2Text:
         'Log in to your online banking and export your transactions as a CSV file. Most banks offer this in the "Export" or "Download" section.',
       step3Title: 'Step 3: Import your transactions',
       step3Text:
-        'Go to the Import page in Fluxby and drag your CSV file, or click to browse. Fluxby will automatically detect the format and import your transactions.',
+        'Open Import, choose your CSV file, and select a bank preset or map the columns manually if needed. Review the sample rows before confirming the import.',
       step4Title: 'Step 4: Categorize transactions',
       step4Text:
-        'After importing, go to the Transactions page to categorize your transactions. Click a transaction to assign a category. Fluxby learns from your choices and will auto-categorize similar transactions in the future.',
+        'Open Transactions and change a category from its category label. Existing rules apply to future transactions. After a manual change, Fluxby may offer to create a rule. With your own TypeSafe key, you can also use optional Jev features for transactions that no rule matches.',
       step5Title: 'Step 5: Explore your dashboard',
       step5Text:
         'Now go to the Dashboard to see your financial overview! You will see your balance, spending per category, and recent transactions.',
       nextStepsTitle: 'What next?',
-      next1: 'Set budgets to track your spending goals',
+      next1: 'Set monthly budgets for individual categories',
       next2: 'Create custom categories for better organization',
       next3: 'Add contacts in the Address Book to track who you transact with',
       next4: 'Import transactions regularly to keep your data up to date',
@@ -1227,10 +1267,10 @@ export const en: LandingTranslationKeys = {
         'Fluxby works in your browser without installation, but you can also install it as an app for a better experience.',
       desktopTitle: 'Desktop (Windows, macOS, Linux)',
       desktopText:
-        'For the best experience on desktop, download the native app from our Downloads page. Native apps offer better performance and work offline.',
+        'Download the native app from the Downloads page. Your financial data is stored locally; sync and optional TypeSafe AI features need an internet connection.',
       browserTitle: 'Web browser',
       browserText:
-        'Fluxby works directly in your browser. Just visit the app URL and start using it - no installation required. Your data is stored locally in your browser.',
+        'Fluxby works directly in your browser without a separate installation. In supported browsers, you can also install the web app as a PWA. Your data is stored locally in that browser.',
       iosTitle: 'iPhone & iPad',
       iosIntro:
         'Fluxby can be installed as a Progressive Web App (PWA) on your iPhone or iPad. This gives you an app-like experience with a home screen icon.',
@@ -1248,7 +1288,7 @@ export const en: LandingTranslationKeys = {
         'Tap "Add" in the top right corner. Fluxby will now appear on your home screen like any other app.',
       iosTipTitle: 'Tip',
       iosTipText:
-        'Once installed, Fluxby will open in full-screen mode without the Safari address bar. Your data is stored locally on your device and syncs between your installed apps via peer-to-peer sync.',
+        'Once installed, Fluxby opens in full-screen mode without the Safari address bar. Each installation has its own local data; pair devices in Settings and use sync if you want to share data.',
       androidTitle: 'Android',
       androidIntro:
         'On Android, you can install Fluxby as a PWA from Chrome or other browsers.',
@@ -1263,73 +1303,68 @@ export const en: LandingTranslationKeys = {
         'Tap the three-dot menu in Chrome and select "Install app" or "Add to Home screen".',
       dataStorageTitle: 'About your data',
       dataStorageText:
-        'Regardless of how you access Fluxby, your data is stored locally on your device. If you use Fluxby in a browser, your data is stored in that browser. If you install the app, data is stored in the app. Use the sync feature to keep your data in sync between devices.',
+        'Your data is stored locally in the browser or desktop app. Each installation has its own local data; sync from Settings to share it between paired devices. Optional TypeSafe AI sends only the data needed for the request you choose; see Smart AI features.',
     },
     bankConnection: {
-      title: 'Connecting your bank account',
+      title: 'Importing bank transactions (CSV)',
       subtitle:
-        'Import your transactions from your bank to start tracking your finances.',
-      howItWorksTitle: 'How it works',
+        'Import a CSV file from your bank to start tracking your finances.',
+      howItWorksTitle: 'No direct bank connection',
       howItWorksText:
-        'Fluxby uses CSV imports to bring your bank transactions into the app. This approach ensures your data stays 100% local on your device - no cloud connections required.',
-      step1Title: 'Step 1: Export from your bank',
+        'Fluxby does not fetch transactions directly from your bank. Export a CSV file from your bank and import it into Fluxby. The import is processed locally. Optional Jev features send the data needed for that request to TypeSafe; see Smart AI features.',
+      step1Title: 'Step 1: Export a CSV from your bank',
       step1Text:
         'Log into your online banking and download your transaction history as a CSV file. Most banks offer this option in the account statements or transaction history section.',
       step2Title: 'Step 2: Import into Fluxby',
       step2Text:
-        'Navigate to the Import page in Fluxby and drag & drop your CSV file, or click to browse for it.',
+        'Open Import and choose your CSV file. Select an available bank preset or choose Other / Manual to map the columns.',
       step3Title: 'Step 3: Review and categorize',
       step3Text:
-        'Once imported, Fluxby will automatically categorize your transactions based on your rules. You can review and adjust categories as needed.',
+        'Fluxby applies your existing categorization rules. After importing, review the transactions, skipped rows, and categories; adjust categories where needed.',
       tipTitle: 'Pro Tip',
       tipText:
-        'Set up auto-categorization rules to automatically tag transactions from specific merchants. This saves you time on future imports!',
-      supportedTitle: 'Supported banks',
-      supportedText: 'Currently, Fluxby supports CSV imports from:',
-      moreComingSoon: 'More banks coming soon...',
+        'After you categorize a transaction manually, Fluxby may offer to create a rule for similar future transactions.',
+      supportedTitle: 'Available CSV options',
+      supportedText:
+        'Presets are available for ING and ASN Bank. For other CSV files, choose Other / Manual and map the required Date, Amount, and Description columns. Review the preview and any skipped rows before confirming. IBAN, counterparty, and balance columns are optional.',
     },
     budgeting: {
-      title: 'Creating a monthly budget',
+      title: 'Managing monthly budgets',
       subtitle:
-        'Set spending limits and track your progress with visual budgets.',
+        'Set monthly spending limits by category and track your progress.',
       whatIsTitle: 'What is a budget?',
       whatIsText:
-        'A budget in Fluxby is a spending limit you set for a specific category or your total monthly expenses. As you make transactions, Fluxby automatically tracks your spending against these limits.',
-      createTitle: 'Creating your first budget',
+        'A budget is a monthly spending limit for one category. Fluxby compares transactions in the selected period with that limit.',
+      createTitle: 'Creating a category budget',
       step1: 'Navigate to the Budgets page from the sidebar',
-      step2: 'Click "New Budget" to open the creation dialog',
-      step3: 'Select a category (or leave empty for a total budget)',
-      step4: 'Enter your budget amount and select the period',
+      step2: 'Click Add budget to open the form',
+      step3: 'Choose a category; a category is required for a new budget',
+      step4: 'Enter the monthly amount',
       step5: 'Click Save to create your budget',
-      typesTitle: 'Budget types',
-      categoryBudgetTitle: 'Category budgets',
-      categoryBudgetText:
-        'Set a limit for a specific category like Groceries, Entertainment, or Transportation. This helps you control spending in specific areas.',
-      totalBudgetTitle: 'Total budget',
-      totalBudgetText:
-        "Set an overall monthly spending limit across all categories. This gives you a bird's eye view of your total expenses.",
       bestPracticeTitle: 'Best Practice',
       bestPracticeText:
-        'Start with a total budget based on your typical monthly spending, then add category-specific budgets for areas where you want to cut back.',
+        'Start with the categories you want to track. When Fluxby has enough transaction history, you can review suggested budgets.',
       trackingTitle: 'Tracking your progress',
       trackingText:
-        'The budget cards show your spending progress in real-time. The circular progress indicator fills up as you approach your limit, changing color from green to yellow to red.',
+        'Budget cards show your spending against each limit with a progress bar. Use the period selector to view other months.',
+      suggestedTitle: 'Suggested budgets',
+      suggestedText:
+        'When there is enough transaction history, Fluxby can suggest budgets by category. Review the suggestions and choose which ones to add.',
     },
     subscriptions: {
       title: 'Managing subscriptions',
-      subtitle:
-        'Keep track of all your recurring payments and get notified about price changes.',
+      subtitle: 'Track recurring payments and review price or payment alerts.',
       whatIsTitle: 'What are subscriptions in Fluxby?',
       whatIsText:
-        'Fluxby automatically detects recurring payments in your transactions, such as streaming services, gym memberships, and utilities. You get an overview of all your monthly fixed costs and are warned when prices change.',
-      detectionTitle: 'How does automatic detection work?',
+        'Fluxby looks for recurring payments in your transactions, such as streaming services and regular bills. Confirm which detected patterns you want to track as subscriptions.',
+      detectionTitle: 'How does detection work?',
       detectionText:
-        'When you import transactions, Fluxby analyzes the patterns in your payments. If a payment recurs regularly (weekly, monthly, quarterly, or yearly), it is automatically recognized as a subscription.',
+        'After an import, Fluxby checks for weekly, monthly, quarterly, and yearly patterns. You can also run detection from the Subscriptions page. Review the results because not every pattern is a subscription.',
       jevReviewTitle: 'Review changed payments with Jev',
       jevReviewText:
         'Jev can recognize recurring payments when the merchant name, IBAN, or amount changes. It suggests adding those payments to an existing subscription. Review and confirm each match yourself; Jev never changes subscriptions automatically.',
       step1: 'Import your transactions via the Import page',
-      step2: 'Fluxby automatically analyzes recurring patterns',
+      step2: 'Review detected patterns on the Subscriptions page; run detection there if needed',
       step3: 'Confirm detected subscriptions or dismiss them',
       step4: 'View your total monthly fixed costs in the overview',
       confirmTitle: 'Confirming or dismissing subscriptions',
@@ -1342,9 +1377,9 @@ export const en: LandingTranslationKeys = {
       tipTitle: 'Tip',
       tipText:
         'Only confirm actual subscriptions you want to track. This keeps your overview clean and your monthly total accurate.',
-      priceAlertsTitle: 'Price change notifications',
+      priceAlertsTitle: 'Review price and payment alerts',
       priceAlertsText:
-        'Fluxby tracks the amounts of your subscriptions. If a subscription suddenly costs more or less than normal, you get a notification. You can then choose to accept or ignore the new amount.',
+        'The Subscriptions page shows alerts for price changes, missed payments, and stale patterns. These are in-app alerts, not push notifications. Review and accept or dismiss them there.',
       priceIncreaseTitle: 'Price increase',
       priceIncreaseText:
         'A red arrow up indicates that a subscription has become more expensive. This may mean the service has raised its prices.',
@@ -1353,7 +1388,10 @@ export const en: LandingTranslationKeys = {
         'A green arrow down indicates that you paid less than normal. This could be a temporary discount or promotion.',
       monthlyOverviewTitle: 'Monthly overview',
       monthlyOverviewText:
-        'At the top of the Subscriptions page, you can see the total amount you spend monthly on subscriptions. This helps you understand your fixed costs and where you might be able to save.',
+        'At the top of the page, you can see monthly spending and counts for confirmed subscriptions and patterns waiting for confirmation.',
+      viewsTitle: 'List and calendar views',
+      viewsText:
+        'Switch between the list of detected subscriptions and a calendar of expected payments for the current month.',
       bestPracticeTitle: 'Best practice',
       bestPracticeText:
         'Check your subscriptions regularly. Many people pay for services they no longer use. By monitoring your subscriptions, you can easily save money.',
@@ -1361,28 +1399,31 @@ export const en: LandingTranslationKeys = {
     privacy: {
       title: 'Your data & privacy',
       subtitle:
-        'Fluxby is designed with privacy first. Your financial data stays on your device.',
-      localFirstTitle: '100% Local',
+        'Fluxby stores your financial data locally. Sync and AI are optional network features.',
+      localFirstTitle: 'Local storage',
       localFirstText:
-        'Unlike most finance apps, Fluxby runs entirely on your computer. Your transaction data, budgets, and categories are stored in a local SQLite database - they never leave your device.',
+        'Your transactions, budgets, and categories are stored in a local database by default. Sync shares data between paired devices. Optional TypeSafe AI sends limited data to TypeSafe for the request; see Smart AI features.',
       noCloud: 'No cloud storage',
-      noCloudDesc: 'Data stays on your machine',
-      noTracking: 'No tracking',
-      noTrackingDesc: 'We never analyze your spending',
+      noCloudDesc: 'No central storage for your financial database',
+      noTracking: 'No ad tracking',
+      noTrackingDesc: 'Your financial data is not used for advertising',
       fullControl: 'Full control',
       fullControlDesc: 'Delete all data anytime',
       howWorksTitle: 'How it works',
       howWorksText:
-        'Fluxby runs entirely in your browser using SQLite with WebAssembly. Your data is stored locally in your browser (OPFS) or on your device when using the desktop app. No servers required, no external connections made.',
+        'The web app uses a local SQLite database in your browser; the desktop app stores data locally on your device. Peer-to-peer sync and optional TypeSafe AI use the internet, but are not required for core features.',
       dataLocationTitle: 'Where is my data stored?',
       dataLocationText:
-        'Your data is stored in your browser using OPFS (Origin Private File System) for the web app, or in your local app data folder for the desktop app. Your data never leaves your device.',
+        'The web app stores data in OPFS (Origin Private File System); the desktop app uses local app storage. Sync copies data to paired devices. Jev requests send limited data to TypeSafe as described in Smart AI features.',
+      backupTitle: 'Back up and restore your data',
+      backupText:
+        'Open Settings > Data Management and export a JSON backup. You can encrypt the backup with a password. Use Import to restore a backup; an encrypted file requires its backup password.',
       deleteDataTitle: 'Deleting your data',
       deleteDataText:
-        "To completely remove all your financial data, you can use the Data Management section in Settings, or clear your browser data. There's no account to close or data to request - it's all local.",
+        'Use Settings > Data Management to delete your Fluxby data. You can also clear the browser data for the browser where you use Fluxby. Export a backup first if you may want to restore the data later.',
       warningTitle: 'Important',
       warningText:
-        'Since all data is stored locally, consider exporting your data regularly if you want to preserve it. You can sync between devices using the peer-to-peer sync feature.',
+        'Sync shares data between paired devices, but is not a separate backup. Keep an exported JSON backup if you want an independent recovery copy.',
     },
     devIntro: {
       title: 'Developer Hub',
@@ -1415,10 +1456,10 @@ export const en: LandingTranslationKeys = {
         'View, search, filter and categorize your imported transactions.',
       tipTitle: 'Quick tip',
       tipText:
-        'Use the search bar and filters to quickly find specific transactions. You can filter by date, category, amount and more.',
+        'Use the search bar and filters to find transactions by date, account, category, contact, type, or description.',
       viewingTitle: 'Viewing transactions',
       viewingText:
-        'The Transactions page shows all your imported transactions in a clear, sortable table. Each transaction shows:',
+        'The Transactions page shows your imported transactions in a responsive list. Each transaction shows:',
       field1: 'Date of the transaction',
       field2: 'Description/counterparty name',
       field3: 'Category (if assigned)',
@@ -1435,7 +1476,7 @@ export const en: LandingTranslationKeys = {
       searchFilterDesc: 'Search by description, counterparty name or notes.',
       categorizingTitle: 'Categorizing transactions',
       categorizingText:
-        'Click on a transaction to assign or change its category. Fluxby learns from your choices and will auto-categorize similar transactions in the future.',
+        'Change a transaction category from its category label. Existing rules run on future transactions; Fluxby does not learn from category changes automatically.',
       bulkTitle: 'Bulk operations',
       bulkText:
         'Select multiple transactions to apply bulk actions like categorizing or deleting.',
@@ -1448,9 +1489,64 @@ export const en: LandingTranslationKeys = {
       whatAreTitle: 'What are categories?',
       whatAreText:
         'Categories help you organize your transactions into meaningful groups like Groceries, Transport, Entertainment, etc. This makes it easier to understand your spending patterns and create budgets.',
-      defaultTitle: 'Default categories',
-      defaultText:
-        'Fluxby comes with a set of pre-configured categories to get you started:',
+      defaultTitle: 'Example categories',
+      defaultText: 'These are examples of categories you can use or adapt:',
+      examples: [
+        {
+          emoji: '🏠',
+          name: 'Housing',
+          color: '#1E40AF',
+          description: 'Rent, mortgage, utilities',
+        },
+        {
+          emoji: '🛒',
+          name: 'Groceries',
+          color: '#34D399',
+          description: 'Supermarket, household items',
+        },
+        {
+          emoji: '🚗',
+          name: 'Transport',
+          color: '#3B82F6',
+          description: 'Fuel, public transit, parking',
+        },
+        {
+          emoji: '🍽️',
+          name: 'Food & drink',
+          color: '#F97316',
+          description: 'Restaurants, delivery, coffee',
+        },
+        {
+          emoji: '🛍️',
+          name: 'Shopping',
+          color: '#EC4899',
+          description: 'Clothing, shoes, electronics',
+        },
+        {
+          emoji: '💪',
+          name: 'Health',
+          color: '#EF4444',
+          description: 'Insurance, pharmacy, sports',
+        },
+        {
+          emoji: '🎬',
+          name: 'Leisure',
+          color: '#8B5CF6',
+          description: 'Streaming, outings, hobbies',
+        },
+        {
+          emoji: '💼',
+          name: 'Income',
+          color: '#22C55E',
+          description: 'Salary, freelance, benefits',
+        },
+        {
+          emoji: '💰',
+          name: 'Savings & investments',
+          color: '#14B8A6',
+          description: 'Savings, investments',
+        },
+      ],
       createTitle: 'Creating a category',
       createText: 'To create a new category:',
       createStep1: 'Go to Categories page from the sidebar',
@@ -1459,7 +1555,10 @@ export const en: LandingTranslationKeys = {
       createStep4: 'Click Save to create your category',
       rulesTitle: 'Auto-categorization rules',
       rulesText:
-        'Set up rules to automatically categorize transactions based on keywords. For example, you can create a rule that automatically categorizes any transaction containing "Albert Heijn" as Groceries.',
+        'Rules assign categories based on words in transaction descriptions. For example, you can create a rule that assigns transactions containing "Albert Heijn" to Groceries.',
+      subcategoryTitle: 'Use subcategories',
+      subcategoryText:
+        'On the Categories page, expand a parent category and choose Add subcategory. Subcategories help group related transactions under one parent category.',
       rulesTip: 'Pro tip',
       rulesTipText:
         'The more specific your rules, the more accurate the auto-categorization. Use merchant names or specific keywords that appear in your bank transactions.',
@@ -1467,26 +1566,27 @@ export const en: LandingTranslationKeys = {
     // Help pages - Accounts
     accounts: {
       title: 'Managing accounts',
-      subtitle: 'Track multiple bank accounts and view consolidated balances.',
+      subtitle:
+        'Manage the accounts associated with your imported transactions.',
       overviewTitle: 'Accounts overview',
       overviewText:
-        'The Accounts page shows all your linked bank accounts with their current balances. You can see at a glance how much money you have across all your accounts.',
+        'Manage accounts in Settings > Accounts. Account cards and balances also appear on the Dashboard and Transactions pages.',
       addTitle: 'Adding an account',
       addText:
-        'When you import a CSV file from your bank, Fluxby automatically detects the account (IBAN) and creates it if needed. You can also manually add an account:',
+        'To add an account manually, open Settings > Accounts:',
       addStep1: 'Go to Settings > Accounts',
       addStep2: 'Click "Add Account"',
-      addStep3: 'Enter the account name and IBAN',
+      addStep3: 'Enter a name and account type; the IBAN is optional',
       addStep4: 'Click Save to add the account',
       filterTitle: 'Filtering by account',
       filterText:
-        'Throughout Fluxby, you can filter transactions by account. Use the account filter dropdown in the header to see transactions from a specific account, or select "All accounts" to see everything combined.',
+        'On the Transactions page, use the account filter to show transactions from one account or all accounts.',
       noteTitle: 'Note',
       noteText:
         'If you have multiple accounts, import CSV files from all of them to get a complete picture of your finances.',
       balanceTitle: 'Understanding balances',
       balanceText:
-        'Account balances are calculated based on your imported transactions. The displayed balance is the sum of all transactions for that account. For the most accurate balance, import all your transactions regularly.',
+        'Fluxby does not connect to banks for live balances. Account information reflects the CSV data you have imported; import newer statements to keep it current.',
       deleteTitle: 'Deleting an account',
       deleteText:
         'Deleting an account also removes all transactions associated with that account. This action cannot be undone. Make sure you really want to remove all data for this account before proceeding.',
@@ -1498,17 +1598,20 @@ export const en: LandingTranslationKeys = {
     addressBook: {
       title: 'Managing address book',
       subtitle:
-        'Organize your contacts and improve transaction categorization with automatic name cleanup.',
+        'Review transaction counterparties, manage contacts, and clean up bank descriptions.',
       tipTitle: 'Quick tip',
       tipText:
-        'The address book is automatically populated when you import transactions. Use name cleanup rules to clean up confusing bank names.',
+        'New counterparties can appear under Suggested Contacts after an import. Add them to your address book when you want to keep them.',
       whatAreTitle: 'What is the address book?',
       whatAreText:
-        'The address book automatically stores counterparties from your transactions based on IBAN and name. It helps you organize contacts, clean up messy bank names, and track spending per merchant.',
+        'The address book helps you organize contacts, clean up bank descriptions, and review transactions by counterparty.',
       featuresTitle: 'Key features',
-      autoExtractionTitle: 'Automatic extraction',
+      autoExtractionTitle: 'Suggested contacts',
       autoExtractionText:
-        'When you import CSV files, Fluxby automatically detects unique counterparties and adds them to your address book. This happens based on IBAN numbers and names.',
+        'After an import, counterparties with new IBANs can appear as Suggested Contacts. Review and add each contact yourself; imports do not add contacts automatically.',
+      jevMatchesTitle: 'Review matches with Jev',
+      jevMatchesText:
+        'If you have configured your TypeSafe key, Jev can suggest that an unknown IBAN belongs to an existing contact. Confirm or skip each suggestion; contacts are not merged automatically.',
       nameCleanupTitle: 'Name cleanup',
       nameCleanupText:
         'Many banks add technical information to transaction names (like "via Mollie" or "via Buckaroo"). The address book helps you create automatic rules that remove this information for cleaner names.',
@@ -1539,23 +1642,21 @@ export const en: LandingTranslationKeys = {
         'Visual breakdown of spending per category. Click on a segment to see transactions in that category.',
       barChartTitle: 'Bar chart',
       barChartText:
-        'Compare spending amounts per category. Ideal for identifying your biggest spending areas.',
+        'Compare income and expenses over the selected period with monthly charts.',
       trendsTitle: 'Monthly trends',
       trendsText:
         'Track how your spending changes over time with monthly trend charts. Compare income to expenses per month to understand your financial development.',
       filtersTitle: 'Using filters',
       filtersText:
-        'All analytics can be filtered by date range and account. Use the filter options to focus on specific periods or accounts.',
+        'Use the date range to focus on the calendar year or years you want to review. For account-specific transaction lists, use the Transactions page.',
       filter1:
-        'Select a date range: This month, Last 3 months, This year or custom range',
-      filter2: 'Filter by account to see analytics for a specific bank account',
-      filter3: 'Combine filters to get exactly the view you need',
+        'Choose a preset or custom date range; analytics group results by calendar year.',
+      filter2: 'Compare trends across the selected years.',
+      filter3:
+        'Use Transactions to filter individual records by account or category.',
       tipTitle: 'Pro tip',
       tipText:
         'Compare the same month across different years to account for seasonal spending patterns like holidays or vacations.',
-      exportTitle: 'Exporting data',
-      exportText:
-        'Export your analytics data for use in other applications or for record keeping.',
     },
     placeholders: {
       bankExport: 'Bank Export Screen',
@@ -2446,6 +2547,20 @@ export const en: LandingTranslationKeys = {
       total: 'Total spent',
       income: 'Income',
       expenses: 'Expenses',
+      months: [
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'May',
+        'Jun',
+        'Jul',
+        'Aug',
+        'Sep',
+        'Oct',
+        'Nov',
+        'Dec',
+      ],
     },
     subscriptions: {
       monthlyTotal: 'Monthly total',
@@ -2472,6 +2587,7 @@ export const en: LandingTranslationKeys = {
       detecting: 'Detecting duplicates...',
       importing: 'Importing',
       done: 'Import complete!',
+      fileName: 'transactions.csv',
       transactionsImported: 'transactions imported',
       dragHint: 'Drag your ING CSV file here',
     },
@@ -2522,7 +2638,8 @@ Object.assign(en, {
       title: 'Manage multiple transactions',
       subtitle: 'Select and delete several transactions at once.',
       tipTitle: 'Good to know',
-      tipText: 'You can restore deleted transactions for up to 5 minutes.',
+      tipText:
+        'Deletions made from the selection can be undone for up to 5 minutes. This does not apply to date-range deletion.',
       selectionModeTitle: 'Turn on selection mode',
       selectionModeText:
         'Turn on selection mode before selecting multiple transactions:',
@@ -2555,9 +2672,10 @@ Object.assign(en, {
       dateRangeStep4: 'Confirm deleting transactions in that range',
       cautionTitle: 'Caution',
       cautionText:
-        'Deleting by date range can remove many transactions at once. Use the preview first to check how many will be affected.',
-      undoTitle: 'Undo deletion',
-      undoText: 'Restore deleted transactions within 5 minutes:',
+        'Date-range deletion can remove many transactions at once and cannot be undone. Check the preview and transaction count first.',
+      undoTitle: 'Undo a selected deletion',
+      undoText:
+        'Restore a deletion made from the transaction selection within 5 minutes:',
       undoPoint1: 'An Undo notification appears after deletion',
       undoPoint2: 'Click Undo to restore the transactions',
       undoPoint3:
@@ -2576,6 +2694,7 @@ Object.assign(en, {
       howItWorksText:
         'Fluxby syncs data directly between devices over an encrypted peer-to-peer connection. Your data does not pass through a central server.',
       directConnection: 'Direct connection',
+      laptop: 'Laptop',
       phone: 'Phone',
       setupTitle: 'Set up sync',
       step1Title: 'Step 1: Open Settings',
@@ -2587,16 +2706,16 @@ Object.assign(en, {
       step3Title: 'Step 3: Connect your devices',
       step3Text:
         'Open the same settings on the second device and scan or enter the pairing code.',
-      step4Title: 'Step 4: Sync automatically',
+      step4Title: 'Step 4: Sync your devices',
       step4Text:
-        'Once paired, changes sync automatically when both devices are online. You can also sync manually.',
+        'When automatic sync is enabled, changes sync while both devices are online. You can also start a manual sync.',
       troubleshootingTitle: 'Troubleshooting',
       troubleshooting1Title: 'Devices cannot find each other',
       troubleshooting1Text:
-        'Check that both devices use the same Wi-Fi network. Some public networks block peer-to-peer connections.',
+        'Check that both devices are online. Network security settings or a firewall may block peer-to-peer connections.',
       troubleshooting2Title: 'Sync failed',
       troubleshooting2Text:
-        'Check your internet connection and pair the devices again if needed.',
+        'Check the internet connection, whether automatic sync is enabled, and try a manual sync. Pair the devices again if needed.',
       troubleshooting3Title: 'Conflicting changes',
       troubleshooting3Text:
         'When the same data changes on multiple devices, Fluxby keeps the most recent version (Last-Write-Wins).',
@@ -2789,7 +2908,7 @@ Object.assign(en, {
         {
           question: 'Does TypeSafe cost money?',
           answerPrefix:
-            'At the time of writing, TypeSafe gives new accounts $5 in credit to get started. You can add more budget yourself. See',
+            'TypeSafe credits and pricing can change. Check the current terms and pricing at',
           linkLabel: 'typesafe.ai',
           answerSuffix: 'for current pricing.',
         },
@@ -2820,6 +2939,40 @@ Object.assign(en, {
       title: 'TypeSafe AI / Jev',
       subtitle:
         'How Fluxby uses TypeSafe’s System One model (Jev) to replace fragile regex rules with calibrated, structured AI judgments.',
+      examples: {
+        request: {
+          merchant: 'Example Market',
+          description: 'Card payment',
+          category: 'Groceries',
+          instructions:
+            'Which spending category best fits the bank transaction described in `merchant`, `description`, and `amount`?',
+          restaurants: 'Restaurants & Bars',
+          transport: 'Transport',
+          noCategory: 'Does not fit any of these categories',
+        },
+        client: {
+          merchant: 'Example Market',
+          description: 'Card payment',
+          keyComment:
+            "// User's key read from OPFS settings — only present if they opt in",
+          fallbackComment: 'graceful degradation',
+          writeComment:
+            'Code owns the write — TypeSafe only returned a probability',
+        },
+        direction: {
+          beforeLoopComment: '// Before the row loop in importCsv()',
+          batchComment:
+            '// TypeSafe classifies each unknown direction value once, in parallel',
+          debitInstruction:
+            'A bank CSV has a direction column whose value is "Belastung". Does this mean money is leaving the account or arriving?',
+          debitMeaning:
+            'Money leaving the account (payment, expense, withdrawal)',
+          creditInstruction:
+            'A bank CSV has a direction column whose value is "Gutschrift". Does this mean money is arriving or leaving the account?',
+          creditMeaning: 'Money arriving (income, deposit, refund)',
+          unknownMeaning: 'Cannot determine from this value alone',
+        },
+      },
       whatTitle: 'What is TypeSafe AI?',
       whatText:
         'TypeSafe builds System One models: small, fast AI primitives that return structured answers instead of generated text. Jev is TypeSafe’s flagship model. Given a state (JSON or string) and one or more typed questions, it returns probabilities for Choice, Score, or Noul (yes/no) answers in about 100 ms.',

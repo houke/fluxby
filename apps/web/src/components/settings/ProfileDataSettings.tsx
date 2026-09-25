@@ -58,13 +58,6 @@ export function ProfileDataSettings() {
       errorKey: 'deleteTransactionsError',
       buttonKey: 'deleteTransactionsButton',
       action: api.deleteAllTransactions,
-      fallbackTitle: 'Delete transactions',
-      fallbackDesc: 'Delete all transactions from this profile',
-      fallbackConfirm:
-        'Are you sure you want to delete all transactions from this profile?',
-      fallbackSuccess: 'All transactions deleted',
-      fallbackError: 'Failed to delete transactions',
-      fallbackButton: 'Delete transactions',
     },
     {
       titleKey: 'deleteCategoriesTitle',
@@ -74,13 +67,6 @@ export function ProfileDataSettings() {
       errorKey: 'deleteCategoriesError',
       buttonKey: 'deleteCategoriesButton',
       action: api.deleteAllCategories,
-      fallbackTitle: 'Delete categories',
-      fallbackDesc: 'Delete all categories, rules, and budgets',
-      fallbackConfirm:
-        'Are you sure you want to delete all categories? This also deletes all rules and budgets.',
-      fallbackSuccess: 'All categories deleted',
-      fallbackError: 'Failed to delete categories',
-      fallbackButton: 'Delete categories',
     },
     {
       titleKey: 'deleteAccountsTitle',
@@ -90,13 +76,6 @@ export function ProfileDataSettings() {
       errorKey: 'deleteAccountsError',
       buttonKey: 'deleteAccountsButton',
       action: api.deleteAllAccounts,
-      fallbackTitle: 'Delete accounts',
-      fallbackDesc: 'Delete all accounts and related transactions',
-      fallbackConfirm:
-        'Are you sure you want to delete all accounts? This also deletes all transactions.',
-      fallbackSuccess: 'All accounts deleted',
-      fallbackError: 'Failed to delete accounts',
-      fallbackButton: 'Delete accounts',
     },
     {
       titleKey: 'deleteBudgetsTitle',
@@ -106,12 +85,6 @@ export function ProfileDataSettings() {
       errorKey: 'deleteBudgetsError',
       buttonKey: 'deleteBudgetsButton',
       action: api.deleteAllBudgets,
-      fallbackTitle: 'Delete budgets',
-      fallbackDesc: 'Delete all budgets',
-      fallbackConfirm: 'Are you sure you want to delete all budgets?',
-      fallbackSuccess: 'All budgets deleted',
-      fallbackError: 'Failed to delete budgets',
-      fallbackButton: 'Delete budgets',
     },
     {
       titleKey: 'deleteAddressBookTitle',
@@ -121,13 +94,6 @@ export function ProfileDataSettings() {
       errorKey: 'deleteAddressBookError',
       buttonKey: 'deleteAddressBookButton',
       action: api.deleteAllAddressBook,
-      fallbackTitle: 'Delete address book',
-      fallbackDesc: 'Delete all contacts (IBANs will reappear as suggestions)',
-      fallbackConfirm:
-        'Are you sure you want to delete all contacts? IBANs will be suggested again.',
-      fallbackSuccess: 'All contacts deleted',
-      fallbackError: 'Failed to delete contacts',
-      fallbackButton: 'Delete contacts',
     },
     {
       titleKey: 'deleteImportHistoryTitle',
@@ -137,13 +103,6 @@ export function ProfileDataSettings() {
       errorKey: 'deleteImportHistoryError',
       buttonKey: 'deleteImportHistoryButton',
       action: api.deleteImportHistory,
-      fallbackTitle: 'Delete import history',
-      fallbackDesc: 'Remove stored import history for this profile',
-      fallbackConfirm:
-        'Are you sure you want to delete the import history for this profile?',
-      fallbackSuccess: 'Import history deleted',
-      fallbackError: 'Failed to delete import history',
-      fallbackButton: 'Delete import history',
     },
     {
       titleKey: 'deleteSubscriptionsTitle',
@@ -153,25 +112,11 @@ export function ProfileDataSettings() {
       errorKey: 'deleteSubscriptionsError',
       buttonKey: 'deleteSubscriptionsButton',
       action: api.deleteAllRecurringPatterns,
-      fallbackTitle: 'Delete subscriptions',
-      fallbackDesc: 'Delete all detected recurring payment patterns',
-      fallbackConfirm:
-        'Are you sure you want to delete all subscriptions? You can detect them again later.',
-      fallbackSuccess: 'All subscriptions deleted',
-      fallbackError: 'Failed to delete subscriptions',
-      fallbackButton: 'Delete subscriptions',
     },
   ];
 
-  // Helper to get translation with fallback
-  const getText = (
-    key: keyof typeof t.settings.profileData,
-    fallback: string
-  ): string => {
-    const profileData = t.settings.profileData as
-      Record<string, string> | undefined;
-    return profileData?.[key] || fallback;
-  };
+  const getText = (key: keyof typeof t.settings.profileData): string =>
+    t.settings.profileData[key];
 
   return (
     <div className=''>
@@ -181,15 +126,13 @@ export function ProfileDataSettings() {
       >
         <CardHeader className='px-3 py-3 sm:px-6 sm:py-4'>
           <CardTitle className='flex items-center gap-2 text-base sm:text-lg'>
-            {getText('title', 'Profielgegevens verwijderen')}
+            {getText('title')}
           </CardTitle>
           <CardDescription className='text-xs sm:text-sm'>
-            {(
-              getText(
-                'description',
-                'Verwijder gegevens van {profile}'
-              ) as string
-            ).replace('{profile}', activeProfile?.name || 'dit profiel')}
+            {getText('description').replace(
+              '{profile}',
+              activeProfile?.name || getText('profileNameFallback')
+            )}
           </CardDescription>
         </CardHeader>
         <CardContent className='px-3 pt-0 pb-3 sm:px-6 sm:pt-0 sm:pb-6'>
@@ -214,14 +157,12 @@ export function ProfileDataSettings() {
                 <div>
                   <p className='font-medium text-orange-600'>
                     {getText(
-                      item.titleKey as keyof typeof t.settings.profileData,
-                      item.fallbackTitle
+                      item.titleKey as keyof typeof t.settings.profileData
                     )}
                   </p>
                   <p className='text-sm text-muted-foreground'>
                     {getText(
-                      item.descKey as keyof typeof t.settings.profileData,
-                      item.fallbackDesc
+                      item.descKey as keyof typeof t.settings.profileData
                     )}
                   </p>
                 </div>
@@ -231,13 +172,11 @@ export function ProfileDataSettings() {
                   disabled={isLoading}
                   onClick={async () => {
                     const confirmMsg = getText(
-                      item.confirmKey as keyof typeof t.settings.profileData,
-                      item.fallbackConfirm
+                      item.confirmKey as keyof typeof t.settings.profileData
                     );
                     const isConfirmed = await confirm({
                       title: getText(
-                        item.titleKey as keyof typeof t.settings.profileData,
-                        item.fallbackTitle
+                        item.titleKey as keyof typeof t.settings.profileData
                       ),
                       message: confirmMsg,
                       variant: 'danger',
@@ -246,12 +185,10 @@ export function ProfileDataSettings() {
                       handleDelete(
                         item.action,
                         getText(
-                          item.successKey as keyof typeof t.settings.profileData,
-                          item.fallbackSuccess
+                          item.successKey as keyof typeof t.settings.profileData
                         ),
                         getText(
-                          item.errorKey as keyof typeof t.settings.profileData,
-                          item.fallbackError
+                          item.errorKey as keyof typeof t.settings.profileData
                         )
                       );
                     }
@@ -261,8 +198,7 @@ export function ProfileDataSettings() {
                     <RefreshCcw className='mr-2 h-4 w-4 animate-spin' />
                   )}
                   {getText(
-                    item.buttonKey as keyof typeof t.settings.profileData,
-                    item.fallbackButton
+                    item.buttonKey as keyof typeof t.settings.profileData
                   )}
                 </Button>
               </div>

@@ -124,26 +124,16 @@ export function useAddressBook(options: { enabled?: boolean } = {}) {
         { merged?: boolean; mergeReason?: 'name' | 'iban' } | undefined;
       if (mergedResult?.merged) {
         if (mergedResult.mergeReason === 'name') {
-          toast.info(
-            t.addressBook?.ibanAddedToMatchingName ||
-              'IBAN added to contact with matching name'
-          );
+          toast.info(t.addressBook?.ibanAddedToMatchingName);
         } else {
-          toast.info(
-            t.addressBook?.ibanAddedToExisting ||
-              'IBAN added to existing contact'
-          );
+          toast.info(t.addressBook?.ibanAddedToExisting);
         }
       } else {
-        toast.success(t.addressBook?.contactAdded || 'Contact added');
+        toast.success(t.addressBook?.contactAdded);
       }
     },
     onError: (error: Error) => {
-      toast.error(
-        error.message ||
-          t.addressBook?.createError ||
-          'Failed to create contact'
-      );
+      toast.error(error.message || t.addressBook?.createError);
     },
   });
 
@@ -169,10 +159,10 @@ export function useAddressBook(options: { enabled?: boolean } = {}) {
       queryClient.invalidateQueries({
         queryKey: ['transactions', activeProfileId],
       });
-      toast.success(t.addressBook?.contactUpdated || 'Contact updated');
+      toast.success(t.addressBook?.contactUpdated);
     },
     onError: (error: Error) =>
-      toast.error(error.message || 'Failed to update contact'),
+      toast.error(error.message || t.addressBook?.updateContactError),
   });
 
   const deleteContactMutation = useMutation({
@@ -194,10 +184,10 @@ export function useAddressBook(options: { enabled?: boolean } = {}) {
       queryClient.invalidateQueries({
         queryKey: ['sharedIbans', activeProfileId],
       });
-      toast.success(t.addressBook?.contactDeleted || 'Contact deleted');
+      toast.success(t.addressBook?.contactDeleted);
     },
     onError: (error: Error) =>
-      toast.error(error.message || 'Failed to delete contact'),
+      toast.error(error.message || t.addressBook?.deleteContactError),
   });
 
   const createRuleMutation = useMutation({
@@ -225,15 +215,12 @@ export function useAddressBook(options: { enabled?: boolean } = {}) {
       const total = addressBookCount + transactionsCount;
       if (total > 0) {
         toast.success(
-          (
-            t.addressBook?.ruleAppliedAuto ||
-            'Rule added and applied: {addressBook} contacts, {transactions} transactions updated'
-          )
+          t.addressBook.ruleAppliedAuto
             .replace('{addressBook}', String(addressBookCount))
             .replace('{transactions}', String(transactionsCount))
         );
       } else {
-        toast.success(t.addressBook?.ruleAdded || 'Cleanup rule added');
+        toast.success(t.addressBook?.ruleAdded);
       }
     },
     onError: (error: Error) => {
@@ -242,9 +229,9 @@ export function useAddressBook(options: { enabled?: boolean } = {}) {
         errorMessage.includes('409') ||
         errorMessage.includes('already exists')
       ) {
-        toast.warning(t.addressBook?.ruleExists || 'Rule already exists');
+        toast.warning(t.addressBook?.ruleExists);
       } else {
-        toast.error(errorMessage || 'Failed to create rule');
+        toast.error(errorMessage || t.addressBook?.createRuleError);
       }
     },
   });
@@ -257,7 +244,7 @@ export function useAddressBook(options: { enabled?: boolean } = {}) {
       });
     },
     onError: (error: Error) =>
-      toast.error(error.message || 'Failed to delete rule'),
+      toast.error(error.message || t.addressBook?.deleteRuleError),
   });
 
   const applyRulesMutation = useMutation({
@@ -270,10 +257,7 @@ export function useAddressBook(options: { enabled?: boolean } = {}) {
         queryKey: ['topAccounts', activeProfileId],
         exact: false,
       });
-      toast.info(
-        t.addressBook?.namesUpdatedInAddressBook ||
-          'Cleanup rules applied to address book'
-      );
+      toast.info(t.addressBook?.namesUpdatedInAddressBook);
     },
   });
 
@@ -295,16 +279,10 @@ export function useAddressBook(options: { enabled?: boolean } = {}) {
       queryClient.invalidateQueries({
         queryKey: ['transactions', activeProfileId],
       });
-      toast.success(
-        t.addressBook?.contactsMerged || 'Contacts merged successfully'
-      );
+      toast.success(t.addressBook?.contactsMerged);
     },
     onError: (error: Error) =>
-      toast.error(
-        error.message ||
-          t.addressBook?.errorMergingContacts ||
-          'Error merging contacts'
-      ),
+      toast.error(error.message || t.addressBook?.errorMergingContacts),
   });
 
   return useMemo(

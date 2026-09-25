@@ -56,8 +56,8 @@ import type { PieSectorDataItem } from 'recharts/types/polar/Pie';
 import type { RecurringPattern } from '@fluxby/shared';
 
 // Helper to capitalize first letter of merchant names
-function capitalizeFirst(name: string | null | undefined): string {
-  if (!name) return 'Unknown';
+function capitalizeFirst(name: string | null | undefined): string | null {
+  if (!name) return null;
   return name.charAt(0).toUpperCase() + name.slice(1);
 }
 
@@ -620,7 +620,7 @@ export default function Analytics() {
               <div className='h-[300px]'>
                 <EmptyState
                   icon={TrendingUp}
-                  title={t.analytics.noData || 'Geen data beschikbaar'}
+                  title={t.analytics.noData}
                   className='h-full py-8'
                 />
               </div>
@@ -1092,8 +1092,7 @@ export default function Analytics() {
                                 </span>
                               </TooltipTrigger>
                               <TooltipContent>
-                                {t.analytics.viewTransactions ||
-                                  'View transactions'}
+                                {t.analytics.viewTransactions}
                               </TooltipContent>
                             </UITooltip>
                           </TooltipProvider>
@@ -1170,8 +1169,7 @@ export default function Analytics() {
                                 </span>
                               </TooltipTrigger>
                               <TooltipContent>
-                                {t.analytics.viewTransactions ||
-                                  'View transactions'}
+                                {t.analytics.viewTransactions}
                               </TooltipContent>
                             </UITooltip>
                           </TooltipProvider>
@@ -1212,11 +1210,10 @@ export default function Analytics() {
         <Card className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'>
           <CardHeader>
             <CardTitle className='text-base sm:text-lg'>
-              {t.analytics?.recurringPayments || 'Recurring payments'}
+              {t.analytics?.recurringPayments}
             </CardTitle>
             <CardDescription>
-              {t.analytics?.recurringPaymentsDescription ||
-                'Merchants with 2+ transactions in the selected period'}
+              {t.analytics?.recurringPaymentsDescription}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -1248,16 +1245,16 @@ export default function Analytics() {
                             <p className='truncate font-medium'>
                               {capitalizeFirst(payment.merchantName) ||
                                 payment.opposingIban ||
-                                'Unknown'}
+                                t.transactions.unknown}
                             </p>
                             <p className='text-sm text-muted-foreground'>
                               {payment.transactionCount}{' '}
-                              {t.analytics?.transactions || 'transactions'}
+                              {t.analytics?.transactions}
                             </p>
                           </div>
                           <div className='ml-4 text-right'>
                             <p className='text-xs text-muted-foreground'>
-                              {t.analytics?.total || 'Total'}
+                              {t.analytics?.total}
                             </p>
                             <p
                               className={`font-semibold tabular-nums ${
@@ -1288,10 +1285,7 @@ export default function Analytics() {
                           return (
                             <EmptyState
                               icon={TrendingUp}
-                              title={
-                                t.analytics?.noPriceHistory ||
-                                'No price history available'
-                              }
+                              title={t.analytics?.noPriceHistory}
                               className='h-full'
                             />
                           );
@@ -1299,10 +1293,10 @@ export default function Analytics() {
                         return (
                           <div className='flex-1'>
                             <p className='mb-2 text-sm font-medium'>
-                              {t.analytics?.priceHistory || 'Price history'}:{' '}
+                              {t.analytics?.priceHistory}:{' '}
                               {capitalizeFirst(payment.merchantName) ||
                                 payment.opposingIban ||
-                                'Unknown'}
+                                t.transactions.unknown}
                             </p>
                             <ResponsiveContainer
                               width='100%'
@@ -1337,7 +1331,7 @@ export default function Analytics() {
                                     if (typeof value !== 'number') return null;
                                     return [
                                       <Currency key='value' amount={value} />,
-                                      t.transactions?.amount || 'Amount',
+                                      t.transactions?.amount,
                                     ];
                                   }}
                                   labelFormatter={(label) => {
@@ -1374,10 +1368,7 @@ export default function Analytics() {
                     ) : (
                       <EmptyState
                         icon={TrendingUp}
-                        title={
-                          t.analytics?.selectRecurringPayment ||
-                          'Select a payment to view history'
-                        }
+                        title={t.analytics?.selectRecurringPayment}
                         className='h-full'
                       />
                     )}
@@ -1387,10 +1378,7 @@ export default function Analytics() {
             ) : (
               <EmptyState
                 icon={RefreshCw}
-                title={
-                  t.analytics?.noRecurringPayments ||
-                  'No recurring payments in this period'
-                }
+                title={t.analytics?.noRecurringPayments}
                 className='py-8'
               />
             )}
@@ -1403,11 +1391,10 @@ export default function Analytics() {
         <Card className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'>
           <CardHeader>
             <CardTitle className='text-base sm:text-lg'>
-              {t.analytics?.subscriptions || 'Subscriptions'}
+              {t.analytics?.subscriptions}
             </CardTitle>
             <CardDescription>
-              {t.analytics?.subscriptionsDescription ||
-                'Transactions with at least 6 recurrences'}
+              {t.analytics?.subscriptionsDescription}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -1435,17 +1422,17 @@ export default function Analytics() {
                           <p className='truncate font-medium'>
                             {capitalizeFirst(pattern.merchantName) ||
                               pattern.opposingIban ||
-                              'Unknown'}
+                              t.transactions.unknown}
                           </p>
                           <p className='text-sm text-muted-foreground'>
                             {pattern.patternType === 'monthly'
-                              ? t.subscriptions?.monthly || 'Monthly'
+                              ? t.subscriptions?.monthly
                               : pattern.patternType === 'yearly'
-                                ? t.subscriptions?.yearly || 'Yearly'
+                                ? t.subscriptions?.yearly
                                 : pattern.patternType === 'quarterly'
-                                  ? t.subscriptions?.quarterly || 'Quarterly'
+                                  ? t.subscriptions?.quarterly
                                   : pattern.patternType === 'weekly'
-                                    ? t.subscriptions?.weekly || 'Weekly'
+                                    ? t.subscriptions?.weekly
                                     : pattern.patternType}
                           </p>
                         </div>
@@ -1505,10 +1492,7 @@ export default function Analytics() {
                           return (
                             <EmptyState
                               icon={TrendingUp}
-                              title={
-                                t.analytics?.noPriceHistory ||
-                                'No price history available'
-                              }
+                              title={t.analytics?.noPriceHistory}
                               className='h-full'
                             />
                           );
@@ -1516,10 +1500,10 @@ export default function Analytics() {
                         return (
                           <div className='flex-1'>
                             <p className='mb-2 text-sm font-medium'>
-                              {t.analytics?.priceHistory || 'Price history'}:{' '}
+                              {t.analytics?.priceHistory}:{' '}
                               {capitalizeFirst(pattern.merchantName) ||
                                 pattern.opposingIban ||
-                                'Unknown'}
+                                t.transactions.unknown}
                             </p>
                             <ResponsiveContainer
                               width='100%'
@@ -1554,7 +1538,7 @@ export default function Analytics() {
                                     if (typeof value !== 'number') return null;
                                     return [
                                       <Currency key='value' amount={value} />,
-                                      t.transactions?.amount || 'Amount',
+                                      t.transactions?.amount,
                                     ];
                                   }}
                                   labelFormatter={(label) => {
@@ -1574,7 +1558,7 @@ export default function Analytics() {
                                   stroke='hsl(var(--muted-foreground))'
                                   strokeDasharray='3 3'
                                   label={{
-                                    value: t.analytics?.average || 'Avg',
+                                    value: t.analytics?.average,
                                     position: 'right',
                                     fill: 'hsl(var(--muted-foreground))',
                                     fontSize: 11,
@@ -1602,10 +1586,7 @@ export default function Analytics() {
                     ) : (
                       <EmptyState
                         icon={TrendingUp}
-                        title={
-                          t.analytics?.selectSubscription ||
-                          'Select a subscription to view price history'
-                        }
+                        title={t.analytics?.selectSubscription}
                         className='h-full'
                       />
                     )}
@@ -1618,28 +1599,22 @@ export default function Analytics() {
                     variant='outline'
                     onClick={() => navigate('/subscriptions/')}
                   >
-                    {t.dashboard?.viewSubscriptions || 'View all subscriptions'}
+                    {t.dashboard?.viewSubscriptions}
                   </Button>
                 </div>
               </div>
             ) : (
               <EmptyState
                 icon={RefreshCw}
-                title={
-                  t.analytics?.noRecurringPayments ||
-                  'No confirmed subscriptions yet'
-                }
-                description={
-                  t.analytics?.confirmSubscriptions ||
-                  'Confirm detected subscriptions in the subscriptions page'
-                }
+                title={t.analytics?.noRecurringPayments}
+                description={t.analytics?.confirmSubscriptions}
                 action={
                   <Button
                     onClick={() => navigate('/subscriptions/')}
                     variant='link'
                     className='h-auto p-0 text-sm'
                   >
-                    {t.dashboard?.goToSubscriptions || 'Go to subscriptions'}
+                    {t.dashboard?.goToSubscriptions}
                   </Button>
                 }
                 className='py-8'

@@ -1,66 +1,16 @@
 import { useLanguage } from '../../contexts/LanguageContext';
 import HelpAnimation from '../../components/help/HelpAnimation';
 
-// Default categories synced with database seed (apps/api/src/db/seed-data.ts)
-const defaultCategories = [
-  {
-    emoji: '🏠',
-    name: 'Wonen & Huisvesting',
-    color: '#1E40AF',
-    description: 'Huur, hypotheek, energie, water',
-  },
-  {
-    emoji: '🛒',
-    name: 'Huishouden & Boodschappen',
-    color: '#34D399',
-    description: 'Supermarkt, drogisterij, huisdieren',
-  },
-  {
-    emoji: '🚗',
-    name: 'Vervoer & Transport',
-    color: '#3B82F6',
-    description: 'Brandstof, OV, auto, parkeren',
-  },
-  {
-    emoji: '🍽️',
-    name: 'Eten & Drinken',
-    color: '#F97316',
-    description: 'Restaurants, bezorging, koffie',
-  },
-  {
-    emoji: '🛍️',
-    name: 'Shopping & Kleding',
-    color: '#EC4899',
-    description: 'Kleding, schoenen, elektronica',
-  },
-  {
-    emoji: '💪',
-    name: 'Gezondheid & Welzijn',
-    color: '#EF4444',
-    description: 'Zorgverzekering, apotheek, sport',
-  },
-  {
-    emoji: '🎬',
-    name: 'Entertainment & Vrije Tijd',
-    color: '#8B5CF6',
-    description: 'Streaming, uitjes, hobbys',
-  },
-  {
-    emoji: '💼',
-    name: 'Inkomen',
-    color: '#22C55E',
-    description: 'Salaris, freelance, uitkeringen',
-  },
-  {
-    emoji: '💰',
-    name: 'Sparen & Beleggen',
-    color: '#14B8A6',
-    description: 'Spaarrekening, beleggingen',
-  },
-];
+interface CategoryExample {
+  name: string;
+  description: string;
+  emoji: string;
+  color: string;
+}
 
 export default function HelpCategories() {
   const { t } = useLanguage();
+  const examples = t.helpCenter.categories.examples as CategoryExample[];
 
   return (
     <article className='prose prose-gray dark:prose-invert max-w-none'>
@@ -87,7 +37,7 @@ export default function HelpCategories() {
         {t.helpCenter?.categories?.defaultText}
       </p>
       <div className='not-prose mt-6 grid gap-3 md:grid-cols-3'>
-        {defaultCategories.map((cat, idx) => (
+        {examples.map((cat, idx) => (
           <div
             key={idx}
             className='flex items-center gap-3 rounded-lg border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-gray-800'
@@ -123,6 +73,13 @@ export default function HelpCategories() {
         <li className='mb-2'>{t.helpCenter?.categories?.step4}</li>
         <li>{t.helpCenter?.categories?.step5}</li>
       </ol>
+
+      <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
+        {t.helpCenter?.categories?.subcategoryTitle}
+      </h2>
+      <p className='text-gray-600 dark:text-gray-400'>
+        {t.helpCenter?.categories?.subcategoryText}
+      </p>
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
         {t.helpCenter?.categories?.rulesTitle}

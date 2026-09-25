@@ -120,9 +120,7 @@ export function SyncSettings() {
 
       if (!success) {
         // Error is set in SyncContext and we can use it, but for the modal let's be specific
-        setConnectionError(
-          t.settings?.sync?.connectionFailed || 'Connection failed'
-        );
+        setConnectionError(t.settings?.sync?.connectionFailed);
       } else {
         setPairingInput('');
         setIsPairingDialogOpen(false);
@@ -130,37 +128,24 @@ export function SyncSettings() {
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : String(err);
       if (errorMessage === 'cannot-connect-to-self') {
-        setConnectionError(
-          t.settings?.sync?.cannotConnectToSelf || 'Cannot connect to yourself'
-        );
+        setConnectionError(t.settings?.sync?.cannotConnectToSelf);
       } else if (errorMessage === 'peer-unavailable') {
-        setConnectionError(
-          t.settings?.sync?.peerUnavailable || 'Peer unavailable'
-        );
+        setConnectionError(t.settings?.sync?.peerUnavailable);
       } else if (
         errorMessage.toLowerCase().includes('timeout') ||
         errorMessage.toLowerCase().includes('time-out')
       ) {
-        setConnectionError(
-          t.settings?.sync?.connectionTimeout ||
-            'Connection timeout - the other device may be behind a firewall. Try a different network.'
-        );
+        setConnectionError(t.settings?.sync?.connectionTimeout);
       } else if (
         errorMessage.toLowerCase().includes('schema version mismatch')
       ) {
-        setConnectionError(
-          t.settings?.sync?.schemaMismatch ||
-            'This device has a different app version. Update both devices to the latest version to sync.'
-        );
+        setConnectionError(t.settings?.sync?.schemaMismatch);
       } else if (
         errorMessage.toLowerCase().includes('protocol version mismatch')
       ) {
-        setConnectionError(
-          t.settings?.sync?.protocolMismatch ||
-            'This device uses an incompatible sync version. Update both devices to the latest version.'
-        );
+        setConnectionError(t.settings?.sync?.protocolMismatch);
       } else {
-        setConnectionError(errorMessage || 'Connection failed');
+        setConnectionError(errorMessage || t.settings.sync.connectionFailed);
       }
     } finally {
       setIsConnecting(false);
@@ -188,11 +173,10 @@ export function SyncSettings() {
                 className='flex cursor-default items-center gap-2 text-base select-none sm:text-lg'
                 onClick={handleTitleClick}
               >
-                {t.settings?.sync?.title || 'Device sync'}
+                {t.settings?.sync?.title}
               </CardTitle>
               <CardDescription className='text-xs sm:text-sm'>
-                {t.settings?.sync?.description ||
-                  'Sync your data across devices using peer-to-peer connections. No server required.'}
+                {t.settings?.sync?.description}
               </CardDescription>
             </div>
             {/* Sync Status & Controls - Compact */}
@@ -226,10 +210,10 @@ export function SyncSettings() {
                     <div className='text-center'>
                       <p className='font-medium'>
                         {syncStatus.state === 'syncing'
-                          ? t.settings?.sync?.syncing || 'Syncing...'
+                          ? t.settings?.sync?.syncing
                           : syncStatus.connectedPeers > 0
-                            ? t.settings?.sync?.connected || 'Connected'
-                            : t.settings?.sync?.notConnected || 'Not connected'}
+                            ? t.settings?.sync?.connected
+                            : t.settings?.sync?.notConnected}
                       </p>
                       <p className='text-xs text-muted-foreground'>
                         {syncStatus.connectedPeers}{' '}
@@ -264,24 +248,16 @@ export function SyncSettings() {
                           const result = await forceSync();
                           if (!result.success) {
                             toast.error(
-                              result.error ||
-                                t.settings?.sync?.syncError ||
-                                'Sync failed'
+                              result.error || t.settings?.sync?.syncError
                             );
                           } else if (
                             result.changesReceived === 0 &&
                             result.changesPushed === 0
                           ) {
-                            toast.info(
-                              t.settings?.sync?.syncNoChanges ||
-                                'No new changes to sync'
-                            );
+                            toast.info(t.settings?.sync?.syncNoChanges);
                           } else {
-                            const message = (
-                              t.settings?.sync?.syncSuccess ||
-                              'Synced {received} received, {pushed} sent'
-                            )
-                              .replace(
+                            const message = t.settings?.sync?.syncSuccess
+                              ?.replace(
                                 '{received}',
                                 String(result.changesReceived)
                               )
@@ -295,7 +271,7 @@ export function SyncSettings() {
                           toast.error(
                             error instanceof Error
                               ? error.message
-                              : t.settings?.sync?.syncError || 'Sync failed'
+                              : t.settings?.sync?.syncError
                           );
                         } finally {
                           setIsSyncingManual(false);
@@ -313,14 +289,11 @@ export function SyncSettings() {
                   </TooltipTrigger>
                   <TooltipContent>
                     <div className='text-center'>
-                      <p className='font-medium'>
-                        {t.settings?.sync?.syncNow || 'Sync now'}
-                      </p>
+                      <p className='font-medium'>{t.settings?.sync?.syncNow}</p>
                       <p className='text-xs text-muted-foreground'>
                         {syncStatus.connectedPeers === 0
                           ? 'Connect to a device to sync'
-                          : t.settings?.sync?.syncNowTooltip ||
-                            'Force sync with all connected devices'}
+                          : t.settings?.sync?.syncNowTooltip}
                       </p>
                     </div>
                   </TooltipContent>
@@ -345,7 +318,7 @@ export function SyncSettings() {
                   <TooltipContent>
                     <div className='text-center'>
                       <p className='font-medium'>
-                        {t.settings?.sync?.autoSync || 'Auto-sync'}
+                        {t.settings?.sync?.autoSync}
                       </p>
                       <p className='text-xs text-muted-foreground'>
                         {autoSyncEnabled
@@ -370,7 +343,7 @@ export function SyncSettings() {
                   </TooltipTrigger>
                   <TooltipContent>
                     <p className='font-medium'>
-                      {t.settings?.sync?.syncHistory || 'Sync history'}
+                      {t.settings?.sync?.syncHistory}
                     </p>
                   </TooltipContent>
                 </Tooltip>
@@ -397,7 +370,7 @@ export function SyncSettings() {
             {/* This Device */}
             <div className='space-y-2'>
               <h4 className='text-sm font-medium'>
-                {t.settings?.sync?.thisDevice || 'This device'}
+                {t.settings?.sync?.thisDevice}
               </h4>
               <div className='flex items-center gap-3 rounded-lg border p-3'>
                 <div className='flex h-10 w-10 items-center justify-center rounded-full bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400'>
@@ -429,12 +402,12 @@ export function SyncSettings() {
                         }}
                         className='h-6 px-2 text-muted-foreground'
                       >
-                        {t.common?.edit || 'Edit'}
+                        {t.common?.edit}
                       </Button>
                     </div>
                   )}
                   <p className='text-xs text-muted-foreground'>
-                    ID: {deviceId.slice(0, 8)}...
+                    {t.common.identifier}: {deviceId.slice(0, 8)}...
                   </p>
                 </div>
                 <div className='flex items-center gap-2'>
@@ -448,10 +421,10 @@ export function SyncSettings() {
                     }
                   >
                     {isInitialized
-                      ? t.settings?.sync?.ready || 'Ready'
+                      ? t.settings?.sync?.ready
                       : lastError
-                        ? t.common?.error || 'Error'
-                        : t.settings?.sync?.initializing || 'Initializing...'}
+                        ? t.common?.error
+                        : t.settings?.sync?.initializing}
                   </Badge>
                   {lastError && (
                     <Button
@@ -460,7 +433,7 @@ export function SyncSettings() {
                       onClick={retryInitialization}
                       className='h-6 px-2 text-xs'
                     >
-                      {t.common?.retry || 'Retry'}
+                      {t.common?.retry}
                     </Button>
                   )}
                 </div>
@@ -469,7 +442,7 @@ export function SyncSettings() {
 
             {/* Connection settings */}
             <h4 className='mb-1 text-sm font-medium'>
-              {t.settings?.sync?.connectionSettings || 'Connection settings'}
+              {t.settings?.sync?.connectionSettings}
             </h4>
 
             {/* Pairing Code & Connect to Device - 2 rows */}
@@ -477,18 +450,17 @@ export function SyncSettings() {
               <div className='flex items-center justify-between rounded-lg border p-3'>
                 <div className='flex-1'>
                   <p className='text-sm font-medium'>
-                    {t.settings?.sync?.pairingCode || 'Pairing code'}
+                    {t.settings?.sync?.pairingCode}
                   </p>
                   <p className='text-xs text-muted-foreground'>
-                    {t.settings?.sync?.pairingCodeDescription ||
-                      'Share this code with another device to connect.'}
+                    {t.settings?.sync?.pairingCodeDescription}
                   </p>
                 </div>
                 <QRPairingDialog
                   trigger={
                     <Button disabled={!isInitialized} size='sm'>
                       <QrCode className='mr-2 h-4 w-4' />
-                      {t.settings?.sync?.showQRCode || 'Show QR code'}
+                      {t.settings?.sync?.showQRCode}
                     </Button>
                   }
                 />
@@ -496,11 +468,10 @@ export function SyncSettings() {
               <div className='flex items-center justify-between rounded-lg border p-3'>
                 <div className='flex-1'>
                   <p className='text-sm font-medium'>
-                    {t.settings?.sync?.connectToDevice || 'Connect to device'}
+                    {t.settings?.sync?.connectToDevice}
                   </p>
                   <p className='text-xs text-muted-foreground'>
-                    {t.settings?.sync?.enterCodeDescription ||
-                      'Enter the pairing code shown on the other device.'}
+                    {t.settings?.sync?.enterCodeDescription}
                   </p>
                 </div>
                 <Button
@@ -510,7 +481,7 @@ export function SyncSettings() {
                   disabled={!isInitialized}
                 >
                   <Link className='mr-2 h-4 w-4' />
-                  {t.settings?.sync?.enterCode || 'Enter pairing code'}
+                  {t.settings?.sync?.enterCode}
                 </Button>
               </div>
             </div>
@@ -519,7 +490,7 @@ export function SyncSettings() {
             {pairedDevices.length > 0 && (
               <div className='space-y-2'>
                 <h4 className='text-sm font-medium'>
-                  {t.settings?.sync?.pairedDevices || 'Paired devices'}
+                  {t.settings?.sync?.pairedDevices}
                 </h4>
                 <div className='space-y-2'>
                   {pairedDevices.map((device) => (
@@ -548,8 +519,8 @@ export function SyncSettings() {
                         </div>
                         <p className='text-xs text-muted-foreground'>
                           {device.lastSyncAt
-                            ? `${t.settings?.sync?.lastSync || 'Last sync'}: ${new Date(device.lastSyncAt).toLocaleString()}`
-                            : t.settings?.sync?.neverSynced || 'Never synced'}
+                            ? `${t.settings?.sync?.lastSync}: ${new Date(device.lastSyncAt).toLocaleString()}`
+                            : t.settings?.sync?.neverSynced}
                         </p>
                       </div>
                       <TooltipProvider>
@@ -565,7 +536,7 @@ export function SyncSettings() {
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent>
-                            {t.settings?.sync?.removeDevice || 'Remove device'}
+                            {t.settings?.sync?.removeDevice}
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
@@ -594,14 +565,9 @@ export function SyncSettings() {
           >
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>
-                  {t.settings?.sync?.pairingRequest || 'Pairing request'}
-                </DialogTitle>
+                <DialogTitle>{t.settings?.sync?.pairingRequest}</DialogTitle>
                 <DialogDescription>
-                  {(
-                    t.settings?.sync?.pairingRequestDescription ||
-                    '{device} wants to connect'
-                  ).replace(
+                  {t.settings?.sync?.pairingRequestDescription?.replace(
                     '{device}',
                     pendingPairingRequest?.deviceName || ''
                   )}
@@ -612,10 +578,10 @@ export function SyncSettings() {
                   variant='outline'
                   onClick={() => pendingPairingRequest?.reject()}
                 >
-                  {t.common?.cancel || 'Cancel'}
+                  {t.common?.cancel}
                 </Button>
                 <Button onClick={() => pendingPairingRequest?.accept()}>
-                  {t.settings?.sync?.accept || 'Accept'}
+                  {t.settings?.sync?.accept}
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -636,27 +602,20 @@ export function SyncSettings() {
           >
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>
-                  {t.settings?.sync?.connectToDevice || 'Connect to device'}
-                </DialogTitle>
+                <DialogTitle>{t.settings?.sync?.connectToDevice}</DialogTitle>
                 <DialogDescription>
-                  {t.settings?.sync?.enterCodeDescription ||
-                    'Enter the pairing code shown on the other device.'}
+                  {t.settings?.sync?.enterCodeDescription}
                 </DialogDescription>
               </DialogHeader>
               <div className='py-4'>
                 <Input
-                  placeholder={
-                    t.settings?.sync?.pairingPlaceholder ||
-                    'fluxby-abc123...:ABCDEF'
-                  }
+                  placeholder={t.settings?.sync?.pairingPlaceholder}
                   value={pairingInput}
                   onChange={(e) => setPairingInput(e.target.value)}
                   className='text-center font-mono text-sm tracking-widest'
                 />
                 <p className='mt-2 text-xs text-muted-foreground'>
-                  {t.settings?.sync?.pairingHint ||
-                    'Enter the full pairing code including the colon. The code is case-sensitive.'}
+                  {t.settings?.sync?.pairingHint}
                 </p>
                 {connectionError && (
                   <p className='mt-2 text-sm text-destructive'>
@@ -674,15 +633,13 @@ export function SyncSettings() {
                     setIsPairingDialogOpen(false);
                   }}
                 >
-                  {t.common?.cancel || 'Cancel'}
+                  {t.common?.cancel}
                 </Button>
                 <Button
                   onClick={handleConnect}
                   disabled={!pairingInput.trim() || isConnecting}
                 >
-                  {isConnecting
-                    ? t.common?.loading || 'Loading...'
-                    : t.settings?.sync?.connect || 'Connect'}
+                  {isConnecting ? t.common?.loading : t.settings?.sync?.connect}
                 </Button>
               </DialogFooter>
             </DialogContent>

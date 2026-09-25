@@ -12,6 +12,9 @@ export interface TranslationKeys {
     filter: string;
     loading: string;
     error: string;
+    unknownError: string;
+    unknownDevice: string;
+    requestFailed: string;
     success: string;
     confirm: string;
     back: string;
@@ -76,12 +79,20 @@ export interface TranslationKeys {
       loadingDatabase: string;
     };
     user: string;
+    profile: string;
+    iban: string;
+    identifier: string;
+    unknownProvider: string;
     backToHomepage: string;
     loadingUserData: string;
     prepareDashboard: string;
     enablePrivacy: string;
     disablePrivacy: string;
     collapse: string;
+    languageNames: {
+      dutch: string;
+      english: string;
+    };
   };
   errors: {
     databaseError: string;
@@ -191,6 +202,38 @@ export interface TranslationKeys {
     forgotPasswordDialogWarning: string;
     resetDatabase: string;
     passwordChangedSuccess: string;
+    initialSetup: {
+      languageTitle: string;
+      languageDescription: string;
+      nameTitle: string;
+      nameDescription: string;
+      namePlaceholder: string;
+      passwordTitle: string;
+      passwordDescription: string;
+      passwordPlaceholder: string;
+      confirmPlaceholder: string;
+      passwordHint: string;
+      seedingTimeout: string;
+      seedingTimeoutRetry: string;
+      recoveryWarningTitle: string;
+      recoveryWarningSetup: string;
+      finish: string;
+      settingUp: string;
+      loadingTitle: string;
+      loadingDescription: string;
+      loadingWarning: string;
+      progressDemoAccount: string;
+      progressTransactions: string;
+      progressBudgets: string;
+      progressCategories: string;
+      progressAddressBook: string;
+      progressEncrypting: string;
+      progressFinalizing: string;
+      progressDashboard: string;
+      elapsed: string;
+      seeding: string;
+      encrypting: string;
+    };
   };
   updater: {
     title: string;
@@ -613,6 +656,19 @@ export interface TranslationKeys {
     jevSuggestionDismissed: string;
   };
   categories: {
+    seedDefaults: {
+      housing: { name: string; description: string };
+      groceries: { name: string; description: string };
+      transport: { name: string; description: string };
+      dining: { name: string; description: string };
+      entertainment: { name: string; description: string };
+      health: { name: string; description: string };
+      shopping: { name: string; description: string };
+      subscriptions: { name: string; description: string };
+      salary: { name: string; description: string };
+      transfers: { name: string; description: string };
+      other: { name: string; description: string };
+    };
     title: string;
     subtitle: string;
     newCategory: string;
@@ -710,9 +766,18 @@ export interface TranslationKeys {
     importSuccess: string;
     importSuccessDescription: string;
     importError: string;
+    importCancelled: string;
+    uploadFailed: string;
+    previewFailed: string;
+    parsingFailed: string;
+    importFailed: string;
+    importFailedWithStatus: string;
+    rowError: string;
+    failedToProcessRow: string;
     importHistory: string;
     noHistory: string;
     filename: string;
+    csvImport: string;
     date: string;
     transactions: string;
     status: string;
@@ -935,6 +1000,7 @@ export interface TranslationKeys {
       rulesApplied: string;
       noTransactionsUpdated: string;
       applyToTransactions: string;
+      failedToApplyRules: string;
     };
     dataManagement: {
       title: string;
@@ -1007,6 +1073,7 @@ export interface TranslationKeys {
     profileData: {
       title: string;
       description: string;
+      profileNameFallback: string;
       deleteTransactionsTitle: string;
       deleteTransactionsDescription: string;
       deleteTransactionsButton: string;
@@ -1303,6 +1370,11 @@ export interface TranslationKeys {
     errorAddingIban: string;
     errorMergingContacts: string;
     createError: string;
+    updateContactError: string;
+    deleteContactError: string;
+    createRuleError: string;
+    deleteRuleError: string;
+    assignIbanError: string;
     ruleAdded: string;
     ruleAppliedAuto: string;
     ruleExists: string;
@@ -1332,7 +1404,7 @@ export interface TranslationKeys {
     deleteRuleTitle: string;
     deleteContactTitle: string;
   };
-  bulkDelete?: {
+  bulkDelete: {
     selectionMode: string;
     selected: string;
     cancelSelection: string;
@@ -1573,7 +1645,7 @@ export interface TranslationKeys {
     sendingPing: string;
     failedPing: string;
   };
-  spotlight?: {
+  spotlight: {
     searchPlaceholder: string;
     noResults: string;
     pages: string;
@@ -1624,6 +1696,9 @@ export const nl: TranslationKeys = {
     filter: 'Filter',
     loading: 'Laden...',
     error: 'Er is een fout opgetreden',
+    unknownError: 'Onbekende fout',
+    unknownDevice: 'Onbekend apparaat',
+    requestFailed: 'Verzoek mislukt',
     success: 'Succes',
     confirm: 'Bevestigen',
     back: 'Terug',
@@ -1715,12 +1790,20 @@ export const nl: TranslationKeys = {
       loadingDatabase: 'Database laden...',
     },
     user: 'Gebruiker',
+    profile: 'Profiel',
+    iban: 'IBAN',
+    identifier: 'ID',
+    unknownProvider: 'Onbekende aanbieder',
     backToHomepage: 'Terug naar homepage',
     loadingUserData: 'Gebruikersgegevens laden...',
     prepareDashboard: 'Even geduld terwijl we je dashboard voorbereiden',
     enablePrivacy: 'Verberg gevoelige data',
     disablePrivacy: 'Toon gevoelige data',
     collapse: 'Inklappen',
+    languageNames: {
+      dutch: 'Nederlands',
+      english: 'English',
+    },
   },
   errors: {
     databaseError: 'Database fout',
@@ -1850,6 +1933,43 @@ export const nl: TranslationKeys = {
     forgotPasswordDialogWarning: 'Deze actie kan niet ongedaan worden gemaakt.',
     resetDatabase: 'Reset database',
     passwordChangedSuccess: 'Je master wachtwoord is succesvol gewijzigd.',
+    initialSetup: {
+      languageTitle: 'Kies je taal',
+      languageDescription: 'Selecteer de taal waarin je Fluxby wilt gebruiken.',
+      nameTitle: 'Hoe heet je?',
+      nameDescription: 'We gebruiken je naam om Fluxby persoonlijker te maken.',
+      namePlaceholder: 'Je naam...',
+      passwordTitle: 'Beveilig je gegevens',
+      passwordDescription:
+        'Kies een hoofdwachtwoord om je financiële gegevens te versleutelen. Dit wachtwoord wordt niet opgeslagen en kan niet worden hersteld. Onthoud het goed!',
+      passwordPlaceholder: 'Hoofdwachtwoord...',
+      confirmPlaceholder: 'Bevestig wachtwoord...',
+      passwordHint:
+        'Minimaal 8 tekens. Dit wachtwoord kan niet worden hersteld!',
+      seedingTimeout:
+        'Het laden van demo-gegevens duurt langer dan verwacht. Dit kan voorkomen op langzamere apparaten.',
+      seedingTimeoutRetry: 'Opnieuw proberen',
+      recoveryWarningTitle: 'Wachtwoord kan niet worden hersteld',
+      recoveryWarningSetup:
+        'Als je dit wachtwoord vergeet, zijn al je gegevens permanent ontoegankelijk. Er is geen manier om je wachtwoord te herstellen of opnieuw in te stellen.',
+      finish: 'Aan de slag!',
+      settingUp: 'Beveiliging instellen...',
+      loadingTitle: 'Account instellen...',
+      loadingDescription: 'We bereiden je persoonlijke omgeving voor.',
+      loadingWarning:
+        'Sluit dit tabblad niet voordat het instellen is voltooid.',
+      progressDemoAccount: 'Demo-account voorbereiden...',
+      progressTransactions: 'Transacties aanmaken...',
+      progressBudgets: 'Budgetten aanmaken...',
+      progressCategories: 'Categorieën aanmaken...',
+      progressAddressBook: 'Adresboek vullen...',
+      progressEncrypting: 'Versleuteling instellen...',
+      progressFinalizing: 'Onboarding voorbereiden...',
+      progressDashboard: 'Dashboard voorbereiden, even geduld...',
+      elapsed: 'Verstreken',
+      seeding: 'Seeden',
+      encrypting: 'Versleutelen',
+    },
   },
   updater: {
     title: 'Software updates',
@@ -2311,6 +2431,52 @@ export const nl: TranslationKeys = {
     jevSuggestionDismissed: 'Suggestie genegeerd',
   },
   categories: {
+    seedDefaults: {
+      housing: {
+        name: 'Wonen & Huisvesting',
+        description: 'Woonlasten',
+      },
+      groceries: {
+        name: 'Boodschappen',
+        description: 'Supermarkt en dagelijkse boodschappen',
+      },
+      transport: {
+        name: 'Vervoer',
+        description: 'Auto, OV en reizen',
+      },
+      dining: {
+        name: 'Uit eten',
+        description: 'Restaurants en eten bestellen',
+      },
+      entertainment: {
+        name: 'Entertainment',
+        description: 'Uitgaan en vrije tijd',
+      },
+      health: {
+        name: 'Gezondheid',
+        description: 'Medische kosten',
+      },
+      shopping: {
+        name: 'Winkelen',
+        description: 'Kleding en overig winkelen',
+      },
+      subscriptions: {
+        name: 'Abonnementen',
+        description: 'Maandelijkse abonnementen',
+      },
+      salary: {
+        name: 'Salaris',
+        description: 'Inkomen uit werk',
+      },
+      transfers: {
+        name: 'Overboekingen',
+        description: 'Interne overboekingen',
+      },
+      other: {
+        name: 'Overig',
+        description: 'Overige uitgaven',
+      },
+    },
     title: 'Categorieën',
     subtitle: 'Beheer hoe je transacties worden ingedeeld',
     newCategory: 'Nieuwe Categorie',
@@ -2418,9 +2584,18 @@ export const nl: TranslationKeys = {
     importSuccessDescription:
       'Er zijn {count} transacties succesvol geïmporteerd.',
     importError: 'Import fout',
+    importCancelled: 'Import geannuleerd',
+    uploadFailed: 'Uploaden mislukt',
+    previewFailed: 'Voorbeeld laden mislukt',
+    parsingFailed: 'Verwerken mislukt',
+    importFailed: 'Importeren mislukt',
+    importFailedWithStatus: 'Importeren mislukt met status {status}',
+    rowError: 'Rij {row}: {error}',
+    failedToProcessRow: 'De rij kon niet worden verwerkt',
     importHistory: 'Importgeschiedenis',
     noHistory: 'Nog geen importgeschiedenis',
     filename: 'Bestandsnaam',
+    csvImport: 'CSV-import',
     date: 'Datum',
     transactions: 'Transacties',
     status: 'Status',
@@ -2671,6 +2846,7 @@ export const nl: TranslationKeys = {
       rulesApplied: '{count} transacties bijgewerkt',
       noTransactionsUpdated: 'Geen transacties bijgewerkt',
       applyToTransactions: 'Toepassen op transacties',
+      failedToApplyRules: 'Kon betaalproviderregels niet toepassen',
     },
     dataManagement: {
       title: 'Gegevensbeheer',
@@ -2762,6 +2938,7 @@ export const nl: TranslationKeys = {
     profileData: {
       title: 'Profielgegevens verwijderen',
       description: 'Verwijder gegevens van {profile}',
+      profileNameFallback: 'dit profiel',
       deleteTransactionsTitle: 'Transacties verwijderen',
       deleteTransactionsDescription:
         'Verwijder alle transacties van dit profiel',
@@ -3184,6 +3361,11 @@ export const nl: TranslationKeys = {
     errorAddingIban: 'Fout bij toevoegen IBAN',
     errorMergingContacts: 'Fout bij samenvoegen contacten',
     createError: 'Fout bij aanmaken contact',
+    updateContactError: 'Fout bij bijwerken contact',
+    deleteContactError: 'Fout bij verwijderen contact',
+    createRuleError: 'Fout bij aanmaken opschoonregel',
+    deleteRuleError: 'Fout bij verwijderen opschoonregel',
+    assignIbanError: 'Fout bij toewijzen IBAN',
     ruleAdded: 'Opschoonregel toegevoegd',
     ruleAppliedAuto:
       'Regel toegevoegd en toegepast: {addressBook} contacten, {transactions} transacties bijgewerkt',

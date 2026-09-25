@@ -96,11 +96,8 @@ export function DataManagementSettings() {
   const handleRestoreBackup = async () => {
     if (!selectedBackup) return;
     const isConfirmed = await confirm({
-      title:
-        t.settings.dataManagement?.restoreBackupDialogTitle || 'Restore backup',
-      message:
-        t.settings.dataManagement?.restoreBackupConfirm ||
-        'Are you sure? All current data will be overwritten.',
+      title: t.settings.dataManagement?.restoreBackupDialogTitle,
+      message: t.settings.dataManagement?.restoreBackupConfirm,
       variant: 'danger',
     });
     if (!isConfirmed) return;
@@ -112,8 +109,8 @@ export function DataManagementSettings() {
         setDataNotice({
           type: 'error',
           text:
-            (t.settings.dataManagement?.restoreBackupError ||
-              'Restore failed') + (result.error ? `: ${result.error}` : ''),
+            t.settings.dataManagement?.restoreBackupError +
+            (result.error ? `: ${result.error}` : ''),
         });
         setLoadingAction(null);
         return;
@@ -121,9 +118,7 @@ export function DataManagementSettings() {
       setRestoreDialog(false);
       setDataNotice({
         type: 'success',
-        text:
-          t.settings.dataManagement?.restoreBackupSuccess ||
-          'Database restored. Restarting app...',
+        text: t.settings.dataManagement?.restoreBackupSuccess,
       });
       // Relaunch after a short delay so the toast is visible
       setTimeout(async () => {
@@ -134,7 +129,7 @@ export function DataManagementSettings() {
       setDataNotice({
         type: 'error',
         text:
-          (t.settings.dataManagement?.restoreBackupError || 'Restore failed') +
+          t.settings.dataManagement?.restoreBackupError +
           (err instanceof Error ? `: ${err.message}` : ''),
       });
       setLoadingAction(null);
@@ -148,9 +143,7 @@ export function DataManagementSettings() {
       if (isEncryptionEnabled) {
         const isValid = await verifyPassword(password);
         if (!isValid) {
-          setPasswordError(
-            t.settings.dataManagement?.wrongPassword || 'Incorrect password'
-          );
+          setPasswordError(t.settings.dataManagement?.wrongPassword);
           return;
         }
       }
@@ -176,9 +169,7 @@ export function DataManagementSettings() {
 
       setDataNotice({
         type: 'success',
-        text:
-          t.settings.dataManagement?.exportEncryptedSuccess ||
-          'Encrypted backup saved successfully.',
+        text: t.settings.dataManagement?.exportEncryptedSuccess,
       });
     } catch {
       setDataNotice({
@@ -224,7 +215,7 @@ export function DataManagementSettings() {
           .join('\n');
         setDataNotice({
           type: 'warning',
-          text: `${t.settings.dataManagement.importSuccess}\n\n${t.settings.dataManagement.skippedRules || 'Skipped category rules'}:\n${skippedList}`,
+          text: `${t.settings.dataManagement.importSuccess}\n\n${t.settings.dataManagement.skippedRules}:\n${skippedList}`,
         });
       } else {
         setDataNotice({
@@ -236,18 +227,14 @@ export function DataManagementSettings() {
       const errorMessage =
         err instanceof Error ? err.message : 'Decryption failed';
       if (errorMessage.includes('incorrect password')) {
-        setPasswordError(
-          t.settings.dataManagement?.wrongPassword || 'Incorrect password'
-        );
+        setPasswordError(t.settings.dataManagement?.wrongPassword);
       } else if (errorMessage.includes('Checksum mismatch')) {
         setPasswordDialog({ open: false, mode: 'import' });
         setPasswordInput('');
         setPasswordError('');
         setDataNotice({
           type: 'error',
-          text:
-            t.settings.dataManagement?.checksumMismatch ||
-            'Backup file is corrupted (checksum mismatch)',
+          text: t.settings.dataManagement?.checksumMismatch,
         });
       } else {
         setPasswordError(errorMessage);
@@ -288,12 +275,8 @@ export function DataManagementSettings() {
 
       if (hasChecksum && !valid) {
         const proceed = await confirm({
-          title:
-            t.settings.dataManagement?.checksumWarningTitle ||
-            'Checksum warning',
-          message:
-            t.settings.dataManagement?.checksumWarningMessage ||
-            'The backup file checksum does not match. The file may have been modified. Continue anyway?',
+          title: t.settings.dataManagement?.checksumWarningTitle,
+          message: t.settings.dataManagement?.checksumWarningMessage,
           variant: 'danger',
         });
         if (!proceed) {
@@ -321,7 +304,7 @@ export function DataManagementSettings() {
           .join('\n');
         setDataNotice({
           type: 'warning',
-          text: `${t.settings.dataManagement.importSuccess}\n\n${t.settings.dataManagement.skippedRules || 'Skipped category rules'}:\n${skippedList}`,
+          text: `${t.settings.dataManagement.importSuccess}\n\n${t.settings.dataManagement.skippedRules}:\n${skippedList}`,
         });
       } else {
         setDataNotice({
@@ -440,8 +423,7 @@ export function DataManagementSettings() {
                   className='flex cursor-pointer items-center gap-1.5 text-xs text-muted-foreground'
                 >
                   <ShieldCheck className='h-3.5 w-3.5' />
-                  {t.settings.dataManagement?.encryptBackup ||
-                    'Encrypt backup with password'}
+                  {t.settings.dataManagement?.encryptBackup}
                 </Label>
               </div>
             </div>
@@ -452,8 +434,7 @@ export function DataManagementSettings() {
                   {t.settings.dataManagement.importTitle}
                 </p>
                 <p className='text-xs text-muted-foreground'>
-                  {t.settings.dataManagement?.importDescriptionEncrypted ||
-                    'Import a previous export file (supports encrypted and plain backups)'}
+                  {t.settings.dataManagement?.importDescriptionEncrypted}
                 </p>
               </div>
               <input
@@ -532,12 +513,10 @@ export function DataManagementSettings() {
               <div className='flex items-center justify-between rounded-lg border p-3'>
                 <div className='flex-1'>
                   <p className='text-sm font-medium'>
-                    {t.settings.dataManagement?.restoreBackupTitle ||
-                      'Restore from backup'}
+                    {t.settings.dataManagement?.restoreBackupTitle}
                   </p>
                   <p className='text-xs text-muted-foreground'>
-                    {t.settings.dataManagement?.restoreBackupDescription ||
-                      'Restore the database from an automatic backup created before an update'}
+                    {t.settings.dataManagement?.restoreBackupDescription}
                   </p>
                 </div>
                 <Button
@@ -546,8 +525,7 @@ export function DataManagementSettings() {
                   onClick={handleOpenRestoreDialog}
                 >
                   <RotateCcw className='mr-2 h-4 w-4' />
-                  {t.settings.dataManagement?.restoreBackupButton ||
-                    'Restore backup'}
+                  {t.settings.dataManagement?.restoreBackupButton}
                 </Button>
               </div>
             )}
@@ -570,23 +548,19 @@ export function DataManagementSettings() {
           <DialogHeader>
             <DialogTitle>
               {passwordDialog.mode === 'export'
-                ? t.settings.dataManagement?.encryptExportTitle ||
-                  'Encrypt backup'
-                : t.settings.dataManagement?.decryptImportTitle ||
-                  'Decrypt backup'}
+                ? t.settings.dataManagement?.encryptExportTitle
+                : t.settings.dataManagement?.decryptImportTitle}
             </DialogTitle>
             <DialogDescription>
               {passwordDialog.mode === 'export'
-                ? t.settings.dataManagement?.encryptExportDescription ||
-                  'Enter a password to encrypt your backup. You will need this password to restore the backup later.'
-                : t.settings.dataManagement?.decryptImportDescription ||
-                  'Enter the password used to encrypt this backup.'}
+                ? t.settings.dataManagement?.encryptExportDescription
+                : t.settings.dataManagement?.decryptImportDescription}
             </DialogDescription>
           </DialogHeader>
           <div className='space-y-4 py-4'>
             <div className='space-y-2'>
               <Label htmlFor='backup-password'>
-                {t.security?.enterPassword || 'Password'}
+                {t.security?.enterPassword}
               </Label>
               <Input
                 id='backup-password'
@@ -607,10 +581,7 @@ export function DataManagementSettings() {
                     }
                   }
                 }}
-                placeholder={
-                  t.settings.dataManagement?.passwordPlaceholder ||
-                  'Enter password (min 4 characters)'
-                }
+                placeholder={t.settings.dataManagement?.passwordPlaceholder}
               />
               {passwordError && (
                 <p className='text-sm text-destructive'>{passwordError}</p>
@@ -651,12 +622,10 @@ export function DataManagementSettings() {
         <DialogContent className='sm:max-w-md'>
           <DialogHeader>
             <DialogTitle>
-              {t.settings.dataManagement?.restoreBackupDialogTitle ||
-                'Restore backup'}
+              {t.settings.dataManagement?.restoreBackupDialogTitle}
             </DialogTitle>
             <DialogDescription>
-              {t.settings.dataManagement?.restoreBackupDialogDescription ||
-                'Select a backup to restore. The app will restart after restoring.'}
+              {t.settings.dataManagement?.restoreBackupDialogDescription}
             </DialogDescription>
           </DialogHeader>
           <div className='space-y-2 py-2'>
@@ -666,8 +635,7 @@ export function DataManagementSettings() {
               </div>
             ) : backupList.length === 0 ? (
               <p className='py-4 text-center text-sm text-muted-foreground'>
-                {t.settings.dataManagement?.restoreBackupEmpty ||
-                  'No backups found'}
+                {t.settings.dataManagement?.restoreBackupEmpty}
               </p>
             ) : (
               backupList.map((backup) => (
@@ -713,8 +681,7 @@ export function DataManagementSettings() {
               ) : (
                 <RotateCcw className='mr-2 h-4 w-4' />
               )}
-              {t.settings.dataManagement?.restoreBackupRelaunch ||
-                'Restore and restart'}
+              {t.settings.dataManagement?.restoreBackupRelaunch}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -94,7 +94,7 @@ export default function ImportAnimation({ isVisible }: { isVisible: boolean }) {
                 </div>
               </div>
               <span className='mt-2 text-xs text-gray-600 dark:text-white/80'>
-                transacties.csv
+                {t.animations.import.fileName}
               </span>
             </div>
           </div>

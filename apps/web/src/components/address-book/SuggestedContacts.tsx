@@ -67,7 +67,7 @@ export const SuggestedContacts: React.FC<SuggestedContactsProps> = ({
         <div className='flex items-center justify-between'>
           <CardTitle className='flex items-center gap-2 text-blue-700 dark:text-blue-400'>
             <UserPlus className='h-5 w-5' />
-            {t.addressBook?.suggestedContacts || 'Suggested contacts'}
+            {t.addressBook?.suggestedContacts}
             <span className='rounded-full bg-blue-200 px-2 py-0.5 text-xs font-normal dark:bg-blue-800'>
               {suggestedContacts.length}
             </span>
@@ -80,14 +80,12 @@ export const SuggestedContacts: React.FC<SuggestedContactsProps> = ({
         </div>
         {!showSuggestedContacts && (
           <CardDescription>
-            {t.addressBook?.suggestedContactsCollapsed ||
-              'Transaction counterparties not yet in your address book. Click to expand.'}
+            {t.addressBook?.suggestedContactsCollapsed}
           </CardDescription>
         )}
         {showSuggestedContacts && (
           <CardDescription>
-            {t.addressBook?.suggestedContactsExpanded ||
-              'These are counterparties from your transactions that are not in your address book yet. Add them to track spending per contact.'}
+            {t.addressBook?.suggestedContactsExpanded}
           </CardDescription>
         )}
       </CardHeader>
@@ -102,8 +100,7 @@ export const SuggestedContacts: React.FC<SuggestedContactsProps> = ({
                 <div className='flex items-center gap-2'>
                   <span className='truncate font-medium'>{account.name}</span>
                   <span className='text-xs text-muted-foreground'>
-                    ({account.transactionCount}{' '}
-                    {t.addressBook?.transactions || 'transactions'})
+                    ({account.transactionCount} {t.addressBook?.transactions})
                   </span>
                 </div>
                 <div className='truncate text-xs text-muted-foreground'>
@@ -150,8 +147,7 @@ export const SuggestedContacts: React.FC<SuggestedContactsProps> = ({
                     <div className='space-y-3'>
                       <div>
                         <label className='mb-1 block text-xs font-medium text-muted-foreground'>
-                          {t.addressBook?.addAsNewContact ||
-                            'Add as new contact'}
+                          {t.addressBook?.addAsNewContact}
                         </label>
                         <div className='flex gap-2'>
                           <Input
@@ -160,9 +156,7 @@ export const SuggestedContacts: React.FC<SuggestedContactsProps> = ({
                               setSuggestedContactEditName(e.target.value)
                             }
                             className='h-8 text-sm'
-                            placeholder={
-                              t.addressBook?.enterName || 'Enter name...'
-                            }
+                            placeholder={t.addressBook?.enterName}
                           />
                           <Button
                             size='sm'
@@ -185,14 +179,13 @@ export const SuggestedContacts: React.FC<SuggestedContactsProps> = ({
                       <div className='flex items-center gap-2'>
                         <div className='h-px flex-1 bg-border' />
                         <span className='text-xs text-muted-foreground'>
-                          {t.common?.or || 'or'}
+                          {t.common?.or}
                         </span>
                         <div className='h-px flex-1 bg-border' />
                       </div>
                       <div>
                         <label className='mb-1 block text-xs font-medium text-muted-foreground'>
-                          {t.addressBook?.assignToExisting ||
-                            'Assign to existing contact'}
+                          {t.addressBook?.assignToExisting}
                         </label>
                         <Input
                           value={suggestedContactSearch}
@@ -200,10 +193,7 @@ export const SuggestedContacts: React.FC<SuggestedContactsProps> = ({
                             setSuggestedContactSearch(e.target.value)
                           }
                           className='mb-2 h-8 text-sm'
-                          placeholder={
-                            t.addressBook?.searchContacts ||
-                            'Search contacts...'
-                          }
+                          placeholder={t.addressBook?.searchContacts}
                         />
                         <div className='max-h-32 overflow-y-auto'>
                           {(() => {
@@ -244,8 +234,7 @@ export const SuggestedContacts: React.FC<SuggestedContactsProps> = ({
                               ))
                             ) : (
                               <div className='py-2 text-center text-sm text-muted-foreground'>
-                                {t.addressBook?.noContactsFound ||
-                                  'No contacts found'}
+                                {t.addressBook?.noContactsFound}
                               </div>
                             );
                           })()}
@@ -259,9 +248,10 @@ export const SuggestedContacts: React.FC<SuggestedContactsProps> = ({
           ))}
           {suggestedContacts.length > 20 && (
             <p className='text-center text-sm text-muted-foreground'>
-              {(
-                t.addressBook?.andMoreSuggested || '...and {count} more'
-              ).replace('{count}', String(suggestedContacts.length - 20))}
+              {t.addressBook?.andMoreSuggested?.replace(
+                '{count}',
+                String(suggestedContacts.length - 20)
+              )}
             </p>
           )}
         </CardContent>

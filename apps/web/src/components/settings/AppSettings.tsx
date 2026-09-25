@@ -140,32 +140,22 @@ export function AppSettings() {
 
     // Validation
     if (!currentPassword) {
-      setPasswordError(
-        t.security?.currentPassword || 'Enter your current password'
-      );
+      setPasswordError(t.security?.currentPassword);
       return;
     }
 
     if (newPassword.length < 8) {
-      setPasswordError(
-        t.security?.passwordTooShort ||
-          'New password must be at least 8 characters'
-      );
+      setPasswordError(t.security?.passwordTooShort);
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      setPasswordError(
-        t.security?.passwordsNoMatch || 'Passwords do not match'
-      );
+      setPasswordError(t.security?.passwordsNoMatch);
       return;
     }
 
     if (currentPassword === newPassword) {
-      setPasswordError(
-        t.settings?.masterPasswordMustDiffer ||
-          'New password must be different from current'
-      );
+      setPasswordError(t.settings?.masterPasswordMustDiffer);
       return;
     }
 
@@ -176,16 +166,13 @@ export function AppSettings() {
 
       if (success) {
         setLocalToast({
-          message:
-            t.security?.passwordChangedSuccess ||
-            'Your master password has been successfully changed.',
+          message: t.security?.passwordChangedSuccess,
           type: 'success',
         });
         setIsPasswordDialogOpen(false);
         resetPasswordForm();
       } else {
-        const message =
-          t.security?.wrongPassword || 'Current password is incorrect';
+        const message = t.security?.wrongPassword;
         setPasswordError(message);
         setLocalToast({ message, type: 'error' });
       }
@@ -193,10 +180,7 @@ export function AppSettings() {
       const errorMessage = err instanceof Error ? err.message : String(err);
       setPasswordError(errorMessage);
       setLocalToast({
-        message:
-          errorMessage ||
-          t.security?.unlockError ||
-          'Failed to change password',
+        message: errorMessage || t.security?.unlockError,
         type: 'error',
       });
     } finally {
@@ -262,7 +246,7 @@ export function AppSettings() {
                 setWebUpdateAvailable(true);
                 setUpdateStatus('available');
                 setUpdateInfo({
-                  version: t.updater?.newVersion || 'New version',
+                  version: t.updater?.newVersion,
                   currentVersion: currentAppVersion || '?',
                 });
               }
@@ -275,7 +259,7 @@ export function AppSettings() {
           setWebUpdateAvailable(true);
           setUpdateStatus('available');
           setUpdateInfo({
-            version: t.updater?.newVersion || 'New version',
+            version: t.updater?.newVersion,
             currentVersion: currentAppVersion || '?',
           });
         }
@@ -328,18 +312,14 @@ export function AppSettings() {
           } else {
             setUpdateStatus('up-to-date');
             if (showToast) {
-              updateToast.success(
-                t.updater?.upToDate || 'You are running the latest version'
-              );
+              updateToast.success(t.updater?.upToDate);
             }
           }
         } catch (err) {
           console.error('Update check failed:', err);
           setUpdateError(err instanceof Error ? err.message : String(err));
           setUpdateStatus('error');
-          updateToast.error(
-            t.updater?.checkFailed || 'Failed to check for updates'
-          );
+          updateToast.error(t.updater?.checkFailed);
         }
       } else if ('serviceWorker' in navigator) {
         // Web: Check for service worker updates
@@ -354,7 +334,7 @@ export function AppSettings() {
               setWebUpdateAvailable(true);
               setUpdateStatus('available');
               setUpdateInfo({
-                version: t.updater?.newVersion || 'New version',
+                version: t.updater?.newVersion,
                 currentVersion: currentAppVersion || '?',
               });
             } else if (registration.installing) {
@@ -368,7 +348,7 @@ export function AppSettings() {
                   setWebUpdateAvailable(true);
                   setUpdateStatus('available');
                   setUpdateInfo({
-                    version: t.updater?.newVersion || 'New version',
+                    version: t.updater?.newVersion,
                     currentVersion: currentAppVersion || '?',
                   });
                 }
@@ -378,19 +358,14 @@ export function AppSettings() {
                 if (updateStatusRef.current === 'checking') {
                   setUpdateStatus('up-to-date');
                   if (showToast) {
-                    updateToast.success(
-                      t.updater?.upToDate ||
-                        'You are running the latest version'
-                    );
+                    updateToast.success(t.updater?.upToDate);
                   }
                 }
               }, 3000);
             } else {
               setUpdateStatus('up-to-date');
               if (showToast) {
-                updateToast.success(
-                  t.updater?.upToDate || 'You are running the latest version'
-                );
+                updateToast.success(t.updater?.upToDate);
               }
             }
           } else {
@@ -449,9 +424,7 @@ export function AppSettings() {
         });
 
         // Prompt to relaunch
-        updateToast.success(
-          t.updater?.installComplete || 'Update installed! Restarting...'
-        );
+        updateToast.success(t.updater?.installComplete);
 
         // Small delay to show the success message
         setTimeout(async () => {
@@ -461,9 +434,7 @@ export function AppSettings() {
         console.error('Update download/install failed:', err);
         setUpdateError(err instanceof Error ? err.message : String(err));
         setUpdateStatus('error');
-        updateToast.error(
-          t.updater?.installFailed || 'Failed to install update'
-        );
+        updateToast.error(t.updater?.installFailed);
       }
     } else if (webUpdateAvailable && swRegistration?.waiting) {
       // Web: Tell SW to skip waiting and activate
@@ -498,8 +469,8 @@ export function AppSettings() {
   // For web: customize labels
   const isWeb = !isTauri;
   const installButtonLabel = isWeb
-    ? t.updater?.refreshNow || 'Refresh now'
-    : t.updater?.installUpdate || 'Install update';
+    ? t.updater?.refreshNow
+    : t.updater?.installUpdate;
 
   return (
     <div className='space-y-0 sm:space-y-6'>
@@ -525,11 +496,10 @@ export function AppSettings() {
                 <div className='mb-3 flex items-center justify-between'>
                   <div>
                     <p className='text-sm font-medium'>
-                      {t.settings?.versions || 'Versions & Updates'}
+                      {t.settings?.versions}
                     </p>
                     <p className='text-xs text-muted-foreground'>
-                      {t.settings?.versionsDescription ||
-                        'App versions and software updates'}
+                      {t.settings?.versionsDescription}
                     </p>
                   </div>
                   <div className='flex items-center gap-2'>
@@ -541,7 +511,7 @@ export function AppSettings() {
                           </div>
                         </TooltipTrigger>
                         <TooltipContent>
-                          {t.settings?.appVersion || 'App version'}
+                          {t.settings?.appVersion}
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
@@ -572,10 +542,8 @@ export function AppSettings() {
                         </TooltipTrigger>
                         <TooltipContent>
                           {hasVersionMismatch
-                            ? t.settings?.versionMismatch ||
-                              'Schema version mismatch. Click to repair.'
-                            : t.settings?.schemaVersion ||
-                              'Database schema / Code version'}
+                            ? t.settings?.versionMismatch
+                            : t.settings?.schemaVersion}
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
@@ -588,17 +556,14 @@ export function AppSettings() {
                     {updateStatus === 'checking' && (
                       <>
                         <Loader2 className='h-4 w-4 animate-spin text-purple-600' />
-                        <span className='text-sm'>
-                          {t.updater?.checking || 'Checking for updates...'}
-                        </span>
+                        <span className='text-sm'>{t.updater?.checking}</span>
                       </>
                     )}
                     {updateStatus === 'idle' && (
                       <>
                         <RefreshCw className='h-4 w-4 text-muted-foreground' />
                         <span className='text-sm text-muted-foreground'>
-                          {t.updater?.clickToCheck ||
-                            'Click to check for updates'}
+                          {t.updater?.clickToCheck}
                         </span>
                       </>
                     )}
@@ -606,8 +571,7 @@ export function AppSettings() {
                       <>
                         <CheckCircle className='h-4 w-4 text-green-600' />
                         <span className='text-sm text-green-700 dark:text-green-400'>
-                          {t.updater?.upToDate ||
-                            'You are running the latest version'}
+                          {t.updater?.upToDate}
                         </span>
                       </>
                     )}
@@ -617,20 +581,18 @@ export function AppSettings() {
                         <div>
                           <span className='text-sm font-medium'>
                             {isWeb
-                              ? t.updater?.webUpdateAvailable ||
-                                'A new version is available'
-                              : (
-                                  t.updater?.newVersionAvailable ||
-                                  'Version {version} is available'
-                                ).replace('{version}', updateInfo.version)}
+                              ? t.updater?.webUpdateAvailable
+                              : t.updater?.newVersionAvailable?.replace(
+                                  '{version}',
+                                  updateInfo.version
+                                )}
                           </span>
                           {!isWeb && updateInfo.body && (
                             <button
                               onClick={() => setShowReleaseNotes(true)}
                               className='ml-2 text-xs text-purple-600 hover:underline'
                             >
-                              {t.updater?.viewReleaseNotes ||
-                                'View release notes'}
+                              {t.updater?.viewReleaseNotes}
                             </button>
                           )}
                         </div>
@@ -641,7 +603,7 @@ export function AppSettings() {
                         <Loader2 className='h-4 w-4 animate-spin text-purple-600' />
                         <div className='flex-1'>
                           <span className='text-sm'>
-                            {t.updater?.downloading || 'Downloading update...'}
+                            {t.updater?.downloading}
                           </span>
                           {downloadProgress && downloadProgress.total > 0 && (
                             <div className='mt-2 space-y-1'>
@@ -665,8 +627,7 @@ export function AppSettings() {
                       <>
                         <CheckCircle className='h-4 w-4 text-green-600' />
                         <span className='text-sm text-green-700 dark:text-green-400'>
-                          {t.updater?.readyToRestart ||
-                            'Update ready. Restarting...'}
+                          {t.updater?.readyToRestart}
                         </span>
                       </>
                     )}
@@ -674,9 +635,7 @@ export function AppSettings() {
                       <>
                         <AlertCircle className='h-4 w-4 text-red-600' />
                         <span className='text-sm text-red-700 dark:text-red-400'>
-                          {updateError ||
-                            t.updater?.errorOccurred ||
-                            'An error occurred'}
+                          {updateError || t.updater?.errorOccurred}
                         </span>
                       </>
                     )}
@@ -693,7 +652,7 @@ export function AppSettings() {
                         onClick={() => checkForUpdates(true)}
                       >
                         <RefreshCw className='mr-2 h-4 w-4' />
-                        {t.updater?.checkNow || 'Check now'}
+                        {t.updater?.checkNow}
                       </Button>
                     )}
                     {updateStatus === 'available' && (
@@ -718,10 +677,10 @@ export function AppSettings() {
               <div className='flex items-center justify-between rounded-lg border p-3'>
                 <div className='flex-1'>
                   <p className='text-sm font-medium'>
-                    {t.settings?.appNameLabel || 'Your name'}
+                    {t.settings?.appNameLabel}
                   </p>
                   <p className='text-xs text-muted-foreground'>
-                    {t.settings?.appNameDescription || 'Used in the greeting'}
+                    {t.settings?.appNameDescription}
                   </p>
                 </div>
                 <div className='flex items-center gap-2'>
@@ -731,9 +690,7 @@ export function AppSettings() {
                         value={editedName}
                         onChange={(e) => setEditedName(e.target.value)}
                         className='h-8 w-32'
-                        placeholder={
-                          t.settings?.appNamePlaceholder || 'Your name...'
-                        }
+                        placeholder={t.settings?.appNamePlaceholder}
                         onKeyDown={(e) => {
                           if (e.key === 'Enter') handleSaveName();
                           if (e.key === 'Escape') {
@@ -755,7 +712,7 @@ export function AppSettings() {
                   ) : (
                     <>
                       <span className='text-sm text-muted-foreground'>
-                        {user?.name || t.settings?.appNameUnset || 'Not set'}
+                        {user?.name || t.settings?.appNameUnset}
                       </span>
                       <TooltipProvider delayDuration={200}>
                         <Tooltip>
@@ -769,9 +726,7 @@ export function AppSettings() {
                               <Pencil className='h-4 w-4' />
                             </Button>
                           </TooltipTrigger>
-                          <TooltipContent>
-                            {t.common?.edit || 'Edit'}
-                          </TooltipContent>
+                          <TooltipContent>{t.common?.edit}</TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
                     </>
@@ -783,11 +738,10 @@ export function AppSettings() {
               <div className='flex items-center justify-between rounded-lg border p-3'>
                 <div className='flex-1'>
                   <p className='text-sm font-medium'>
-                    {t.settings?.masterPasswordTitle || 'Master password'}
+                    {t.settings?.masterPasswordTitle}
                   </p>
                   <p className='text-xs text-muted-foreground'>
-                    {t.settings?.masterPasswordDescription ||
-                      'Encrypts all your financial data locally'}
+                    {t.settings?.masterPasswordDescription}
                   </p>
                 </div>
                 <Dialog
@@ -800,19 +754,16 @@ export function AppSettings() {
                   <DialogTrigger asChild>
                     <Button variant='outline' size='sm'>
                       {t.settings?.masterPasswordChange ||
-                        t.security?.changePassword ||
-                        'Change password'}
+                        t.security?.changePassword}
                     </Button>
                   </DialogTrigger>
                   <DialogContent className='sm:max-w-md'>
                     <DialogHeader>
                       <DialogTitle>
-                        {t.settings?.masterPasswordDialogTitle ||
-                          'Change master password'}
+                        {t.settings?.masterPasswordDialogTitle}
                       </DialogTitle>
                       <DialogDescription>
-                        {t.settings?.masterPasswordDialogDescription ||
-                          'Enter your current password and choose a new password.'}
+                        {t.settings?.masterPasswordDialogDescription}
                       </DialogDescription>
                     </DialogHeader>
 
@@ -820,8 +771,7 @@ export function AppSettings() {
                       <div className='rounded-lg bg-amber-50 p-3 dark:bg-amber-950/30'>
                         <p className='flex items-start gap-2 text-sm text-amber-800 dark:text-amber-200'>
                           <AlertTriangle className='mt-0.5 h-4 w-4 flex-shrink-0' />
-                          {t.settings?.masterPasswordWarning ||
-                            'Warning: Your password cannot be recovered. If you forget it, your data cannot be decrypted.'}
+                          {t.settings?.masterPasswordWarning}
                         </p>
                       </div>
                       <div className='space-y-2'>
@@ -830,8 +780,7 @@ export function AppSettings() {
                           className='text-sm font-medium'
                         >
                           {t.settings?.masterPasswordCurrent ||
-                            t.security?.currentPassword ||
-                            'Current password'}
+                            t.security?.currentPassword}
                         </label>
                         <Input
                           id='current-password'
@@ -850,7 +799,7 @@ export function AppSettings() {
                           htmlFor='new-password'
                           className='text-sm font-medium'
                         >
-                          {t.settings?.masterPasswordNew || 'New password'}
+                          {t.settings?.masterPasswordNew}
                         </label>
                         <Input
                           id='new-password'
@@ -864,8 +813,7 @@ export function AppSettings() {
                           minLength={8}
                         />
                         <p className='text-xs text-muted-foreground'>
-                          {t.settings?.masterPasswordMinLength ||
-                            'Minimum 8 characters'}
+                          {t.settings?.masterPasswordMinLength}
                         </p>
                       </div>
 
@@ -874,8 +822,7 @@ export function AppSettings() {
                           htmlFor='confirm-password'
                           className='text-sm font-medium'
                         >
-                          {t.settings?.masterPasswordConfirm ||
-                            'Confirm new password'}
+                          {t.settings?.masterPasswordConfirm}
                         </label>
                         <Input
                           id='confirm-password'
@@ -906,7 +853,7 @@ export function AppSettings() {
                           resetPasswordForm();
                         }}
                       >
-                        {t.common?.cancel || 'Cancel'}
+                        {t.common?.cancel}
                       </Button>
                       <Button
                         onClick={handleChangePassword}
@@ -919,10 +866,9 @@ export function AppSettings() {
                         className='bg-purple-600 hover:bg-purple-700'
                       >
                         {isChangingPassword
-                          ? t.settings?.masterPasswordChanging || 'Changing...'
+                          ? t.settings?.masterPasswordChanging
                           : t.settings?.masterPasswordChange ||
-                            t.security?.changePassword ||
-                            'Change password'}
+                            t.security?.changePassword}
                       </Button>
                     </DialogFooter>
                   </DialogContent>
@@ -1010,9 +956,10 @@ export function AppSettings() {
         <DialogContent className='max-w-lg'>
           <DialogHeader>
             <DialogTitle>
-              {(
-                t.updater?.releaseNotesTitle || 'Release notes for {version}'
-              ).replace('{version}', updateInfo?.version || '')}
+              {t.updater?.releaseNotesTitle?.replace(
+                '{version}',
+                updateInfo?.version || ''
+              )}
             </DialogTitle>
             <DialogDescription>
               {updateInfo?.date && (
@@ -1032,7 +979,7 @@ export function AppSettings() {
               variant='outline'
               onClick={() => setShowReleaseNotes(false)}
             >
-              {t.common?.close || 'Close'}
+              {t.common?.close}
             </Button>
             <Button
               onClick={() => {

@@ -35,7 +35,7 @@ export default function HelpSync() {
             </svg>
           </div>
           <span className='mt-2 text-sm font-medium text-gray-700 dark:text-gray-300'>
-            Laptop
+            {t.helpCenter.sync.laptop}
           </span>
         </div>
         <div className='flex flex-col items-center'>

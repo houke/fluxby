@@ -980,9 +980,10 @@ export default function Dashboard() {
                           onClick={handleJumpToPeriod}
                           className='text-sm text-primary hover:underline'
                         >
-                          {(
-                            t.dashboard?.jumpToPeriod || 'Jump to {period}'
-                          ).replace('{period}', suggestedPeriod.label)}
+                          {t.dashboard?.jumpToPeriod?.replace(
+                            '{period}',
+                            suggestedPeriod.label
+                          )}
                         </button>
                       </>
                     )}
@@ -999,7 +1000,7 @@ export default function Dashboard() {
           >
             <CardHeader>
               <CardTitle className='flex items-center justify-between text-base sm:text-lg'>
-                <span>{t.subscriptions?.title || 'Subscriptions'}</span>
+                <span>{t.subscriptions?.title}</span>
                 <span className='text-sm font-normal text-muted-foreground'>
                   {periodLabel}
                 </span>
@@ -1014,8 +1015,7 @@ export default function Dashboard() {
                     recurringStats.expectedPeriodExpenses > 0 && (
                       <div className='flex items-center justify-between'>
                         <span className='text-sm text-muted-foreground'>
-                          {t.subscriptions?.expectedThisPeriod ||
-                            'Expected this period'}
+                          {t.subscriptions?.expectedThisPeriod}
                         </span>
                         <span className='font-semibold'>
                           <Currency
@@ -1026,8 +1026,7 @@ export default function Dashboard() {
                     )}
                   <div className='flex items-center justify-between'>
                     <span className='text-sm text-muted-foreground'>
-                      {t.subscriptions?.totalMonthlySpend ||
-                        'Total monthly spend'}
+                      {t.subscriptions?.totalMonthlySpend}
                     </span>
                     <span className='font-semibold text-rose-600'>
                       <Currency
@@ -1039,7 +1038,7 @@ export default function Dashboard() {
                     <div className='flex items-center gap-2'>
                       <Check className='h-4 w-4 text-emerald-500' />
                       <span className='text-sm text-muted-foreground'>
-                        {t.subscriptions?.confirmedSubscriptions || 'Confirmed'}
+                        {t.subscriptions?.confirmedSubscriptions}
                       </span>
                     </div>
                     <span className='font-semibold'>
@@ -1051,8 +1050,7 @@ export default function Dashboard() {
                       <div className='flex items-center gap-2'>
                         <Sparkles className='h-4 w-4 text-purple-500' />
                         <span className='text-sm text-muted-foreground'>
-                          {t.subscriptions?.suggestedSubscriptions ||
-                            'Suggested'}
+                          {t.subscriptions?.suggestedSubscriptions}
                         </span>
                       </div>
                       <span className='font-semibold text-purple-600'>
@@ -1067,7 +1065,7 @@ export default function Dashboard() {
                       onClick={() => navigate('/subscriptions/')}
                       className='w-full'
                     >
-                      {t.dashboard?.viewSubscriptions || 'View subscriptions'}
+                      {t.dashboard?.viewSubscriptions}
                     </Button>
                   </div>
                 </div>
@@ -1075,18 +1073,16 @@ export default function Dashboard() {
                 <div className='flex flex-col items-center justify-center py-8 text-center'>
                   <RefreshCw className='mb-4 h-12 w-12 text-muted-foreground/50' />
                   <p className='text-muted-foreground'>
-                    {t.dashboard?.noSubscriptions ||
-                      'No subscriptions detected yet'}
+                    {t.dashboard?.noSubscriptions}
                   </p>
                   <p className='mt-1 text-sm text-muted-foreground'>
-                    {t.dashboard?.detectSubscriptions ||
-                      'Detect recurring payments automatically'}
+                    {t.dashboard?.detectSubscriptions}
                   </p>
                   <button
                     onClick={() => navigate('/subscriptions/')}
                     className='mt-3 text-sm text-primary hover:underline'
                   >
-                    {t.dashboard?.goToSubscriptions || 'Go to subscriptions'}
+                    {t.dashboard?.goToSubscriptions}
                   </button>
                 </div>
               )}
@@ -1191,9 +1187,10 @@ export default function Dashboard() {
                           onClick={handleJumpToPeriod}
                           className='text-sm text-primary hover:underline'
                         >
-                          {(
-                            t.dashboard?.jumpToPeriod || 'Jump to {period}'
-                          ).replace('{period}', suggestedPeriod.label)}
+                          {t.dashboard?.jumpToPeriod?.replace(
+                            '{period}',
+                            suggestedPeriod.label
+                          )}
                         </button>
                       </>
                     )}
@@ -1210,7 +1207,7 @@ export default function Dashboard() {
           >
             <CardHeader>
               <CardTitle className='truncate pb-1 text-base sm:text-lg'>
-                {t.dashboard?.topAccounts || 'Top tegenrekeningen'}
+                {t.dashboard?.topAccounts}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -1258,7 +1255,7 @@ export default function Dashboard() {
                       variant='outline'
                       onClick={() => navigate('/addressbook/')}
                     >
-                      {t.dashboard?.viewAddressBook || 'Bekijk adresboek'}
+                      {t.dashboard?.viewAddressBook}
                     </Button>
                   </div>
                 </div>
@@ -1266,19 +1263,17 @@ export default function Dashboard() {
                 <div className='flex h-[200px] flex-col items-center justify-center text-center'>
                   <Users className='mb-4 h-12 w-12 text-muted-foreground/50' />
                   <p className='text-muted-foreground'>
-                    {t.dashboard?.noTopAccounts ||
-                      'Nog geen tegenrekeningen bekend'}
+                    {t.dashboard?.noTopAccounts}
                   </p>
                   <p className='mt-1 text-sm text-muted-foreground'>
-                    {t.dashboard?.addContactsToAddressBook ||
-                      'Voeg contacten toe aan je adresboek'}
+                    {t.dashboard?.addContactsToAddressBook}
                   </p>
                   <div className='mt-3 flex flex-wrap items-center justify-center gap-x-2'>
                     <button
                       onClick={() => navigate('/addressbook/')}
                       className='text-sm text-primary hover:underline'
                     >
-                      {t.dashboard?.goToAddressBook || 'Ga naar adresboek'}
+                      {t.dashboard?.goToAddressBook}
                     </button>
                     {suggestedPeriod && !isViewingSuggestedPeriod && (
                       <>
@@ -1287,9 +1282,10 @@ export default function Dashboard() {
                           onClick={handleJumpToPeriod}
                           className='text-sm text-primary hover:underline'
                         >
-                          {(
-                            t.dashboard?.jumpToPeriod || 'Jump to {period}'
-                          ).replace('{period}', suggestedPeriod.label)}
+                          {t.dashboard?.jumpToPeriod?.replace(
+                            '{period}',
+                            suggestedPeriod.label
+                          )}
                         </button>
                       </>
                     )}

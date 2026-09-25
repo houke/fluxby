@@ -54,7 +54,7 @@ export function MigrationGate({ children }: MigrationGateProps) {
 
                 {/* Title */}
                 <h2 className='mb-2 text-xl font-semibold'>
-                  {t.common?.loading || 'Loading...'}
+                  {t.common?.loading}
                 </h2>
               </div>
             </div>

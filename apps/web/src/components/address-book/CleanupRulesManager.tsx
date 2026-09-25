@@ -45,13 +45,10 @@ export const CleanupRulesManager: React.FC<CleanupRulesManagerProps> = ({
   return (
     <Card data-onboarding='cleanup-rules-card'>
       <CardHeader>
-        <CardTitle>
-          {t.addressBook?.cleanupRules || 'Name cleanup rules'}
-        </CardTitle>
+        <CardTitle>{t.addressBook?.cleanupRules}</CardTitle>
         <CardHeader className='p-0'>
           <CardDescription>
-            {t.addressBook?.cleanupRulesDescription ||
-              'Text parts that are automatically removed from account names.'}
+            {t.addressBook?.cleanupRulesDescription}
           </CardDescription>
         </CardHeader>
       </CardHeader>
@@ -59,9 +56,7 @@ export const CleanupRulesManager: React.FC<CleanupRulesManagerProps> = ({
         {/* Add new rule */}
         <div className='flex gap-2'>
           <Input
-            placeholder={
-              t.addressBook?.patternPlaceholder || 'Text to remove...'
-            }
+            placeholder={t.addressBook?.patternPlaceholder}
             value={newRulePattern}
             onChange={(e) => setNewRulePattern(e.target.value)}
             className='flex-1'
@@ -96,7 +91,7 @@ export const CleanupRulesManager: React.FC<CleanupRulesManagerProps> = ({
           ))}
           {(!cleanupRules || cleanupRules.length === 0) && (
             <p className='py-2 text-center text-sm text-muted-foreground'>
-              {t.addressBook?.noRulesDefined || 'No rules defined'}
+              {t.addressBook?.noRulesDefined}
             </p>
           )}
         </div>
@@ -114,7 +109,7 @@ export const CleanupRulesManager: React.FC<CleanupRulesManagerProps> = ({
                 isApplyAddressBookPending && 'animate-spin'
               )}
             />
-            {t.addressBook?.applyToAddressBook || 'Apply to address book'}
+            {t.addressBook?.applyToAddressBook}
           </Button>
           <Button
             variant='outline'
@@ -127,7 +122,7 @@ export const CleanupRulesManager: React.FC<CleanupRulesManagerProps> = ({
                 isApplyTransactionsPending && 'animate-spin'
               )}
             />
-            {t.addressBook?.applyToTransactions || 'Apply to transactions'}
+            {t.addressBook?.applyToTransactions}
           </Button>
         </div>
       </CardContent>

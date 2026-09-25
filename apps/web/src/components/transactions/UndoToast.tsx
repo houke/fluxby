@@ -75,10 +75,7 @@ export function UndoToast({
     >
       {/* Message */}
       <span className='text-sm font-medium'>
-        {(t.bulkDelete?.undoToast || '{count} transacties verwijderd').replace(
-          '{count}',
-          String(deletedCount)
-        )}
+        {t.bulkDelete.undoToast.replace('{count}', String(deletedCount))}
       </span>
 
       {/* Countdown timer */}
@@ -111,7 +108,7 @@ export function UndoToast({
         ) : (
           <RotateCcw className='h-4 w-4' aria-hidden='true' />
         )}
-        {t.bulkDelete?.undo || 'Ongedaan maken'}
+        {t.bulkDelete.undo}
       </Button>
 
       {/* Dismiss button */}
@@ -126,7 +123,7 @@ export function UndoToast({
           urgency === 'warning' && 'hover:bg-white/20',
           urgency === 'critical' && 'hover:bg-white/20'
         )}
-        aria-label={t.common?.close || 'Sluiten'}
+        aria-label={t.common?.close}
       >
         <X className='h-4 w-4' aria-hidden='true' />
       </Button>

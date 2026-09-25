@@ -2,47 +2,65 @@ import { ExternalLink } from 'lucide-react';
 import CodeBlock from '../../components/docs/CodeBlock';
 import { useLanguage } from '../../contexts/LanguageContext';
 
-const exampleRequest = (language: 'en' | 'nl') => {
-  const merchant = language === 'nl' ? 'Albert Heijn' : 'Example Market';
-  const description = language === 'nl' ? 'PIN betaling' : 'Card payment';
-  const category = language === 'nl' ? 'Supermarkt' : 'Groceries';
-  const instructions =
-    language === 'nl'
-      ? 'Welke uitgavencategorie past het beste bij de banktransactie in `merchant`, `description` en `amount`?'
-      : 'Which spending category best fits the bank transaction described in `merchant`, `description`, and `amount`?';
-  const restaurants =
-    language === 'nl' ? 'Restaurants & cafés' : 'Restaurants & Bars';
-  const transport = language === 'nl' ? 'Vervoer' : 'Transport';
-  const noCategory =
-    language === 'nl'
-      ? 'Past bij geen van deze categorieën'
-      : 'Does not fit any of these categories';
+interface CategoryExampleCopy {
+  merchant: string;
+  description: string;
+  category: string;
+  instructions: string;
+  restaurants: string;
+  transport: string;
+  noCategory: string;
+}
+
+interface ClientExampleCopy {
+  merchant: string;
+  description: string;
+  keyComment: string;
+  fallbackComment: string;
+  writeComment: string;
+}
+
+interface DirectionExampleCopy {
+  beforeLoopComment: string;
+  batchComment: string;
+  debitInstruction: string;
+  debitMeaning: string;
+  creditInstruction: string;
+  creditMeaning: string;
+  unknownMeaning: string;
+}
+
+const exampleRequest = (copy: CategoryExampleCopy) => {
   const [groceriesId, restaurantsId, transportId] = [
     'cat-uuid-1',
     'cat-uuid-2',
     'cat-uuid-3',
   ];
 
-  return `{
-  "state": {
-    "merchant": "${merchant}",
-    "description": "${description}",
-    "amount": -24.80
-  },
-  "model": "jev-latest",
-  "questions": {
-    "category": {
-      "type": "choice",
-      "instructions": "${instructions}",
-      "criteria": {
-        "${groceriesId}": "${category}",
-        "${restaurantsId}": "${restaurants}",
-        "${transportId}": "${transport}",
-        "none": "${noCategory}"
-      }
-    }
-  }
-}`;
+  return JSON.stringify(
+    {
+      state: {
+        merchant: copy.merchant,
+        description: copy.description,
+        amount: -24.8,
+      },
+      model: 'jev-latest',
+      questions: {
+        category: {
+          type: 'choice',
+          instructions: copy.instructions,
+          criteria: {
+            [groceriesId]: copy.category,
+            [restaurantsId]: copy.restaurants,
+            [transportId]: copy.transport,
+            none: copy.noCategory,
+          },
+        },
+      },
+    },
+    null,
+    2
+  );
 };
 
 const exampleResponse = `{
@@ -63,34 +81,36 @@ const exampleResponse = `{
   "usage": { "input_tokens": 248, "output_tokens": 42 }
 }`;
 
-const directionExample = `// Before the row loop in importCsv()
-// TypeSafe classifies each unknown direction value once, in parallel
-
-{
-  "state": { "directionValues": ["Belastung", "Gutschrift"] },
-  "model": "jev-latest",
-  "questions": {
-    "v0": {
-      "type": "choice",
-      "instructions": "A bank CSV has a direction column whose value is \\"Belastung\\". Does this mean money is leaving the account or arriving?",
-      "criteria": {
-        "debit": "Money leaving the account (payment, expense, withdrawal)",
-        "credit": "Money arriving (income, deposit, refund)",
-        "unknown": "Cannot determine from this value alone"
-      }
+const directionExample = (copy: DirectionExampleCopy) => {
+  const payload = {
+    state: { directionValues: ['Belastung', 'Gutschrift'] },
+    model: 'jev-latest',
+    questions: {
+      v0: {
+        type: 'choice',
+        instructions: copy.debitInstruction,
+        criteria: {
+          debit: copy.debitMeaning,
+          credit: copy.creditMeaning,
+          unknown: copy.unknownMeaning,
+        },
+      },
+      v1: {
+        type: 'choice',
+        instructions: copy.creditInstruction,
+        criteria: {
+          debit: copy.debitMeaning,
+          credit: copy.creditMeaning,
+          unknown: copy.unknownMeaning,
+        },
+      },
     },
-    "v1": {
-      "type": "choice",
-      "instructions": "A bank CSV has a direction column whose value is \\"Gutschrift\\". ...",
-      "criteria": { "debit": "...", "credit": "...", "unknown": "..." }
-    }
-  }
-}`;
+  };
 
-const clientExample = (language: 'en' | 'nl') => {
-  const merchant = language === 'nl' ? 'Albert Heijn' : 'Example Market';
-  const description = language === 'nl' ? 'PIN betaling' : 'Card payment';
+  return `${copy.beforeLoopComment}\n${copy.batchComment}\n\n${JSON.stringify(payload, null, 2)}`;
+};
 
+const clientExample = (copy: ClientExampleCopy) => {
   return `import {
   suggestCategory,
   detectDirectionConvention,
@@ -99,20 +119,20 @@ const clientExample = (language: 'en' | 'nl') => {
   getTypeSafeApiKey,
 } from '@/lib/typesafe-client';
 
-// User's key read from OPFS settings — only present if they opt in
+${copy.keyComment}
 const key = getTypeSafeApiKey();
-if (!key) return; // graceful degradation
+if (!key) return; // ${copy.fallbackComment}
 
 const suggestion = await suggestCategory({
-  merchantName: '${merchant}',
-  description: '${description}',
+  merchantName: '${copy.merchant}',
+  description: '${copy.description}',
   amount: -24.80,
   categories: userCategories,   // user's own category list
   apiKey: key,
 });
 
 if (suggestion && suggestion.confidence > 0.7) {
-  // code owns the write — TypeSafe only returned a probability
+  // ${copy.writeComment}
   await db.runAsync(
     'UPDATE transactions SET category_id = ? WHERE id = ?',
     [suggestion.categoryId, transactionId]
@@ -121,21 +141,22 @@ if (suggestion && suggestion.confidence > 0.7) {
 };
 
 export default function DocsAI() {
-  const { t, language } = useLanguage();
-  const copy = t.docs.ai;
+  const { t } = useLanguage();
+  const docs = t.docs.ai;
+  const examples = docs.examples;
 
   return (
     <article className='prose prose-gray dark:prose-invert max-w-none'>
       <h1 className='mb-4 text-4xl font-bold text-gray-900 dark:text-gray-100'>
-        {copy.title}
+        {docs.title}
       </h1>
       <p className='text-xl text-gray-600 dark:text-gray-400'>
-        {copy.subtitle}
+        {docs.subtitle}
       </p>
 
       <div className='mt-8 rounded-xl border border-purple-200 bg-purple-50 p-6 dark:border-purple-800 dark:bg-purple-950/30'>
         <h3 className='mt-0 mb-2 flex items-center gap-2 text-lg font-semibold text-purple-900 dark:text-purple-200'>
-          <span>✨</span> {copy.whatTitle}
+          <span>✨</span> {docs.whatTitle}
         </h3>
         <p className='mb-2 text-purple-800 dark:text-purple-300'>
           <a
@@ -146,24 +167,24 @@ export default function DocsAI() {
           >
             TypeSafe
           </a>{' '}
-          {copy.whatText}
+          {docs.whatText}
         </p>
         <p className='mb-0 text-purple-800 dark:text-purple-300'>
-          {copy.controlText}
+          {docs.controlText}
         </p>
       </div>
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        {copy.architectureTitle}
+        {docs.architectureTitle}
       </h2>
       <p className='text-gray-600 dark:text-gray-400'>
-        {copy.architectureIntro}
+        {docs.architectureIntro}
       </p>
       <div className='not-prose mt-6 overflow-x-auto'>
         <table className='w-full border-collapse text-sm'>
           <thead>
             <tr className='border-b text-left'>
-              {copy.decisionHeaders.map((header: string) => (
+              {docs.decisionHeaders.map((header: string) => (
                 <th key={header} className='py-2 pr-4 font-medium'>
                   {header}
                 </th>
@@ -171,7 +192,7 @@ export default function DocsAI() {
             </tr>
           </thead>
           <tbody>
-            {copy.decisions.map(
+            {docs.decisions.map(
               ([decision, primitive, replaces]: [string, string, string]) => (
                 <tr key={decision} className='border-b last:border-0'>
                   <td className='py-2 pr-4 font-medium text-gray-900 dark:text-gray-100'>
@@ -193,49 +214,49 @@ export default function DocsAI() {
       </div>
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        {copy.optInTitle}
+        {docs.optInTitle}
       </h2>
-      <p className='text-gray-600 dark:text-gray-400'>{copy.optInText}</p>
+      <p className='text-gray-600 dark:text-gray-400'>{docs.optInText}</p>
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        {copy.implementationTitle}
+        {docs.implementationTitle}
       </h2>
       <p className='text-gray-600 dark:text-gray-400'>
-        {copy.implementationText}
+        {docs.implementationText}
       </p>
-      <p className='text-gray-600 dark:text-gray-400'>{copy.workerText}</p>
-      <CodeBlock language='typescript' code={clientExample(language)} />
+      <p className='text-gray-600 dark:text-gray-400'>{docs.workerText}</p>
+      <CodeBlock language='typescript' code={clientExample(examples.client)} />
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        {copy.categoryExampleTitle}
+        {docs.categoryExampleTitle}
       </h2>
       <p className='text-gray-600 dark:text-gray-400'>
-        {copy.categoryExampleText}
+        {docs.categoryExampleText}
       </p>
       <h3 className='mt-6 text-lg font-semibold text-gray-900 dark:text-gray-100'>
-        {copy.request}
+        {docs.request}
       </h3>
-      <CodeBlock language='json' code={exampleRequest(language)} />
+      <CodeBlock language='json' code={exampleRequest(examples.request)} />
       <h3 className='mt-6 text-lg font-semibold text-gray-900 dark:text-gray-100'>
-        {copy.response}
+        {docs.response}
       </h3>
       <CodeBlock language='json' code={exampleResponse} />
-      <p className='text-gray-600 dark:text-gray-400'>{copy.confidenceText}</p>
+      <p className='text-gray-600 dark:text-gray-400'>{docs.confidenceText}</p>
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        {copy.directionExampleTitle}
+        {docs.directionExampleTitle}
       </h2>
-      <p className='text-gray-600 dark:text-gray-400'>{copy.directionText}</p>
-      <CodeBlock language='json' code={directionExample} />
+      <p className='text-gray-600 dark:text-gray-400'>{docs.directionText}</p>
+      <CodeBlock language='json' code={directionExample(examples.direction)} />
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        {copy.thresholdsTitle}
+        {docs.thresholdsTitle}
       </h2>
       <div className='not-prose mt-4 overflow-x-auto'>
         <table className='w-full border-collapse text-sm'>
           <thead>
             <tr className='border-b text-left'>
-              {copy.thresholdHeaders.map((header: string) => (
+              {docs.thresholdHeaders.map((header: string) => (
                 <th key={header} className='py-2 pr-4 font-medium'>
                   {header}
                 </th>
@@ -243,7 +264,7 @@ export default function DocsAI() {
             </tr>
           </thead>
           <tbody>
-            {copy.thresholds.map(
+            {docs.thresholds.map(
               ([feature, primitive, threshold, action]: [
                 string,
                 string,
@@ -269,33 +290,33 @@ export default function DocsAI() {
       </div>
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        {copy.privacyTitle}
+        {docs.privacyTitle}
       </h2>
-      <p className='text-gray-600 dark:text-gray-400'>{copy.privacyIntro}</p>
+      <p className='text-gray-600 dark:text-gray-400'>{docs.privacyIntro}</p>
       <ul className='text-gray-600 dark:text-gray-400'>
-        {copy.privacyItems.map(([label, detail]: [string, string]) => (
+        {docs.privacyItems.map(([label, detail]: [string, string]) => (
           <li key={label}>
             <strong>{label}:</strong> {detail}
           </li>
         ))}
       </ul>
       <p className='text-gray-600 dark:text-gray-400'>
-        {copy.privacyFooterPrefix}{' '}
+        {docs.privacyFooterPrefix}{' '}
         <a
           href='https://typesafe.ai/legal/privacy-policy'
           target='_blank'
           rel='noopener noreferrer'
         >
-          {copy.privacyLink}
+          {docs.privacyLink}
         </a>{' '}
-        {copy.privacyFooterSuffix}
+        {docs.privacyFooterSuffix}
       </p>
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        {copy.furtherReadingTitle}
+        {docs.furtherReadingTitle}
       </h2>
       <ul className='space-y-1 text-gray-600 dark:text-gray-400'>
-        {copy.furtherReading.map(([label, href]: [string, string]) => (
+        {docs.furtherReading.map(([label, href]: [string, string]) => (
           <li key={href}>
             <a
               href={href}

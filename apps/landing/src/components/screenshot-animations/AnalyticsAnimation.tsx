@@ -17,54 +17,38 @@ const monthlyDataBase = [
   { monthKey: 'dec', income: 3800, expenses: 3450 },
 ];
 
-// Month abbreviations per language
-const monthNames = {
-  nl: {
-    jan: 'Jan',
-    feb: 'Feb',
-    mar: 'Mrt',
-    apr: 'Apr',
-    may: 'Mei',
-    jun: 'Jun',
-    jul: 'Jul',
-    aug: 'Aug',
-    sep: 'Sep',
-    oct: 'Okt',
-    nov: 'Nov',
-    dec: 'Dec',
-  },
-  en: {
-    jan: 'Jan',
-    feb: 'Feb',
-    mar: 'Mar',
-    apr: 'Apr',
-    may: 'May',
-    jun: 'Jun',
-    jul: 'Jul',
-    aug: 'Aug',
-    sep: 'Sep',
-    oct: 'Oct',
-    nov: 'Nov',
-    dec: 'Dec',
-  },
-};
-
 export default function AnalyticsAnimation({
   isVisible,
 }: {
   isVisible: boolean;
 }) {
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
   const [scrollX, setScrollX] = useState(0);
   const animationRef = useRef<number | null>(null);
   const lastTimeRef = useRef<number>(0);
 
   // Get translated labels
   const anim = t.animations.analytics;
-  const months = monthNames[language];
+  const months = t.animations.analytics.months;
   const monthlyData = monthlyDataBase.map((d) => ({
     ...d,
-    month: months[d.monthKey as keyof typeof months],
+    month:
+      months[
+        [
+          'jan',
+          'feb',
+          'mar',
+          'apr',
+          'may',
+          'jun',
+          'jul',
+          'aug',
+          'sep',
+          'oct',
+          'nov',
+          'dec',
+        ].indexOf(d.monthKey)
+      ],
   }));
 
   useEffect(() => {

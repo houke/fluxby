@@ -433,6 +433,95 @@ function missingWebTranslationReferences(): string[] {
   return missing;
 }
 
+function hardcodedTranslationFallbacks(): string[] {
+  const directories = ['apps/web/src', 'apps/landing/src'];
+  const files = directories.flatMap((directory) =>
+    getFiles(path.join(rootDirectory, directory)).filter(
+      (filePath) => !filePath.includes('/lib/i18n/')
+    )
+  );
+  const fallbacks: string[] = [];
+
+  for (const filePath of files) {
+    const sourceText = fs.readFileSync(filePath, 'utf8');
+    const sourceFile = ts.createSourceFile(
+      filePath,
+      sourceText,
+      ts.ScriptTarget.Latest,
+      true,
+      filePath.endsWith('.tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS
+    );
+    const aliases = new Map<string, string>();
+
+    function collectAliases(node: ts.Node) {
+      if (
+        ts.isVariableDeclaration(node) &&
+        node.initializer &&
+        ts.isIdentifier(node.name)
+      ) {
+        const initializerPath = normalizeExpressionPath(
+          node.initializer,
+          aliases
+        );
+        if (initializerPath.startsWith('t.')) {
+          aliases.set(node.name.text, initializerPath);
+        }
+      }
+      ts.forEachChild(node, collectAliases);
+    }
+    collectAliases(sourceFile);
+
+    function getFallbackCopy(expression: ts.Expression): string | null {
+      if (ts.isArrayLiteralExpression(expression)) {
+        return expression.elements
+          .map((element) => getFallbackCopy(element))
+          .filter((value): value is string => value !== null)
+          .join(' ');
+      }
+      if (
+        ts.isStringLiteral(expression) ||
+        ts.isNoSubstitutionTemplateLiteral(expression)
+      ) {
+        return expression.text;
+      }
+      if (ts.isTemplateExpression(expression)) {
+        return [
+          expression.head.text,
+          ...expression.templateSpans.map((span) => span.literal.text),
+        ].join('');
+      }
+      return null;
+    }
+
+    function visit(node: ts.Node) {
+      if (
+        ts.isBinaryExpression(node) &&
+        (node.operatorToken.kind === ts.SyntaxKind.BarBarToken ||
+          node.operatorToken.kind === ts.SyntaxKind.QuestionQuestionToken)
+      ) {
+        const translationPath = normalizeExpressionPath(node.left, aliases);
+        const fallbackCopy = getFallbackCopy(node.right);
+        if (
+          translationPath.startsWith('t.') &&
+          fallbackCopy &&
+          /[A-Za-zÀ-ÿ]/.test(fallbackCopy)
+        ) {
+          const line =
+            sourceFile.getLineAndCharacterOfPosition(node.getStart(sourceFile))
+              .line + 1;
+          fallbacks.push(
+            `${path.relative(rootDirectory, filePath)}:${line} ${translationPath}`
+          );
+        }
+      }
+      ts.forEachChild(node, visit);
+    }
+    visit(sourceFile);
+  }
+
+  return fallbacks;
+}
+
 describe('locale coverage', () => {
   it('keeps Dutch and English translation dictionaries in sync', () => {
     expect(localeShapeDifferences(webNl, webEn, 'web')).toEqual([]);
@@ -452,6 +541,10 @@ describe('locale coverage', () => {
 
   it('provides both languages for every app translation reference', () => {
     expect(missingWebTranslationReferences()).toEqual([]);
+  });
+
+  it('does not use hardcoded copy as a translation fallback', () => {
+    expect(hardcodedTranslationFallbacks()).toEqual([]);
   });
 
   it('localizes OpenAPI summaries, descriptions, and tags into both languages', () => {

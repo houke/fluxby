@@ -304,11 +304,9 @@ async function handleParse(request: ParseRequest): Promise<void> {
 
     self.postMessage(response);
   } catch (err) {
-    const errorMessage =
-      err instanceof Error ? err.message : 'Unknown parsing error';
     const response: WorkerResponse = {
       type: 'error',
-      error: errorMessage,
+      ...(err instanceof Error ? { error: err.message } : {}),
     };
     self.postMessage(response);
   }

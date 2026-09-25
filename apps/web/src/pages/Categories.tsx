@@ -736,9 +736,9 @@ export default function Categories() {
   }, [sortBy, t]);
 
   const sortOptions = [
-    { key: 'name' as const, label: t.addressBook?.sortName || 'Name' },
+    { key: 'name' as const, label: t.addressBook?.sortName },
     { key: 'transactions' as const, label: t.categories.transactions },
-    { key: 'amount' as const, label: t.addressBook?.sortAmount || 'Amount' },
+    { key: 'amount' as const, label: t.addressBook?.sortAmount },
   ];
 
   // Toggle category expansion and save to OPFS
@@ -854,7 +854,7 @@ export default function Categories() {
       // Only apply to existing transactions if user confirms
       if (createdPatterns.length > 0) {
         const isConfirmed = await confirm({
-          title: t.categories.applyRules || 'Apply rules',
+          title: t.categories.applyRules,
           message: t.categories.applyToExistingConfirm,
           variant: 'default',
         });
@@ -874,7 +874,7 @@ export default function Categories() {
 
   const handleDeleteRule = async (ruleId: string) => {
     const isConfirmed = await confirm({
-      title: t.categories.deleteRule || 'Delete rule',
+      title: t.categories.deleteRule,
       message: t.categories.deleteRuleConfirm,
       variant: 'danger',
     });
@@ -896,7 +896,7 @@ export default function Categories() {
     } catch (error) {
       console.error('Failed to fetch seed data', error);
       setToast({
-        message: t.categories.seedError || 'Failed to fetch seed data',
+        message: t.categories.seedError,
         type: 'error',
       });
     } finally {
@@ -917,7 +917,7 @@ export default function Categories() {
         queryKey: ['categoryRules', activeProfileId],
       });
       setToast({
-        message: t.categories.seedSuccess || 'Categories seeded successfully',
+        message: t.categories.seedSuccess,
         type: 'success',
       });
       // Automatically apply rules after seeding
@@ -927,7 +927,7 @@ export default function Categories() {
     } catch (error) {
       console.error('Failed to seed categories', error);
       setToast({
-        message: t.categories.seedError || 'Failed to seed categories',
+        message: t.categories.seedError,
         type: 'error',
       });
     } finally {
@@ -989,15 +989,11 @@ export default function Categories() {
                   }
                 >
                   <SelectTrigger>
-                    <SelectValue
-                      placeholder={
-                        t.categories.selectParent || 'Select parent category'
-                      }
-                    />
+                    <SelectValue placeholder={t.categories.selectParent} />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItemNoCheck value='none'>
-                      {t.categories.noParent || 'No parent (top-level)'}
+                      {t.categories.noParent}
                     </SelectItemNoCheck>
                     {parentCategories.map((p) => (
                       <SelectItemNoCheck key={p.id} value={p.id.toString()}>
@@ -1204,7 +1200,7 @@ export default function Categories() {
                     className='h-7 w-7 rounded-md hover:bg-red-600 hover:text-white'
                     onClick={async () => {
                       const isConfirmed = await confirm({
-                        title: t.categories.deleteCategory || 'Delete category',
+                        title: t.categories.deleteCategory,
                         message: t.categories.deleteConfirm,
                         variant: 'danger',
                       });
@@ -1341,8 +1337,7 @@ export default function Categories() {
                 <div className='flex items-center gap-2'>
                   <h3 className='font-semibold'>{category.name}</h3>
                   <span className='rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground'>
-                    {subs.length}{' '}
-                    {t.categories.subcategories || 'subcategories'}
+                    {subs.length} {t.categories.subcategories}
                   </span>
                 </div>
                 {category.description && (
@@ -1389,8 +1384,7 @@ export default function Categories() {
                         onClick={async (e) => {
                           e.stopPropagation();
                           const isConfirmed = await confirm({
-                            title:
-                              t.categories.deleteCategory || 'Delete category',
+                            title: t.categories.deleteCategory,
                             message: t.categories.deleteConfirm,
                             variant: 'danger',
                           });
@@ -1427,9 +1421,8 @@ export default function Categories() {
                     </TooltipTrigger>
                     <TooltipContent>
                       {isExpanded
-                        ? t.common?.collapse || 'Collapse'
-                        : t.categories?.toggleSubcategories ||
-                          'Toggle subcategories'}
+                        ? t.common?.collapse
+                        : t.categories?.toggleSubcategories}
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
@@ -1448,7 +1441,7 @@ export default function Categories() {
                   )
                 ) : (
                   <div className='border-t border-border px-4 py-6 text-center text-sm text-muted-foreground'>
-                    {t.categories.noSubcategories || 'No subcategories yet'}
+                    {t.categories.noSubcategories}
                   </div>
                 )}
 
@@ -1471,7 +1464,7 @@ export default function Categories() {
                     }}
                   >
                     <Plus className='mr-2 h-4 w-4' />
-                    {t.categories.addSubcategory || 'Add subcategory'}
+                    {t.categories.addSubcategory}
                   </Button>
                 </div>
               </div>
@@ -1512,10 +1505,7 @@ export default function Categories() {
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent className='max-w-xs'>
-                  <p>
-                    {t.categories.applyRulesTooltip ||
-                      'Apply all category rules to transactions'}
-                  </p>
+                  <p>{t.categories.applyRulesTooltip}</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
@@ -1532,7 +1522,7 @@ export default function Categories() {
               ) : (
                 <>
                   <Plus className='mr-2 h-4 w-4' />
-                  {t.categories.addCategory || 'Add category'}
+                  {t.categories.addCategory}
                 </>
               )}
             </Button>
@@ -1547,7 +1537,7 @@ export default function Categories() {
             <CardTitle className='flex items-center gap-2'>
               <Plus className='h-5 w-5' />
               {newParentId
-                ? t.categories.addSubcategory || 'Add subcategory'
+                ? t.categories.addSubcategory
                 : t.categories.addNewCategory}
             </CardTitle>
           </CardHeader>
@@ -1569,15 +1559,11 @@ export default function Categories() {
                   onValueChange={(v) => setNewParentId(v === 'none' ? null : v)}
                 >
                   <SelectTrigger>
-                    <SelectValue
-                      placeholder={
-                        t.categories.selectParent || 'Select parent category'
-                      }
-                    />
+                    <SelectValue placeholder={t.categories.selectParent} />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value='none'>
-                      {t.categories.noParent || 'No parent (top-level)'}
+                      {t.categories.noParent}
                     </SelectItem>
                     {parentCategories.map((p) => (
                       <SelectItem key={p.id} value={p.id.toString()}>
@@ -1656,9 +1642,7 @@ export default function Categories() {
               <div className='relative flex-1'>
                 <Search className='absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
                 <Input
-                  placeholder={
-                    t.categories.searchPlaceholder || 'Search categories...'
-                  }
+                  placeholder={t.categories.searchPlaceholder}
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   className='pl-10'
@@ -1674,7 +1658,7 @@ export default function Categories() {
                       acc + (subcategoriesByParent.get(cat.id)?.length || 0),
                     0
                   )}{' '}
-                  {t.categories.subcategoriesCount || 'subcategories'}
+                  {t.categories.subcategoriesCount}
                 </span>
                 <div className='flex items-center gap-2'>
                   {/* Amount mode toggle */}
@@ -1715,15 +1699,11 @@ export default function Categories() {
                         </div>
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p>
-                          {t.categories.amountModeTooltip ||
-                            'Toggle between all-time and selected period amounts'}
-                        </p>
+                        <p>{t.categories.amountModeTooltip}</p>
                         <p className='mt-1 text-xs text-muted-foreground'>
                           {amountMode === 'all-time'
-                            ? t.categories.amountModeAllTime || 'All time'
-                            : t.categories.amountModeSelectedPeriod ||
-                              'Selected period'}
+                            ? t.categories.amountModeAllTime
+                            : t.categories.amountModeSelectedPeriod}
                         </p>
                       </TooltipContent>
                     </Tooltip>
@@ -1742,7 +1722,7 @@ export default function Categories() {
                       <button
                         key={option.key}
                         type='button'
-                        aria-label={`${t.addressBook?.sortBy || 'Sort by'}: ${option.label}`}
+                        aria-label={`${t.addressBook?.sortBy}: ${option.label}`}
                         aria-pressed={sortBy === option.key}
                         onClick={() => setSortBy(option.key)}
                         className={cn(
@@ -1803,17 +1783,15 @@ export default function Categories() {
                 className='mt-4'
               >
                 <Sparkles className='mr-2 h-4 w-4' />
-                {t.categories.seedWithDefaultData || 'Seed with default data'}
+                {t.categories.seedWithDefaultData}
               </Button>
             }
           />
         ) : filteredSortedParents.length === 0 ? (
           <EmptyState
             icon={Search}
-            title={t.addressBook?.noResults || 'No results found'}
-            description={
-              t.addressBook?.tryDifferentSearch || 'Try a different search term'
-            }
+            title={t.addressBook?.noResults}
+            description={t.addressBook?.tryDifferentSearch}
           />
         ) : (
           <div className='space-y-4' data-onboarding='category-list'>
@@ -1826,8 +1804,7 @@ export default function Categories() {
               <Card>
                 <CardHeader>
                   <CardTitle className='text-muted-foreground'>
-                    {t.categories.uncategorized ||
-                      'Uncategorized subcategories'}
+                    {t.categories.uncategorized}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className='p-0'>
@@ -1865,20 +1842,17 @@ export default function Categories() {
       <Dialog open={isSeedModalOpen} onOpenChange={setIsSeedModalOpen}>
         <DialogContent className='max-h-[80vh] overflow-y-auto sm:max-w-[700px]'>
           <DialogHeader>
-            <DialogTitle>
-              {t.categories.seedCategories || 'Seed categories'}
-            </DialogTitle>
+            <DialogTitle>{t.categories.seedCategories}</DialogTitle>
             <DialogDescription>
-              {t.categories.seedCategoriesDescription ||
-                'Select the categories you want to add to your profile. Each category includes subcategories with auto-categorization rules.'}
+              {t.categories.seedCategoriesDescription}
             </DialogDescription>
           </DialogHeader>
           <div className='flex items-center justify-between border-b pb-2'>
             <span className='text-sm text-muted-foreground'>
               {isLoadingSeed
-                ? t.common?.loading || 'Loading...'
+                ? t.common?.loading
                 : `${selectedSeedCategories.size}/${seedCategories.length} ${
-                    t.categories.categoriesCount || 'categories'
+                    t.categories.categoriesCount
                   }`}
             </span>
             <Button
@@ -1888,8 +1862,8 @@ export default function Categories() {
               disabled={isLoadingSeed || seedCategories.length === 0}
             >
               {selectedSeedCategories.size === seedCategories.length
-                ? t.categories.deselectAll || 'Deselect all'
-                : t.categories.selectAll || 'Select all'}
+                ? t.categories.deselectAll
+                : t.categories.selectAll}
             </Button>
           </div>
           <div className='grid gap-3 py-2'>
@@ -1950,9 +1924,7 @@ export default function Categories() {
               onClick={handleSeedSubmit}
               disabled={isSeeding || selectedSeedCategories.size === 0}
             >
-              {isSeeding
-                ? t.categories.seeding || 'Seeding...'
-                : t.categories.addSelected || 'Add selected'}
+              {isSeeding ? t.categories.seeding : t.categories.addSelected}
             </Button>
           </div>
         </DialogContent>
@@ -1973,27 +1945,21 @@ export default function Categories() {
       >
         <DialogContent className='sm:max-w-[500px]'>
           <DialogHeader>
-            <DialogTitle>
-              {t.categories.addSubcategory || 'Add subcategory'}
-            </DialogTitle>
+            <DialogTitle>{t.categories.addSubcategory}</DialogTitle>
           </DialogHeader>
           <div className='space-y-4 py-4'>
             {/* Parent select (50%) and Name input (50%) on same row */}
             <div className='flex gap-4'>
               <div className='w-1/2'>
                 <label className='mb-1.5 block text-sm font-medium'>
-                  {t.categories.selectParent || 'Parent category'}
+                  {t.categories.selectParent}
                 </label>
                 <Select
                   value={newParentId?.toString() || 'none'}
                   onValueChange={(v) => setNewParentId(v === 'none' ? null : v)}
                 >
                   <SelectTrigger>
-                    <SelectValue
-                      placeholder={
-                        t.categories.selectParent || 'Select parent category'
-                      }
-                    />
+                    <SelectValue placeholder={t.categories.selectParent} />
                   </SelectTrigger>
                   <SelectContent>
                     {parentCategories.map((p) => (

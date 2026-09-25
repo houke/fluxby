@@ -312,10 +312,10 @@ export default function Budgets() {
   }, [sortBy, t]);
 
   const sortOptions: { key: SortOption; label: string }[] = [
-    { key: 'name', label: t.addressBook?.sortName || 'Name' },
+    { key: 'name', label: t.addressBook?.sortName },
     { key: 'spent', label: t.budgets.spent },
     { key: 'percentage', label: '%' },
-    { key: 'amount', label: t.budgets.amount || 'Budget' },
+    { key: 'amount', label: t.budgets.amount },
   ];
 
   const totalBudget = budgets?.reduce((sum, b) => sum + b.amount, 0) || 0;
@@ -815,8 +815,7 @@ export default function Budgets() {
                                     </span>
                                   </TooltipTrigger>
                                   <TooltipContent>
-                                    {t.budgets.viewTransactions ||
-                                      'View transactions'}
+                                    {t.budgets.viewTransactions}
                                   </TooltipContent>
                                 </Tooltip>
                               </TooltipProvider>
@@ -900,8 +899,7 @@ export default function Budgets() {
                                 onClick={async (e) => {
                                   e.stopPropagation();
                                   const isConfirmed = await confirm({
-                                    title:
-                                      t.budgets.deleteBudget || 'Delete budget',
+                                    title: t.budgets.deleteBudget,
                                     message: t.budgets.confirmDelete,
                                     variant: 'danger',
                                   });
@@ -963,11 +961,8 @@ export default function Budgets() {
             ) : budgets && budgets.length > 0 ? (
               <EmptyState
                 icon={Search}
-                title={t.addressBook?.noResults || 'No results found'}
-                description={
-                  t.addressBook?.tryDifferentSearch ||
-                  'Try a different search term'
-                }
+                title={t.addressBook?.noResults}
+                description={t.addressBook?.tryDifferentSearch}
               />
             ) : (
               <EmptyState
