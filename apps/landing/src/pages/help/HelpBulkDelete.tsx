@@ -6,196 +6,140 @@ export default function HelpBulkDelete() {
   return (
     <article className='prose prose-gray dark:prose-invert max-w-none'>
       <h1 className='mb-4 text-4xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.helpCenter?.bulkDelete?.title || 'Meerdere transacties beheren'}
+        {t.helpCenter?.bulkDelete?.title}
       </h1>
       <p className='text-xl text-gray-600 dark:text-gray-400'>
-        {t.helpCenter?.bulkDelete?.subtitle ||
-          'Selecteer en verwijder meerdere transacties tegelijk voor snelle administratie.'}
+        {t.helpCenter?.bulkDelete?.subtitle}
       </p>
 
       <div className='mt-8 rounded-xl border border-purple-200 bg-purple-50 p-6 dark:border-purple-800 dark:bg-purple-950/30'>
         <h3 className='mt-0 mb-2 flex items-center gap-2 text-lg font-semibold text-purple-900 dark:text-purple-200'>
           <span>💡</span>
-          {t.helpCenter?.bulkDelete?.tipTitle || 'Handig om te weten'}
+          {t.helpCenter?.bulkDelete?.tipTitle}
         </h3>
         <p className='mb-0 text-purple-800 dark:text-purple-300'>
-          {t.helpCenter?.bulkDelete?.tipText ||
-            'Je kunt transacties ongedaan maken tot 5 minuten na verwijdering. Hierdoor kun je rustig experimenteren zonder angst voor dataverlies.'}
+          {t.helpCenter?.bulkDelete?.tipText}
         </p>
       </div>
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.helpCenter?.bulkDelete?.selectionModeTitle ||
-          'Selectiemodus activeren'}
+        {t.helpCenter?.bulkDelete?.selectionModeTitle}
       </h2>
       <p className='text-gray-600 dark:text-gray-400'>
-        {t.helpCenter?.bulkDelete?.selectionModeText ||
-          'Om meerdere transacties te selecteren, moet je eerst de selectiemodus inschakelen:'}
+        {t.helpCenter?.bulkDelete?.selectionModeText}
       </p>
       <ol className='mt-4 list-inside list-decimal text-gray-600 dark:text-gray-400'>
-        <li className='mb-2'>
-          {t.helpCenter?.bulkDelete?.step1 ||
-            'Ga naar de Transacties pagina via het menu'}
-        </li>
-        <li className='mb-2'>
-          {t.helpCenter?.bulkDelete?.step2 ||
-            'Klik op het vinkje-icoon naast een transactie om selectiemodus te starten'}
-        </li>
-        <li className='mb-2'>
-          {t.helpCenter?.bulkDelete?.step3 ||
-            'Er verschijnt een actiebalk onderin met opties voor de geselecteerde transacties'}
-        </li>
+        <li className='mb-2'>{t.helpCenter?.bulkDelete?.step1}</li>
+        <li className='mb-2'>{t.helpCenter?.bulkDelete?.step2}</li>
+        <li className='mb-2'>{t.helpCenter?.bulkDelete?.step3}</li>
       </ol>
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.helpCenter?.bulkDelete?.selectingTitle || 'Transacties selecteren'}
+        {t.helpCenter?.bulkDelete?.selectingTitle}
       </h2>
       <p className='text-gray-600 dark:text-gray-400'>
-        {t.helpCenter?.bulkDelete?.selectingText ||
-          'Er zijn verschillende manieren om transacties te selecteren:'}
+        {t.helpCenter?.bulkDelete?.selectingText}
       </p>
       <div className='mt-6 grid gap-4 md:grid-cols-2'>
         <div className='rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800'>
           <div className='mb-2 text-2xl'>☑️</div>
           <h3 className='mb-1 font-semibold text-gray-900 dark:text-gray-100'>
-            {t.helpCenter?.bulkDelete?.singleSelect || 'Individueel selecteren'}
+            {t.helpCenter?.bulkDelete?.singleSelect}
           </h3>
           <p className='mb-0 text-sm text-gray-600 dark:text-gray-400'>
-            {t.helpCenter?.bulkDelete?.singleSelectDesc ||
-              'Klik op het vinkje bij elke transactie die je wilt selecteren.'}
+            {t.helpCenter?.bulkDelete?.singleSelectDesc}
           </p>
         </div>
         <div className='rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800'>
           <div className='mb-2 text-2xl'>⇧</div>
           <h3 className='mb-1 font-semibold text-gray-900 dark:text-gray-100'>
-            {t.helpCenter?.bulkDelete?.rangeSelect || 'Bereik selecteren'}
+            {t.helpCenter?.bulkDelete?.rangeSelect}
           </h3>
           <p className='mb-0 text-sm text-gray-600 dark:text-gray-400'>
-            {t.helpCenter?.bulkDelete?.rangeSelectDesc ||
-              'Houd Shift ingedrukt en klik op een andere transactie om alles ertussen te selecteren (alleen op desktop).'}
+            {t.helpCenter?.bulkDelete?.rangeSelectDesc}
           </p>
         </div>
         <div className='rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800'>
           <div className='mb-2 text-2xl'>✅</div>
           <h3 className='mb-1 font-semibold text-gray-900 dark:text-gray-100'>
-            {t.helpCenter?.bulkDelete?.selectAll || 'Alles selecteren'}
+            {t.helpCenter?.bulkDelete?.selectAll}
           </h3>
           <p className='mb-0 text-sm text-gray-600 dark:text-gray-400'>
-            {t.helpCenter?.bulkDelete?.selectAllDesc ||
-              'Gebruik de "Alles selecteren" knop in de actiebalk om alle zichtbare transacties te selecteren.'}
+            {t.helpCenter?.bulkDelete?.selectAllDesc}
           </p>
         </div>
         <div className='rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800'>
           <div className='mb-2 text-2xl'>❌</div>
           <h3 className='mb-1 font-semibold text-gray-900 dark:text-gray-100'>
-            {t.helpCenter?.bulkDelete?.deselectAll || 'Selectie opheffen'}
+            {t.helpCenter?.bulkDelete?.deselectAll}
           </h3>
           <p className='mb-0 text-sm text-gray-600 dark:text-gray-400'>
-            {t.helpCenter?.bulkDelete?.deselectAllDesc ||
-              'Klik op "Annuleren" of druk op Escape om de selectiemodus te verlaten en alle selecties op te heffen.'}
+            {t.helpCenter?.bulkDelete?.deselectAllDesc}
           </p>
         </div>
       </div>
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.helpCenter?.bulkDelete?.deletingTitle ||
-          'Geselecteerde transacties verwijderen'}
+        {t.helpCenter?.bulkDelete?.deletingTitle}
       </h2>
       <p className='text-gray-600 dark:text-gray-400'>
-        {t.helpCenter?.bulkDelete?.deletingText ||
-          'Zodra je transacties hebt geselecteerd, kun je ze verwijderen:'}
+        {t.helpCenter?.bulkDelete?.deletingText}
       </p>
       <ol className='mt-4 list-inside list-decimal text-gray-600 dark:text-gray-400'>
-        <li className='mb-2'>
-          {t.helpCenter?.bulkDelete?.deleteStep1 ||
-            'Klik op de "Verwijderen" knop in de actiebalk onderaan'}
-        </li>
-        <li className='mb-2'>
-          {t.helpCenter?.bulkDelete?.deleteStep2 ||
-            'Bevestig de verwijdering in het dialoogvenster'}
-        </li>
-        <li className='mb-2'>
-          {t.helpCenter?.bulkDelete?.deleteStep3 ||
-            'De transacties worden verwijderd en het rekeningsaldo wordt automatisch herberekend'}
-        </li>
+        <li className='mb-2'>{t.helpCenter?.bulkDelete?.deleteStep1}</li>
+        <li className='mb-2'>{t.helpCenter?.bulkDelete?.deleteStep2}</li>
+        <li className='mb-2'>{t.helpCenter?.bulkDelete?.deleteStep3}</li>
       </ol>
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.helpCenter?.bulkDelete?.dateRangeTitle ||
-          'Verwijderen op datumbereik'}
+        {t.helpCenter?.bulkDelete?.dateRangeTitle}
       </h2>
       <p className='text-gray-600 dark:text-gray-400'>
-        {t.helpCenter?.bulkDelete?.dateRangeText ||
-          'Je kunt ook alle transacties binnen een bepaalde periode verwijderen:'}
+        {t.helpCenter?.bulkDelete?.dateRangeText}
       </p>
       <ol className='mt-4 list-inside list-decimal text-gray-600 dark:text-gray-400'>
-        <li className='mb-2'>
-          {t.helpCenter?.bulkDelete?.dateRangeStep1 ||
-            'Klik op de "Verwijder op datum" knop in de actiebalk'}
-        </li>
-        <li className='mb-2'>
-          {t.helpCenter?.bulkDelete?.dateRangeStep2 ||
-            'Selecteer de start- en einddatum'}
-        </li>
-        <li className='mb-2'>
-          {t.helpCenter?.bulkDelete?.dateRangeStep3 ||
-            'Optioneel: filter op een specifieke rekening'}
-        </li>
-        <li className='mb-2'>
-          {t.helpCenter?.bulkDelete?.dateRangeStep4 ||
-            'Bevestig om alle transacties in dat bereik te verwijderen'}
-        </li>
+        <li className='mb-2'>{t.helpCenter?.bulkDelete?.dateRangeStep1}</li>
+        <li className='mb-2'>{t.helpCenter?.bulkDelete?.dateRangeStep2}</li>
+        <li className='mb-2'>{t.helpCenter?.bulkDelete?.dateRangeStep3}</li>
+        <li className='mb-2'>{t.helpCenter?.bulkDelete?.dateRangeStep4}</li>
       </ol>
 
       <div className='not-prose mt-6 rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-900/20'>
         <h4 className='mb-2 flex items-center gap-2 text-amber-800 dark:text-amber-200'>
           <span>⚠️</span>
-          {t.helpCenter?.bulkDelete?.cautionTitle || 'Let op'}
+          {t.helpCenter?.bulkDelete?.cautionTitle}
         </h4>
         <p className='m-0 text-amber-700 dark:text-amber-300'>
-          {t.helpCenter?.bulkDelete?.cautionText ||
-            'Verwijderen op datumbereik kan veel transacties tegelijk verwijderen. Gebruik de dry-run optie (preview) om eerst te zien hoeveel transacties getroffen worden.'}
+          {t.helpCenter?.bulkDelete?.cautionText}
         </p>
       </div>
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.helpCenter?.bulkDelete?.undoTitle || 'Ongedaan maken'}
+        {t.helpCenter?.bulkDelete?.undoTitle}
       </h2>
       <p className='text-gray-600 dark:text-gray-400'>
-        {t.helpCenter?.bulkDelete?.undoText ||
-          'Verwijderde transacties kunnen worden hersteld binnen 5 minuten na verwijdering:'}
+        {t.helpCenter?.bulkDelete?.undoText}
       </p>
       <ul className='mt-4 list-inside list-disc text-gray-600 dark:text-gray-400'>
-        <li className='mb-2'>
-          {t.helpCenter?.bulkDelete?.undoPoint1 ||
-            'Na verwijdering verschijnt een "Ongedaan maken" melding'}
-        </li>
-        <li className='mb-2'>
-          {t.helpCenter?.bulkDelete?.undoPoint2 ||
-            'Klik op "Ongedaan maken" om de transacties te herstellen'}
-        </li>
-        <li className='mb-2'>
-          {t.helpCenter?.bulkDelete?.undoPoint3 ||
-            'De melding verdwijnt automatisch na 5 minuten, waarna herstel niet meer mogelijk is'}
-        </li>
+        <li className='mb-2'>{t.helpCenter?.bulkDelete?.undoPoint1}</li>
+        <li className='mb-2'>{t.helpCenter?.bulkDelete?.undoPoint2}</li>
+        <li className='mb-2'>{t.helpCenter?.bulkDelete?.undoPoint3}</li>
       </ul>
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.helpCenter?.bulkDelete?.balanceTitle || 'Effect op rekeningsaldo'}
+        {t.helpCenter?.bulkDelete?.balanceTitle}
       </h2>
       <p className='text-gray-600 dark:text-gray-400'>
-        {t.helpCenter?.bulkDelete?.balanceText ||
-          'Wanneer je transacties verwijdert, wordt het saldo van de betreffende rekening(en) automatisch herberekend op basis van de resterende transacties. Je hoeft dit niet handmatig te doen.'}
+        {t.helpCenter?.bulkDelete?.balanceText}
       </p>
 
       <div className='not-prose mt-6 rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-900/20'>
         <h4 className='mb-2 flex items-center gap-2 text-green-800 dark:text-green-200'>
           <span>✅</span>
-          {t.helpCenter?.bulkDelete?.bestPracticeTitle || 'Best practice'}
+          {t.helpCenter?.bulkDelete?.bestPracticeTitle}
         </h4>
         <p className='m-0 text-green-700 dark:text-green-300'>
-          {t.helpCenter?.bulkDelete?.bestPracticeText ||
-            'Gebruik filters om eerst de transacties te bekijken die je wilt verwijderen. Zo weet je zeker dat je de juiste selectie maakt voordat je ze verwijdert.'}
+          {t.helpCenter?.bulkDelete?.bestPracticeText}
         </p>
       </div>
     </article>

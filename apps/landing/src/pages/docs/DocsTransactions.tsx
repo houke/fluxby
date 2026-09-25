@@ -203,9 +203,13 @@ fetch('http://localhost:3001/api/transactions/txn_123abc', {
         <CodeBlock
           code={listTransactionsCode}
           language='javascript'
-          title='Request'
+          title={t.docs.common.request}
         />
-        <CodeBlock code={responseExample} language='json' title='Response' />
+        <CodeBlock
+          code={responseExample}
+          language='json'
+          title={t.docs.common.response}
+        />
       </div>
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
@@ -276,11 +280,10 @@ fetch('http://localhost:3001/api/import/csv', {
       <div className='mt-6 rounded-xl border border-blue-200 bg-blue-50 p-6 dark:border-blue-800 dark:bg-blue-950/30'>
         <h3 className='mt-0 mb-2 flex items-center gap-2 text-lg font-semibold text-blue-900 dark:text-blue-200'>
           <span>💡</span>
-          {t.docs?.transactions?.supportedBanks || 'Ondersteunde banken'}
+          {t.docs?.transactions?.supportedBanks}
         </h3>
         <p className='mb-0 text-blue-800 dark:text-blue-300'>
-          {t.docs?.transactions?.supportedBanksText ||
-            'Momenteel worden ING en ASN Bank CSV exports ondersteund. Meer banken worden toegevoegd in toekomstige updates.'}
+          {t.docs?.transactions?.supportedBanksText}
         </p>
       </div>
     </article>

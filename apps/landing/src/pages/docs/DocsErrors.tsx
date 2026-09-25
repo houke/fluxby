@@ -41,10 +41,10 @@ export default function DocsErrors() {
           <thead className='bg-gray-50 dark:bg-gray-800'>
             <tr>
               <th className='px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100'>
-                Code
+                {t.docs.common.code}
               </th>
               <th className='px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100'>
-                Description
+                {t.docs.common.description}
               </th>
             </tr>
           </thead>

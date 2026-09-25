@@ -8,6 +8,7 @@ import {
 } from 'react';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { getStoredLanguage, translations } from '@/lib/i18n';
 
 import type {
   ToastVariant,
@@ -43,6 +44,7 @@ function ToastItem({
   toast: ToastMessage;
   onDismiss: (id: string) => void;
 }) {
+  const copy = translations[getStoredLanguage()].common;
   const { bg, border, icon: Icon } = variantStyles[toast.variant];
   const textColor = variantTextColors[toast.variant];
   const iconColor = variantIconColors[toast.variant];
@@ -64,7 +66,7 @@ function ToastItem({
       <button
         onClick={() => onDismiss(toast.id)}
         className='rounded-md p-0.5 hover:bg-gray-100 dark:hover:bg-gray-800'
-        aria-label='Dismiss notification'
+        aria-label={copy.dismissNotification}
       >
         <X className='h-4 w-4 text-gray-500' />
       </button>
@@ -77,6 +79,7 @@ interface ToastProviderProps {
 }
 
 export function ToastProvider({ children }: ToastProviderProps) {
+  const copy = translations[getStoredLanguage()].common;
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
   const dismiss = useCallback((id: string) => {
@@ -166,7 +169,7 @@ export function ToastProvider({ children }: ToastProviderProps) {
       {toasts.length > 0 && (
         <div
           className='pointer-events-none fixed top-4 right-4 z-[100] flex flex-col gap-2'
-          aria-label='Notifications'
+          aria-label={copy.notifications}
         >
           {toasts.map((toast) => (
             <ToastItem key={toast.id} toast={toast} onDismiss={dismiss} />

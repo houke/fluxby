@@ -35,6 +35,7 @@ import { onboardingChapters } from './onboarding-data';
 import { SpotlightOverlay } from './SpotlightOverlay';
 import { useProfile } from '@/contexts/ProfileContext';
 import { useReducedMotion } from '@/hooks/useMediaQuery';
+import { translations } from '@/lib/i18n';
 // Types are in ./types.ts
 
 // Icon mapping for chapters
@@ -99,6 +100,7 @@ export function OnboardingModal({
   onChapterSelect,
   isCreatingDemo = false,
 }: OnboardingModalProps) {
+  const t = translations[language].onboarding;
   const navigate = useNavigate();
   const location = useLocation();
   const { profiles } = useProfile();
@@ -465,13 +467,9 @@ export function OnboardingModal({
         <div className='flex items-start gap-3'>
           <FluxbyWebGL width={40} height={40} />
           <div className='flex-1'>
-            <p className='text-sm font-medium'>
-              {language === 'nl' ? 'Tot later!' : 'See you later!'}
-            </p>
+            <p className='text-sm font-medium'>{t.seeYouLaterTitle}</p>
             <p className='text-xs text-muted-foreground'>
-              {language === 'nl'
-                ? 'Klik op Fluxby of ga naar instellingen om de rondleiding te herstarten.'
-                : 'Click Fluxby or go to settings to restart the tour.'}
+              {t.seeYouLaterDescription}
             </p>
           </div>
           <button
@@ -480,7 +478,7 @@ export function OnboardingModal({
               handleCloseSeeYouLater();
             }}
             className='rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground'
-            title={language === 'nl' ? 'Sluiten' : 'Close'}
+            title={t.closeTour}
           >
             <X className='h-4 w-4' />
           </button>
@@ -524,7 +522,7 @@ export function OnboardingModal({
             <button
               onClick={handleClose}
               className='absolute top-2 right-2 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground'
-              title={language === 'nl' ? 'Overslaan' : 'Skip'}
+              title={t.skipTour}
             >
               <X className='h-4 w-4' />
             </button>
@@ -556,9 +554,7 @@ export function OnboardingModal({
           {isNavigating ? (
             <div className='flex flex-col items-center gap-3'>
               <div className='h-6 w-6 animate-spin rounded-full border-4 border-purple-200 border-t-purple-600' />
-              <p className='text-sm text-muted-foreground'>
-                {language === 'nl' ? 'Even geduld...' : 'Please wait...'}
-              </p>
+              <p className='text-sm text-muted-foreground'>{t.wait}</p>
             </div>
           ) : (
             <>
@@ -571,9 +567,7 @@ export function OnboardingModal({
               <p className='mt-4 text-center whitespace-pre-line text-muted-foreground'>
                 {currentStep.id === 'completion-next-steps' &&
                 hasOnlyDemoProfile
-                  ? language === 'nl'
-                    ? '1. Maak een nieuw profiel aan voor je echte data\n2. Importeer je banktransacties\n3. Organiseer je categorieën\n4. Stel budgetten in'
-                    : '1. Create a new profile for your real data\n2. Import your bank transactions\n3. Organize your categories\n4. Set up budgets'
+                  ? t.demoNextSteps
                   : getText(currentStep.content)}
               </p>
 
@@ -586,7 +580,7 @@ export function OnboardingModal({
                     disabled={isNavigating}
                     className='gap-1 bg-purple-600 hover:bg-purple-700'
                   >
-                    {language === 'nl' ? 'Aan de slag!' : "Let's get started!"}
+                    {t.getStarted}
                     <ChevronRight className='h-3.5 w-3.5' />
                   </Button>
                 </div>
@@ -660,14 +654,13 @@ export function OnboardingModal({
                 className={cn('gap-1', isFirstGlobalStep && 'invisible')}
               >
                 <ChevronLeft className='h-3.5 w-3.5' />
-                {language === 'nl' ? 'Vorige' : 'Back'}
+                {t.previous}
               </Button>
 
               {/* Step Counter with Chapter Title */}
               <div className='flex flex-col items-center'>
                 <span className='text-sm font-medium text-purple-600'>
-                  {language === 'nl' ? 'Stap' : 'Step'} {currentStepIndex + 1}{' '}
-                  {language === 'nl' ? 'van' : 'of'} {totalStepsInChapter}
+                  {t.step} {currentStepIndex + 1} {t.of} {totalStepsInChapter}
                 </span>
                 <span className='text-xs text-muted-foreground'>
                   {getText(currentChapter.title)}
@@ -684,20 +677,12 @@ export function OnboardingModal({
                 {isCreatingDemo ? (
                   <>
                     <div className='h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent' />
-                    {language === 'nl'
-                      ? 'Demo voorbereiden...'
-                      : 'Preparing demo...'}
+                    {t.preparingDemo}
                   </>
                 ) : isLastGlobalStep ? (
-                  language === 'nl' ? (
-                    'Afronden'
-                  ) : (
-                    'Finish'
-                  )
-                ) : language === 'nl' ? (
-                  'Volgende'
+                  t.finish
                 ) : (
-                  'Next'
+                  t.next
                 )}
                 {!isLastGlobalStep && !isCreatingDemo && (
                   <ChevronRight className='h-3.5 w-3.5' />

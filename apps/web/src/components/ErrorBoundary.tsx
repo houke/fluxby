@@ -3,6 +3,7 @@ import { AlertTriangle, Home, RefreshCw } from 'lucide-react';
 import { resetAppAndRestartOnboarding } from '@/lib/database-reset';
 import { readFromOPFSSync } from '@fluxby/database';
 import { captureError } from '@/lib/error-tracking';
+import { getStoredLanguage, translations } from '@/lib/i18n';
 
 interface Props {
   children: ReactNode;
@@ -66,6 +67,8 @@ export class ErrorBoundary extends Component<Props, State> {
 
   public render() {
     if (this.state.hasError) {
+      const copy = translations[getStoredLanguage()].errorBoundary;
+
       return (
         <div className='flex min-h-screen items-center justify-center bg-background'>
           <div className='mx-4 w-full max-w-md rounded-lg border bg-card p-8 shadow-lg'>
@@ -76,21 +79,16 @@ export class ErrorBoundary extends Component<Props, State> {
               </div>
 
               {/* Title */}
-              <h2 className='mb-2 text-xl font-semibold'>
-                Oeps, er ging iets mis
-              </h2>
+              <h2 className='mb-2 text-xl font-semibold'>{copy.title}</h2>
 
               {/* Description */}
-              <p className='mb-6 text-muted-foreground'>
-                Er is een onverwachte fout opgetreden. Probeer het opnieuw of ga
-                terug naar het dashboard.
-              </p>
+              <p className='mb-6 text-muted-foreground'>{copy.description}</p>
 
               {/* Error details (collapsible in dev) */}
               {process.env.NODE_ENV === 'development' && this.state.error && (
                 <details className='mb-6 w-full rounded border bg-muted/50 p-3 text-left'>
                   <summary className='cursor-pointer text-sm font-medium'>
-                    Technische details
+                    {copy.technicalDetails}
                   </summary>
                   <pre className='mt-2 overflow-auto text-xs text-destructive'>
                     {this.state.error.message}
@@ -107,14 +105,14 @@ export class ErrorBoundary extends Component<Props, State> {
                   className='flex w-full items-center justify-center gap-2 rounded-lg bg-purple-600 px-4 py-3 font-medium text-white transition-colors hover:bg-purple-700'
                 >
                   <Home className='h-4 w-4' />
-                  Naar dashboard
+                  {copy.goDashboard}
                 </button>
                 {this.shouldShowReset() && (
                   <button
                     onClick={this.handleResetLocalData}
                     className='flex w-full items-center justify-center gap-2 rounded-lg border border-red-300 bg-white px-4 py-3 font-medium text-red-700 transition-colors hover:bg-red-50 dark:border-red-800 dark:bg-gray-700 dark:text-red-200 dark:hover:bg-gray-600'
                   >
-                    Reset lokale data
+                    {copy.resetLocalData}
                   </button>
                 )}
                 <button
@@ -122,7 +120,7 @@ export class ErrorBoundary extends Component<Props, State> {
                   className='flex w-full items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-3 font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600'
                 >
                   <RefreshCw className='h-4 w-4' />
-                  Pagina herladen
+                  {copy.reloadPage}
                 </button>
               </div>
             </div>

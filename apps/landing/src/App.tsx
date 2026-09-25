@@ -63,42 +63,42 @@ function LegalModals() {
       <LegalModal
         isOpen={activeModal === 'privacy'}
         onClose={closeModal}
-        title={t.legal?.privacyTitle || 'Privacybeleid'}
+        title={t.legal.privacyTitle}
       >
         <PrivacyPolicyContent />
       </LegalModal>
       <LegalModal
         isOpen={activeModal === 'terms'}
         onClose={closeModal}
-        title={t.legal?.termsTitle || 'Gebruiksvoorwaarden'}
+        title={t.legal.termsTitle}
       >
         <TermsOfUseContent />
       </LegalModal>
       <LegalModal
         isOpen={activeModal === 'features'}
         onClose={closeModal}
-        title={t.legal?.featuresTitle || 'Alle functies'}
+        title={t.legal.featuresTitle}
       >
         <FeaturesContent />
       </LegalModal>
       <LegalModal
         isOpen={activeModal === 'pricing'}
         onClose={closeModal}
-        title={t.legal?.pricingTitle || 'Prijzen'}
+        title={t.legal.pricingTitle}
       >
         <PricingContent />
       </LegalModal>
       <LegalModal
         isOpen={activeModal === 'updates'}
         onClose={closeModal}
-        title={t.legal?.updatesTitle || 'Updates'}
+        title={t.legal.updatesTitle}
       >
         <UpdatesContent />
       </LegalModal>
       <LegalModal
         isOpen={activeModal === 'about'}
         onClose={closeModal}
-        title={t.legal?.aboutTitle || 'Over Fluxby'}
+        title={t.legal.aboutTitle}
       >
         <AboutContent />
       </LegalModal>

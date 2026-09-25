@@ -106,14 +106,12 @@ export default function TransactionsAnimation({
   const lastTimeRef = useRef<number>(0);
 
   // Get translated category names
-  const anim = t.animations?.transactions;
-  const dateLabel = anim?.date || 'dec';
+  const anim = t.animations.transactions;
+  const dateLabel = anim.date;
   const transactions = transactionData.map((tx) => ({
     ...tx,
     date: `${tx.day} ${dateLabel}`,
-    category:
-      anim?.categories?.[tx.categoryKey as keyof typeof anim.categories] ||
-      tx.categoryKey,
+    category: anim.categories[tx.categoryKey as keyof typeof anim.categories],
   }));
 
   useEffect(() => {

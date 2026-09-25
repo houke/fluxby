@@ -94,9 +94,13 @@ fetch('http://localhost:3001/api/budgets', {
         <CodeBlock
           code={listBudgetsCode}
           language='javascript'
-          title='Request'
+          title={t.docs.common.request}
         />
-        <CodeBlock code={responseExample} language='json' title='Response' />
+        <CodeBlock
+          code={responseExample}
+          language='json'
+          title={t.docs.common.response}
+        />
       </div>
 
       <div className='mt-6 rounded-xl border border-green-200 bg-green-50 p-6 dark:border-green-800 dark:bg-green-950/30'>
@@ -243,7 +247,7 @@ fetch('http://localhost:3001/api/budgets', {
         {t.docs.budgets.deleteTitle}
       </h2>
       <p className='text-gray-600 dark:text-gray-400'>
-        {t.docs?.budgets?.deleteText || 'Verwijder een budget:'}
+        {t.docs?.budgets?.deleteText}
       </p>
 
       <div className='mt-6 overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800'>

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 interface CodeBlockProps {
   code: string;
@@ -12,6 +13,7 @@ export default function CodeBlock({
   title,
 }: CodeBlockProps) {
   const [copied, setCopied] = useState(false);
+  const { t } = useLanguage();
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(code);
@@ -37,7 +39,7 @@ export default function CodeBlock({
           onClick={handleCopy}
           className='absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 transition-colors hover:bg-gray-600'
         >
-          {copied ? '✓ Copied!' : 'Copy'}
+          {copied ? `✓ ${t.docs.common.copied}` : t.docs.common.copy}
         </button>
       </div>
     </div>

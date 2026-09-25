@@ -28,13 +28,12 @@ export default function NotFound() {
 
           {/* Title */}
           <h2 className='mb-2 text-xl font-semibold text-gray-900 dark:text-white'>
-            {t.errors?.notFound || 'Pagina niet gevonden'}
+            {t.errors.notFound}
           </h2>
 
           {/* Description */}
           <p className='mb-6 text-gray-600 dark:text-gray-400'>
-            {t.errors?.notFoundDescription ||
-              'De pagina die je zoekt bestaat niet of is verplaatst.'}
+            {t.errors.notFoundDescription}
           </p>
 
           {/* Buttons */}
@@ -44,14 +43,14 @@ export default function NotFound() {
               className='flex w-full items-center justify-center gap-2 rounded-lg bg-purple-600 px-4 py-3 font-medium text-white transition-colors hover:bg-purple-700'
             >
               <Home className='h-4 w-4' />
-              {t.errors?.goHome || 'Naar homepage'}
+              {t.errors.goHome}
             </button>
             <button
               onClick={handleGoBack}
               className='flex w-full items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-3 font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600'
             >
               <ArrowLeft className='h-4 w-4' />
-              {t.errors?.goBack || 'Ga terug'}
+              {t.errors.goBack}
             </button>
           </div>
         </div>

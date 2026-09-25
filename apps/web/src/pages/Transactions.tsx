@@ -1085,18 +1085,13 @@ export default function Transactions() {
     const raw = addTxAmount.replace(',', '.');
     const parsed = parseFloat(raw);
     if (!addTxAmount.trim()) {
-      errors.amount =
-        language === 'nl' ? 'Bedrag is verplicht' : 'Amount is required';
+      errors.amount = t.transactions.amountRequired;
     } else if (isNaN(parsed) || parsed <= 0) {
-      errors.amount =
-        language === 'nl'
-          ? 'Voer een geldig positief bedrag in'
-          : 'Enter a valid positive amount';
+      errors.amount = t.transactions.amountMustBePositive;
     }
 
     if (!addTxDate) {
-      errors.date =
-        language === 'nl' ? 'Datum is verplicht' : 'Date is required';
+      errors.date = t.transactions.dateRequired;
     }
 
     if (Object.keys(errors).length > 0) {
@@ -3383,7 +3378,9 @@ export default function Transactions() {
                                     }))
                                   }
                                   className='h-8 text-sm'
-                                  placeholder='Naam voor adresboek'
+                                  placeholder={
+                                    t.transactions.nameForAddressBook
+                                  }
                                 />
                               </div>
                             </div>
@@ -3646,8 +3643,15 @@ export default function Transactions() {
                           <div className='flex items-center gap-2'>
                             <Users className='h-4 w-4 text-purple-600' />
                             <span className='text-sm font-medium text-purple-700 dark:text-purple-300'>
-                              Mogelijk dezelfde ({group.entries.length}{' '}
-                              varianten, {totalTransactions} transacties)
+                              {t.addressBook.possibleDuplicates
+                                .replace(
+                                  '{count}',
+                                  String(group.entries.length)
+                                )
+                                .replace(
+                                  '{transactions}',
+                                  String(totalTransactions)
+                                )}
                             </span>
                           </div>
                           <Button
@@ -3665,7 +3669,7 @@ export default function Transactions() {
                             }}
                           >
                             <Scissors className='mr-1 h-4 w-4' />
-                            Splitsen
+                            {t.addressBook.split}
                           </Button>
                         </div>
 
@@ -3698,7 +3702,7 @@ export default function Transactions() {
                               );
                             }}
                             className='h-9 flex-1'
-                            placeholder='Naam voor adresboek'
+                            placeholder={t.transactions.nameForAddressBook}
                           />
                           <Button
                             className='bg-purple-600 hover:bg-purple-700'
@@ -3736,13 +3740,15 @@ export default function Transactions() {
                             }
                           >
                             <Merge className='mr-1 h-4 w-4' />
-                            Samenvoegen
+                            {t.addressBook.merge}
                           </Button>
                         </div>
 
                         <p className='mt-2 text-xs text-muted-foreground'>
-                          Alle {group.entries.length} varianten worden
-                          samengevoegd onder deze naam.
+                          {t.addressBook.allVariantsMerged.replace(
+                            '{count}',
+                            String(group.entries.length)
+                          )}
                         </p>
                       </div>
                     );
@@ -3762,8 +3768,8 @@ export default function Transactions() {
                           <span className='text-xs text-muted-foreground'>
                             ({group.entries[0].transactionCount}{' '}
                             {group.entries[0].transactionCount === 1
-                              ? 'transactie'
-                              : 'transacties'}
+                              ? t.transactions.transaction
+                              : t.transactions.transactionsPlural}
                             )
                           </span>
                         </div>
@@ -3780,7 +3786,7 @@ export default function Transactions() {
                               );
                             }}
                             className='h-8 text-sm'
-                            placeholder='Naam voor adresboek'
+                            placeholder={t.transactions.nameForAddressBook}
                           />
                         </div>
                       </div>
@@ -3829,7 +3835,7 @@ export default function Transactions() {
                   setSharedIbanGroups([]);
                 }}
               >
-                Sluiten
+                {t.transactions.close}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -4490,7 +4496,9 @@ export default function Transactions() {
                 {/* Transfer direction toggle — only for transfer type */}
                 {addTxType === 'transfer' && (
                   <div className='space-y-2'>
-                    <label className='text-sm font-medium'>Richting</label>
+                    <label className='text-sm font-medium'>
+                      {t.transactions.direction}
+                    </label>
                     <div className='flex gap-2'>
                       <button
                         onClick={() => setAddTxTransferOutgoing(true)}

@@ -9,6 +9,8 @@ export default function ScreenshotPlaceholder({
   instruction,
   height = '300px',
 }: PlaceholderProps) {
+  const { t } = useLanguage();
+
   return (
     <div
       className='my-6 flex w-full flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 p-4 text-center dark:border-gray-600 dark:bg-gray-800'
@@ -20,10 +22,11 @@ export default function ScreenshotPlaceholder({
       </h4>
       <p className='mt-2 max-w-md text-sm text-gray-500 dark:text-gray-400'>
         <span className='mb-1 block text-xs font-semibold tracking-wider text-red-500 uppercase dark:text-red-400'>
-          Missing Asset
+          {t.helpCenter.common.missingAsset}
         </span>
         {instruction}
       </p>
     </div>
   );
 }
+import { useLanguage } from '../../contexts/LanguageContext';

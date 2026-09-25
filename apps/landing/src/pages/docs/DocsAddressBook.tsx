@@ -269,12 +269,12 @@ fetch('http://localhost:3001/api/addressbook/shared-ibans', {
         <CodeBlock
           code={listContactsCode}
           language='javascript'
-          title='Request'
+          title={t.docs.common.request}
         />
         <CodeBlock
           code={listContactsResponse}
           language='json'
-          title='Response'
+          title={t.docs.common.response}
         />
       </div>
 
@@ -301,7 +301,7 @@ fetch('http://localhost:3001/api/addressbook/shared-ibans', {
         <CodeBlock
           code={createContactCode}
           language='javascript'
-          title='Request'
+          title={t.docs.common.request}
         />
       </div>
 

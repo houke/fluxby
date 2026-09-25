@@ -22,23 +22,16 @@ function getManualInstructions(
   // iOS Safari
   if (platform === 'ios') {
     return {
-      title: instructions.iosSafari?.title || 'Install on iOS',
-      steps: instructions.iosSafari?.steps || [
-        'Tap the Share button',
-        'Scroll down and tap "Add to Home Screen"',
-        'Tap "Add" to confirm',
-      ],
+      title: instructions.iosSafari.title,
+      steps: instructions.iosSafari.steps,
     };
   }
 
   // macOS Safari
   if (platform === 'macos' && browser === 'safari') {
     return {
-      title: instructions.macosSafari?.title || 'Install on macOS Safari',
-      steps: instructions.macosSafari?.steps || [
-        'Click File in the menu bar',
-        'Select "Add to Dock"',
-      ],
+      title: instructions.macosSafari.title,
+      steps: instructions.macosSafari.steps,
     };
   }
 
@@ -48,24 +41,16 @@ function getManualInstructions(
     ['chrome', 'edge', 'brave', 'opera'].includes(browser)
   ) {
     return {
-      title: instructions.desktop?.title || 'Install on desktop',
-      steps: instructions.desktop?.steps || [
-        'Click the install icon in the address bar (right side)',
-        'Or click the menu (⋮) and select "Install Fluxby"',
-        'Click "Install" to confirm',
-      ],
+      title: instructions.desktop.title,
+      steps: instructions.desktop.steps,
     };
   }
 
   // Android Chrome
   if (platform === 'android') {
     return {
-      title: instructions.android?.title || 'Install on Android',
-      steps: instructions.android?.steps || [
-        'Tap the menu (⋮) in the top right',
-        'Tap "Add to Home screen" or "Install app"',
-        'Tap "Add" to confirm',
-      ],
+      title: instructions.android.title,
+      steps: instructions.android.steps,
     };
   }
 
@@ -98,11 +83,10 @@ export function PWAInstallBanner() {
             <div className='flex items-start justify-between gap-4'>
               <div>
                 <CardTitle className='text-base sm:text-lg'>
-                  {t.pwa?.installedTitle || 'Fluxby is installed'}
+                  {t.pwa.installedTitle}
                 </CardTitle>
                 <CardDescription className='text-xs sm:text-sm'>
-                  {t.pwa?.installedDescription ||
-                    'You are using the installed version of Fluxby.'}
+                  {t.pwa.installedDescription}
                 </CardDescription>
               </div>
             </div>
@@ -123,18 +107,17 @@ export function PWAInstallBanner() {
             <div className='flex items-start justify-between gap-4'>
               <div>
                 <CardTitle className='text-base sm:text-lg'>
-                  {t.pwa?.installTitle || 'Install Fluxby'}
+                  {t.pwa.installTitle}
                 </CardTitle>
                 <CardDescription className='text-xs sm:text-sm'>
-                  {t.pwa?.installDescription ||
-                    'Install Fluxby for faster loading, offline access, and a native-like experience.'}
+                  {t.pwa.installDescription}
                 </CardDescription>
               </div>
 
               <div className='flex items-center'>
                 <Button onClick={installPWA} variant='secondary' size='sm'>
                   <Download className='mr-2 h-4 w-4' />
-                  {t.pwa?.installButton}
+                  {t.pwa.installButton}
                 </Button>
               </div>
             </div>
@@ -171,11 +154,10 @@ export function PWAInstallBanner() {
             <div className='flex items-center gap-2'>
               <div>
                 <CardTitle className='text-base sm:text-lg'>
-                  {t.pwa?.installTitle || 'Install Fluxby'}
+                  {t.pwa.installTitle}
                 </CardTitle>
                 <CardDescription className='mt-0 text-xs sm:text-sm'>
-                  {t.pwa?.installDescription ||
-                    'Install Fluxby for faster loading, offline access, and a native-like experience.'}
+                  {t.pwa.installDescription}
                 </CardDescription>
               </div>
             </div>
@@ -202,22 +184,13 @@ export function PWAInstallBanner() {
               <div className='rounded-md bg-muted/50 p-3'>
                 <div className='mb-2 text-sm font-medium'>
                   <Info className='mr-2 inline-block h-4 w-4' />
-                  {t.pwa?.desktopInstall?.title || 'Install instructions'}
+                  {t.pwa.desktopInstall.title}
                 </div>
                 <ul className='list-inside list-disc space-y-1 pl-5 text-sm text-muted-foreground'>
+                  <li>{t.pwa.desktopInstall.description}</li>
+                  <li>{t.pwa.manualInstructions.desktop.steps[1]}</li>
                   <li>
-                    {t.pwa?.desktopInstall?.description ||
-                      "Click the install icon in your browser's address bar."}
-                  </li>
-                  <li>
-                    {
-                      "Open the browser menu (⋮) and choose 'Install Fluxby' if available."
-                    }
-                  </li>
-                  <li>
-                    {
-                      'On macOS Safari: File → Add to Dock / Add to Applications.'
-                    }
+                    {t.pwa.manualInstructions.macosSafari.steps.join('. ')}.
                   </li>
                 </ul>
               </div>

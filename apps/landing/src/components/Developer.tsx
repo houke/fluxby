@@ -5,42 +5,14 @@ const featureIcons = ['🔌', '📚', '⚡'];
 
 export default function Developer() {
   const { t } = useLanguage();
+  const copy = t.developer;
   const appHref = `${import.meta.env.BASE_URL}app/`;
 
-  const features = [
-    {
-      icon: featureIcons[0],
-      title: t.developer?.features[0]?.title || 'RESTful API',
-      description:
-        t.developer?.features[0]?.description ||
-        'Clean REST endpoints for all data operations. Transactions, categories, budgets, and analytics.',
-    },
-    {
-      icon: featureIcons[1],
-      title: t.developer?.features[1]?.title || 'OpenAPI/Swagger',
-      description:
-        t.developer?.features[1]?.description ||
-        'Interactive API documentation at /api/docs. Try endpoints directly in your browser.',
-    },
-    {
-      icon: featureIcons[2],
-      title: t.developer?.features[2]?.title || 'Easy Integration',
-      description:
-        t.developer?.features[2]?.description ||
-        'JSON responses, standard HTTP methods. Build custom dashboards or automations.',
-    },
-  ];
-
-  const endpoints = [
-    { method: 'GET', path: '/api/transactions', desc: 'List transactions' },
-    {
-      method: 'GET',
-      path: '/api/analytics/dashboard',
-      desc: 'Dashboard stats',
-    },
-    { method: 'GET', path: '/api/categories', desc: 'All categories' },
-    { method: 'POST', path: '/api/import/csv', desc: 'Import bank CSV' },
-  ];
+  const features = copy.features.map((feature, index) => ({
+    icon: featureIcons[index],
+    ...feature,
+  }));
+  const endpoints = copy.endpoints;
 
   return (
     <section
@@ -61,19 +33,16 @@ export default function Developer() {
         <div className='mb-12 text-center md:mb-16'>
           <div className='mb-4 inline-flex items-center gap-2 rounded-full bg-purple-500/20 px-4 py-2 text-purple-300'>
             <span className='text-lg'>🛠️</span>
-            <span className='text-sm font-medium'>
-              {t.developer?.badge || 'Developer API'}
-            </span>
+            <span className='text-sm font-medium'>{copy.badge}</span>
           </div>
           <h2 className='mb-4 text-4xl font-bold md:text-5xl'>
-            {t.developer?.title || 'Build with'}{' '}
+            {copy.title}{' '}
             <span className='bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent'>
-              {t.developer?.titleHighlight || 'Fluxby API'}
+              {copy.titleHighlight}
             </span>
           </h2>
           <p className='mx-auto max-w-2xl text-lg text-gray-400'>
-            {t.developer?.subtitle ||
-              'Access your financial data programmatically. Create custom integrations, dashboards, or automate your workflows.'}
+            {copy.subtitle}
           </p>
         </div>
 
@@ -100,7 +69,7 @@ export default function Developer() {
             <div className='h-3 w-3 rounded-full bg-yellow-500' />
             <div className='h-3 w-3 rounded-full bg-green-500' />
             <span className='ml-4 text-sm text-gray-400'>
-              {t.developer?.endpointsTitle || 'API Endpoints'}
+              {copy.endpointsTitle}
             </span>
           </div>
           <div className='p-6'>
@@ -119,12 +88,12 @@ export default function Developer() {
                     {endpoint.method}
                   </span>
                   <code className='text-purple-300'>{endpoint.path}</code>
-                  <span className='text-gray-500'>// {endpoint.desc}</span>
+                  <span className='text-gray-500'>
+                    // {endpoint.description}
+                  </span>
                 </div>
               ))}
-              <div className='mt-4 text-gray-500'>
-                {t.developer?.moreEndpoints || '... and 20+ more endpoints'}
-              </div>
+              <div className='mt-4 text-gray-500'>{copy.moreEndpoints}</div>
             </div>
           </div>
         </div>
@@ -136,7 +105,7 @@ export default function Developer() {
             className='inline-flex items-center gap-2 rounded-full bg-purple-600 px-8 py-3 font-medium text-white transition-all hover:bg-purple-500 hover:shadow-lg hover:shadow-purple-500/25'
           >
             <span>📖</span>
-            {t.developer?.viewDocs || 'View API Docs'}
+            {copy.viewDocs}
           </Link>
           <a
             href={appHref}
@@ -145,7 +114,7 @@ export default function Developer() {
             className='inline-flex items-center gap-2 rounded-full border border-gray-600 bg-gray-800 px-8 py-3 font-medium text-white transition-all hover:border-gray-500 hover:bg-gray-700'
           >
             <span>⚡</span>
-            {t.developer?.tryApp || 'Try the App'}
+            {copy.tryApp}
           </a>
         </div>
       </div>

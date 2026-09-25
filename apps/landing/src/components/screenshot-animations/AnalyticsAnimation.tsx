@@ -60,12 +60,11 @@ export default function AnalyticsAnimation({
   const lastTimeRef = useRef<number>(0);
 
   // Get translated labels
-  const anim = t.animations?.analytics;
-  const months =
-    monthNames[language as keyof typeof monthNames] || monthNames.en;
+  const anim = t.animations.analytics;
+  const months = monthNames[language];
   const monthlyData = monthlyDataBase.map((d) => ({
     ...d,
-    month: months[d.monthKey as keyof typeof months] || d.monthKey,
+    month: months[d.monthKey as keyof typeof months],
   }));
 
   useEffect(() => {
@@ -117,13 +116,13 @@ export default function AnalyticsAnimation({
         <div className='flex items-center gap-2 p-4'>
           <div className='h-3 w-3 rounded bg-emerald-500' />
           <span className='text-xs text-gray-600 dark:text-white/80'>
-            {anim?.income || 'Income'}
+            {anim.income}
           </span>
         </div>
         <div className='flex items-center gap-2'>
           <div className='h-3 w-3 rounded bg-rose-500' />
           <span className='text-xs text-gray-600 dark:text-white/80'>
-            {anim?.expenses || 'Expenses'}
+            {anim.expenses}
           </span>
         </div>
       </div>

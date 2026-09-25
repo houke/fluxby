@@ -34,832 +34,627 @@ const UpdatesContent = () => {
   const updatesPage = t.legal?.updatesPage;
 
   const releases = [
-        {
+    {
       version: '1.13.3',
-      date: updatesPage?.v1133Date || '22 september 2026',
-      title: updatesPage?.v1133Title || 'Release 1.13.3',
-      description:
-        updatesPage?.v1133Description ||
-        '1 bugfix.',
+      date: updatesPage?.v1133Date,
+      title: updatesPage?.v1133Title,
+      description: updatesPage?.v1133Description,
       features: [
         {
           icon: Wrench,
-          title: updatesPage?.v1133F1Title || 'Old tauri db ondersteuning toegevoegd voor',
-          description: updatesPage?.v1133F1Desc || 'Dit had niet moeten gebeuren, maar nu is het gefixed!',
+          title: updatesPage?.v1133F1Title,
+          description: updatesPage?.v1133F1Desc,
         },
       ],
     },
     {
       version: '1.13.2',
-      date: updatesPage?.v1132Date || '22 september 2026',
-      title: updatesPage?.v1132Title || 'Release 1.13.2',
-      description: updatesPage?.v1132Description || '1 bugfix.',
+      date: updatesPage?.v1132Date,
+      title: updatesPage?.v1132Title,
+      description: updatesPage?.v1132Description,
       features: [
         {
           icon: RotateCcw,
-          title:
-            updatesPage?.v1132F1Title ||
-            'Herstel first tour and use native batched jev requests',
-          description:
-            updatesPage?.v1132F1Desc || 'Een vervelend probleempje opgelost.',
+          title: updatesPage?.v1132F1Title,
+          description: updatesPage?.v1132F1Desc,
         },
       ],
     },
     {
       version: '1.13.1',
-      date: updatesPage?.v1131Date || '21 september 2026',
-      title: updatesPage?.v1131Title || 'Release 1.13.1',
-      description: updatesPage?.v1131Description || '1 bugfix.',
+      date: updatesPage?.v1131Date,
+      title: updatesPage?.v1131Title,
+      description: updatesPage?.v1131Description,
       features: [
         {
           icon: Wrench,
-          title:
-            updatesPage?.v1131F1Title ||
-            'Persist first-run completion and allow jev',
-          description:
-            updatesPage?.v1131F1Desc || 'Kleine fix, groot verschil.',
+          title: updatesPage?.v1131F1Title,
+          description: updatesPage?.v1131F1Desc,
         },
       ],
     },
     {
       version: '1.13.0',
-      date: updatesPage?.v1130Date || '21 september 2026',
-      title: updatesPage?.v1130Title || 'Release 1.13.0',
-      description:
-        updatesPage?.v1130Description || '1 nieuwe feature en 1 bugfix.',
+      date: updatesPage?.v1130Date,
+      title: updatesPage?.v1130Title,
+      description: updatesPage?.v1130Description,
       features: [
         {
           icon: Plus,
-          title:
-            updatesPage?.v1130F1Title ||
-            'Toegevoegd web proxy and responsive docs fixes',
-          description:
-            updatesPage?.v1130F1Desc ||
-            'We hebben iets nieuws voor je! Bekijk de release notes voor alle details.',
+          title: updatesPage?.v1130F1Title,
+          description: updatesPage?.v1130F1Desc,
         },
         {
           icon: Shield,
-          title:
-            updatesPage?.v1130F2Title ||
-            'Move frame ancestors policy to response headers',
-          description:
-            updatesPage?.v1130F2Desc || 'Kleine fix, groot verschil.',
+          title: updatesPage?.v1130F2Title,
+          description: updatesPage?.v1130F2Desc,
         },
       ],
     },
     {
       version: '1.12.2',
-      date: updatesPage?.v1122Date || '21 september 2026',
-      title: updatesPage?.v1122Title || 'Release 1.12.2',
-      description: updatesPage?.v1122Description || '13 bugfixes.',
+      date: updatesPage?.v1122Date,
+      title: updatesPage?.v1122Title,
+      description: updatesPage?.v1122Description,
       features: [
         {
           icon: Wrench,
-          title: updatesPage?.v1122F1Title || 'Bugfixes',
-          description:
-            updatesPage?.v1122F1Desc ||
-            '13 bugs opgelost. Zie changelog voor details.',
+          title: updatesPage?.v1122F1Title,
+          description: updatesPage?.v1122F1Desc,
         },
       ],
     },
     {
       version: '1.12.1',
-      date: updatesPage?.v1121Date || '20 september 2026',
-      title: updatesPage?.v1121Title || 'Release 1.12.1',
-      description: updatesPage?.v1121Description || '2 bugfixes.',
+      date: updatesPage?.v1121Date,
+      title: updatesPage?.v1121Title,
+      description: updatesPage?.v1121Description,
       features: [
         {
           icon: Globe,
-          title: updatesPage?.v1121F1Title || 'Web app verbeteringen',
-          description:
-            updatesPage?.v1121F1Desc ||
-            '2 bugfixes. Bekijk de release op GitHub!',
+          title: updatesPage?.v1121F1Title,
+          description: updatesPage?.v1121F1Desc,
         },
       ],
     },
     {
       version: '1.12.0',
-      date: updatesPage?.v1120Date || '20 september 2026',
-      title: updatesPage?.v1120Title || 'Release 1.12.0',
-      description:
-        updatesPage?.v1120Description || '1 nieuwe feature en 4 bugfixes.',
+      date: updatesPage?.v1120Date,
+      title: updatesPage?.v1120Title,
+      description: updatesPage?.v1120Description,
       features: [
         {
           icon: Globe,
-          title:
-            updatesPage?.v1120F1Title ||
-            'Opgelost tab scroll reset and categorie sign handling',
-          description:
-            updatesPage?.v1120F1Desc ||
-            'We hebben iets nieuws voor je! Bekijk de release notes voor alle details.',
+          title: updatesPage?.v1120F1Title,
+          description: updatesPage?.v1120F1Desc,
         },
         {
           icon: Wrench,
-          title: updatesPage?.v1120F2Title || 'Bugfixes',
-          description:
-            updatesPage?.v1120F2Desc ||
-            '4 bugs opgelost. Zie changelog voor details.',
+          title: updatesPage?.v1120F2Title,
+          description: updatesPage?.v1120F2Desc,
         },
       ],
     },
     {
       version: '1.11.0',
-      date: updatesPage?.v1110Date || '19 september 2026',
-      title: updatesPage?.v1110Title || 'Release 1.11.0',
-      description:
-        updatesPage?.v1110Description || '3 nieuwe features en 11 bugfixes.',
+      date: updatesPage?.v1110Date,
+      title: updatesPage?.v1110Title,
+      description: updatesPage?.v1110Description,
       features: [
         {
           icon: BookOpen,
-          title:
-            updatesPage?.v1110F1Title ||
-            'Toegevoegd typesafe ai docs to developer hub and help center',
-          description:
-            updatesPage?.v1110F1Desc ||
-            'Er is weer wat bijgekomen. Ontdek het zelf!',
+          title: updatesPage?.v1110F1Title,
+          description: updatesPage?.v1110F1Desc,
         },
         {
           icon: Globe,
-          title: updatesPage?.v1110F2Title || 'Nieuwe web app mogelijkheden',
-          description:
-            updatesPage?.v1110F2Desc ||
-            '2 nieuwe features. Bekijk de release op GitHub!',
+          title: updatesPage?.v1110F2Title,
+          description: updatesPage?.v1110F2Desc,
         },
         {
           icon: Wrench,
-          title: updatesPage?.v1110F3Title || 'Bugfixes',
-          description:
-            updatesPage?.v1110F3Desc ||
-            '11 bugs opgelost. Zie changelog voor details.',
+          title: updatesPage?.v1110F3Title,
+          description: updatesPage?.v1110F3Desc,
         },
       ],
     },
     {
       version: '1.10.0',
-      date: updatesPage?.v1100Date || '8 september 2026',
-      title: updatesPage?.v1100Title || 'Release 1.10.0',
-      description:
-        updatesPage?.v1100Description || '14 nieuwe features en 24 bugfixes.',
+      date: updatesPage?.v1100Date,
+      title: updatesPage?.v1100Title,
+      description: updatesPage?.v1100Description,
       features: [
         {
           icon: Globe,
-          title: updatesPage?.v1100F1Title || 'Web app uitbreidingen',
-          description:
-            updatesPage?.v1100F1Desc ||
-            '6 nieuwe mogelijkheden om te ontdekken. Bekijk de release notes!',
+          title: updatesPage?.v1100F1Title,
+          description: updatesPage?.v1100F1Desc,
         },
         {
           icon: Shield,
-          title:
-            updatesPage?.v1100F2Title ||
-            'Toegevoegd csp headers for xss protection',
-          description:
-            updatesPage?.v1100F2Desc ||
-            'We hebben iets nieuws voor je! Bekijk de release notes voor alle details.',
+          title: updatesPage?.v1100F2Title,
+          description: updatesPage?.v1100F2Desc,
         },
         {
           icon: BookOpen,
-          title: updatesPage?.v1100F3Title || 'API verbeteringen',
-          description:
-            updatesPage?.v1100F3Desc ||
-            '5 nieuwe mogelijkheden om te ontdekken. Bekijk de release notes!',
+          title: updatesPage?.v1100F3Title,
+          description: updatesPage?.v1100F3Desc,
         },
         {
           icon: Share2,
-          title: updatesPage?.v1100F4Title || 'Gedeelde functionaliteit',
-          description:
-            updatesPage?.v1100F4Desc ||
-            '2 nieuwe features. Bekijk de release op GitHub!',
+          title: updatesPage?.v1100F4Title,
+          description: updatesPage?.v1100F4Desc,
         },
         {
           icon: Wrench,
-          title: updatesPage?.v1100F5Title || 'Bugfixes',
-          description:
-            updatesPage?.v1100F5Desc ||
-            '24 bugs opgelost. Zie changelog voor details.',
+          title: updatesPage?.v1100F5Title,
+          description: updatesPage?.v1100F5Desc,
         },
       ],
     },
     {
       version: '1.9.0',
-      date: updatesPage?.v190Date || '8 maart 2026',
-      title: updatesPage?.v190Title || 'Release 1.9.0',
-      description:
-        updatesPage?.v190Description || '3 nieuwe features en 2 bugfixes.',
+      date: updatesPage?.v190Date,
+      title: updatesPage?.v190Title,
+      description: updatesPage?.v190Description,
       features: [
         {
           icon: Globe,
-          title: updatesPage?.v190F1Title || 'Nieuwe web app mogelijkheden',
-          description:
-            updatesPage?.v190F1Desc ||
-            '3 nieuwe features. Bekijk de release op GitHub!',
+          title: updatesPage?.v190F1Title,
+          description: updatesPage?.v190F1Desc,
         },
         {
           icon: Globe,
-          title: updatesPage?.v190F2Title || 'Betere web ervaring',
-          description:
-            updatesPage?.v190F2Desc ||
-            '2 bugfixes. Bekijk de release op GitHub!',
+          title: updatesPage?.v190F2Title,
+          description: updatesPage?.v190F2Desc,
         },
       ],
     },
     {
       version: '1.8.2',
-      date: updatesPage?.v182Date || '8 maart 2026',
-      title: updatesPage?.v182Title || 'Release 1.8.2',
-      description: updatesPage?.v182Description || '1 bugfix.',
+      date: updatesPage?.v182Date,
+      title: updatesPage?.v182Title,
+      description: updatesPage?.v182Description,
       features: [
         {
           icon: Database,
-          title:
-            updatesPage?.v182F1Title ||
-            'Resolve wasm memory access fout in transactionasync',
-          description: updatesPage?.v182F1Desc || 'Bugs gedood, app verbeterd.',
+          title: updatesPage?.v182F1Title,
+          description: updatesPage?.v182F1Desc,
         },
       ],
     },
     {
       version: '1.8.1',
-      date: updatesPage?.v181Date || '8 maart 2026',
-      title: updatesPage?.v181Title || 'Release 1.8.1',
-      description:
-        updatesPage?.v181Description || 'Nieuwe verbeteringen en bugfixes.',
+      date: updatesPage?.v181Date,
+      title: updatesPage?.v181Title,
+      description: updatesPage?.v181Description,
       features: [],
     },
     {
       version: '1.8.0',
-      date: updatesPage?.v180Date || '7 maart 2026',
-      title: updatesPage?.v180Title || 'Release 1.8.0',
-      description:
-        updatesPage?.v180Description || '3 nieuwe features en 9 bugfixes.',
+      date: updatesPage?.v180Date,
+      title: updatesPage?.v180Title,
+      description: updatesPage?.v180Description,
       features: [
         {
           icon: Wrench,
-          title:
-            updatesPage?.v180F1Title || 'Complete code review with 19 fixes',
-          description:
-            updatesPage?.v180F1Desc ||
-            'We hebben iets nieuws voor je! Bekijk de release notes voor alle details.',
+          title: updatesPage?.v180F1Title,
+          description: updatesPage?.v180F1Desc,
         },
         {
           icon: Globe,
-          title:
-            updatesPage?.v180F2Title ||
-            'Geïmplementeerd bulk transactie deletion with undo ondersteuning toegevoegd voor',
-          description:
-            updatesPage?.v180F2Desc ||
-            'Nieuwe functionaliteit waar je iets aan hebt.',
+          title: updatesPage?.v180F2Title,
+          description: updatesPage?.v180F2Desc,
         },
         {
           icon: Plus,
-          title:
-            updatesPage?.v180F3Title ||
-            'Toegevoegd ios web app installation instructions',
-          description:
-            updatesPage?.v180F3Desc ||
-            'Nieuwe functionaliteit waar je iets aan hebt.',
+          title: updatesPage?.v180F3Title,
+          description: updatesPage?.v180F3Desc,
         },
         {
           icon: Wrench,
-          title: updatesPage?.v180F4Title || 'Bugfixes',
-          description:
-            updatesPage?.v180F4Desc ||
-            '9 bugs opgelost. Zie changelog voor details.',
+          title: updatesPage?.v180F4Title,
+          description: updatesPage?.v180F4Desc,
         },
       ],
     },
     {
       version: '1.7.1',
-      date: updatesPage?.v171Date || '22 januari 2026',
-      title: updatesPage?.v171Title || 'Release 1.7.1',
-      description: updatesPage?.v171Description || '3 bugfixes.',
+      date: updatesPage?.v171Date,
+      title: updatesPage?.v171Title,
+      description: updatesPage?.v171Description,
       features: [
         {
           icon: Monitor,
-          title:
-            updatesPage?.v171F1Title ||
-            'Enable macos updater ondersteuning toegevoegd voor and opgelost build warnings',
-          description:
-            updatesPage?.v171F1Desc || 'Een vervelend probleempje opgelost.',
+          title: updatesPage?.v171F1Title,
+          description: updatesPage?.v171F1Desc,
         },
         {
           icon: Globe,
-          title: updatesPage?.v171F2Title || 'Web app verbeteringen',
-          description:
-            updatesPage?.v171F2Desc ||
-            '2 bugfixes. Bekijk de release op GitHub!',
+          title: updatesPage?.v171F2Title,
+          description: updatesPage?.v171F2Desc,
         },
       ],
     },
     {
       version: '1.7.0',
-      date: updatesPage?.v170Date || '19 januari 2026',
-      title: updatesPage?.v170Title || 'Release 1.7.0',
-      description:
-        updatesPage?.v170Description || '2 nieuwe features en 10 bugfixes.',
+      date: updatesPage?.v170Date,
+      title: updatesPage?.v170Title,
+      description: updatesPage?.v170Description,
       features: [
         {
           icon: Globe,
-          title:
-            updatesPage?.v170F1Title ||
-            'Toegevoegd sticky y-axis to all charts and verbeterd formatting',
-          description:
-            updatesPage?.v170F1Desc ||
-            'We hebben iets nieuws voor je! Bekijk de release notes voor alle details.',
+          title: updatesPage?.v170F1Title,
+          description: updatesPage?.v170F1Desc,
         },
         {
           icon: Sparkles,
-          title:
-            updatesPage?.v170F2Title ||
-            'Require 180-day span for 6 transacties',
-          description: updatesPage?.v170F2Desc || 'Dit maakt Fluxby nog beter.',
+          title: updatesPage?.v170F2Title,
+          description: updatesPage?.v170F2Desc,
         },
         {
           icon: Wrench,
-          title: updatesPage?.v170F3Title || 'Bugfixes',
-          description:
-            updatesPage?.v170F3Desc ||
-            '10 bugs opgelost. Zie changelog voor details.',
+          title: updatesPage?.v170F3Title,
+          description: updatesPage?.v170F3Desc,
         },
       ],
     },
     {
       version: '1.6.0',
-      date: updatesPage?.v160Date || '17 januari 2026',
-      title: updatesPage?.v160Title || 'Release 1.6.0',
-      description:
-        updatesPage?.v160Description || '6 nieuwe features en 24 bugfixes.',
+      date: updatesPage?.v160Date,
+      title: updatesPage?.v160Title,
+      description: updatesPage?.v160Description,
       features: [
         {
           icon: BarChart3,
-          title: updatesPage?.v160F1Title || 'analytics verbeteringen',
-          description:
-            updatesPage?.v160F1Desc ||
-            '2 nieuwe features. Bekijk de release op GitHub!',
+          title: updatesPage?.v160F1Title,
+          description: updatesPage?.v160F1Desc,
         },
         {
           icon: Globe,
-          title: updatesPage?.v160F2Title || 'Nieuwe web app mogelijkheden',
-          description:
-            updatesPage?.v160F2Desc ||
-            '3 nieuwe features. Bekijk de release op GitHub!',
+          title: updatesPage?.v160F2Title,
+          description: updatesPage?.v160F2Desc,
         },
         {
           icon: Brain,
-          title:
-            updatesPage?.v160F3Title ||
-            'Geïmplementeerd smart amount clustering for multi-tier patterns',
-          description:
-            updatesPage?.v160F3Desc ||
-            'Nieuwe functionaliteit waar je iets aan hebt.',
+          title: updatesPage?.v160F3Title,
+          description: updatesPage?.v160F3Desc,
         },
         {
           icon: Wrench,
-          title: updatesPage?.v160F4Title || 'Bugfixes',
-          description:
-            updatesPage?.v160F4Desc ||
-            '24 bugs opgelost. Zie changelog voor details.',
+          title: updatesPage?.v160F4Title,
+          description: updatesPage?.v160F4Desc,
         },
       ],
     },
     {
       version: '1.5.1',
-      date: updatesPage?.v151Date || '14 januari 2026',
-      title: updatesPage?.v151Title || 'Release 1.5.1',
-      description: updatesPage?.v151Description || '3 bugfixes.',
+      date: updatesPage?.v151Date,
+      title: updatesPage?.v151Title,
+      description: updatesPage?.v151Description,
       features: [
         {
           icon: Globe,
-          title: updatesPage?.v151F1Title || 'Betere web ervaring',
-          description:
-            updatesPage?.v151F1Desc ||
-            '2 bugfixes. Bekijk de release op GitHub!',
+          title: updatesPage?.v151F1Title,
+          description: updatesPage?.v151F1Desc,
         },
         {
           icon: Monitor,
-          title:
-            updatesPage?.v151F2Title ||
-            'Switch to universal macos binary and verwijderd redundant artifacts',
-          description: updatesPage?.v151F2Desc || 'Kleine fix, groot verschil.',
+          title: updatesPage?.v151F2Title,
+          description: updatesPage?.v151F2Desc,
         },
       ],
     },
     {
       version: '1.5.0',
-      date: updatesPage?.v150Date || '11 januari 2026',
-      title: updatesPage?.v150Title || 'Release 1.5.0',
-      description: updatesPage?.v150Description || '2 nieuwe features.',
+      date: updatesPage?.v150Date,
+      title: updatesPage?.v150Title,
+      description: updatesPage?.v150Description,
       features: [
         {
           icon: RefreshCw,
-          title: updatesPage?.v150F1Title || 'sync verbeteringen',
-          description:
-            updatesPage?.v150F1Desc ||
-            '2 nieuwe features. Bekijk de release op GitHub!',
+          title: updatesPage?.v150F1Title,
+          description: updatesPage?.v150F1Desc,
         },
       ],
     },
     {
       version: '1.4.2',
-      date: updatesPage?.v142Date || '11 januari 2026',
-      title: updatesPage?.v142Title || 'Release 1.4.2',
-      description: updatesPage?.v142Description || '1 bugfix.',
+      date: updatesPage?.v142Date,
+      title: updatesPage?.v142Title,
+      description: updatesPage?.v142Description,
       features: [
         {
           icon: Globe,
-          title:
-            updatesPage?.v142F1Title ||
-            'Verbeterd apparaat-to-apparaat synchronisatie gebruikerservaring and opgelost connection issues',
-          description:
-            updatesPage?.v142F1Desc ||
-            'Dit had niet moeten gebeuren, maar nu is het gefixed!',
+          title: updatesPage?.v142F1Title,
+          description: updatesPage?.v142F1Desc,
         },
       ],
     },
     {
       version: '1.4.1',
-      date: updatesPage?.v141Date || '11 januari 2026',
-      title: updatesPage?.v141Title || 'Release 1.4.1',
-      description: updatesPage?.v141Description || '1 bugfix.',
+      date: updatesPage?.v141Date,
+      title: updatesPage?.v141Title,
+      description: updatesPage?.v141Description,
       features: [
         {
           icon: FileText,
-          title:
-            updatesPage?.v141F1Title ||
-            'Resolve build failure due to missing imports',
-          description: updatesPage?.v141F1Desc || 'Bugs gedood, app verbeterd.',
+          title: updatesPage?.v141F1Title,
+          description: updatesPage?.v141F1Desc,
         },
       ],
     },
     {
       version: '1.4.0',
-      date: updatesPage?.v140Date || '11 januari 2026',
-      title: updatesPage?.v140Title || 'Release 1.4.0',
-      description:
-        updatesPage?.v140Description || '29 nieuwe features en 32 bugfixes.',
+      date: updatesPage?.v140Date,
+      title: updatesPage?.v140Title,
+      description: updatesPage?.v140Description,
       features: [
         {
           icon: Globe,
-          title: updatesPage?.v140F1Title || 'Nieuwe web app mogelijkheden',
-          description:
-            updatesPage?.v140F1Desc ||
-            '18 nieuwe mogelijkheden om te ontdekken. Bekijk de release notes!',
+          title: updatesPage?.v140F1Title,
+          description: updatesPage?.v140F1Desc,
         },
         {
           icon: RefreshCw,
-          title:
-            updatesPage?.v140F2Title ||
-            'Toegevoegd menu items and verbeterd apparaat-to-apparaat synchronisatie reliability',
-          description:
-            updatesPage?.v140F2Desc ||
-            'We hebben iets nieuws voor je! Bekijk de release notes voor alle details.',
+          title: updatesPage?.v140F2Title,
+          description: updatesPage?.v140F2Desc,
         },
         {
           icon: Monitor,
-          title:
-            updatesPage?.v140F3Title ||
-            'Toegevoegd in-app bijgewerkt mechanism via github releases',
-          description: updatesPage?.v140F3Desc || 'Dit maakt Fluxby nog beter.',
+          title: updatesPage?.v140F3Title,
+          description: updatesPage?.v140F3Desc,
         },
         {
           icon: Database,
-          title: updatesPage?.v140F4Title || 'Nieuwe data mogelijkheden',
-          description:
-            updatesPage?.v140F4Desc ||
-            '4 nieuwe mogelijkheden om te ontdekken. Bekijk de release notes!',
+          title: updatesPage?.v140F4Title,
+          description: updatesPage?.v140F4Desc,
         },
         {
           icon: Share2,
-          title:
-            updatesPage?.v140F5Title ||
-            'Toegevoegd recurring transactie seeding and demo data',
-          description:
-            updatesPage?.v140F5Desc ||
-            'Nieuwe functionaliteit waar je iets aan hebt.',
+          title: updatesPage?.v140F5Title,
+          description: updatesPage?.v140F5Desc,
         },
         {
           icon: TrendingUp,
-          title: updatesPage?.v140F6Title || 'subscriptions verbeteringen',
-          description:
-            updatesPage?.v140F6Desc ||
-            '2 nieuwe features. Bekijk de release op GitHub!',
+          title: updatesPage?.v140F6Title,
+          description: updatesPage?.v140F6Desc,
         },
         {
           icon: Sun,
-          title:
-            updatesPage?.v140F7Title ||
-            'Make spotlight zoeken keywords translatable',
-          description:
-            updatesPage?.v140F7Desc ||
-            'Nieuwe functionaliteit waar je iets aan hebt.',
+          title: updatesPage?.v140F7Title,
+          description: updatesPage?.v140F7Desc,
         },
         {
           icon: Plus,
-          title:
-            updatesPage?.v140F8Title ||
-            'Toegevoegd automatic migration prompt for version updates',
-          description: updatesPage?.v140F8Desc || 'Dit maakt Fluxby nog beter.',
+          title: updatesPage?.v140F8Title,
+          description: updatesPage?.v140F8Desc,
         },
         {
           icon: Wrench,
-          title: updatesPage?.v140F9Title || 'Bugfixes',
-          description:
-            updatesPage?.v140F9Desc ||
-            '32 bugs opgelost. Zie changelog voor details.',
+          title: updatesPage?.v140F9Title,
+          description: updatesPage?.v140F9Desc,
         },
       ],
     },
     {
       version: '1.3.1',
-      date: updatesPage?.v131Date || '9 januari 2026',
-      title: updatesPage?.v131Title || 'Release 1.3.1',
-      description: updatesPage?.v131Description || '3 bugfixes.',
+      date: updatesPage?.v131Date,
+      title: updatesPage?.v131Title,
+      description: updatesPage?.v131Description,
       features: [
         {
           icon: Rocket,
-          title: updatesPage?.v131F1Title || 'Release verbeteringen',
-          description:
-            updatesPage?.v131F1Desc ||
-            '2 bugfixes. Bekijk de release op GitHub!',
+          title: updatesPage?.v131F1Title,
+          description: updatesPage?.v131F1Desc,
         },
         {
           icon: FileText,
-          title:
-            updatesPage?.v131F2Title ||
-            'Herstel `uselanguage` importeren and toegevoegd `barchart3` icon',
-          description: updatesPage?.v131F2Desc || 'Bugs gedood, app verbeterd.',
+          title: updatesPage?.v131F2Title,
+          description: updatesPage?.v131F2Desc,
         },
       ],
     },
     {
       version: '1.3.0',
-      date: updatesPage?.v130Date || '8 januari 2026',
-      title: updatesPage?.v130Title || 'Release 1.3.0',
-      description:
-        updatesPage?.v130Description || '10 nieuwe features en 15 bugfixes.',
+      date: updatesPage?.v130Date,
+      title: updatesPage?.v130Title,
+      description: updatesPage?.v130Description,
       features: [
         {
           icon: Globe,
-          title: updatesPage?.v130F1Title || 'Web app uitbreidingen',
-          description:
-            updatesPage?.v130F1Desc ||
-            '7 nieuwe mogelijkheden om te ontdekken. Bekijk de release notes!',
+          title: updatesPage?.v130F1Title,
+          description: updatesPage?.v130F1Desc,
         },
         {
           icon: Database,
-          title:
-            updatesPage?.v130F2Title ||
-            'Geïmplementeerd file-based migration system and centralized logger',
-          description:
-            updatesPage?.v130F2Desc ||
-            'Nieuwe functionaliteit waar je iets aan hebt.',
+          title: updatesPage?.v130F2Title,
+          description: updatesPage?.v130F2Desc,
         },
         {
           icon: FileText,
-          title:
-            updatesPage?.v130F3Title ||
-            'Toegevoegd apparaat synchronisatie screenshot section with animation',
-          description:
-            updatesPage?.v130F3Desc ||
-            'Er is weer wat bijgekomen. Ontdek het zelf!',
+          title: updatesPage?.v130F3Title,
+          description: updatesPage?.v130F3Desc,
         },
         {
           icon: RefreshCw,
-          title:
-            updatesPage?.v130F4Title ||
-            'Finalize apparaat-to-apparaat synchronisatie implementation with documentation',
-          description: updatesPage?.v130F4Desc || 'Dit maakt Fluxby nog beter.',
+          title: updatesPage?.v130F4Title,
+          description: updatesPage?.v130F4Desc,
         },
         {
           icon: Wrench,
-          title: updatesPage?.v130F5Title || 'Bugfixes',
-          description:
-            updatesPage?.v130F5Desc ||
-            '15 bugs opgelost. Zie changelog voor details.',
+          title: updatesPage?.v130F5Title,
+          description: updatesPage?.v130F5Desc,
         },
       ],
     },
     {
       version: '1.2.0',
-      date: updatesPage?.v120Date || '6 januari 2026',
-      title: updatesPage?.v120Title || 'Release 1.2.0',
-      description:
-        updatesPage?.v120Description || '7 nieuwe features en 15 bugfixes.',
+      date: updatesPage?.v120Date,
+      title: updatesPage?.v120Title,
+      description: updatesPage?.v120Description,
       features: [
         {
           icon: Brain,
-          title: updatesPage?.v120F1Title || 'Diverse verbeteringen',
-          description:
-            updatesPage?.v120F1Desc ||
-            '4 nieuwe features. Zie changelog voor details.',
+          title: updatesPage?.v120F1Title,
+          description: updatesPage?.v120F1Desc,
         },
         {
           icon: FileText,
-          title: updatesPage?.v120F2Title || 'Landingspagina verbeteringen',
-          description:
-            updatesPage?.v120F2Desc ||
-            '2 nieuwe features. Zie changelog voor details.',
+          title: updatesPage?.v120F2Title,
+          description: updatesPage?.v120F2Desc,
         },
         {
           icon: Database,
-          title:
-            updatesPage?.v120F3Title ||
-            'Add sync database adapter for P2P synchronization',
-          description:
-            updatesPage?.v120F3Desc || 'Nieuwe functionaliteit toegevoegd.',
+          title: updatesPage?.v120F3Title,
+          description: updatesPage?.v120F3Desc,
         },
         {
           icon: Wrench,
-          title: updatesPage?.v120F4Title || 'Bugfixes',
-          description:
-            updatesPage?.v120F4Desc ||
-            '15 bugs opgelost. Zie changelog voor details.',
+          title: updatesPage?.v120F4Title,
+          description: updatesPage?.v120F4Desc,
         },
       ],
     },
     {
       version: '1.1.0',
-      date: updatesPage?.v110Date || '5 januari 2026',
-      title: updatesPage?.v110Title || 'Release 1.1.0',
-      description:
-        updatesPage?.v110Description || '7 nieuwe features en 10 bugfixes.',
+      date: updatesPage?.v110Date,
+      title: updatesPage?.v110Title,
+      description: updatesPage?.v110Description,
       features: [
         {
           icon: Settings,
-          title:
-            updatesPage?.v110F1Title ||
-            'Remove Install Fluxby card from app settings',
-          description:
-            updatesPage?.v110F1Desc || 'Nieuwe functionaliteit toegevoegd.',
+          title: updatesPage?.v110F1Title,
+          description: updatesPage?.v110F1Desc,
         },
         {
           icon: Globe,
-          title: updatesPage?.v110F2Title || 'Web app verbeteringen',
-          description:
-            updatesPage?.v110F2Desc ||
-            '3 nieuwe features. Zie changelog voor details.',
+          title: updatesPage?.v110F2Title,
+          description: updatesPage?.v110F2Desc,
         },
         {
           icon: FileText,
-          title: updatesPage?.v110F3Title || 'Landingspagina verbeteringen',
-          description:
-            updatesPage?.v110F3Desc ||
-            '3 nieuwe features. Zie changelog voor details.',
+          title: updatesPage?.v110F3Title,
+          description: updatesPage?.v110F3Desc,
         },
         {
           icon: Wrench,
-          title: updatesPage?.v110F4Title || 'Bugfixes',
-          description:
-            updatesPage?.v110F4Desc ||
-            '10 bugs opgelost. Zie changelog voor details.',
+          title: updatesPage?.v110F4Title,
+          description: updatesPage?.v110F4Desc,
         },
       ],
     },
     {
       version: '1.0.4',
-      date: updatesPage?.v104Date || '4 januari 2026',
-      title: updatesPage?.v104Title || 'Release 1.0.4',
-      description:
-        updatesPage?.v104Description || 'Nieuwe verbeteringen en bugfixes.',
+      date: updatesPage?.v104Date,
+      title: updatesPage?.v104Title,
+      description: updatesPage?.v104Description,
       features: [],
     },
     {
       version: '1.0.3',
-      date: updatesPage?.v103Date || '4 januari 2026',
-      title: updatesPage?.v103Title || 'Release 1.0.3',
-      description: updatesPage?.v103Description || '1 bugfix.',
+      date: updatesPage?.v103Date,
+      title: updatesPage?.v103Title,
+      description: updatesPage?.v103Description,
       features: [
         {
           icon: Rocket,
-          title:
-            updatesPage?.v103F1Title ||
-            'Sync versions to tauri files and fix duplicate releases',
-          description: updatesPage?.v103F1Desc || 'Bug opgelost.',
+          title: updatesPage?.v103F1Title,
+          description: updatesPage?.v103F1Desc,
         },
       ],
     },
     {
       version: '1.0.2',
-      date: updatesPage?.v102Date || '4 januari 2026',
-      title: updatesPage?.v102Title || 'Release 1.0.2',
-      description: updatesPage?.v102Description || '5 bugfixes.',
+      date: updatesPage?.v102Date,
+      title: updatesPage?.v102Title,
+      description: updatesPage?.v102Description,
       features: [
         {
           icon: Wrench,
-          title: updatesPage?.v102F1Title || 'Bugfixes',
-          description:
-            updatesPage?.v102F1Desc ||
-            '5 bugs opgelost. Zie changelog voor details.',
+          title: updatesPage?.v102F1Title,
+          description: updatesPage?.v102F1Desc,
         },
       ],
     },
     {
       version: '1.0.1',
-      date: updatesPage?.v101Date || '4 januari 2026',
-      title: updatesPage?.v101Title || 'Release 1.0.1',
-      description:
-        updatesPage?.v101Description || 'Nieuwe verbeteringen en bugfixes.',
+      date: updatesPage?.v101Date,
+      title: updatesPage?.v101Title,
+      description: updatesPage?.v101Description,
       features: [
         // Features from v1.0.1
         {
           icon: Sparkles,
-          title:
-            updatesPage?.v101F1Title || 'implement per-file version checking',
-          description: updatesPage?.v101F1Desc || 'See changelog for details.',
+          title: updatesPage?.v101F1Title,
+          description: updatesPage?.v101F1Desc,
         },
       ],
     },
     {
       version: '1.0.0',
-      date: updatesPage?.v100Date || '04 januari 2026',
-      title: updatesPage?.v100Title || 'Eerste release',
-      description:
-        updatesPage?.v100Description ||
-        'De eerste officiële versie van Fluxby is live! Dit is alles wat erin zit:',
+      date: updatesPage?.v100Date,
+      title: updatesPage?.v100Title,
+      description: updatesPage?.v100Description,
       features: [
         {
           icon: FileSpreadsheet,
-          title: updatesPage?.f1Title || 'CSV Import',
-          description:
-            updatesPage?.f1Desc ||
-            'Importeer je banktransacties eenvoudig via CSV-export van je bank. Op dit moment wordt ING ondersteund, met meer banken in de toekomst.',
+          title: updatesPage?.f1Title,
+          description: updatesPage?.f1Desc,
         },
         {
           icon: BarChart3,
-          title: updatesPage?.f2Title || 'Dashboard & Analytics',
-          description:
-            updatesPage?.f2Desc ||
-            'Krijg direct inzicht in je financiën met een overzichtelijk dashboard. Bekijk je inkomsten, uitgaven en trends in mooie interactieve grafieken.',
+          title: updatesPage?.f2Title,
+          description: updatesPage?.f2Desc,
         },
         {
           icon: Tag,
-          title: updatesPage?.f3Title || 'Slimme categorisatie',
-          description:
-            updatesPage?.f3Desc ||
-            'Transacties worden automatisch gecategoriseerd. Je kunt ook eigen categorieën maken met aangepaste kleuren en iconen.',
+          title: updatesPage?.f3Title,
+          description: updatesPage?.f3Desc,
         },
         {
           icon: Target,
-          title: updatesPage?.f4Title || 'Budget tracking',
-          description:
-            updatesPage?.f4Desc ||
-            'Stel maandelijkse budgetten in per categorie en houd je voortgang bij. Krijg visueel overzicht van hoeveel je nog kunt uitgeven.',
+          title: updatesPage?.f4Title,
+          description: updatesPage?.f4Desc,
         },
         {
           icon: Building2,
-          title: updatesPage?.f5Title || 'Meerdere rekeningen',
-          description:
-            updatesPage?.f5Desc ||
-            'Beheer al je bankrekeningen op één plek. Betaalrekening, spaarrekening, creditcard - alles gecombineerd in één overzicht.',
+          title: updatesPage?.f5Title,
+          description: updatesPage?.f5Desc,
         },
         {
           icon: Users,
-          title: updatesPage?.f6Title || 'Adresboek',
-          description:
-            updatesPage?.f6Desc ||
-            'Koppel transacties aan contacten en zie hoeveel je uitgeeft bij specifieke winkels of personen. Automatische suggesties maken het makkelijk.',
+          title: updatesPage?.f6Title,
+          description: updatesPage?.f6Desc,
         },
         {
           icon: Shield,
-          title: updatesPage?.f7Title || '100% Privacy',
-          description:
-            updatesPage?.f7Desc ||
-            'Al je data blijft lokaal op je apparaat. Geen cloud, geen accounts, geen tracking. Jouw financiële gegevens zijn alleen van jou.',
+          title: updatesPage?.f7Title,
+          description: updatesPage?.f7Desc,
         },
         {
           icon: Brain,
-          title: updatesPage?.f8Title || 'AI-gestuurde herkenning',
-          description:
-            updatesPage?.f8Desc ||
-            'Lokale AI helpt bij het herkennen en categoriseren van transacties zonder je data te delen met externe diensten.',
+          title: updatesPage?.f8Title,
+          description: updatesPage?.f8Desc,
         },
         {
           icon: Palette,
-          title: updatesPage?.f9Title || 'Donkere modus',
-          description:
-            updatesPage?.f9Desc ||
-            "Werk in de modus die bij je past. Schakel makkelijk tussen lichte en donkere thema's.",
+          title: updatesPage?.f9Title,
+          description: updatesPage?.f9Desc,
         },
         {
           icon: Globe,
-          title: updatesPage?.f10Title || 'Nederlands & Engels',
-          description:
-            updatesPage?.f10Desc ||
-            'Volledig vertaalde interface in het Nederlands en Engels. Wissel wanneer je wilt.',
+          title: updatesPage?.f10Title,
+          description: updatesPage?.f10Desc,
         },
         {
           icon: Download,
-          title: updatesPage?.f11Title || 'Export functionaliteit',
-          description:
-            updatesPage?.f11Desc ||
-            'Exporteer je data naar JSON of CSV formaat. Maak back-ups wanneer je wilt voor gemoedsrust.',
+          title: updatesPage?.f11Title,
+          description: updatesPage?.f11Desc,
         },
         {
           icon: BookOpen,
-          title: updatesPage?.f12Title || 'Developer API',
-          description:
-            updatesPage?.f12Desc ||
-            'Volledige REST API documentatie voor developers die willen integreren of uitbreiden. Swagger UI inbegrepen.',
+          title: updatesPage?.f12Title,
+          description: updatesPage?.f12Desc,
         },
       ],
     },
@@ -868,8 +663,7 @@ const UpdatesContent = () => {
   return (
     <>
       <p className='mb-8 text-lg text-gray-600 dark:text-gray-400'>
-        {updatesPage?.intro ||
-          'Bekijk wat er nieuw is in Fluxby. Hier vind je alle updates en nieuwe features.'}
+        {updatesPage?.intro}
       </p>
 
       <div className='space-y-8'>
@@ -892,7 +686,7 @@ const UpdatesContent = () => {
                       rel='noopener noreferrer'
                       className='flex items-center gap-1 text-sm text-purple-600 transition-colors hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-300'
                     >
-                      {updatesPage?.viewRelease || 'Bekijk release'}
+                      {updatesPage?.viewRelease}
                       <ExternalLink className='h-3 w-3' />
                     </a>
                   </div>
@@ -939,11 +733,10 @@ const UpdatesContent = () => {
       <div className='mt-12 rounded-2xl border-2 border-dashed border-gray-300 bg-gray-50 p-8 text-center dark:border-gray-700 dark:bg-gray-800/30'>
         <Zap className='mx-auto mb-4 h-10 w-10 text-gray-400' />
         <h3 className='mb-2 text-lg font-bold text-gray-700 dark:text-gray-300'>
-          {updatesPage?.comingSoonTitle || 'Meer updates komen eraan'}
+          {updatesPage?.comingSoonTitle}
         </h3>
         <p className='text-gray-500 dark:text-gray-400'>
-          {updatesPage?.comingSoonText ||
-            'We werken continu aan nieuwe features en verbeteringen. Houd deze pagina in de gaten!'}
+          {updatesPage?.comingSoonText}
         </p>
       </div>
     </>

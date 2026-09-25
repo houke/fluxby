@@ -27,6 +27,7 @@ const scrollToTop = () => {
 export default function DocsSidebar({ isOpen, onClose }: DocsSidebarProps) {
   const location = useLocation();
   const { t } = useLanguage();
+  const copy = t.docs;
   const prevPathRef = useRef(location.pathname);
 
   // Close sidebar on route change (mobile)
@@ -40,100 +41,100 @@ export default function DocsSidebar({ isOpen, onClose }: DocsSidebarProps) {
 
   const navigation: NavSection[] = [
     {
-      title: t.docs?.nav?.gettingStarted || 'Getting Started',
+      title: copy.nav.gettingStarted,
       items: [
         {
-          title: t.docs?.nav?.introduction || 'Introduction',
+          title: copy.nav.introduction,
           path: '/docs',
           icon: '📖',
         },
         {
-          title: t.docs?.nav?.authentication || 'Authentication',
+          title: copy.nav.authentication,
           path: '/docs/authentication',
           icon: '🔐',
         },
         {
-          title: t.docs?.nav?.architecture || 'Architecture',
+          title: copy.nav.architecture,
           path: '/docs/architecture',
           icon: '🏗️',
         },
         {
-          title: t.docs?.nav?.profiles || 'Profiles & Multi-Tenancy',
+          title: copy.nav.profiles,
           path: '/docs/profiles',
           icon: '👥',
         },
         {
-          title: t.docs?.nav?.errors || 'Error Handling',
+          title: copy.nav.errors,
           path: '/docs/errors',
           icon: '⚠️',
         },
       ],
     },
     {
-      title: t.docs?.nav?.coreResources || 'Core Resources',
+      title: copy.nav.coreResources,
       items: [
         {
-          title: t.docs?.nav?.accounts || 'Accounts',
+          title: copy.nav.accounts,
           path: '/docs/accounts',
           icon: '🏦',
         },
         {
-          title: t.docs?.nav?.transactions || 'Transactions',
+          title: copy.nav.transactions,
           path: '/docs/transactions',
           icon: '💸',
         },
         {
-          title: t.docs?.nav?.categories || 'Categories',
+          title: copy.nav.categories,
           path: '/docs/categories',
           icon: '🏷️',
         },
         {
-          title: t.docs?.nav?.budgets || 'Budgets',
+          title: copy.nav.budgets,
           path: '/docs/budgets',
           icon: '📊',
         },
         {
-          title: t.docs?.nav?.subscriptions || 'Subscriptions',
+          title: copy.nav.subscriptions,
           path: '/docs/subscriptions',
           icon: '🔄',
         },
         {
-          title: t.docs?.nav?.analytics || 'Analytics',
+          title: copy.nav.analytics,
           path: '/docs/analytics',
           icon: '📈',
         },
         {
-          title: t.docs?.nav?.addressBook || 'Address Book',
+          title: copy.nav.addressBook,
           path: '/docs/addressbook',
           icon: '📒',
         },
         {
-          title: t.docs?.nav?.import || 'Import',
+          title: copy.nav.import,
           path: '/docs/import',
           icon: '📥',
         },
         {
-          title: t.docs?.nav?.data || 'Data Management',
+          title: copy.nav.data,
           path: '/docs/data',
           icon: '💾',
         },
       ],
     },
     {
-      title: t.docs?.nav?.tools || 'Tools',
+      title: copy.nav.tools,
       items: [
         {
-          title: t.docs?.nav?.openapi || 'OpenAPI Spec',
+          title: copy.nav.openapi,
           path: '/docs/openapi',
           icon: '📄',
         },
         {
-          title: t.docs?.nav?.ai || 'TypeSafe AI',
+          title: copy.nav.ai,
           path: '/docs/ai',
           icon: '✨',
         },
         {
-          title: t.docs?.nav?.helpCenter || 'Helpcentrum',
+          title: copy.nav.helpCenter,
           path: '/help',
           icon: '❓',
         },
@@ -169,7 +170,7 @@ export default function DocsSidebar({ isOpen, onClose }: DocsSidebarProps) {
               Fluxby
             </span>
             <span className='rounded bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-700 dark:bg-purple-900/50 dark:text-purple-300'>
-              {t.docs?.badge || 'Docs'}
+              {copy.badge}
             </span>
           </Link>
         </div>

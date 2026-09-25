@@ -7,7 +7,7 @@ export default function BudgetsAnimation({
   isVisible: boolean;
 }) {
   const { t } = useLanguage();
-  const anim = t.animations?.budgets;
+  const anim = t.animations.budgets;
   const [progress, setProgress] = useState(0);
   const [isExceeded, setIsExceeded] = useState(false);
   const animationRef = useRef<number | null>(null);
@@ -72,10 +72,10 @@ export default function BudgetsAnimation({
           </div>
           <div>
             <div className='text-sm font-semibold text-gray-900 dark:text-white'>
-              {anim?.categories?.boodschappen || 'Groceries'}
+              {anim.categories.boodschappen}
             </div>
             <div className='text-xs text-gray-500 dark:text-white/60'>
-              {anim?.leftThisMonth || 'left this month'}
+              {anim.leftThisMonth}
             </div>
           </div>
         </div>
@@ -95,7 +95,7 @@ export default function BudgetsAnimation({
         <div className='flex items-center justify-between text-sm'>
           <div>
             <span className='text-gray-500 dark:text-white/60'>
-              {anim?.spent || 'Spent'}:{' '}
+              {anim.spent}:{' '}
             </span>
             <span
               className={`font-semibold ${isExceeded ? 'text-red-500 dark:text-red-400' : 'text-gray-900 dark:text-white'}`}
@@ -105,7 +105,7 @@ export default function BudgetsAnimation({
           </div>
           <div>
             <span className='text-gray-500 dark:text-white/60'>
-              {anim?.budget || 'Budget'}:{' '}
+              {anim.budget}:{' '}
             </span>
             <span className='font-semibold text-gray-900 dark:text-white'>
               €{budgetAmount}
@@ -117,12 +117,11 @@ export default function BudgetsAnimation({
         <div className='mt-2 text-center'>
           {isExceeded ? (
             <span className='text-sm font-medium text-red-500 dark:text-red-400'>
-              €{Math.abs(remaining).toFixed(0)}{' '}
-              {anim?.overBudget || 'over budget!'} ⚠️
+              €{Math.abs(remaining).toFixed(0)} {anim.overBudget} ⚠️
             </span>
           ) : (
             <span className='text-sm text-gray-500 dark:text-white/60'>
-              €{remaining.toFixed(0)} {anim?.remaining || 'remaining'}
+              €{remaining.toFixed(0)} {anim.remaining}
             </span>
           )}
         </div>

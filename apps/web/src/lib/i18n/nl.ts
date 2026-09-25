@@ -42,6 +42,7 @@ export interface TranslationKeys {
     appSubtitle: string;
     logout: string;
     toggleTheme: string;
+    environment: string;
     notifications: string;
     restartOnboarding: string;
     preparingOnboarding: string;
@@ -59,8 +60,21 @@ export interface TranslationKeys {
     noResults: string;
     or: string;
     dismiss: string;
+    dismissNotification: string;
     comingSoon: string;
     initializingDatabase: string;
+    resetDatabaseAction: string;
+    databaseTakingLonger: string;
+    databaseInitStatus: {
+      starting: string;
+      resettingDatabase: string;
+      settingUpEncryption: string;
+      preparingSecuritySettings: string;
+      waitingForUnlock: string;
+      derivingEncryptionKey: string;
+      connectingToDatabase: string;
+      loadingDatabase: string;
+    };
     user: string;
     backToHomepage: string;
     loadingUserData: string;
@@ -73,6 +87,56 @@ export interface TranslationKeys {
     databaseError: string;
     databaseErrorDescription: string;
     resetDatabase: string;
+    notFoundWelcome: string;
+    notFoundTitle: string;
+    appPageIntro: string;
+    appPageHomeLink: string;
+    appPageDashboardPrefix: string;
+    dashboardLink: string;
+    landingRouteIntro: string;
+    landingRouteSuffix: string;
+    defaultNotFoundDescription: string;
+    goToDashboard: string;
+    goBack: string;
+    goToHomePage: string;
+    debugResetButton: string;
+    debugResetConfirm: string;
+    debugResetSuccess: string;
+    debugResetFailure: string;
+  };
+  onboarding: {
+    seeYouLaterTitle: string;
+    seeYouLaterDescription: string;
+    closeTour: string;
+    skipTour: string;
+    wait: string;
+    demoNextSteps: string;
+    getStarted: string;
+    previous: string;
+    step: string;
+    of: string;
+    preparingDemo: string;
+    finish: string;
+    next: string;
+    settings: {
+      title: string;
+      progress: string;
+      completed: string;
+      notStarted: string;
+      completedDescription: string;
+      inProgressDescription: string;
+      introDescription: string;
+      continue: string;
+      startTour: string;
+      restart: string;
+      active: string;
+      chapters: string;
+      restartDialogTitle: string;
+      restartProfileWarning: string;
+      createDemoWarning: string;
+      starting: string;
+      restartButton: string;
+    };
   };
   migrations: {
     updateAvailable: string;
@@ -278,6 +342,9 @@ export interface TranslationKeys {
     iban: string;
     date: string;
     amount: string;
+    amountRequired: string;
+    amountMustBePositive: string;
+    dateRequired: string;
     addToAddressBook: string;
     unlinkFromContact: string;
     savedToAddressBook: string;
@@ -306,6 +373,7 @@ export interface TranslationKeys {
     allPaymentMethods: string;
     allPaymentProcessors: string;
     noPaymentProcessor: string;
+    direction: string;
     paymentMethods: {
       pin: string;
       ideal: string;
@@ -448,6 +516,9 @@ export interface TranslationKeys {
     proposedBudgetsDescription: string;
     avgSpent: string;
     perMonth: string;
+    perMonthShort: string;
+    monthCountUnit: string;
+    searchPlaceholder: string;
     createSelected: string;
   };
   subscriptions: {
@@ -823,6 +894,7 @@ export interface TranslationKeys {
         credit: string;
       };
       currentBalance: string;
+      deleteAccountTitle: string;
       deleteConfirm: string;
       addTitle: string;
       ibanPlaceholder: string;
@@ -1159,6 +1231,7 @@ export interface TranslationKeys {
     sortRecent: string;
     clearFilters: string;
     noResults: string;
+    noTransactions: string;
     tryDifferentSearch: string;
     loadMore: string;
     remaining: string;
@@ -1208,6 +1281,7 @@ export interface TranslationKeys {
     addAsNewContact: string;
     enterName: string;
     assignedToContact: string;
+    noContactSelected: string;
     // Split contact
     splitContact: string;
     splitContactDescription: string;
@@ -1424,26 +1498,80 @@ export interface TranslationKeys {
       };
     };
   };
-  pwa?: {
+  pwa: {
     installTitle: string;
     installDescription: string;
     installButton: string;
     installedTitle: string;
     installedDescription: string;
-    manualInstructions?: {
+    manualInstructions: {
       generic: string;
-      iosSafari?: { title: string; steps: string[] };
-      macosSafari?: { title: string; steps: string[] };
-      desktop?: { title: string; steps: string[] };
-      android?: { title: string; steps: string[] };
+      iosSafari: { title: string; steps: string[] };
+      macosSafari: { title: string; steps: string[] };
+      desktop: { title: string; steps: string[] };
+      android: { title: string; steps: string[] };
     };
-    desktopInstall?: {
+    desktopInstall: {
       title: string;
       description: string;
       buttonText: string;
       buttonDisabledText: string;
-      alertMessage?: string;
+      alertMessage: string;
     };
+  };
+  profileSwitcher: {
+    currentProfile: string;
+    switchToProfile: string;
+    manageProfiles: string;
+    types: Record<
+      'personal' | 'business' | 'shared' | 'savings' | 'investing',
+      string
+    >;
+  };
+  errorBoundary: {
+    title: string;
+    description: string;
+    technicalDetails: string;
+    goDashboard: string;
+    resetLocalData: string;
+    reloadPage: string;
+  };
+  syncDebug: {
+    title: string;
+    description: string;
+    close: string;
+    connectionStatus: string;
+    status: string;
+    connected: string;
+    disconnected: string;
+    deviceId: string;
+    deviceName: string;
+    paired: string;
+    devices: string;
+    retryInit: string;
+    generateCode: string;
+    connectivityTest: string;
+    note: string;
+    targetPeerId: string;
+    payload: string;
+    ping: string;
+    milliseconds: string;
+    entries: string;
+    errors: string;
+    warnings: string;
+    auto: string;
+    export: string;
+    clear: string;
+    noLogEntries: string;
+    pairedDevices: string;
+    test: string;
+    all: string;
+    debug: string;
+    info: string;
+    warn: string;
+    error: string;
+    sendingPing: string;
+    failedPing: string;
   };
   spotlight?: {
     searchPlaceholder: string;
@@ -1525,6 +1653,7 @@ export const nl: TranslationKeys = {
     appSubtitle: 'Je financiële vriend',
     logout: 'Uitloggen',
     toggleTheme: 'Thema wisselen',
+    environment: 'Omgeving',
     notifications: 'Meldingen',
     restartOnboarding: 'Rondleiding herstarten',
     preparingOnboarding: 'Profiel wisselen…',
@@ -1570,8 +1699,21 @@ export const nl: TranslationKeys = {
     noResults: 'Geen resultaten',
     or: 'of',
     dismiss: 'Sluiten',
+    dismissNotification: 'Melding sluiten',
     comingSoon: 'Binnenkort beschikbaar',
     initializingDatabase: 'Database initialiseren...',
+    resetDatabaseAction: 'Database resetten',
+    databaseTakingLonger: 'Dit duurt langer dan verwacht...',
+    databaseInitStatus: {
+      starting: 'Starten...',
+      resettingDatabase: 'Database resetten...',
+      settingUpEncryption: 'Versleuteling instellen...',
+      preparingSecuritySettings: 'Beveiligingsinstellingen voorbereiden...',
+      waitingForUnlock: 'Wachten tot de app wordt ontgrendeld...',
+      derivingEncryptionKey: 'Versleutelingssleutel afleiden...',
+      connectingToDatabase: 'Verbinding maken met database...',
+      loadingDatabase: 'Database laden...',
+    },
     user: 'Gebruiker',
     backToHomepage: 'Terug naar homepage',
     loadingUserData: 'Gebruikersgegevens laden...',
@@ -1585,6 +1727,65 @@ export const nl: TranslationKeys = {
     databaseErrorDescription:
       'Er is een fout opgetreden bij het initialiseren van de database. Probeer de pagina te vernieuwen.',
     resetDatabase: 'Reset database',
+    notFoundWelcome: 'Welkom bij Fluxby',
+    notFoundTitle: 'Pagina niet gevonden',
+    appPageIntro: 'Je bent op de app pagina. Ga naar het',
+    appPageHomeLink: 'startscherm',
+    appPageDashboardPrefix: 'of start met het',
+    dashboardLink: 'dashboard',
+    landingRouteIntro: 'Deze pagina bestaat in het hoofdmenu. Ga naar',
+    landingRouteSuffix: 'op de landingspagina.',
+    defaultNotFoundDescription:
+      'De pagina die je zoekt bestaat niet of is verplaatst.',
+    goToDashboard: 'Naar dashboard',
+    goBack: 'Ga terug',
+    goToHomePage: 'Naar startpagina',
+    debugResetButton: '🔄 Database resetten',
+    debugResetConfirm:
+      '⚠️ Hiermee worden alle appgegevens verwijderd en wordt de pagina opnieuw geladen. Doorgaan?',
+    debugResetSuccess: '✅ Database gewist. De pagina wordt opnieuw geladen.',
+    debugResetFailure: '❌ Fout: {message}',
+  },
+  onboarding: {
+    seeYouLaterTitle: 'Tot later!',
+    seeYouLaterDescription:
+      'Klik op Fluxby of ga naar instellingen om de rondleiding te herstarten.',
+    closeTour: 'Sluiten',
+    skipTour: 'Overslaan',
+    wait: 'Even geduld...',
+    demoNextSteps:
+      '1. Maak een nieuw profiel aan voor je echte data\n2. Importeer je banktransacties\n3. Organiseer je categorieën\n4. Stel budgetten in',
+    getStarted: 'Aan de slag!',
+    previous: 'Vorige',
+    step: 'Stap',
+    of: 'van',
+    preparingDemo: 'Demo voorbereiden...',
+    finish: 'Afronden',
+    next: 'Volgende',
+    settings: {
+      title: 'Rondleiding',
+      progress: 'Voortgang',
+      completed: 'Voltooid',
+      notStarted: 'Nog niet gestart',
+      completedDescription:
+        'Je hebt de rondleiding voltooid! Je kunt deze altijd opnieuw starten om alle functies te bekijken.',
+      inProgressDescription:
+        'Je bent bezig met de rondleiding. Ga verder waar je gebleven was of start opnieuw.',
+      introDescription:
+        'Ontdek alle functies van Fluxby met onze interactieve rondleiding.',
+      continue: 'Verder gaan',
+      startTour: 'Start rondleiding',
+      restart: 'Opnieuw starten',
+      active: 'Rondleiding is actief',
+      chapters: 'Hoofdstukken',
+      restartDialogTitle: 'Rondleiding herstarten',
+      restartProfileWarning:
+        'Door de rondleiding te herstarten wordt je automatisch overgeschakeld naar het Demo profiel.',
+      createDemoWarning:
+        'Als er geen Demo profiel bestaat, wordt deze aangemaakt en gevuld met voorbeelddata.',
+      starting: 'Bezig...',
+      restartButton: 'Herstarten',
+    },
   },
   migrations: {
     updateAvailable: 'Update beschikbaar',
@@ -1803,6 +2004,9 @@ export const nl: TranslationKeys = {
     iban: 'IBAN',
     date: 'Datum',
     amount: 'Bedrag',
+    amountRequired: 'Bedrag is verplicht',
+    amountMustBePositive: 'Voer een geldig positief bedrag in',
+    dateRequired: 'Datum is verplicht',
     addToAddressBook: 'Toevoegen aan adresboek',
     unlinkFromContact: 'Ontkoppelen',
     savedToAddressBook: 'Toegevoegd aan adresboek',
@@ -1833,6 +2037,7 @@ export const nl: TranslationKeys = {
     allPaymentMethods: 'Alle betaalmethodes',
     allPaymentProcessors: 'Alle betaalplatforms',
     noPaymentProcessor: 'Geen',
+    direction: 'Richting',
     paymentMethods: {
       pin: 'PIN',
       ideal: 'iDEAL',
@@ -1993,6 +2198,9 @@ export const nl: TranslationKeys = {
       'Slimme budgetvoorstellen op basis van je uitgaven van de afgelopen maanden',
     avgSpent: 'Gem. uitgegeven',
     perMonth: 'per maand',
+    perMonthShort: '/mnd',
+    monthCountUnit: 'mnd',
+    searchPlaceholder: 'Zoek budgetten...',
     createSelected: 'Aanmaken',
   },
   subscriptions: {
@@ -2417,6 +2625,7 @@ export const nl: TranslationKeys = {
         credit: 'Creditcard',
       },
       currentBalance: 'Huidig saldo',
+      deleteAccountTitle: 'Rekening verwijderen',
       deleteConfirm:
         'Weet je zeker dat je deze rekening wilt verwijderen? Alle gekoppelde transacties worden ook verwijderd.',
       addTitle: 'Nieuwe rekening toevoegen',
@@ -2913,6 +3122,7 @@ export const nl: TranslationKeys = {
     sortRecent: 'Recent',
     clearFilters: 'Filters wissen',
     noResults: 'Geen contacten gevonden',
+    noTransactions: 'Geen transacties gevonden',
     tryDifferentSearch: 'Probeer een andere zoekterm',
     loadMore: 'Meer laden',
     remaining: 'resterend',
@@ -3025,6 +3235,7 @@ export const nl: TranslationKeys = {
     addAsNewContact: 'Toevoegen als nieuw contact',
     enterName: 'Voer naam in...',
     assignedToContact: 'IBAN toegewezen aan contact',
+    noContactSelected: 'Geen contact geselecteerd',
   },
   bulkDelete: {
     selectionMode: 'Selectiemodus',
@@ -3177,6 +3388,113 @@ export const nl: TranslationKeys = {
     ibanRemovedFromContact: 'IBAN verwijderd van contact',
     allCategoriesDeleted: 'Alle categorieën verwijderd',
     allBudgetsDeleted: 'Alle budgetten verwijderd',
+  },
+  pwa: {
+    installTitle: 'Fluxby installeren',
+    installDescription:
+      'Installeer Fluxby voor sneller laden, offline toegang en een ervaring die aanvoelt als een native app. Er verschijnt een pictogram op je apparaat en de app start sneller.',
+    installButton: 'Installeren',
+    installedTitle: 'Fluxby is geïnstalleerd',
+    installedDescription: 'Je gebruikt de geïnstalleerde versie van Fluxby.',
+    manualInstructions: {
+      generic: 'Gebruik het menu van je browser om deze app te installeren.',
+      iosSafari: {
+        title: 'Installeren op iOS',
+        steps: [
+          'Tik op de deelknop (vierkant met pijl omhoog)',
+          'Scroll omlaag en tik op "Zet op beginscherm"',
+          'Tik op "Voeg toe" om te bevestigen',
+        ],
+      },
+      macosSafari: {
+        title: 'Installeren via Safari',
+        steps: ['Klik in de menubalk op "Archief"', 'Kies "Voeg toe aan Dock"'],
+      },
+      desktop: {
+        title: 'Installeren op desktop',
+        steps: [
+          'Klik op het installatiepictogram rechts in de adresbalk',
+          'Of open het browsermenu en kies "Fluxby installeren"',
+          'Bevestig de installatie om Fluxby aan je apparaat toe te voegen',
+        ],
+      },
+      android: {
+        title: 'Installeren op Android',
+        steps: [
+          'Tik rechtsboven op het menu (⋮)',
+          'Tik op "Toevoegen aan startscherm" of "App installeren"',
+          'Tik op "Toevoegen" om te bevestigen',
+        ],
+      },
+    },
+    desktopInstall: {
+      title: 'Installatie-instructies',
+      description:
+        'Zoek het installatiepictogram in de adresbalk van je browser of gebruik het menu om Fluxby te installeren.',
+      buttonText: 'Nu installeren',
+      buttonDisabledText: 'Gebruik het installatiepictogram in de browser',
+      alertMessage:
+        'Zoek het installatiepictogram (⊕) in de adresbalk van je browser om Fluxby te installeren.',
+    },
+  },
+  profileSwitcher: {
+    currentProfile: 'Huidig profiel',
+    switchToProfile: 'Wissel naar profiel',
+    manageProfiles: 'Profielen beheren',
+    types: {
+      personal: 'Persoonlijk',
+      business: 'Zakelijk',
+      shared: 'Gedeeld',
+      savings: 'Sparen',
+      investing: 'Beleggen',
+    },
+  },
+  errorBoundary: {
+    title: 'Er is iets misgegaan',
+    description:
+      'Er is een onverwachte fout opgetreden. Probeer het opnieuw of ga terug naar het dashboard.',
+    technicalDetails: 'Technische details',
+    goDashboard: 'Naar dashboard',
+    resetLocalData: 'Lokale gegevens resetten',
+    reloadPage: 'Pagina herladen',
+  },
+  syncDebug: {
+    title: 'Sync-foutopsporing',
+    description:
+      'Hulpmiddelen voor PeerJS-verbindingen. Formaat van de koppelcode:',
+    close: 'Sluiten',
+    connectionStatus: 'Verbindingsstatus',
+    status: 'Status',
+    connected: 'Verbonden',
+    disconnected: 'Verbinding verbroken',
+    deviceId: 'Apparaat-ID',
+    deviceName: 'Apparaatnaam',
+    paired: 'Gekoppeld',
+    devices: 'apparaten',
+    retryInit: 'Opnieuw initialiseren',
+    generateCode: 'Koppelcode genereren',
+    connectivityTest: 'Verbindingstest (gesimuleerd)',
+    note: 'Deze pingtest is alleen gesimuleerd en dient voor foutopsporingslogs. Test de echte verbinding met de knop "Apparaat koppelen" en een koppelcode.',
+    targetPeerId: 'Doel-peer-ID',
+    payload: 'Berichtinhoud',
+    ping: 'Ping',
+    milliseconds: 'ms',
+    entries: 'logregels',
+    errors: 'fouten',
+    warnings: 'waarschuwingen',
+    auto: 'Automatisch',
+    export: 'Exporteren',
+    clear: 'Wissen',
+    noLogEntries: 'Geen logregels',
+    pairedDevices: 'Gekoppelde apparaten',
+    test: 'Test',
+    all: 'Alles',
+    debug: 'Foutopsporing',
+    info: 'Info',
+    warn: 'Waarschuwing',
+    error: 'Fout',
+    sendingPing: 'PING verzenden naar {peerId}',
+    failedPing: 'Ping verzenden mislukt: {error}',
   },
   spotlight: {
     searchPlaceholder: 'Zoeken...',

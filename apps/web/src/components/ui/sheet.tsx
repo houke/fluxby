@@ -2,6 +2,7 @@ import * as React from 'react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { getStoredLanguage, translations } from '@/lib/i18n';
 
 const Sheet = DialogPrimitive.Root;
 
@@ -44,26 +45,30 @@ const sheetVariants = {
 const SheetContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
   SheetContentProps
->(({ side = 'bottom', className, children, ...props }, ref) => (
-  <SheetPortal>
-    <SheetOverlay />
-    <DialogPrimitive.Content
-      ref={ref}
-      className={cn(
-        'fixed z-50 gap-4 bg-card p-6 shadow-lg transition ease-in-out data-[state=closed]:duration-300 data-[state=closed]:animate-out data-[state=open]:duration-500 data-[state=open]:animate-in',
-        sheetVariants[side],
-        className
-      )}
-      {...props}
-    >
-      {children}
-      <DialogPrimitive.Close className='absolute top-4 right-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none disabled:pointer-events-none data-[state=open]:bg-secondary'>
-        <X className='h-4 w-4' />
-        <span className='sr-only'>Close</span>
-      </DialogPrimitive.Close>
-    </DialogPrimitive.Content>
-  </SheetPortal>
-));
+>(({ side = 'bottom', className, children, ...props }, ref) => {
+  const closeLabel = translations[getStoredLanguage()].common.close;
+
+  return (
+    <SheetPortal>
+      <SheetOverlay />
+      <DialogPrimitive.Content
+        ref={ref}
+        className={cn(
+          'fixed z-50 gap-4 bg-card p-6 shadow-lg transition ease-in-out data-[state=closed]:duration-300 data-[state=closed]:animate-out data-[state=open]:duration-500 data-[state=open]:animate-in',
+          sheetVariants[side],
+          className
+        )}
+        {...props}
+      >
+        {children}
+        <DialogPrimitive.Close className='absolute top-4 right-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none disabled:pointer-events-none data-[state=open]:bg-secondary'>
+          <X className='h-4 w-4' />
+          <span className='sr-only'>{closeLabel}</span>
+        </DialogPrimitive.Close>
+      </DialogPrimitive.Content>
+    </SheetPortal>
+  );
+});
 SheetContent.displayName = DialogPrimitive.Content.displayName;
 
 const SheetHeader = ({

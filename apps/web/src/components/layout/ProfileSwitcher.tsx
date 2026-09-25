@@ -38,7 +38,7 @@ const PROFILE_TYPE_COLORS: Record<string, string> = {
 };
 
 export function ProfileSwitcher() {
-  const { t: _t } = useLanguage();
+  const { t } = useLanguage();
   const { activeProfile, profiles, isSwitching, switchProfile } = useProfile();
   const navigate = useNavigate();
 
@@ -53,6 +53,9 @@ export function ProfileSwitcher() {
   const Icon = PROFILE_TYPE_ICONS[activeProfile.type] || User;
   const typeColor =
     PROFILE_TYPE_COLORS[activeProfile.type] || 'from-gray-500 to-gray-600';
+  const getProfileTypeLabel = (type: string) =>
+    t.profileSwitcher.types[type as keyof typeof t.profileSwitcher.types] ||
+    type;
 
   return (
     <DropdownMenu>
@@ -90,7 +93,7 @@ export function ProfileSwitcher() {
               {activeProfile.name}
             </span>
             <span className='text-xs text-muted-foreground capitalize'>
-              {activeProfile.type}
+              {getProfileTypeLabel(activeProfile.type)}
             </span>
           </div>
 
@@ -101,7 +104,7 @@ export function ProfileSwitcher() {
       <DropdownMenuContent align='end' className='w-56'>
         {/* Current Profile Header */}
         <div className='px-2 py-1.5 text-xs font-medium text-muted-foreground'>
-          Huidig profiel
+          {t.profileSwitcher.currentProfile}
         </div>
         <div className='flex items-center gap-2 px-2 py-1.5'>
           <div
@@ -125,7 +128,7 @@ export function ProfileSwitcher() {
           <div className='flex flex-col'>
             <span className='font-medium'>{activeProfile.name}</span>
             <span className='text-xs text-muted-foreground capitalize'>
-              {activeProfile.type}
+              {getProfileTypeLabel(activeProfile.type)}
             </span>
           </div>
         </div>
@@ -135,7 +138,7 @@ export function ProfileSwitcher() {
           <>
             <DropdownMenuSeparator />
             <div className='px-2 py-1.5 text-xs font-medium text-muted-foreground'>
-              Wissel naar profiel
+              {t.profileSwitcher.switchToProfile}
             </div>
             {otherProfiles.map((profile) => {
               const OtherIcon = PROFILE_TYPE_ICONS[profile.type] || User;
@@ -183,7 +186,7 @@ export function ProfileSwitcher() {
           className='cursor-pointer'
         >
           <Settings className='h-4 w-4' />
-          <span>Profielen beheren</span>
+          <span>{t.profileSwitcher.manageProfiles}</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

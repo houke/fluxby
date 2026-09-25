@@ -8,20 +8,16 @@ export default function HelpDevIntro() {
     <div className='space-y-8'>
       <div>
         <h1 className='text-3xl font-bold text-gray-900 dark:text-gray-100'>
-          {t.helpCenter?.devIntro?.title || 'Developer Hub'}
+          {t.helpCenter?.devIntro?.title}
         </h1>
         <p className='mt-2 text-lg text-gray-600 dark:text-gray-400'>
-          {t.helpCenter?.devIntro?.subtitle ||
-            'Bouw integraties met de Fluxby API. Krijg programmatisch toegang tot je financiële gegevens.'}
+          {t.helpCenter?.devIntro?.subtitle}
         </p>
       </div>
 
       <div className='prose prose-purple dark:prose-invert max-w-none'>
-        <h2>{t.helpCenter?.devIntro?.quickStartTitle || 'Snelstart'}</h2>
-        <p>
-          {t.helpCenter?.devIntro?.quickStartText ||
-            'De Fluxby API draait lokaal op http://localhost:3001/api. Geen API keys of authenticatie vereist voor lokale ontwikkeling.'}
-        </p>
+        <h2>{t.helpCenter?.devIntro?.quickStartTitle}</h2>
+        <p>{t.helpCenter?.devIntro?.quickStartText}</p>
 
         <div className='not-prose rounded-lg bg-gray-900 p-4 font-mono text-sm text-gray-100'>
           <div className='mb-2 text-gray-400'># Get your dashboard stats</div>
@@ -32,55 +28,48 @@ export default function HelpDevIntro() {
           </div>
         </div>
 
-        <h2>
-          {t.helpCenter?.devIntro?.whatCanBuildTitle || 'Wat kun je bouwen?'}
-        </h2>
+        <h2>{t.helpCenter?.devIntro?.whatCanBuildTitle}</h2>
 
         <div className='not-prose grid gap-4 md:grid-cols-2'>
           <div className='rounded-lg border border-gray-200 p-4 dark:border-gray-700'>
             <div className='mb-2 text-2xl'>📊</div>
             <h4 className='font-semibold text-gray-900 dark:text-gray-100'>
-              {t.helpCenter?.devIntro?.customDashboards ||
-                'Aangepaste dashboards'}
+              {t.helpCenter?.devIntro?.customDashboards}
             </h4>
             <p className='mt-1 text-sm text-gray-500 dark:text-gray-400'>
-              {t.helpCenter?.devIntro?.customDashboardsDesc ||
-                'Bouw gepersonaliseerde visualisaties met je favoriete chart library'}
+              {t.helpCenter?.devIntro?.customDashboardsDesc}
             </p>
           </div>
           <div className='rounded-lg border border-gray-200 p-4 dark:border-gray-700'>
             <div className='mb-2 text-2xl'>🤖</div>
             <h4 className='font-semibold text-gray-900 dark:text-gray-100'>
-              {t.helpCenter?.devIntro?.automations || 'Automatiseringen'}
+              {t.helpCenter?.devIntro?.automations}
             </h4>
             <p className='mt-1 text-sm text-gray-500 dark:text-gray-400'>
-              {t.helpCenter?.devIntro?.automationsDesc ||
-                'Maak scripts die transacties categoriseren of rapporten genereren'}
+              {t.helpCenter?.devIntro?.automationsDesc}
             </p>
           </div>
           <div className='rounded-lg border border-gray-200 p-4 dark:border-gray-700'>
             <div className='mb-2 text-2xl'>📱</div>
             <h4 className='font-semibold text-gray-900 dark:text-gray-100'>
-              {t.helpCenter?.devIntro?.mobileApps || 'Mobiele apps'}
+              {t.helpCenter?.devIntro?.mobileApps}
             </h4>
             <p className='mt-1 text-sm text-gray-500 dark:text-gray-400'>
-              {t.helpCenter?.devIntro?.mobileAppsDesc ||
-                'Bouw mobiele companion apps die synchroniseren met je Fluxby data'}
+              {t.helpCenter?.devIntro?.mobileAppsDesc}
             </p>
           </div>
           <div className='rounded-lg border border-gray-200 p-4 dark:border-gray-700'>
             <div className='mb-2 text-2xl'>🔔</div>
             <h4 className='font-semibold text-gray-900 dark:text-gray-100'>
-              {t.helpCenter?.devIntro?.notifications || 'Notificaties'}
+              {t.helpCenter?.devIntro?.notifications}
             </h4>
             <p className='mt-1 text-sm text-gray-500 dark:text-gray-400'>
-              {t.helpCenter?.devIntro?.notificationsDesc ||
-                'Stel alerts in voor budgetlimieten of ongebruikelijke uitgaven'}
+              {t.helpCenter?.devIntro?.notificationsDesc}
             </p>
           </div>
         </div>
 
-        <h2>{t.helpCenter?.devIntro?.resourcesTitle || 'Bronnen'}</h2>
+        <h2>{t.helpCenter?.devIntro?.resourcesTitle}</h2>
         <div className='not-prose grid gap-4 md:grid-cols-2'>
           <Link
             to='/docs'
@@ -89,12 +78,10 @@ export default function HelpDevIntro() {
             <div className='text-2xl'>📚</div>
             <div>
               <h4 className='font-semibold text-gray-900 dark:text-gray-100'>
-                {t.helpCenter?.devIntro?.fullDocsTitle ||
-                  'Volledige API documentatie'}
+                {t.helpCenter?.devIntro?.fullDocsTitle}
               </h4>
               <p className='text-sm text-gray-500 dark:text-gray-400'>
-                {t.helpCenter?.devIntro?.fullDocsDesc ||
-                  'Complete referentie voor alle endpoints'}
+                {t.helpCenter?.devIntro?.fullDocsDesc}
               </p>
             </div>
           </Link>
@@ -107,11 +94,10 @@ export default function HelpDevIntro() {
             <div className='text-2xl'>🔧</div>
             <div>
               <h4 className='font-semibold text-gray-900 dark:text-gray-100'>
-                {t.helpCenter?.devIntro?.swaggerTitle || 'Swagger UI'}
+                {t.helpCenter?.devIntro?.swaggerTitle}
               </h4>
               <p className='text-sm text-gray-500 dark:text-gray-400'>
-                {t.helpCenter?.devIntro?.swaggerDesc ||
-                  'Interactieve API verkenner'}
+                {t.helpCenter?.devIntro?.swaggerDesc}
               </p>
             </div>
           </a>

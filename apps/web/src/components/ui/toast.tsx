@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { X, CheckCircle, AlertTriangle, AlertCircle, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { getStoredLanguage, translations } from '@/lib/i18n';
 
 /**
  * Toast types for the legacy Toast component.
@@ -64,6 +65,7 @@ export function Toast({
   autoDismiss,
   duration = 4000,
 }: ToastProps) {
+  const copy = translations[getStoredLanguage()].common;
   useEffect(() => {
     // Warning and error toasts NEVER auto-dismiss - they require user interaction
     // Success and info auto-dismiss after duration
@@ -92,7 +94,7 @@ export function Toast({
       <button
         onClick={onClose}
         className='rounded-md p-0.5 hover:bg-gray-100 dark:hover:bg-gray-800'
-        aria-label='Dismiss notification'
+        aria-label={copy.dismissNotification}
       >
         <X className='h-4 w-4 text-gray-500' />
       </button>

@@ -6,20 +6,16 @@ export default function HelpSync() {
   return (
     <article className='prose prose-gray dark:prose-invert max-w-none'>
       <h1 className='mb-4 text-4xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.helpCenter?.sync?.title || 'Synchronisatie tussen apparaten'}
+        {t.helpCenter?.sync?.title}
       </h1>
       <p className='text-xl text-gray-600 dark:text-gray-400'>
-        {t.helpCenter?.sync?.subtitle ||
-          'Houd je financiële gegevens gesynchroniseerd tussen al je apparaten zonder cloud.'}
+        {t.helpCenter?.sync?.subtitle}
       </p>
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.helpCenter?.sync?.howItWorksTitle || 'Hoe het werkt'}
+        {t.helpCenter?.sync?.howItWorksTitle}
       </h2>
-      <p>
-        {t.helpCenter?.sync?.howItWorksText ||
-          'Fluxby gebruikt peer-to-peer (P2P) technologie om je gegevens direct tussen je apparaten te synchroniseren. Je data gaat nooit via een server - het reist rechtstreeks van apparaat naar apparaat via een versleutelde verbinding.'}
-      </p>
+      <p>{t.helpCenter?.sync?.howItWorksText}</p>
 
       <div className='not-prose my-8 flex items-center justify-center gap-4 rounded-lg bg-gradient-to-r from-purple-50 to-blue-50 p-8 dark:from-purple-900/20 dark:to-blue-900/20'>
         <div className='flex flex-col items-center'>
@@ -79,7 +75,7 @@ export default function HelpSync() {
             </line>
           </svg>
           <span className='text-xs text-gray-500 dark:text-gray-400'>
-            {t.helpCenter?.sync?.directConnection || 'Directe verbinding'}
+            {t.helpCenter?.sync?.directConnection}
           </span>
         </div>
         <div className='flex flex-col items-center'>
@@ -99,82 +95,56 @@ export default function HelpSync() {
             </svg>
           </div>
           <span className='mt-2 text-sm font-medium text-gray-700 dark:text-gray-300'>
-            {t.helpCenter?.sync?.phone || 'Telefoon'}
+            {t.helpCenter?.sync?.phone}
           </span>
         </div>
       </div>
 
       <h2 className='text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.helpCenter?.sync?.setupTitle || 'Synchronisatie instellen'}
+        {t.helpCenter?.sync?.setupTitle}
       </h2>
 
-      <h3>{t.helpCenter?.sync?.step1Title || 'Stap 1: Open instellingen'}</h3>
-      <p>
-        {t.helpCenter?.sync?.step1Text ||
-          'Ga naar Instellingen en zoek de sectie "Apparaten synchroniseren". Hier kun je je apparaat bekijken en nieuwe apparaten koppelen.'}
-      </p>
+      <h3>{t.helpCenter?.sync?.step1Title}</h3>
+      <p>{t.helpCenter?.sync?.step1Text}</p>
 
-      <h3>
-        {t.helpCenter?.sync?.step2Title ||
-          'Stap 2: Genereer een koppelingscode'}
-      </h3>
-      <p>
-        {t.helpCenter?.sync?.step2Text ||
-          'Klik op "Toon QR-code" om een unieke koppelingscode te genereren. Je kunt de QR-code scannen met je andere apparaat, of de code handmatig invoeren.'}
-      </p>
+      <h3>{t.helpCenter?.sync?.step2Title}</h3>
+      <p>{t.helpCenter?.sync?.step2Text}</p>
 
-      <h3>
-        {t.helpCenter?.sync?.step3Title || 'Stap 3: Verbind je apparaten'}
-      </h3>
-      <p>
-        {t.helpCenter?.sync?.step3Text ||
-          'Op je tweede apparaat, ga naar dezelfde instellingenpagina en voer de koppelingscode in of scan de QR-code. De apparaten worden automatisch verbonden.'}
-      </p>
+      <h3>{t.helpCenter?.sync?.step3Title}</h3>
+      <p>{t.helpCenter?.sync?.step3Text}</p>
 
-      <h3>
-        {t.helpCenter?.sync?.step4Title ||
-          'Stap 4: Automatische synchronisatie'}
-      </h3>
-      <p>
-        {t.helpCenter?.sync?.step4Text ||
-          'Na het koppelen worden wijzigingen automatisch gesynchroniseerd wanneer beide apparaten online zijn. Je kunt ook handmatig synchroniseren met de "Nu synchroniseren" knop.'}
-      </p>
+      <h3>{t.helpCenter?.sync?.step4Title}</h3>
+      <p>{t.helpCenter?.sync?.step4Text}</p>
 
       <h2 className='text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.helpCenter?.sync?.troubleshootingTitle || 'Problemen oplossen'}
+        {t.helpCenter?.sync?.troubleshootingTitle}
       </h2>
 
       <div className='not-prose space-y-4'>
         <div className='rounded-lg border border-gray-200 p-4 dark:border-gray-700'>
           <h4 className='mb-2 font-semibold text-gray-900 dark:text-gray-100'>
-            {t.helpCenter?.sync?.troubleshooting1Title ||
-              'Apparaten kunnen elkaar niet vinden'}
+            {t.helpCenter?.sync?.troubleshooting1Title}
           </h4>
           <p className='text-gray-600 dark:text-gray-400'>
-            {t.helpCenter?.sync?.troubleshooting1Text ||
-              'Zorg ervoor dat beide apparaten op hetzelfde WiFi-netwerk zijn aangesloten. Sommige openbare netwerken blokkeren peer-to-peer verbindingen.'}
+            {t.helpCenter?.sync?.troubleshooting1Text}
           </p>
         </div>
 
         <div className='rounded-lg border border-gray-200 p-4 dark:border-gray-700'>
           <h4 className='mb-2 font-semibold text-gray-900 dark:text-gray-100'>
-            {t.helpCenter?.sync?.troubleshooting2Title ||
-              'Synchronisatie mislukt'}
+            {t.helpCenter?.sync?.troubleshooting2Title}
           </h4>
           <p className='text-gray-600 dark:text-gray-400'>
-            {t.helpCenter?.sync?.troubleshooting2Text ||
-              'Controleer je internetverbinding en probeer opnieuw te verbinden. Als het probleem aanhoudt, verwijder het gekoppelde apparaat en koppel opnieuw.'}
+            {t.helpCenter?.sync?.troubleshooting2Text}
           </p>
         </div>
 
         <div className='rounded-lg border border-gray-200 p-4 dark:border-gray-700'>
           <h4 className='mb-2 font-semibold text-gray-900 dark:text-gray-100'>
-            {t.helpCenter?.sync?.troubleshooting3Title ||
-              'Conflicterende wijzigingen'}
+            {t.helpCenter?.sync?.troubleshooting3Title}
           </h4>
           <p className='text-gray-600 dark:text-gray-400'>
-            {t.helpCenter?.sync?.troubleshooting3Text ||
-              'Als je dezelfde gegevens op meerdere apparaten bewerkt, bewaart Fluxby automatisch de meest recente versie (Last-Write-Wins).'}
+            {t.helpCenter?.sync?.troubleshooting3Text}
           </p>
         </div>
       </div>
@@ -182,11 +152,10 @@ export default function HelpSync() {
       <div className='not-prose mt-8 rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-900/20'>
         <h4 className='mb-2 flex items-center gap-2 text-green-800 dark:text-green-200'>
           <span>🔒</span>
-          {t.helpCenter?.sync?.securityTitle || 'Privacy & Beveiliging'}
+          {t.helpCenter?.sync?.securityTitle}
         </h4>
         <p className='m-0 text-green-700 dark:text-green-300'>
-          {t.helpCenter?.sync?.securityText ||
-            'Je gegevens blijven altijd op je eigen apparaten. Fluxby gebruikt geen cloud servers om je financiële informatie op te slaan. Alle synchronisatie gebeurt via versleutelde peer-to-peer verbindingen.'}
+          {t.helpCenter?.sync?.securityText}
         </p>
       </div>
     </article>

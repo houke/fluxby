@@ -3,7 +3,7 @@ import { useLanguage } from '../../contexts/LanguageContext';
 
 export default function SyncAnimation({ isVisible }: { isVisible: boolean }) {
   const { t } = useLanguage();
-  const anim = t.animations?.sync;
+  const anim = t.animations.sync;
   const [phase, setPhase] = useState<
     'discover' | 'connect' | 'sync' | 'complete'
   >('discover');
@@ -163,11 +163,10 @@ export default function SyncAnimation({ isVisible }: { isVisible: boolean }) {
                 : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300'
         }`}
       >
-        {phase === 'discover' &&
-          (anim?.discovering || 'Discovering devices...')}
-        {phase === 'connect' && (anim?.connecting || 'Connecting...')}
-        {phase === 'sync' && (anim?.syncing || 'Syncing data...')}
-        {phase === 'complete' && (anim?.complete || 'Sync complete!')}
+        {phase === 'discover' && anim.discovering}
+        {phase === 'connect' && anim.connecting}
+        {phase === 'sync' && anim.syncing}
+        {phase === 'complete' && anim.complete}
       </div>
 
       {/* Devices with connection */}
@@ -175,7 +174,7 @@ export default function SyncAnimation({ isVisible }: { isVisible: boolean }) {
         <DeviceIcon
           type='laptop'
           isActive={phase !== 'discover' || progress > 30}
-          label={anim?.device1 || 'Laptop'}
+          label={anim.device1}
         />
 
         {/* Connection line area */}
@@ -243,7 +242,7 @@ export default function SyncAnimation({ isVisible }: { isVisible: boolean }) {
         <DeviceIcon
           type='phone'
           isActive={phase !== 'discover' || progress > 60}
-          label={anim?.device2 || 'Phone'}
+          label={anim.device2}
         />
       </div>
 
@@ -254,14 +253,14 @@ export default function SyncAnimation({ isVisible }: { isVisible: boolean }) {
             <div className='h-2 w-2 rounded-full bg-purple-500' />
             <span className='text-gray-600 dark:text-white/70'>
               {phase === 'complete' ? '156' : Math.floor(progress * 1.56)}{' '}
-              {anim?.transactions || 'transactions'}
+              {anim.transactions}
             </span>
           </div>
           <div className='flex items-center gap-2'>
             <div className='h-2 w-2 rounded-full bg-pink-500' />
             <span className='text-gray-600 dark:text-white/70'>
               {phase === 'complete' ? '12' : Math.floor(progress * 0.12)}{' '}
-              {anim?.categories || 'categories'}
+              {anim.categories}
             </span>
           </div>
         </div>
@@ -285,7 +284,7 @@ export default function SyncAnimation({ isVisible }: { isVisible: boolean }) {
           </svg>
         </div>
         <span className='text-xs font-medium text-gray-600 dark:text-white/70'>
-          {anim?.p2pEncrypted || 'Peer-to-peer encrypted'}
+          {anim.p2pEncrypted}
         </span>
       </div>
     </div>

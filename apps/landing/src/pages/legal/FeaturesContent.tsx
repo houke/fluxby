@@ -56,188 +56,91 @@ const FeaturesContent = () => {
 
   const features = [
     {
-      title: featuresPage?.smartTracking?.title || 'Slimme transactie tracking',
-      description:
-        featuresPage?.smartTracking?.description ||
-        'Categoriseer automatisch je uitgaven en inkomsten met AI-gestuurde herkenning. Fluxby leert je uitgavenpatronen en suggereert betere manieren om te sparen.',
-      highlights: featuresPage?.smartTracking?.highlights || [
-        'Automatische categorisatie',
-        'Patroonherkenning',
-        'Slimme suggesties',
-      ],
+      title: featuresPage?.smartTracking?.title,
+      description: featuresPage?.smartTracking?.description,
+      highlights: featuresPage?.smartTracking?.highlights,
     },
     {
-      title: featuresPage?.analytics?.title || 'Mooie analytics',
-      description:
-        featuresPage?.analytics?.description ||
-        'Prachtige grafieken die het begrijpen van je financiën leuk maken. Zie je geld groeien met interactieve visualisaties.',
-      highlights: featuresPage?.analytics?.highlights || [
-        'Interactieve grafieken',
-        'Trend analyse',
-        'Categorie verdeling',
-      ],
+      title: featuresPage?.analytics?.title,
+      description: featuresPage?.analytics?.description,
+      highlights: featuresPage?.analytics?.highlights,
     },
     {
-      title: featuresPage?.budgets?.title || 'Budget doelen',
-      description:
-        featuresPage?.budgets?.description ||
-        'Stel schattige budgetdoelen in met Fluxby die je aanmoedigt. Bekijk je voortgang met leuke animaties.',
-      highlights: featuresPage?.budgets?.highlights || [
-        'Maandelijkse limieten',
-        'Voortgang tracking',
-        'Overschrijding alerts',
-      ],
+      title: featuresPage?.budgets?.title,
+      description: featuresPage?.budgets?.description,
+      highlights: featuresPage?.budgets?.highlights,
     },
     {
-      title: featuresPage?.privacy?.title || '100% lokaal & privé',
-      description:
-        featuresPage?.privacy?.description ||
-        'Je financiële data verlaat nooit je apparaat. Geen cloud, geen servers, geen tracking - alles blijft op je computer.',
-      highlights: featuresPage?.privacy?.highlights || [
-        'Geen cloud opslag',
-        'Geen accounts nodig',
-        'Volledige privacy',
-      ],
+      title: featuresPage?.privacy?.title,
+      description: featuresPage?.privacy?.description,
+      highlights: featuresPage?.privacy?.highlights,
     },
     {
-      title: featuresPage?.bankImport?.title || 'Bank CSV import',
-      description:
-        featuresPage?.bankImport?.description ||
-        'Exporteer eenvoudig transacties van je bank en importeer ze in Fluxby. Werkt met meerdere banken.',
-      highlights: featuresPage?.bankImport?.highlights || [
-        'Meerdere banken ondersteuning',
-        'Drag & drop upload',
-        'Duplicaat detectie',
-      ],
+      title: featuresPage?.bankImport?.title,
+      description: featuresPage?.bankImport?.description,
+      highlights: featuresPage?.bankImport?.highlights,
     },
     {
-      title: featuresPage?.peer2peer?.title || 'Peer-to-peer sync',
-      description:
-        featuresPage?.peer2peer?.description ||
-        'Synchroniseer je data veilig tussen apparaten zonder cloud server. Je apparaten praten direct met elkaar.',
-      highlights: featuresPage?.peer2peer?.highlights || [
-        'End-to-end encryptie',
-        'Geen centrale server',
-        'Sync tussen apparaten',
-      ],
+      title: featuresPage?.peer2peer?.title,
+      description: featuresPage?.peer2peer?.description,
+      highlights: featuresPage?.peer2peer?.highlights,
     },
     {
-      title: featuresPage?.multiProfile?.title || 'Meerdere profielen',
-      description:
-        featuresPage?.multiProfile?.description ||
-        'Maak aparte profielen voor persoonlijk, zakelijk of gezinsfinanciën. Houd alles georganiseerd maar gescheiden.',
-      highlights: featuresPage?.multiProfile?.highlights || [
-        'Aparte werkruimtes',
-        'Vlot wisselen',
-        'Gescheiden data',
-      ],
+      title: featuresPage?.multiProfile?.title,
+      description: featuresPage?.multiProfile?.description,
+      highlights: featuresPage?.multiProfile?.highlights,
     },
     {
-      title: featuresPage?.customization?.title || 'Persoonlijke ervaring',
-      description:
-        featuresPage?.customization?.description ||
-        "Pas Fluxby aan met verschillende thema's en instellingen. Maak financieel beheer uniek van jou.",
-      highlights: featuresPage?.customization?.highlights || [
-        'Donkere modus',
-        'Aanpasbare categorieën',
-        'Eigen kleuren & iconen',
-      ],
+      title: featuresPage?.customization?.title,
+      description: featuresPage?.customization?.description,
+      highlights: featuresPage?.customization?.highlights,
     },
     {
-      title: featuresPage?.realtime?.title || 'Realtime updates',
-      description:
-        featuresPage?.realtime?.description ||
-        'Zie je financiële overzicht direct veranderen wanneer je transacties toevoegt of bewerkt.',
-      highlights: featuresPage?.realtime?.highlights || [
-        'Directe dashboard updates',
-        'Live grafieken',
-        'Automatische herberekening',
-      ],
+      title: featuresPage?.realtime?.title,
+      description: featuresPage?.realtime?.description,
+      highlights: featuresPage?.realtime?.highlights,
     },
     {
-      title: featuresPage?.ai?.title || 'AI-gestuurde inzichten',
-      description:
-        featuresPage?.ai?.description ||
-        'Lokale AI helpt je bij het categoriseren en begrijpen van je uitgaven zonder je data te delen.',
-      highlights: featuresPage?.ai?.highlights || [
-        'Categorisatie suggesties',
-        'Uitgavenpatronen',
-        'Bespaartips',
-      ],
+      title: featuresPage?.ai?.title,
+      description: featuresPage?.ai?.description,
+      highlights: featuresPage?.ai?.highlights,
     },
     {
-      title: featuresPage?.multiAccount?.title || 'Meerdere rekeningen',
-      description:
-        featuresPage?.multiAccount?.description ||
-        'Beheer al je bankrekeningen op één plek. Zie je totale vermogen en cashflow overzichtelijk.',
-      highlights: featuresPage?.multiAccount?.highlights || [
-        'Onbeperkt rekeningen',
-        'Gecombineerd overzicht',
-        'Per rekening filteren',
-      ],
+      title: featuresPage?.multiAccount?.title,
+      description: featuresPage?.multiAccount?.description,
+      highlights: featuresPage?.multiAccount?.highlights,
     },
     {
-      title: featuresPage?.addressBook?.title || 'Adresboek',
-      description:
-        featuresPage?.addressBook?.description ||
-        'Koppel transacties aan contacten. Zie hoeveel je uitgeeft aan specifieke winkels of personen.',
-      highlights: featuresPage?.addressBook?.highlights || [
-        'Contact koppeling',
-        'Uitgaven per contact',
-        'Auto-suggesties',
-      ],
+      title: featuresPage?.addressBook?.title,
+      description: featuresPage?.addressBook?.description,
+      highlights: featuresPage?.addressBook?.highlights,
     },
     {
-      title: featuresPage?.security?.title || 'Veilig & betrouwbaar',
-      description:
-        featuresPage?.security?.description ||
-        'Geen externe verbindingen betekent geen risico op datalekken. Je data is zo veilig als je apparaat.',
-      highlights: featuresPage?.security?.highlights || [
-        'Offline beschikbaar',
-        'Geen externe API calls',
-        'Lokale database',
-      ],
+      title: featuresPage?.security?.title,
+      description: featuresPage?.security?.description,
+      highlights: featuresPage?.security?.highlights,
     },
     {
-      title: featuresPage?.sync?.title || 'Export & backup',
-      description:
-        featuresPage?.sync?.description ||
-        'Exporteer je data wanneer je wilt. Maak back-ups voor gemoedsrust.',
-      highlights: featuresPage?.sync?.highlights || [
-        'JSON export',
-        'CSV export',
-        'Database backup',
-      ],
+      title: featuresPage?.sync?.title,
+      description: featuresPage?.sync?.description,
+      highlights: featuresPage?.sync?.highlights,
     },
     {
-      title: featuresPage?.languages?.title || 'Nederlands & Engels',
-      description:
-        featuresPage?.languages?.description ||
-        'Gebruik Fluxby in je voorkeurstaal. Volledig vertaald interface.',
-      highlights: featuresPage?.languages?.highlights || [
-        'Nederlandse UI',
-        'Engelse UI',
-        'Makkelijk wisselen',
-      ],
+      title: featuresPage?.languages?.title,
+      description: featuresPage?.languages?.description,
+      highlights: featuresPage?.languages?.highlights,
     },
     {
-      title: featuresPage?.openSource?.title || 'Open source',
-      description:
-        featuresPage?.openSource?.description ||
-        'Volledig open source en transparant. Bekijk de code, draag bij, of pas het aan.',
-      highlights: featuresPage?.openSource?.highlights || [
-        'GitHub repository',
-        'Community driven',
-        'Transparante code',
-      ],
+      title: featuresPage?.openSource?.title,
+      description: featuresPage?.openSource?.description,
+      highlights: featuresPage?.openSource?.highlights,
     },
   ];
 
   return (
     <>
       <p className='mb-8 text-lg text-gray-600 dark:text-gray-400'>
-        {featuresPage?.intro ||
-          'Ontdek alles wat Fluxby te bieden heeft. Van slimme transactie tracking tot prachtige analytics - alles wat je nodig hebt om je financiën te beheren.'}
+        {featuresPage?.intro}
       </p>
 
       <div className='grid gap-6 sm:grid-cols-2'>

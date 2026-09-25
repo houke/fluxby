@@ -31,59 +31,46 @@ const Downloads = () => {
   // Get browser-specific PWA instructions
   const getPWAInstructions = () => {
     if (pwa.platform === 'ios') {
-      return (
-        t.downloads?.pwa?.browserInstructions?.ios ||
-        'Tap the Share icon and then "Add to Home Screen"'
-      );
+      return t.downloads.pwa.browserInstructions.ios;
     }
     if (pwa.platform === 'android') {
-      return (
-        t.downloads?.pwa?.browserInstructions?.android ||
-        'Tap the menu (⋮) and then "Add to Home Screen"'
-      );
+      return t.downloads.pwa.browserInstructions.android;
     }
-    return (
-      t.downloads?.pwa?.browserInstructions?.desktop ||
-      'Click the install icon in the address bar'
-    );
+    return t.downloads.pwa.browserInstructions.desktop;
   };
 
   const platforms = [
     {
       id: 'mac',
-      name: t.downloads?.mac?.name || 'macOS',
+      name: t.downloads.mac.name,
       icon: Apple,
-      description:
-        t.downloads?.mac?.description ||
-        'Native ervaring voor Apple Silicon & Intel Macs.',
+      description: t.downloads.mac.description,
       downloads: [
         {
-          label: t.downloads?.mac?.aarchLabel || 'Apple Silicon',
+          label: t.downloads.mac.aarchLabel,
           link: getDownloadLink(`Fluxby_${version}_aarch64.dmg`),
-          type: t.downloads?.mac?.aarchLabel || 'M1/M2/M3/M4',
+          type: 'M1/M2/M3/M4',
         },
         {
-          label: t.downloads?.mac?.x64Label || 'Intel',
+          label: t.downloads.mac.x64Label,
           link: getDownloadLink(`Fluxby_${version}_x64.dmg`),
-          type: t.downloads?.mac?.x64Label || 'x64',
+          type: t.downloads.mac.x64Label,
         },
       ],
     },
     {
       id: 'windows',
-      name: t.downloads?.windows?.name || 'Windows',
+      name: t.downloads.windows.name,
       icon: Monitor,
-      description:
-        t.downloads?.windows?.description ||
-        'Eenvoudige installatie voor Windows 10 & 11.',
+      description: t.downloads.windows.description,
       downloads: [
         {
-          label: t.downloads?.windows?.x64Label || 'x64',
+          label: t.downloads.windows.x64Label,
           link: getDownloadLink(`Fluxby_${version}_x64-setup.exe`),
           type: 'x64 EXE',
         },
         {
-          label: t.downloads?.windows?.arm64Label || 'ARM64',
+          label: t.downloads.windows.arm64Label,
           link: getDownloadLink(`Fluxby_${version}_arm64-setup.exe`),
           type: 'ARM64 EXE',
         },
@@ -91,24 +78,22 @@ const Downloads = () => {
     },
     {
       id: 'linux',
-      name: t.downloads?.linux?.name || 'Linux',
+      name: t.downloads.linux.name,
       icon: AppWindow,
-      description:
-        t.downloads?.linux?.description ||
-        'Packages for all major Linux distributions.',
+      description: t.downloads.linux.description,
       downloads: [
         {
-          label: t.downloads?.linux?.appimageLabel || 'AppImage',
+          label: t.downloads.linux.appimageLabel,
           link: getDownloadLink(`fluxby_${version}_amd64.AppImage`),
           type: 'AppImage',
         },
         {
-          label: t.downloads?.linux?.debLabel || 'DEB',
+          label: t.downloads.linux.debLabel,
           link: getDownloadLink(`fluxby_${version}_amd64.deb`),
           type: 'Debian/Ubuntu',
         },
         {
-          label: t.downloads?.linux?.rpmLabel || 'RPM',
+          label: t.downloads.linux.rpmLabel,
           link: getDownloadLink(`fluxby_${version}_amd64.rpm`),
           type: 'Fedora/RHEL',
         },
@@ -125,15 +110,10 @@ const Downloads = () => {
       <div className='container mx-auto px-6'>
         <div className='mx-auto mb-12 max-w-3xl text-center md:mb-16'>
           <h2 className='mb-6 text-4xl font-black text-gray-900 md:text-5xl dark:text-white'>
-            {t.downloads?.title || (
-              <>
-                Download <span className='text-fluxby-purple'>Fluxby</span>
-              </>
-            )}
+            {t.downloads.title}
           </h2>
           <p className='text-xl text-gray-600 dark:text-gray-300'>
-            {t.downloads?.description ||
-              'Kies jouw platform en begin direct met het visualiseren van je financiën. Alles blijft 100% lokaal op je eigen apparaat.'}
+            {t.downloads.description}
           </p>
         </div>
 
@@ -151,7 +131,7 @@ const Downloads = () => {
               {pwa.isInstalled && (
                 <span className='flex items-center gap-1 rounded-full bg-green-100 px-3 py-1 text-xs font-bold tracking-wider text-green-700 uppercase dark:bg-green-900/50 dark:text-green-300'>
                   <Check className='h-3 w-3' />
-                  {t.downloads?.pwa?.installedBadge || 'Installed'}
+                  {t.downloads.pwa.installedBadge}
                 </span>
               )}
               {!pwa.isInstalled && (
@@ -162,11 +142,10 @@ const Downloads = () => {
             </div>
 
             <h3 className='mb-2 text-2xl font-bold text-gray-900 dark:text-white'>
-              {t.downloads?.pwa?.name || 'Browser (PWA)'}
+              {t.downloads.pwa.name}
             </h3>
             <p className='mb-8 flex-grow text-gray-600 dark:text-gray-400'>
-              {t.downloads?.pwa?.description ||
-                'Install directly from your browser. No download needed, works offline.'}
+              {t.downloads.pwa.description}
             </p>
 
             <div className='flex flex-col gap-3'>
@@ -176,7 +155,7 @@ const Downloads = () => {
                   className='bg-fluxby-purple hover:bg-fluxby-dark flex w-full items-center justify-center gap-2 rounded-xl py-3 font-bold text-white transition-colors'
                 >
                   <Download className='h-5 w-5' />
-                  {t.downloads?.pwa?.installButton || 'Install as app'}
+                  {t.downloads.pwa.installButton}
                 </button>
               ) : pwa.isInstalled ? (
                 <a
@@ -184,7 +163,7 @@ const Downloads = () => {
                   className='flex w-full items-center justify-center gap-2 rounded-xl bg-green-600 py-3 font-bold text-white transition-colors hover:bg-green-700'
                 >
                   <Check className='h-5 w-5' />
-                  Open Fluxby
+                  {t.downloads.pwa.openButton}
                 </a>
               ) : (
                 <div className='rounded-xl bg-gray-100 p-4 text-center text-sm text-gray-600 dark:bg-gray-700 dark:text-gray-300'>
@@ -237,18 +216,7 @@ const Downloads = () => {
         </div>
 
         <div className='mt-16 text-center text-sm text-gray-500 dark:text-gray-400'>
-          <p className='mx-auto max-w-xl'>
-            {t.downloads?.note || (
-              <>
-                Je hoeft niets te installeren om Fluxby te gebruiken; het werkt{' '}
-                <span className='text-fluxby-purple font-semibold'>
-                  volledig in je browser
-                </span>
-                . Deze downloads zijn beschikbaar voor wie de voorkeur geeft aan
-                een dedicated applicatie op hun systeem.
-              </>
-            )}
-          </p>
+          <p className='mx-auto max-w-xl'>{t.downloads.note}</p>
         </div>
       </div>
     </section>

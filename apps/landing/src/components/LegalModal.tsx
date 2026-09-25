@@ -13,7 +13,7 @@ interface LegalModalProps {
 const LegalModal = ({ isOpen, onClose, title, children }: LegalModalProps) => {
   const [isAnimating, setIsAnimating] = useState(false);
   const [shouldRender, setShouldRender] = useState(false);
-  const { language, setLanguage } = useLanguage();
+  const { language, setLanguage, t } = useLanguage();
   const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
@@ -75,7 +75,7 @@ const LegalModal = ({ isOpen, onClose, title, children }: LegalModalProps) => {
         <button
           onClick={onClose}
           className='absolute top-4 right-4 z-10 rounded-full bg-gray-100 p-2 text-gray-600 transition-all hover:bg-gray-200 hover:text-gray-900 md:top-6 md:right-6 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white'
-          aria-label='Sluiten'
+          aria-label={t.helpCenter.common.close}
         >
           <X className='h-5 w-5 md:h-6 md:w-6' />
         </button>
@@ -121,8 +121,8 @@ const LegalModal = ({ isOpen, onClose, title, children }: LegalModalProps) => {
                     className='rounded-lg border border-gray-200 bg-gray-50 p-2 text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-gray-100'
                     title={
                       theme === 'dark'
-                        ? 'Switch to light mode'
-                        : 'Switch to dark mode'
+                        ? t.helpCenter.common.switchToLightMode
+                        : t.helpCenter.common.switchToDarkMode
                     }
                   >
                     {theme === 'dark' ? (

@@ -1105,7 +1105,7 @@ export default function Dashboard() {
           >
             <CardHeader>
               <CardTitle className='truncate pb-1 text-base sm:text-lg'>
-                Recente transacties
+                {t.dashboard.recentTransactions}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -1139,7 +1139,7 @@ export default function Dashboard() {
                             {tx.merchantName ||
                               tx.opposingAccountName ||
                               tx.description ||
-                              'Onbekend'}
+                              t.transactions.unknown}
                           </p>
                           <p className='text-sm text-muted-foreground'>
                             {formatDateShort(tx.date)}
@@ -1164,7 +1164,7 @@ export default function Dashboard() {
                       variant='outline'
                       onClick={() => navigate('/transactions/')}
                     >
-                      Alle transacties
+                      {t.dashboard.viewAll}
                     </Button>
                   </div>
                 </div>
@@ -1238,7 +1238,7 @@ export default function Dashboard() {
                         <div className='min-w-0 flex-1'>
                           <p className='truncate font-medium'>{account.name}</p>
                           <p className='text-sm text-muted-foreground'>
-                            {account.transactionCount} transacties
+                            {account.transactionCount} {t.common.transactions}
                           </p>
                         </div>
                       </div>

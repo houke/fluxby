@@ -35,6 +35,7 @@ export interface LandingTranslationKeys {
       description: string;
       installButton: string;
       installedBadge: string;
+      openButton: string;
       browserInstructions: {
         ios: string;
         android: string;
@@ -80,6 +81,11 @@ export interface LandingTranslationKeys {
     subtitle: string;
     features: Array<{
       title: string;
+      description: string;
+    }>;
+    endpoints: Array<{
+      method: string;
+      path: string;
       description: string;
     }>;
     endpointsTitle: string;
@@ -137,13 +143,13 @@ export interface LandingTranslationKeys {
     };
   };
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  helpSection?: Record<string, any>;
+  helpSection: Record<string, any>;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   docs: any;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  helpCenter?: Record<string, any>;
+  helpCenter: Record<string, any>;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  legal?: Record<string, any>;
+  legal: Record<string, any>;
   errors: {
     notFound: string;
     notFoundDescription: string;
@@ -184,6 +190,7 @@ export interface LandingTranslationKeys {
       active: string;
       pending: string;
       frequencies: Record<string, string>;
+      gym: string;
       nextPayment: string;
       priceIncrease: string;
       update: string;
@@ -200,7 +207,7 @@ export interface LandingTranslationKeys {
       transactionsImported: string;
       dragHint: string;
     };
-    sync?: {
+    sync: {
       discovering: string;
       connecting: string;
       syncing: string;
@@ -252,6 +259,7 @@ export const nl: LandingTranslationKeys = {
         'Installeer direct vanuit je browser. Geen download nodig, werkt offline.',
       installButton: 'Installeren als app',
       installedBadge: 'Geïnstalleerd',
+      openButton: 'Fluxby openen',
       browserInstructions: {
         ios: 'Tik op het Deel-icoon en dan "Zet op beginscherm"',
         android: 'Tik op het menu (⋮) en dan "Toevoegen aan startscherm"',
@@ -427,6 +435,28 @@ export const nl: LandingTranslationKeys = {
         title: 'Eenvoudige integratie',
         description:
           'JSON responses, standaard HTTP methodes. Bouw aangepaste dashboards of automatiseringen.',
+      },
+    ],
+    endpoints: [
+      {
+        method: 'GET',
+        path: '/api/transactions',
+        description: 'Transacties weergeven',
+      },
+      {
+        method: 'GET',
+        path: '/api/analytics/dashboard',
+        description: 'Dashboardstatistieken',
+      },
+      {
+        method: 'GET',
+        path: '/api/categories',
+        description: 'Alle categorieën',
+      },
+      {
+        method: 'POST',
+        path: '/api/import/csv',
+        description: 'Bank-CSV importeren',
       },
     ],
     endpointsTitle: 'API endpoints',
@@ -1686,6 +1716,7 @@ export const nl: LandingTranslationKeys = {
     termsTitle: 'Gebruiksvoorwaarden',
     privacy: {
       lastUpdated: 'Laatst bijgewerkt:',
+      lastUpdatedDate: '4 januari 2026',
       introTitle: '1. Introductie',
       introText:
         'Dit Privacybeleid beschrijft hoe Fluxby ("wij", "ons" of "de App") met jouw gegevens omgaat.',
@@ -1709,6 +1740,9 @@ export const nl: LandingTranslationKeys = {
       transactionDataTitle: 'A. Financiële Transactiegegevens',
       transactionDataText:
         "Wanneer je handmatig gegevens invoert of bestanden importeert (zoals CSV's of bankafschriften), verwerkt de App deze informatie om grafieken en categorieën te maken. Deze verwerking gebeurt direct op jouw apparaat. Wij zien (en kunnen) deze gegevens niet zien.",
+      localStorageTitle: 'B. Lokale opslag',
+      localStorageText:
+        'De App slaat alle gegevens op in een lokale database op je apparaat. Dit omvat transacties, categorieën, budgetten en instellingen. De database verlaat je apparaat nooit en is alleen toegankelijk voor de App.',
       addressBookTitle: 'B. Adresboek / Contacten',
       addressBookText:
         'De App heeft een adresboekfunctie om transacties te koppelen aan specifieke personen of entiteiten. Als je toegang geeft tot je contacten, leest de App alleen deze gegevens om namen weer te geven binnen de App. Je contactenlijst wordt nooit geüpload of gedeeld.',
@@ -1744,6 +1778,7 @@ export const nl: LandingTranslationKeys = {
     },
     terms: {
       lastUpdated: 'Laatst bijgewerkt:',
+      lastUpdatedDate: '4 januari 2026',
       aiDisclaimerTitle:
         '1. De "Vibe Coded" Disclaimer (AI-Gegenereerde Software)',
       aiDisclaimerImportant:
@@ -2025,25 +2060,31 @@ export const nl: LandingTranslationKeys = {
     updatesPage: {
       intro:
         'Bekijk wat er nieuw is in Fluxby. Hier vind je alle updates en nieuwe features.',
+      v101Date: '4 januari 2026',
+      v101Title: 'Release 1.0.1',
+      v101Description: 'Nieuwe verbeteringen en bugfixes.',
+      v101F1Title: 'Versiecontrole per bestand geïmplementeerd',
+      v101F1Desc: 'Bekijk de changelog voor meer informatie.',
       v1133Date: '22 september 2026',
       v1133Title: 'Release 1.13.3',
       v1133Description: '1 bugfix.',
-      v1133F1Title: 'Old tauri db ondersteuning toegevoegd voor',
-      v1133F1Desc: 'Dit had niet moeten gebeuren, maar nu is het gefixed!',
+      v1133F1Title: 'Ondersteuning voor de oude Tauri-database toegevoegd',
+      v1133F1Desc: 'Dit had niet mogen gebeuren, maar het is nu opgelost!',
       v1132Date: '22 september 2026',
       v1132Title: 'Release 1.13.2',
       v1132Description: '1 bugfix.',
-      v1132F1Title: 'Herstel first tour and use native batched jev requests',
+      v1132F1Title:
+        'Eerste rondleiding hersteld en Jev-verzoeken gebundeld via de native app',
       v1132F1Desc: 'Een vervelend probleempje opgelost.',
       v1131Date: '21 september 2026',
       v1131Title: 'Release 1.13.1',
       v1131Description: '1 bugfix.',
-      v1131F1Title: 'Persist first-run completion and allow jev',
-      v1131F1Desc: 'Kleine fix, groot verschil.',
+      v1131F1Title: 'Eerste-startstatus bewaren en Jev inschakelen',
+      v1131F1Desc: 'Fouten opgelost en de app verbeterd.',
       v1130Date: '21 september 2026',
       v1130Title: 'Release 1.13.0',
       v1130Description: '1 nieuwe feature en 1 bugfix.',
-      v1130F1Title: 'Toegevoegd web proxy and responsive docs fixes',
+      v1130F1Title: 'Webproxy en verbeteringen voor responsieve documentatie',
       v1130F1Desc:
         'We hebben iets nieuws voor je! Bekijk de release notes voor alle details.',
       v1130F2Title: 'Move frame ancestors policy to response headers',
@@ -2386,6 +2427,7 @@ export const nl: LandingTranslationKeys = {
       },
       costs: {
         title: 'De financiën van dit experiment 💰',
+        freeLabel: 'Gratis',
         content:
           'Ik bereikte al snel mijn premium request limiet in mijn GitHub Copilot abonnement. Dit kwam doordat Claude Opus een 3x multiplier heeft, elke Opus prompt telt als 3 requests in je limiet. Om dit experiment voort te zetten stond ik een budget van $25 toe voor extra premium credits en ontwikkelde ik een slimme strategie voor wanneer welk model te gebruiken. Dit was strategisch resource management in plaats van gewoon blindelings geld uitgeven. Uiteindelijk besteedde ik ongeveer $30 (abonnementskosten en extra request kosten) totaal aan LLM kosten voor het hele project, wat ongelooflijk goedkoop is voor een volledige applicatie.',
         strategy: {
@@ -2532,6 +2574,7 @@ export const nl: LandingTranslationKeys = {
         quarterly: 'Per kwartaal',
         yearly: 'Jaarlijks',
       },
+      gym: 'Sportschool',
       nextPayment: 'Volgende',
       priceIncrease: 'Prijsstijging gedetecteerd',
       update: 'Bijwerken',
@@ -2561,3 +2604,724 @@ export const nl: LandingTranslationKeys = {
     },
   },
 };
+
+Object.assign(nl, {
+  docs: {
+    ...nl.docs,
+    profiles: {
+      ...nl.docs.profiles,
+      whatIsProfileTitle: 'Wat is een profiel?',
+      whatIsProfileText:
+        'Een profiel in Fluxby is een volledig geïsoleerde financiële omgeving. Je kunt profielen gebruiken om:',
+      useCases: [
+        'Persoonlijke en zakelijke financiën gescheiden te houden',
+        'Financiën van verschillende gezinsleden te beheren',
+        'Hypothetische budgetten of planningsscenario’s te testen',
+      ],
+    },
+  },
+  helpCenter: {
+    ...(nl.helpCenter ?? {}),
+    transactions: {
+      title: 'Transacties beheren',
+      subtitle:
+        'Bekijk, zoek, filter en categoriseer je geïmporteerde transacties.',
+      tipTitle: 'Snelle tip',
+      tipText:
+        'Gebruik de zoekbalk en filters om snel specifieke transacties te vinden. Je kunt filteren op datum, categorie, bedrag en meer.',
+      viewingTitle: 'Transacties bekijken',
+      viewingText:
+        'De Transacties-pagina toont al je geïmporteerde transacties in een overzichtelijke, sorteerbare tabel. Elke transactie toont:',
+      field1: 'Datum van de transactie',
+      field2: 'Omschrijving of naam van de tegenpartij',
+      field3: 'Categorie (indien toegewezen)',
+      field4: 'Bedrag (inkomsten groen, uitgaven rood)',
+      filteringTitle: 'Transacties filteren',
+      filteringText: 'Gebruik het filterpaneel om je transacties te verfijnen:',
+      dateFilter: 'Datumbereik',
+      dateFilterDesc: 'Filter op een maand, jaar of aangepast datumbereik.',
+      categoryFilter: 'Categorie',
+      categoryFilterDesc: 'Toon alleen transacties uit bepaalde categorieën.',
+      typeFilter: 'Transactietype',
+      typeFilterDesc: 'Filter op inkomsten, uitgaven of alle transacties.',
+      searchFilter: 'Zoeken',
+      searchFilterDesc: 'Zoek op omschrijving, tegenpartij of notities.',
+      categorizingTitle: 'Transacties categoriseren',
+      categorizingText: 'Je kunt transacties op twee manieren categoriseren:',
+      manualMethod: 'Handmatig',
+      manualMethodDesc:
+        'Klik op een transactie, open de categorie-dropdown en kies een categorie.',
+      autoMethod: 'Automatisch categoriseren',
+      autoMethodDesc:
+        'Maak regels die categorieën automatisch toewijzen op basis van de omschrijving.',
+      proTip: 'Tip',
+      proTipText:
+        'Na handmatig categoriseren kan Fluxby een regel voorstellen. Zo bespaar je tijd bij volgende imports van dezelfde winkel.',
+    },
+    categories: {
+      title: 'Categorieën beheren',
+      subtitle:
+        'Organiseer transacties met eigen categorieën en regels voor automatische categorisatie.',
+      whatAreTitle: 'Wat zijn categorieën?',
+      whatAreText:
+        'Categorieën groeperen transacties, bijvoorbeeld boodschappen, vervoer en entertainment. Zo krijg je inzicht in je uitgaven en kun je budgetten maken.',
+      defaultTitle: 'Standaardcategorieën',
+      defaultText:
+        'Fluxby bevat standaardcategorieën waarmee je meteen aan de slag kunt:',
+      createTitle: 'Een categorie maken',
+      createText: 'Zo maak je een nieuwe categorie:',
+      step1: 'Ga in de zijbalk naar Categorieën',
+      step2: 'Klik op Nieuwe categorie',
+      step3: 'Voer een naam in en kies een pictogram',
+      step4: 'Kies een kleur om de categorie herkenbaar te maken',
+      step5: 'Klik op Opslaan',
+      rulesTitle: 'Regels voor automatische categorisatie',
+      rulesText:
+        'Regels wijzen categorieën toe op basis van woorden in de omschrijving. Je kunt bijvoorbeeld transacties met “Albert Heijn” of “Jumbo” automatisch aan Boodschappen toewijzen.',
+      tipTitle: 'Snelle tip',
+      tipText:
+        'Wanneer je zelf een transactie categoriseert, kan Fluxby aanbieden om daar een regel van te maken. Dat bespaart tijd bij volgende imports.',
+      deleteTitle: 'Een categorie verwijderen',
+      deleteText:
+        'Bij het verwijderen kun je de bijbehorende transacties naar een andere categorie verplaatsen of ongecategoriseerd laten. Standaardcategorieën kun je niet verwijderen.',
+    },
+    accounts: {
+      title: 'Rekeningen beheren',
+      subtitle: 'Houd meerdere bankrekeningen en hun gezamenlijke saldo bij.',
+      overviewTitle: 'Rekeningoverzicht',
+      overviewText:
+        'De pagina Rekeningen toont je gekoppelde bankrekeningen en actuele saldo’s. Je ziet in één oogopslag hoeveel geld er op je rekeningen staat.',
+      addTitle: 'Een rekening toevoegen',
+      addText:
+        'Bij het importeren van een CSV-bestand herkent Fluxby de IBAN en maakt zo nodig automatisch een rekening aan. Je kunt ook handmatig een rekening toevoegen:',
+      addStep1: 'Ga naar Instellingen > Rekeningen',
+      addStep2: 'Klik op Rekening toevoegen',
+      addStep3: 'Voer de rekeningnaam en IBAN in',
+      addStep4: 'Klik op Opslaan',
+      filterTitle: 'Filteren op rekening',
+      filterText:
+        'Filter transacties via de rekeningkeuze in de kopbalk. Kies één rekening of Alle rekeningen om ze samen te bekijken.',
+      noteTitle: 'Let op',
+      noteText:
+        'Importeer transacties van al je rekeningen voor een compleet overzicht van je financiën.',
+      balanceTitle: 'Saldo’s begrijpen',
+      balanceText:
+        'Rekeningsaldi worden berekend op basis van geïmporteerde transacties. Importeer regelmatig je transacties om het saldo zo nauwkeurig mogelijk te houden.',
+      deleteTitle: 'Een rekening verwijderen',
+      deleteText:
+        'Het verwijderen van een rekening verwijdert ook de gekoppelde transacties. Dit kan niet ongedaan worden gemaakt.',
+      warningTitle: 'Waarschuwing',
+      warningText:
+        'Een rekening verwijderen wist permanent alle bijbehorende transacties. Exporteer je gegevens vooraf als je ze later nodig kunt hebben.',
+    },
+    addressBook: {
+      title: 'Adresboek beheren',
+      subtitle:
+        'Beheer contacten en verbeter transactienamen met automatische opschoonregels.',
+      tipTitle: 'Snelle tip',
+      tipText:
+        'Imports vullen het adresboek automatisch. Gebruik opschoonregels om onduidelijke bankomschrijvingen te verduidelijken.',
+      whatAreTitle: 'Wat is het adresboek?',
+      whatAreText:
+        'Het adresboek bewaart tegenpartijen uit transacties op basis van IBAN en naam. Zo kun je contacten beheren, banknamen opschonen en uitgaven per winkel volgen.',
+      featuresTitle: 'Belangrijkste functies',
+      autoExtractionTitle: 'Automatisch aanvullen',
+      autoExtractionText:
+        'Bij het importeren van CSV-bestanden herkent Fluxby tegenpartijen op basis van IBAN en naam en voegt ze toe aan het adresboek.',
+      nameCleanupTitle: 'Namen opschonen',
+      nameCleanupText:
+        'Banken voegen soms technische tekst toe aan transactienamen, zoals “via Mollie”. Maak regels om die tekst automatisch te verwijderen.',
+      sharedIbansTitle: 'Gedeelde IBAN’s',
+      sharedIbansText:
+        'Betaalproviders gebruiken soms één IBAN voor meerdere winkels. Bepaal of die namen bij dezelfde winkel horen of apart moeten blijven.',
+      managingTitle: 'Contacten beheren',
+      managingText:
+        'Je kunt contacten toevoegen, bewerken en opschoonregels instellen:',
+      manage1: 'Klik op een contact om de gegevens te bekijken',
+      manage2: 'Zoek contacten met de zoekbalk',
+      manage3: 'Maak opschoonregels voor betere categorisatie',
+      manage4: 'Bekijk de transactiegeschiedenis per contact',
+    },
+    analytics: {
+      title: 'Analyses en inzichten',
+      subtitle:
+        'Krijg inzicht in je uitgavenpatronen met analyses en grafieken.',
+      dashboardTitle: 'Dashboardoverzicht',
+      dashboardText:
+        'Het dashboard geeft een snel overzicht van je financiën, waaronder je saldo, maandelijkse uitgaven en recente transacties.',
+      categoriesTitle: 'Uitgaven per categorie',
+      categoriesText:
+        'Bekijk hoe je uitgaven over categorieën zijn verdeeld en waar je geld naartoe gaat.',
+      pieChartTitle: 'Taartdiagram',
+      pieChartText:
+        'Bekijk de verdeling van uitgaven per categorie. Klik op een segment om de transacties te zien.',
+      barChartTitle: 'Staafdiagram',
+      barChartText:
+        'Vergelijk uitgaven per categorie en ontdek waar je het meest aan uitgeeft.',
+      trendsTitle: 'Maandelijkse trends',
+      trendsText:
+        'Volg veranderingen in je uitgaven en vergelijk per maand je inkomsten met je uitgaven.',
+      filtersTitle: 'Filters gebruiken',
+      filtersText:
+        'Filter analyses op periode en rekening om specifieke gegevens te bekijken.',
+      filter1:
+        'Kies een periode: deze maand, laatste 3 maanden, dit jaar of een eigen bereik',
+      filter2: 'Filter op rekening om één bankrekening te bekijken',
+      filter3: 'Combineer filters om de gewenste weergave te maken',
+      tipTitle: 'Tip',
+      tipText:
+        'Vergelijk dezelfde maand in verschillende jaren om rekening te houden met seizoensuitgaven, zoals feestdagen of vakanties.',
+      exportTitle: 'Gegevens exporteren',
+      exportText:
+        'Exporteer je transactiegegevens en analyses via Instellingen om ze als CSV in andere toepassingen te gebruiken.',
+    },
+  },
+});
+
+Object.assign(nl, {
+  helpCenter: {
+    ...nl.helpCenter,
+    privacy: {
+      ...nl.helpCenter?.privacy,
+      storageLabel: 'Browser-OPFS / desktopappgegevens',
+    },
+  },
+});
+
+Object.assign(nl, {
+  helpCenter: {
+    ...nl.helpCenter,
+    devNav: {
+      ...nl.helpCenter?.devNav,
+      tools: 'Hulpmiddelen',
+      developerDocs: 'Ontwikkelaarsdocumentatie',
+    },
+    common: {
+      ...nl.helpCenter?.common,
+      openMenu: 'Menu openen',
+      home: 'Startpagina',
+      switchToLightMode: 'Overschakelen naar licht thema',
+      switchToDarkMode: 'Overschakelen naar donker thema',
+      close: 'Sluiten',
+      missingAsset: 'Afbeelding ontbreekt',
+      loading: 'Inhoud laden...',
+    },
+    ai: {
+      title: 'Slimme AI-functies',
+      intro:
+        'Fluxby kan TypeSafe AI optioneel gebruiken om transacties te categoriseren, onbekende importkolommen te herkennen, mogelijke adresboekmatches te vinden en betaalplatforms te herkennen.',
+      notice:
+        'TypeSafe AI werkt in de desktop-app en in de web-app. De webversie gebruikt een kleine Fluxby-gateway voor browsercommunicatie; de desktop-app maakt rechtstreeks verbinding. In beide versies moet je eerst je eigen TypeSafe API-sleutel toevoegen. Zonder sleutel worden geen AI-verzoeken gedaan.',
+      whatTitle: 'Wat is TypeSafe AI?',
+      whatText:
+        'TypeSafe AI is een dienst die gerichte AI-beslissingen teruggeeft als gestructureerde antwoorden. Fluxby past bestaande regels eerst toe; Jev helpt daarna bij betalingen die nog geen match hebben. Sommige categorie- en betaalprovideracties passen een betrouwbaar voorstel automatisch toe wanneer je ze start.',
+      optionalTitle: 'Volledig optioneel.',
+      optionalText:
+        'Zonder API-sleutel werkt Fluxby precies zoals altijd. Met een sleutel worden bepaalde functies slimmer.',
+      benefitsTitle: 'Wat verbetert AI?',
+      features: [
+        {
+          emoji: '🏷️',
+          title: 'Automatisch categoriseren',
+          description:
+            'Pas bestaande regels toe en laat de AI daarna een categorie kiezen op basis van winkelnaam, omschrijving en bedrag. Alleen automatisch toegewezen bij meer dan 60% zekerheid.',
+        },
+        {
+          emoji: '🧠',
+          title: 'Categorisatieregels ontdekken',
+          description:
+            'TypeSafe beoordeelt terugkerende winkels zonder categorie. Fluxby maakt alleen een herbruikbare regel als de categorie met meer dan 60% zekerheid past.',
+        },
+        {
+          emoji: '📊',
+          title: 'Importkolommen voorstellen',
+          description:
+            'Als verplichte CSV-velden ontbreken of dubbelzinnig zijn, kan Jev een kolom voorstellen. Controleer de koppeling en het transactievoorbeeld voordat je importeert.',
+        },
+        {
+          emoji: '📒',
+          title: 'Adresboekmatches voorstellen',
+          description:
+            'Jev vergelijkt onbekende tegenpartijen met bestaande contacten. Jij bevestigt elke IBAN-koppeling; contacten worden nooit automatisch samengevoegd.',
+        },
+        {
+          emoji: '📥',
+          title: 'CSV-import: richting herkennen',
+          description:
+            'Banken buiten Nederland gebruiken soms afwijkende codes voor debet en credit, zoals het Duitse Belastung en Gutschrift. AI herkent deze, zodat imports het juiste teken krijgen.',
+        },
+        {
+          emoji: '📅',
+          title: 'CSV-import: datumnotatie herkennen',
+          description:
+            'Is 01/02/2024 1 februari of 2 januari? AI herkent de datumnotatie van je bank aan de hand van enkele voorbeelden en voorkomt stille datumfouten.',
+        },
+        {
+          emoji: '💳',
+          title: 'Betaalplatforms herkennen',
+          description:
+            'Tikkie, PayPal, Mollie en nieuwe platforms worden herkend aan de hand van IBAN en transactieomschrijving, ook als ze nog niet in je patronenlijst staan.',
+        },
+        {
+          emoji: '🔄',
+          title: 'Abonnementen samenvoegen',
+          description:
+            'Netflix en Netflix Premium bij dezelfde IBAN kunnen hetzelfde abonnement zijn. AI groepeert zulke varianten, zodat patroondetectie de volledige transactiegeschiedenis kan gebruiken.',
+        },
+        {
+          emoji: '🔍',
+          title: 'Dubbele transacties opsporen',
+          description:
+            'Transacties met hetzelfde bedrag en bijna dezelfde datum, maar een iets andere omschrijving, worden aangeboden ter controle. Fluxby verwijdert nooit automatisch; jij beslist.',
+        },
+        {
+          emoji: '🔄',
+          title: 'Interne overboekingen controleren',
+          description:
+            'Jev beoordeelt mogelijke tegenboekingen op verschillende rekeningen. Jij bevestigt een paar voordat Fluxby beide transacties als overboeking markeert.',
+        },
+      ],
+      setupTitle: 'Hoe schakel ik AI in?',
+      setupSteps: [
+        'Ga naar Instellingen → App-instellingen → TypeSafe AI.',
+        'Plak de sleutel in het invoerveld en sla op.',
+        'Gebruik de knoppen om te categoriseren, regels te vinden, betaalplatforms te herkennen, dubbele transacties te controleren en mogelijke overboekingen te beoordelen. Jev kan ook importkolommen en adresboekmatches voorstellen.',
+      ],
+      setupKeyPrefix: 'Haal een gratis API-sleutel op via',
+      setupKeyLabel: 'console.typesafe.ai/keys',
+      removeKeyNotice:
+        'Je kunt de sleutel op elk moment verwijderen. Daarna worden er geen AI-verzoeken meer gedaan.',
+      demoDataNotice:
+        'In nieuwe demogegevens blijven betalingen van Salon Nova en Bistro Kora zonder categorie. Gebruik ze om Jev-categorisering en het vinden van terugkerende categorisatieregels te proberen.',
+      privacyTitle: 'Privacy — welke gegevens worden verstuurd?',
+      privacyText:
+        'Fluxby verstuurt alleen de minimale gegevens die nodig zijn voor de beslissing. Volledige transactielijsten worden nooit verstuurd. Je persoonlijke IBAN’s blijven lokaal; providerherkenning kan wel een IBAN van een tegenpartij meesturen wanneer je die actie start.',
+      dataTableFeature: 'Functie',
+      dataTableSent: 'Wat wordt verstuurd',
+      dataRows: [
+        ['Categoriseren', 'Winkelnaam, omschrijving en bedrag'],
+        ['CSV-richting', 'Unieke richtingswaarden uit het bestand'],
+        ['CSV-datum', 'Maximaal 10 datumteksten uit het CSV-bestand'],
+        [
+          'CSV-kolommen',
+          'Kolomnamen en maximaal twee beperkte voorbeeldregels',
+        ],
+        ['Betaalplatform', 'IBAN en winkelnamen'],
+        [
+          'Adresboekmatch',
+          'Tegenpartijnaam, aantal transacties en mogelijke contactnamen; geen IBAN',
+        ],
+        ['Abonnementen', 'IBAN en genormaliseerde winkelnamen'],
+        ['Dubbele transacties', 'Datum, bedrag en omschrijving van elk paar'],
+        [
+          'Overboekingen',
+          'Rekeningnamen, datum, bedrag en omschrijving van elk paar',
+        ],
+      ],
+      privacyLinkPrefix: 'Bekijk het',
+      privacyLinkLabel: 'TypeSafe-privacybeleid',
+      privacyLinkSuffix:
+        'voor details over hoe TypeSafe met je gegevens omgaat.',
+      faqTitle: 'Veelgestelde vragen',
+      faqs: [
+        {
+          question: 'Werkt Fluxby zonder AI?',
+          answer:
+            'Ja, volledig. Alle AI-functies zijn een optionele laag boven op de bestaande logica. Zonder API-sleutel gedraagt de app zich precies hetzelfde als voorheen.',
+        },
+        {
+          question: 'Kan de AI mijn transacties verwijderen?',
+          answer:
+            'Nee. De AI doet alleen voorstellen; de code en jij nemen alle beslissingen. Dubbele transacties worden aangeboden ter controle en nooit automatisch verwijderd.',
+        },
+        {
+          question: 'Kost TypeSafe geld?',
+          answerPrefix:
+            'TypeSafe geeft nieuwe accounts bij het schrijven van deze tekst $5 tegoed om mee te starten. Je kunt daarna zelf extra budget toevoegen. Bekijk',
+          linkLabel: 'typesafe.ai',
+          answerSuffix: 'voor de actuele prijzen.',
+        },
+        {
+          question: 'Wat is “Jev”?',
+          answer:
+            'Jev is het vlaggenschipmodel System One van TypeSafe. Het geeft gestructureerde antwoorden terug, zoals kansen en keuzes, in plaats van vrije tekst. Fluxby gebruikt Jev via de TypeSafe HTTP API.',
+        },
+      ],
+    },
+  },
+  docs: {
+    ...nl.docs,
+    common: {
+      ...nl.docs.common,
+      openMenu: 'Menu openen',
+      home: 'Startpagina',
+      switchToLightMode: 'Overschakelen naar licht thema',
+      switchToDarkMode: 'Overschakelen naar donker thema',
+      copy: 'Kopiëren',
+      copied: 'Gekopieerd!',
+      request: 'Verzoek',
+      response: 'Antwoord',
+      code: 'Code',
+      description: 'Beschrijving',
+    },
+    ai: {
+      title: 'TypeSafe AI / Jev',
+      subtitle:
+        'Zo gebruikt Fluxby het System One-model Jev van TypeSafe om kwetsbare regexregels te vervangen door gekalibreerde, gestructureerde AI-beoordelingen.',
+      whatTitle: 'Wat is TypeSafe AI?',
+      whatText:
+        'TypeSafe bouwt System One-modellen: kleine, snelle AI-primitieven die gestructureerde antwoorden geven in plaats van tekst te genereren. Jev is het vlaggenschipmodel van TypeSafe. Op basis van een status (JSON of tekst) en een of meer getypeerde vragen geeft het in ongeveer 100 ms kansen voor Choice-, Score- of Noul-antwoorden (ja/nee).',
+      controlText:
+        'De code beheert de besturingsstroom. Jev behandelt alleen taken die semantisch begrip van ongestructureerde tekst vereisen, zoals “welke categorie past bij deze winkelnaam?” of “is deze IBAN van een betaalbemiddelaar?”.',
+      architectureTitle: 'Architectuur',
+      architectureIntro:
+        'Fluxby volgt TypeSafe’s patroon voor AI-aangedreven software: houd deterministisch werk in code en zet AI alleen in waar heuristieken tekortschieten.',
+      decisionHeaders: ['Beslissing', 'Primitief', 'Vervangt'],
+      decisions: [
+        ['Transactiecategorie', 'Choice', 'Terugvaloptie voor regexregels'],
+        ['CSV-datumnotatie', 'Choice', 'Gok op basis van vaste volgorde'],
+        [
+          'Waarden in de richtingskolom',
+          'Choice',
+          'Vaste lijst met af/bij/debet',
+        ],
+        ['Betaalprovider herkennen', 'Noul', 'Lijst met deeltekenpatronen'],
+        [
+          'Terugkerende winkels groeperen',
+          'Noul',
+          'Verwijderen van Nederlandse maandnamen',
+        ],
+        [
+          'Semantische duplicaatcontrole',
+          'Noul',
+          'Deduplicatie op basis van alleen een hash',
+        ],
+      ],
+      optInTitle: 'Optioneel — functies blijven werken zonder AI',
+      optInText:
+        'Elke TypeSafe-integratie controleert op een API-sleutel voordat de dienst wordt aangeroepen. Ontbreekt de sleutel of mislukt de aanroep, dan blijft de bestaande deterministische logica ongewijzigd actief. Gebruikers die geen sleutel instellen, merken geen verschil.',
+      implementationTitle: 'Clientimplementatie',
+      implementationText:
+        'Fluxby blijft lokaal werken en gebruikt geen gedeelde TypeSafe-sleutel. De desktop-app roept TypeSafe rechtstreeks aan. De web-app op GitHub Pages stuurt dezelfde aanvraag via de optionele Fluxby Cloudflare Worker, zodat de browser de CORS-preflight veilig kan uitvoeren. apps/web/src/lib/typesafe-client.ts kiest het transport en biedt functies per domein.',
+      workerText:
+        'De Worker wordt één keer voor Fluxby uitgerold, niet één keer per gebruiker. De installatie staat beschreven in workers/typesafe-proxy/README.md. Gebruikers moeten nog steeds hun eigen TypeSafe API-sleutel toevoegen voordat er een aanvraag wordt verstuurd.',
+      categoryExampleTitle: 'Voorbeeld: transacties categoriseren',
+      categoryExampleText:
+        'Als de regexregelengine geen transactie kan koppelen, stuurt Fluxby de winkelnaam, omschrijving en het bedrag samen met de eigen categorielijst van de gebruiker naar Jev. Jev geeft voor elke categorie een kans terug.',
+      request: 'Aanvraag',
+      response: 'Antwoord',
+      confidenceText:
+        'Fluxby bundelt onafhankelijke transactievragen in één aanvraag en past een voorstel alleen toe wanneer confidence > 0.7. Bij of onder die grens blijft de transactie ongecategoriseerd voor handmatige controle. Terugkerende winkels kunnen ook exacte tekstregels opleveren wanneer ze dezelfde grens halen.',
+      directionExampleTitle: 'Voorbeeld: CSV-richtingskolom herkennen',
+      directionText:
+        'Bij bankbestanden met afwijkende waarden in de richtingskolom, bijvoorbeeld het Duitse “Belastung” en “Gutschrift”, vraagt Fluxby Jev om elke unieke waarde in één parallelle groep te classificeren voordat de rijen worden verwerkt.',
+      thresholdsTitle: 'Zekerheidsdrempels',
+      thresholdHeaders: [
+        'Functie',
+        'Primitief',
+        'Drempel',
+        'Actie bij behalen',
+      ],
+      thresholds: [
+        [
+          'Categorisatievoorstel',
+          'Choice confidence',
+          '> 0.7',
+          'Categorie automatisch toewijzen',
+        ],
+        [
+          'Datumnotatie herkennen',
+          'Choice confidence',
+          '≥ 0.8',
+          'Standaardinstelling van parser vervangen',
+        ],
+        [
+          'Richting herkennen',
+          'Choice',
+          '—',
+          'Gebruiken als het antwoord niet “unknown” is',
+        ],
+        [
+          'Betaalprovider',
+          'Noul',
+          '≥ 0.75',
+          'Markeren als door AI herkende provider',
+        ],
+        [
+          'Terugkerende betalingen groeperen',
+          'Noul',
+          '≥ 0.75',
+          'Winkelgroepen samenvoegen',
+        ],
+        [
+          'Duplicaten herkennen',
+          'Noul',
+          '≥ 0.75',
+          'Aan gebruiker tonen ter controle',
+        ],
+      ],
+      privacyTitle: 'Privacy en gegevensstroom',
+      privacyIntro:
+        'Als TypeSafe AI is ingeschakeld, worden bij elke aanvraag de volgende gegevens naar de TypeSafe API gestuurd:',
+      privacyItems: [
+        [
+          'Categorisatievoorstel',
+          'Winkelnaam, omschrijving en transactiebedrag',
+        ],
+        [
+          'Richting herkennen',
+          'Unieke waarden uit de richtingskolom van het CSV-voorbeeld',
+        ],
+        [
+          'Datumnotatie herkennen',
+          'Maximaal 10 voorbeeld datums uit het CSV-bestand',
+        ],
+        ['Betaalprovider herkennen', 'IBAN en winkelnamen'],
+        [
+          'Terugkerende betalingen groeperen',
+          'IBAN en genormaliseerde winkelnamen',
+        ],
+        [
+          'Duplicaten herkennen',
+          'Datum, bedrag en omschrijving van mogelijke transactieparen',
+        ],
+      ],
+      privacyFooterPrefix:
+        'TypeSafe wordt alleen aangeroepen wanneer de gebruiker een API-sleutel heeft ingesteld. Lees het',
+      privacyLink: 'privacybeleid van TypeSafe',
+      privacyFooterSuffix: 'voor meer informatie over gegevensverwerking.',
+      furtherReadingTitle: 'Verder lezen',
+      furtherReading: [
+        ['TypeSafe-documentatie', 'https://docs.typesafe.ai'],
+        [
+          'Bouwen met System One',
+          'https://docs.typesafe.ai/concepts/how-to-build-with-system-one',
+        ],
+        [
+          'Primitieven (Choice, Score, Noul)',
+          'https://docs.typesafe.ai/primitives',
+        ],
+        ['Zekerheid en drempels', 'https://docs.typesafe.ai/confidence'],
+        [
+          'Kookboek voor extractie van vooraf geparseerde waarden',
+          'https://docs.typesafe.ai/cookbooks/pre_parsed_value_extraction_cookbook',
+        ],
+        [
+          'Kookboek voor hiërarchische classificatie',
+          'https://docs.typesafe.ai/cookbooks/hierarchical_classification',
+        ],
+        [
+          'Interne referentie: docs/TYPESAFE-INTEGRATION.md',
+          'https://github.com/fluxby-app/fluxby/blob/main/docs/TYPESAFE-INTEGRATION.md',
+        ],
+      ],
+    },
+    architecture: {
+      ...nl.docs.architecture,
+      pageCopy: {
+        webTitle: 'Web (PWA)',
+        webFeatures: [
+          'Offline beschikbaar',
+          'Als PWA te installeren',
+          'Automatische updates',
+        ],
+        desktopTitle: 'Desktop (Tauri)',
+        desktopFeatures: [
+          'Native prestaties',
+          'Integratie met het systeemvak',
+          'Native back-ups',
+        ],
+        headlessTitle: 'Headless (API)',
+        headlessFeatures: [
+          'REST API',
+          'Swagger-documentatie',
+          'Integratie met Zapier/n8n',
+        ],
+        noteTitle: 'Let op',
+        autoLockLabels: ['Web:', 'Desktop:', 'Inactiviteit:'],
+        storageHeaders: ['Platform', 'Opslag', 'Locatie'],
+        storageRows: [
+          ['Web', 'OPFS (Origin Private File System)', 'Browseromgeving'],
+          ['Desktop (Tauri)', 'Tauri FS Plugin', 'AppLocalData'],
+          ['Headless (Node)', 'Node.js fs-module', 'Instelbaar pad'],
+        ],
+        backupLabels: ['Desktop:', 'Web:', 'Formaat:'],
+        comparisonHeaders: ['Aspect', 'Web-app (OPFS)', 'API-server (Node.js)'],
+        comparisonRows: [
+          [
+            'Databaselocatie',
+            'Browser-OPFS (sandbox)',
+            'map data/ in het project',
+          ],
+          [
+            'Beveiliging',
+            'Wachtwoord vergrendelt de interface',
+            'Alleen lokaal (SQLite zonder versleuteling)',
+          ],
+          [
+            'Toegang',
+            'Alleen via je browser met je wachtwoord',
+            'REST API op localhost:3001',
+          ],
+          [
+            'Gebruik',
+            'Dagelijks gebruik door eindgebruikers',
+            'Ontwikkeling, scripts en automatisering',
+          ],
+        ],
+        dataFlowSteps: [
+          [
+            'Exporteren vanuit de web-app',
+            'Ga naar Instellingen → Back-up → JSON-export downloaden',
+          ],
+          ['De API-server starten', 'npm run dev (of alleen npm run dev:api)'],
+          [
+            'Importeren via de API',
+            'Stuur een POST-aanvraag naar /api/data/import met je JSON-export',
+          ],
+          [
+            'Je integratie bouwen',
+            'Gebruik de REST API voor je scripts en automatisering',
+          ],
+        ],
+        whySeparateLabels: [
+          'Privacy:',
+          'Isolatie:',
+          'Flexibiliteit:',
+          'Serverloos:',
+        ],
+      },
+    },
+  },
+});
+
+Object.assign(nl, {
+  helpCenter: {
+    ...(nl.helpCenter ?? {}),
+    bulkDelete: {
+      title: 'Meerdere transacties beheren',
+      subtitle: 'Selecteer en verwijder meerdere transacties tegelijk.',
+      tipTitle: 'Handig om te weten',
+      tipText: 'Je kunt transacties tot 5 minuten na verwijdering herstellen.',
+      selectionModeTitle: 'Selectiemodus activeren',
+      selectionModeText:
+        'Schakel eerst de selectiemodus in om meerdere transacties te kiezen:',
+      step1: 'Ga via het menu naar Transacties',
+      step2: 'Klik naast een transactie op het vinkje',
+      step3:
+        'Onderin verschijnt een actiebalk voor de geselecteerde transacties',
+      selectingTitle: 'Transacties selecteren',
+      selectingText:
+        'Je kunt transacties op verschillende manieren selecteren:',
+      singleSelect: 'Afzonderlijk selecteren',
+      singleSelectDesc: 'Klik bij elke gewenste transactie op het vinkje.',
+      rangeSelect: 'Een bereik selecteren',
+      rangeSelectDesc:
+        'Houd Shift ingedrukt en klik op een andere transactie om alles ertussen te selecteren (alleen op desktop).',
+      selectAll: 'Alles selecteren',
+      selectAllDesc:
+        'Gebruik Alles selecteren in de actiebalk om alle zichtbare transacties te selecteren.',
+      deselectAll: 'Selectie opheffen',
+      deselectAllDesc:
+        'Klik op Annuleren of druk op Escape om de selectiemodus te verlaten.',
+      deletingTitle: 'Geselecteerde transacties verwijderen',
+      deletingText: 'Verwijder geselecteerde transacties als volgt:',
+      deleteStep1: 'Klik onderin de actiebalk op Verwijderen',
+      deleteStep2: 'Bevestig de verwijdering in het dialoogvenster',
+      deleteStep3: 'Het rekeningsaldo wordt automatisch opnieuw berekend',
+      dateRangeTitle: 'Verwijderen op datumbereik',
+      dateRangeText:
+        'Je kunt ook transacties uit een bepaalde periode verwijderen:',
+      dateRangeStep1: 'Klik op Verwijderen op datum in de actiebalk',
+      dateRangeStep2: 'Kies de begin- en einddatum',
+      dateRangeStep3: 'Filter eventueel op een specifieke rekening',
+      dateRangeStep4: 'Bevestig het verwijderen van transacties in die periode',
+      cautionTitle: 'Let op',
+      cautionText:
+        'Verwijderen op datumbereik kan veel transacties tegelijk wissen. Gebruik eerst de voorbeeldweergave om het aantal te controleren.',
+      undoTitle: 'Verwijderen ongedaan maken',
+      undoText: 'Herstel verwijderde transacties binnen 5 minuten:',
+      undoPoint1:
+        'Na het verwijderen verschijnt een melding met Ongedaan maken',
+      undoPoint2: 'Klik op Ongedaan maken om transacties te herstellen',
+      undoPoint3:
+        'De melding verdwijnt na 5 minuten; daarna kun je niet meer herstellen',
+      balanceTitle: 'Effect op het rekeningsaldo',
+      balanceText:
+        'Na het verwijderen wordt het saldo opnieuw berekend op basis van de overgebleven transacties.',
+      bestPracticeTitle: 'Aanbevolen werkwijze',
+      bestPracticeText:
+        'Gebruik filters om de transacties te controleren voordat je ze verwijdert.',
+    },
+    sync: {
+      title: 'Synchronisatie tussen apparaten',
+      subtitle:
+        'Houd je gegevens tussen apparaten gesynchroniseerd zonder cloud.',
+      howItWorksTitle: 'Hoe het werkt',
+      howItWorksText:
+        'Fluxby synchroniseert gegevens rechtstreeks tussen apparaten via een versleutelde peer-to-peerverbinding. De gegevens gaan niet via een centrale server.',
+      directConnection: 'Directe verbinding',
+      phone: 'Telefoon',
+      setupTitle: 'Synchronisatie instellen',
+      step1Title: 'Stap 1: Open Instellingen',
+      step1Text:
+        'Open de sectie Apparaten synchroniseren om je apparaat te bekijken en andere apparaten te koppelen.',
+      step2Title: 'Stap 2: Maak een koppelcode',
+      step2Text:
+        'Toon de QR-code en scan die met je andere apparaat, of voer de code daar handmatig in.',
+      step3Title: 'Stap 3: Verbind je apparaten',
+      step3Text:
+        'Open dezelfde instellingen op het tweede apparaat en scan of voer de koppelcode in.',
+      step4Title: 'Stap 4: Synchroniseer automatisch',
+      step4Text:
+        'Na het koppelen worden wijzigingen automatisch gesynchroniseerd wanneer beide apparaten online zijn. Je kunt ook handmatig synchroniseren.',
+      troubleshootingTitle: 'Problemen oplossen',
+      troubleshooting1Title: 'Apparaten vinden elkaar niet',
+      troubleshooting1Text:
+        'Controleer of beide apparaten hetzelfde wifinetwerk gebruiken. Sommige openbare netwerken blokkeren peer-to-peerverbindingen.',
+      troubleshooting2Title: 'Synchronisatie mislukt',
+      troubleshooting2Text:
+        'Controleer je internetverbinding en koppel de apparaten zo nodig opnieuw.',
+      troubleshooting3Title: 'Tegenstrijdige wijzigingen',
+      troubleshooting3Text:
+        'Bij gelijktijdige wijzigingen bewaart Fluxby automatisch de meest recente versie (Last-Write-Wins).',
+      securityTitle: 'Privacy en beveiliging',
+      securityText:
+        'Je financiële gegevens blijven op je eigen apparaten. Synchronisatie verloopt via versleutelde peer-to-peerverbindingen; Fluxby bewaart ze niet in de cloud.',
+    },
+  },
+});
+
+Object.assign(nl, {
+  docs: {
+    ...nl.docs,
+    errors: {
+      ...nl.docs.errors,
+      codeHeader: 'Code',
+      descriptionHeader: 'Beschrijving',
+    },
+  },
+  helpCenter: {
+    ...(nl.helpCenter ?? {}),
+    transactions: {
+      ...nl.helpCenter?.transactions,
+      bulkTitle: 'Meerdere transacties tegelijk wijzigen',
+      bulkText:
+        'Selecteer meerdere transacties om in één keer acties toe te passen, zoals categoriseren of verwijderen.',
+    },
+    categories: {
+      ...nl.helpCenter?.categories,
+      createStep1: 'Ga naar Categorieën in de zijbalk',
+      createStep2: 'Klik op Nieuwe categorie',
+      createStep3: 'Kies een naam, pictogram en kleur',
+      createStep4: 'Klik op Opslaan om de categorie te maken',
+      rulesTip: 'Tip',
+      rulesTipText:
+        'Hoe specifieker je regels zijn, hoe nauwkeuriger de categorisatie. Gebruik winkelnamen of woorden uit banktransacties.',
+    },
+  },
+  legal: {
+    ...nl.legal,
+    downloads: nl.downloads,
+  },
+});

@@ -3,6 +3,7 @@ import CodeBlock from '../../components/docs/CodeBlock';
 
 export default function DocsArchitecture() {
   const { t } = useLanguage();
+  const copy = t.docs.architecture.pageCopy;
 
   const schemaExample = `-- Every syncable table has these columns
 CREATE TABLE transactions (
@@ -62,43 +63,43 @@ function mergeChanges(local, remote) {
         <div className='rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800'>
           <div className='mb-2 text-2xl'>🌐</div>
           <h3 className='mb-1 font-semibold text-gray-900 dark:text-gray-100'>
-            Web (PWA)
+            {copy.webTitle}
           </h3>
           <p className='mb-2 text-sm text-gray-600 dark:text-gray-400'>
             {t.docs.architecture.webDesc}
           </p>
           <ul className='mb-0 list-none pl-0 text-xs text-gray-500'>
-            <li>✓ Offline support</li>
-            <li>✓ Installeerbaar als PWA</li>
-            <li>✓ Automatische updates</li>
+            {copy.webFeatures.map((feature: string) => (
+              <li key={feature}>✓ {feature}</li>
+            ))}
           </ul>
         </div>
         <div className='rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800'>
           <div className='mb-2 text-2xl'>🖥️</div>
           <h3 className='mb-1 font-semibold text-gray-900 dark:text-gray-100'>
-            Desktop (Tauri)
+            {copy.desktopTitle}
           </h3>
           <p className='mb-2 text-sm text-gray-600 dark:text-gray-400'>
             {t.docs.architecture.desktopDesc}
           </p>
           <ul className='mb-0 list-none pl-0 text-xs text-gray-500'>
-            <li>✓ Native prestaties</li>
-            <li>✓ System tray integratie</li>
-            <li>✓ Native backups</li>
+            {copy.desktopFeatures.map((feature: string) => (
+              <li key={feature}>✓ {feature}</li>
+            ))}
           </ul>
         </div>
         <div className='rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800'>
           <div className='mb-2 text-2xl'>⚙️</div>
           <h3 className='mb-1 font-semibold text-gray-900 dark:text-gray-100'>
-            Headless (API)
+            {copy.headlessTitle}
           </h3>
           <p className='mb-2 text-sm text-gray-600 dark:text-gray-400'>
             {t.docs.architecture.headlessDesc}
           </p>
           <ul className='mb-0 list-none pl-0 text-xs text-gray-500'>
-            <li>✓ REST API</li>
-            <li>✓ Swagger documentatie</li>
-            <li>✓ Zapier/n8n integratie</li>
+            {copy.headlessFeatures.map((feature: string) => (
+              <li key={feature}>✓ {feature}</li>
+            ))}
           </ul>
         </div>
       </div>
@@ -112,7 +113,7 @@ function mergeChanges(local, remote) {
       <div className='mt-4 mb-6 rounded-xl border border-amber-200 bg-amber-50 p-6 dark:border-amber-800 dark:bg-amber-950/30'>
         <h3 className='mt-0 mb-2 flex items-center gap-2 text-lg font-semibold text-amber-900 dark:text-amber-200'>
           <span>ℹ️</span>
-          Note
+          {copy.noteTitle}
         </h3>
         <p className='mb-0 text-amber-800 dark:text-amber-300'>
           {t.docs.architecture.privacyNote}
@@ -127,13 +128,16 @@ function mergeChanges(local, remote) {
       </h3>
       <ul className='text-gray-600 dark:text-gray-400'>
         <li>
-          <strong>Web:</strong> {t.docs.architecture.autoLockWeb}
+          <strong>{copy.autoLockLabels[0]}</strong>{' '}
+          {t.docs.architecture.autoLockWeb}
         </li>
         <li>
-          <strong>Desktop:</strong> {t.docs.architecture.autoLockDesktop}
+          <strong>{copy.autoLockLabels[1]}</strong>{' '}
+          {t.docs.architecture.autoLockDesktop}
         </li>
         <li>
-          <strong>Idle timeout:</strong> {t.docs.architecture.autoLockIdle}
+          <strong>{copy.autoLockLabels[2]}</strong>{' '}
+          {t.docs.architecture.autoLockIdle}
         </li>
       </ul>
 
@@ -169,48 +173,48 @@ function mergeChanges(local, remote) {
           <thead className='bg-gray-50 dark:bg-gray-800'>
             <tr>
               <th className='px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100'>
-                Platform
+                {copy.storageHeaders[0]}
               </th>
               <th className='px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100'>
-                Storage
+                {copy.storageHeaders[1]}
               </th>
               <th className='px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100'>
-                Locatie
+                {copy.storageHeaders[2]}
               </th>
             </tr>
           </thead>
           <tbody className='divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900'>
             <tr>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                Web
+                {copy.storageRows[0][0]}
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                OPFS (Origin Private File System)
+                {copy.storageRows[0][1]}
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                Browser sandbox
-              </td>
-            </tr>
-            <tr>
-              <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                Desktop (Tauri)
-              </td>
-              <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                Tauri FS Plugin
-              </td>
-              <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                <code>AppLocalData</code>
+                {copy.storageRows[0][2]}
               </td>
             </tr>
             <tr>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                Headless (Node)
+                {copy.storageRows[1][0]}
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                Node.js fs module
+                {copy.storageRows[1][1]}
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                Configurable path
+                <code>{copy.storageRows[1][2]}</code>
+              </td>
+            </tr>
+            <tr>
+              <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
+                {copy.storageRows[2][0]}
+              </td>
+              <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
+                {copy.storageRows[2][1]}
+              </td>
+              <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
+                {copy.storageRows[2][2]}
               </td>
             </tr>
           </tbody>
@@ -225,13 +229,16 @@ function mergeChanges(local, remote) {
       </p>
       <ul className='text-gray-600 dark:text-gray-400'>
         <li>
-          <strong>Desktop:</strong> {t.docs.architecture.backupDesktop}
+          <strong>{copy.backupLabels[0]}</strong>{' '}
+          {t.docs.architecture.backupDesktop}
         </li>
         <li>
-          <strong>Web:</strong> {t.docs.architecture.backupWeb}
+          <strong>{copy.backupLabels[1]}</strong>{' '}
+          {t.docs.architecture.backupWeb}
         </li>
         <li>
-          <strong>Formaat:</strong> {t.docs.architecture.backupFormat}
+          <strong>{copy.backupLabels[2]}</strong>{' '}
+          {t.docs.architecture.backupFormat}
         </li>
       </ul>
 
@@ -257,59 +264,59 @@ function mergeChanges(local, remote) {
           <thead className='bg-gray-50 dark:bg-gray-800'>
             <tr>
               <th className='px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100'>
-                Aspect
+                {copy.comparisonHeaders[0]}
               </th>
               <th className='px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100'>
-                Web App (OPFS)
+                {copy.comparisonHeaders[1]}
               </th>
               <th className='px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100'>
-                API Server (Node.js)
+                {copy.comparisonHeaders[2]}
               </th>
             </tr>
           </thead>
           <tbody className='divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900'>
             <tr>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                Database locatie
+                {copy.comparisonRows[0][0]}
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                Browser OPFS (sandbox)
+                {copy.comparisonRows[0][1]}
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                <code>data/</code> folder in project
-              </td>
-            </tr>
-            <tr>
-              <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                Beveiliging
-              </td>
-              <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                Wachtwoord vergrendelt UI
-              </td>
-              <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                Lokaal alleen (plain SQLite)
+                {copy.comparisonRows[0][2]}
               </td>
             </tr>
             <tr>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                Toegang
+                {copy.comparisonRows[1][0]}
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                Alleen via je browser met je wachtwoord
+                {copy.comparisonRows[1][1]}
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                REST API op localhost:3001
+                {copy.comparisonRows[1][2]}
               </td>
             </tr>
             <tr>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                Gebruik
+                {copy.comparisonRows[2][0]}
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                Dagelijks gebruik door eindgebruiker
+                {copy.comparisonRows[2][1]}
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                Development, scripts, automations
+                {copy.comparisonRows[2][2]}
+              </td>
+            </tr>
+            <tr>
+              <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
+                {copy.comparisonRows[3][0]}
+              </td>
+              <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
+                {copy.comparisonRows[3][1]}
+              </td>
+              <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
+                {copy.comparisonRows[3][2]}
               </td>
             </tr>
           </tbody>
@@ -333,22 +340,11 @@ function mergeChanges(local, remote) {
         {t.docs.architecture.dataFlowText}
       </p>
       <ol className='text-gray-600 dark:text-gray-400'>
-        <li>
-          <strong>Export vanuit web app:</strong> Ga naar Instellingen → Backup
-          → Download JSON export
-        </li>
-        <li>
-          <strong>Start de API server:</strong> <code>npm run dev</code> (of
-          alleen <code>npm run dev:api</code>)
-        </li>
-        <li>
-          <strong>Import via API:</strong> POST naar{' '}
-          <code>/api/data/import</code> met je export JSON
-        </li>
-        <li>
-          <strong>Bouw je integratie:</strong> Gebruik de REST API voor je
-          scripts en automations
-        </li>
+        {copy.dataFlowSteps.map(([title, description]: [string, string]) => (
+          <li key={title}>
+            <strong>{title}:</strong> {description}
+          </li>
+        ))}
       </ol>
 
       <h3 className='mt-8 text-xl font-bold text-gray-900 dark:text-gray-100'>
@@ -356,16 +352,20 @@ function mergeChanges(local, remote) {
       </h3>
       <ul className='text-gray-600 dark:text-gray-400'>
         <li>
-          <strong>Privacy:</strong> {t.docs.architecture.whySeparate1}
+          <strong>{copy.whySeparateLabels[0]}</strong>{' '}
+          {t.docs.architecture.whySeparate1}
         </li>
         <li>
-          <strong>Isolatie:</strong> {t.docs.architecture.whySeparate2}
+          <strong>{copy.whySeparateLabels[1]}</strong>{' '}
+          {t.docs.architecture.whySeparate2}
         </li>
         <li>
-          <strong>Flexibiliteit:</strong> {t.docs.architecture.whySeparate3}
+          <strong>{copy.whySeparateLabels[2]}</strong>{' '}
+          {t.docs.architecture.whySeparate3}
         </li>
         <li>
-          <strong>Serverless:</strong> {t.docs.architecture.whySeparate4}
+          <strong>{copy.whySeparateLabels[3]}</strong>{' '}
+          {t.docs.architecture.whySeparate4}
         </li>
       </ul>
     </article>

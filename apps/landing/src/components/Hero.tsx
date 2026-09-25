@@ -638,7 +638,7 @@ const Hero = () => {
 
       {/* Scroll down indicator - centered at bottom of hero */}
       <button
-        aria-label='Scroll down'
+        aria-label={t.hero.scrollDown}
         onClick={() =>
           window.scrollTo({
             top: window.innerHeight,

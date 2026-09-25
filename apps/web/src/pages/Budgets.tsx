@@ -588,8 +588,9 @@ export default function Budgets() {
                       <p className='font-medium'>{proposal.categoryName}</p>
                       <p className='text-xs text-muted-foreground'>
                         {t.budgets.avgSpent}:{' '}
-                        <Currency amount={proposal.avgMonthlySpent} />
-                        /mnd ({proposal.basedOnMonths} mnd)
+                        <Currency amount={proposal.avgMonthlySpent} />{' '}
+                        {t.budgets.perMonthShort} ({proposal.basedOnMonths}{' '}
+                        {t.budgets.monthCountUnit})
                       </p>
                     </div>
                   </div>
@@ -696,7 +697,7 @@ export default function Budgets() {
               <div className='relative flex-1'>
                 <Search className='absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
                 <Input
-                  placeholder='Search budgets...'
+                  placeholder={t.budgets.searchPlaceholder}
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   className='pl-10'

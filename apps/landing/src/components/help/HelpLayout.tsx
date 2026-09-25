@@ -28,7 +28,7 @@ export default function HelpLayout() {
             <button
               onClick={() => setIsMobileMenuOpen(true)}
               className='mr-2 rounded-lg p-2 text-gray-600 hover:bg-gray-100 lg:hidden dark:text-gray-400 dark:hover:bg-gray-700'
-              aria-label='Open menu'
+              aria-label={t.helpCenter.common.openMenu}
             >
               <svg
                 className='h-6 w-6'
@@ -49,11 +49,8 @@ export default function HelpLayout() {
               to='/'
               className='text-sm text-gray-500 transition-colors hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100'
             >
-              ←{' '}
-              <span className='hidden sm:inline'>
-                {t.docs?.backToHome || 'Back to Home'}
-              </span>
-              <span className='sm:hidden'>Home</span>
+              ← <span className='hidden sm:inline'>{t.docs.backToHome}</span>
+              <span className='sm:hidden'>{t.helpCenter.common.home}</span>
             </Link>
           </div>
           <div className='flex items-center gap-4'>
@@ -87,8 +84,8 @@ export default function HelpLayout() {
               className='rounded-lg border border-gray-200 bg-gray-50 p-2 text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-gray-100'
               title={
                 theme === 'dark'
-                  ? 'Switch to light mode'
-                  : 'Switch to dark mode'
+                  ? t.helpCenter.common.switchToLightMode
+                  : t.helpCenter.common.switchToDarkMode
               }
             >
               {theme === 'dark' ? (
@@ -134,8 +131,7 @@ export default function HelpLayout() {
         {/* Footer */}
         <footer className='border-t border-gray-200 bg-white px-8 py-6 dark:border-gray-700 dark:bg-gray-800'>
           <div className='mx-auto max-w-4xl text-center text-sm text-gray-500 dark:text-gray-400'>
-            © Fluxby.{' '}
-            {t.helpCenter?.footerText || "We're here to help you succeed."}
+            © Fluxby. {t.helpCenter.footerText}
           </div>
         </footer>
       </div>

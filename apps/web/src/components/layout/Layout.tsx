@@ -441,7 +441,7 @@ export default function Layout() {
               <div className='absolute inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm'>
                 <div className='flex items-center gap-2 text-muted-foreground'>
                   <div className='h-5 w-5 animate-spin rounded-full border-2 border-muted border-t-purple-600' />
-                  <span>Profiel wisselen...</span>
+                  <span>{t.common.preparingOnboarding}</span>
                 </div>
               </div>
             )}

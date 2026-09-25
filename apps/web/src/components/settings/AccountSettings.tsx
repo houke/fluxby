@@ -97,9 +97,10 @@ interface SortableAccountItemProps {
           credit: string;
         };
         title: string;
+        namePlaceholder: string;
         currentBalance: string;
         deleteConfirm: string;
-        deleteAccountTitle?: string;
+        deleteAccountTitle: string;
       };
     };
     common: {
@@ -160,7 +161,7 @@ const SortableAccountItem = React.memo(function SortableAccountItem({
             value={editName}
             onChange={(e) => setEditName(e.target.value)}
             className='flex-1'
-            placeholder='Account name'
+            placeholder={t.settings.accounts.namePlaceholder}
           />
           <Select
             value={editType}
@@ -182,7 +183,7 @@ const SortableAccountItem = React.memo(function SortableAccountItem({
             step='0.01'
             value={editBalance}
             onChange={(e) => setEditBalance(e.target.value)}
-            placeholder='Balance'
+            placeholder={t.settings.accounts.currentBalance}
             className='w-full sm:w-32'
           />
           <div className='flex gap-2'>
@@ -295,9 +296,7 @@ const SortableAccountItem = React.memo(function SortableAccountItem({
                       className='rounded-md text-destructive transition-colors hover:bg-red-600 hover:text-white dark:hover:bg-red-700'
                       onClick={async () => {
                         const isConfirmed = await confirm({
-                          title:
-                            t.settings.accounts.deleteAccountTitle ||
-                            'Delete account',
+                          title: t.settings.accounts.deleteAccountTitle,
                           message: t.settings.accounts.deleteConfirm,
                           variant: 'danger',
                         });

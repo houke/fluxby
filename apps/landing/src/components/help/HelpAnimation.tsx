@@ -86,7 +86,7 @@ function ProfileAnimation({
   anim?: { title?: string; placeholder?: string; button?: string };
 }) {
   const [typing, setTyping] = useState(0);
-  const name = anim?.placeholder || 'Persoonlijk';
+  const name = anim?.placeholder ?? '';
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -100,7 +100,7 @@ function ProfileAnimation({
       <div className='flex w-72 flex-col items-center gap-4 p-6'>
         <div className='text-4xl'>👤</div>
         <h3 className='text-lg font-semibold text-gray-700 dark:text-gray-200'>
-          {anim?.title || 'Nieuw profiel'}
+          {anim?.title}
         </h3>
         <div className='w-full'>
           <div className='relative rounded-lg border-2 border-gray-300 bg-white px-4 py-3 dark:border-gray-600 dark:bg-gray-700'>
@@ -111,7 +111,7 @@ function ProfileAnimation({
           </div>
         </div>
         <div className='w-full rounded-lg bg-purple-600 py-2 text-center text-white'>
-          {anim?.button || 'Aanmaken'}
+          {anim?.button}
         </div>
       </div>
     </AnimationWrapper>
@@ -151,7 +151,7 @@ function ImportAnimation({
             <>
               <div className='text-3xl'>📂</div>
               <p className='mt-2 text-sm text-gray-500 dark:text-gray-400'>
-                {anim?.dropText || 'Sleep CSV hier'}
+                {anim?.dropText}
               </p>
             </>
           )}
@@ -163,7 +163,7 @@ function ImportAnimation({
               <div className='flex items-center gap-2 rounded-lg bg-white px-4 py-2 shadow-lg dark:bg-gray-600'>
                 <span className='text-xl'>📄</span>
                 <span className='text-sm font-medium text-gray-700 dark:text-gray-200'>
-                  {anim?.fileName || 'transacties.csv'}
+                  {anim?.fileName}
                 </span>
               </div>
             </div>
@@ -177,9 +177,7 @@ function ImportAnimation({
                 />
               </div>
               <p className='text-sm text-gray-600 dark:text-gray-300'>
-                {phase === 2
-                  ? anim?.processing || 'Verwerken...'
-                  : '✓ ' + (anim?.fileName || 'transacties.csv')}
+                {phase === 2 ? anim?.processing : '✓ ' + anim?.fileName}
               </p>
             </div>
           )}
@@ -219,7 +217,7 @@ function DashboardAnimation({
         <div className='flex w-full gap-2'>
           <div className='flex-1 rounded-lg bg-white px-3 py-2 shadow-sm dark:bg-gray-700'>
             <p className='text-xs text-gray-500 dark:text-gray-400'>
-              {anim?.balance || 'Saldo'}
+              {anim?.balance}
             </p>
             <p className='text-lg font-bold text-gray-800 dark:text-gray-200'>
               €3.450
@@ -227,13 +225,13 @@ function DashboardAnimation({
           </div>
           <div className='flex-1 rounded-lg bg-white px-3 py-2 shadow-sm dark:bg-gray-700'>
             <p className='text-xs text-gray-500 dark:text-gray-400'>
-              {anim?.income || 'Inkomsten'}
+              {anim?.income}
             </p>
             <p className='font-semibold text-green-600'>+€2.800</p>
           </div>
           <div className='flex-1 rounded-lg bg-white px-3 py-2 shadow-sm dark:bg-gray-700'>
             <p className='text-xs text-gray-500 dark:text-gray-400'>
-              {anim?.expenses || 'Uitgaven'}
+              {anim?.expenses}
             </p>
             <p className='font-semibold text-red-500'>-€1.245</p>
           </div>
@@ -304,12 +302,7 @@ function TransactionsAnimation({
   anim?: { search?: string; items?: string[] };
 }) {
   const [highlighted, setHighlighted] = useState(0);
-  const items = anim?.items || [
-    '🛒 Albert Heijn',
-    '⛽ Shell',
-    '🍽️ Restaurant',
-    '📺 Netflix',
-  ];
+  const items = anim?.items ?? [];
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -324,9 +317,7 @@ function TransactionsAnimation({
         {/* Search bar */}
         <div className='flex items-center gap-2 rounded-lg bg-white px-3 py-2 dark:bg-gray-700'>
           <span className='text-gray-400'>🔍</span>
-          <span className='text-sm text-gray-400'>
-            {anim?.search || 'Zoeken...'}
-          </span>
+          <span className='text-sm text-gray-400'>{anim?.search}</span>
         </div>
         {/* Transaction list */}
         <div className='flex flex-col gap-2'>
@@ -365,12 +356,7 @@ function CategoriesAnimation({
   anim?: { items?: Array<{ emoji: string; name: string; color: string }> };
 }) {
   const [selected, setSelected] = useState(0);
-  const items = anim?.items || [
-    { emoji: '🛒', name: 'Boodschappen', color: '#34D399' },
-    { emoji: '🚗', name: 'Vervoer', color: '#3B82F6' },
-    { emoji: '🍽️', name: 'Uit eten', color: '#F97316' },
-    { emoji: '🎬', name: 'Entertainment', color: '#8B5CF6' },
-  ];
+  const items = anim?.items ?? [];
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -464,22 +450,18 @@ function BudgetAnimation({
             <span className='text-2xl font-bold text-gray-800 dark:text-gray-200'>
               {progress}%
             </span>
-            <span className='text-xs text-gray-500'>
-              {anim?.title || 'Budget'}
-            </span>
+            <span className='text-xs text-gray-500'>{anim?.title}</span>
           </div>
         </div>
         {/* Stats */}
         <div className='flex w-full justify-between text-sm'>
           <div>
-            <p className='text-gray-500 dark:text-gray-400'>
-              {anim?.spent || 'Uitgegeven'}
-            </p>
+            <p className='text-gray-500 dark:text-gray-400'>{anim?.spent}</p>
             <p className='font-semibold text-purple-600'>€{spent}</p>
           </div>
           <div className='text-right'>
             <p className='text-gray-500 dark:text-gray-400'>
-              {anim?.remaining || 'Resterend'}
+              {anim?.remaining}
             </p>
             <p className='font-semibold text-gray-800 dark:text-gray-200'>
               €{remaining}
@@ -509,19 +491,19 @@ function SubscriptionsAnimation({
 
   const subscriptions = [
     {
-      name: anim?.netflix || 'Netflix',
+      name: anim?.netflix,
       amount: -12.99,
       icon: '🎬',
       nextDate: '15 jan',
     },
     {
-      name: anim?.spotify || 'Spotify',
+      name: anim?.spotify,
       amount: -9.99,
       icon: '🎵',
       nextDate: '3 jan',
     },
     {
-      name: anim?.gym || 'Sportschool',
+      name: anim?.gym,
       amount: -29.99,
       icon: '💪',
       nextDate: '1 feb',
@@ -543,7 +525,7 @@ function SubscriptionsAnimation({
         {/* Header with total */}
         <div className='flex items-center justify-between border-b border-gray-200 pb-2 dark:border-gray-600'>
           <span className='text-sm text-gray-500 dark:text-gray-400'>
-            {anim?.monthly || 'Maandelijks'}
+            {anim?.monthly}
           </span>
           <span className='font-bold text-purple-600'>
             €{Math.abs(totalMonthly).toFixed(2)}
@@ -622,9 +604,7 @@ function AccountsAnimation({
       <div className='flex w-72 flex-col gap-3 p-4'>
         <div className='flex items-center justify-between rounded-xl bg-gradient-to-r from-purple-600 to-purple-700 p-4 text-white'>
           <div>
-            <p className='text-sm opacity-80'>
-              {anim?.checking || 'Betaalrekening'}
-            </p>
+            <p className='text-sm opacity-80'>{anim?.checking}</p>
             <p className='text-xl font-bold'>
               €{balances[0].toLocaleString('nl-NL')}
             </p>
@@ -633,9 +613,7 @@ function AccountsAnimation({
         </div>
         <div className='flex items-center justify-between rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 p-4 text-white'>
           <div>
-            <p className='text-sm opacity-80'>
-              {anim?.savings || 'Spaarrekening'}
-            </p>
+            <p className='text-sm opacity-80'>{anim?.savings}</p>
             <p className='text-xl font-bold'>
               €{balances[1].toLocaleString('nl-NL')}
             </p>
@@ -655,7 +633,7 @@ function TrendsAnimation({
   height: string;
   anim?: { months?: string[]; income?: string; expenses?: string };
 }) {
-  const months = anim?.months || ['Jan', 'Feb', 'Mar', 'Apr', 'Mei'];
+  const months = anim?.months ?? [];
   const [activeMonth, setActiveMonth] = useState(0);
   // Income and expenses data for each month
   const incomeData = [2800, 3200, 2900, 3100, 2950];
@@ -677,13 +655,13 @@ function TrendsAnimation({
           <div className='flex items-center gap-1.5'>
             <div className='h-3 w-3 rounded-sm bg-green-500' />
             <span className='text-xs text-gray-600 dark:text-gray-300'>
-              {anim?.income || 'Inkomsten'}
+              {anim?.income}
             </span>
           </div>
           <div className='flex items-center gap-1.5'>
             <div className='h-3 w-3 rounded-sm bg-red-400' />
             <span className='text-xs text-gray-600 dark:text-gray-300'>
-              {anim?.expenses || 'Uitgaven'}
+              {anim?.expenses}
             </span>
           </div>
         </div>
@@ -727,7 +705,7 @@ function TrendsAnimation({
         <div className='flex justify-center gap-6 rounded-lg bg-white px-4 py-2 dark:bg-gray-700'>
           <div className='text-center'>
             <p className='text-xs text-gray-500'>
-              {months[activeMonth]} {anim?.income || 'Inkomsten'}
+              {months[activeMonth]} {anim?.income}
             </p>
             <p className='font-semibold text-green-600'>
               €{incomeData[activeMonth].toLocaleString('nl-NL')}
@@ -735,7 +713,7 @@ function TrendsAnimation({
           </div>
           <div className='text-center'>
             <p className='text-xs text-gray-500'>
-              {months[activeMonth]} {anim?.expenses || 'Uitgaven'}
+              {months[activeMonth]} {anim?.expenses}
             </p>
             <p className='font-semibold text-red-500'>
               €{expenseData[activeMonth].toLocaleString('nl-NL')}
@@ -756,11 +734,7 @@ function AddressBookAnimation({
   anim?: { contacts?: Array<{ name: string; count: number }> };
 }) {
   const [selected, setSelected] = useState(0);
-  const contacts = anim?.contacts || [
-    { name: 'Albert Heijn', count: 24 },
-    { name: 'Shell', count: 12 },
-    { name: 'NS', count: 8 },
-  ];
+  const contacts = anim?.contacts ?? [];
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -808,7 +782,7 @@ function ExportAnimation({
   anim?: { formats?: string[]; exporting?: string };
 }) {
   const [step, setStep] = useState(0);
-  const formats = anim?.formats || ['JSON', 'CSV'];
+  const formats = anim?.formats ?? [];
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -844,9 +818,7 @@ function ExportAnimation({
               {step === 2 ? '⏳' : '✅'}
             </div>
             <p className='text-sm text-gray-600 dark:text-gray-300'>
-              {step === 2
-                ? anim?.exporting || 'Exporteren...'
-                : 'fluxby-export.json'}
+              {step === 2 ? anim?.exporting : 'fluxby-export.json'}
             </p>
             {step === 3 && <div className='animate-bounce text-2xl'>⬇️</div>}
           </div>

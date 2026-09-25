@@ -107,9 +107,13 @@ fetch('http://localhost:3001/api/profiles', {
         <CodeBlock
           code={listProfilesCode}
           language='javascript'
-          title='Request'
+          title={t.docs.common.request}
         />
-        <CodeBlock code={responseExample} language='json' title='Response' />
+        <CodeBlock
+          code={responseExample}
+          language='json'
+          title={t.docs.common.response}
+        />
       </div>
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>

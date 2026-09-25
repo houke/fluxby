@@ -86,9 +86,13 @@ fetch('http://localhost:3001/api/categories', {
         <CodeBlock
           code={listCategoriesCode}
           language='javascript'
-          title='Request'
+          title={t.docs.common.request}
         />
-        <CodeBlock code={responseExample} language='json' title='Response' />
+        <CodeBlock
+          code={responseExample}
+          language='json'
+          title={t.docs.common.response}
+        />
       </div>
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
@@ -242,11 +246,10 @@ fetch('http://localhost:3001/api/categories', {
       <div className='mt-6 rounded-xl border border-purple-200 bg-purple-50 p-6 dark:border-purple-800 dark:bg-purple-950/30'>
         <h3 className='mt-0 mb-2 flex items-center gap-2 text-lg font-semibold text-purple-900 dark:text-purple-200'>
           <span>✨</span>
-          {t.docs?.categories?.autoCategorizationTitle || 'Auto-categorisatie'}
+          {t.docs?.categories?.autoCategorizationTitle}
         </h3>
         <p className='mb-0 text-purple-800 dark:text-purple-300'>
-          {t.docs?.categories?.autoCategorizationText ||
-            'Fluxby kan transacties automatisch categoriseren op basis van regels die je definieert. Stel regels in via de app onder Categorieën → Regels, of gebruik de API voor aangepaste automatisering.'}
+          {t.docs?.categories?.autoCategorizationText}
         </p>
       </div>
     </article>

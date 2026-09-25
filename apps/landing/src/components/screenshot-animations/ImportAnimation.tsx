@@ -3,7 +3,7 @@ import { useLanguage } from '../../contexts/LanguageContext';
 
 export default function ImportAnimation({ isVisible }: { isVisible: boolean }) {
   const { t } = useLanguage();
-  const anim = t.animations?.import;
+  const anim = t.animations.import;
   const [phase, setPhase] = useState<'drop' | 'processing' | 'complete'>(
     'drop'
   );
@@ -136,8 +136,8 @@ export default function ImportAnimation({ isVisible }: { isVisible: boolean }) {
             </div>
             <span className='text-sm text-gray-700 dark:text-white/80'>
               {phase === 'complete'
-                ? `47 ${anim?.transactionsImported || 'transactions imported'}!`
-                : `${anim?.uploading || 'Uploading...'}`}
+                ? `47 ${anim.transactionsImported}!`
+                : anim.uploading}
             </span>
           </div>
         )}
@@ -146,7 +146,7 @@ export default function ImportAnimation({ isVisible }: { isVisible: boolean }) {
         {phase === 'processing' && (
           <div className='absolute right-4 bottom-4 left-4'>
             <div className='mb-1 flex justify-between text-xs text-gray-500 dark:text-white/60'>
-              <span>{anim?.processing || 'Processing...'}</span>
+              <span>{anim.processing}</span>
               <span>{Math.round(processProgress)}%</span>
             </div>
             <div className='h-2 overflow-hidden rounded-full bg-gray-200 dark:bg-white/20'>
@@ -163,17 +163,17 @@ export default function ImportAnimation({ isVisible }: { isVisible: boolean }) {
       <div className='mt-4 text-center'>
         {phase === 'drop' && (
           <span className='text-xs text-gray-500 dark:text-white/60'>
-            {anim?.dragHint || 'Drag your CSV file here'}
+            {anim.dragHint}
           </span>
         )}
         {phase === 'processing' && (
           <span className='text-xs text-gray-500 dark:text-white/60'>
-            {anim?.detecting || 'Detecting duplicates...'}
+            {anim.detecting}
           </span>
         )}
         {phase === 'complete' && (
           <span className='text-xs text-emerald-600 dark:text-emerald-400'>
-            ✓ {anim?.done || 'Import complete!'}
+            ✓ {anim.done}
           </span>
         )}
       </div>

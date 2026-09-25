@@ -27,6 +27,7 @@ const scrollToTop = () => {
 export default function HelpSidebar({ isOpen, onClose }: HelpSidebarProps) {
   const location = useLocation();
   const { t } = useLanguage();
+  const copy = t.helpCenter as NonNullable<typeof t.helpCenter>;
   const prevPathRef = useRef(location.pathname);
 
   // Close sidebar on route change (mobile)
@@ -41,108 +42,105 @@ export default function HelpSidebar({ isOpen, onClose }: HelpSidebarProps) {
   // User Guide navigation
   const navigation: NavSection[] = [
     {
-      title: t.helpCenter?.userNav?.gettingStarted || 'Getting Started',
+      title: copy.userNav.gettingStarted,
       items: [
         {
-          title: t.helpCenter?.userNav?.welcome || 'Welcome',
+          title: copy.userNav.welcome,
           path: '/help',
           icon: '👋',
         },
         {
-          title: t.helpCenter?.userNav?.firstSteps || 'First steps',
+          title: copy.userNav.firstSteps,
           path: '/help/first-steps',
           icon: '🚀',
         },
         {
-          title: t.helpCenter?.userNav?.installation || 'Installation',
+          title: copy.userNav.installation,
           path: '/help/installation',
           icon: '📲',
         },
         {
-          title:
-            t.helpCenter?.userNav?.bankConnection || 'Connecting your bank',
+          title: copy.userNav.bankConnection,
           path: '/help/bank-connection',
           icon: '🏦',
         },
       ],
     },
     {
-      title: t.helpCenter?.userNav?.features || 'Features',
+      title: copy.userNav.features,
       items: [
         {
-          title: t.helpCenter?.userNav?.transactions || 'Transactions',
+          title: copy.userNav.transactions,
           path: '/help/transactions',
           icon: '💸',
         },
         {
-          title: t.helpCenter?.userNav?.bulkDelete || 'Bulk delete',
+          title: copy.userNav.bulkDelete,
           path: '/help/bulk-delete',
           icon: '🗑️',
         },
         {
-          title: t.helpCenter?.userNav?.categories || 'Categories',
+          title: copy.userNav.categories,
           path: '/help/categories',
           icon: '🏷️',
         },
         {
-          title: t.helpCenter?.userNav?.accounts || 'Accounts',
+          title: copy.userNav.accounts,
           path: '/help/accounts',
           icon: '🏦',
         },
         {
-          title: t.helpCenter?.userNav?.addressBook || 'Address Book',
+          title: copy.userNav.addressBook,
           path: '/help/address-book',
           icon: '📒',
         },
       ],
     },
     {
-      title: t.helpCenter?.userNav?.budgeting || 'Budgeting & Analytics',
+      title: copy.userNav.budgeting,
       items: [
         {
-          title: t.helpCenter?.userNav?.createBudget || 'Creating a budget',
+          title: copy.userNav.createBudget,
           path: '/help/budgeting',
           icon: '📊',
         },
         {
-          title: t.helpCenter?.userNav?.subscriptions || 'Subscriptions',
+          title: copy.userNav.subscriptions,
           path: '/help/subscriptions',
           icon: '🔄',
         },
         {
-          title:
-            t.helpCenter?.userNav?.understandAnalytics ||
-            'Understanding analytics',
+          title: copy.userNav.understandAnalytics,
           path: '/help/analytics',
           icon: '📈',
         },
       ],
     },
     {
-      title: t.helpCenter?.userNav?.security || 'Security & Privacy',
+      title: copy.userNav.security,
       items: [
         {
-          title: t.helpCenter?.userNav?.sync || 'Device sync',
+          title: copy.userNav.sync,
           path: '/help/sync',
           icon: '🔄',
         },
         {
-          title: t.helpCenter?.userNav?.dataPrivacy || 'Your data & privacy',
+          title: copy.userNav.dataPrivacy,
           path: '/help/privacy',
           icon: '🔒',
         },
         {
-          title: t.helpCenter?.userNav?.ai || 'Slimme AI functies',
+          title: copy.userNav.ai,
           path: '/help/ai',
           icon: '✨',
         },
       ],
     },
     {
-      title: t.helpCenter?.devNav?.tools || 'Tools',
+      title: copy.devNav.tools,
       items: [
         {
-          title: t.helpCenter?.devNav?.developerDocs || 'Developer Docs',
+          title: copy.devNav.developerDocs,
           path: '/docs',
           icon: '💻',
         },
@@ -178,7 +176,7 @@ export default function HelpSidebar({ isOpen, onClose }: HelpSidebarProps) {
               Fluxby
             </span>
             <span className='rounded bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-700 dark:bg-purple-900/50 dark:text-purple-300'>
-              {t.helpCenter?.badge || 'Help Center'}
+              {copy.badge}
             </span>
           </Link>
         </div>

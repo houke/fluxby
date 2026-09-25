@@ -191,11 +191,15 @@ fetch('http://localhost:3001/api/import/history', {
       </div>
 
       <div className='not-prose mt-6 space-y-4'>
-        <CodeBlock code={importCSVCode} language='javascript' title='Request' />
+        <CodeBlock
+          code={importCSVCode}
+          language='javascript'
+          title={t.docs.common.request}
+        />
         <CodeBlock
           code={importResponseExample}
           language='json'
-          title='Response'
+          title={t.docs.common.response}
         />
       </div>
 
@@ -218,11 +222,15 @@ fetch('http://localhost:3001/api/import/history', {
       </div>
 
       <div className='not-prose mt-6 space-y-4'>
-        <CodeBlock code={previewCode} language='javascript' title='Request' />
+        <CodeBlock
+          code={previewCode}
+          language='javascript'
+          title={t.docs.common.request}
+        />
         <CodeBlock
           code={previewResponseExample}
           language='json'
-          title='Response'
+          title={t.docs.common.response}
         />
       </div>
 
@@ -245,11 +253,15 @@ fetch('http://localhost:3001/api/import/history', {
       </div>
 
       <div className='not-prose mt-6 space-y-4'>
-        <CodeBlock code={historyCode} language='javascript' title='Request' />
+        <CodeBlock
+          code={historyCode}
+          language='javascript'
+          title={t.docs.common.request}
+        />
         <CodeBlock
           code={historyResponseExample}
           language='json'
-          title='Response'
+          title={t.docs.common.response}
         />
       </div>
 

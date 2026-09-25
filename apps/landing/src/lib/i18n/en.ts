@@ -17,7 +17,7 @@ export const en: LandingTranslationKeys = {
     title: 'Meet',
     subtitle: 'your adorable financial mascotte!',
     description:
-      'Make money management fun with your own digital mascotte. Track expenses, set goals, and get better insights into your spending! Completely free forever.',
+      'Make money management fun with your own digital mascot. Track expenses, set goals, and get better insights into your spending! Completely free forever.',
     getStarted: 'Get started 🚀',
     scrollDown: 'Scroll down',
   },
@@ -177,6 +177,28 @@ export const en: LandingTranslationKeys = {
           'JSON responses, standard HTTP methods. Build custom dashboards or automations.',
       },
     ],
+    endpoints: [
+      {
+        method: 'GET',
+        path: '/api/transactions',
+        description: 'List transactions',
+      },
+      {
+        method: 'GET',
+        path: '/api/analytics/dashboard',
+        description: 'Dashboard statistics',
+      },
+      {
+        method: 'GET',
+        path: '/api/categories',
+        description: 'All categories',
+      },
+      {
+        method: 'POST',
+        path: '/api/import/csv',
+        description: 'Import bank CSV',
+      },
+    ],
     endpointsTitle: 'API endpoints',
     moreEndpoints: '... and 20+ more endpoints',
     viewDocs: 'View API docs',
@@ -261,6 +283,7 @@ export const en: LandingTranslationKeys = {
         'Install directly from your browser. No download needed, works offline.',
       installButton: 'Install as app',
       installedBadge: 'Installed',
+      openButton: 'Open Fluxby',
       browserInstructions: {
         ios: 'Tap the Share icon and then "Add to Home Screen"',
         android: 'Tap the menu (⋮) and then "Add to Home Screen"',
@@ -1622,6 +1645,7 @@ export const en: LandingTranslationKeys = {
     termsTitle: 'Terms of Use',
     privacy: {
       lastUpdated: 'Last Updated:',
+      lastUpdatedDate: 'January 4, 2026',
       introTitle: '1. Introduction',
       introText:
         'This Privacy Policy describes how Fluxby ("we," "us," or "the App") handles your data.',
@@ -1644,6 +1668,9 @@ export const en: LandingTranslationKeys = {
       transactionDataTitle: 'A. Financial Transaction Data',
       transactionDataText:
         'When you manually input data or import files (such as CSVs or bank statements), the App processes this information to create charts and categories. This processing happens instantly on your device. We do not (and cannot) see this data.',
+      localStorageTitle: 'B. Local Storage',
+      localStorageText:
+        'The App stores all data in a local database on your device. This includes transactions, categories, budgets, and settings. The database never leaves your device and is only accessible to the App.',
       addressBookTitle: 'B. Address Book / Contacts',
       addressBookText:
         'The App features an address book function to associate transactions with specific people or entities. If you grant access to your contacts, the App only reads this data to display names within the App. Your contact list is never uploaded or shared.',
@@ -1679,6 +1706,7 @@ export const en: LandingTranslationKeys = {
     },
     terms: {
       lastUpdated: 'Last Updated:',
+      lastUpdatedDate: 'January 4, 2026',
       aiDisclaimerTitle:
         '1. The "Vibe Coded" Disclaimer (AI-Generated Software)',
       aiDisclaimerImportant:
@@ -1930,25 +1958,30 @@ export const en: LandingTranslationKeys = {
     updatesPage: {
       intro:
         "See what's new in Fluxby. Here you'll find all updates and new features.",
+      v101Date: 'January 4, 2026',
+      v101Title: 'Release 1.0.1',
+      v101Description: 'New improvements and bug fixes.',
+      v101F1Title: 'Implement per-file version checking',
+      v101F1Desc: 'See the changelog for details.',
       v1133Date: 'September 22, 2026',
       v1133Title: 'Release 1.13.3',
       v1133Description: '1 bug fix.',
-      v1133F1Title: 'Old tauri db support',
+      v1133F1Title: 'Legacy Tauri database support',
       v1133F1Desc: "This shouldn't have happened, but it's fixed now!",
       v1132Date: 'September 22, 2026',
       v1132Title: 'Release 1.13.2',
       v1132Description: '1 bug fix.',
-      v1132F1Title: 'Restore first tour and use native batched Jev requests',
+      v1132F1Title: 'Restore the first tour and batch Jev requests natively',
       v1132F1Desc: 'An annoying issue has been squashed.',
       v1131Date: 'September 21, 2026',
       v1131Title: 'Release 1.13.1',
       v1131Description: '1 bug fix.',
-      v1131F1Title: 'Persist first-run completion and allow Jev',
+      v1131F1Title: 'Persist first-run completion and enable Jev',
       v1131F1Desc: 'Bugs eliminated, app improved.',
       v1130Date: 'September 21, 2026',
       v1130Title: 'Release 1.13.0',
       v1130Description: '1 new feature and 1 bug fix.',
-      v1130F1Title: 'Web proxy and responsive docs fixes',
+      v1130F1Title: 'Web proxy and responsive documentation fixes',
       v1130F1Desc: 'New functionality that actually helps.',
       v1130F2Title: 'Move frame ancestors policy to response headers',
       v1130F2Desc: 'Bugs eliminated, app improved.',
@@ -2278,6 +2311,7 @@ export const en: LandingTranslationKeys = {
       },
       costs: {
         title: 'The Budget 💰',
+        freeLabel: 'Free',
         content:
           'I quickly hit my premium request limit in my GitHub Copilot subscription. This was because Claude Opus has a 3x multiplier, every Opus prompt counts as 3 requests towards your limit. To continue the experiment, I set a budget of $25 to allow additional premium credits to be used and developed a smart strategy for which model to use when. This was strategic resource management instead of just blindly burning money. In the end I spent around $30 (subscription costs and additional request costs) total on LLM costs for the entire project, which is insanely cheap for a full application.',
         strategy: {
@@ -2424,6 +2458,7 @@ export const en: LandingTranslationKeys = {
         quarterly: 'Quarterly',
         yearly: 'Yearly',
       },
+      gym: 'Gym',
       nextPayment: 'Next',
       priceIncrease: 'Price increase detected',
       update: 'Update',
@@ -2453,3 +2488,519 @@ export const en: LandingTranslationKeys = {
     },
   },
 };
+
+Object.assign(en, {
+  helpCenter: {
+    ...(en.helpCenter ?? {}),
+    transactions: {
+      ...en.helpCenter?.transactions,
+      manualMethod: 'Manual',
+      manualMethodDesc:
+        'Open a transaction, then choose a category from the category menu.',
+      autoMethod: 'Automatic categorization',
+      autoMethodDesc:
+        'Create rules that assign categories based on transaction descriptions.',
+      proTip: 'Tip',
+      proTipText:
+        'After you categorize a transaction, Fluxby can offer to create a rule for similar future imports.',
+    },
+    categories: {
+      ...en.helpCenter?.categories,
+      step1: 'Open Categories from the sidebar',
+      step2: 'Click New Category',
+      step3: 'Enter a name and choose an icon',
+      step4: 'Choose a color to identify the category',
+      step5: 'Click Save to create the category',
+      tipTitle: 'Quick tip',
+      tipText:
+        'After you categorize a transaction manually, Fluxby can offer to create a rule for future imports.',
+      deleteTitle: 'Deleting a category',
+      deleteText:
+        'When deleting a category, you can move its transactions to another category or leave them uncategorized. Default categories cannot be deleted.',
+    },
+    bulkDelete: {
+      title: 'Manage multiple transactions',
+      subtitle: 'Select and delete several transactions at once.',
+      tipTitle: 'Good to know',
+      tipText: 'You can restore deleted transactions for up to 5 minutes.',
+      selectionModeTitle: 'Turn on selection mode',
+      selectionModeText:
+        'Turn on selection mode before selecting multiple transactions:',
+      step1: 'Open Transactions from the menu',
+      step2: 'Click the checkmark beside a transaction',
+      step3: 'An action bar appears with options for the selected transactions',
+      selectingTitle: 'Selecting transactions',
+      selectingText: 'There are several ways to select transactions:',
+      singleSelect: 'Select individually',
+      singleSelectDesc: 'Click the checkmark beside each transaction.',
+      rangeSelect: 'Select a range',
+      rangeSelectDesc:
+        'Hold Shift and click another transaction to select everything between them (desktop only).',
+      selectAll: 'Select all',
+      selectAllDesc:
+        'Use Select all in the action bar to select all visible transactions.',
+      deselectAll: 'Clear selection',
+      deselectAllDesc:
+        'Click Cancel or press Escape to leave selection mode and clear the selection.',
+      deletingTitle: 'Delete selected transactions',
+      deletingText: 'Delete the selected transactions as follows:',
+      deleteStep1: 'Click Delete in the action bar at the bottom',
+      deleteStep2: 'Confirm the deletion in the dialog',
+      deleteStep3: 'The account balance is recalculated automatically',
+      dateRangeTitle: 'Delete by date range',
+      dateRangeText: 'You can also delete transactions from a specific period:',
+      dateRangeStep1: 'Click Delete by date in the action bar',
+      dateRangeStep2: 'Choose a start and end date',
+      dateRangeStep3: 'Optionally filter by a specific account',
+      dateRangeStep4: 'Confirm deleting transactions in that range',
+      cautionTitle: 'Caution',
+      cautionText:
+        'Deleting by date range can remove many transactions at once. Use the preview first to check how many will be affected.',
+      undoTitle: 'Undo deletion',
+      undoText: 'Restore deleted transactions within 5 minutes:',
+      undoPoint1: 'An Undo notification appears after deletion',
+      undoPoint2: 'Click Undo to restore the transactions',
+      undoPoint3:
+        'The notification disappears after 5 minutes, after which recovery is no longer available',
+      balanceTitle: 'Effect on account balance',
+      balanceText:
+        'After transactions are deleted, the balance is recalculated from the remaining transactions.',
+      bestPracticeTitle: 'Best practice',
+      bestPracticeText:
+        'Use filters to review the transactions before deleting them.',
+    },
+    sync: {
+      title: 'Sync between devices',
+      subtitle: 'Keep your data in sync across devices without the cloud.',
+      howItWorksTitle: 'How it works',
+      howItWorksText:
+        'Fluxby syncs data directly between devices over an encrypted peer-to-peer connection. Your data does not pass through a central server.',
+      directConnection: 'Direct connection',
+      phone: 'Phone',
+      setupTitle: 'Set up sync',
+      step1Title: 'Step 1: Open Settings',
+      step1Text:
+        'Open the Sync Devices section to see your device and pair additional devices.',
+      step2Title: 'Step 2: Generate a pairing code',
+      step2Text:
+        'Show the QR code and scan it with your other device, or enter the code manually.',
+      step3Title: 'Step 3: Connect your devices',
+      step3Text:
+        'Open the same settings on the second device and scan or enter the pairing code.',
+      step4Title: 'Step 4: Sync automatically',
+      step4Text:
+        'Once paired, changes sync automatically when both devices are online. You can also sync manually.',
+      troubleshootingTitle: 'Troubleshooting',
+      troubleshooting1Title: 'Devices cannot find each other',
+      troubleshooting1Text:
+        'Check that both devices use the same Wi-Fi network. Some public networks block peer-to-peer connections.',
+      troubleshooting2Title: 'Sync failed',
+      troubleshooting2Text:
+        'Check your internet connection and pair the devices again if needed.',
+      troubleshooting3Title: 'Conflicting changes',
+      troubleshooting3Text:
+        'When the same data changes on multiple devices, Fluxby keeps the most recent version (Last-Write-Wins).',
+      securityTitle: 'Privacy and security',
+      securityText:
+        'Your financial data stays on your devices. Sync uses encrypted peer-to-peer connections; Fluxby does not store it in the cloud.',
+    },
+  },
+  docs: {
+    ...en.docs,
+    nav: { ...en.docs.nav, ai: 'TypeSafe AI' },
+    profiles: {
+      ...en.docs.profiles,
+      whatIsProfileTitle: 'What is a Profile?',
+      whatIsProfileText:
+        'A profile in Fluxby is a completely isolated financial environment. You can use profiles to:',
+      useCases: [
+        'Keep personal and business finances separate',
+        'Manage finances for different family members',
+        'Test hypothetical budgets or planning scenarios',
+      ],
+    },
+    errors: {
+      ...en.docs.errors,
+      codeHeader: 'Code',
+      descriptionHeader: 'Description',
+    },
+  },
+  legal: {
+    ...en.legal,
+    downloads: en.downloads,
+  },
+});
+
+Object.assign(en, {
+  helpCenter: {
+    ...en.helpCenter,
+    privacy: {
+      ...en.helpCenter?.privacy,
+      storageLabel: 'Browser OPFS / desktop app data',
+    },
+  },
+});
+
+Object.assign(en, {
+  helpCenter: {
+    ...en.helpCenter,
+    devNav: {
+      ...en.helpCenter?.devNav,
+      tools: 'Tools',
+      developerDocs: 'Developer docs',
+    },
+    common: {
+      ...en.helpCenter?.common,
+      openMenu: 'Open menu',
+      home: 'Home',
+      switchToLightMode: 'Switch to light mode',
+      switchToDarkMode: 'Switch to dark mode',
+      close: 'Close',
+      missingAsset: 'Missing asset',
+      loading: 'Loading content...',
+    },
+    ai: {
+      title: 'Smart AI features',
+      intro:
+        'Fluxby can optionally use TypeSafe AI to categorise transactions, recognise unfamiliar import columns, find possible address book matches, and identify payment providers.',
+      notice:
+        'TypeSafe AI works in both the desktop app and the web app. The web version uses a small Fluxby gateway for browser communication; the desktop app connects directly. In either version, add your own TypeSafe API key first. No AI requests are made without a key.',
+      whatTitle: 'What is TypeSafe AI?',
+      whatText:
+        'TypeSafe AI is a service that returns focused AI decisions as structured answers. Fluxby applies existing rules first; Jev then helps with payments that have not matched a rule. Some category and payment provider actions automatically apply a reliable suggestion when you start them.',
+      optionalTitle: 'Completely optional.',
+      optionalText:
+        'Fluxby works as usual without an API key. Adding a key makes certain features smarter.',
+      benefitsTitle: 'What does AI improve?',
+      features: [
+        {
+          emoji: '🏷️',
+          title: 'Automatic categorisation',
+          description:
+            'Apply existing rules first, then let AI choose a category from the merchant name, description, and amount. Automatic assignment happens only above 60% confidence.',
+        },
+        {
+          emoji: '🧠',
+          title: 'Discover categorisation rules',
+          description:
+            'TypeSafe reviews recurring merchants without a category. Fluxby creates a reusable rule only when the category is a good fit with over 60% confidence.',
+        },
+        {
+          emoji: '📊',
+          title: 'Suggest import columns',
+          description:
+            'When required CSV fields are missing or ambiguous, Jev can suggest a column. Check the mapping and transaction preview before importing.',
+        },
+        {
+          emoji: '📒',
+          title: 'Suggest address book matches',
+          description:
+            'Jev compares unknown counterparties with existing contacts. You confirm every IBAN match; contacts are never merged automatically.',
+        },
+        {
+          emoji: '📥',
+          title: 'CSV import: detect transaction direction',
+          description:
+            'Banks outside the Netherlands sometimes use unfamiliar debit and credit codes, such as the German Belastung and Gutschrift. AI recognises them so imports get the correct sign.',
+        },
+        {
+          emoji: '📅',
+          title: 'CSV import: detect date format',
+          description:
+            'Does 01/02/2024 mean 1 February or 2 January? AI detects your bank’s date format from a few examples and prevents silent date errors.',
+        },
+        {
+          emoji: '💳',
+          title: 'Recognise payment providers',
+          description:
+            'Tikkie, PayPal, Mollie, and new platforms are recognised from IBAN and transaction descriptions, even when they are not in your pattern list yet.',
+        },
+        {
+          emoji: '🔄',
+          title: 'Group subscriptions',
+          description:
+            'Netflix and Netflix Premium under the same IBAN may be the same subscription. AI groups such variations so pattern detection can use the full transaction history.',
+        },
+        {
+          emoji: '🔍',
+          title: 'Find duplicate transactions',
+          description:
+            'Transactions with the same amount and nearly the same date, but a slightly different description, are surfaced for review. Fluxby never deletes them automatically; you decide.',
+        },
+        {
+          emoji: '🔄',
+          title: 'Review internal transfers',
+          description:
+            'Jev reviews possible counter-transactions across different accounts. You confirm a pair before Fluxby marks both transactions as a transfer.',
+        },
+      ],
+      setupTitle: 'How do I enable AI?',
+      setupSteps: [
+        'Go to Settings → App settings → TypeSafe AI.',
+        'Paste the key into the field and save.',
+        'Use the buttons to categorise transactions, find rules, recognise payment providers, review duplicates, and check possible transfers. Jev can also suggest import columns and address book matches.',
+      ],
+      setupKeyPrefix: 'Get a free API key from',
+      setupKeyLabel: 'console.typesafe.ai/keys',
+      removeKeyNotice:
+        'You can remove the key at any time. Fluxby will then stop making AI requests.',
+      demoDataNotice:
+        'In new demo data, payments from Salon Nova and Bistro Kora remain uncategorised. Use them to try Jev categorisation and recurring categorisation rule discovery.',
+      privacyTitle: 'Privacy — what data is sent?',
+      privacyText:
+        'Fluxby sends only the minimum data needed for each decision. It never sends full transaction lists. Your personal IBANs stay local; provider detection may send a counterparty IBAN when you start that action.',
+      dataTableFeature: 'Feature',
+      dataTableSent: 'Data sent',
+      dataRows: [
+        ['Categorisation', 'Merchant name, description, and amount'],
+        ['CSV direction', 'Unique direction values from the file'],
+        ['CSV date', 'Up to 10 date strings from the CSV file'],
+        ['CSV columns', 'Column names and up to two limited sample rows'],
+        ['Payment provider', 'IBAN and merchant names'],
+        [
+          'Address book match',
+          'Counterparty name, transaction count, and possible contact names; no IBAN',
+        ],
+        ['Subscriptions', 'IBAN and normalised merchant names'],
+        [
+          'Duplicate transactions',
+          'Date, amount, and description for each pair',
+        ],
+        [
+          'Transfers',
+          'Account names, date, amount, and description for each pair',
+        ],
+      ],
+      privacyLinkPrefix: 'Read the',
+      privacyLinkLabel: 'TypeSafe privacy policy',
+      privacyLinkSuffix: 'for details about how TypeSafe handles your data.',
+      faqTitle: 'Frequently asked questions',
+      faqs: [
+        {
+          question: 'Does Fluxby work without AI?',
+          answer:
+            'Yes, completely. All AI features are an optional layer on top of the existing logic. Without an API key, the app behaves exactly as it did before.',
+        },
+        {
+          question: 'Can AI delete my transactions?',
+          answer:
+            'No. AI only makes suggestions; the code and you make every decision. Possible duplicates are shown for review and are never deleted automatically.',
+        },
+        {
+          question: 'Does TypeSafe cost money?',
+          answerPrefix:
+            'At the time of writing, TypeSafe gives new accounts $5 in credit to get started. You can add more budget yourself. See',
+          linkLabel: 'typesafe.ai',
+          answerSuffix: 'for current pricing.',
+        },
+        {
+          question: 'What is “Jev”?',
+          answer:
+            'Jev is TypeSafe’s flagship System One model. It returns structured answers, such as probabilities and choices, instead of free text. Fluxby uses Jev through the TypeSafe HTTP API.',
+        },
+      ],
+    },
+  },
+  docs: {
+    ...en.docs,
+    common: {
+      ...en.docs.common,
+      openMenu: 'Open menu',
+      home: 'Home',
+      switchToLightMode: 'Switch to light mode',
+      switchToDarkMode: 'Switch to dark mode',
+      copy: 'Copy',
+      copied: 'Copied!',
+      request: 'Request',
+      response: 'Response',
+      code: 'Code',
+      description: 'Description',
+    },
+    ai: {
+      title: 'TypeSafe AI / Jev',
+      subtitle:
+        'How Fluxby uses TypeSafe’s System One model (Jev) to replace fragile regex rules with calibrated, structured AI judgments.',
+      whatTitle: 'What is TypeSafe AI?',
+      whatText:
+        'TypeSafe builds System One models: small, fast AI primitives that return structured answers instead of generated text. Jev is TypeSafe’s flagship model. Given a state (JSON or string) and one or more typed questions, it returns probabilities for Choice, Score, or Noul (yes/no) answers in about 100 ms.',
+      controlText:
+        'Code owns the control flow. Jev handles only tasks that require semantic understanding of unstructured text, such as “which category fits this merchant name?” or “is this IBAN a payment intermediary?”.',
+      architectureTitle: 'Architecture',
+      architectureIntro:
+        'Fluxby follows TypeSafe’s AI-powered software pattern: keep deterministic work in code and add AI only where heuristics break down.',
+      decisionHeaders: ['Decision', 'Primitive', 'Replaces'],
+      decisions: [
+        ['Transaction category', 'Choice', 'Regex rule engine fallback'],
+        ['CSV date format', 'Choice', 'Fixed-order format guesser'],
+        ['Direction column values', 'Choice', 'Hardcoded debit/credit list'],
+        ['Payment provider detection', 'Noul', 'Substring pattern list'],
+        ['Recurring merchant grouping', 'Noul', 'Dutch month-name stripper'],
+        ['Semantic duplicate check', 'Noul', 'Hash-only deduplication'],
+      ],
+      optInTitle: 'Opt-in — features degrade gracefully',
+      optInText:
+        'Every TypeSafe integration checks for an API key before calling the service. If the key is absent or the call fails, the existing deterministic logic runs unchanged. Users who do not configure a key see no change in behaviour.',
+      implementationTitle: 'Client implementation',
+      implementationText:
+        'Fluxby remains local-first and does not use a shared TypeSafe key. The desktop app calls TypeSafe directly. The GitHub Pages web app sends the same request through the optional Fluxby Cloudflare Worker so the browser can pass CORS preflight safely. apps/web/src/lib/typesafe-client.ts selects the transport and exposes domain helpers.',
+      workerText:
+        'The Worker is deployed once for Fluxby, not once per user. Setup is documented in workers/typesafe-proxy/README.md. Users still need to add their own TypeSafe API key before any request is made.',
+      categoryExampleTitle: 'Example: transaction categorisation',
+      categoryExampleText:
+        'When the regex rule engine cannot match a transaction, Fluxby sends the merchant name, description, and amount to Jev alongside the user’s own category list. Jev returns a probability for each category.',
+      request: 'Request',
+      response: 'Response',
+      confidenceText:
+        'Fluxby batches independent transaction questions in one request and applies a suggestion only when confidence > 0.7. At or below that threshold, the transaction remains uncategorised for manual review. Repeated merchants can also become exact-text rules when they clear the same threshold.',
+      directionExampleTitle: 'Example: CSV direction column inference',
+      directionText:
+        'For bank exports with non-standard direction column values, such as the German “Belastung” and “Gutschrift”, Fluxby asks Jev to classify each unique value in one parallel batch before processing rows.',
+      thresholdsTitle: 'Confidence thresholds',
+      thresholdHeaders: ['Feature', 'Primitive', 'Threshold', 'Action if met'],
+      thresholds: [
+        [
+          'Category suggestion',
+          'Choice confidence',
+          '> 0.7',
+          'Auto-assign category',
+        ],
+        [
+          'Date format detection',
+          'Choice confidence',
+          '≥ 0.8',
+          'Override parser default',
+        ],
+        [
+          'Direction inference',
+          'Choice',
+          '—',
+          'Use if answer is not “unknown”',
+        ],
+        ['Payment provider', 'Noul', '≥ 0.75', 'Mark as AI-detected provider'],
+        ['Recurring grouping', 'Noul', '≥ 0.75', 'Merge merchant groups'],
+        ['Duplicate detection', 'Noul', '≥ 0.75', 'Surface for user review'],
+      ],
+      privacyTitle: 'Privacy and data flow',
+      privacyIntro:
+        'When TypeSafe AI is enabled, the following data is sent to the TypeSafe API for each request:',
+      privacyItems: [
+        [
+          'Category suggestion',
+          'Merchant name, description text, and transaction amount',
+        ],
+        [
+          'Direction inference',
+          'Unique direction column values from the CSV sample',
+        ],
+        ['Date format detection', 'Up to 10 sample date strings from the CSV'],
+        ['Payment provider detection', 'IBAN and merchant names'],
+        ['Recurring grouping', 'IBAN and normalised merchant names'],
+        [
+          'Duplicate detection',
+          'Date, amount, and description of candidate transaction pairs',
+        ],
+      ],
+      privacyFooterPrefix:
+        'No TypeSafe calls are made without a user-supplied API key. Review the',
+      privacyLink: 'TypeSafe privacy policy',
+      privacyFooterSuffix: 'for details on data handling.',
+      furtherReadingTitle: 'Further reading',
+      furtherReading: [
+        ['TypeSafe documentation', 'https://docs.typesafe.ai'],
+        [
+          'How to build with System One',
+          'https://docs.typesafe.ai/concepts/how-to-build-with-system-one',
+        ],
+        [
+          'Primitives (Choice, Score, Noul)',
+          'https://docs.typesafe.ai/primitives',
+        ],
+        ['Confidence and thresholds', 'https://docs.typesafe.ai/confidence'],
+        [
+          'Pre-parsed value extraction cookbook',
+          'https://docs.typesafe.ai/cookbooks/pre_parsed_value_extraction_cookbook',
+        ],
+        [
+          'Hierarchical classification cookbook',
+          'https://docs.typesafe.ai/cookbooks/hierarchical_classification',
+        ],
+        [
+          'Internal reference: docs/TYPESAFE-INTEGRATION.md',
+          'https://github.com/fluxby-app/fluxby/blob/main/docs/TYPESAFE-INTEGRATION.md',
+        ],
+      ],
+    },
+    architecture: {
+      ...en.docs.architecture,
+      pageCopy: {
+        webTitle: 'Web (PWA)',
+        webFeatures: [
+          'Offline support',
+          'Installable as a PWA',
+          'Automatic updates',
+        ],
+        desktopTitle: 'Desktop (Tauri)',
+        desktopFeatures: [
+          'Native performance',
+          'System tray integration',
+          'Native backups',
+        ],
+        headlessTitle: 'Headless (API)',
+        headlessFeatures: [
+          'REST API',
+          'Swagger documentation',
+          'Zapier/n8n integration',
+        ],
+        noteTitle: 'Note',
+        autoLockLabels: ['Web:', 'Desktop:', 'Idle timeout:'],
+        storageHeaders: ['Platform', 'Storage', 'Location'],
+        storageRows: [
+          ['Web', 'OPFS (Origin Private File System)', 'Browser sandbox'],
+          ['Desktop (Tauri)', 'Tauri FS Plugin', 'AppLocalData'],
+          ['Headless (Node)', 'Node.js fs module', 'Configurable path'],
+        ],
+        backupLabels: ['Desktop:', 'Web:', 'Format:'],
+        comparisonHeaders: ['Aspect', 'Web App (OPFS)', 'API Server (Node.js)'],
+        comparisonRows: [
+          [
+            'Database location',
+            'Browser OPFS (sandbox)',
+            'data/ folder in project',
+          ],
+          ['Security', 'Password locks the UI', 'Local only (plain SQLite)'],
+          [
+            'Access',
+            'Only through your browser with your password',
+            'REST API at localhost:3001',
+          ],
+          [
+            'Use',
+            'Daily use by end users',
+            'Development, scripts, automations',
+          ],
+        ],
+        dataFlowSteps: [
+          [
+            'Export from the web app',
+            'Go to Settings → Backup → Download JSON export',
+          ],
+          ['Start the API server', 'npm run dev (or just npm run dev:api)'],
+          [
+            'Import through the API',
+            'POST to /api/data/import with your exported JSON',
+          ],
+          [
+            'Build your integration',
+            'Use the REST API for your scripts and automations',
+          ],
+        ],
+        whySeparateLabels: [
+          'Privacy:',
+          'Isolation:',
+          'Flexibility:',
+          'Serverless:',
+        ],
+      },
+    },
+  },
+});

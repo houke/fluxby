@@ -9,7 +9,7 @@ const subscriptionData = [
     icon: '📺',
     amount: 15.99,
     frequency: 'monthly',
-    nextDate: '15 jan',
+    nextDate: { day: 15, month: 0 },
     isConfirmed: true,
   },
   {
@@ -18,17 +18,18 @@ const subscriptionData = [
     icon: '🎵',
     amount: 9.99,
     frequency: 'monthly',
-    nextDate: '3 jan',
+    nextDate: { day: 3, month: 0 },
     isConfirmed: true,
   },
 
   {
     id: 4,
     name: 'Gym',
+    nameKey: 'gym' as const,
     icon: '🏋️',
     amount: 29.99,
     frequency: 'monthly',
-    nextDate: '1 feb',
+    nextDate: { day: 1, month: 1 },
     isConfirmed: true,
   },
   {
@@ -37,7 +38,7 @@ const subscriptionData = [
     icon: '✨',
     amount: 10.99,
     frequency: 'monthly',
-    nextDate: '8 jan',
+    nextDate: { day: 8, month: 0 },
     isConfirmed: false,
     priceChange: 2.0,
   },
@@ -48,8 +49,21 @@ export default function SubscriptionsAnimation({
 }: {
   isVisible: boolean;
 }) {
-  const { t } = useLanguage();
-  const anim = t.animations?.subscriptions;
+  const { t, language } = useLanguage();
+  const anim = t.animations.subscriptions;
+  const dateFormatter = new Intl.DateTimeFormat(
+    language === 'nl' ? 'nl-NL' : 'en-GB',
+    { day: 'numeric', month: 'short', timeZone: 'UTC' }
+  );
+  const subscriptions = subscriptionData.map((subscription) => ({
+    ...subscription,
+    name: subscription.nameKey ? anim[subscription.nameKey] : subscription.name,
+    nextDate: dateFormatter.format(
+      new Date(
+        Date.UTC(2026, subscription.nextDate.month, subscription.nextDate.day)
+      )
+    ),
+  }));
   const [highlightedIndex, setHighlightedIndex] = useState<number | null>(null);
   const [showPriceAlert, setShowPriceAlert] = useState(false);
   const [confirming, setConfirming] = useState(false);
@@ -121,7 +135,7 @@ export default function SubscriptionsAnimation({
   }, [isVisible]);
 
   // Calculate total monthly spend
-  const totalMonthly = subscriptionData
+  const totalMonthly = subscriptions
     .filter(
       (s, index) => s.isConfirmed || (highlightedIndex === index && confirming)
     )
@@ -134,7 +148,7 @@ export default function SubscriptionsAnimation({
         <div className='flex items-center justify-between'>
           <div>
             <div className='text-xs text-gray-500 dark:text-white/60'>
-              {anim?.monthlyTotal || 'Monthly total'}
+              {anim.monthlyTotal}
             </div>
             <div className='text-xl font-bold text-gray-900 dark:text-white'>
               €{totalMonthly.toFixed(2)}
@@ -144,7 +158,7 @@ export default function SubscriptionsAnimation({
             <div className='text-center'>
               <div className='text-lg font-bold text-purple-600 dark:text-purple-400'>
                 {
-                  subscriptionData.filter(
+                  subscriptions.filter(
                     (s, index) =>
                       s.isConfirmed ||
                       (highlightedIndex === index && confirming)
@@ -152,13 +166,13 @@ export default function SubscriptionsAnimation({
                 }
               </div>
               <div className='text-xs text-gray-500 dark:text-white/60'>
-                {anim?.active || 'Active'}
+                {anim.active}
               </div>
             </div>
             <div className='text-center'>
               <div className='text-lg font-bold text-amber-500'>
                 {
-                  subscriptionData.filter(
+                  subscriptions.filter(
                     (s, index) =>
                       !s.isConfirmed &&
                       !(highlightedIndex === index && confirming)
@@ -166,7 +180,7 @@ export default function SubscriptionsAnimation({
                 }
               </div>
               <div className='text-xs text-gray-500 dark:text-white/60'>
-                {anim?.pending || 'Pending'}
+                {anim.pending}
               </div>
             </div>
           </div>
@@ -175,7 +189,7 @@ export default function SubscriptionsAnimation({
 
       {/* Subscription cards */}
       <div className='flex-1 space-y-2 overflow-hidden'>
-        {subscriptionData.map((sub, index) => {
+        {subscriptions.map((sub, index) => {
           const isHighlighted = highlightedIndex === index;
           const showAlert = isHighlighted && showPriceAlert && sub.priceChange;
           const isBeingConfirmed = isHighlighted && confirming;
@@ -206,10 +220,12 @@ export default function SubscriptionsAnimation({
                     )}
                   </div>
                   <div className='text-xs text-gray-500 dark:text-white/60'>
-                    {anim?.frequencies?.[
-                      sub.frequency as keyof typeof anim.frequencies
-                    ] || sub.frequency}{' '}
-                    · {anim?.nextPayment || 'Next'}: {sub.nextDate}
+                    {
+                      anim.frequencies[
+                        sub.frequency as keyof typeof anim.frequencies
+                      ]
+                    }{' '}
+                    · {anim.nextPayment}: {sub.nextDate}
                   </div>
                 </div>
 
@@ -230,10 +246,10 @@ export default function SubscriptionsAnimation({
               {showAlert && (
                 <div className='mt-2 flex items-center justify-between rounded-lg bg-rose-50 p-2 text-xs dark:bg-rose-900/20'>
                   <span className='text-rose-600 dark:text-rose-400'>
-                    {anim?.priceIncrease || 'Price increase detected'}
+                    {anim.priceIncrease}
                   </span>
                   <button className='rounded bg-rose-500 px-2 py-1 text-white'>
-                    {anim?.update || 'Update'}
+                    {anim.update}
                   </button>
                 </div>
               )}

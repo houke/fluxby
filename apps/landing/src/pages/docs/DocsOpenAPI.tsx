@@ -1,11 +1,16 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { ExternalLink, Download, Copy, Check, FolderOpen } from 'lucide-react';
+import { localizeOpenApiSpec } from '../../lib/openapi-i18n';
 
 export default function DocsOpenAPI() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [copied, setCopied] = useState(false);
   const [spec, setSpec] = useState<object | null>(null);
+  const localizedSpec = useMemo(
+    () => (spec ? localizeOpenApiSpec(spec, language) : null),
+    [spec, language]
+  );
 
   useEffect(() => {
     fetch('/openapi.json')
@@ -15,16 +20,16 @@ export default function DocsOpenAPI() {
   }, []);
 
   const handleCopy = () => {
-    if (spec) {
-      navigator.clipboard.writeText(JSON.stringify(spec, null, 2));
+    if (localizedSpec) {
+      navigator.clipboard.writeText(JSON.stringify(localizedSpec, null, 2));
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
   };
 
   const handleDownload = () => {
-    if (spec) {
-      const blob = new Blob([JSON.stringify(spec, null, 2)], {
+    if (localizedSpec) {
+      const blob = new Blob([JSON.stringify(localizedSpec, null, 2)], {
         type: 'application/json',
       });
       const url = URL.createObjectURL(blob);
@@ -48,7 +53,7 @@ export default function DocsOpenAPI() {
       <div className='not-prose mt-8 flex flex-wrap gap-4'>
         <button
           onClick={handleDownload}
-          disabled={!spec}
+          disabled={!localizedSpec}
           className='inline-flex items-center gap-2 rounded-lg bg-purple-600 px-4 py-2 font-medium text-white transition-colors hover:bg-purple-700 disabled:opacity-50'
         >
           <Download className='h-4 w-4' />
@@ -57,7 +62,7 @@ export default function DocsOpenAPI() {
 
         <button
           onClick={handleCopy}
-          disabled={!spec}
+          disabled={!localizedSpec}
           className='inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
         >
           {copied ? (
@@ -168,13 +173,13 @@ npx @openapitools/openapi-generator-cli generate \\
         </div>
       </div>
 
-      {spec && (
+      {localizedSpec && (
         <>
           <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
             {t.docs.openapi.specPreview}
           </h2>
           <pre className='mt-6 max-h-96 overflow-auto rounded-lg bg-gray-900 p-4 text-xs text-gray-100'>
-            <code>{JSON.stringify(spec, null, 2)}</code>
+            <code>{JSON.stringify(localizedSpec, null, 2)}</code>
           </pre>
         </>
       )}

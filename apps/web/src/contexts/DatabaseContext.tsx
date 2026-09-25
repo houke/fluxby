@@ -32,6 +32,7 @@ import {
 } from '@/components/ui/dialog';
 import { resetAppAndRestartOnboarding } from '@/lib/database-reset';
 import { debugLog } from '@/lib/debug';
+import type { TranslationKeys } from '@/lib/i18n';
 
 // Dev mode logger - always log in Tauri for debugging
 function devLog(message: string, ...args: unknown[]) {
@@ -71,6 +72,8 @@ interface DatabaseProviderProps {
   children: ReactNode;
 }
 
+type DatabaseInitStatus = keyof TranslationKeys['common']['databaseInitStatus'];
+
 // Module-level tracking for initialization - persists across React StrictMode remounts
 // This is critical because React's useRef resets on StrictMode unmount/remount
 let moduleInitStarted = false;
@@ -83,7 +86,7 @@ function resetModuleInitState() {
 }
 
 export function DatabaseProvider({ children }: DatabaseProviderProps) {
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
   const { isEncryptionEnabled, isUnlocked, encryptionKey, isHydrated } =
     useEncryption();
   const isDev = import.meta.env.DEV;
@@ -94,7 +97,7 @@ export function DatabaseProvider({ children }: DatabaseProviderProps) {
   const [isLoading, setIsLoading] = useState(!existingDb && !moduleInitError);
   const [error, setError] = useState<Error | null>(moduleInitError);
   const [isReady, setIsReady] = useState(!!existingDb);
-  const [initStatus, setInitStatus] = useState<string>('Starting...');
+  const [initStatus, setInitStatus] = useState<DatabaseInitStatus>('starting');
   const [showResetButton, setShowResetButton] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const mountedRef = useRef(true);
@@ -114,7 +117,7 @@ export function DatabaseProvider({ children }: DatabaseProviderProps) {
   // Helper to clear all storage and reload
   const handleResetDatabase = async () => {
     devLog('User requested database reset');
-    setInitStatus('Resetting database...');
+    setInitStatus('resettingDatabase');
     // Reset module-level state
     resetModuleInitState();
     resetDatabase(true);
@@ -162,7 +165,7 @@ export function DatabaseProvider({ children }: DatabaseProviderProps) {
       if (needsReopen) {
         if (reopenInProgressRef.current) {
           devLog('Encrypted database reopen already in progress');
-          setInitStatus('Setting up encryption...');
+          setInitStatus('settingUpEncryption');
           setIsLoading(true);
           setIsReady(false);
           return () => {
@@ -175,7 +178,7 @@ export function DatabaseProvider({ children }: DatabaseProviderProps) {
           'DB was opened without encryption but key is now set — reopening with encryption'
         );
         dbOpenedWithKeyRef.current = null;
-        setInitStatus('Setting up encryption...');
+        setInitStatus('settingUpEncryption');
         setIsLoading(true);
         setIsReady(false);
 
@@ -248,7 +251,7 @@ export function DatabaseProvider({ children }: DatabaseProviderProps) {
     // creating the database before OPFS readFromOPFS has populated the password hash.
     if (!isHydrated) {
       devLog('Waiting for encryption hydration...');
-      setInitStatus('Preparing security settings...');
+      setInitStatus('preparingSecuritySettings');
       setIsLoading(true);
       setIsReady(false);
       return;
@@ -257,7 +260,7 @@ export function DatabaseProvider({ children }: DatabaseProviderProps) {
     // If password protection is enabled but not unlocked, wait
     if (isEncryptionEnabled && !isUnlocked) {
       devLog('Waiting for unlock...');
-      setInitStatus('Waiting for unlock...');
+      setInitStatus('waitingForUnlock');
       setIsLoading(false);
       setIsReady(false);
       return;
@@ -267,7 +270,7 @@ export function DatabaseProvider({ children }: DatabaseProviderProps) {
     // This prevents the "locked phase" issue - we need the key BEFORE creating the DB
     if (isEncryptionEnabled && isUnlocked && !encryptionKey) {
       devLog('Waiting for encryption key derivation...');
-      setInitStatus('Deriving encryption key...');
+      setInitStatus('derivingEncryptionKey');
       setIsLoading(true);
       return;
     }
@@ -277,11 +280,11 @@ export function DatabaseProvider({ children }: DatabaseProviderProps) {
       devLog(
         'Init already started, calling createDatabase (factory handles singleton)'
       );
-      setInitStatus('Connecting to database...');
+      setInitStatus('connectingToDatabase');
     } else {
       devLog('Starting new database initialization...');
       moduleInitStarted = true;
-      setInitStatus('Loading database...');
+      setInitStatus('loadingDatabase');
     }
 
     setIsLoading(true);
@@ -361,26 +364,24 @@ export function DatabaseProvider({ children }: DatabaseProviderProps) {
             </div>
 
             {/* Title */}
-            <h2 className='mb-2 text-xl font-semibold'>
-              {t.common?.loading || 'Loading...'}
-            </h2>
+            <h2 className='mb-2 text-xl font-semibold'>{t.common.loading}</h2>
 
             {/* Description */}
             <p className='text-muted-foreground'>
-              {t.common?.initializingDatabase || 'Initializing database...'}
+              {t.common.initializingDatabase}
             </p>
 
             {/* Always show init status in Tauri or dev mode */}
             {(isDev || isTauri) && (
               <p className='mt-2 font-mono text-xs text-muted-foreground'>
-                {initStatus}
+                {t.common.databaseInitStatus[initStatus]}
               </p>
             )}
 
             {/* Show environment info in Tauri */}
             {isTauri && (
               <p className='mt-1 font-mono text-xs text-purple-500'>
-                Environment: Tauri
+                {t.common.environment}: Tauri
               </p>
             )}
 
@@ -388,9 +389,7 @@ export function DatabaseProvider({ children }: DatabaseProviderProps) {
             {showResetButton && (
               <div className='mt-6 space-y-2'>
                 <p className='text-sm text-amber-600 dark:text-amber-400'>
-                  {language === 'nl'
-                    ? 'Dit duurt langer dan verwacht...'
-                    : 'This is taking longer than expected...'}
+                  {t.common.databaseTakingLonger}
                 </p>
                 <Button
                   variant='outline'
@@ -399,7 +398,7 @@ export function DatabaseProvider({ children }: DatabaseProviderProps) {
                   className='gap-2'
                 >
                   <RefreshCw className='h-4 w-4' />
-                  {language === 'nl' ? 'Database resetten' : 'Reset database'}
+                  {t.common.resetDatabaseAction}
                 </Button>
               </div>
             )}

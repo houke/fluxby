@@ -117,7 +117,7 @@ const Footer = () => {
             target='_blank'
             rel='noopener noreferrer'
             className='hover:text-fluxby-light flex items-center gap-2 text-gray-400 transition-colors'
-            aria-label='Contribute on GitHub'
+            aria-label={t.footer.github}
           >
             <svg
               xmlns='http://www.w3.org/2000/svg'

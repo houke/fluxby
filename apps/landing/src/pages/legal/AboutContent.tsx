@@ -25,7 +25,7 @@ const AboutContent = () => {
   if (!aboutPage) {
     return (
       <p className='text-lg text-gray-600 dark:text-gray-400'>
-        Loading content...
+        {t.helpCenter.common.loading}
       </p>
     );
   }
@@ -191,7 +191,7 @@ const AboutContent = () => {
           <ul className='space-y-2 text-sm'>
             <li className='flex items-center gap-2'>
               <span className='rounded bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400'>
-                Free
+                {aboutPage.costs?.freeLabel}
               </span>
               <span className='text-gray-700 dark:text-gray-300'>
                 {aboutPage.costs?.strategy?.free}
@@ -254,7 +254,7 @@ const AboutContent = () => {
       {/* Explore More Cards */}
       <section className='mt-12'>
         <h2 className='mb-6 text-2xl font-bold text-gray-900 dark:text-white'>
-          {aboutPage.exploreMore?.title || 'Explore More'}
+          {aboutPage.exploreMore?.title}
         </h2>
         <div className='grid gap-4 sm:grid-cols-2'>
           <a
@@ -268,11 +268,10 @@ const AboutContent = () => {
             </div>
             <div>
               <h3 className='mb-1 text-lg font-bold text-gray-900 dark:text-white'>
-                {aboutPage.exploreMore?.app?.title || 'Try Fluxby Now'}
+                {aboutPage.exploreMore?.app?.title}
               </h3>
               <p className='text-sm text-gray-600 dark:text-gray-400'>
-                {aboutPage.exploreMore?.app?.description ||
-                  'See the magic for yourself! Dive into the app and experience what AI-powered finance management feels like.'}
+                {aboutPage.exploreMore?.app?.description}
               </p>
             </div>
           </a>
@@ -286,11 +285,10 @@ const AboutContent = () => {
             </div>
             <div>
               <h3 className='mb-1 text-lg font-bold text-gray-900 dark:text-white'>
-                {aboutPage.exploreMore?.docs?.title || 'Developer Docs'}
+                {aboutPage.exploreMore?.docs?.title}
               </h3>
               <p className='text-sm text-gray-600 dark:text-gray-400'>
-                {aboutPage.exploreMore?.docs?.description ||
-                  'For developers who want to build with Fluxby. Full API documentation, examples, and integration guides.'}
+                {aboutPage.exploreMore?.docs?.description}
               </p>
             </div>
           </Link>
@@ -304,11 +302,10 @@ const AboutContent = () => {
             </div>
             <div>
               <h3 className='mb-1 text-lg font-bold text-gray-900 dark:text-white'>
-                {aboutPage.exploreMore?.help?.title || 'Help Center'}
+                {aboutPage.exploreMore?.help?.title}
               </h3>
               <p className='text-sm text-gray-600 dark:text-gray-400'>
-                {aboutPage.exploreMore?.help?.description ||
-                  'Discover all the possibilities! Guides, tips, and everything you need to get the most out of Fluxby.'}
+                {aboutPage.exploreMore?.help?.description}
               </p>
             </div>
           </Link>
@@ -324,11 +321,10 @@ const AboutContent = () => {
             </div>
             <div>
               <h3 className='mb-1 text-lg font-bold text-gray-900 dark:text-white'>
-                {aboutPage.exploreMore?.github?.title || 'Contribute on GitHub'}
+                {aboutPage.exploreMore?.github?.title}
               </h3>
               <p className='text-sm text-gray-600 dark:text-gray-400'>
-                {aboutPage.exploreMore?.github?.description ||
-                  'Help make Fluxby even better! Report bugs, suggest features, or contribute code to the project.'}
+                {aboutPage.exploreMore?.github?.description}
               </p>
             </div>
           </a>
@@ -338,11 +334,10 @@ const AboutContent = () => {
       {/* Personal Message */}
       <section className='mt-12 rounded-2xl border-2 border-purple-200 bg-gradient-to-br from-purple-50 to-pink-50 p-8 text-center dark:border-purple-800 dark:from-purple-900/20 dark:to-pink-900/20'>
         <p className='mb-4 text-lg text-gray-700 dark:text-gray-300'>
-          {aboutPage.personalMessage?.text ||
-            "I hope you enjoy using Fluxby as much as I enjoyed building it! Go check out the demo — I've made sure there's a fully working demo profile available for you to test everything out! 🚀"}
+          {aboutPage.personalMessage?.text}
         </p>
         <p className='font-["Caveat",_cursive] text-3xl text-purple-600 dark:text-purple-400'>
-          — {aboutPage.personalMessage?.signature || 'Houke'}
+          — {aboutPage.personalMessage?.signature}
         </p>
       </section>
     </div>

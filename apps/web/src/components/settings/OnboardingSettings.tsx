@@ -72,7 +72,7 @@ const CHAPTER_ICONS: Record<
 };
 
 export function OnboardingSettings() {
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
   const { state, startOnboarding } = useOnboarding();
   const { switchProfile, refreshProfiles } = useProfile();
   const navigate = useNavigate();
@@ -116,8 +116,6 @@ export function OnboardingSettings() {
     : wasStarted
       ? Math.round((completedSteps / totalSteps) * 100)
       : 0;
-
-  const getText = (nl: string, en: string) => (language === 'nl' ? nl : en);
 
   // Handle restart with demo account check
   const handleRestart = async () => {
@@ -179,7 +177,7 @@ export function OnboardingSettings() {
         >
           <CardHeader className='px-3 py-3 sm:px-6 sm:py-4'>
             <CardTitle className='text-base sm:text-lg'>
-              {getText('Rondleiding', 'Onboarding Tour')}
+              {t.onboarding.settings.title}
             </CardTitle>
           </CardHeader>
           <CardContent className='space-y-4 px-3 pb-3 sm:px-6 sm:pb-6'>
@@ -187,18 +185,18 @@ export function OnboardingSettings() {
             <div className='space-y-2'>
               <div className='flex items-center justify-between text-sm'>
                 <span className='text-muted-foreground'>
-                  {getText('Voortgang', 'Progress')}
+                  {t.onboarding.settings.progress}
                 </span>
                 <span className='font-medium'>
                   {isCompleted ? (
                     <span className='flex items-center gap-1 text-green-600'>
                       <Check className='h-4 w-4' />
-                      {getText('Voltooid', 'Completed')}
+                      {t.onboarding.settings.completed}
                     </span>
                   ) : wasStarted ? (
                     `${progressPercentage}%`
                   ) : (
-                    getText('Nog niet gestart', 'Not started')
+                    t.onboarding.settings.notStarted
                   )}
                 </span>
               </div>
@@ -214,19 +212,10 @@ export function OnboardingSettings() {
             {/* Description */}
             <p className='text-sm text-muted-foreground'>
               {isCompleted
-                ? getText(
-                    'Je hebt de rondleiding voltooid! Je kunt deze altijd opnieuw starten om alle functies te bekijken.',
-                    'You have completed the tour! You can always restart it to review all features.'
-                  )
+                ? t.onboarding.settings.completedDescription
                 : wasStarted
-                  ? getText(
-                      'Je bent bezig met de rondleiding. Ga verder waar je gebleven was of start opnieuw.',
-                      'You are in the middle of the tour. Continue where you left off or restart.'
-                    )
-                  : getText(
-                      'Ontdek alle functies van Fluxby met onze interactieve rondleiding.',
-                      'Discover all features of Fluxby with our interactive tour.'
-                    )}
+                  ? t.onboarding.settings.inProgressDescription
+                  : t.onboarding.settings.introDescription}
             </p>
 
             {/* Action Buttons */}
@@ -249,7 +238,7 @@ export function OnboardingSettings() {
                   className='gap-2 bg-purple-600 hover:bg-purple-700'
                 >
                   <Play className='h-4 w-4' />
-                  {getText('Verder gaan', 'Continue')}
+                  {t.onboarding.settings.continue}
                 </Button>
               )}
 
@@ -260,7 +249,7 @@ export function OnboardingSettings() {
                   className='gap-2 bg-purple-600 hover:bg-purple-700'
                 >
                   <Play className='h-4 w-4' />
-                  {getText('Start rondleiding', 'Start Tour')}
+                  {t.onboarding.settings.startTour}
                 </Button>
               )}
 
@@ -272,14 +261,14 @@ export function OnboardingSettings() {
                   className='gap-2'
                 >
                   <RotateCcw className='h-4 w-4' />
-                  {getText('Opnieuw starten', 'Restart')}
+                  {t.onboarding.settings.restart}
                 </Button>
               )}
 
               {state.isActive && (
                 <div className='flex items-center gap-2 rounded-lg bg-purple-100 px-3 py-1.5 text-sm font-medium text-purple-700 dark:bg-purple-900/30 dark:text-purple-300'>
                   <div className='h-2 w-2 animate-pulse rounded-full bg-purple-600' />
-                  {getText('Rondleiding is actief', 'Tour is active')}
+                  {t.onboarding.settings.active}
                 </div>
               )}
             </div>
@@ -288,7 +277,7 @@ export function OnboardingSettings() {
             {wasStarted && !isCompleted && (
               <div className='mt-4 border-t pt-4'>
                 <p className='mb-2 text-xs font-medium text-muted-foreground'>
-                  {getText('Hoofdstukken', 'Chapters')}
+                  {t.onboarding.settings.chapters}
                 </p>
                 <TooltipProvider delayDuration={0}>
                   <div className='flex flex-wrap items-center gap-2'>
@@ -352,21 +341,11 @@ export function OnboardingSettings() {
           <DialogHeader>
             <DialogTitle className='flex items-center gap-2'>
               <AlertTriangle className='h-5 w-5 text-amber-500' />
-              {getText('Rondleiding herstarten', 'Restart Tour')}
+              {t.onboarding.settings.restartDialogTitle}
             </DialogTitle>
             <DialogDescription className='space-y-2 pt-2'>
-              <div>
-                {getText(
-                  'Door de rondleiding te herstarten wordt je automatisch overgeschakeld naar het Demo profiel.',
-                  'By restarting the tour, you will be automatically switched to the Demo profile.'
-                )}
-              </div>
-              <div>
-                {getText(
-                  'Als er geen Demo profiel bestaat, wordt deze aangemaakt en gevuld met voorbeelddata.',
-                  'If no Demo profile exists, one will be created and filled with sample data.'
-                )}
-              </div>
+              <div>{t.onboarding.settings.restartProfileWarning}</div>
+              <div>{t.onboarding.settings.createDemoWarning}</div>
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -375,7 +354,7 @@ export function OnboardingSettings() {
               onClick={() => setShowRestartDialog(false)}
               disabled={isRestarting}
             >
-              {getText('Annuleren', 'Cancel')}
+              {t.common.cancel}
             </Button>
             <Button
               onClick={handleRestart}
@@ -385,12 +364,12 @@ export function OnboardingSettings() {
               {isRestarting ? (
                 <>
                   <RotateCcw className='mr-2 h-4 w-4 animate-spin' />
-                  {getText('Bezig...', 'Starting...')}
+                  {t.onboarding.settings.starting}
                 </>
               ) : (
                 <>
                   <Play className='mr-2 h-4 w-4' />
-                  {getText('Herstarten', 'Restart')}
+                  {t.onboarding.settings.restartButton}
                 </>
               )}
             </Button>

@@ -7,137 +7,106 @@ export default function HelpTransactions() {
   return (
     <article className='prose prose-gray dark:prose-invert max-w-none'>
       <h1 className='mb-4 text-4xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.helpCenter?.transactions?.title || 'Transacties beheren'}
+        {t.helpCenter?.transactions?.title}
       </h1>
       <p className='text-xl text-gray-600 dark:text-gray-400'>
-        {t.helpCenter?.transactions?.subtitle ||
-          'Bekijk, zoek, filter en categoriseer je geïmporteerde transacties.'}
+        {t.helpCenter?.transactions?.subtitle}
       </p>
 
       <div className='mt-8 rounded-xl border border-purple-200 bg-purple-50 p-6 dark:border-purple-800 dark:bg-purple-950/30'>
         <h3 className='mt-0 mb-2 flex items-center gap-2 text-lg font-semibold text-purple-900 dark:text-purple-200'>
           <span>💡</span>
-          {t.helpCenter?.transactions?.tipTitle || 'Snelle tip'}
+          {t.helpCenter?.transactions?.tipTitle}
         </h3>
         <p className='mb-0 text-purple-800 dark:text-purple-300'>
-          {t.helpCenter?.transactions?.tipText ||
-            'Gebruik de zoekbalk en filters om snel specifieke transacties te vinden. Je kunt filteren op datum, categorie, bedrag en meer.'}
+          {t.helpCenter?.transactions?.tipText}
         </p>
       </div>
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.helpCenter?.transactions?.viewingTitle || 'Transacties bekijken'}
+        {t.helpCenter?.transactions?.viewingTitle}
       </h2>
       <p className='text-gray-600 dark:text-gray-400'>
-        {t.helpCenter?.transactions?.viewingText ||
-          'De Transacties pagina toont al je geïmporteerde transacties in een overzichtelijke, sorteerbare tabel. Elke transactie toont:'}
+        {t.helpCenter?.transactions?.viewingText}
       </p>
       <ul className='mt-4 list-inside list-disc text-gray-600 dark:text-gray-400'>
-        <li>
-          {t.helpCenter?.transactions?.field1 || 'Datum van de transactie'}
-        </li>
-        <li>
-          {t.helpCenter?.transactions?.field2 ||
-            'Omschrijving/naam tegenpartij'}
-        </li>
-        <li>
-          {t.helpCenter?.transactions?.field3 ||
-            'Categorie (indien toegewezen)'}
-        </li>
-        <li>
-          {t.helpCenter?.transactions?.field4 ||
-            'Bedrag (inkomsten in groen, uitgaven in rood)'}
-        </li>
+        <li>{t.helpCenter?.transactions?.field1}</li>
+        <li>{t.helpCenter?.transactions?.field2}</li>
+        <li>{t.helpCenter?.transactions?.field3}</li>
+        <li>{t.helpCenter?.transactions?.field4}</li>
       </ul>
 
       <HelpAnimation type='transactions' />
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.helpCenter?.transactions?.filteringTitle || 'Transacties filteren'}
+        {t.helpCenter?.transactions?.filteringTitle}
       </h2>
       <p className='text-gray-600 dark:text-gray-400'>
-        {t.helpCenter?.transactions?.filteringText ||
-          'Gebruik het filterpaneel om je transacties te verfijnen:'}
+        {t.helpCenter?.transactions?.filteringText}
       </p>
       <div className='mt-6 grid gap-4 md:grid-cols-2'>
         <div className='rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800'>
           <div className='mb-2 text-2xl'>📅</div>
           <h3 className='mb-1 font-semibold text-gray-900 dark:text-gray-100'>
-            {t.helpCenter?.transactions?.dateFilter || 'Datumbereik'}
+            {t.helpCenter?.transactions?.dateFilter}
           </h3>
           <p className='mb-0 text-sm text-gray-600 dark:text-gray-400'>
-            {t.helpCenter?.transactions?.dateFilterDesc ||
-              'Filter op specifieke maand, jaar of aangepast datumbereik.'}
+            {t.helpCenter?.transactions?.dateFilterDesc}
           </p>
         </div>
         <div className='rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800'>
           <div className='mb-2 text-2xl'>🏷️</div>
           <h3 className='mb-1 font-semibold text-gray-900 dark:text-gray-100'>
-            {t.helpCenter?.transactions?.categoryFilter || 'Categorie'}
+            {t.helpCenter?.transactions?.categoryFilter}
           </h3>
           <p className='mb-0 text-sm text-gray-600 dark:text-gray-400'>
-            {t.helpCenter?.transactions?.categoryFilterDesc ||
-              'Toon alleen transacties van specifieke categorieën.'}
+            {t.helpCenter?.transactions?.categoryFilterDesc}
           </p>
         </div>
         <div className='rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800'>
           <div className='mb-2 text-2xl'>💰</div>
           <h3 className='mb-1 font-semibold text-gray-900 dark:text-gray-100'>
-            {t.helpCenter?.transactions?.typeFilter || 'Transactietype'}
+            {t.helpCenter?.transactions?.typeFilter}
           </h3>
           <p className='mb-0 text-sm text-gray-600 dark:text-gray-400'>
-            {t.helpCenter?.transactions?.typeFilterDesc ||
-              'Filter op inkomsten, uitgaven of alle transacties.'}
+            {t.helpCenter?.transactions?.typeFilterDesc}
           </p>
         </div>
         <div className='rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800'>
           <div className='mb-2 text-2xl'>🔍</div>
           <h3 className='mb-1 font-semibold text-gray-900 dark:text-gray-100'>
-            {t.helpCenter?.transactions?.searchFilter || 'Zoeken'}
+            {t.helpCenter?.transactions?.searchFilter}
           </h3>
           <p className='mb-0 text-sm text-gray-600 dark:text-gray-400'>
-            {t.helpCenter?.transactions?.searchFilterDesc ||
-              'Zoek op omschrijving, naam tegenpartij of notities.'}
+            {t.helpCenter?.transactions?.searchFilterDesc}
           </p>
         </div>
       </div>
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.helpCenter?.transactions?.categorizingTitle ||
-          'Transacties categoriseren'}
+        {t.helpCenter?.transactions?.categorizingTitle}
       </h2>
       <p className='text-gray-600 dark:text-gray-400'>
-        {t.helpCenter?.transactions?.categorizingText ||
-          'Je kunt categorieën aan transacties toewijzen op twee manieren:'}
+        {t.helpCenter?.transactions?.categorizingText}
       </p>
       <ol className='mt-4 list-inside list-decimal text-gray-600 dark:text-gray-400'>
         <li className='mb-2'>
-          <strong>
-            {t.helpCenter?.transactions?.manualMethod || 'Handmatig'}
-          </strong>
-          :{' '}
-          {t.helpCenter?.transactions?.manualMethodDesc ||
-            'Klik op een transactie om te bewerken en selecteer een categorie uit de dropdown.'}
+          <strong>{t.helpCenter?.transactions?.manualMethod}</strong>:{' '}
+          {t.helpCenter?.transactions?.manualMethodDesc}
         </li>
         <li>
-          <strong>
-            {t.helpCenter?.transactions?.autoMethod ||
-              'Automatisch categoriseren'}
-          </strong>
-          :{' '}
-          {t.helpCenter?.transactions?.autoMethodDesc ||
-            'Maak regels die automatisch categorieën toewijzen op basis van de transactieomschrijving.'}
+          <strong>{t.helpCenter?.transactions?.autoMethod}</strong>:{' '}
+          {t.helpCenter?.transactions?.autoMethodDesc}
         </li>
       </ol>
 
       <div className='not-prose mt-6 rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-900/20'>
         <h4 className='mb-2 flex items-center gap-2 text-green-800 dark:text-green-200'>
           <span>✅</span>
-          {t.helpCenter?.transactions?.proTip || 'Pro tip'}
+          {t.helpCenter?.transactions?.proTip}
         </h4>
         <p className='m-0 text-green-700 dark:text-green-300'>
-          {t.helpCenter?.transactions?.proTipText ||
-            'Wanneer je een transactie categoriseert, kan Fluxby een auto-categorisatieregel voor je maken. Dit bespaart tijd bij toekomstige imports van dezelfde winkel!'}
+          {t.helpCenter?.transactions?.proTipText}
         </p>
       </div>
     </article>

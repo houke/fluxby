@@ -7,7 +7,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 export default function NotFound() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { language } = useLanguage();
+  const { t } = useLanguage();
 
   // Check if running in Tauri (no landing page available)
   const isTauri = typeof window !== 'undefined' && '__TAURI__' in window;
@@ -27,97 +27,48 @@ export default function NotFound() {
     navigate('/dashboard');
   };
 
-  const title = isAtRoot
-    ? language === 'nl'
-      ? 'Welkom bij Fluxby'
-      : 'Welcome to Fluxby'
-    : language === 'nl'
-      ? 'Pagina niet gevonden'
-      : 'Page not found';
+  const title = isAtRoot ? t.errors.notFoundWelcome : t.errors.notFoundTitle;
 
   const description =
     isAtRoot && !isTauri ? (
-      language === 'nl' ? (
-        <>
-          Je bent op de app pagina. Ga naar het{' '}
-          <a
-            href='/'
-            className='text-purple-600 underline hover:text-purple-500'
-            onClick={(e) => {
-              e.preventDefault();
-              window.location.href = '/';
-            }}
-          >
-            startscherm
-          </a>{' '}
-          of start met het{' '}
-          <span
-            onClick={goToDashboard}
-            className='cursor-pointer text-purple-600 underline hover:text-purple-500'
-          >
-            dashboard
-          </span>
-          .
-        </>
-      ) : (
-        <>
-          You&apos;re on the app page. Go to the{' '}
-          <a
-            href='/'
-            className='text-purple-600 underline hover:text-purple-500'
-            onClick={(e) => {
-              e.preventDefault();
-              window.location.href = '/';
-            }}
-          >
-            home page
-          </a>{' '}
-          or start with the{' '}
-          <span
-            onClick={goToDashboard}
-            className='cursor-pointer text-purple-600 underline hover:text-purple-500'
-          >
-            dashboard
-          </span>
-          .
-        </>
-      )
+      <>
+        {t.errors.appPageIntro}{' '}
+        <a
+          href='/'
+          className='text-purple-600 underline hover:text-purple-500'
+          onClick={(e) => {
+            e.preventDefault();
+            window.location.href = '/';
+          }}
+        >
+          {t.errors.appPageHomeLink}
+        </a>{' '}
+        {t.errors.appPageDashboardPrefix}{' '}
+        <span
+          onClick={goToDashboard}
+          className='cursor-pointer text-purple-600 underline hover:text-purple-500'
+        >
+          {t.errors.dashboardLink}
+        </span>
+        .
+      </>
     ) : mightBeLandingRoute ? (
-      language === 'nl' ? (
-        <>
-          Deze pagina bestaat in het hoofdmenu. Ga naar{' '}
-          <a
-            href={currentPath}
-            className='text-purple-600 underline hover:text-purple-500'
-            onClick={(e) => {
-              e.preventDefault();
-              window.location.href = currentPath.replace('/app', '');
-            }}
-          >
-            {currentPath}
-          </a>{' '}
-          op de landingspagina.
-        </>
-      ) : (
-        <>
-          This page exists in the main menu. Go to{' '}
-          <a
-            href={currentPath}
-            className='text-purple-600 underline hover:text-purple-500'
-            onClick={(e) => {
-              e.preventDefault();
-              window.location.href = currentPath.replace('/app', '');
-            }}
-          >
-            {currentPath}
-          </a>{' '}
-          on the landing page.
-        </>
-      )
-    ) : language === 'nl' ? (
-      'De pagina die je zoekt bestaat niet of is verplaatst.'
+      <>
+        {t.errors.landingRouteIntro}{' '}
+        <a
+          href={currentPath}
+          className='text-purple-600 underline hover:text-purple-500'
+          onClick={(e) => {
+            e.preventDefault();
+            window.location.href = currentPath.replace('/app', '');
+          }}
+        >
+          {currentPath}
+        </a>{' '}
+        {t.errors.landingRouteSuffix}
+      </>
     ) : (
-      "The page you're looking for doesn't exist or has been moved."
+      t.errors.defaultNotFoundDescription
     );
 
   return (
@@ -136,7 +87,7 @@ export default function NotFound() {
             )}
             <Button onClick={goToDashboard} className='w-full' size='lg'>
               <Home className='mr-2 h-4 w-4' />
-              {language === 'nl' ? 'Naar dashboard' : 'Go to dashboard'}
+              {t.errors.goToDashboard}
             </Button>
 
             <Button
@@ -146,7 +97,7 @@ export default function NotFound() {
               size='lg'
             >
               <ArrowLeft className='mr-2 h-4 w-4' />
-              {language === 'nl' ? 'Ga terug' : 'Go back'}
+              {t.errors.goBack}
             </Button>
 
             {!isTauri && (
@@ -157,7 +108,7 @@ export default function NotFound() {
                 size='lg'
               >
                 <ExternalLink className='mr-2 h-4 w-4' />
-                {language === 'nl' ? 'Naar startpagina' : 'Go to home page'}
+                {t.errors.goToHomePage}
               </Button>
             )}
           </div>

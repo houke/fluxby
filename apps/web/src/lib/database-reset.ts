@@ -10,6 +10,7 @@ import {
   clearSettingsCache,
   writeToOPFSWithCache,
 } from '@fluxby/database';
+import { getStoredLanguage, translations } from '@/lib/i18n';
 import { isRunningInTauri } from './tauri-bridge';
 
 /**
@@ -261,8 +262,9 @@ export async function resetAppAndRestartOnboarding(): Promise<void> {
 export function addDatabaseResetButton(): void {
   if (typeof document === 'undefined') return;
 
+  const t = translations[getStoredLanguage()].errors;
   const button = document.createElement('button');
-  button.textContent = '🔄 Reset DB';
+  button.textContent = t.debugResetButton;
   button.style.cssText = `
     position: fixed;
     bottom: 20px;
@@ -279,16 +281,17 @@ export function addDatabaseResetButton(): void {
   `;
 
   button.onclick = async () => {
-    if (
-      confirm('⚠️ This will delete ALL app data and reload the page. Continue?')
-    ) {
+    if (confirm(t.debugResetConfirm)) {
       try {
         await clearAllAppData();
-        alert('✅ Database cleared. Page will reload.');
+        alert(t.debugResetSuccess);
         window.location.reload();
       } catch (error) {
         alert(
-          `❌ Error: ${error instanceof Error ? error.message : 'Unknown error'}`
+          t.debugResetFailure.replace(
+            '{message}',
+            error instanceof Error ? error.message : String(error)
+          )
         );
       }
     }

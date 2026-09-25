@@ -6,21 +6,20 @@ const PricingContent = () => {
   const pricingPage = t.legal?.pricingPage;
 
   const freeFeatures = [
-    pricingPage?.feature1 || 'Onbeperkt transacties importeren',
-    pricingPage?.feature2 || 'Alle analytics en grafieken',
-    pricingPage?.feature3 || 'Budget tracking en doelen',
-    pricingPage?.feature4 || 'Meerdere bankrekeningen',
-    pricingPage?.feature5 || 'Adresboek functionaliteit',
-    pricingPage?.feature6 || 'Export naar JSON/CSV',
-    pricingPage?.feature7 || 'Donkere modus',
-    pricingPage?.feature8 || 'Toekomstige updates',
+    pricingPage?.feature1,
+    pricingPage?.feature2,
+    pricingPage?.feature3,
+    pricingPage?.feature4,
+    pricingPage?.feature5,
+    pricingPage?.feature6,
+    pricingPage?.feature7,
+    pricingPage?.feature8,
   ];
 
   return (
     <>
       <p className='mb-8 text-lg text-gray-600 dark:text-gray-400'>
-        {pricingPage?.intro ||
-          'Fluxby is en blijft volledig gratis. Geen verborgen kosten, geen premium versie, geen abonnement.'}
+        {pricingPage?.intro}
       </p>
 
       {/* Free Forever Card */}
@@ -31,17 +30,17 @@ const PricingContent = () => {
               <Gift className='h-12 w-12 flex-shrink-0 text-white' />
               <div className='flex flex-col gap-0'>
                 <h2 className='m-0 text-3xl leading-tight font-black text-white'>
-                  {pricingPage?.freeTitle || 'Gratis'}
+                  {pricingPage?.freeTitle}
                 </h2>
                 <p className='m-0 text-lg font-medium text-white'>
-                  {pricingPage?.freeSubtitle || 'Voor altijd'}
+                  {pricingPage?.freeSubtitle}
                 </p>
               </div>
             </div>
             <div className='text-left sm:text-right'>
               <span className='text-5xl font-black text-white'>€0</span>
               <span className='text-xl text-white/90'>
-                /{pricingPage?.perMonth || 'maand'}
+                /{pricingPage?.perMonth}
               </span>
             </div>
           </div>
@@ -69,12 +68,11 @@ const PricingContent = () => {
             <Heart className='h-7 w-7 text-purple-600 dark:text-purple-400' />
           </div>
           <h3 className='m-0 text-2xl font-bold text-gray-900 dark:text-white'>
-            {pricingPage?.whyFreeTitle || 'Waarom gratis?'}
+            {pricingPage?.whyFreeTitle}
           </h3>
         </div>
         <p className='m-0 text-gray-600 dark:text-gray-400'>
-          {pricingPage?.whyFreeText ||
-            'Fluxby is gebouwd met de overtuiging dat iedereen toegang zou moeten hebben tot goede financiële tools. Omdat alle data lokaal blijft en we geen servers draaien, hebben we geen lopende kosten. Dit maakt het mogelijk om Fluxby voor altijd gratis aan te bieden.'}
+          {pricingPage?.whyFreeText}
         </p>
       </div>
 
@@ -85,12 +83,11 @@ const PricingContent = () => {
             <Sparkles className='h-7 w-7 text-green-600 dark:text-green-400' />
           </div>
           <h3 className='m-0 text-2xl font-bold text-gray-900 dark:text-white'>
-            {pricingPage?.promiseTitle || 'Onze belofte'}
+            {pricingPage?.promiseTitle}
           </h3>
         </div>
         <p className='m-0 text-gray-600 dark:text-gray-400'>
-          {pricingPage?.promiseText ||
-            'Er komt geen premium versie. Er komt geen abonnement. Er komen geen "pro" features achter een betaalmuur. Alles wat we bouwen blijft gratis beschikbaar voor iedereen.'}
+          {pricingPage?.promiseText}
         </p>
       </div>
 
@@ -107,11 +104,10 @@ const PricingContent = () => {
           </div>
           <div>
             <h4 className='text-lg font-semibold text-gray-900 dark:text-white'>
-              {pricingPage?.coffeeTitle || 'Koop een koffie'}
+              {pricingPage?.coffeeTitle}
             </h4>
             <p className='text-sm text-gray-700 dark:text-gray-400'>
-              {pricingPage?.coffeeDescription ||
-                'Waardeer je Fluxby? Een kopje koffie is altijd welkom!'}
+              {pricingPage?.coffeeDescription}
             </p>
           </div>
         </a>
@@ -127,11 +123,10 @@ const PricingContent = () => {
           </div>
           <div>
             <h4 className='text-lg font-semibold text-gray-900 dark:text-white'>
-              {pricingPage?.contributeTitle || 'Help mee ontwikkelen'}
+              {pricingPage?.contributeTitle}
             </h4>
             <p className='text-sm text-gray-700 dark:text-gray-400'>
-              {pricingPage?.contributeDescription ||
-                'Draag bij aan de code of vraag nieuwe features aan op GitHub.'}
+              {pricingPage?.contributeDescription}
             </p>
           </div>
         </a>

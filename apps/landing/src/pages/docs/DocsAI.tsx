@@ -1,37 +1,60 @@
 import { ExternalLink } from 'lucide-react';
 import CodeBlock from '../../components/docs/CodeBlock';
+import { useLanguage } from '../../contexts/LanguageContext';
 
-const exampleRequest = `{
+const exampleRequest = (language: 'en' | 'nl') => {
+  const merchant = language === 'nl' ? 'Albert Heijn' : 'Example Market';
+  const description = language === 'nl' ? 'PIN betaling' : 'Card payment';
+  const category = language === 'nl' ? 'Supermarkt' : 'Groceries';
+  const instructions =
+    language === 'nl'
+      ? 'Welke uitgavencategorie past het beste bij de banktransactie in `merchant`, `description` en `amount`?'
+      : 'Which spending category best fits the bank transaction described in `merchant`, `description`, and `amount`?';
+  const restaurants =
+    language === 'nl' ? 'Restaurants & cafés' : 'Restaurants & Bars';
+  const transport = language === 'nl' ? 'Vervoer' : 'Transport';
+  const noCategory =
+    language === 'nl'
+      ? 'Past bij geen van deze categorieën'
+      : 'Does not fit any of these categories';
+  const [groceriesId, restaurantsId, transportId] = [
+    'cat-uuid-1',
+    'cat-uuid-2',
+    'cat-uuid-3',
+  ];
+
+  return `{
   "state": {
-    "merchant": "Albert Heijn",
-    "description": "PIN betaling",
+    "merchant": "${merchant}",
+    "description": "${description}",
     "amount": -24.80
   },
   "model": "jev-latest",
   "questions": {
     "category": {
       "type": "choice",
-      "instructions": "Which spending category best fits the bank transaction described in \`merchant\`, \`description\`, and \`amount\`?",
+      "instructions": "${instructions}",
       "criteria": {
-        "cat-uuid-supermarkt": "Supermarkt",
-        "cat-uuid-restaurant": "Restaurants & Bars",
-        "cat-uuid-transport": "Transport",
-        "none": "Does not fit any of these categories"
+        "${groceriesId}": "${category}",
+        "${restaurantsId}": "${restaurants}",
+        "${transportId}": "${transport}",
+        "none": "${noCategory}"
       }
     }
   }
 }`;
+};
 
 const exampleResponse = `{
   "model": "jev-latest",
   "answers": {
     "category": {
       "type": "choice",
-      "choice": "cat-uuid-supermarkt",
+      "choice": "cat-uuid-1",
       "probabilities": {
-        "cat-uuid-supermarkt": 0.94,
-        "cat-uuid-restaurant": 0.04,
-        "cat-uuid-transport": 0.01,
+        "cat-uuid-1": 0.94,
+        "cat-uuid-2": 0.04,
+        "cat-uuid-3": 0.01,
         "none": 0.01
       },
       "confidence": 0.91
@@ -64,7 +87,11 @@ const directionExample = `// Before the row loop in importCsv()
   }
 }`;
 
-const clientExample = `import {
+const clientExample = (language: 'en' | 'nl') => {
+  const merchant = language === 'nl' ? 'Albert Heijn' : 'Example Market';
+  const description = language === 'nl' ? 'PIN betaling' : 'Card payment';
+
+  return `import {
   suggestCategory,
   detectDirectionConvention,
   detectDateFormat,
@@ -77,8 +104,8 @@ const key = getTypeSafeApiKey();
 if (!key) return; // graceful degradation
 
 const suggestion = await suggestCategory({
-  merchantName: 'Albert Heijn',
-  description: 'PIN betaling',
+  merchantName: '${merchant}',
+  description: '${description}',
   amount: -24.80,
   categories: userCategories,   // user's own category list
   apiKey: key,
@@ -91,22 +118,24 @@ if (suggestion && suggestion.confidence > 0.7) {
     [suggestion.categoryId, transactionId]
   );
 }`;
+};
 
 export default function DocsAI() {
+  const { t, language } = useLanguage();
+  const copy = t.docs.ai;
+
   return (
     <article className='prose prose-gray dark:prose-invert max-w-none'>
       <h1 className='mb-4 text-4xl font-bold text-gray-900 dark:text-gray-100'>
-        TypeSafe AI / Jev
+        {copy.title}
       </h1>
       <p className='text-xl text-gray-600 dark:text-gray-400'>
-        How Fluxby uses TypeSafe&apos;s System One model (Jev) to replace
-        fragile regex rules with calibrated, structured AI judgments.
+        {copy.subtitle}
       </p>
 
-      {/* What is TypeSafe */}
       <div className='mt-8 rounded-xl border border-purple-200 bg-purple-50 p-6 dark:border-purple-800 dark:bg-purple-950/30'>
         <h3 className='mt-0 mb-2 flex items-center gap-2 text-lg font-semibold text-purple-900 dark:text-purple-200'>
-          <span>✨</span> What is TypeSafe AI?
+          <span>✨</span> {copy.whatTitle}
         </h3>
         <p className='mb-2 text-purple-800 dark:text-purple-300'>
           <a
@@ -117,274 +146,156 @@ export default function DocsAI() {
           >
             TypeSafe
           </a>{' '}
-          builds <strong>System One</strong> models — small, fast AI primitives
-          that return structured answers instead of generated text.{' '}
-          <strong>Jev</strong> is TypeSafe&apos;s flagship model. Given a state
-          (JSON or string) and one or more typed questions, it returns
-          probabilities for Choice, Score, or Noul (yes/no) answers in ~100 ms.
+          {copy.whatText}
         </p>
         <p className='mb-0 text-purple-800 dark:text-purple-300'>
-          Code owns the control flow. Jev handles only the parts that require
-          semantic understanding of unstructured text &mdash; such as
-          &ldquo;which category fits this merchant name?&rdquo; or &ldquo;is
-          this IBAN a payment intermediary?&rdquo;.
+          {copy.controlText}
         </p>
       </div>
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        Architecture
+        {copy.architectureTitle}
       </h2>
       <p className='text-gray-600 dark:text-gray-400'>
-        Fluxby follows TypeSafe&apos;s <em>AI-powered software</em> pattern:
-        keep deterministic work in code, and insert AI only where heuristics
-        break down.
+        {copy.architectureIntro}
       </p>
-
       <div className='not-prose mt-6 overflow-x-auto'>
         <table className='w-full border-collapse text-sm'>
           <thead>
             <tr className='border-b text-left'>
-              <th className='py-2 pr-4 font-medium'>Decision</th>
-              <th className='py-2 pr-4 font-medium'>Primitive</th>
-              <th className='py-2 font-medium'>Replaces</th>
+              {copy.decisionHeaders.map((header: string) => (
+                <th key={header} className='py-2 pr-4 font-medium'>
+                  {header}
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody>
-            {[
-              ['Transaction category', 'Choice', 'Regex rule engine fallback'],
-              ['CSV date format', 'Choice', 'Fixed-order format guesser'],
-              [
-                'Direction column values',
-                'Choice',
-                'Hardcoded af/bij/debit list',
-              ],
-              ['Payment provider detection', 'Noul', 'Substring pattern list'],
-              [
-                'Recurring merchant grouping',
-                'Noul',
-                'Dutch month-name stripper',
-              ],
-              ['Semantic duplicate check', 'Noul', 'Hash-only deduplication'],
-            ].map(([decision, primitive, replaces]) => (
-              <tr key={decision} className='border-b last:border-0'>
-                <td className='py-2 pr-4 font-medium text-gray-900 dark:text-gray-100'>
-                  {decision}
-                </td>
-                <td className='py-2 pr-4'>
-                  <span className='rounded bg-purple-100 px-2 py-0.5 font-mono text-xs text-purple-800 dark:bg-purple-900 dark:text-purple-200'>
-                    {primitive}
-                  </span>
-                </td>
-                <td className='py-2 text-gray-500 dark:text-gray-400'>
-                  {replaces}
-                </td>
-              </tr>
-            ))}
+            {copy.decisions.map(
+              ([decision, primitive, replaces]: [string, string, string]) => (
+                <tr key={decision} className='border-b last:border-0'>
+                  <td className='py-2 pr-4 font-medium text-gray-900 dark:text-gray-100'>
+                    {decision}
+                  </td>
+                  <td className='py-2 pr-4'>
+                    <span className='rounded bg-purple-100 px-2 py-0.5 font-mono text-xs text-purple-800 dark:bg-purple-900 dark:text-purple-200'>
+                      {primitive}
+                    </span>
+                  </td>
+                  <td className='py-2 text-gray-500 dark:text-gray-400'>
+                    {replaces}
+                  </td>
+                </tr>
+              )
+            )}
           </tbody>
         </table>
       </div>
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        Opt-in — all features are gracefully degraded
+        {copy.optInTitle}
       </h2>
-      <p className='text-gray-600 dark:text-gray-400'>
-        Every TypeSafe integration checks for an API key before calling the
-        service. If the key is absent or the call fails, the existing
-        deterministic logic runs unchanged. Users who do not configure a key see
-        no change in behaviour.
-      </p>
+      <p className='text-gray-600 dark:text-gray-400'>{copy.optInText}</p>
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        Client implementation
+        {copy.implementationTitle}
       </h2>
       <p className='text-gray-600 dark:text-gray-400'>
-        Fluxby remains local-first and does not use a shared TypeSafe key. The
-        desktop app calls TypeSafe directly. The GitHub Pages web app sends the
-        same request through the optional Fluxby Cloudflare Worker so the
-        browser can pass CORS preflight safely.{' '}
-        <code>apps/web/src/lib/typesafe-client.ts</code> selects the transport
-        and exposes domain helpers:
+        {copy.implementationText}
       </p>
-      <p className='text-gray-600 dark:text-gray-400'>
-        The Worker is deployed once for Fluxby, not once per user. Setup is
-        documented in <code>workers/typesafe-proxy/README.md</code>. Users still
-        need to add their own TypeSafe API key before any request is made.
-      </p>
-      <CodeBlock language='typescript' code={clientExample} />
+      <p className='text-gray-600 dark:text-gray-400'>{copy.workerText}</p>
+      <CodeBlock language='typescript' code={clientExample(language)} />
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        Example: transaction categorisation
+        {copy.categoryExampleTitle}
       </h2>
       <p className='text-gray-600 dark:text-gray-400'>
-        When the regex-rule engine cannot match a transaction, Fluxby sends the
-        merchant name, description, and amount to Jev alongside the user&apos;s
-        own category list. Jev returns a probability for each category.
+        {copy.categoryExampleText}
       </p>
-
       <h3 className='mt-6 text-lg font-semibold text-gray-900 dark:text-gray-100'>
-        Request
+        {copy.request}
       </h3>
-      <CodeBlock language='json' code={exampleRequest} />
-
+      <CodeBlock language='json' code={exampleRequest(language)} />
       <h3 className='mt-6 text-lg font-semibold text-gray-900 dark:text-gray-100'>
-        Response
+        {copy.response}
       </h3>
       <CodeBlock language='json' code={exampleResponse} />
-
-      <p className='text-gray-600 dark:text-gray-400'>
-        Fluxby batches independent transaction questions in one request and only
-        applies a suggestion when <code>confidence &gt; 0.7</code>. At or below
-        that threshold, the transaction remains uncategorised for manual review.
-        Repeated merchants can also become escaped, exact-text rules after
-        clearing the same threshold.
-      </p>
+      <p className='text-gray-600 dark:text-gray-400'>{copy.confidenceText}</p>
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        Example: CSV direction column inference
+        {copy.directionExampleTitle}
       </h2>
-      <p className='text-gray-600 dark:text-gray-400'>
-        For bank exports with non-standard direction column values (e.g. German
-        &ldquo;Belastung&rdquo;/&ldquo;Gutschrift&rdquo;), Fluxby asks Jev to
-        classify each unique value in one parallel batch before processing rows.
-      </p>
+      <p className='text-gray-600 dark:text-gray-400'>{copy.directionText}</p>
       <CodeBlock language='json' code={directionExample} />
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        Confidence thresholds
+        {copy.thresholdsTitle}
       </h2>
       <div className='not-prose mt-4 overflow-x-auto'>
         <table className='w-full border-collapse text-sm'>
           <thead>
             <tr className='border-b text-left'>
-              <th className='py-2 pr-4 font-medium'>Feature</th>
-              <th className='py-2 pr-4 font-medium'>Primitive</th>
-              <th className='py-2 pr-4 font-medium'>Threshold</th>
-              <th className='py-2 font-medium'>Action if met</th>
+              {copy.thresholdHeaders.map((header: string) => (
+                <th key={header} className='py-2 pr-4 font-medium'>
+                  {header}
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody>
-            {[
-              [
-                'Category suggestion',
-                'Choice confidence',
-                '> 0.7',
-                'Auto-assign category',
-              ],
-              [
-                'Date format detection',
-                'Choice confidence',
-                '≥ 0.8',
-                'Override parser default',
-              ],
-              [
-                'Direction inference',
-                'Choice',
-                '—',
-                'Used if answer is not "unknown"',
-              ],
-              [
-                'Payment provider',
-                'Noul',
-                '≥ 0.75',
-                'Mark as AI-detected provider',
-              ],
-              ['Recurring grouping', 'Noul', '≥ 0.75', 'Merge merchant groups'],
-              [
-                'Duplicate detection',
-                'Noul',
-                '≥ 0.75',
-                'Surface for user review',
-              ],
-            ].map(([feat, prim, thresh, action]) => (
-              <tr key={feat} className='border-b last:border-0'>
-                <td className='py-2 pr-4 font-medium text-gray-900 dark:text-gray-100'>
-                  {feat}
-                </td>
-                <td className='py-2 pr-4 font-mono text-xs text-gray-600 dark:text-gray-400'>
-                  {prim}
-                </td>
-                <td className='py-2 pr-4 font-mono text-xs'>{thresh}</td>
-                <td className='py-2 text-sm text-gray-500 dark:text-gray-400'>
-                  {action}
-                </td>
-              </tr>
-            ))}
+            {copy.thresholds.map(
+              ([feature, primitive, threshold, action]: [
+                string,
+                string,
+                string,
+                string,
+              ]) => (
+                <tr key={feature} className='border-b last:border-0'>
+                  <td className='py-2 pr-4 font-medium text-gray-900 dark:text-gray-100'>
+                    {feature}
+                  </td>
+                  <td className='py-2 pr-4 font-mono text-xs text-gray-600 dark:text-gray-400'>
+                    {primitive}
+                  </td>
+                  <td className='py-2 pr-4 font-mono text-xs'>{threshold}</td>
+                  <td className='py-2 text-sm text-gray-500 dark:text-gray-400'>
+                    {action}
+                  </td>
+                </tr>
+              )
+            )}
           </tbody>
         </table>
       </div>
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        Privacy and data flow
+        {copy.privacyTitle}
       </h2>
-      <p className='text-gray-600 dark:text-gray-400'>
-        When TypeSafe AI is enabled, the following data is sent to the TypeSafe
-        API for each request:
-      </p>
+      <p className='text-gray-600 dark:text-gray-400'>{copy.privacyIntro}</p>
       <ul className='text-gray-600 dark:text-gray-400'>
-        <li>
-          <strong>Category suggestion:</strong> merchant name, description text,
-          and transaction amount
-        </li>
-        <li>
-          <strong>Direction inference:</strong> unique direction column values
-          from the CSV sample
-        </li>
-        <li>
-          <strong>Date format detection:</strong> up to 10 sample date strings
-          from the CSV
-        </li>
-        <li>
-          <strong>Payment provider detection:</strong> IBAN and merchant names
-        </li>
-        <li>
-          <strong>Recurring grouping:</strong> IBAN and normalised merchant
-          names
-        </li>
-        <li>
-          <strong>Duplicate detection:</strong> date, amount, and description of
-          candidate transaction pairs
-        </li>
+        {copy.privacyItems.map(([label, detail]: [string, string]) => (
+          <li key={label}>
+            <strong>{label}:</strong> {detail}
+          </li>
+        ))}
       </ul>
       <p className='text-gray-600 dark:text-gray-400'>
-        No TypeSafe calls are made without a user-supplied API key. Review the{' '}
+        {copy.privacyFooterPrefix}{' '}
         <a
           href='https://typesafe.ai/legal/privacy-policy'
           target='_blank'
           rel='noopener noreferrer'
         >
-          TypeSafe privacy policy
+          {copy.privacyLink}
         </a>{' '}
-        for details on data handling.
+        {copy.privacyFooterSuffix}
       </p>
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        Further reading
+        {copy.furtherReadingTitle}
       </h2>
       <ul className='space-y-1 text-gray-600 dark:text-gray-400'>
-        {[
-          ['TypeSafe documentation', 'https://docs.typesafe.ai'],
-          [
-            'How to build with System One',
-            'https://docs.typesafe.ai/concepts/how-to-build-with-system-one',
-          ],
-          [
-            'Primitives (Choice, Score, Noul)',
-            'https://docs.typesafe.ai/primitives',
-          ],
-          ['Confidence and thresholds', 'https://docs.typesafe.ai/confidence'],
-          [
-            'Pre-parsed value extraction cookbook',
-            'https://docs.typesafe.ai/cookbooks/pre_parsed_value_extraction_cookbook',
-          ],
-          [
-            'Hierarchical classification cookbook',
-            'https://docs.typesafe.ai/cookbooks/hierarchical_classification',
-          ],
-          [
-            'Internal reference: docs/TYPESAFE-INTEGRATION.md',
-            'https://github.com/fluxby-app/fluxby/blob/main/docs/TYPESAFE-INTEGRATION.md',
-          ],
-        ].map(([label, href]) => (
+        {copy.furtherReading.map(([label, href]: [string, string]) => (
           <li key={href}>
             <a
               href={href}

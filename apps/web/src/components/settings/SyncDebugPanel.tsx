@@ -33,12 +33,15 @@ import {
   type SyncLogLevel,
 } from '@fluxby/core';
 import { cn } from '@/lib/utils';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface SyncDebugPanelProps {
   onClose?: () => void;
 }
 
 export function SyncDebugPanel({ onClose }: SyncDebugPanelProps) {
+  const { t } = useLanguage();
+  const copy = t.syncDebug;
   const {
     deviceId,
     deviceName,
@@ -85,7 +88,7 @@ export function SyncDebugPanel({ onClose }: SyncDebugPanelProps) {
       // For now, we just log the attempt
       logger.info(
         'connection:data',
-        `Sending PING to ${targetPeerId}`,
+        copy.sendingPing.replace('{peerId}', targetPeerId),
         targetPeerId,
         {
           payload: pingPayload,
@@ -104,12 +107,12 @@ export function SyncDebugPanel({ onClose }: SyncDebugPanelProps) {
     } catch (error) {
       logger.error(
         'connection:error',
-        `Failed to send ping: ${error}`,
+        copy.failedPing.replace('{error}', String(error)),
         targetPeerId
       );
     }
     refreshLogs();
-  }, [targetPeerId, pingPayload, logger, refreshLogs]);
+  }, [targetPeerId, pingPayload, logger, refreshLogs, copy]);
 
   // Clear logs
   const clearLogs = useCallback(() => {
@@ -144,16 +147,15 @@ export function SyncDebugPanel({ onClose }: SyncDebugPanelProps) {
           <div>
             <CardTitle className='flex items-center gap-2 text-orange-600'>
               <Activity className='h-5 w-5' />
-              Sync Debug Panel
+              {copy.title}
             </CardTitle>
             <CardDescription>
-              Debug tools for PeerJS connectivity. Pairing code format:{' '}
-              {'{peerId}:{6-char-code}'}
+              {copy.description} {'{peerId}:{6-char-code}'}
             </CardDescription>
           </div>
           {onClose && (
             <Button variant='ghost' size='sm' onClick={onClose}>
-              Close
+              {copy.close}
             </Button>
           )}
         </div>
@@ -161,31 +163,33 @@ export function SyncDebugPanel({ onClose }: SyncDebugPanelProps) {
       <CardContent className='space-y-4'>
         {/* Connection Status */}
         <div className='rounded-lg bg-gray-50 p-3 dark:bg-gray-900'>
-          <h4 className='mb-2 text-sm font-medium'>Connection Status</h4>
+          <h4 className='mb-2 text-sm font-medium'>{copy.connectionStatus}</h4>
           <div className='grid grid-cols-2 gap-2 text-sm'>
             <div className='flex items-center gap-2'>
-              <span className='text-muted-foreground'>Status:</span>
+              <span className='text-muted-foreground'>{copy.status}:</span>
               {isInitialized ? (
                 <Badge variant='default' className='bg-green-600'>
-                  <Wifi className='mr-1 h-3 w-3' /> Connected
+                  <Wifi className='mr-1 h-3 w-3' /> {copy.connected}
                 </Badge>
               ) : (
                 <Badge variant='destructive'>
-                  <WifiOff className='mr-1 h-3 w-3' /> Disconnected
+                  <WifiOff className='mr-1 h-3 w-3' /> {copy.disconnected}
                 </Badge>
               )}
             </div>
             <div className='flex items-center gap-2'>
-              <span className='text-muted-foreground'>Device ID:</span>
+              <span className='text-muted-foreground'>{copy.deviceId}:</span>
               <code className='text-xs'>{deviceId.slice(0, 8)}...</code>
             </div>
             <div className='flex items-center gap-2'>
-              <span className='text-muted-foreground'>Device Name:</span>
+              <span className='text-muted-foreground'>{copy.deviceName}:</span>
               <span>{deviceName}</span>
             </div>
             <div className='flex items-center gap-2'>
-              <span className='text-muted-foreground'>Paired:</span>
-              <span>{pairedDevices.length} devices</span>
+              <span className='text-muted-foreground'>{copy.paired}:</span>
+              <span>
+                {pairedDevices.length} {copy.devices}
+              </span>
             </div>
           </div>
           {lastError && (
@@ -202,7 +206,7 @@ export function SyncDebugPanel({ onClose }: SyncDebugPanelProps) {
               disabled={isInitialized}
             >
               <RefreshCw className='mr-1 h-3 w-3' />
-              Retry Init
+              {copy.retryInit}
             </Button>
             <Button
               variant='outline'
@@ -210,7 +214,7 @@ export function SyncDebugPanel({ onClose }: SyncDebugPanelProps) {
               onClick={generateNewPairingCode}
               disabled={!isInitialized}
             >
-              Generate Code
+              {copy.generateCode}
             </Button>
             {pairingCode && (
               <code className='flex items-center rounded bg-gray-200 px-2 text-xs dark:bg-gray-800'>
@@ -222,23 +226,17 @@ export function SyncDebugPanel({ onClose }: SyncDebugPanelProps) {
 
         {/* Ping Test */}
         <div className='rounded-lg bg-gray-50 p-3 dark:bg-gray-900'>
-          <h4 className='mb-2 text-sm font-medium'>
-            Connectivity Test (Simulated)
-          </h4>
-          <p className='mb-2 text-xs text-muted-foreground'>
-            Note: This ping test is simulated for debugging logs. To test real
-            connectivity, use the &quot;Pair device&quot; button to connect with
-            another device using a pairing code.
-          </p>
+          <h4 className='mb-2 text-sm font-medium'>{copy.connectivityTest}</h4>
+          <p className='mb-2 text-xs text-muted-foreground'>{copy.note}</p>
           <div className='flex gap-2'>
             <Input
-              placeholder='Target Peer ID'
+              placeholder={copy.targetPeerId}
               value={targetPeerId}
               onChange={(e) => setTargetPeerId(e.target.value)}
               className='flex-1 text-sm'
             />
             <Input
-              placeholder='Payload'
+              placeholder={copy.payload}
               value={pingPayload}
               onChange={(e) => setPingPayload(e.target.value)}
               className='w-24 text-sm'
@@ -249,7 +247,7 @@ export function SyncDebugPanel({ onClose }: SyncDebugPanelProps) {
               disabled={!targetPeerId.trim()}
             >
               <Send className='mr-1 h-3 w-3' />
-              Ping
+              {copy.ping}
             </Button>
           </div>
           {pingResults.length > 0 && (
@@ -273,7 +271,8 @@ export function SyncDebugPanel({ onClose }: SyncDebugPanelProps) {
                           : 'border-red-500 text-red-600'
                     )}
                   >
-                    {result.rtt}ms
+                    {result.rtt}
+                    {copy.milliseconds}
                   </Badge>
                 </div>
               ))}
@@ -283,12 +282,14 @@ export function SyncDebugPanel({ onClose }: SyncDebugPanelProps) {
 
         {/* Log Stats */}
         <div className='flex items-center gap-2 text-xs'>
-          <Badge variant='secondary'>{stats.totalEntries} entries</Badge>
+          <Badge variant='secondary'>
+            {stats.totalEntries} {copy.entries}
+          </Badge>
           <Badge variant='outline' className='text-red-600'>
-            {stats.errorCount} errors
+            {stats.errorCount} {copy.errors}
           </Badge>
           <Badge variant='outline' className='text-yellow-600'>
-            {stats.warningCount} warnings
+            {stats.warningCount} {copy.warnings}
           </Badge>
           <div className='flex-1' />
           <Button
@@ -300,15 +301,15 @@ export function SyncDebugPanel({ onClose }: SyncDebugPanelProps) {
             <RefreshCw
               className={cn('mr-1 h-3 w-3', autoRefresh && 'animate-spin')}
             />
-            Auto
+            {copy.auto}
           </Button>
           <Button variant='ghost' size='sm' onClick={exportLogs}>
             <Download className='mr-1 h-3 w-3' />
-            Export
+            {copy.export}
           </Button>
           <Button variant='ghost' size='sm' onClick={clearLogs}>
             <Trash2 className='mr-1 h-3 w-3' />
-            Clear
+            {copy.clear}
           </Button>
         </div>
 
@@ -322,7 +323,7 @@ export function SyncDebugPanel({ onClose }: SyncDebugPanelProps) {
               onClick={() => setFilterLevel(level)}
               className='text-xs'
             >
-              {level.charAt(0).toUpperCase() + level.slice(1)}
+              {copy[level]}
             </Button>
           ))}
         </div>
@@ -332,7 +333,7 @@ export function SyncDebugPanel({ onClose }: SyncDebugPanelProps) {
           <div className='space-y-1 p-2'>
             {filteredLogs.length === 0 ? (
               <div className='p-4 text-center text-sm text-muted-foreground'>
-                No log entries
+                {copy.noLogEntries}
               </div>
             ) : (
               filteredLogs.map((entry, i) => (
@@ -388,7 +389,7 @@ export function SyncDebugPanel({ onClose }: SyncDebugPanelProps) {
         {/* Paired Devices */}
         {pairedDevices.length > 0 && (
           <div className='rounded-lg bg-gray-50 p-3 dark:bg-gray-900'>
-            <h4 className='mb-2 text-sm font-medium'>Paired Devices</h4>
+            <h4 className='mb-2 text-sm font-medium'>{copy.pairedDevices}</h4>
             <div className='space-y-2'>
               {pairedDevices.map((device) => (
                 <div
@@ -412,7 +413,7 @@ export function SyncDebugPanel({ onClose }: SyncDebugPanelProps) {
                     size='sm'
                     onClick={() => setTargetPeerId(device.peerId)}
                   >
-                    Test
+                    {copy.test}
                   </Button>
                 </div>
               ))}

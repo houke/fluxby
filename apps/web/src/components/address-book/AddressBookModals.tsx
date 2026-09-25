@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/tooltip';
 import { Plus, UserPlus, Merge, Users, Scissors, Check } from 'lucide-react';
 import type { AddressBookEntryWithStats } from '@/hooks/useAddressBook';
+import type { TranslationKeys } from '@/lib/i18n';
 
 // Use a simplified version if not exported, or define here if needed.
 // Since we can't easily import from a component file if it's not set up for it,
@@ -91,8 +92,7 @@ interface AddressBookModalsProps {
     names: string[];
   }) => Promise<unknown>;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  translations: any;
+  translations: TranslationKeys;
 }
 
 export const AddressBookModals = React.memo<AddressBookModalsProps>(
@@ -148,22 +148,18 @@ export const AddressBookModals = React.memo<AddressBookModalsProps>(
             <DialogHeader>
               <DialogTitle>
                 {selectedSharedIban
-                  ? `${t.addressBook?.editSharedIban || 'Edit shared IBAN'} - ${selectedSharedIban.iban}`
-                  : t.addressBook?.editSharedIban || 'Edit shared IBAN'}
+                  ? `${t.addressBook.editSharedIban} - ${selectedSharedIban.iban}`
+                  : t.addressBook.editSharedIban}
               </DialogTitle>
               <DialogDescription>
-                {t.addressBook?.editSharedIbanDescription ||
-                  'Add names to your address book. Similar names are grouped.'}
+                {t.addressBook.editSharedIbanDescription}
               </DialogDescription>
             </DialogHeader>
             <div className='space-y-4 py-4'>
               {editModalGroups.length === 0 ? (
                 <div className='py-8 text-center text-muted-foreground'>
                   <Check className='mx-auto mb-2 h-12 w-12 text-green-500' />
-                  <p>
-                    {t.addressBook?.allNamesProcessed ||
-                      'All names have been processed!'}
-                  </p>
+                  <p>{t.addressBook.allNamesProcessed}</p>
                 </div>
               ) : (
                 editModalGroups.map((group) => {
@@ -185,9 +181,7 @@ export const AddressBookModals = React.memo<AddressBookModalsProps>(
                                 </span>
                                 <span className='text-xs text-muted-foreground'>
                                   ({entry.transactionCount}{' '}
-                                  {t.addressBook?.transactions ||
-                                    'transactions'}
-                                  )
+                                  {t.addressBook.transactions})
                                 </span>
                               </div>
                               <div className='mt-2'>
@@ -202,7 +196,9 @@ export const AddressBookModals = React.memo<AddressBookModalsProps>(
                                     }))
                                   }
                                   className='h-8 text-sm'
-                                  placeholder='Naam voor adresboek'
+                                  placeholder={
+                                    t.transactions.nameForAddressBook
+                                  }
                                 />
                               </div>
                             </div>
@@ -440,7 +436,7 @@ export const AddressBookModals = React.memo<AddressBookModalsProps>(
                               )
                             }
                             className='h-9 flex-1'
-                            placeholder='Naam voor adresboek'
+                            placeholder={t.transactions.nameForAddressBook}
                           />
                           <Button
                             className='bg-purple-600 hover:bg-purple-700'
@@ -588,7 +584,7 @@ export const AddressBookModals = React.memo<AddressBookModalsProps>(
                   </div>
                 ))
               ) : (
-                <p>No contact selected</p>
+                <p>{t.addressBook.noContactSelected}</p>
               )}
               {splitNameWarning && (
                 <p className='text-sm text-amber-600'>{splitNameWarning}</p>

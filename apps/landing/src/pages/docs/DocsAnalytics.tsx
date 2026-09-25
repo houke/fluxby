@@ -95,8 +95,16 @@ fetch('http://localhost:3001/api/analytics/categories', {
       </div>
 
       <div className='not-prose mt-6 space-y-4'>
-        <CodeBlock code={dashboardCode} language='javascript' title='Request' />
-        <CodeBlock code={dashboardResponse} language='json' title='Response' />
+        <CodeBlock
+          code={dashboardCode}
+          language='javascript'
+          title={t.docs.common.request}
+        />
+        <CodeBlock
+          code={dashboardResponse}
+          language='json'
+          title={t.docs.common.response}
+        />
       </div>
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
@@ -163,8 +171,16 @@ fetch('http://localhost:3001/api/analytics/categories', {
       </div>
 
       <div className='not-prose mt-6 space-y-4'>
-        <CodeBlock code={monthlyCode} language='javascript' title='Request' />
-        <CodeBlock code={monthlyResponse} language='json' title='Response' />
+        <CodeBlock
+          code={monthlyCode}
+          language='javascript'
+          title={t.docs.common.request}
+        />
+        <CodeBlock
+          code={monthlyResponse}
+          language='json'
+          title={t.docs.common.response}
+        />
       </div>
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
@@ -189,7 +205,7 @@ fetch('http://localhost:3001/api/analytics/categories', {
         <CodeBlock
           code={categoriesCode}
           language='javascript'
-          title='Request'
+          title={t.docs.common.request}
         />
       </div>
 

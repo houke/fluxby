@@ -1031,7 +1031,9 @@ export default function Import() {
                     )}
                     <span>{bank.name}</span>
                     {!bank.enabled && (
-                      <span className='text-xs opacity-60'>Binnenkort</span>
+                      <span className='text-xs opacity-60'>
+                        {t.common.comingSoon}
+                      </span>
                     )}
                   </button>
                 ))}

@@ -109,11 +109,15 @@ fetch('http://localhost:3001/api/data/reset', {
       </div>
 
       <div className='not-prose mt-6 space-y-4'>
-        <CodeBlock code={exportCode} language='javascript' title='Request' />
+        <CodeBlock
+          code={exportCode}
+          language='javascript'
+          title={t.docs.common.request}
+        />
         <CodeBlock
           code={exportResponseExample}
           language='json'
-          title='Response'
+          title={t.docs.common.response}
         />
       </div>
 
@@ -136,11 +140,15 @@ fetch('http://localhost:3001/api/data/reset', {
       </div>
 
       <div className='not-prose mt-6 space-y-4'>
-        <CodeBlock code={importCode} language='javascript' title='Request' />
+        <CodeBlock
+          code={importCode}
+          language='javascript'
+          title={t.docs.common.request}
+        />
         <CodeBlock
           code={importResponseExample}
           language='json'
-          title='Response'
+          title={t.docs.common.response}
         />
       </div>
 
@@ -163,11 +171,15 @@ fetch('http://localhost:3001/api/data/reset', {
       </div>
 
       <div className='not-prose mt-6 space-y-4'>
-        <CodeBlock code={resetCode} language='javascript' title='Request' />
+        <CodeBlock
+          code={resetCode}
+          language='javascript'
+          title={t.docs.common.request}
+        />
         <CodeBlock
           code={resetResponseExample}
           language='json'
-          title='Response'
+          title={t.docs.common.response}
         />
       </div>
 

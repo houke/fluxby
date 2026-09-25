@@ -130,32 +130,29 @@ fetch('http://localhost:3001/api/recurring/{id}/dismiss', {
   return (
     <article className='prose prose-gray dark:prose-invert max-w-none'>
       <h1 className='mb-4 text-4xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.docs.subscriptions?.title || 'Abonnementen'}
+        {t.docs.subscriptions?.title}
       </h1>
       <p className='text-xl text-gray-600 dark:text-gray-400'>
-        {t.docs.subscriptions?.subtitle ||
-          'Detecteer en beheer terugkerende betalingen automatisch. Krijg inzicht in je maandelijkse vaste lasten.'}
+        {t.docs.subscriptions?.subtitle}
       </p>
 
       {/* Detection Note */}
       <div className='mt-6 rounded-xl border border-purple-200 bg-purple-50 p-6 dark:border-purple-800 dark:bg-purple-950/30'>
         <h3 className='mt-0 mb-2 flex items-center gap-2 text-lg font-semibold text-purple-900 dark:text-purple-200'>
           <span>🔍</span>
-          {t.docs.subscriptions?.detectionNote || 'Automatische detectie'}
+          {t.docs.subscriptions?.detectionNote}
         </h3>
         <p className='mb-0 text-purple-800 dark:text-purple-300'>
-          {t.docs.subscriptions?.detectionNoteText ||
-            'Fluxby analyseert je transactiehistorie en detecteert automatisch terugkerende patronen. Patronen worden gedetecteerd wanneer dezelfde merchant minimaal 3 keer voorkomt met regelmatige intervallen.'}
+          {t.docs.subscriptions?.detectionNoteText}
         </p>
       </div>
 
       {/* Pattern Object */}
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.docs.subscriptions?.objectTitle || 'Het Patroon Object'}
+        {t.docs.subscriptions?.objectTitle}
       </h2>
       <p className='text-gray-600 dark:text-gray-400'>
-        {t.docs.subscriptions?.objectText ||
-          'Een recurring pattern representeert een gedetecteerd abonnement of terugkerende betaling.'}
+        {t.docs.subscriptions?.objectText}
       </p>
 
       <div className='not-prose mt-6 overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700'>
@@ -163,13 +160,13 @@ fetch('http://localhost:3001/api/recurring/{id}/dismiss', {
           <thead className='bg-gray-50 dark:bg-gray-800'>
             <tr>
               <th className='px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100'>
-                {t.docs.common?.tableField || 'Veld'}
+                {t.docs.common?.tableField}
               </th>
               <th className='px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100'>
-                {t.docs.common?.tableType || 'Type'}
+                {t.docs.common?.tableType}
               </th>
               <th className='px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100'>
-                {t.docs.common?.tableDescription || 'Beschrijving'}
+                {t.docs.common?.tableDescription}
               </th>
             </tr>
           </thead>
@@ -182,7 +179,7 @@ fetch('http://localhost:3001/api/recurring/{id}/dismiss', {
                 string
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                {t.docs.subscriptions?.fields?.id || 'Unieke identifier'}
+                {t.docs.subscriptions?.fields?.id}
               </td>
             </tr>
             <tr>
@@ -193,8 +190,7 @@ fetch('http://localhost:3001/api/recurring/{id}/dismiss', {
                 string | null
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                {t.docs.subscriptions?.fields?.merchantName ||
-                  'Naam van de merchant'}
+                {t.docs.subscriptions?.fields?.merchantName}
               </td>
             </tr>
             <tr>
@@ -205,8 +201,7 @@ fetch('http://localhost:3001/api/recurring/{id}/dismiss', {
                 string
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                {t.docs.subscriptions?.fields?.patternType ||
-                  'weekly, biweekly, monthly, quarterly, yearly'}
+                {t.docs.subscriptions?.fields?.patternType}
               </td>
             </tr>
             <tr>
@@ -217,8 +212,7 @@ fetch('http://localhost:3001/api/recurring/{id}/dismiss', {
                 number
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                {t.docs.subscriptions?.fields?.avgAmount ||
-                  'Gemiddeld bedrag (negatief voor uitgaven)'}
+                {t.docs.subscriptions?.fields?.avgAmount}
               </td>
             </tr>
             <tr>
@@ -229,8 +223,7 @@ fetch('http://localhost:3001/api/recurring/{id}/dismiss', {
                 number
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                {t.docs.subscriptions?.fields?.lastAmount ||
-                  'Laatste afgeschreven bedrag'}
+                {t.docs.subscriptions?.fields?.lastAmount}
               </td>
             </tr>
             <tr>
@@ -241,8 +234,7 @@ fetch('http://localhost:3001/api/recurring/{id}/dismiss', {
                 string | null
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                {t.docs.subscriptions?.fields?.nextExpectedDate ||
-                  'Verwachte volgende afschrijfdatum'}
+                {t.docs.subscriptions?.fields?.nextExpectedDate}
               </td>
             </tr>
             <tr>
@@ -253,8 +245,7 @@ fetch('http://localhost:3001/api/recurring/{id}/dismiss', {
                 boolean
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                {t.docs.subscriptions?.fields?.isConfirmed ||
-                  'Of het patroon door de gebruiker is bevestigd'}
+                {t.docs.subscriptions?.fields?.isConfirmed}
               </td>
             </tr>
             <tr>
@@ -265,8 +256,7 @@ fetch('http://localhost:3001/api/recurring/{id}/dismiss', {
                 boolean
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                {t.docs.subscriptions?.fields?.isVariable ||
-                  'Of het bedrag varieert (>10% afwijking)'}
+                {t.docs.subscriptions?.fields?.isVariable}
               </td>
             </tr>
             <tr>
@@ -277,8 +267,7 @@ fetch('http://localhost:3001/api/recurring/{id}/dismiss', {
                 number
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                {t.docs.subscriptions?.fields?.transactionCount ||
-                  'Aantal keer dat dit patroon is gedetecteerd'}
+                {t.docs.subscriptions?.fields?.transactionCount}
               </td>
             </tr>
           </tbody>
@@ -287,11 +276,10 @@ fetch('http://localhost:3001/api/recurring/{id}/dismiss', {
 
       {/* List Patterns */}
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.docs.subscriptions?.listTitle || 'Patronen ophalen'}
+        {t.docs.subscriptions?.listTitle}
       </h2>
       <p className='text-gray-600 dark:text-gray-400'>
-        {t.docs.subscriptions?.listText ||
-          'Haal alle gedetecteerde terugkerende patronen op:'}
+        {t.docs.subscriptions?.listText}
       </p>
 
       <div className='mt-6 overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800'>
@@ -306,20 +294,20 @@ fetch('http://localhost:3001/api/recurring/{id}/dismiss', {
       </div>
 
       <h3 className='mt-6 text-lg font-semibold text-gray-900 dark:text-gray-100'>
-        {t.docs.common?.queryParams || 'Query parameters'}
+        {t.docs.common?.queryParams}
       </h3>
       <div className='not-prose mt-4 overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700'>
         <table className='min-w-full'>
           <thead className='bg-gray-50 dark:bg-gray-800'>
             <tr>
               <th className='px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100'>
-                {t.docs.common?.tableField || 'Veld'}
+                {t.docs.common?.tableField}
               </th>
               <th className='px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100'>
-                {t.docs.common?.tableType || 'Type'}
+                {t.docs.common?.tableType}
               </th>
               <th className='px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100'>
-                {t.docs.common?.tableDescription || 'Beschrijving'}
+                {t.docs.common?.tableDescription}
               </th>
             </tr>
           </thead>
@@ -332,8 +320,7 @@ fetch('http://localhost:3001/api/recurring/{id}/dismiss', {
                 boolean
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                {t.docs.subscriptions?.params?.activeOnly ||
-                  'Alleen actieve patronen (default: true)'}
+                {t.docs.subscriptions?.params?.activeOnly}
               </td>
             </tr>
           </tbody>
@@ -344,18 +331,21 @@ fetch('http://localhost:3001/api/recurring/{id}/dismiss', {
         <CodeBlock
           code={listPatternsCode}
           language='javascript'
-          title='Request'
+          title={t.docs.common.request}
         />
-        <CodeBlock code={listResponse} language='json' title='Response' />
+        <CodeBlock
+          code={listResponse}
+          language='json'
+          title={t.docs.common.response}
+        />
       </div>
 
       {/* Get Stats */}
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.docs.subscriptions?.statsTitle || 'Statistieken ophalen'}
+        {t.docs.subscriptions?.statsTitle}
       </h2>
       <p className='text-gray-600 dark:text-gray-400'>
-        {t.docs.subscriptions?.statsText ||
-          'Krijg een overzicht van je terugkerende kosten:'}
+        {t.docs.subscriptions?.statsText}
       </p>
 
       <div className='mt-6 overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800'>
@@ -370,17 +360,24 @@ fetch('http://localhost:3001/api/recurring/{id}/dismiss', {
       </div>
 
       <div className='not-prose mt-6 space-y-4'>
-        <CodeBlock code={getStatsCode} language='javascript' title='Request' />
-        <CodeBlock code={statsResponse} language='json' title='Response' />
+        <CodeBlock
+          code={getStatsCode}
+          language='javascript'
+          title={t.docs.common.request}
+        />
+        <CodeBlock
+          code={statsResponse}
+          language='json'
+          title={t.docs.common.response}
+        />
       </div>
 
       {/* Calendar */}
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.docs.subscriptions?.calendarTitle || 'Verwachte betalingen'}
+        {t.docs.subscriptions?.calendarTitle}
       </h2>
       <p className='text-gray-600 dark:text-gray-400'>
-        {t.docs.subscriptions?.calendarText ||
-          'Haal verwachte betalingen op voor een datumbereik:'}
+        {t.docs.subscriptions?.calendarText}
       </p>
 
       <div className='mt-6 overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800'>
@@ -395,23 +392,23 @@ fetch('http://localhost:3001/api/recurring/{id}/dismiss', {
       </div>
 
       <h3 className='mt-6 text-lg font-semibold text-gray-900 dark:text-gray-100'>
-        {t.docs.common?.queryParams || 'Query parameters'}
+        {t.docs.common?.queryParams}
       </h3>
       <div className='not-prose mt-4 overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700'>
         <table className='min-w-full'>
           <thead className='bg-gray-50 dark:bg-gray-800'>
             <tr>
               <th className='px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100'>
-                {t.docs.common?.tableField || 'Veld'}
+                {t.docs.common?.tableField}
               </th>
               <th className='px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100'>
-                {t.docs.common?.tableType || 'Type'}
+                {t.docs.common?.tableType}
               </th>
               <th className='px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100'>
-                {t.docs.common?.tableRequired || 'Verplicht'}
+                {t.docs.common?.tableRequired}
               </th>
               <th className='px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100'>
-                {t.docs.common?.tableDescription || 'Beschrijving'}
+                {t.docs.common?.tableDescription}
               </th>
             </tr>
           </thead>
@@ -425,11 +422,11 @@ fetch('http://localhost:3001/api/recurring/{id}/dismiss', {
               </td>
               <td className='px-4 py-3'>
                 <span className='rounded bg-green-100 px-2 py-0.5 text-xs text-green-800 dark:bg-green-900/30 dark:text-green-400'>
-                  {t.docs.common?.yes || 'Ja'}
+                  {t.docs.common?.yes}
                 </span>
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                {t.docs.subscriptions?.params?.startDate || 'Startdatum'}
+                {t.docs.subscriptions?.params?.startDate}
               </td>
             </tr>
             <tr>
@@ -441,11 +438,11 @@ fetch('http://localhost:3001/api/recurring/{id}/dismiss', {
               </td>
               <td className='px-4 py-3'>
                 <span className='rounded bg-green-100 px-2 py-0.5 text-xs text-green-800 dark:bg-green-900/30 dark:text-green-400'>
-                  {t.docs.common?.yes || 'Ja'}
+                  {t.docs.common?.yes}
                 </span>
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                {t.docs.subscriptions?.params?.endDate || 'Einddatum'}
+                {t.docs.subscriptions?.params?.endDate}
               </td>
             </tr>
           </tbody>
@@ -453,17 +450,24 @@ fetch('http://localhost:3001/api/recurring/{id}/dismiss', {
       </div>
 
       <div className='not-prose mt-6 space-y-4'>
-        <CodeBlock code={calendarCode} language='javascript' title='Request' />
-        <CodeBlock code={calendarResponse} language='json' title='Response' />
+        <CodeBlock
+          code={calendarCode}
+          language='javascript'
+          title={t.docs.common.request}
+        />
+        <CodeBlock
+          code={calendarResponse}
+          language='json'
+          title={t.docs.common.response}
+        />
       </div>
 
       {/* Detect Patterns */}
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.docs.subscriptions?.detectTitle || 'Patronen detecteren'}
+        {t.docs.subscriptions?.detectTitle}
       </h2>
       <p className='text-gray-600 dark:text-gray-400'>
-        {t.docs.subscriptions?.detectText ||
-          'Voer patroondetectie uit op je transactiehistorie:'}
+        {t.docs.subscriptions?.detectText}
       </p>
 
       <div className='mt-6 overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800'>
@@ -481,44 +485,38 @@ fetch('http://localhost:3001/api/recurring/{id}/dismiss', {
         <CodeBlock
           code={detectPatternsCode}
           language='javascript'
-          title='Request'
+          title={t.docs.common.request}
         />
-        <CodeBlock code={detectResponse} language='json' title='Response' />
+        <CodeBlock
+          code={detectResponse}
+          language='json'
+          title={t.docs.common.response}
+        />
       </div>
 
       <div className='mt-6 rounded-xl border border-blue-200 bg-blue-50 p-6 dark:border-blue-800 dark:bg-blue-950/30'>
         <h3 className='mt-0 mb-2 flex items-center gap-2 text-lg font-semibold text-blue-900 dark:text-blue-200'>
           <span>💡</span>
-          {t.docs.subscriptions?.detectNote || 'Detectie criteria'}
+          {t.docs.subscriptions?.detectNote}
         </h3>
         <ul className='mb-0 list-inside list-disc text-blue-800 dark:text-blue-300'>
-          <li>
-            {t.docs.subscriptions?.detectCriteria?.minTransactions ||
-              'Minimaal 3 transacties van dezelfde merchant'}
-          </li>
-          <li>
-            {t.docs.subscriptions?.detectCriteria?.minSpan ||
-              'Transacties moeten over minimaal 2 maanden verspreid zijn'}
-          </li>
-          <li>
-            {t.docs.subscriptions?.detectCriteria?.consistency ||
-              'Consistente intervallen (±3 dagen tolerantie)'}
-          </li>
+          <li>{t.docs.subscriptions?.detectCriteria?.minTransactions}</li>
+          <li>{t.docs.subscriptions?.detectCriteria?.minSpan}</li>
+          <li>{t.docs.subscriptions?.detectCriteria?.consistency}</li>
         </ul>
       </div>
 
       {/* Confirm/Dismiss */}
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.docs.subscriptions?.actionsTitle || 'Patronen beheren'}
+        {t.docs.subscriptions?.actionsTitle}
       </h2>
       <p className='text-gray-600 dark:text-gray-400'>
-        {t.docs.subscriptions?.actionsText ||
-          'Bevestig patronen als echte abonnementen of negeer false positives:'}
+        {t.docs.subscriptions?.actionsText}
       </p>
 
       {/* Confirm */}
       <h3 className='mt-8 text-lg font-semibold text-gray-900 dark:text-gray-100'>
-        {t.docs.subscriptions?.confirmTitle || 'Patroon bevestigen'}
+        {t.docs.subscriptions?.confirmTitle}
       </h3>
 
       <div className='mt-4 overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800'>
@@ -536,13 +534,13 @@ fetch('http://localhost:3001/api/recurring/{id}/dismiss', {
         <CodeBlock
           code={confirmPatternCode}
           language='javascript'
-          title='Request'
+          title={t.docs.common.request}
         />
       </div>
 
       {/* Dismiss */}
       <h3 className='mt-8 text-lg font-semibold text-gray-900 dark:text-gray-100'>
-        {t.docs.subscriptions?.dismissTitle || 'Patroon negeren'}
+        {t.docs.subscriptions?.dismissTitle}
       </h3>
 
       <div className='mt-4 overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800'>
@@ -560,13 +558,13 @@ fetch('http://localhost:3001/api/recurring/{id}/dismiss', {
         <CodeBlock
           code={dismissPatternCode}
           language='javascript'
-          title='Request'
+          title={t.docs.common.request}
         />
       </div>
 
       {/* Delete */}
       <h3 className='mt-8 text-lg font-semibold text-gray-900 dark:text-gray-100'>
-        {t.docs.subscriptions?.deleteTitle || 'Patroon verwijderen'}
+        {t.docs.subscriptions?.deleteTitle}
       </h3>
 
       <div className='mt-4 overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800'>
@@ -582,11 +580,10 @@ fetch('http://localhost:3001/api/recurring/{id}/dismiss', {
 
       {/* Pattern Types */}
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.docs.subscriptions?.patternTypesTitle || 'Patroon types'}
+        {t.docs.subscriptions?.patternTypesTitle}
       </h2>
       <p className='text-gray-600 dark:text-gray-400'>
-        {t.docs.subscriptions?.patternTypesText ||
-          'Fluxby detecteert de volgende patronen:'}
+        {t.docs.subscriptions?.patternTypesText}
       </p>
 
       <div className='not-prose mt-6 overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700'>
@@ -597,10 +594,10 @@ fetch('http://localhost:3001/api/recurring/{id}/dismiss', {
                 Type
               </th>
               <th className='px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100'>
-                {t.docs.subscriptions?.intervalColumn || 'Interval'}
+                {t.docs.subscriptions?.intervalColumn}
               </th>
               <th className='px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100'>
-                {t.docs.subscriptions?.exampleColumn || 'Voorbeeld'}
+                {t.docs.subscriptions?.exampleColumn}
               </th>
             </tr>
           </thead>
@@ -610,11 +607,10 @@ fetch('http://localhost:3001/api/recurring/{id}/dismiss', {
                 <code className='text-sm'>weekly</code>
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                5-9 {t.docs.subscriptions?.days || 'dagen'}
+                5-9 {t.docs.subscriptions?.days}
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                {t.docs.subscriptions?.examples?.weekly ||
-                  'Wekelijkse boodschappen'}
+                {t.docs.subscriptions?.examples?.weekly}
               </td>
             </tr>
             <tr>
@@ -622,11 +618,10 @@ fetch('http://localhost:3001/api/recurring/{id}/dismiss', {
                 <code className='text-sm'>biweekly</code>
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                12-16 {t.docs.subscriptions?.days || 'dagen'}
+                12-16 {t.docs.subscriptions?.days}
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                {t.docs.subscriptions?.examples?.biweekly ||
-                  'Tweewekelijkse loon'}
+                {t.docs.subscriptions?.examples?.biweekly}
               </td>
             </tr>
             <tr>
@@ -634,11 +629,10 @@ fetch('http://localhost:3001/api/recurring/{id}/dismiss', {
                 <code className='text-sm'>monthly</code>
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                26-35 {t.docs.subscriptions?.days || 'dagen'}
+                26-35 {t.docs.subscriptions?.days}
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                {t.docs.subscriptions?.examples?.monthly ||
-                  'Netflix, Spotify, huur'}
+                {t.docs.subscriptions?.examples?.monthly}
               </td>
             </tr>
             <tr>
@@ -646,11 +640,10 @@ fetch('http://localhost:3001/api/recurring/{id}/dismiss', {
                 <code className='text-sm'>quarterly</code>
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                85-100 {t.docs.subscriptions?.days || 'dagen'}
+                85-100 {t.docs.subscriptions?.days}
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                {t.docs.subscriptions?.examples?.quarterly ||
-                  'Kwartaalabonnement'}
+                {t.docs.subscriptions?.examples?.quarterly}
               </td>
             </tr>
             <tr>
@@ -658,11 +651,10 @@ fetch('http://localhost:3001/api/recurring/{id}/dismiss', {
                 <code className='text-sm'>yearly</code>
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                350-380 {t.docs.subscriptions?.days || 'dagen'}
+                350-380 {t.docs.subscriptions?.days}
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                {t.docs.subscriptions?.examples?.yearly ||
-                  'Jaarabonnement, verzekering'}
+                {t.docs.subscriptions?.examples?.yearly}
               </td>
             </tr>
           </tbody>
@@ -671,7 +663,7 @@ fetch('http://localhost:3001/api/recurring/{id}/dismiss', {
 
       {/* Endpoints Summary */}
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.docs.subscriptions?.endpointsTitle || 'Alle Endpoints'}
+        {t.docs.subscriptions?.endpointsTitle}
       </h2>
 
       <div className='not-prose mt-6 overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700'>
@@ -685,7 +677,7 @@ fetch('http://localhost:3001/api/recurring/{id}/dismiss', {
                 Endpoint
               </th>
               <th className='px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100'>
-                {t.docs.common?.tableDescription || 'Beschrijving'}
+                {t.docs.common?.tableDescription}
               </th>
             </tr>
           </thead>
@@ -700,8 +692,7 @@ fetch('http://localhost:3001/api/recurring/{id}/dismiss', {
                 <code className='text-sm'>/api/recurring</code>
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                {t.docs.subscriptions?.endpoints?.list ||
-                  'Lijst alle patronen op'}
+                {t.docs.subscriptions?.endpoints?.list}
               </td>
             </tr>
             <tr>
@@ -714,8 +705,7 @@ fetch('http://localhost:3001/api/recurring/{id}/dismiss', {
                 <code className='text-sm'>/api/recurring/stats</code>
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                {t.docs.subscriptions?.endpoints?.stats ||
-                  'Haal statistieken op'}
+                {t.docs.subscriptions?.endpoints?.stats}
               </td>
             </tr>
             <tr>
@@ -728,8 +718,7 @@ fetch('http://localhost:3001/api/recurring/{id}/dismiss', {
                 <code className='text-sm'>/api/recurring/calendar</code>
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                {t.docs.subscriptions?.endpoints?.calendar ||
-                  'Haal verwachte betalingen op'}
+                {t.docs.subscriptions?.endpoints?.calendar}
               </td>
             </tr>
             <tr>
@@ -742,8 +731,7 @@ fetch('http://localhost:3001/api/recurring/{id}/dismiss', {
                 <code className='text-sm'>/api/recurring/detect</code>
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                {t.docs.subscriptions?.endpoints?.detect ||
-                  'Voer patroondetectie uit'}
+                {t.docs.subscriptions?.endpoints?.detect}
               </td>
             </tr>
             <tr>
@@ -756,8 +744,7 @@ fetch('http://localhost:3001/api/recurring/{id}/dismiss', {
                 <code className='text-sm'>/api/recurring/:id/confirm</code>
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                {t.docs.subscriptions?.endpoints?.confirm ||
-                  'Bevestig een patroon'}
+                {t.docs.subscriptions?.endpoints?.confirm}
               </td>
             </tr>
             <tr>
@@ -770,8 +757,7 @@ fetch('http://localhost:3001/api/recurring/{id}/dismiss', {
                 <code className='text-sm'>/api/recurring/:id/dismiss</code>
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                {t.docs.subscriptions?.endpoints?.dismiss ||
-                  'Negeer een patroon'}
+                {t.docs.subscriptions?.endpoints?.dismiss}
               </td>
             </tr>
             <tr>
@@ -784,8 +770,7 @@ fetch('http://localhost:3001/api/recurring/{id}/dismiss', {
                 <code className='text-sm'>/api/recurring/:id</code>
               </td>
               <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                {t.docs.subscriptions?.endpoints?.delete ||
-                  'Verwijder een patroon'}
+                {t.docs.subscriptions?.endpoints?.delete}
               </td>
             </tr>
           </tbody>

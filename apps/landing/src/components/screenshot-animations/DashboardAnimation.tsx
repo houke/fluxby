@@ -23,11 +23,10 @@ export default function DashboardAnimation({
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Get translated category names
-  const anim = t.animations?.dashboard;
+  const anim = t.animations.dashboard;
   const categories = categoryData.map((cat) => ({
     ...cat,
-    name:
-      anim?.categories?.[cat.key as keyof typeof anim.categories] || cat.key,
+    name: anim.categories[cat.key as keyof typeof anim.categories],
   }));
 
   useEffect(() => {
@@ -131,7 +130,7 @@ export default function DashboardAnimation({
             className='fill-gray-500 dark:fill-white/70'
             style={{ fontSize: '10px' }}
           >
-            {anim?.total || 'total'}
+            {anim.total}
           </text>
         </svg>
       </div>

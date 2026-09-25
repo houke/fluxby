@@ -7,87 +7,67 @@ export default function HelpAddressBook() {
   return (
     <article className='prose prose-gray dark:prose-invert max-w-none'>
       <h1 className='mb-4 text-4xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.helpCenter?.addressBook?.title || 'Adresboek beheren'}
+        {t.helpCenter?.addressBook?.title}
       </h1>
       <p className='text-xl text-gray-600 dark:text-gray-400'>
-        {t.helpCenter?.addressBook?.subtitle ||
-          'Organiseer je contacten en verbeter transactie categorisatie met automatische naam opschoning.'}
+        {t.helpCenter?.addressBook?.subtitle}
       </p>
 
       <div className='mt-8 rounded-xl border border-purple-200 bg-purple-50 p-6 dark:border-purple-800 dark:bg-purple-950/30'>
         <h3 className='mt-0 mb-2 flex items-center gap-2 text-lg font-semibold text-purple-900 dark:text-purple-200'>
           <span>💡</span>
-          {t.helpCenter?.addressBook?.tipTitle || 'Snelle tip'}
+          {t.helpCenter?.addressBook?.tipTitle}
         </h3>
         <p className='mb-0 text-purple-800 dark:text-purple-300'>
-          {t.helpCenter?.addressBook?.tipText ||
-            'Het adresboek wordt automatisch gevuld wanneer je transacties importeert. Gebruik de naam opschoning regels om verwarrende banknamen op te schonen.'}
+          {t.helpCenter?.addressBook?.tipText}
         </p>
       </div>
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.helpCenter?.addressBook?.whatAreTitle || 'Wat is het adresboek?'}
+        {t.helpCenter?.addressBook?.whatAreTitle}
       </h2>
       <p className='text-gray-600 dark:text-gray-400'>
-        {t.helpCenter?.addressBook?.whatAreText ||
-          'Het adresboek slaat automatisch tegenpartijen op van je transacties gebaseerd op IBAN en naam. Het helpt je om contacten te organiseren, verwarrende banknamen op te schonen, en uitgaven per merchant te volgen.'}
+        {t.helpCenter?.addressBook?.whatAreText}
       </p>
 
       <HelpAnimation type='addressBook' />
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.helpCenter?.addressBook?.featuresTitle || 'Belangrijke functies'}
+        {t.helpCenter?.addressBook?.featuresTitle}
       </h2>
 
       <h3 className='mt-8 text-xl font-semibold text-gray-900 dark:text-gray-100'>
-        {t.helpCenter?.addressBook?.autoExtractionTitle ||
-          'Automatische extractie'}
+        {t.helpCenter?.addressBook?.autoExtractionTitle}
       </h3>
       <p className='text-gray-600 dark:text-gray-400'>
-        {t.helpCenter?.addressBook?.autoExtractionText ||
-          'Wanneer je CSV bestanden importeert, detecteert Fluxby automatisch unieke tegenpartijen en voegt ze toe aan je adresboek. Dit gebeurt gebaseerd op IBAN nummers en namen.'}
+        {t.helpCenter?.addressBook?.autoExtractionText}
       </p>
 
       <h3 className='mt-8 text-xl font-semibold text-gray-900 dark:text-gray-100'>
-        {t.helpCenter?.addressBook?.nameCleanupTitle || 'Naam opschoning'}
+        {t.helpCenter?.addressBook?.nameCleanupTitle}
       </h3>
       <p className='text-gray-600 dark:text-gray-400'>
-        {t.helpCenter?.addressBook?.nameCleanupText ||
-          'Veel banken voegen technische informatie toe aan transactienamen (zoals "via Mollie" of "via Buckaroo"). Het adresboek helpt je om automatische regels te maken die deze informatie verwijderen voor schonere namen.'}
+        {t.helpCenter?.addressBook?.nameCleanupText}
       </p>
 
       <h3 className='mt-8 text-xl font-semibold text-gray-900 dark:text-gray-100'>
-        {t.helpCenter?.addressBook?.sharedIbansTitle || 'Gedeelde IBANs'}
+        {t.helpCenter?.addressBook?.sharedIbansTitle}
       </h3>
       <p className='text-gray-600 dark:text-gray-400'>
-        {t.helpCenter?.addressBook?.sharedIbansText ||
-          'Sommige betaalproviders gebruiken gedeelde IBANs voor meerdere merchants. Het adresboek helpt je om te beslissen of je deze wilt samenvoegen als dezelfde merchant of apart houden als verschillende bedrijven.'}
+        {t.helpCenter?.addressBook?.sharedIbansText}
       </p>
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
-        {t.helpCenter?.addressBook?.managingTitle || 'Contacten beheren'}
+        {t.helpCenter?.addressBook?.managingTitle}
       </h2>
       <p className='text-gray-600 dark:text-gray-400'>
-        {t.helpCenter?.addressBook?.managingText ||
-          'Je kunt handmatig contacten toevoegen, bestaande contacten bewerken, of naam opschoning regels configureren:'}
+        {t.helpCenter?.addressBook?.managingText}
       </p>
       <ul className='mt-4 list-inside list-disc text-gray-600 dark:text-gray-400'>
-        <li>
-          {t.helpCenter?.addressBook?.manage1 ||
-            'Klik op een contact om details te bekijken'}
-        </li>
-        <li>
-          {t.helpCenter?.addressBook?.manage2 ||
-            'Gebruik de zoekbalk om contacten te vinden'}
-        </li>
-        <li>
-          {t.helpCenter?.addressBook?.manage3 ||
-            'Maak naam opschoning regels voor betere categorisatie'}
-        </li>
-        <li>
-          {t.helpCenter?.addressBook?.manage4 ||
-            'Bekijk transactiegeschiedenis per contact'}
-        </li>
+        <li>{t.helpCenter?.addressBook?.manage1}</li>
+        <li>{t.helpCenter?.addressBook?.manage2}</li>
+        <li>{t.helpCenter?.addressBook?.manage3}</li>
+        <li>{t.helpCenter?.addressBook?.manage4}</li>
       </ul>
     </article>
   );
