@@ -539,9 +539,10 @@ describe('locale coverage', () => {
     expect(missingLandingTranslationReferences()).toEqual([]);
   });
 
+  // Full-app TypeScript analysis can exceed Vitest's default under coverage.
   it('provides both languages for every app translation reference', () => {
     expect(missingWebTranslationReferences()).toEqual([]);
-  });
+  }, 15_000);
 
   it('does not use hardcoded copy as a translation fallback', () => {
     expect(hardcodedTranslationFallbacks()).toEqual([]);
