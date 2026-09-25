@@ -93,16 +93,24 @@ function getFiles(directory: string): string[] {
   });
 }
 
-function collectOpenApiText(value: unknown): string[] {
-  if (Array.isArray(value)) return value.flatMap(collectOpenApiText);
+function collectOpenApiText(value: unknown, inTagList = false): string[] {
+  if (Array.isArray(value)) {
+    return value.flatMap((item) => {
+      if (inTagList && typeof item === 'string') return [item];
+      return collectOpenApiText(item, inTagList);
+    });
+  }
   if (!value || typeof value !== 'object') return [];
 
   return Object.entries(value).flatMap(([key, item]) => {
     const text =
-      (key === 'summary' || key === 'description') && typeof item === 'string'
+      (key === 'summary' ||
+        key === 'description' ||
+        (inTagList && key === 'name')) &&
+      typeof item === 'string'
         ? [item]
         : [];
-    return [...text, ...collectOpenApiText(item)];
+    return [...text, ...collectOpenApiText(item, key === 'tags')];
   });
 }
 
@@ -431,6 +439,13 @@ describe('locale coverage', () => {
     expect(localeShapeDifferences(landingNl, landingEn, 'landing')).toEqual([]);
   });
 
+  it('translates developer-docs sidebar section headings into Dutch', () => {
+    expect(landingNl.docs.nav.coreResources).not.toBe(
+      landingEn.docs.nav.coreResources
+    );
+    expect(landingNl.docs.nav.tools).not.toBe(landingEn.docs.nav.tools);
+  });
+
   it('provides both languages for landing, Help Center, and developer docs strings', () => {
     expect(missingLandingTranslationReferences()).toEqual([]);
   });
@@ -439,7 +454,7 @@ describe('locale coverage', () => {
     expect(missingWebTranslationReferences()).toEqual([]);
   });
 
-  it('localizes every OpenAPI summary and description into both languages', () => {
+  it('localizes OpenAPI summaries, descriptions, and tags into both languages', () => {
     const spec = JSON.parse(
       fs.readFileSync(
         path.join(rootDirectory, 'apps/landing/public/openapi.json'),

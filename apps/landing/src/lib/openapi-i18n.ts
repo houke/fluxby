@@ -298,6 +298,19 @@ const englishFromDutch: Record<string, string> = {
 const dutchFromEnglish: Record<string, string> = {
   'API for managing financial transactions, categories, budgets, and analytics. This API is intended for developers building custom interfaces.':
     'API voor het beheren van financiële transacties, categorieën, budgetten en analyses. Deze API is bedoeld voor ontwikkelaars die eigen interfaces bouwen.',
+  Accounts: 'Rekeningen',
+  AddressBook: 'Adresboek',
+  'Address Book': 'Adresboek',
+  Analytics: 'Analyses',
+  Budgets: 'Budgetten',
+  Categories: 'Categorieën',
+  Data: 'Gegevens',
+  Import: 'Importeren',
+  Profiles: 'Profielen',
+  Recurring: 'Terugkerend',
+  Rules: 'Regels',
+  Transactions: 'Transacties',
+  User: 'Gebruiker',
   'Access denied': 'Geen toegang',
   'Access denied - account belongs to different profile':
     'Geen toegang - de rekening hoort bij een ander profiel',
@@ -470,14 +483,31 @@ const dutchFromEnglishTranslations = Object.fromEntries(
   Object.entries(englishFromDutch).map(([dutch, english]) => [english, dutch])
 );
 
-function localizeValue(value: unknown, language: Language): unknown {
+function localizeValue(
+  value: unknown,
+  language: Language,
+  inTagList = false
+): unknown {
   if (Array.isArray(value)) {
-    return value.map((item) => localizeValue(item, language));
+    return value.map((item) => {
+      if (inTagList && language === 'nl' && typeof item === 'string') {
+        return dutchFromEnglish[item] || item;
+      }
+      return localizeValue(item, language, inTagList);
+    });
   }
   if (!value || typeof value !== 'object') return value;
 
   return Object.fromEntries(
     Object.entries(value).map(([key, item]) => {
+      if (
+        inTagList &&
+        language === 'nl' &&
+        key === 'name' &&
+        typeof item === 'string'
+      ) {
+        return [key, dutchFromEnglish[item] || item];
+      }
       if (
         (key === 'summary' || key === 'description') &&
         typeof item === 'string'
@@ -491,6 +521,7 @@ function localizeValue(value: unknown, language: Language): unknown {
               item,
         ];
       }
+      if (key === 'tags') return [key, localizeValue(item, language, true)];
       return [key, localizeValue(item, language)];
     })
   );
