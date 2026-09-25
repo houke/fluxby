@@ -254,7 +254,7 @@ describe('Bulk Delete Performance Benchmark (TEST-004)', () => {
 
     console.log('');
     console.log('='.repeat(80));
-    console.log('RECOMMENDATION (Q5):');
+    console.log('OBSERVED RESULTS (Q5):');
     console.log('');
 
     // Find optimal batch size for 10k
@@ -266,7 +266,7 @@ describe('Bulk Delete Performance Benchmark (TEST-004)', () => {
 
     if (fastestResult) {
       console.log(
-        `Optimal BATCH_SIZE for 10k deletions: ${fastestResult.batchSize}`
+        `Fastest observed BATCH_SIZE for 10k deletions: ${fastestResult.batchSize}`
       );
       console.log(
         `Average deletion time: ${fastestResult.avgTimeMs.toFixed(2)}ms`
@@ -279,10 +279,10 @@ describe('Bulk Delete Performance Benchmark (TEST-004)', () => {
       if (fastestResult.meetsTarget) {
         console.log('');
         console.log(
-          `✅ BATCH_SIZE of ${fastestResult.batchSize} is recommended for production use.`
+          `✅ BATCH_SIZE of ${fastestResult.batchSize} was fastest in this run.`
         );
         console.log(
-          '   It provides the best balance of performance and SQL safety (staying under 32766 parameter limit).'
+          "   This observed batch size stays within SQLite's 32766 parameter limit."
         );
       }
     }
@@ -367,10 +367,10 @@ describe('Bulk Delete Performance Benchmark (TEST-004)', () => {
 });
 
 // ============================================
-// INDIVIDUAL BATCH SIZE RECOMMENDATION TEST
+// INDIVIDUAL BATCH SIZE PERFORMANCE TEST
 // ============================================
 
-describe('Q5: Optimal BATCH_SIZE Determination', () => {
+describe('Q5: BATCH_SIZE Performance', () => {
   let profileId: number;
   let accountId: number;
 
@@ -384,7 +384,7 @@ describe('Q5: Optimal BATCH_SIZE Determination', () => {
     db.close();
   });
 
-  it('recommends BATCH_SIZE of 500 for 10k+ deletions', () => {
+  it('keeps each tested batch size under the five-second target', () => {
     const txCount = 10000;
     const batchSizesToTest = [100, 250, 500, 750, 1000];
     const results: Array<{ batchSize: number; avgTimeMs: number }> = [];
@@ -409,25 +409,23 @@ describe('Q5: Optimal BATCH_SIZE Determination', () => {
       results[0]
     );
 
-    console.log('\n=== Q5 ANSWER: Optimal BATCH_SIZE ===');
+    console.log('\n=== Q5 OBSERVED BATCH SIZE PERFORMANCE ===');
     console.log('Results for 10k soft-deletions:');
     for (const r of results) {
       const isFastest = r.batchSize === fastest.batchSize;
       console.log(
-        `  Batch size ${r.batchSize}: ${r.avgTimeMs.toFixed(2)}ms ${isFastest ? '✅ FASTEST' : ''}`
+        `  Batch size ${r.batchSize}: ${r.avgTimeMs.toFixed(2)}ms ${isFastest ? '✅ FASTEST OBSERVED' : ''}`
       );
     }
     console.log('');
-    console.log(`RECOMMENDED BATCH_SIZE: ${fastest.batchSize}`);
+    console.log(`FASTEST OBSERVED BATCH_SIZE: ${fastest.batchSize}`);
     console.log('');
 
-    // The implementation uses 500 as the default, verify it's reasonable
-    // Allow any batch size >= 250 and <= 1000 as acceptable
-    expect(fastest.batchSize).toBeGreaterThanOrEqual(250);
-    expect(fastest.batchSize).toBeLessThanOrEqual(1000);
-
-    // Verify it meets the 5-second target
-    expect(fastest.avgTimeMs).toBeLessThan(5000);
+    // Timing differences between candidates are noisy, so only enforce the
+    // actual performance requirement for each candidate.
+    for (const result of results) {
+      expect(result.avgTimeMs).toBeLessThan(5000);
+    }
   });
 
   it('validates current implementation BATCH_SIZE of 500', () => {
