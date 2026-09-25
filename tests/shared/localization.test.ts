@@ -268,6 +268,7 @@ function missingWebTranslationReferences(): string[] {
     jsx: ts.JsxEmit.ReactJSX,
     module: ts.ModuleKind.ESNext,
     moduleResolution: ts.ModuleResolutionKind.Bundler,
+    noResolve: true,
     target: ts.ScriptTarget.ESNext,
   });
   const checker = program.getTypeChecker();
@@ -539,10 +540,10 @@ describe('locale coverage', () => {
     expect(missingLandingTranslationReferences()).toEqual([]);
   });
 
-  // Full-app TypeScript analysis can exceed Vitest's default under coverage.
+  // Keep some headroom for full-app analysis when CI is under load.
   it('provides both languages for every app translation reference', () => {
     expect(missingWebTranslationReferences()).toEqual([]);
-  }, 15_000);
+  }, 15000);
 
   it('does not use hardcoded copy as a translation fallback', () => {
     expect(hardcodedTranslationFallbacks()).toEqual([]);
