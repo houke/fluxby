@@ -890,7 +890,78 @@ function generateUpdatesEntry(commits, version) {
 }
 
 /**
- * Update UpdatesContent.tsx with new release using smart bundling and icons
+ * Generate the default release summary in both languages.
+ */
+function getReleaseDescriptions(entry) {
+  let descriptionNl = 'Nieuwe verbeteringen en bugfixes.';
+  let descriptionEn = 'New improvements and bug fixes.';
+
+  if (entry.totalFeatures > 0 && entry.totalFixes > 0) {
+    const featureNounNl = entry.totalFeatures === 1 ? 'functie' : 'functies';
+    descriptionNl =
+      entry.totalFeatures +
+      ' nieuwe ' +
+      featureNounNl +
+      ' en ' +
+      entry.totalFixes +
+      ' bugfixes.';
+    descriptionEn =
+      entry.totalFeatures +
+      ' new ' +
+      (entry.totalFeatures === 1 ? 'feature' : 'features') +
+      ' and ' +
+      entry.totalFixes +
+      ' bug ' +
+      (entry.totalFixes === 1 ? 'fix' : 'fixes') +
+      '.';
+  } else if (entry.totalFeatures > 0) {
+    const featureNounNl = entry.totalFeatures === 1 ? 'functie' : 'functies';
+    descriptionNl = entry.totalFeatures + ' nieuwe ' + featureNounNl + '.';
+    descriptionEn =
+      entry.totalFeatures +
+      ' new ' +
+      (entry.totalFeatures === 1 ? 'feature' : 'features') +
+      '.';
+  } else if (entry.totalFixes > 0) {
+    descriptionNl =
+      entry.totalFixes +
+      ' ' +
+      (entry.totalFixes === 1 ? 'bugfix' : 'bugfixes') +
+      '.';
+    descriptionEn =
+      entry.totalFixes +
+      ' bug ' +
+      (entry.totalFixes === 1 ? 'fix' : 'fixes') +
+      '.';
+  }
+
+  return { descriptionNl, descriptionEn };
+}
+
+function getReleaseTranslationKeys(entry) {
+  const versionKey = entry.version.replace(/\./g, '');
+  return [
+    'v' + versionKey + 'Date',
+    'v' + versionKey + 'Title',
+    'v' + versionKey + 'Description',
+    ...entry.bundles.flatMap((_, index) => {
+      const featureNum = index + 1;
+      return [
+        'v' + versionKey + 'F' + featureNum + 'Title',
+        'v' + versionKey + 'F' + featureNum + 'Desc',
+      ];
+    }),
+  ];
+}
+
+function hasTranslationKeys(content, keys) {
+  return keys.every((key) =>
+    new RegExp('^[\\t ]*' + key + '[\\t ]*:', 'm').test(content)
+  );
+}
+
+/**
+ * Update UpdatesContent.tsx with the release and its translated keys.
  */
 function updateUpdatesContent(entry) {
   const filePath = join(
@@ -940,38 +1011,23 @@ function updateUpdatesContent(entry) {
       const featureNum = index + 1;
       return `        {
           icon: ${bundle.icon},
-          title: updatesPage?.v${versionKey}F${featureNum}Title || '${escapeString(bundle.titleNl)}',
-          description: updatesPage?.v${versionKey}F${featureNum}Desc || '${escapeString(bundle.descriptionNl)}',
+          title: updatesPage?.v${versionKey}F${featureNum}Title,
+          description: updatesPage?.v${versionKey}F${featureNum}Desc,
         },`;
     })
     .join('\n');
 
-  // Generate the description based on what changed
-  let descriptionNl = 'Nieuwe verbeteringen en bugfixes.';
-  let descriptionEn = 'New improvements and bug fixes.';
-
-  if (entry.totalFeatures > 0 && entry.totalFixes > 0) {
-    descriptionNl = `${entry.totalFeatures} nieuwe ${entry.totalFeatures === 1 ? 'feature' : 'features'} en ${entry.totalFixes} ${entry.totalFixes === 1 ? 'bugfix' : 'bugfixes'}.`;
-    descriptionEn = `${entry.totalFeatures} new ${entry.totalFeatures === 1 ? 'feature' : 'features'} and ${entry.totalFixes} bug ${entry.totalFixes === 1 ? 'fix' : 'fixes'}.`;
-  } else if (entry.totalFeatures > 0) {
-    descriptionNl = `${entry.totalFeatures} nieuwe ${entry.totalFeatures === 1 ? 'feature' : 'features'}.`;
-    descriptionEn = `${entry.totalFeatures} new ${entry.totalFeatures === 1 ? 'feature' : 'features'}.`;
-  } else if (entry.totalFixes > 0) {
-    descriptionNl = `${entry.totalFixes} ${entry.totalFixes === 1 ? 'bugfix' : 'bugfixes'}.`;
-    descriptionEn = `${entry.totalFixes} bug ${entry.totalFixes === 1 ? 'fix' : 'fixes'}.`;
-  }
-
-  const newReleaseEntry = `    {
-      version: '${entry.version}',
-      date: updatesPage?.v${versionKey}Date || '${entry.dateNl}',
-      title: updatesPage?.v${versionKey}Title || 'Release ${entry.version}',
-      description:
-        updatesPage?.v${versionKey}Description ||
-        '${escapeString(descriptionNl)}',
-      features: [
-${featuresCode}
-      ],
-    },`;
+  const newReleaseEntry = [
+    '    {',
+    "      version: '" + entry.version + "',",
+    '      date: updatesPage?.v' + versionKey + 'Date,',
+    '      title: updatesPage?.v' + versionKey + 'Title,',
+    '      description: updatesPage?.v' + versionKey + 'Description,',
+    '      features: [',
+    featuresCode,
+    '      ],',
+    '    },',
+  ].join('\n');
 
   // Insert new release at the start of the releases array
   const releasesMatch = content.match(/(const releases = \[\s*)\{/);
@@ -981,7 +1037,7 @@ ${featuresCode}
       `${releasesMatch[1]}${newReleaseEntry}\n    {`
     );
     writeFileSync(filePath, content);
-    return { success: true, descriptionNl, descriptionEn };
+    return { success: true };
   }
 
   return { success: false };
@@ -1012,38 +1068,53 @@ function updateTranslations(entry, descriptionNl, descriptionEn) {
     descriptionEn
   );
 
-  // Update nl.ts
   const nlPath = join(ROOT_DIR, 'apps/landing/src/lib/i18n/nl.ts');
-  let nlContent = readFileSync(nlPath, 'utf-8');
-
-  // Find the updatesPage section and add new entries after 'intro'
-  const nlUpdatesMatch = nlContent.match(
-    /(updatesPage:\s*\{[\s\S]*?intro:[^,]+,)/
-  );
-  if (nlUpdatesMatch) {
-    nlContent = nlContent.replace(
-      nlUpdatesMatch[0],
-      nlUpdatesMatch[0] + '\n' + nlTranslations
-    );
-    writeFileSync(nlPath, nlContent);
-    log('✓ Updated nl.ts translations', 'green');
-  }
-
-  // Update en.ts
   const enPath = join(ROOT_DIR, 'apps/landing/src/lib/i18n/en.ts');
-  let enContent = readFileSync(enPath, 'utf-8');
+  const translationKeys = getReleaseTranslationKeys(entry);
 
-  const enUpdatesMatch = enContent.match(
-    /(updatesPage:\s*\{[\s\S]*?intro:[^,]+,)/
-  );
-  if (enUpdatesMatch) {
-    enContent = enContent.replace(
-      enUpdatesMatch[0],
-      enUpdatesMatch[0] + '\n' + enTranslations
+  updateLocaleTranslations(nlPath, nlTranslations, translationKeys);
+  updateLocaleTranslations(enPath, enTranslations, translationKeys);
+  log('✓ Updated Dutch and English translations', 'green');
+}
+
+function updateLocaleTranslations(filePath, entries, translationKeys) {
+  let content = readFileSync(filePath, 'utf-8');
+  const missingEntries = [];
+
+  for (const entry of entries.split('\n')) {
+    const keyMatch = entry.match(
+      /^[\t ]*(v\d+(?:F\d+(?:Title|Desc)|Date|Title|Description)):/
     );
-    writeFileSync(enPath, enContent);
-    log('✓ Updated en.ts translations', 'green');
+    if (!keyMatch) {
+      throw new Error('Could not parse generated translation entry: ' + entry);
+    }
+
+    const propertyPattern = new RegExp(
+      '^[\\t ]*' + keyMatch[1] + '[\\t ]*:.*$',
+      'm'
+    );
+    if (!propertyPattern.test(content)) {
+      missingEntries.push(entry);
+    }
   }
+
+  if (missingEntries.length > 0) {
+    const introPattern = /(updatesPage:\s*\{[\s\S]*?intro:[^,]+,)/;
+    const introMatch = content.match(introPattern);
+    if (!introMatch) {
+      throw new Error('Could not find updatesPage in ' + filePath);
+    }
+    content = content.replace(
+      introPattern,
+      introMatch[1] + '\n' + missingEntries.join('\n')
+    );
+  }
+
+  if (!hasTranslationKeys(content, translationKeys)) {
+    throw new Error('Release translations are incomplete in ' + filePath);
+  }
+
+  writeFileSync(filePath, content);
 }
 
 /**
@@ -1121,10 +1192,7 @@ function updatePackageJsonVersion(newVersion) {
       packageLock.packages[workspacePath].version = newVersion;
     }
   }
-  writeFileSync(
-    packageLockPath,
-    JSON.stringify(packageLock, null, 2) + '\n'
-  );
+  writeFileSync(packageLockPath, JSON.stringify(packageLock, null, 2) + '\n');
 
   // Update apps/tauri/package.json
   const tauriPackagePath = join(ROOT_DIR, 'apps/tauri/package.json');
@@ -1271,8 +1339,12 @@ async function main() {
   log(`Version bump: ${bump}`, 'cyan');
   log(`New version: ${newVersion}`, 'green');
 
+  const entry = generateUpdatesEntry(commits, newVersion);
+  const releaseDescriptions = getReleaseDescriptions(entry);
+  const translationKeys = getReleaseTranslationKeys(entry);
+
   // Step 3.5: Check if version already exists in each file
-  let packageJsonHasVersion = pkg.version === newVersion;
+  const packageJsonHasVersion = pkg.version === newVersion;
   let updatesContentHasVersion = false;
   let translationsHaveVersion = false;
   try {
@@ -1291,10 +1363,15 @@ async function main() {
       join(ROOT_DIR, 'apps/landing/src/lib/i18n/nl.ts'),
       'utf-8'
     );
-    const versionKey = newVersion.replace(/\./g, '');
-    translationsHaveVersion = nlContent.includes(`v${versionKey}Date:`);
+    const enContent = readFileSync(
+      join(ROOT_DIR, 'apps/landing/src/lib/i18n/en.ts'),
+      'utf-8'
+    );
+    translationsHaveVersion =
+      hasTranslationKeys(nlContent, translationKeys) &&
+      hasTranslationKeys(enContent, translationKeys);
   } catch {
-    // Ignore if nl.ts does not exist or cannot be read
+    // Missing locale files are incomplete release metadata.
   }
   let changelogHasVersion = false;
   try {
@@ -1348,7 +1425,6 @@ async function main() {
   }
 
   // Update UpdatesContent.tsx and translations
-  const entry = generateUpdatesEntry(commits, newVersion);
   if (!updatesContentHasVersion) {
     const result = updateUpdatesContent(entry);
     if (result.success) {
@@ -1357,15 +1433,25 @@ async function main() {
         `  → Added ${entry.bundles.length} feature cards with smart icons`,
         'cyan'
       );
-
-      // Update translation files
-      logStep('6/9', 'Updating translations...');
-      updateTranslations(entry, result.descriptionNl, result.descriptionEn);
     } else {
-      log('⚠️ Failed to update UpdatesContent.tsx', 'yellow');
+      throw new Error('Failed to update UpdatesContent.tsx');
     }
   } else {
     log('⏭️ Skipped UpdatesContent.tsx (version already exists)', 'yellow');
+  }
+
+  if (!translationsHaveVersion) {
+    logStep('6/9', 'Updating translations...');
+    updateTranslations(
+      entry,
+      releaseDescriptions.descriptionNl,
+      releaseDescriptions.descriptionEn
+    );
+  } else {
+    log(
+      '⏭️ Skipped translations (version already exists in Dutch and English)',
+      'yellow'
+    );
   }
 
   // Generate API assets (OpenAPI & Bruno)

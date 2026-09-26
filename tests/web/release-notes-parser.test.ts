@@ -1,49 +1,6 @@
 import { describe, it, expect } from 'vitest';
 
-// Inline the parseLocalizedReleaseNotes function for testing
-// (copied from UpdateChecker.tsx)
-type Language = 'nl' | 'en';
-
-function parseLocalizedReleaseNotes(
-  body: string | undefined,
-  language: Language
-): string {
-  if (!body) return '';
-
-  // Try HTML comment format first (<!-- nl --> ... <!-- /nl -->)
-  const commentRegex = new RegExp(
-    `<!--\\s*${language}\\s*-->([\\s\\S]*?)<!--\\s*\\/${language}\\s*-->`,
-    'i'
-  );
-  const commentMatch = body.match(commentRegex);
-  if (commentMatch) {
-    return commentMatch[1].trim();
-  }
-
-  // Try markdown header format (## 🇳🇱 Nederlands or ## 🇬🇧 English)
-  const headerPatterns: Record<Language, RegExp> = {
-    nl: /##\s*(?:🇳🇱\s*)?Nederlands\s*\n([\s\S]*?)(?=##\s*(?:🇬🇧\s*)?English|$)/i,
-    en: /##\s*(?:🇬🇧\s*)?English\s*\n([\s\S]*?)(?=##\s*(?:🇳🇱\s*)?Nederlands|$)/i,
-  };
-
-  const headerMatch = body.match(headerPatterns[language]);
-  if (headerMatch) {
-    return headerMatch[1].trim();
-  }
-
-  // Try simple [nl] ... [en] markers
-  const simpleRegex = new RegExp(
-    `\\[${language}\\]([\\s\\S]*?)(?=\\[(?:nl|en)\\]|$)`,
-    'i'
-  );
-  const simpleMatch = body.match(simpleRegex);
-  if (simpleMatch) {
-    return simpleMatch[1].trim();
-  }
-
-  // No language markers found, return full body
-  return body;
-}
+import { parseLocalizedReleaseNotes } from '../../apps/web/src/lib/release-notes';
 
 describe('parseLocalizedReleaseNotes', () => {
   describe('HTML comment format', () => {
@@ -120,6 +77,26 @@ English content here
 
       const resultEn = parseLocalizedReleaseNotes(bodyWithoutFlags, 'en');
       expect(resultEn).toContain('English content here');
+    });
+
+    it('does not include later non-language sections', () => {
+      const bodyWithDownloads = [
+        '## 🇳🇱 Nederlands',
+        'Dutch release notes',
+        '',
+        '## 🇬🇧 English',
+        'English release notes',
+        '',
+        '## Downloads / Downloads',
+        'Download table',
+      ].join('\n');
+
+      expect(parseLocalizedReleaseNotes(bodyWithDownloads, 'en')).toContain(
+        'English release notes'
+      );
+      expect(parseLocalizedReleaseNotes(bodyWithDownloads, 'en')).not.toContain(
+        'Download table'
+      );
     });
   });
 

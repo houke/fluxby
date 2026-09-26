@@ -65,6 +65,9 @@ jobs:
         run: npm run typecheck -w apps/landing
         continue-on-error: false
 
+      - name: Check localization and release note parsing
+        run: npm run test:run -- tests/shared/localization.test.ts tests/web/release-notes-parser.test.ts
+
       - name: Build GitHub Pages site
         run: npm run build:pages
         # No VITE_BASE_URL needed - custom domain (fluxby.app) serves from root /

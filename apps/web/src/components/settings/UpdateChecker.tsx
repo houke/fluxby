@@ -28,7 +28,7 @@ import {
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/contexts/ToastContext';
 import { useConfirm } from '@/contexts/ConfirmContext';
-import type { Language } from '@/lib/i18n';
+import { parseLocalizedReleaseNotes } from '@/lib/release-notes';
 
 // Check if running in Tauri
 const isTauri = typeof window !== 'undefined' && '__TAURI__' in window;
@@ -38,68 +38,6 @@ const currentAppVersion =
   typeof import.meta !== 'undefined'
     ? (import.meta.env?.VITE_APP_VERSION as string | undefined)
     : undefined;
-
-/**
- * Parse localized release notes from GitHub release body.
- * Supports two formats:
- *
- * Format 1 - HTML comments (recommended for GitHub):
- * <!-- nl -->
- * Dutch release notes...
- * <!-- /nl -->
- * <!-- en -->
- * English release notes...
- * <!-- /en -->
- *
- * Format 2 - Markdown headers:
- * ## 🇳🇱 Nederlands
- * Dutch release notes...
- *
- * ## 🇬🇧 English
- * English release notes...
- *
- * If no language markers found, returns the full body.
- */
-function parseLocalizedReleaseNotes(
-  body: string | undefined,
-  language: Language
-): string {
-  if (!body) return '';
-
-  // Try HTML comment format first (<!-- nl --> ... <!-- /nl -->)
-  const commentRegex = new RegExp(
-    `<!--\\s*${language}\\s*-->([\\s\\S]*?)<!--\\s*\\/${language}\\s*-->`,
-    'i'
-  );
-  const commentMatch = body.match(commentRegex);
-  if (commentMatch) {
-    return commentMatch[1].trim();
-  }
-
-  // Try markdown header format (## 🇳🇱 Nederlands or ## 🇬🇧 English)
-  const headerPatterns: Record<Language, RegExp> = {
-    nl: /##\s*(?:🇳🇱\s*)?Nederlands\s*\n([\s\S]*?)(?=##\s*(?:🇬🇧\s*)?English|$)/i,
-    en: /##\s*(?:🇬🇧\s*)?English\s*\n([\s\S]*?)(?=##\s*(?:🇳🇱\s*)?Nederlands|$)/i,
-  };
-
-  const headerMatch = body.match(headerPatterns[language]);
-  if (headerMatch) {
-    return headerMatch[1].trim();
-  }
-
-  // Try simple [nl] ... [en] markers
-  const simpleRegex = new RegExp(
-    `\\[${language}\\]([\\s\\S]*?)(?=\\[(?:nl|en)\\]|$)`,
-    'i'
-  );
-  const simpleMatch = body.match(simpleRegex);
-  if (simpleMatch) {
-    return simpleMatch[1].trim();
-  }
-
-  // No language markers found, return full body
-  return body;
-}
 
 interface UpdateInfo {
   version: string;

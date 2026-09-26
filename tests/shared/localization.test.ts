@@ -7,6 +7,7 @@ import { nl as webNl } from '../../apps/web/src/lib/i18n/nl';
 import { en as landingEn } from '../../apps/landing/src/lib/i18n/en';
 import { nl as landingNl } from '../../apps/landing/src/lib/i18n/nl';
 import { localizeOpenApiSpec } from '../../apps/landing/src/lib/openapi-i18n';
+import { generateLocalizedReleaseNotes } from '../../scripts/generate-release-notes';
 
 const rootDirectory = process.cwd();
 const ignoredArrayLengthDifferences = new Set([
@@ -524,6 +525,24 @@ function hardcodedTranslationFallbacks(): string[] {
 }
 
 describe('locale coverage', () => {
+  it('generates GitHub release notes from the Dutch and English dictionaries', () => {
+    const notes = generateLocalizedReleaseNotes('1.14.0');
+
+    expect(notes).toContain('## 🇳🇱 Nederlands');
+    expect(notes).toContain('## 🇬🇧 English');
+    expect(notes).toContain(landingNl.legal.updatesPage.v1140F1Title);
+    expect(notes).toContain(landingEn.legal.updatesPage.v1140F1Title);
+    expect(notes.indexOf('## 🇳🇱 Nederlands')).toBeLessThan(
+      notes.indexOf('## 🇬🇧 English')
+    );
+    const dutchNotes = notes.split('## 🇬🇧 English')[0];
+    const englishNotes = notes.split('## 🇬🇧 English')[1];
+    expect(dutchNotes).not.toContain(landingEn.legal.updatesPage.v1140F1Title);
+    expect(englishNotes).not.toContain(
+      landingNl.legal.updatesPage.v1140F1Title
+    );
+  });
+
   it('keeps Dutch and English translation dictionaries in sync', () => {
     expect(localeShapeDifferences(webNl, webEn, 'web')).toEqual([]);
     expect(localeShapeDifferences(landingNl, landingEn, 'landing')).toEqual([]);

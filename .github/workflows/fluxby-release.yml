@@ -28,6 +28,15 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
       - name: Get current and target version
         id: get-version
         run: |
@@ -54,137 +63,18 @@ jobs:
 
           echo "Updated versions to $VERSION"
 
-      - name: Update UpdatesContent.tsx
-        id: update-updates
-        run: |
-          VERSION="${{ steps.get-version.outputs.version }}"
-          VERSION_KEY=$(echo "$VERSION" | tr -d '.')
-          DATE=$(date +"%d %B %Y" | sed 's/January/januari/;s/February/februari/;s/March/maart/;s/April/april/;s/May/mei/;s/June/juni/;s/July/juli/;s/August/augustus/;s/September/september/;s/October/oktober/;s/November/november/;s/December/december/')
+      - name: Check localization and release note parsing
+        run: npm run test:run -- tests/shared/localization.test.ts tests/web/release-notes-parser.test.ts
 
-          FILE="apps/landing/src/pages/legal/UpdatesContent.tsx"
-
-          if grep -q "version: '${VERSION}'" "$FILE"; then
-            echo "Version $VERSION already exists in UpdatesContent.tsx"
-          else
-            # Create new release entry
-            NEW_ENTRY="    {
-                  version: '${VERSION}',
-                  date: updatesPage?.v${VERSION_KEY}Date || '${DATE}',
-                  title: updatesPage?.v${VERSION_KEY}Title || 'Release ${VERSION}',
-                  description:
-                    updatesPage?.v${VERSION_KEY}Description ||
-                    'Zie de release notes voor alle wijzigingen.',
-                  features: [],
-                },"
-
-            # Insert after "const releases = ["
-            sed -i "s/const releases = \[/const releases = [\n${NEW_ENTRY}/" "$FILE"
-            echo "Updated UpdatesContent.tsx"
-          fi
-
-      - name: Generate changelog from commits
+      - name: Generate bilingual changelog from translations
         id: changelog
         run: |
-          # Get previous tag
-          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
-            # Triggered by tag push: we are ON the tag, so we need the one before it
-            PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
-          else
-            # Triggered by other means: get the latest tag
-            PREV_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
-          fi
-
-          if [ -n "$PREV_TAG" ]; then
-            REVISION_RANGE="${PREV_TAG}..HEAD"
-          else
-            REVISION_RANGE="HEAD"
-          fi
-
-          echo "Generating changelog for range: $REVISION_RANGE"
-
-          {
-            echo "## What's Changed"
-            echo ""
-            
-            # Features
-            FEATURES=$(git log $REVISION_RANGE --oneline --no-merges --grep="^feat" --format="- %s" 2>/dev/null | sed 's/^- feat(\([^)]*\)): /- **\1:** /' | sed 's/^- feat: /- /')
-            if [ -n "$FEATURES" ]; then
-              echo "### ✨ Features"
-              echo ""
-              echo "$FEATURES"
-              echo ""
-            fi
-            
-            # Bug fixes
-            FIXES=$(git log $REVISION_RANGE --oneline --no-merges --grep="^fix" --format="- %s" 2>/dev/null | sed 's/^- fix(\([^)]*\)): /- **\1:** /' | sed 's/^- fix: /- /')
-            if [ -n "$FIXES" ]; then
-              echo "### 🐛 Bug Fixes"
-              echo ""
-              echo "$FIXES"
-              echo ""
-            fi
-            
-            # Performance
-            PERF=$(git log $REVISION_RANGE --oneline --no-merges --grep="^perf" --format="- %s" 2>/dev/null | sed 's/^- perf(\([^)]*\)): /- **\1:** /' | sed 's/^- perf: /- /')
-            if [ -n "$PERF" ]; then
-              echo "### ⚡ Performance"
-              echo ""
-              echo "$PERF"
-              echo ""
-            fi
-
-            # Refactoring
-            REFACTOR=$(git log $REVISION_RANGE --oneline --no-merges --grep="^refactor" --format="- %s" 2>/dev/null | sed 's/^- refactor(\([^)]*\)): /- **\1:** /' | sed 's/^- refactor: /- /')
-            if [ -n "$REFACTOR" ]; then
-              echo "### 🛠️ Refactoring"
-              echo ""
-              echo "$REFACTOR"
-              echo ""
-            fi
-
-            # Documentation
-            DOCS=$(git log $REVISION_RANGE --oneline --no-merges --grep="^docs" --format="- %s" 2>/dev/null | sed 's/^- docs(\([^)]*\)): /- **\1:** /' | sed 's/^- docs: /- /')
-            if [ -n "$DOCS" ]; then
-              echo "### 📝 Documentation"
-              echo ""
-              echo "$DOCS"
-              echo ""
-            fi
-
-            # Chores
-            CHORE=$(git log $REVISION_RANGE --oneline --no-merges --grep="^chore" --format="- %s" 2>/dev/null | sed 's/^- chore(\([^)]*\)): /- **\1:** /' | sed 's/^- chore: /- /')
-            if [ -n "$CHORE" ]; then
-              echo "### 🧹 Chores"
-              echo ""
-              echo "$CHORE"
-              echo ""
-            fi
-
-            # Styles
-            STYLES=$(git log $REVISION_RANGE --oneline --no-merges --grep="^style" --format="- %s" 2>/dev/null | sed 's/^- style(\([^)]*\)): /- **\1:** /' | sed 's/^- style: /- /')
-            if [ -n "$STYLES" ]; then
-              echo "### 🎨 Styles"
-              echo ""
-              echo "$STYLES"
-              echo ""
-            fi
-
-            # Tests
-            TESTS=$(git log $REVISION_RANGE --oneline --no-merges --grep="^test" --format="- %s" 2>/dev/null | sed 's/^- test(\([^)]*\)): /- **\1:** /' | sed 's/^- test: /- /')
-            if [ -n "$TESTS" ]; then
-              echo "### 🧪 Tests"
-              echo ""
-              echo "$TESTS"
-              echo ""
-            fi
-          } > changelog_body.md
-
-          # Store changelog as output (for backwards compatibility)
+          npx tsx scripts/generate-release-notes.ts "$GITHUB_REF_NAME" > changelog_body.md
           {
             echo 'changelog<<EOF'
             cat changelog_body.md
             echo 'EOF'
-          } >> $GITHUB_OUTPUT
+          } >> "$GITHUB_OUTPUT"
 
       - name: Upload changelog artifact
         uses: actions/upload-artifact@v7
@@ -194,9 +84,7 @@ jobs:
           retention-days: 1
 
       - name: Generate API Assets
-        run: |
-          npm ci
-          npm run generate:api
+        run: npm run generate:api
 
       - name: Commit, Tag and Push (Manual Trigger only)
         if: github.event_name == 'workflow_dispatch' && github.event.inputs.dry_run != 'true'
@@ -247,9 +135,9 @@ jobs:
 
           ---
 
-          ## Downloads
+          ## Downloads / Downloads
 
-          | Platform | Download |
+          | Platform | Download / Downloaden |
           |----------|----------|
           | Windows (x64) | [Fluxby_${VERSION}_x64-setup.exe](https://github.com/${{ github.repository }}/releases/download/v${VERSION}/Fluxby_${VERSION}_x64-setup.exe) |
           | Windows (ARM64) | [Fluxby_${VERSION}_arm64-setup.exe](https://github.com/${{ github.repository }}/releases/download/v${VERSION}/Fluxby_${VERSION}_arm64-setup.exe) |
@@ -257,7 +145,9 @@ jobs:
           | Linux (AppImage) | [Fluxby_${VERSION}_amd64.AppImage](https://github.com/${{ github.repository }}/releases/download/v${VERSION}/Fluxby_${VERSION}_amd64.AppImage) |
           | Linux (Debian) | [Fluxby_${VERSION}_amd64.deb](https://github.com/${{ github.repository }}/releases/download/v${VERSION}/Fluxby_${VERSION}_amd64.deb) |
 
-          > **Note for macOS users:** The app is not code signed. On first launch, right-click the app and select "Open", then click "Open" in the dialog to bypass Gatekeeper.
+          > **macOS (Nederlands):** De app is niet ondertekend met een code signing-certificaat. Open de app de eerste keer via de rechtermuisknop en kies "Open"; bevestig daarna in het venster om Gatekeeper te omzeilen.
+          >
+          > **macOS (English):** The app is not code signed. On first launch, right-click the app and select "Open", then click "Open" in the dialog to bypass Gatekeeper.
           EOF
 
       - name: Create release
