@@ -1112,7 +1112,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Demo data seeded successfully"
+            "description": "Demo data seeded, including uncategorized expenses for Jev categorization"
           },
           "404": {
             "description": "Profile not found"

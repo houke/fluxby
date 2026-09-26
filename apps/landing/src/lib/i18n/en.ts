@@ -2059,6 +2059,17 @@ export const en: LandingTranslationKeys = {
     updatesPage: {
       intro:
         "See what's new in Fluxby. Here you'll find all updates and new features.",
+      v1140Date: 'September 26, 2026',
+      v1140Title: 'Release 1.14.0',
+      v1140Description: '3 new features and 9 bug fixes.',
+      v1140F1Title: 'Review payment changes with Jev',
+      v1140F1Desc: 'There\'s more to explore. Discover it yourself!',
+      v1140F2Title: 'Jev suggestions and recognize ING workbooks',
+      v1140F2Desc: 'This makes Fluxby even better.',
+      v1140F3Title: 'Allow clearing a category',
+      v1140F3Desc: 'We\'ve got something new for you! Check the release notes for all details.',
+      v1140F4Title: 'Bug fixes',
+      v1140F4Desc: '9 bugs fixed. See changelog for details.',
       v101Date: 'January 4, 2026',
       v101Title: 'Release 1.0.1',
       v101Description: 'New improvements and bug fixes.',

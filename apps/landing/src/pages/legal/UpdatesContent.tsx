@@ -1,4 +1,5 @@
 import {
+  ArrowLeftRight,
   BarChart3,
   BookOpen,
   Brain,
@@ -34,6 +35,36 @@ const UpdatesContent = () => {
   const updatesPage = t.legal?.updatesPage;
 
   const releases = [
+        {
+      version: '1.14.0',
+      date: updatesPage?.v1140Date || '26 september 2026',
+      title: updatesPage?.v1140Title || 'Release 1.14.0',
+      description:
+        updatesPage?.v1140Description ||
+        '3 nieuwe features en 9 bugfixes.',
+      features: [
+        {
+          icon: Sparkles,
+          title: updatesPage?.v1140F1Title || 'Review payment changes with jev',
+          description: updatesPage?.v1140F1Desc || 'Er is weer wat bijgekomen. Ontdek het zelf!',
+        },
+        {
+          icon: Globe,
+          title: updatesPage?.v1140F2Title || 'Toegevoegd jev suggestions and recognize ing workbooks',
+          description: updatesPage?.v1140F2Desc || 'Nieuwe functionaliteit waar je iets aan hebt.',
+        },
+        {
+          icon: ArrowLeftRight,
+          title: updatesPage?.v1140F3Title || 'Allow clearing a categorie',
+          description: updatesPage?.v1140F3Desc || 'Er is weer wat bijgekomen. Ontdek het zelf!',
+        },
+        {
+          icon: Wrench,
+          title: updatesPage?.v1140F4Title || 'Bugfixes',
+          description: updatesPage?.v1140F4Desc || '9 bugs opgelost. Zie changelog voor details.',
+        },
+      ],
+    },
     {
       version: '1.13.3',
       date: updatesPage?.v1133Date,

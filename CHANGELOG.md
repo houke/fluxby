@@ -1,5 +1,38 @@
 # Changelog
 
+## v1.14.0
+
+**Release Date:** 2026-09-26
+
+### Features
+
+- **subscriptions:** review payment changes with Jev
+- **web:** add Jev suggestions and recognize ING workbooks
+- **transactions:** allow clearing a category
+
+### Bug Fixes
+
+- **i18n:** localize app and documentation strings
+- **i18n:** localize developer docs headings
+- **i18n:** complete bilingual string coverage
+- **jev:** preserve keyless behavior and seed review examples
+- **filters:** preserve date range on account switch
+- **import:** limit uploads to CSV while retaining English ING support
+- **cloudflare:** add proper route
+- **addressbook:** trigger contact loading while scrolling
+- **transactions:** refresh list after manual entry
+
+### Documentation
+
+- **help:** align guides with current app
+- **typesafe:** review Jev app opportunities
+
+### Tests
+
+- **api:** remove batch benchmark timing flakiness
+- **i18n:** optimize locale coverage scan
+- **i18n:** raise locale audit timeout for coverage
+
 ## v1.13.3
 
 **Release Date:** 2026-09-22
