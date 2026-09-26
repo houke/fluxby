@@ -35,33 +35,31 @@ const UpdatesContent = () => {
   const updatesPage = t.legal?.updatesPage;
 
   const releases = [
-        {
+    {
       version: '1.14.0',
-      date: updatesPage?.v1140Date || '26 september 2026',
-      title: updatesPage?.v1140Title || 'Release 1.14.0',
-      description:
-        updatesPage?.v1140Description ||
-        '3 nieuwe features en 9 bugfixes.',
+      date: updatesPage?.v1140Date,
+      title: updatesPage?.v1140Title,
+      description: updatesPage?.v1140Description,
       features: [
         {
           icon: Sparkles,
-          title: updatesPage?.v1140F1Title || 'Review payment changes with jev',
-          description: updatesPage?.v1140F1Desc || 'Er is weer wat bijgekomen. Ontdek het zelf!',
+          title: updatesPage?.v1140F1Title,
+          description: updatesPage?.v1140F1Desc,
         },
         {
           icon: Globe,
-          title: updatesPage?.v1140F2Title || 'Toegevoegd jev suggestions and recognize ing workbooks',
-          description: updatesPage?.v1140F2Desc || 'Nieuwe functionaliteit waar je iets aan hebt.',
+          title: updatesPage?.v1140F2Title,
+          description: updatesPage?.v1140F2Desc,
         },
         {
           icon: ArrowLeftRight,
-          title: updatesPage?.v1140F3Title || 'Allow clearing a categorie',
-          description: updatesPage?.v1140F3Desc || 'Er is weer wat bijgekomen. Ontdek het zelf!',
+          title: updatesPage?.v1140F3Title,
+          description: updatesPage?.v1140F3Desc,
         },
         {
           icon: Wrench,
-          title: updatesPage?.v1140F4Title || 'Bugfixes',
-          description: updatesPage?.v1140F4Desc || '9 bugs opgelost. Zie changelog voor details.',
+          title: updatesPage?.v1140F4Title,
+          description: updatesPage?.v1140F4Desc,
         },
       ],
     },

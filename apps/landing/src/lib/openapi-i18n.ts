@@ -369,6 +369,8 @@ const dutchFromEnglish: Record<string, string> = {
     'Verwijdert een rekening. Gekoppelde transacties blijven bestaan, maar worden losgekoppeld (account_id wordt null).',
   'Deletion successful': 'Verwijderen geslaagd',
   'Demo data seeded successfully': 'Voorbeeldgegevens toegevoegd',
+  'Demo data seeded, including uncategorized expenses for Jev categorization':
+    'Demogegevens toegevoegd, inclusief niet-gecategoriseerde uitgaven voor Jev-categorisatie',
   'Demo profile created and seeded successfully':
     'Demoprofiel aangemaakt en gevuld met voorbeeldgegevens',
   'Demo profile details or null if not found':
