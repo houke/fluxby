@@ -417,6 +417,7 @@ const dutchFromEnglish: Record<string, string> = {
     'Ongeldig verzoek - criteria ontbreken of validatie is mislukt',
   'Invalid request data': 'Ongeldige verzoekgegevens',
   'JSON string with column mapping': 'JSON-tekst met kolomtoewijzing',
+  Language: 'Taal',
   'Language for category names and descriptions (default nl)':
     'Taal voor categorienamen en -beschrijvingen (standaard nl)',
   "Language for the new profile's default categories":
@@ -476,6 +477,7 @@ const dutchFromEnglish: Record<string, string> = {
   'Start date (YYYY-MM-DD)': 'Startdatum (YYYY-MM-DD)',
   'Statistics about recurring patterns':
     'Statistieken over terugkerende patronen',
+  Taal: 'Language',
   'Takes precedence over X-Language': 'Gaat voor op X-Language',
   'Transaction created': 'Transactie aangemaakt',
   'Transaction management': 'Transactiebeheer',
