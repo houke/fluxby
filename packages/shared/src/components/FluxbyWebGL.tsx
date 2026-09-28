@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   detectMotionTier,
+  isTouchDevice,
   observeMotionTier,
   type MotionTier,
 } from '../utils/motion.js';
@@ -48,6 +49,18 @@ interface QualitySettings {
   pauseDuringScroll: boolean;
   scrollResumeDelay: number;
   allowEyeTracking: boolean;
+  maxDpr: number;
+  bodyFps: number;
+  bodyFrameCount: number;
+}
+
+interface AvatarRenderCache {
+  avatarData: object;
+  resolution: number;
+  bodyTexture: HTMLCanvasElement | null;
+  bellyTexture: HTMLCanvasElement | null;
+  earTextures: (HTMLCanvasElement | null)[];
+  bodyFrames: (HTMLCanvasElement | null | undefined)[];
 }
 
 const QUALITY_PRESETS: Record<MotionTier, QualitySettings> = {
@@ -64,6 +77,9 @@ const QUALITY_PRESETS: Record<MotionTier, QualitySettings> = {
     pauseDuringScroll: false,
     scrollResumeDelay: 0,
     allowEyeTracking: true,
+    maxDpr: 3,
+    bodyFps: 30,
+    bodyFrameCount: 0,
   },
   medium: {
     particleMultiplier: 0.7,
@@ -78,6 +94,9 @@ const QUALITY_PRESETS: Record<MotionTier, QualitySettings> = {
     pauseDuringScroll: true,
     scrollResumeDelay: 160,
     allowEyeTracking: true,
+    maxDpr: 1.5,
+    bodyFps: 8,
+    bodyFrameCount: 12,
   },
   low: {
     particleMultiplier: 0.35,
@@ -92,6 +111,9 @@ const QUALITY_PRESETS: Record<MotionTier, QualitySettings> = {
     pauseDuringScroll: true,
     scrollResumeDelay: 220,
     allowEyeTracking: false,
+    maxDpr: 1.5,
+    bodyFps: 6,
+    bodyFrameCount: 8,
   },
   minimal: {
     particleMultiplier: 0,
@@ -106,6 +128,9 @@ const QUALITY_PRESETS: Record<MotionTier, QualitySettings> = {
     pauseDuringScroll: true,
     scrollResumeDelay: 280,
     allowEyeTracking: false,
+    maxDpr: 1,
+    bodyFps: 0,
+    bodyFrameCount: 1,
   },
 };
 
@@ -113,7 +138,7 @@ const getQualitySettings = (tier: MotionTier): QualitySettings =>
   QUALITY_PRESETS[tier] ?? QUALITY_PRESETS.full;
 
 /**
- * FluxbyWebGL - A WebGL canvas component that renders fluffy particle effects
+ * FluxbyWebGL - A Canvas 2D component that renders fluffy particle effects
  * Creates a cozy, magical atmosphere around the Fluxby mascot
  */
 export function FluxbyWebGL({
@@ -137,15 +162,19 @@ export function FluxbyWebGL({
   const lastFrameTimeRef = useRef(0);
   const totalActiveTimeRef = useRef(0);
   const instanceSeedRef = useRef(Math.random() * 10000);
-  const [motionTier, setMotionTier] = useState<MotionTier>('full');
+  const [motionTier, setMotionTier] = useState<MotionTier>(detectMotionTier);
   const qualitySettings = useMemo(
     () => getQualitySettings(motionTier),
     [motionTier]
   );
   const [isInView, setIsInView] = useState(true);
+  const [isPageVisible, setIsPageVisible] = useState(
+    () => typeof document === 'undefined' || !document.hidden
+  );
   const [isScrollPaused, setIsScrollPaused] = useState(false);
   const scrollPausedRef = useRef(false);
   const hasStaticFrameRef = useRef(false);
+  const renderCacheRef = useRef<AvatarRenderCache | null>(null);
   const effectiveParticleCount = useMemo(() => {
     const base = particleCount ?? 0;
     const scaled = Math.round(base * qualitySettings.particleMultiplier);
@@ -279,10 +308,6 @@ export function FluxbyWebGL({
   useEffect(() => {
     if (typeof window === 'undefined') return;
     let mounted = true;
-    const initialTier = detectMotionTier();
-    if (mounted) {
-      setMotionTier(initialTier);
-    }
     const cleanup = observeMotionTier((tier) => {
       if (mounted) {
         setMotionTier(tier);
@@ -292,6 +317,13 @@ export function FluxbyWebGL({
       mounted = false;
       if (cleanup) cleanup();
     };
+  }, []);
+
+  useEffect(() => {
+    const handleVisibilityChange = () => setIsPageVisible(!document.hidden);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () =>
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, []);
 
   useEffect(() => {
@@ -364,9 +396,11 @@ export function FluxbyWebGL({
     animated &&
     qualitySettings.animationsEnabled &&
     isInView &&
+    isPageVisible &&
     (!qualitySettings.pauseDuringScroll || !isScrollPaused);
 
-  const enableEyeTracking = interactive && qualitySettings.allowEyeTracking;
+  const enableEyeTracking =
+    interactive && qualitySettings.allowEyeTracking && !isTouchDevice();
 
   useEffect(() => {
     lastFrameTimeRef.current = 0;
@@ -387,10 +421,24 @@ export function FluxbyWebGL({
     }
 
     // Set up canvas for high DPI displays
-    const dpr = (typeof window !== 'undefined' && window.devicePixelRatio) || 1;
-    canvas.width = width * dpr;
-    canvas.height = height * dpr;
+    const dpr = Math.min(window.devicePixelRatio || 1, qualitySettings.maxDpr);
+    const pixelWidth = Math.round(width * dpr);
+    const pixelHeight = Math.round(height * dpr);
+    if (canvas.width !== pixelWidth || canvas.height !== pixelHeight) {
+      canvas.width = pixelWidth;
+      canvas.height = pixelHeight;
+    }
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    if (!isInView || !isPageVisible) {
+      ctx.clearRect(0, 0, width, height);
+      lastFrameTimeRef.current = 0;
+      return;
+    }
+    if (isScrollPaused && qualitySettings.pauseDuringScroll) {
+      lastFrameTimeRef.current = 0;
+      return;
+    }
 
     if (!qualitySettings.animationsEnabled) {
       blinkTimeRef.current = 0;
@@ -410,33 +458,143 @@ export function FluxbyWebGL({
 
     const surfaceFurIterations = bodyFurMarks.length;
 
-    // Function to draw the Fluxby avatar
-    const drawFluxbyAvatar = (
-      ctx: CanvasRenderingContext2D,
-      centerX: number,
-      centerY: number,
-      size: number,
-      isBlinking = false,
-      eyeTarget = { x: 0, y: 0 },
-      time = 0,
-      avatarPosXNormalized = 0
+    // These noise textures do not depend on time or eye position. Rasterize
+    // them once at the display resolution, including their alpha values.
+    const drawBodyTexture = (textureCtx: CanvasRenderingContext2D) => {
+      for (let i = 0; i < textureSampleCount; i++) {
+        const seed = i * 0.31 + instanceSeed;
+        const angle = seededRandom(seed) * Math.PI * 2;
+        const dist = seededRandom(seed + 1) * 0.95;
+        const x = Math.cos(angle) * dist * 36;
+        const y = Math.sin(angle) * dist * 33 + 6;
+        const noiseVal = fractalNoise(x * 0.15, y * 0.15);
+        textureCtx.fillStyle =
+          0.5 + noiseVal * 0.3 > 0.5 ? '#F5F3FF' : '#C4B5FD';
+        textureCtx.globalAlpha = 0.1 + Math.abs(noiseVal) * 0.15;
+        textureCtx.beginPath();
+        textureCtx.arc(
+          x,
+          y,
+          0.25 + seededRandom(seed + 2) * 0.5,
+          0,
+          Math.PI * 2
+        );
+        textureCtx.fill();
+      }
+      textureCtx.globalAlpha = 1;
+    };
+
+    const drawBellyTexture = (textureCtx: CanvasRenderingContext2D) => {
+      for (let i = 0; i < bellyTextureCount; i++) {
+        const seed = i * 0.67 + 500;
+        const angle = seededRandom(seed) * Math.PI * 2;
+        const dist = seededRandom(seed + 1) * 0.8;
+        const x = Math.cos(angle) * dist * 14;
+        const y = Math.sin(angle) * dist * 12 + 14;
+        const noiseVal = fractalNoise(x * 0.2, y * 0.2, 6);
+        textureCtx.fillStyle = noiseVal > 0 ? '#FEF3C7' : '#F5F3FF';
+        textureCtx.globalAlpha = 0.15 + Math.abs(noiseVal) * 0.1;
+        textureCtx.beginPath();
+        textureCtx.arc(
+          x,
+          y,
+          0.2 + seededRandom(seed + 2) * 0.4,
+          0,
+          Math.PI * 2
+        );
+        textureCtx.fill();
+      }
+      textureCtx.globalAlpha = 1;
+    };
+
+    const drawEarTexture = (
+      textureCtx: CanvasRenderingContext2D,
+      ear: number
     ) => {
-      // Scale to 110% - reduced slightly to avoid shadow cutoff
-      const avatarScale = 1.1;
-      const scale = (size / 100) * avatarScale;
+      const earX = ear === 0 ? -19 : 19;
+      const earAngle = ear === 0 ? -Math.PI / 6 : Math.PI / 6;
+      for (let i = 0; i < earTextureCount; i++) {
+        const seed = i * 0.41 + ear * 100;
+        const angle = seededRandom(seed) * Math.PI * 2;
+        const dist = seededRandom(seed + 1) * 0.8;
+        const x = earX + Math.cos(angle + earAngle) * dist * 6;
+        const y = -16 + Math.sin(angle) * dist * 10;
+        const noiseVal = fractalNoise(x * 0.3, y * 0.3, 6);
+        textureCtx.fillStyle = noiseVal > 0 ? '#C4B5FD' : '#A78BFA';
+        textureCtx.globalAlpha = 0.18 + Math.abs(noiseVal) * 0.12;
+        textureCtx.beginPath();
+        textureCtx.arc(
+          x,
+          y,
+          0.15 + seededRandom(seed + 2) * 0.35,
+          0,
+          Math.PI * 2
+        );
+        textureCtx.fill();
+      }
+      textureCtx.globalAlpha = 1;
+    };
 
-      // Add subtle 3D movement based on mouse position
-      const half = Math.max(1, size / 2);
-      const nx = Math.max(-1, Math.min(1, eyeTarget.x / half));
-      const ny = Math.max(-1, Math.min(1, eyeTarget.y / half));
-      const tiltX = nx * 0.025;
-      const tiltY = ny * 0.012;
+    const resolution = Math.ceil(Math.min(width, height) * 1.1 * dpr);
+    const createLayer = (
+      draw?: (layerCtx: CanvasRenderingContext2D) => void
+    ): HTMLCanvasElement | null => {
+      const layer = document.createElement('canvas');
+      layer.width = resolution;
+      layer.height = resolution;
+      const layerCtx = layer.getContext('2d');
+      if (!layerCtx) return null;
+      layerCtx.setTransform(
+        resolution / 100,
+        0,
+        0,
+        resolution / 100,
+        resolution / 2,
+        resolution / 2
+      );
+      draw?.(layerCtx);
+      return layer;
+    };
 
-      ctx.save();
-      ctx.translate(centerX, centerY);
-      ctx.scale(scale, scale);
-      ctx.rotate(tiltX);
+    const bodyFrameCount = enableEyeTracking
+      ? 0
+      : qualitySettings.bodyFrameCount;
+    let renderCache = renderCacheRef.current;
+    if (
+      !renderCache ||
+      renderCache.avatarData !== avatarData ||
+      renderCache.resolution !== resolution ||
+      renderCache.bodyFrames.length !== bodyFrameCount
+    ) {
+      renderCache = {
+        avatarData,
+        resolution,
+        bodyTexture: createLayer(drawBodyTexture),
+        bellyTexture: createLayer(drawBellyTexture),
+        earTextures: [0, 1].map((ear) =>
+          createLayer((layerCtx) => drawEarTexture(layerCtx, ear))
+        ),
+        bodyFrames: Array.from({ length: bodyFrameCount }, () => undefined),
+      };
+      renderCacheRef.current = renderCache;
+    }
+    const cachedLayers = renderCache;
 
+    const drawTexture = (
+      targetCtx: CanvasRenderingContext2D,
+      layer: HTMLCanvasElement | null,
+      fallback: (textureCtx: CanvasRenderingContext2D) => void
+    ) => {
+      if (layer) targetCtx.drawImage(layer, -50, -50, 100, 100);
+      else fallback(targetCtx);
+    };
+
+    const drawAvatarBody = (
+      ctx: CanvasRenderingContext2D,
+      tiltX: number,
+      tiltY: number,
+      time: number
+    ) => {
       // Color palette - rich purple tones
       const darkPurple = '#7C3AED';
       const basePurple = '#8B5CF6';
@@ -526,27 +684,7 @@ export function FluxbyWebGL({
       // ========== PROCEDURAL FUR TEXTURE ==========
       // Layer 1: Noise-based fur grain texture - increased
       ctx.globalCompositeOperation = 'overlay';
-      for (let i = 0; i < textureSampleCount; i++) {
-        // Use instance seed for texture variation too
-        const seed = i * 0.31 + instanceSeed;
-        const angle = seededRandom(seed) * Math.PI * 2;
-        const dist = seededRandom(seed + 1) * 0.95;
-
-        const x = Math.cos(angle) * dist * bodyRadiusX;
-        const y = Math.sin(angle) * dist * bodyRadiusY + bodyCenterY;
-
-        const noiseVal = fractalNoise(x * 0.15, y * 0.15);
-        const brightness = 0.5 + noiseVal * 0.3;
-
-        const dotSize = 0.25 + seededRandom(seed + 2) * 0.5;
-        const alpha = 0.1 + Math.abs(noiseVal) * 0.15;
-
-        ctx.fillStyle = brightness > 0.5 ? creamHighlight : lightPurple;
-        ctx.globalAlpha = alpha;
-        ctx.beginPath();
-        ctx.arc(x, y, dotSize, 0, Math.PI * 2);
-        ctx.fill();
-      }
+      drawTexture(ctx, cachedLayers.bodyTexture, drawBodyTexture);
       ctx.globalCompositeOperation = 'source-over';
       ctx.globalAlpha = 1.0;
 
@@ -696,23 +834,7 @@ export function FluxbyWebGL({
       ctx.restore();
 
       // Belly fur texture - increased
-      for (let i = 0; i < bellyTextureCount; i++) {
-        const seed = i * 0.67 + 500;
-        const angle = seededRandom(seed) * Math.PI * 2;
-        const dist = seededRandom(seed + 1) * 0.8;
-
-        const x = Math.cos(angle) * dist * 14;
-        const y = Math.sin(angle) * dist * 12 + 14;
-
-        const noiseVal = fractalNoise(x * 0.2, y * 0.2, 50);
-        const dotSize = 0.2 + seededRandom(seed + 2) * 0.4;
-
-        ctx.fillStyle = noiseVal > 0 ? '#FEF3C7' : '#F5F3FF';
-        ctx.globalAlpha = 0.15 + Math.abs(noiseVal) * 0.1;
-        ctx.beginPath();
-        ctx.arc(x, y, dotSize, 0, Math.PI * 2);
-        ctx.fill();
-      }
+      drawTexture(ctx, cachedLayers.bellyTexture, drawBellyTexture);
 
       ctx.globalAlpha = 1.0;
 
@@ -771,23 +893,9 @@ export function FluxbyWebGL({
         const earAngleBase = ear === 0 ? -Math.PI / 6 : Math.PI / 6;
 
         // Noise dots - high density
-        for (let i = 0; i < earTextureCount; i++) {
-          const seed = i * 0.41 + ear * 100;
-          const angle = seededRandom(seed) * Math.PI * 2;
-          const dist = seededRandom(seed + 1) * 0.8;
-
-          const x = earX + Math.cos(angle + earAngleBase) * dist * 6;
-          const y = -16 + Math.sin(angle) * dist * 10;
-
-          const noiseVal = fractalNoise(x * 0.3, y * 0.3, 70 + ear * 30);
-          const dotSize = 0.15 + seededRandom(seed + 2) * 0.35;
-
-          ctx.fillStyle = noiseVal > 0 ? lightPurple : midPurple;
-          ctx.globalAlpha = 0.18 + Math.abs(noiseVal) * 0.12;
-          ctx.beginPath();
-          ctx.arc(x, y, dotSize, 0, Math.PI * 2);
-          ctx.fill();
-        }
+        drawTexture(ctx, cachedLayers.earTextures[ear], (textureCtx) =>
+          drawEarTexture(textureCtx, ear)
+        );
 
         // Gradient fur marks on ears - QUADRUPLED
         for (let i = 0; i < earGradientCount; i++) {
@@ -834,6 +942,52 @@ export function FluxbyWebGL({
       ctx.fill();
       ctx.filter = 'none';
       ctx.restore();
+    };
+
+    // Breathing and facial animation stay at the target frame rate. The touch
+    // tiers lazily cache a bounded sequence of fur poses and play it forward
+    // and backward, avoiding a jump at the loop boundary or a startup burst.
+    const drawFluxbyAvatar = (
+      ctx: CanvasRenderingContext2D,
+      centerX: number,
+      centerY: number,
+      size: number,
+      isBlinking = false,
+      eyeTarget = { x: 0, y: 0 },
+      time = 0,
+      avatarPosXNormalized = 0
+    ) => {
+      const scale = (size / 100) * 1.1;
+      const half = Math.max(1, size / 2);
+      const nx = Math.max(-1, Math.min(1, eyeTarget.x / half));
+      const ny = Math.max(-1, Math.min(1, eyeTarget.y / half));
+      const tiltX = nx * 0.025;
+      const tiltY = ny * 0.012;
+
+      ctx.save();
+      ctx.translate(centerX, centerY);
+      ctx.scale(scale, scale);
+      ctx.rotate(tiltX);
+
+      if (bodyFrameCount > 0) {
+        const cycleLength = Math.max(1, (bodyFrameCount - 1) * 2);
+        const cycleFrame =
+          Math.floor(time * qualitySettings.bodyFps) % cycleLength;
+        const bodyFrame =
+          cycleFrame < bodyFrameCount ? cycleFrame : cycleLength - cycleFrame;
+        let bodyLayer = cachedLayers.bodyFrames[bodyFrame];
+        if (bodyLayer === undefined) {
+          const furTime = bodyFrame / Math.max(1, qualitySettings.bodyFps);
+          bodyLayer = createLayer((bodyCtx) =>
+            drawAvatarBody(bodyCtx, tiltX, tiltY, furTime)
+          );
+          cachedLayers.bodyFrames[bodyFrame] = bodyLayer;
+        }
+        if (bodyLayer) ctx.drawImage(bodyLayer, -50, -50, 100, 100);
+        else drawAvatarBody(ctx, tiltX, tiltY, time);
+      } else {
+        drawAvatarBody(ctx, tiltX, tiltY, time);
+      }
 
       // Eyes (drawn LAST to be on top of everything)
       if (isBlinking) {
@@ -1028,22 +1182,11 @@ export function FluxbyWebGL({
       // Scale breathing amplitude with canvas size so it's visible on large
       // landing instances while staying subtle on small UI avatars.
       const maxBreathAmplitude = Math.min(width, height) / 80; // e.g., 400 -> 5
-      let breathAmplitude =
+      const breathAmplitude =
         animationActive && qualitySettings.breathScale > 0
           ? Math.max(0, Math.min(8, maxBreathAmplitude)) *
             qualitySettings.breathScale
           : 0;
-      // Respect user-level reduced motion preference
-      try {
-        if (typeof window !== 'undefined' && window.matchMedia) {
-          if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-            breathAmplitude = 0;
-          }
-        }
-      } catch {
-        // ignore
-      }
-
       const breath =
         animationActive && breathAmplitude > 0
           ? Math.sin(time * 2) * breathAmplitude
@@ -1185,11 +1328,6 @@ export function FluxbyWebGL({
       }
     };
 
-    if (!isInView) {
-      ctx.clearRect(0, 0, width, height);
-      return;
-    }
-
     if (!qualitySettings.animationsEnabled || !animated) {
       animate(0);
       return;
@@ -1213,6 +1351,8 @@ export function FluxbyWebGL({
     effectiveParticleCount,
     qualitySettings,
     isInView,
+    isPageVisible,
+    isScrollPaused,
     avatarData,
     fractalNoise,
     seededRandom,

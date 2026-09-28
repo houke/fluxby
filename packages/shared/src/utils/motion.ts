@@ -17,10 +17,20 @@ const DEFAULT_TIER: MotionTier = 'full';
 
 const CONNECTION_TYPES_PENALTY = new Set(['slow-2g', '2g']);
 
+export function isTouchDevice(): boolean {
+  if (typeof window === 'undefined') return false;
+  const userAgent = window.navigator.userAgent ?? '';
+  if (MOBILE_REGEX.test(userAgent) || TABLET_REGEX.test(userAgent)) return true;
+  try {
+    return Boolean(window.matchMedia?.('(pointer: coarse)').matches);
+  } catch {
+    return false;
+  }
+}
+
 /**
- * Check if the device likely has good GPU/rendering capabilities.
- * This is the PRIMARY performance indicator as it cannot be restricted
- * by hosting environments like GitHub Pages.
+ * Estimate desktop GPU feature support. This is only a starting quality hint,
+ * rather than a measurement of Canvas 2D frame cost.
  *
  * Returns a score from 0-3:
  * - 0: No WebGL support
@@ -106,54 +116,40 @@ export function detectMotionTier(): MotionTier {
   const connection = navigatorRef.connection;
   const saveData = Boolean(connection?.saveData);
   const effectiveType = connection?.effectiveType ?? '';
-  const userAgent = navigatorRef.userAgent ?? '';
-  const isMobile = MOBILE_REGEX.test(userAgent);
-  const isTablet = TABLET_REGEX.test(userAgent);
 
   // 2. Data saver mode - user explicitly wants reduced data usage
   if (saveData || CONNECTION_TYPES_PENALTY.has(effectiveType)) {
     return 'low';
   }
 
-  // 3. PRIMARY DETECTION: Use devicePixelRatio and GPU capabilities
-  // These cannot be restricted by hosting environments like GitHub Pages
-  const dpr = window.devicePixelRatio || 1;
-  const isHighDPI = dpr >= 2;
-  const gpuScore = getGPUCapabilityScore();
+  // A Retina display or WebGL2 support does not make continuous Canvas 2D
+  // drawing cheap on a phone. Cap touch devices before checking GPU features;
+  // coarse pointers also cover iPads using a desktop user agent.
+  if (isTouchDevice()) {
+    const hardwareConcurrency = navigatorRef.hardwareConcurrency;
+    const deviceMemory = navigatorRef.deviceMemory;
+    if (
+      (hardwareConcurrency !== undefined && hardwareConcurrency <= 4) ||
+      (deviceMemory !== undefined && deviceMemory <= 4)
+    ) {
+      return 'low';
+    }
+    return 'medium';
+  }
 
-  // High-end device detection based on reliable indicators:
-  // - High DPI display (Retina/HiDPI) indicates modern hardware
-  // - GPU capability score indicates actual rendering performance
-  if (gpuScore >= 3 || (gpuScore >= 2 && isHighDPI)) {
-    // High-end GPU or good GPU with high DPI = full quality
+  // Desktop GPU features are only a starting quality estimate.
+  const gpuScore = getGPUCapabilityScore();
+  if (gpuScore >= 2) {
     return 'full';
   }
-
-  if (gpuScore >= 2) {
-    // Good GPU but standard DPI - still capable of full on desktop
-    if (!isMobile && !isTablet) {
-      return 'full';
-    }
-    // Mobile with good GPU but no high DPI = medium
-    return 'medium';
-  }
-
-  if (gpuScore === 1 && isHighDPI) {
-    // Basic WebGL but high DPI suggests decent modern device
-    return 'medium';
-  }
-
-  // 4. FALLBACK: Only use CPU/memory as downgrade signals, not primary detection
-  // Note: These values can be restricted by hosts like GitHub Pages,
-  // so we only use them to potentially downgrade, never to upgrade
-  const hardwareConcurrency = navigatorRef.hardwareConcurrency ?? 8;
-  const deviceMemory = navigatorRef.deviceMemory ?? 8;
-
-  // If GPU detection passed but memory/CPU report very low,
-  // it's likely a restricted environment - trust GPU over CPU/memory
   if (gpuScore >= 1) {
     return 'medium';
   }
+
+  // Missing hardware hints are common; only reported low values downgrade
+  // a desktop without WebGL support.
+  const hardwareConcurrency = navigatorRef.hardwareConcurrency ?? 8;
+  const deviceMemory = navigatorRef.deviceMemory ?? 8;
 
   // No WebGL support at all - use CPU/memory as last resort
   if (deviceMemory <= 2 || hardwareConcurrency <= 2) {

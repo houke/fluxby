@@ -59,6 +59,8 @@ npm run test:run -- tests/database/
 | database | backup         | `backup.ts`                  | Serialize/deserialize, filename, size estimation  | ✅ Covered |
 | shared   | utils          | `utils.ts`                   | `formatCurrency`, `cn`, `findSimilarNameGroups`   | ✅ Covered |
 | shared   | seed-data      | `seed-data.ts`               | Category structure, bilingual text extraction     | ✅ Covered |
+| shared   | motion         | `utils/motion.ts`            | Mobile quality, touch detection, preferences      | ✅ Covered |
+| shared   | animation      | `components/FluxbyWebGL.tsx` | Cache bounds, DPI, scroll and visibility pausing   | ✅ Covered |
 | api      | utils          | `addressbook-utils.ts`       | Regex safety, cleanup rules                       | ✅ Covered |
 | api      | routes         | `transactions.ts`            | Transaction CRUD                                  | 🔲 Pending |
 | api      | routes         | `addressbook.ts`             | Address book endpoints                            | ✅ Covered |
