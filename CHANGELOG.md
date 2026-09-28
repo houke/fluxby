@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.14.1
+
+**Release Date:** 2026-09-28
+
+### Bug Fixes
+
+- **seed:** create demo data in the selected language
+- **release:** generate and validate bilingual notes
+- **i18n:** correct release copy and remove fallbacks
+
 ## v1.14.0
 
 **Release Date:** 2026-09-26

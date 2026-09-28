@@ -35,6 +35,29 @@ const UpdatesContent = () => {
   const updatesPage = t.legal?.updatesPage;
 
   const releases = [
+        {
+      version: '1.14.1',
+      date: updatesPage?.v1141Date,
+      title: updatesPage?.v1141Title,
+      description: updatesPage?.v1141Description,
+      features: [
+        {
+          icon: Plus,
+          title: updatesPage?.v1141F1Title,
+          description: updatesPage?.v1141F1Desc,
+        },
+        {
+          icon: Rocket,
+          title: updatesPage?.v1141F2Title,
+          description: updatesPage?.v1141F2Desc,
+        },
+        {
+          icon: Wrench,
+          title: updatesPage?.v1141F3Title,
+          description: updatesPage?.v1141F3Desc,
+        },
+      ],
+    },
     {
       version: '1.14.0',
       date: updatesPage?.v1140Date,

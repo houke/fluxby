@@ -974,7 +974,7 @@
           {
             "in": "header",
             "name": "X-Language",
-            "description": "Language for the new profile's default categories",
+            "description": "Language",
             "schema": {
               "type": "string",
               "enum": ["nl", "en"],
@@ -1124,7 +1124,7 @@
           {
             "in": "header",
             "name": "X-Language",
-            "description": "Language for the seeded demo data",
+            "description": "Language",
             "schema": {
               "type": "string",
               "enum": ["nl", "en"],
@@ -1139,10 +1139,10 @@
                 "type": "object",
                 "properties": {
                   "language": {
+                    "description": "Language",
                     "type": "string",
                     "enum": ["nl", "en"],
-                    "default": "nl",
-                    "description": "Takes precedence over X-Language"
+                    "default": "nl"
                   }
                 }
               }

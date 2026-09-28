@@ -12,17 +12,16 @@ post {
 
 headers {
   X-Profile-Id: {{profileId}}
-  X-Language: en
 }
 
 body:json {
-  { "name": "Language test", "type": "personal" }
+  {}
 }
 
 docs {
   # Create a new profile
   
-  Set `X-Language` to `en` or `nl` to choose the language of the new profile's default categories. Dutch is used if omitted.
+  No description provided.
   
   ## Endpoint
   `POST /api/profiles`
