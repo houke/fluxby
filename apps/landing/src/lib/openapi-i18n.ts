@@ -419,6 +419,11 @@ const dutchFromEnglish: Record<string, string> = {
   'JSON string with column mapping': 'JSON-tekst met kolomtoewijzing',
   'Language for category names and descriptions (default nl)':
     'Taal voor categorienamen en -beschrijvingen (standaard nl)',
+  "Language for the new profile's default categories":
+    'Taal voor de standaardcategorieën van het nieuwe profiel',
+  'Language for the restored demo categories and accounts':
+    'Taal voor de herstelde democategorieën en -rekeningen',
+  'Language for the seeded demo data': 'Taal voor de voorbeeldgegevens',
   'Limit deletion to specific account':
     'Beperk het verwijderen tot een specifieke rekening',
   'List of expected payments in the date range':
@@ -471,6 +476,7 @@ const dutchFromEnglish: Record<string, string> = {
   'Start date (YYYY-MM-DD)': 'Startdatum (YYYY-MM-DD)',
   'Statistics about recurring patterns':
     'Statistieken over terugkerende patronen',
+  'Takes precedence over X-Language': 'Gaat voor op X-Language',
   'Transaction created': 'Transactie aangemaakt',
   'Transaction management': 'Transactiebeheer',
   'Update an existing profile': 'Werk een bestaand profiel bij',

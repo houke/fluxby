@@ -1,7 +1,9 @@
 // English translations for the Fluxby web app
 import type { TranslationKeys } from './nl';
+import { DEMO_TRANSLATIONS } from '@fluxby/shared';
 
 export const en: TranslationKeys = {
+  demoData: DEMO_TRANSLATIONS.en,
   common: {
     save: 'Save',
     cancel: 'Cancel',

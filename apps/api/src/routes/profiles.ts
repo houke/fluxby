@@ -3,7 +3,10 @@ import { randomInt, randomUUID } from 'node:crypto';
 import { query, queryOne, run, runMany } from '../db/index.js';
 import {
   buildRecurringPatternFromTemplate,
-  DEMO_UNCATEGORIZED_EXPENSES,
+  DEMO_TRANSLATIONS,
+  getDemoSeedData,
+  getSeedCategoryNameMap,
+  type DemoTranslations,
   type Profile,
   type ProfileType,
 } from '@fluxby/shared';
@@ -117,6 +120,14 @@ router.get('/:id', (req, res) => {
  *   post:
  *     summary: Create a new profile
  *     tags: [Profiles]
+ *     parameters:
+ *       - in: header
+ *         name: X-Language
+ *         description: Language
+ *         schema:
+ *           type: string
+ *           enum: [nl, en]
+ *           default: nl
  *     requestBody:
  *       required: true
  *       content:
@@ -143,6 +154,7 @@ router.get('/:id', (req, res) => {
 router.post('/', validate(createProfileSchema), (req, res) => {
   try {
     const { name, type, avatarUrl } = req.body;
+    const language = req.get('X-Language') === 'en' ? 'en' : 'nl';
 
     const result = run(
       'INSERT INTO profiles (user_id, name, type, avatar_url) VALUES (1, ?, ?, ?)',
@@ -155,7 +167,7 @@ router.post('/', validate(createProfileSchema), (req, res) => {
     try {
       const { parentCategories, subcategories } = flattenCategoriesForDB(
         SEED_CATEGORIES,
-        'nl'
+        language
       );
       const categoryIdMap: Record<string, number> = {};
 
@@ -375,65 +387,67 @@ router.delete('/:id', (req, res) => {
 // =============================================================================
 
 // Demo merchant data for realistic transactions
-const DEMO_MERCHANTS = {
-  supermarkets: [
-    { name: 'Albert Heijn', iban: 'NL00DEMO0001000001' },
-    { name: 'Jumbo', iban: 'NL00DEMO0001000002' },
-    { name: 'Lidl', iban: 'NL00DEMO0001000003' },
-    { name: 'Aldi', iban: 'NL00DEMO0001000004' },
-    { name: 'Plus', iban: 'NL00DEMO0001000005' },
-  ],
-  restaurants: [
-    { name: 'Thuisbezorgd.nl', iban: 'NL00DEMO0002000001' },
-    { name: 'Uber Eats', iban: 'NL00DEMO0002000002' },
-    { name: "McDonald's", iban: 'NL00DEMO0002000003' },
-    { name: 'Starbucks', iban: 'NL00DEMO0002000004' },
-    { name: 'Vapiano', iban: 'NL00DEMO0002000005' },
-  ],
-  utilities: [
-    { name: 'Vattenfall', iban: 'NL00DEMO0003000001' },
-    { name: 'Vitens', iban: 'NL00DEMO0003000002' },
-    { name: 'Ziggo', iban: 'NL00DEMO0003000003' },
-  ],
-  subscriptions: [
-    { name: 'Netflix', iban: 'NL00DEMO0004000001' },
-    { name: 'Spotify', iban: 'NL00DEMO0004000002' },
-    { name: 'Disney+', iban: 'NL00DEMO0004000003' },
-    { name: 'KPN', iban: 'NL00DEMO0004000004' },
-  ],
-  transport: [
-    { name: 'NS', iban: 'NL00DEMO0005000001' },
-    { name: 'Shell', iban: 'NL00DEMO0005000002' },
-    { name: 'BP', iban: 'NL00DEMO0005000003' },
-    { name: 'Q-Park', iban: 'NL00DEMO0005000004' },
-  ],
-  health: [
-    { name: 'Kruidvat', iban: 'NL00DEMO0006000001' },
-    { name: 'Etos', iban: 'NL00DEMO0006000002' },
-    { name: 'Apotheek', iban: 'NL00DEMO0006000003' },
-  ],
-  shopping: [
-    { name: 'Bol.com', iban: 'NL00DEMO0007000001' },
-    { name: 'Amazon', iban: 'NL00DEMO0007000002' },
-    { name: 'H&M', iban: 'NL00DEMO0007000003' },
-    { name: 'IKEA', iban: 'NL00DEMO0007000004' },
-    { name: 'Action', iban: 'NL00DEMO0007000005' },
-    { name: 'MediaMarkt', iban: 'NL00DEMO0007000006' },
-  ],
-  housing: [
-    { name: 'Woonstad Rotterdam', iban: 'NL00DEMO0008000001' },
-    { name: 'Vestia', iban: 'NL00DEMO0008000002' },
-  ],
-  leisure: [
-    { name: 'Pathé', iban: 'NL00DEMO0009000001' },
-    { name: 'Rijksmuseum', iban: 'NL00DEMO0009000002' },
-    { name: 'Basic-Fit', iban: 'NL00DEMO0009000003' },
-  ],
-  insurance: [
-    { name: 'Centraal Beheer', iban: 'NL00DEMO0010000001' },
-    { name: 'Zilveren Kruis', iban: 'NL00DEMO0010000002' },
-  ],
-};
+function createDemoMerchants(copy: DemoTranslations) {
+  return {
+    supermarkets: [
+      { name: 'Albert Heijn', iban: 'NL00DEMO0001000001' },
+      { name: 'Jumbo', iban: 'NL00DEMO0001000002' },
+      { name: 'Lidl', iban: 'NL00DEMO0001000003' },
+      { name: 'Aldi', iban: 'NL00DEMO0001000004' },
+      { name: 'Plus', iban: 'NL00DEMO0001000005' },
+    ],
+    restaurants: [
+      { name: 'Thuisbezorgd.nl', iban: 'NL00DEMO0002000001' },
+      { name: 'Uber Eats', iban: 'NL00DEMO0002000002' },
+      { name: "McDonald's", iban: 'NL00DEMO0002000003' },
+      { name: 'Starbucks', iban: 'NL00DEMO0002000004' },
+      { name: 'Vapiano', iban: 'NL00DEMO0002000005' },
+    ],
+    utilities: [
+      { name: 'Vattenfall', iban: 'NL00DEMO0003000001' },
+      { name: 'Vitens', iban: 'NL00DEMO0003000002' },
+      { name: 'Ziggo', iban: 'NL00DEMO0003000003' },
+    ],
+    subscriptions: [
+      { name: 'Netflix', iban: 'NL00DEMO0004000001' },
+      { name: 'Spotify', iban: 'NL00DEMO0004000002' },
+      { name: 'Disney+', iban: 'NL00DEMO0004000003' },
+      { name: 'KPN', iban: 'NL00DEMO0004000004' },
+    ],
+    transport: [
+      { name: 'NS', iban: 'NL00DEMO0005000001' },
+      { name: 'Shell', iban: 'NL00DEMO0005000002' },
+      { name: 'BP', iban: 'NL00DEMO0005000003' },
+      { name: 'Q-Park', iban: 'NL00DEMO0005000004' },
+    ],
+    health: [
+      { name: 'Kruidvat', iban: 'NL00DEMO0006000001' },
+      { name: 'Etos', iban: 'NL00DEMO0006000002' },
+      { name: copy.pharmacy, iban: 'NL00DEMO0006000003' },
+    ],
+    shopping: [
+      { name: 'Bol.com', iban: 'NL00DEMO0007000001' },
+      { name: 'Amazon', iban: 'NL00DEMO0007000002' },
+      { name: 'H&M', iban: 'NL00DEMO0007000003' },
+      { name: 'IKEA', iban: 'NL00DEMO0007000004' },
+      { name: 'Action', iban: 'NL00DEMO0007000005' },
+      { name: 'MediaMarkt', iban: 'NL00DEMO0007000006' },
+    ],
+    housing: [
+      { name: 'Woonstad Rotterdam', iban: 'NL00DEMO0008000001' },
+      { name: 'Vestia', iban: 'NL00DEMO0008000002' },
+    ],
+    leisure: [
+      { name: 'Pathé', iban: 'NL00DEMO0009000001' },
+      { name: 'Rijksmuseum', iban: 'NL00DEMO0009000002' },
+      { name: 'Basic-Fit', iban: 'NL00DEMO0009000003' },
+    ],
+    insurance: [
+      { name: 'Centraal Beheer', iban: 'NL00DEMO0010000001' },
+      { name: 'Zilveren Kruis', iban: 'NL00DEMO0010000002' },
+    ],
+  };
+}
 
 // Payment processors that share IBANs - these will have multiple different merchants using the same IBAN
 // This simulates payment aggregators where different stores route through the same payment provider
@@ -445,33 +459,41 @@ const PAYMENT_PROCESSORS = [
 
 // Contacts with multiple IBANs (same person/entity using different bank accounts)
 // This simulates people who receive payments to different accounts
-const MULTI_IBAN_CONTACTS = [
-  {
-    name: 'Albert Heijn',
-    ibans: ['NL00DEMO0001000001', 'NL00DEMO0001000011', 'NL00DEMO0001000021'],
-    descriptions: ['Boodschappen (winkel)', 'Boodschappen (online)', 'Bonus'],
-  },
-  {
-    name: 'Jan de Vries',
-    ibans: ['NL00DEMO0060000001', 'NL00DEMO0060000002', 'NL00DEMO0060000003'],
-    descriptions: ['Freelance werk', 'Terugbetaling', 'Gezamenlijke kosten'],
-  },
-  {
-    name: 'Familie Jansen',
-    ibans: ['NL00DEMO0061000001', 'NL00DEMO0061000002'],
-    descriptions: ['Verjaardag cadeau', 'Etentje delen'],
-  },
-];
+function createDemoContacts(copy: DemoTranslations) {
+  return [
+    {
+      name: 'Albert Heijn',
+      ibans: ['NL00DEMO0001000001', 'NL00DEMO0001000011', 'NL00DEMO0001000021'],
+      descriptions: copy.supermarketDescriptions,
+    },
+    {
+      name: 'Jan de Vries',
+      ibans: ['NL00DEMO0060000001', 'NL00DEMO0060000002', 'NL00DEMO0060000003'],
+      descriptions: copy.freelanceDescriptions,
+    },
+    {
+      name: copy.family,
+      ibans: ['NL00DEMO0061000001', 'NL00DEMO0061000002'],
+      descriptions: copy.giftDescriptions,
+    },
+  ];
+}
 
 // Income sources
-const INCOME_SOURCES = [
-  { name: 'Werkgever BV', iban: 'NL00DEMO0050000001', description: 'Salaris' },
-  {
-    name: 'Belastingdienst',
-    iban: 'NL00DEMO0050000002',
-    description: 'Zorgtoeslag',
-  },
-];
+function createDemoIncomeSources(copy: DemoTranslations) {
+  return [
+    {
+      name: copy.employer,
+      iban: 'NL00DEMO0050000001',
+      description: copy.salary,
+    },
+    {
+      name: copy.taxAuthority,
+      iban: 'NL00DEMO0050000002',
+      description: copy.healthcareAllowance,
+    },
+  ];
+}
 
 /**
  * @swagger
@@ -485,6 +507,24 @@ const INCOME_SOURCES = [
  *         required: true
  *         schema:
  *           type: integer
+ *       - in: header
+ *         name: X-Language
+ *         description: Language
+ *         schema:
+ *           type: string
+ *           enum: [nl, en]
+ *           default: nl
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               language:
+ *                 description: Language
+ *                 type: string
+ *                 enum: [nl, en]
+ *                 default: nl
  *     responses:
  *       200:
  *         description: Demo data seeded, including uncategorized expenses for Jev categorization
@@ -493,6 +533,24 @@ const INCOME_SOURCES = [
  */
 router.post('/:id/seed-demo', (req, res) => {
   try {
+    const language = req.body?.language ?? req.get('X-Language') ?? 'nl';
+    if (language !== 'nl' && language !== 'en') {
+      return res.status(400).json({
+        success: false,
+        error:
+          DEMO_TRANSLATIONS[req.get('X-Language') === 'en' ? 'en' : 'nl']
+            .invalidLanguage,
+      });
+    }
+    const {
+      copy,
+      proposedContact: PROPOSED_CONTACT_DEMO,
+      uncategorizedExpenses: DEMO_UNCATEGORIZED_EXPENSES,
+    } = getDemoSeedData(language);
+    const DEMO_MERCHANTS = createDemoMerchants(copy);
+    const MULTI_IBAN_CONTACTS = createDemoContacts(copy);
+    const INCOME_SOURCES = createDemoIncomeSources(copy);
+    const categoryNames = getSeedCategoryNameMap(language, SEED_CATEGORIES);
     const profileId = parseInt(req.params.id, 10);
     if (isNaN(profileId)) {
       return res
@@ -524,9 +582,13 @@ router.post('/:id/seed-demo', (req, res) => {
     run('DELETE FROM address_book WHERE profile_id = ?', [profileId]);
 
     // 2. Seed categories
-    const { parentCategories, subcategories } =
-      flattenCategoriesForDB(SEED_CATEGORIES);
+    const { parentCategories, subcategories } = flattenCategoriesForDB(
+      SEED_CATEGORIES,
+      language
+    );
     const categoryIdMap: Record<string, number> = {};
+    const categoryId = (name: string) =>
+      categoryIdMap[categoryNames[name]] || null;
 
     // Insert parent categories
     for (const cat of parentCategories) {
@@ -563,7 +625,7 @@ router.post('/:id/seed-demo', (req, res) => {
       'INSERT INTO accounts (iban, name, type, bank, current_balance, profile_id, order_index) VALUES (?, ?, ?, ?, ?, ?, ?)',
       [
         demoAccountIban,
-        'Demo Betaalrekening',
+        copy.checkingAccount,
         'checking',
         'demo',
         2500.0,
@@ -577,7 +639,7 @@ router.post('/:id/seed-demo', (req, res) => {
       'INSERT INTO accounts (iban, name, type, bank, current_balance, profile_id, order_index) VALUES (?, ?, ?, ?, ?, ?, ?)',
       [
         savingsAccountIban,
-        'Demo Spaarrekening',
+        copy.savingsAccount,
         'savings',
         'demo',
         5000.0,
@@ -641,13 +703,13 @@ router.post('/:id/seed-demo', (req, res) => {
             .split('T')[0],
           amount: 2800 + randomAmount(-200, 200),
           type: 'income',
-          description: 'Salaris',
+          description: copy.salary,
           merchant_name: salarySource.name,
           account_id: mainAccountId,
           opposing_iban: salarySource.iban,
           opposing_name: salarySource.name,
-          category_id: categoryIdMap['Salaris'] || null,
-          payment_method: 'Overboeking',
+          category_id: categoryId('Salaris'),
+          payment_method: 'transfer',
         });
       }
 
@@ -658,13 +720,13 @@ router.post('/:id/seed-demo', (req, res) => {
           date: new Date(Date.UTC(year, month, 5)).toISOString().split('T')[0],
           amount: 115 + randomAmount(-10, 10),
           type: 'income',
-          description: 'Zorgtoeslag',
+          description: copy.healthcareAllowance,
           merchant_name: toeslagSource.name,
           account_id: mainAccountId,
           opposing_iban: toeslagSource.iban,
           opposing_name: toeslagSource.name,
-          category_id: categoryIdMap['Teruggaven'] || null,
-          payment_method: 'Overboeking',
+          category_id: categoryId('Teruggaven'),
+          payment_method: 'transfer',
         });
       }
 
@@ -674,13 +736,13 @@ router.post('/:id/seed-demo', (req, res) => {
         date: new Date(Date.UTC(year, month, 1)).toISOString().split('T')[0],
         amount: -850,
         type: 'expense',
-        description: 'Huur',
+        description: copy.rent,
         merchant_name: housing.name,
         account_id: mainAccountId,
         opposing_iban: housing.iban,
         opposing_name: housing.name,
-        category_id: categoryIdMap['Huur & Hypotheek'] || null,
-        payment_method: 'Incasso',
+        category_id: categoryId('Huur & Hypotheek'),
+        payment_method: 'incasso',
       });
 
       // Utilities (around 15th)
@@ -690,15 +752,15 @@ router.post('/:id/seed-demo', (req, res) => {
           date: new Date(Date.UTC(year, month, 15)).toISOString().split('T')[0],
           amount: isInternet ? -55 : -randomAmount(45, 180),
           type: 'expense',
-          description: isInternet ? 'Internet & TV' : 'Energie / water',
+          description: isInternet ? copy.internetAndTv : copy.energyAndWater,
           merchant_name: utility.name,
           account_id: mainAccountId,
           opposing_iban: utility.iban,
           opposing_name: utility.name,
           category_id: isInternet
-            ? categoryIdMap['Mobiel & Internet'] || null
-            : categoryIdMap['Energie & Water'] || null,
-          payment_method: 'Incasso',
+            ? categoryId('Mobiel & Internet')
+            : categoryId('Energie & Water'),
+          payment_method: 'incasso',
         });
       }
 
@@ -709,15 +771,15 @@ router.post('/:id/seed-demo', (req, res) => {
           date: new Date(Date.UTC(year, month, 3)).toISOString().split('T')[0],
           amount: isMobileInternet ? -52 : -randomAmount(8, 18),
           type: 'expense',
-          description: 'Maandabonnement',
+          description: copy.monthlySubscription,
           merchant_name: sub.name,
           account_id: mainAccountId,
           opposing_iban: sub.iban,
           opposing_name: sub.name,
           category_id: isMobileInternet
-            ? categoryIdMap['Mobiel & Internet'] || null
-            : categoryIdMap['Streaming & Media'] || null,
-          payment_method: 'Incasso',
+            ? categoryId('Mobiel & Internet')
+            : categoryId('Streaming & Media'),
+          payment_method: 'incasso',
         });
       }
 
@@ -726,13 +788,13 @@ router.post('/:id/seed-demo', (req, res) => {
         date: new Date(Date.UTC(year, month, 2)).toISOString().split('T')[0],
         amount: -250,
         type: 'transfer',
-        description: 'Sparen',
-        merchant_name: 'Eigen rekening',
+        description: copy.savings,
+        merchant_name: copy.ownAccount,
         account_id: mainAccountId,
         opposing_iban: savingsAccountIban,
-        opposing_name: 'Demo Spaarrekening',
+        opposing_name: copy.savingsAccount,
         category_id: null,
-        payment_method: 'Overboeking',
+        payment_method: 'transfer',
       });
 
       // Random daily expenses
@@ -748,7 +810,7 @@ router.post('/:id/seed-demo', (req, res) => {
         let merchant: { name: string; iban: string };
         let amount: number;
         let description: string;
-        let categoryId: number | null = null;
+        let expenseCategoryId: number | null = null;
 
         // Use payment processor more often (40%) to create shared IBAN scenarios
         const useProcessor = secureRandom() > 0.6;
@@ -758,54 +820,54 @@ router.post('/:id/seed-demo', (req, res) => {
           // Groceries
           merchant = randomItem(DEMO_MERCHANTS.supermarkets);
           amount = -randomAmount(15, 120);
-          description = 'Boodschappen';
-          categoryId = categoryIdMap['Supermarkt'] || null;
+          description = copy.groceries;
+          expenseCategoryId = categoryId('Supermarkt');
         } else if (expenseType < 0.45) {
           // Restaurants/takeout
           merchant = randomItem(DEMO_MERCHANTS.restaurants);
           amount = -randomAmount(12, 60);
           description =
             merchant.name.includes('bezorgd') || merchant.name.includes('Uber')
-              ? 'Eten bestellen'
-              : 'Uit eten';
-          categoryId =
+              ? copy.foodDelivery
+              : copy.diningOut;
+          expenseCategoryId =
             merchant.name.includes('bezorgd') || merchant.name.includes('Uber')
-              ? categoryIdMap['Eten Bestellen'] || null
-              : categoryIdMap['Restaurants & Bars'] || null;
+              ? categoryId('Eten Bestellen')
+              : categoryId('Restaurants & Bars');
         } else if (expenseType < 0.55) {
           // Transport
           merchant = randomItem(DEMO_MERCHANTS.transport);
           amount = -randomAmount(5, 80);
-          description = merchant.name === 'NS' ? 'Treinreis' : 'Tanken';
-          categoryId =
+          description = merchant.name === 'NS' ? copy.trainJourney : copy.fuel;
+          expenseCategoryId =
             merchant.name === 'NS'
-              ? categoryIdMap['Openbaar Vervoer'] || null
+              ? categoryId('Openbaar Vervoer')
               : merchant.name.includes('Park')
-                ? categoryIdMap['Parkeren & Taxi'] || null
-                : categoryIdMap['Brandstof & Laden'] || null;
+                ? categoryId('Parkeren & Taxi')
+                : categoryId('Brandstof & Laden');
         } else if (expenseType < 0.65) {
           // Health/drugstore
           merchant = randomItem(DEMO_MERCHANTS.health);
           amount = -randomAmount(8, 35);
-          description = 'Persoonlijke verzorging';
-          categoryId = categoryIdMap['Drogisterij'] || null;
+          description = copy.personalCare;
+          expenseCategoryId = categoryId('Drogisterij');
         } else if (expenseType < 0.8) {
           // Shopping
           merchant = randomItem(DEMO_MERCHANTS.shopping);
           amount = -randomAmount(15, 150);
-          description = 'Aankoop';
-          categoryId =
+          description = copy.purchase;
+          expenseCategoryId =
             merchant.name === 'IKEA'
-              ? categoryIdMap['Inrichting & Tuin'] || null
-              : categoryIdMap['Kleding & Schoenen'] || null;
+              ? categoryId('Inrichting & Tuin')
+              : categoryId('Kleding & Schoenen');
         } else {
           // Leisure
           merchant = randomItem(DEMO_MERCHANTS.leisure);
           amount = -randomAmount(10, 50);
-          description = merchant.name.includes('Fit') ? 'Sportschool' : 'Uitje';
-          categoryId = merchant.name.includes('Fit')
-            ? categoryIdMap['Sport & Fitness'] || null
-            : categoryIdMap['Uitjes & Cultuur'] || null;
+          description = merchant.name.includes('Fit') ? copy.gym : copy.outing;
+          expenseCategoryId = merchant.name.includes('Fit')
+            ? categoryId('Sport & Wellness')
+            : categoryId('Uitjes & Cultuur');
         }
 
         // Determine payment method based on type
@@ -817,7 +879,7 @@ router.post('/:id/seed-demo', (req, res) => {
         ) {
           paymentMethod = 'iDEAL';
         } else {
-          paymentMethod = 'Pinpas';
+          paymentMethod = 'pin';
         }
 
         transactions.push({
@@ -842,7 +904,7 @@ router.post('/:id/seed-demo', (req, res) => {
           // For processors: use merchant name as opposing_name to create shared IBAN scenario
           // This simulates real payment processors where the same IBAN has different merchant names
           opposing_name: processor ? merchant.name : merchant.name,
-          category_id: categoryId,
+          category_id: expenseCategoryId,
           payment_method: paymentMethod,
         });
       }
@@ -867,7 +929,7 @@ router.post('/:id/seed-demo', (req, res) => {
             opposing_iban: contact.ibans[ibanIndex],
             opposing_name: contact.name,
             category_id: null,
-            payment_method: 'Overboeking',
+            payment_method: 'transfer',
           });
         }
       }
@@ -897,12 +959,12 @@ router.post('/:id/seed-demo', (req, res) => {
             .split('T')[0],
           amount: -randomAmount(20, 180),
           type: 'expense',
-          description: `Online aankoop ${merchant}`,
+          description: copy.onlinePurchaseAt.replace('{merchant}', merchant),
           merchant_name: `${merchant} via ${idealProcessor.name}`,
           account_id: mainAccountId,
           opposing_iban: idealProcessor.iban,
           opposing_name: merchant,
-          category_id: categoryIdMap['Online Shopping'] || null,
+          category_id: categoryId('Warenhuis'),
           payment_method: 'iDEAL',
         });
       }
@@ -925,16 +987,18 @@ router.post('/:id/seed-demo', (req, res) => {
             merchant === 'Uber' ? -randomAmount(10, 45) : -randomAmount(8, 18),
           type: 'expense',
           description:
-            merchant === 'Uber' ? 'Uber rit' : `${merchant} abonnement`,
+            merchant === 'Uber'
+              ? copy.uberRide
+              : copy.subscriptionTo.replace('{merchant}', merchant),
           merchant_name: `${merchant} via ${adyenProcessor.name}`,
           account_id: mainAccountId,
           opposing_iban: adyenProcessor.iban,
           opposing_name: merchant,
           category_id:
             merchant === 'Uber'
-              ? categoryIdMap['Parkeren & Taxi'] || null
-              : categoryIdMap['Abonnementen'] || null,
-          payment_method: merchant === 'Uber' ? 'iDEAL' : 'Incasso',
+              ? categoryId('Parkeren & Taxi')
+              : categoryId('Streaming & Media'),
+          payment_method: merchant === 'Uber' ? 'iDEAL' : 'incasso',
         });
       }
 
@@ -966,16 +1030,18 @@ router.post('/:id/seed-demo', (req, res) => {
             .split('T')[0],
           amount: isDelivery ? -randomAmount(15, 70) : -randomAmount(30, 100),
           type: 'expense',
-          description: isDelivery ? 'Boodschappen bezorgd' : 'Online aankoop',
+          description: isDelivery
+            ? copy.groceriesDelivered
+            : copy.onlinePurchase,
           merchant_name: `${merchant} via ${mollieProcessor.name}`,
           account_id: mainAccountId,
           opposing_iban: mollieProcessor.iban,
           opposing_name: merchant,
           category_id: isDelivery
             ? merchant === 'Thuisbezorgd.nl'
-              ? categoryIdMap['Eten Bestellen'] || null
-              : categoryIdMap['Supermarkt'] || null
-            : categoryIdMap['Online Shopping'] || null,
+              ? categoryId('Eten Bestellen')
+              : categoryId('Supermarkt')
+            : categoryId('Warenhuis'),
           payment_method: 'iDEAL',
         });
       }
@@ -986,12 +1052,6 @@ router.post('/:id/seed-demo', (req, res) => {
     const proposedContactDate = new Date(
       Date.UTC(todayYear, todayMonth, Math.max(1, todayDay - 3))
     );
-    const PROPOSED_CONTACT_DEMO = {
-      iban: 'NL00DEMO0095000001',
-      name: 'Marktplaats Verkoper',
-      description: 'Marktplaats aankoop',
-      amount: -45.0,
-    };
     transactions.push({
       date: proposedContactDate.toISOString().split('T')[0],
       amount: PROPOSED_CONTACT_DEMO.amount,
@@ -1018,7 +1078,7 @@ router.post('/:id/seed-demo', (req, res) => {
         opposing_iban: expense.iban,
         opposing_name: expense.name,
         category_id: null,
-        payment_method: 'Pinpas',
+        payment_method: 'pin',
       });
     }
 
@@ -1213,11 +1273,11 @@ router.post('/:id/seed-demo', (req, res) => {
       { name: 'Restaurants & Bars', amount: 150 },
       { name: 'Eten Bestellen', amount: 100 },
       { name: 'Streaming & Media', amount: 50 },
-      { name: 'Sport & Fitness', amount: 40 },
+      { name: 'Sport & Wellness', amount: 40 },
     ];
 
     for (const budget of budgetCategories) {
-      const catId = categoryIdMap[budget.name];
+      const catId = categoryId(budget.name);
       if (catId) {
         run(
           'INSERT INTO budgets (category_id, amount, period, profile_id) VALUES (?, ?, ?, ?)',
@@ -1308,7 +1368,7 @@ router.post('/:id/seed-demo', (req, res) => {
       },
       {
         opposingIban: INCOME_SOURCES[0].iban, // Salary
-        merchantName: 'Werkgever BV',
+        merchantName: copy.employer,
         patternType: 'monthly',
         avgAmount: 2800.0,
         lastAmount: 2850.0,

@@ -39,7 +39,7 @@ export function initializeDatabase(): void {
   // Execute schema
   db.exec(schema);
 
-  // Update categories to Dutch if they're still in English
+  // Update only legacy global defaults; profile categories retain their language.
   updateCategoriesToDutch();
 
   // Seed defaults if table is empty
@@ -763,7 +763,7 @@ function dedupeCategoryByName(name: string): void {
   }
 }
 
-// Update category names to Dutch
+// Keep the legacy global defaults Dutch without renaming a user's English categories.
 function updateCategoriesToDutch(): void {
   const dutchCategories: Record<string, string> = {
     Groceries: 'Boodschappen',
@@ -782,10 +782,9 @@ function updateCategoriesToDutch(): void {
 
   for (const [english, dutch] of Object.entries(dutchCategories)) {
     try {
-      db.prepare('UPDATE categories SET name = ? WHERE name = ?').run(
-        dutch,
-        english
-      );
+      db.prepare(
+        'UPDATE categories SET name = ? WHERE name = ? AND profile_id IS NULL'
+      ).run(dutch, english);
     } catch {
       // Ignore errors
     }

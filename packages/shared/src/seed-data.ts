@@ -3,6 +3,11 @@
  * This provides bilingual categories (Dutch/English) with hierarchical subcategories and merchant matching rules
  */
 
+import {
+  DEMO_TRANSLATIONS,
+  type DemoTranslations,
+} from './demo-translations.js';
+
 export interface BilingualText {
   nl: string;
   en: string;
@@ -74,9 +79,12 @@ export const SEED_CATEGORIES: SeedCategory[] = [
     },
     subcategories: [
       {
-        name: 'Huur & Hypotheek',
+        name: { nl: 'Huur & Hypotheek', en: 'Rent & Mortgage' },
         icon: '🔑',
-        description: 'Bruto maandlasten voor je woning.',
+        description: {
+          nl: 'Bruto maandlasten voor je woning.',
+          en: 'Monthly housing and mortgage payments.',
+        },
         rules: [
           'Woonstad',
           'Vestia',
@@ -94,9 +102,12 @@ export const SEED_CATEGORIES: SeedCategory[] = [
         ],
       },
       {
-        name: 'Energie & Water',
+        name: { nl: 'Energie & Water', en: 'Energy & Water' },
         icon: '⚡',
-        description: 'Gas, elektriciteit en water.',
+        description: {
+          nl: 'Gas, elektriciteit en water.',
+          en: 'Gas, electricity and water.',
+        },
         rules: [
           'Vattenfall',
           'Eneco',
@@ -118,9 +129,12 @@ export const SEED_CATEGORIES: SeedCategory[] = [
         ],
       },
       {
-        name: 'Gemeente & Belasting',
+        name: { nl: 'Gemeente & Belasting', en: 'Municipal Taxes' },
         icon: '🗑️',
-        description: 'Lokale belastingen en heffingen.',
+        description: {
+          nl: 'Lokale belastingen en heffingen.',
+          en: 'Local taxes and levies.',
+        },
         rules: [
           'Belastingdienst',
           'Gemeente',
@@ -136,9 +150,12 @@ export const SEED_CATEGORIES: SeedCategory[] = [
         ],
       },
       {
-        name: 'Inrichting & Tuin',
+        name: { nl: 'Inrichting & Tuin', en: 'Furniture & Garden' },
         icon: '🪑',
-        description: 'Meubels, klussen, decoratie en tuin.',
+        description: {
+          nl: 'Meubels, klussen, decoratie en tuin.',
+          en: 'Furniture, DIY, decor and garden.',
+        },
         rules: [
           'IKEA',
           'Action',
@@ -160,9 +177,12 @@ export const SEED_CATEGORIES: SeedCategory[] = [
         ],
       },
       {
-        name: 'Woonverzekering',
+        name: { nl: 'Woonverzekering', en: 'Home Insurance' },
         icon: '🔒',
-        description: 'Opstal- en inboedelverzekering.',
+        description: {
+          nl: 'Opstal- en inboedelverzekering.',
+          en: 'Buildings and contents insurance.',
+        },
         rules: [
           'Interpolis',
           'Centraal Beheer',
@@ -190,9 +210,12 @@ export const SEED_CATEGORIES: SeedCategory[] = [
     },
     subcategories: [
       {
-        name: 'Supermarkt',
+        name: { nl: 'Supermarkt', en: 'Supermarket' },
         icon: '🍎',
-        description: 'Eten, drinken en dagelijkse boodschappen.',
+        description: {
+          nl: 'Eten, drinken en dagelijkse boodschappen.',
+          en: 'Food, drinks and everyday groceries.',
+        },
         rules: [
           'Albert Heijn',
           'Jumbo',
@@ -213,9 +236,12 @@ export const SEED_CATEGORIES: SeedCategory[] = [
         ],
       },
       {
-        name: 'Drogisterij',
+        name: { nl: 'Drogisterij', en: 'Drugstore' },
         icon: '🧴',
-        description: 'Persoonlijke verzorging, schoonmaak en medicijnen.',
+        description: {
+          nl: 'Persoonlijke verzorging, schoonmaak en medicijnen.',
+          en: 'Personal care, cleaning and medicine.',
+        },
         rules: [
           'Kruidvat',
           'Etos',
@@ -230,9 +256,12 @@ export const SEED_CATEGORIES: SeedCategory[] = [
         ],
       },
       {
-        name: 'Speciaalzaken',
+        name: { nl: 'Speciaalzaken', en: 'Specialty Stores' },
         icon: '🥖',
-        description: 'Bakker, slager, visboer en slijterij.',
+        description: {
+          nl: 'Bakker, slager, visboer en slijterij.',
+          en: 'Bakery, butcher, fishmonger and wine shop.',
+        },
         rules: [
           'Bakkerij',
           'Slagerij',
@@ -248,9 +277,12 @@ export const SEED_CATEGORIES: SeedCategory[] = [
         ],
       },
       {
-        name: 'Huisdieren',
+        name: { nl: 'Huisdieren', en: 'Pets' },
         icon: '🐾',
-        description: 'Voeding, speeltjes en zorg voor dieren.',
+        description: {
+          nl: 'Voeding, speeltjes en zorg voor dieren.',
+          en: 'Food, toys and care for animals.',
+        },
         rules: [
           'Zooplus',
           'Welkoop',
@@ -277,9 +309,12 @@ export const SEED_CATEGORIES: SeedCategory[] = [
     },
     subcategories: [
       {
-        name: 'Brandstof & Laden',
+        name: { nl: 'Brandstof & Laden', en: 'Fuel & Charging' },
         icon: '⛽',
-        description: 'Benzine, diesel en elektrisch laden.',
+        description: {
+          nl: 'Benzine, diesel en elektrisch laden.',
+          en: 'Petrol, diesel and electric charging.',
+        },
         rules: [
           'Shell',
           'Esso',
@@ -298,9 +333,12 @@ export const SEED_CATEGORIES: SeedCategory[] = [
         ],
       },
       {
-        name: 'Openbaar Vervoer',
+        name: { nl: 'Openbaar Vervoer', en: 'Public Transport' },
         icon: '🚆',
-        description: 'Trein, tram, bus en metro.',
+        description: {
+          nl: 'Trein, tram, bus en metro.',
+          en: 'Train, tram, bus and metro.',
+        },
         rules: [
           'NS Groep',
           'NS International',
@@ -322,9 +360,12 @@ export const SEED_CATEGORIES: SeedCategory[] = [
         ],
       },
       {
-        name: 'Parkeren & Taxi',
+        name: { nl: 'Parkeren & Taxi', en: 'Parking & Taxi' },
         icon: '🅿️',
-        description: 'Parkeerkosten en taxidiensten.',
+        description: {
+          nl: 'Parkeerkosten en taxidiensten.',
+          en: 'Parking fees and taxi services.',
+        },
         rules: [
           'Yellowbrick',
           'Parkmobile',
@@ -340,9 +381,12 @@ export const SEED_CATEGORIES: SeedCategory[] = [
         ],
       },
       {
-        name: 'Auto Kosten',
+        name: { nl: 'Auto Kosten', en: 'Car Costs' },
         icon: '🛡️',
-        description: 'Verzekering, wegenbelasting en lease.',
+        description: {
+          nl: 'Verzekering, wegenbelasting en lease.',
+          en: 'Insurance, road tax and leasing.',
+        },
         rules: [
           'ANWB',
           'Allianz Direct',
@@ -357,9 +401,12 @@ export const SEED_CATEGORIES: SeedCategory[] = [
         ],
       },
       {
-        name: 'Onderhoud & Fiets',
+        name: { nl: 'Onderhoud & Fiets', en: 'Maintenance & Cycling' },
         icon: '🚲',
-        description: 'Garagekosten, wasstraat en fietsenmaker.',
+        description: {
+          nl: 'Garagekosten, wasstraat en fietsenmaker.',
+          en: 'Garage costs, car washes and bicycle shops.',
+        },
         rules: [
           'KwikFit',
           'Euromaster',
@@ -383,12 +430,18 @@ export const SEED_CATEGORIES: SeedCategory[] = [
     name: { nl: 'Telecom & Abonnementen', en: 'Telecom & Subscriptions' },
     icon: '📱',
     color: '#0EA5E9',
-    description: 'De doorlopende digitale contracten.',
+    description: {
+      nl: 'De doorlopende digitale contracten.',
+      en: 'Ongoing digital subscriptions and contracts.',
+    },
     subcategories: [
       {
-        name: 'Mobiel & Internet',
+        name: { nl: 'Mobiel & Internet', en: 'Mobile & Internet' },
         icon: '📞',
-        description: 'Telefoonabonnementen en thuis internet/TV.',
+        description: {
+          nl: 'Telefoonabonnementen en thuis internet/TV.',
+          en: 'Phone plans and home internet or TV.',
+        },
         rules: [
           'KPN',
           'Ziggo',
@@ -407,9 +460,12 @@ export const SEED_CATEGORIES: SeedCategory[] = [
         ],
       },
       {
-        name: 'Streaming & Media',
+        name: { nl: 'Streaming & Media', en: 'Streaming & Media' },
         icon: '📺',
-        description: 'Video, muziek en nieuws.',
+        description: {
+          nl: 'Video, muziek en nieuws.',
+          en: 'Video, music and news.',
+        },
         rules: [
           'Netflix',
           'Spotify',
@@ -427,9 +483,12 @@ export const SEED_CATEGORIES: SeedCategory[] = [
         ],
       },
       {
-        name: 'Software & Cloud',
+        name: { nl: 'Software & Cloud', en: 'Software & Cloud' },
         icon: '☁️',
-        description: 'Apps, cloudopslag en VPN.',
+        description: {
+          nl: 'Apps, cloudopslag en VPN.',
+          en: 'Apps, cloud storage and VPNs.',
+        },
         rules: [
           'Google Storage',
           'Apple iCloud',
@@ -453,12 +512,18 @@ export const SEED_CATEGORIES: SeedCategory[] = [
     name: { nl: 'Eten, Drinken & Uitgaan', en: 'Food, Drinks & Going Out' },
     icon: '🍽️',
     color: '#F97316',
-    description: 'De "leuke" uitgaven: Horeca en entertainment.',
+    description: {
+      nl: 'De "leuke" uitgaven: Horeca en entertainment.',
+      en: 'Dining and entertainment expenses.',
+    },
     subcategories: [
       {
-        name: 'Restaurants & Bars',
+        name: { nl: 'Restaurants & Bars', en: 'Restaurants & Bars' },
         icon: '🥂',
-        description: 'Uit eten, terrasje en cafébezoek.',
+        description: {
+          nl: 'Uit eten, terrasje en cafébezoek.',
+          en: 'Dining out, terraces and cafés.',
+        },
         rules: [
           'Loetje',
           't Zusje',
@@ -478,9 +543,9 @@ export const SEED_CATEGORIES: SeedCategory[] = [
         ],
       },
       {
-        name: 'Eten Bestellen',
+        name: { nl: 'Eten Bestellen', en: 'Food Delivery' },
         icon: '🍕',
-        description: 'Maaltijdbezorging.',
+        description: { nl: 'Maaltijdbezorging.', en: 'Meal delivery.' },
         rules: [
           'bezorg',
           'Deliveroo',
@@ -493,9 +558,12 @@ export const SEED_CATEGORIES: SeedCategory[] = [
         ],
       },
       {
-        name: 'Uitjes & Cultuur',
+        name: { nl: 'Uitjes & Cultuur', en: 'Outings & Culture' },
         icon: '🎟️',
-        description: 'Bioscoop, musea, concerten en evenementen.',
+        description: {
+          nl: 'Bioscoop, musea, concerten en evenementen.',
+          en: 'Cinema, museums, concerts and events.',
+        },
         rules: [
           'Pathe',
           'Vue',
@@ -523,12 +591,18 @@ export const SEED_CATEGORIES: SeedCategory[] = [
     name: { nl: 'Shopping & Vrije Tijd', en: 'Shopping & Leisure' },
     icon: '🛍️',
     color: '#A855F7',
-    description: "Niet-essentiële aankopen en hobby's.",
+    description: {
+      nl: "Niet-essentiële aankopen en hobby's.",
+      en: 'Non-essential purchases and hobbies.',
+    },
     subcategories: [
       {
-        name: 'Kleding & Schoenen',
+        name: { nl: 'Kleding & Schoenen', en: 'Clothing & Shoes' },
         icon: '👕',
-        description: 'Kledingwinkels en online mode.',
+        description: {
+          nl: 'Kledingwinkels en online mode.',
+          en: 'Clothing stores and online fashion.',
+        },
         rules: [
           'Zalando',
           'H&M',
@@ -550,15 +624,21 @@ export const SEED_CATEGORIES: SeedCategory[] = [
         ],
       },
       {
-        name: 'Warenhuis',
+        name: { nl: 'Warenhuis', en: 'Department Stores' },
         icon: '🏬',
-        description: 'Winkels met een gemengd assortiment.',
+        description: {
+          nl: 'Winkels met een gemengd assortiment.',
+          en: 'Stores with a mixed product range.',
+        },
         rules: ['HEMA', 'De Bijenkorf', 'Bol\\.com', 'Amazon', 'warenhuis'],
       },
       {
-        name: 'Elektronica',
+        name: { nl: 'Elektronica', en: 'Electronics' },
         icon: '📱',
-        description: 'Gadgets, telefoons en apparatuur.',
+        description: {
+          nl: 'Gadgets, telefoons en apparatuur.',
+          en: 'Gadgets, phones and devices.',
+        },
         rules: [
           'Coolblue',
           'MediaMarkt',
@@ -572,9 +652,12 @@ export const SEED_CATEGORIES: SeedCategory[] = [
         ],
       },
       {
-        name: 'Loterij & Kansspel',
+        name: { nl: 'Loterij & Kansspel', en: 'Lottery & Gambling' },
         icon: '🎫',
-        description: 'Loterijen en gokken.',
+        description: {
+          nl: 'Loterijen en gokken.',
+          en: 'Lotteries and gambling.',
+        },
         rules: [
           'Postcode Loterij',
           'Staatsloterij',
@@ -590,9 +673,12 @@ export const SEED_CATEGORIES: SeedCategory[] = [
         ],
       },
       {
-        name: 'Hobby & Cadeaus',
+        name: { nl: 'Hobby & Cadeaus', en: 'Hobbies & Gifts' },
         icon: '🎁',
-        description: 'Boeken, games, bloemen en speelgoed.',
+        description: {
+          nl: 'Boeken, games, bloemen en speelgoed.',
+          en: 'Books, games, flowers and toys.',
+        },
         rules: [
           'Bruna',
           'Ako',
@@ -619,12 +705,18 @@ export const SEED_CATEGORIES: SeedCategory[] = [
     name: { nl: 'Gezondheid & Zorg', en: 'Health & Care' },
     icon: '💊',
     color: '#EF4444',
-    description: 'Kosten voor lichaam en geest.',
+    description: {
+      nl: 'Kosten voor lichaam en geest.',
+      en: 'Costs for physical and mental health.',
+    },
     subcategories: [
       {
-        name: 'Zorgverzekering',
+        name: { nl: 'Zorgverzekering', en: 'Health Insurance' },
         icon: '🩺',
-        description: 'Maandelijkse premie.',
+        description: {
+          nl: 'Maandelijkse premie.',
+          en: 'Monthly insurance premium.',
+        },
         rules: [
           'Zilveren Kruis',
           'VGZ',
@@ -640,9 +732,12 @@ export const SEED_CATEGORIES: SeedCategory[] = [
         ],
       },
       {
-        name: 'Zorgkosten',
+        name: { nl: 'Zorgkosten', en: 'Healthcare Costs' },
         icon: '🩹',
-        description: 'Eigen risico, tandarts, fysio en apotheek.',
+        description: {
+          nl: 'Eigen risico, tandarts, fysio en apotheek.',
+          en: 'Deductibles, dentist, physiotherapy and pharmacy.',
+        },
         rules: [
           'Apotheek',
           'BENU',
@@ -657,9 +752,12 @@ export const SEED_CATEGORIES: SeedCategory[] = [
         ],
       },
       {
-        name: 'Sport & Wellness',
+        name: { nl: 'Sport & Wellness', en: 'Sports & Wellness' },
         icon: '🏋️',
-        description: 'Sportschool, vereniging en uiterlijke verzorging.',
+        description: {
+          nl: 'Sportschool, vereniging en uiterlijke verzorging.',
+          en: 'Gyms, clubs and personal care.',
+        },
         rules: [
           'Basic-Fit',
           'Fit For Free',
@@ -685,12 +783,18 @@ export const SEED_CATEGORIES: SeedCategory[] = [
     name: { nl: 'Vakantie & Reizen', en: 'Vacation & Travel' },
     icon: '✈️',
     color: '#06B6D4',
-    description: 'Kosten gemaakt voor of tijdens reizen.',
+    description: {
+      nl: 'Kosten gemaakt voor of tijdens reizen.',
+      en: 'Costs incurred while travelling.',
+    },
     subcategories: [
       {
-        name: 'Tickets & Verblijf',
+        name: { nl: 'Tickets & Verblijf', en: 'Tickets & Accommodation' },
         icon: '✈️',
-        description: 'Vluchten, hotels en boekingen.',
+        description: {
+          nl: 'Vluchten, hotels en boekingen.',
+          en: 'Flights, hotels and bookings.',
+        },
         rules: [
           'KLM',
           'Transavia',
@@ -710,9 +814,12 @@ export const SEED_CATEGORIES: SeedCategory[] = [
         ],
       },
       {
-        name: 'Vakantie uitgaven',
+        name: { nl: 'Vakantie uitgaven', en: 'Holiday Expenses' },
         icon: '🌴',
-        description: 'Transacties in het buitenland.',
+        description: {
+          nl: 'Transacties in het buitenland.',
+          en: 'Transactions abroad.',
+        },
         rules: ['Foreign Currency', 'buitenland', 'vakantie'],
       },
     ],
@@ -723,12 +830,18 @@ export const SEED_CATEGORIES: SeedCategory[] = [
     name: { nl: 'Financieel & Toekomst', en: 'Financial & Future' },
     icon: '💰',
     color: '#10B981',
-    description: 'Geldmanagement en bankzaken.',
+    description: {
+      nl: 'Geldmanagement en bankzaken.',
+      en: 'Money management and banking.',
+    },
     subcategories: [
       {
-        name: 'Sparen & Beleggen',
+        name: { nl: 'Sparen & Beleggen', en: 'Savings & Investments' },
         icon: '📈',
-        description: 'Overboekingen naar eigen spaar/beleggingsrekeningen.',
+        description: {
+          nl: 'Overboekingen naar eigen spaar/beleggingsrekeningen.',
+          en: 'Transfers to your own savings and investment accounts.',
+        },
         rules: [
           'DEGIRO',
           'Meesman',
@@ -744,9 +857,12 @@ export const SEED_CATEGORIES: SeedCategory[] = [
         ],
       },
       {
-        name: 'Bankkosten',
+        name: { nl: 'Bankkosten', en: 'Bank Fees' },
         icon: '🏦',
-        description: 'Kosten voor betaalpakket of rood staan.',
+        description: {
+          nl: 'Kosten voor betaalpakket of rood staan.',
+          en: 'Account fees and overdraft costs.',
+        },
         rules: [
           'Kosten Betaalpakket',
           'Rente',
@@ -757,9 +873,9 @@ export const SEED_CATEGORIES: SeedCategory[] = [
         ],
       },
       {
-        name: 'Leningen & Schulden',
+        name: { nl: 'Leningen & Schulden', en: 'Loans & Debt' },
         icon: '💸',
-        description: 'Aflossing van leningen.',
+        description: { nl: 'Aflossing van leningen.', en: 'Loan repayments.' },
         rules: [
           'DUO',
           'Dienst Uitvoering Onderwijs',
@@ -772,9 +888,9 @@ export const SEED_CATEGORIES: SeedCategory[] = [
         ],
       },
       {
-        name: 'Goede Doelen',
+        name: { nl: 'Goede Doelen', en: 'Charities' },
         icon: '🎗️',
-        description: 'Donaties en giften.',
+        description: { nl: 'Donaties en giften.', en: 'Donations and gifts.' },
         rules: [
           'KWF',
           'Rode Kruis',
@@ -805,12 +921,18 @@ export const SEED_CATEGORIES: SeedCategory[] = [
     name: { nl: 'Onderwijs & Werk', en: 'Education & Work' },
     icon: '🎓',
     color: '#8B5CF6',
-    description: 'Studie en werkgerelateerde kosten.',
+    description: {
+      nl: 'Studie en werkgerelateerde kosten.',
+      en: 'Study and work-related expenses.',
+    },
     subcategories: [
       {
-        name: 'Studie',
+        name: { nl: 'Studie', en: 'Education' },
         icon: '📚',
-        description: 'Collegegeld en studiemateriaal.',
+        description: {
+          nl: 'Collegegeld en studiemateriaal.',
+          en: 'Tuition and study materials.',
+        },
         rules: [
           'DUO Collegegeld',
           'Universiteit',
@@ -824,9 +946,12 @@ export const SEED_CATEGORIES: SeedCategory[] = [
         ],
       },
       {
-        name: 'Kinderopvang',
+        name: { nl: 'Kinderopvang', en: 'Childcare' },
         icon: '👶',
-        description: 'Opvang voor de kinderen.',
+        description: {
+          nl: 'Opvang voor de kinderen.',
+          en: 'Care for children.',
+        },
         rules: [
           'Kinderopvang',
           'KDV',
@@ -839,9 +964,12 @@ export const SEED_CATEGORIES: SeedCategory[] = [
         ],
       },
       {
-        name: 'Zakelijk',
+        name: { nl: 'Zakelijk', en: 'Business' },
         icon: '💼',
-        description: 'Voorschotten en werkuitgaven.',
+        description: {
+          nl: 'Voorschotten en werkuitgaven.',
+          en: 'Advances and work expenses.',
+        },
         rules: ['Makro', 'Sligro', 'zakelijk', 'werk', 'kantoor'],
       },
     ],
@@ -982,67 +1110,71 @@ export function flattenCategoriesForDB(
 /**
  * Demo merchants data for generating realistic transactions
  */
-export const DEMO_MERCHANTS = {
-  supermarkets: [
-    { name: 'Albert Heijn', iban: 'NL00DEMO0001000001' },
-    { name: 'Jumbo', iban: 'NL00DEMO0001000002' },
-    { name: 'Lidl', iban: 'NL00DEMO0001000003' },
-    { name: 'Aldi', iban: 'NL00DEMO0001000004' },
-    { name: 'Plus', iban: 'NL00DEMO0001000005' },
-    { name: 'Dirk', iban: 'NL00DEMO0001000006' },
-  ],
-  restaurants: [
-    { name: 'Thuisbezorgd.nl', iban: 'NL00DEMO0002000001' },
-    { name: 'Dominos Pizza', iban: 'NL00DEMO0002000002' },
-    { name: "McDonald's", iban: 'NL00DEMO0002000003' },
-    { name: 'Starbucks', iban: 'NL00DEMO0002000004' },
-    { name: 'Uber Eats', iban: 'NL00DEMO0002000005' },
-  ],
-  transport: [
-    { name: 'Shell', iban: 'NL00DEMO0003000001' },
-    { name: 'NS', iban: 'NL00DEMO0003000002' },
-    { name: 'TotalEnergies', iban: 'NL00DEMO0003000003' },
-    { name: 'Parkmobile', iban: 'NL00DEMO0003000004' },
-  ],
-  health: [
-    { name: 'Kruidvat', iban: 'NL00DEMO0004000001' },
-    { name: 'Etos', iban: 'NL00DEMO0004000002' },
-    { name: 'Basic-Fit', iban: 'NL00DEMO0004000003' },
-  ],
-  shopping: [
-    { name: 'Bol.com', iban: 'NL00DEMO0005000001' },
-    { name: 'HEMA', iban: 'NL00DEMO0005000002' },
-    { name: 'H&M', iban: 'NL00DEMO0005000003' },
-    { name: 'IKEA', iban: 'NL00DEMO0005000004' },
-    { name: 'Action', iban: 'NL00DEMO0005000005' },
-    { name: 'MediaMarkt', iban: 'NL00DEMO0005000006' },
-    { name: 'Amazon', iban: 'NL00DEMO0005000007' },
-  ],
-  leisure: [
-    { name: 'Pathe', iban: 'NL00DEMO0006000001' },
-    { name: 'Spotify', iban: 'NL00DEMO0006000002' },
-    { name: 'Netflix', iban: 'NL00DEMO0006000003' },
-    { name: 'Basic-Fit', iban: 'NL00DEMO0006000004' },
-  ],
-  utilities: [
-    { name: 'Eneco', iban: 'NL00DEMO0007000001' },
-    { name: 'Ziggo', iban: 'NL00DEMO0007000002' },
-    { name: 'Vattenfall', iban: 'NL00DEMO0007000003' },
-  ],
-  housing: [
-    { name: 'Woningcorporatie', iban: 'NL00DEMO0008000001' },
-    { name: 'Verhuurder', iban: 'NL00DEMO0008000002' },
-  ],
-  insurance: [
-    { name: 'Zilveren Kruis', iban: 'NL00DEMO0009000001' },
-    { name: 'Centraal Beheer', iban: 'NL00DEMO0009000002' },
-  ],
-  subscriptions: [
-    { name: 'Netflix', iban: 'NL00DEMO0010000001' },
-    { name: 'Spotify', iban: 'NL00DEMO0010000002' },
-    { name: 'KPN', iban: 'NL00DEMO0010000003' },
-  ],
-};
+function createDemoMerchants(copy: DemoTranslations) {
+  return {
+    supermarkets: [
+      { name: 'Albert Heijn', iban: 'NL00DEMO0001000001' },
+      { name: 'Jumbo', iban: 'NL00DEMO0001000002' },
+      { name: 'Lidl', iban: 'NL00DEMO0001000003' },
+      { name: 'Aldi', iban: 'NL00DEMO0001000004' },
+      { name: 'Plus', iban: 'NL00DEMO0001000005' },
+      { name: 'Dirk', iban: 'NL00DEMO0001000006' },
+    ],
+    restaurants: [
+      { name: 'Thuisbezorgd.nl', iban: 'NL00DEMO0002000001' },
+      { name: 'Dominos Pizza', iban: 'NL00DEMO0002000002' },
+      { name: "McDonald's", iban: 'NL00DEMO0002000003' },
+      { name: 'Starbucks', iban: 'NL00DEMO0002000004' },
+      { name: 'Uber Eats', iban: 'NL00DEMO0002000005' },
+    ],
+    transport: [
+      { name: 'Shell', iban: 'NL00DEMO0003000001' },
+      { name: 'NS', iban: 'NL00DEMO0003000002' },
+      { name: 'TotalEnergies', iban: 'NL00DEMO0003000003' },
+      { name: 'Parkmobile', iban: 'NL00DEMO0003000004' },
+    ],
+    health: [
+      { name: 'Kruidvat', iban: 'NL00DEMO0004000001' },
+      { name: 'Etos', iban: 'NL00DEMO0004000002' },
+      { name: 'Basic-Fit', iban: 'NL00DEMO0004000003' },
+    ],
+    shopping: [
+      { name: 'Bol.com', iban: 'NL00DEMO0005000001' },
+      { name: 'HEMA', iban: 'NL00DEMO0005000002' },
+      { name: 'H&M', iban: 'NL00DEMO0005000003' },
+      { name: 'IKEA', iban: 'NL00DEMO0005000004' },
+      { name: 'Action', iban: 'NL00DEMO0005000005' },
+      { name: 'MediaMarkt', iban: 'NL00DEMO0005000006' },
+      { name: 'Amazon', iban: 'NL00DEMO0005000007' },
+    ],
+    leisure: [
+      { name: 'Pathe', iban: 'NL00DEMO0006000001' },
+      { name: 'Spotify', iban: 'NL00DEMO0006000002' },
+      { name: 'Netflix', iban: 'NL00DEMO0006000003' },
+      { name: 'Basic-Fit', iban: 'NL00DEMO0006000004' },
+    ],
+    utilities: [
+      { name: 'Eneco', iban: 'NL00DEMO0007000001' },
+      { name: 'Ziggo', iban: 'NL00DEMO0007000002' },
+      { name: 'Vattenfall', iban: 'NL00DEMO0007000003' },
+    ],
+    housing: [
+      { name: copy.housingAssociation, iban: 'NL00DEMO0008000001' },
+      { name: copy.landlord, iban: 'NL00DEMO0008000002' },
+    ],
+    insurance: [
+      { name: 'Zilveren Kruis', iban: 'NL00DEMO0009000001' },
+      { name: 'Centraal Beheer', iban: 'NL00DEMO0009000002' },
+    ],
+    subscriptions: [
+      { name: 'Netflix', iban: 'NL00DEMO0010000001' },
+      { name: 'Spotify', iban: 'NL00DEMO0010000002' },
+      { name: 'KPN', iban: 'NL00DEMO0010000003' },
+    ],
+  };
+}
+
+export const DEMO_MERCHANTS = createDemoMerchants(DEMO_TRANSLATIONS.nl);
 
 /**
  * Payment processors for shared IBAN demo scenarios
@@ -1058,41 +1190,49 @@ export const PAYMENT_PROCESSORS = [
 /**
  * Multi-IBAN contacts for demo scenarios
  */
-export const MULTI_IBAN_CONTACTS = [
-  {
-    name: 'Albert Heijn',
-    // Keep the primary supermarket demo IBAN, and add two more so the UI
-    // can reliably demonstrate merged contacts (multiple IBANs per contact).
-    ibans: ['NL00DEMO0001000001', 'NL00DEMO0001000011', 'NL00DEMO0001000021'],
-    descriptions: ['Boodschappen (winkel)', 'Boodschappen (online)', 'Bonus'],
-  },
-  {
-    name: 'Jan de Vries',
-    ibans: ['NL00DEMO0090000001', 'NL00DEMO0090000002', 'NL00DEMO0090000003'],
-    descriptions: ['Aflossing', 'Boodschappen deel', 'Etentje bijdrage'],
-  },
-  {
-    name: 'Familie Jansen',
-    ibans: ['NL00DEMO0091000001', 'NL00DEMO0091000002'],
-    descriptions: ['Verjaardag', 'Gezamenlijk cadeau'],
-  },
-];
+function createDemoContacts(copy: DemoTranslations) {
+  return [
+    {
+      name: 'Albert Heijn',
+      // Keep the primary supermarket demo IBAN, and add two more so the UI
+      // can reliably demonstrate merged contacts (multiple IBANs per contact).
+      ibans: ['NL00DEMO0001000001', 'NL00DEMO0001000011', 'NL00DEMO0001000021'],
+      descriptions: copy.supermarketDescriptions,
+    },
+    {
+      name: 'Jan de Vries',
+      ibans: ['NL00DEMO0090000001', 'NL00DEMO0090000002', 'NL00DEMO0090000003'],
+      descriptions: copy.personalDescriptions,
+    },
+    {
+      name: copy.family,
+      ibans: ['NL00DEMO0091000001', 'NL00DEMO0091000002'],
+      descriptions: copy.familyDescriptions,
+    },
+  ];
+}
+
+export const MULTI_IBAN_CONTACTS = createDemoContacts(DEMO_TRANSLATIONS.nl);
 
 /**
  * Income sources for demo transactions
  */
-export const INCOME_SOURCES = [
-  {
-    name: 'Werkgever B.V.',
-    iban: 'NL00DEMO0000000001',
-    description: 'Salaris',
-  },
-  {
-    name: 'Belastingdienst',
-    iban: 'NL00DEMO0000000002',
-    description: 'Zorgtoeslag',
-  },
-];
+function createDemoIncomeSources(copy: DemoTranslations) {
+  return [
+    {
+      name: copy.employer,
+      iban: 'NL00DEMO0000000001',
+      description: copy.salary,
+    },
+    {
+      name: copy.taxAuthority,
+      iban: 'NL00DEMO0000000002',
+      description: copy.healthcareAllowance,
+    },
+  ];
+}
+
+export const INCOME_SOURCES = createDemoIncomeSources(DEMO_TRANSLATIONS.nl);
 
 /**
  * Default payment provider rules for the demo
@@ -1141,143 +1281,190 @@ export const DEFAULT_DEMO_BUDGETS = [
  * This IBAN should NOT be added to address book during seeding,
  * so it appears as a "Proposed Contact" in the UI
  */
-export const PROPOSED_CONTACT_DEMO = {
-  iban: 'NL00DEMO0095000001',
-  name: 'Marktplaats Verkoper',
-  description: 'Marktplaats aankoop',
-  amount: -45.0,
-};
+function createProposedDemoContact(copy: DemoTranslations) {
+  return {
+    iban: 'NL00DEMO0095000001',
+    name: copy.marketplaceSeller,
+    description: copy.marketplacePurchase,
+    amount: -45.0,
+  };
+}
+
+export const PROPOSED_CONTACT_DEMO = createProposedDemoContact(
+  DEMO_TRANSLATIONS.nl
+);
 
 /** Recent expenses without a category or an existing merchant rule, for Jev demos. */
-export const DEMO_UNCATEGORIZED_EXPENSES = [
-  {
-    daysAgo: 5,
-    name: 'Salon Nova',
-    iban: 'NL00DEMO0096000001',
-    description: 'Knipbeurt',
-    amount: -38,
-  },
-  {
-    daysAgo: 35,
-    name: 'Salon Nova',
-    iban: 'NL00DEMO0096000001',
-    description: 'Knipbeurt',
-    amount: -38,
-  },
-  {
-    daysAgo: 65,
-    name: 'Salon Nova',
-    iban: 'NL00DEMO0096000001',
-    description: 'Knipbeurt',
-    amount: -42,
-  },
-  {
-    daysAgo: 9,
-    name: 'Bistro Kora',
-    iban: 'NL00DEMO0096000002',
-    description: 'Avondmenu',
-    amount: -54,
-  },
-  {
-    daysAgo: 39,
-    name: 'Bistro Kora',
-    iban: 'NL00DEMO0096000002',
-    description: 'Avondmenu',
-    amount: -47,
-  },
-  {
-    daysAgo: 69,
-    name: 'Bistro Kora',
-    iban: 'NL00DEMO0096000002',
-    description: 'Avondmenu',
-    amount: -51,
-  },
-] as const;
+function createUncategorizedDemoExpenses(copy: DemoTranslations) {
+  return [
+    {
+      daysAgo: 5,
+      name: 'Salon Nova',
+      iban: 'NL00DEMO0096000001',
+      description: copy.haircut,
+      amount: -38,
+    },
+    {
+      daysAgo: 35,
+      name: 'Salon Nova',
+      iban: 'NL00DEMO0096000001',
+      description: copy.haircut,
+      amount: -38,
+    },
+    {
+      daysAgo: 65,
+      name: 'Salon Nova',
+      iban: 'NL00DEMO0096000001',
+      description: copy.haircut,
+      amount: -42,
+    },
+    {
+      daysAgo: 9,
+      name: 'Bistro Kora',
+      iban: 'NL00DEMO0096000002',
+      description: copy.dinnerMenu,
+      amount: -54,
+    },
+    {
+      daysAgo: 39,
+      name: 'Bistro Kora',
+      iban: 'NL00DEMO0096000002',
+      description: copy.dinnerMenu,
+      amount: -47,
+    },
+    {
+      daysAgo: 69,
+      name: 'Bistro Kora',
+      iban: 'NL00DEMO0096000002',
+      description: copy.dinnerMenu,
+      amount: -51,
+    },
+  ] as const;
+}
+
+export const DEMO_UNCATEGORIZED_EXPENSES = createUncategorizedDemoExpenses(
+  DEMO_TRANSLATIONS.nl
+);
 
 /**
  * Demo recurring patterns for subscriptions feature
  * These are seeded when creating demo data to show subscription management
  */
-export const DEMO_RECURRING_PATTERNS = [
-  {
-    merchantName: 'Netflix',
-    patternType: 'monthly' as const,
-    avgAmount: -12.99,
-    lastAmount: -12.99,
-    isConfirmed: true,
-    isVariable: false,
-    transactionCount: 18,
-  },
-  {
-    merchantName: 'Spotify',
-    patternType: 'monthly' as const,
-    avgAmount: -9.99,
-    lastAmount: -9.99,
-    isConfirmed: true,
-    isVariable: false,
-    transactionCount: 18,
-  },
-  {
-    merchantName: 'Disney+',
-    patternType: 'monthly' as const,
-    avgAmount: -8.99,
-    lastAmount: -8.99,
-    isConfirmed: false, // Pending confirmation
-    isVariable: false,
-    transactionCount: 12,
-  },
-  {
-    merchantName: 'KPN',
-    patternType: 'monthly' as const,
-    avgAmount: -52.0,
-    lastAmount: -52.0,
-    isConfirmed: true,
-    isVariable: false,
-    transactionCount: 18,
-  },
-  {
-    merchantName: 'Vattenfall',
-    patternType: 'monthly' as const,
-    avgAmount: -120.0,
-    lastAmount: -125.0,
-    isConfirmed: true,
-    isVariable: true, // Energy bills vary
-    transactionCount: 18,
-  },
-  {
-    merchantName: 'Ziggo',
-    patternType: 'monthly' as const,
-    avgAmount: -55.0,
-    lastAmount: -55.0,
-    isConfirmed: true,
-    isVariable: false,
-    transactionCount: 18,
-  },
-  {
-    merchantName: 'Woonstad Rotterdam',
-    patternType: 'monthly' as const,
-    avgAmount: -850.0,
-    lastAmount: -850.0,
-    isConfirmed: true,
-    isVariable: false,
-    transactionCount: 18,
-  },
-  {
-    merchantName: 'Basic-Fit',
-    patternType: 'monthly' as const,
-    avgAmount: -29.99,
-    lastAmount: -29.99,
-    isConfirmed: false, // Pending confirmation
-    isVariable: false,
-    transactionCount: 6,
-  },
-  {
-    merchantName: 'Werkgever B.V.',
-    patternType: 'monthly' as const,
-    avgAmount: 2800.0,
-    lastAmount: 2850.0,
-    isConfirmed: true,
-    isVariable: true, // Salary varies slightly
-    transactionCount: 18,
-  },
-];
+function createDemoRecurringPatterns(copy: DemoTranslations) {
+  return [
+    {
+      merchantName: 'Netflix',
+      patternType: 'monthly' as const,
+      avgAmount: -12.99,
+      lastAmount: -12.99,
+      isConfirmed: true,
+      isVariable: false,
+      transactionCount: 18,
+    },
+    {
+      merchantName: 'Spotify',
+      patternType: 'monthly' as const,
+      avgAmount: -9.99,
+      lastAmount: -9.99,
+      isConfirmed: true,
+      isVariable: false,
+      transactionCount: 18,
+    },
+    {
+      merchantName: 'Disney+',
+      patternType: 'monthly' as const,
+      avgAmount: -8.99,
+      lastAmount: -8.99,
+      isConfirmed: false, // Pending confirmation
+      isVariable: false,
+      transactionCount: 12,
+    },
+    {
+      merchantName: 'KPN',
+      patternType: 'monthly' as const,
+      avgAmount: -52.0,
+      lastAmount: -52.0,
+      isConfirmed: true,
+      isVariable: false,
+      transactionCount: 18,
+    },
+    {
+      merchantName: 'Vattenfall',
+      patternType: 'monthly' as const,
+      avgAmount: -120.0,
+      lastAmount: -125.0,
+      isConfirmed: true,
+      isVariable: true, // Energy bills vary
+      transactionCount: 18,
+    },
+    {
+      merchantName: 'Ziggo',
+      patternType: 'monthly' as const,
+      avgAmount: -55.0,
+      lastAmount: -55.0,
+      isConfirmed: true,
+      isVariable: false,
+      transactionCount: 18,
+    },
+    {
+      merchantName: 'Woonstad Rotterdam',
+      patternType: 'monthly' as const,
+      avgAmount: -850.0,
+      lastAmount: -850.0,
+      isConfirmed: true,
+      isVariable: false,
+      transactionCount: 18,
+    },
+    {
+      merchantName: 'Basic-Fit',
+      patternType: 'monthly' as const,
+      avgAmount: -29.99,
+      lastAmount: -29.99,
+      isConfirmed: false, // Pending confirmation
+      isVariable: false,
+      transactionCount: 6,
+    },
+    {
+      merchantName: copy.employer,
+      patternType: 'monthly' as const,
+      avgAmount: 2800.0,
+      lastAmount: 2850.0,
+      isConfirmed: true,
+      isVariable: true, // Salary varies slightly
+      transactionCount: 18,
+    },
+  ];
+}
+
+export const DEMO_RECURRING_PATTERNS = createDemoRecurringPatterns(
+  DEMO_TRANSLATIONS.nl
+);
+
+/** Resolve fresh demo templates in the language selected at creation time. */
+export function getDemoSeedData(language: 'nl' | 'en') {
+  const copy = DEMO_TRANSLATIONS[language];
+  return {
+    copy,
+    merchants: createDemoMerchants(copy),
+    multiIbanContacts: createDemoContacts(copy),
+    incomeSources: createDemoIncomeSources(copy),
+    proposedContact: createProposedDemoContact(copy),
+    uncategorizedExpenses: createUncategorizedDemoExpenses(copy),
+    recurringPatterns: createDemoRecurringPatterns(copy),
+  };
+}
+
+/** Keep demo category references independent of translated display names. */
+export function getSeedCategoryNameMap(
+  language: 'nl' | 'en',
+  categories: SeedCategory[] = SEED_CATEGORIES
+): Record<string, string> {
+  return Object.fromEntries(
+    categories.flatMap((category) =>
+      [category, ...category.subcategories].map((entry) => [
+        getText(entry.name, 'nl'),
+        getText(entry.name, language),
+      ])
+    )
+  );
+}

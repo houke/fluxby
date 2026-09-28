@@ -1134,7 +1134,7 @@ export const api = {
     return ds.deleteAllAccounts();
   },
 
-  createDemoData: async (language: 'nl' | 'en' = 'nl') => {
+  createDemoData: async (language: 'nl' | 'en' = getStoredLanguage()) => {
     const ds = getDataService();
     const profileId = getActiveProfileIdSync();
     if (!profileId) throw new Error('No active profile');
@@ -1149,7 +1149,7 @@ export const api = {
   },
 
   // ============= Demo Data Methods =============
-  createDemoProfile: async () => {
+  createDemoProfile: async (language: 'nl' | 'en' = getStoredLanguage()) => {
     const ds = getDataService();
     // Check if demo profile already exists
     const existingProfiles = await ds.getProfiles();
@@ -1187,11 +1187,15 @@ export const api = {
       name: 'Demo',
       type: 'personal',
       avatarUrl: avatarGradient,
+      language,
     });
     return profile;
   },
 
-  seedDemoData: async (profileId: string, language: 'nl' | 'en' = 'nl') => {
+  seedDemoData: async (
+    profileId: string,
+    language: 'nl' | 'en' = getStoredLanguage()
+  ) => {
     const ds = getDataService();
     return ds.createDemoData(profileId, language);
   },

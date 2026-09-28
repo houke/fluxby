@@ -806,7 +806,7 @@ export const nl: LandingTranslationKeys = {
       listProfilesText: 'Haal alle profielen op om te zien wat beschikbaar is:',
       createProfileTitle: 'Profiel Aanmaken',
       createProfileText:
-        'Maak een nieuw profiel aan met een naam en type (personal of business):',
+        'Maak een nieuw profiel aan met een naam en type (personal of business). Stel X-Language in op en of nl voor de standaardcategorieën. Maak demogegevens met een POST naar /api/profiles/{id}/seed-demo en language in de JSON-body; dit gaat voor X-Language. Zonder taalkeuze wordt Nederlands gebruikt. Bestaande gegevens behouden de taal waarin ze zijn aangemaakt.',
       profileTypesTitle: 'Profiel Types',
       tableType: 'Type',
       tableDescription: 'Beschrijving',
@@ -1476,7 +1476,7 @@ export const nl: LandingTranslationKeys = {
         'Stel Fluxby in, importeer een CSV-bestand en ontdek je financiële overzicht.',
       step1Title: 'Stap 1: Fluxby instellen',
       step1Text:
-        'Kies je taal, vul je naam in en stel een wachtwoord van minimaal 8 tekens in. Fluxby maakt een lokaal demo-profiel met voorbeeldtransacties en opent daarna de rondleiding. Je hoeft niet in te loggen op een online Fluxby-account.',
+        'Kies je taal, vul je naam in en stel een wachtwoord van minimaal 8 tekens in. Fluxby maakt een lokaal demo-profiel met categorieën, rekeningnamen en voorbeeldtransacties in de gekozen taal en opent daarna de rondleiding. Ook nieuwe profielen krijgen standaardcategorieën in je huidige taal. Als je later de taal van de interface wijzigt, blijven bestaande gegevens zoals ze zijn aangemaakt. Je hoeft niet in te loggen op een online Fluxby-account.',
       step2Title: 'Stap 2: Exporteer een CSV bij je bank',
       step2Text:
         'Log in op de website of app van je bank en exporteer je transacties als CSV-bestand. De meeste banken bieden deze optie in de "Export" of "Download" sectie.',

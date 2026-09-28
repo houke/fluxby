@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { db, query, run, runMany } from '../db/index.js';
 import { flattenCategoriesForDB, SEED_CATEGORIES } from '../db/seed-data.js';
+import { DEMO_TRANSLATIONS } from '@fluxby/shared';
 
 const router = Router();
 
@@ -559,6 +560,14 @@ router.post('/import', (req, res) => {
  *     summary: Reset all data and restore demo profile
  *     description: Deletes ALL data across all profiles, then creates/restores the demo profile with sample data. This is a destructive operation that cannot be undone.
  *     tags: [Data]
+ *     parameters:
+ *       - in: header
+ *         name: X-Language
+ *         description: Language for the restored demo categories and accounts
+ *         schema:
+ *           type: string
+ *           enum: [nl, en]
+ *           default: nl
  *     responses:
  *       200:
  *         description: Data reset and demo profile restored
@@ -579,8 +588,10 @@ router.post('/import', (req, res) => {
  *       500:
  *         description: Reset failed
  */
-router.delete('/reset', (_req, res) => {
+router.delete('/reset', (req, res) => {
   try {
+    const language = req.get('X-Language') === 'en' ? 'en' : 'nl';
+    const copy = DEMO_TRANSLATIONS[language];
     db.exec('BEGIN');
 
     // Delete ALL data across ALL profiles (respect FK order)
@@ -606,8 +617,10 @@ router.delete('/reset', (_req, res) => {
     const profileId = Number(profileResult.lastInsertRowid);
 
     // Seed categories for demo profile
-    const { parentCategories, subcategories } =
-      flattenCategoriesForDB(SEED_CATEGORIES);
+    const { parentCategories, subcategories } = flattenCategoriesForDB(
+      SEED_CATEGORIES,
+      language
+    );
     const categoryIdMap: Record<string, number> = {};
 
     // Insert parent categories
@@ -643,7 +656,7 @@ router.delete('/reset', (_req, res) => {
       'INSERT INTO accounts (iban, name, type, bank, current_balance, profile_id, order_index) VALUES (?, ?, ?, ?, ?, ?, ?)',
       [
         demoAccountIban,
-        'Demo Betaalrekening',
+        copy.checkingAccount,
         'checking',
         'demo',
         2500.0,
@@ -659,7 +672,7 @@ router.delete('/reset', (_req, res) => {
       'INSERT INTO accounts (iban, name, type, bank, current_balance, profile_id, order_index) VALUES (?, ?, ?, ?, ?, ?, ?)',
       [
         savingsAccountIban,
-        'Demo Spaarrekening',
+        copy.savingsAccount,
         'savings',
         'demo',
         5000.0,

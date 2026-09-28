@@ -1,6 +1,8 @@
 // Dutch translations for the Fluxby web app
+import { DEMO_TRANSLATIONS, type DemoTranslations } from '@fluxby/shared';
 
 export interface TranslationKeys {
+  demoData: DemoTranslations;
   common: {
     save: string;
     cancel: string;
@@ -1685,6 +1687,7 @@ export interface TranslationKeys {
 }
 
 export const nl: TranslationKeys = {
+  demoData: DEMO_TRANSLATIONS.nl,
   common: {
     save: 'Opslaan',
     cancel: 'Annuleren',

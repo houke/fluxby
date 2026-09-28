@@ -103,6 +103,21 @@ describe('getCategoriesForLanguage', () => {
 });
 
 describe('SEED_CATEGORIES', () => {
+  it('provides both language variants for every seeded category label and description', () => {
+    for (const category of SEED_CATEGORIES) {
+      for (const entry of [category, ...category.subcategories]) {
+        for (const field of [entry.name, entry.description]) {
+          expect(typeof field).toBe('object');
+          expect((field as BilingualText).nl.trim()).not.toBe('');
+          expect((field as BilingualText).en.trim()).not.toBe('');
+        }
+      }
+    }
+    expect(
+      getCategoriesForLanguage(SEED_CATEGORIES, 'en')[0].subcategories[0].name
+    ).toBe('Rent & Mortgage');
+  });
+
   it('is an array', () => {
     expect(Array.isArray(SEED_CATEGORIES)).toBe(true);
   });

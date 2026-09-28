@@ -7,7 +7,8 @@ vi.mock('@/lib/database-reset', () => ({
   resetAppAndRestartOnboarding: vi.fn().mockResolvedValue(undefined),
 }));
 
-vi.mock('@fluxby/shared', () => ({
+vi.mock('@fluxby/shared', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@fluxby/shared')>()),
   FluxbyWebGL: () => <div data-testid='fluxby-webgl' />,
 }));
 

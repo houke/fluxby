@@ -68,6 +68,7 @@ async function fetchAPI<T>(
     headers: {
       'Content-Type': 'application/json',
       'X-Profile-ID': getActiveProfileIdSync(),
+      'X-Language': getStoredLanguage(),
       ...options?.headers,
     },
   });
@@ -107,6 +108,7 @@ async function fetchAPIWithProfile<T>(
     headers: {
       'Content-Type': 'application/json',
       'X-Profile-ID': String(profileId),
+      'X-Language': getStoredLanguage(),
       ...options?.headers,
     },
   });
@@ -871,7 +873,10 @@ export const api = {
       method: 'POST',
     }),
 
-  seedDemoData: (profileId: number, _language?: 'nl' | 'en') =>
+  seedDemoData: (
+    profileId: number,
+    language: 'nl' | 'en' = getStoredLanguage()
+  ) =>
     fetchAPI<{
       profileId: number;
       categories: number;
@@ -880,5 +885,6 @@ export const api = {
       budgets: number;
     }>(`/profiles/${profileId}/seed-demo`, {
       method: 'POST',
+      body: JSON.stringify({ language }),
     }),
 };

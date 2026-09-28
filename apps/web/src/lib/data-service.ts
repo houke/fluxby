@@ -434,7 +434,9 @@ export function createDataService(db: Database) {
       type?: string;
       avatarUrl?: string;
       id?: string; // Optional - use for demo profile
+      language?: 'nl' | 'en';
     }): Promise<Profile> {
+      const language = data.language ?? getStoredLanguage();
       const id = data.id || crypto.randomUUID();
       const now = Date.now();
 
@@ -460,7 +462,7 @@ export function createDataService(db: Database) {
         // Seed default categories with subcategories and rules for the new profile
         const { parentCategories, subcategories } = flattenCategoriesForDB(
           SEED_CATEGORIES,
-          'nl'
+          language
         );
         const categoryIdMap: Record<string, string> = {};
 
@@ -8191,23 +8193,29 @@ export function createDataService(db: Database) {
 
     async createDemoData(
       targetProfileId: string,
-      language: 'nl' | 'en' = 'nl'
+      language: 'nl' | 'en' = getStoredLanguage()
     ) {
       const now = Date.now();
 
       // Import seed data
       const {
         flattenCategoriesForDB,
-        DEMO_MERCHANTS,
+        getSeedCategoryNameMap,
+        getDemoSeedData,
         PAYMENT_PROCESSORS,
-        MULTI_IBAN_CONTACTS,
-        INCOME_SOURCES,
         DEFAULT_DEMO_BUDGETS,
         DEFAULT_PAYMENT_PROVIDER_RULES,
-        PROPOSED_CONTACT_DEMO,
-        DEMO_UNCATEGORIZED_EXPENSES,
-        DEMO_RECURRING_PATTERNS,
       } = await import('@fluxby/shared');
+      const {
+        copy,
+        merchants: DEMO_MERCHANTS,
+        multiIbanContacts: MULTI_IBAN_CONTACTS,
+        incomeSources: INCOME_SOURCES,
+        proposedContact: PROPOSED_CONTACT_DEMO,
+        uncategorizedExpenses: DEMO_UNCATEGORIZED_EXPENSES,
+        recurringPatterns: DEMO_RECURRING_PATTERNS,
+      } = getDemoSeedData(language);
+      const categoryNames = getSeedCategoryNameMap(language);
 
       // === PERFORMANCE: Wrap all operations in a single transaction ===
       await db.runAsync('BEGIN TRANSACTION', []);
@@ -8244,6 +8252,8 @@ export function createDataService(db: Database) {
           language
         );
         const categoryIdMap: Record<string, string> = {};
+        const categoryId = (name: string) =>
+          categoryIdMap[categoryNames[name]] || null;
 
         // Prepare parent categories with pre-generated IDs
         const parentCatData = parentCategories.map((cat) => {
@@ -8351,7 +8361,7 @@ export function createDataService(db: Database) {
           [
             mainAccountId,
             demoAccountIban,
-            'Demo Betaalrekening',
+            copy.checkingAccount,
             'checking',
             'demo',
             2500.0,
@@ -8367,7 +8377,7 @@ export function createDataService(db: Database) {
           [
             savingsAccountId,
             savingsAccountIban,
-            'Demo Spaarrekening',
+            copy.savingsAccount,
             'savings',
             'demo',
             5000.0,
@@ -8444,13 +8454,13 @@ export function createDataService(db: Database) {
                 .split('T')[0],
               amount: 2800 + randomAmount(-200, 200),
               type: 'income',
-              description: 'Salaris',
+              description: copy.salary,
               merchant_name: salarySource.name,
               account_id: mainAccountId,
               opposing_iban: salarySource.iban,
               opposing_name: salarySource.name,
-              category_id: categoryIdMap['Salaris'] || null,
-              payment_method: 'Overboeking',
+              category_id: categoryId('Salaris'),
+              payment_method: 'transfer',
               payment_provider: null,
             });
           }
@@ -8463,13 +8473,13 @@ export function createDataService(db: Database) {
               .split('T')[0],
             amount: 115 + randomAmount(-10, 10),
             type: 'income',
-            description: 'Zorgtoeslag',
+            description: copy.healthcareAllowance,
             merchant_name: toeslagSource.name,
             account_id: mainAccountId,
             opposing_iban: toeslagSource.iban,
             opposing_name: toeslagSource.name,
-            category_id: categoryIdMap['Teruggaven'] || null,
-            payment_method: 'Overboeking',
+            category_id: categoryId('Teruggaven'),
+            payment_method: 'transfer',
             payment_provider: null,
           });
 
@@ -8481,13 +8491,13 @@ export function createDataService(db: Database) {
               .split('T')[0],
             amount: -850,
             type: 'expense',
-            description: 'Huur',
+            description: copy.rent,
             merchant_name: housing.name,
             account_id: mainAccountId,
             opposing_iban: housing.iban,
             opposing_name: housing.name,
-            category_id: categoryIdMap['Huur & Hypotheek'] || null,
-            payment_method: 'Incasso',
+            category_id: categoryId('Huur & Hypotheek'),
+            payment_method: 'incasso',
             payment_provider: null,
           });
 
@@ -8499,16 +8509,16 @@ export function createDataService(db: Database) {
                 .split('T')[0],
               amount: -randomAmount(80, 150),
               type: 'expense',
-              description: 'Maandelijkse kosten',
+              description: copy.monthlyCosts,
               merchant_name: utility.name,
               account_id: mainAccountId,
               opposing_iban: utility.iban,
               opposing_name: utility.name,
               category_id:
                 utility.name === 'Ziggo'
-                  ? categoryIdMap['Mobiel & Internet'] || null
-                  : categoryIdMap['Energie & Water'] || null,
-              payment_method: 'Incasso',
+                  ? categoryId('Mobiel & Internet')
+                  : categoryId('Energie & Water'),
+              payment_method: 'incasso',
               payment_provider: null,
             });
           }
@@ -8522,16 +8532,16 @@ export function createDataService(db: Database) {
               amount: -randomAmount(100, 180),
               type: 'expense',
               description: ins.name.includes('Zilveren')
-                ? 'Zorgverzekering'
-                : 'Autoverzekering',
+                ? copy.healthInsurance
+                : copy.carInsurance,
               merchant_name: ins.name,
               account_id: mainAccountId,
               opposing_iban: ins.iban,
               opposing_name: ins.name,
               category_id: ins.name.includes('Zilveren')
-                ? categoryIdMap['Zorgverzekering'] || null
-                : categoryIdMap['Auto Kosten'] || null,
-              payment_method: 'Incasso',
+                ? categoryId('Zorgverzekering')
+                : categoryId('Auto Kosten'),
+              payment_method: 'incasso',
               payment_provider: null,
             });
           }
@@ -8546,16 +8556,16 @@ export function createDataService(db: Database) {
                 .split('T')[0],
               amount: -randomAmount(10, 20),
               type: 'expense',
-              description: 'Maandabonnement',
+              description: copy.monthlySubscription,
               merchant_name: sub.name,
               account_id: mainAccountId,
               opposing_iban: sub.iban,
               opposing_name: sub.name,
               category_id:
                 sub.name === 'KPN'
-                  ? categoryIdMap['Mobiel & Internet'] || null
-                  : categoryIdMap['Streaming & Media'] || null,
-              payment_method: 'Incasso',
+                  ? categoryId('Mobiel & Internet')
+                  : categoryId('Streaming & Media'),
+              payment_method: 'incasso',
               payment_provider: null,
             });
           }
@@ -8567,13 +8577,13 @@ export function createDataService(db: Database) {
               .split('T')[0],
             amount: -250,
             type: 'transfer',
-            description: 'Sparen',
-            merchant_name: 'Eigen rekening',
+            description: copy.savings,
+            merchant_name: copy.ownAccount,
             account_id: mainAccountId,
             opposing_iban: savingsAccountIban,
-            opposing_name: 'Demo Spaarrekening',
+            opposing_name: copy.savingsAccount,
             category_id: null,
-            payment_method: 'Overboeking',
+            payment_method: 'transfer',
             payment_provider: null,
           });
 
@@ -8589,7 +8599,7 @@ export function createDataService(db: Database) {
             let merchant: { name: string; iban: string };
             let amount: number;
             let description: string;
-            let categoryId: string | null = null;
+            let expenseCategoryId: string | null = null;
 
             const useProcessor = secureRandom() > 0.6;
             const processor = useProcessor
@@ -8599,53 +8609,54 @@ export function createDataService(db: Database) {
             if (expenseType < 0.3) {
               merchant = randomItem(DEMO_MERCHANTS.supermarkets);
               amount = -randomAmount(15, 120);
-              description = 'Boodschappen';
-              categoryId = categoryIdMap['Supermarkt'] || null;
+              description = copy.groceries;
+              expenseCategoryId = categoryId('Supermarkt');
             } else if (expenseType < 0.45) {
               merchant = randomItem(DEMO_MERCHANTS.restaurants);
               amount = -randomAmount(12, 60);
               description =
                 merchant.name.includes('bezorgd') ||
                 merchant.name.includes('Uber')
-                  ? 'Eten bestellen'
-                  : 'Uit eten';
-              categoryId =
+                  ? copy.foodDelivery
+                  : copy.diningOut;
+              expenseCategoryId =
                 merchant.name.includes('bezorgd') ||
                 merchant.name.includes('Uber')
-                  ? categoryIdMap['Eten Bestellen'] || null
-                  : categoryIdMap['Restaurants & Bars'] || null;
+                  ? categoryId('Eten Bestellen')
+                  : categoryId('Restaurants & Bars');
             } else if (expenseType < 0.55) {
               merchant = randomItem(DEMO_MERCHANTS.transport);
               amount = -randomAmount(5, 80);
-              description = merchant.name === 'NS' ? 'Treinreis' : 'Tanken';
-              categoryId =
+              description =
+                merchant.name === 'NS' ? copy.trainJourney : copy.fuel;
+              expenseCategoryId =
                 merchant.name === 'NS'
-                  ? categoryIdMap['Openbaar Vervoer'] || null
+                  ? categoryId('Openbaar Vervoer')
                   : merchant.name.includes('Park')
-                    ? categoryIdMap['Parkeren & Taxi'] || null
-                    : categoryIdMap['Brandstof & Laden'] || null;
+                    ? categoryId('Parkeren & Taxi')
+                    : categoryId('Brandstof & Laden');
             } else if (expenseType < 0.65) {
               merchant = randomItem(DEMO_MERCHANTS.health);
               amount = -randomAmount(8, 35);
-              description = 'Persoonlijke verzorging';
-              categoryId = categoryIdMap['Drogisterij'] || null;
+              description = copy.personalCare;
+              expenseCategoryId = categoryId('Drogisterij');
             } else if (expenseType < 0.8) {
               merchant = randomItem(DEMO_MERCHANTS.shopping);
               amount = -randomAmount(15, 150);
-              description = 'Aankoop';
-              categoryId =
+              description = copy.purchase;
+              expenseCategoryId =
                 merchant.name === 'IKEA'
-                  ? categoryIdMap['Inrichting & Tuin'] || null
-                  : categoryIdMap['Kleding & Schoenen'] || null;
+                  ? categoryId('Inrichting & Tuin')
+                  : categoryId('Kleding & Schoenen');
             } else {
               merchant = randomItem(DEMO_MERCHANTS.leisure);
               amount = -randomAmount(10, 50);
               description = merchant.name.includes('Fit')
-                ? 'Sportschool'
-                : 'Uitje';
-              categoryId = merchant.name.includes('Fit')
-                ? categoryIdMap['Sport & Wellness'] || null
-                : categoryIdMap['Uitjes & Cultuur'] || null;
+                ? copy.gym
+                : copy.outing;
+              expenseCategoryId = merchant.name.includes('Fit')
+                ? categoryId('Sport & Wellness')
+                : categoryId('Uitjes & Cultuur');
             }
 
             let paymentMethod: string;
@@ -8656,7 +8667,7 @@ export function createDataService(db: Database) {
             ) {
               paymentMethod = 'iDEAL';
             } else {
-              paymentMethod = 'Pinpas';
+              paymentMethod = 'pin';
             }
 
             transactions.push({
@@ -8679,7 +8690,7 @@ export function createDataService(db: Database) {
                       : merchant.iban;
                   })(),
               opposing_name: processor ? merchant.name : merchant.name,
-              category_id: categoryId,
+              category_id: expenseCategoryId,
               payment_method: paymentMethod,
               payment_provider: processor ? processor.name : null,
             });
@@ -8708,7 +8719,7 @@ export function createDataService(db: Database) {
                 opposing_iban: contact.ibans[ibanIndex],
                 opposing_name: contact.name,
                 category_id: null,
-                payment_method: 'Overboeking',
+                payment_method: 'transfer',
                 payment_provider: null,
               });
             }
@@ -8736,12 +8747,15 @@ export function createDataService(db: Database) {
                 .split('T')[0],
               amount: -randomAmount(20, 180),
               type: 'expense',
-              description: `Online aankoop ${merchant}`,
+              description: copy.onlinePurchaseAt.replace(
+                '{merchant}',
+                merchant
+              ),
               merchant_name: `${merchant} via ${PAYMENT_PROCESSORS[0].name}`,
               account_id: mainAccountId,
               opposing_iban: PAYMENT_PROCESSORS[0].iban,
               opposing_name: merchant,
-              category_id: categoryIdMap['Warenhuis'] || null,
+              category_id: categoryId('Warenhuis'),
               payment_method: 'iDEAL',
               payment_provider: PAYMENT_PROCESSORS[0].name,
             });
@@ -8767,16 +8781,18 @@ export function createDataService(db: Database) {
                   : -randomAmount(8, 18),
               type: 'expense',
               description:
-                merchant === 'Uber' ? 'Uber rit' : `${merchant} abonnement`,
+                merchant === 'Uber'
+                  ? copy.uberRide
+                  : copy.subscriptionTo.replace('{merchant}', merchant),
               merchant_name: `${merchant} via ${PAYMENT_PROCESSORS[1].name}`,
               account_id: mainAccountId,
               opposing_iban: PAYMENT_PROCESSORS[1].iban,
               opposing_name: merchant,
               category_id:
                 merchant === 'Uber'
-                  ? categoryIdMap['Parkeren & Taxi'] || null
-                  : categoryIdMap['Streaming & Media'] || null,
-              payment_method: merchant === 'Uber' ? 'iDEAL' : 'Incasso',
+                  ? categoryId('Parkeren & Taxi')
+                  : categoryId('Streaming & Media'),
+              payment_method: merchant === 'Uber' ? 'iDEAL' : 'incasso',
               payment_provider: PAYMENT_PROCESSORS[1].name,
             });
           }
@@ -8801,17 +8817,17 @@ export function createDataService(db: Database) {
                 : -randomAmount(30, 100),
               type: 'expense',
               description: isDelivery
-                ? 'Boodschappen bezorgd'
-                : 'Online aankoop',
+                ? copy.groceriesDelivered
+                : copy.onlinePurchase,
               merchant_name: `${merchant} via ${PAYMENT_PROCESSORS[2].name}`,
               account_id: mainAccountId,
               opposing_iban: PAYMENT_PROCESSORS[2].iban,
               opposing_name: merchant,
               category_id: isDelivery
                 ? merchant === 'Thuisbezorgd.nl'
-                  ? categoryIdMap['Eten Bestellen'] || null
-                  : categoryIdMap['Supermarkt'] || null
-                : categoryIdMap['Kleding & Schoenen'] || null,
+                  ? categoryId('Eten Bestellen')
+                  : categoryId('Supermarkt')
+                : categoryId('Kleding & Schoenen'),
               payment_method: 'iDEAL',
               payment_provider: PAYMENT_PROCESSORS[2].name,
             });
@@ -8850,7 +8866,7 @@ export function createDataService(db: Database) {
             opposing_iban: expense.iban,
             opposing_name: expense.name,
             category_id: null,
-            payment_method: 'Pinpas',
+            payment_method: 'pin',
             payment_provider: null,
           });
         }
@@ -9074,7 +9090,7 @@ export function createDataService(db: Database) {
         // 7. Create budgets (bulk insert)
         const budgetsToInsert = DEFAULT_DEMO_BUDGETS.map((budget) => ({
           id: crypto.randomUUID(),
-          categoryId: categoryIdMap[budget.categoryName],
+          categoryId: categoryId(budget.categoryName),
           amount: budget.amount,
         })).filter((b) => b.categoryId); // Only include budgets with valid category IDs
 
@@ -9113,7 +9129,12 @@ export function createDataService(db: Database) {
         }>;
 
         // Delegate recurring pattern insertion to helper function
-        await insertDemoRecurringPatterns(db, targetProfileId, patternDate);
+        await insertDemoRecurringPatterns(
+          db,
+          targetProfileId,
+          patternDate,
+          language
+        );
 
         if (patternsToInsert.length > 0) {
           const placeholders = patternsToInsert
@@ -9149,7 +9170,7 @@ export function createDataService(db: Database) {
           categories: Object.keys(categoryIdMap).length,
           transactions: transactions.length,
           addressBookEntries: uniqueIbans.size,
-          budgets: DEFAULT_DEMO_BUDGETS.length,
+          budgets: budgetsToInsert.length,
           recurringPatterns: DEMO_RECURRING_PATTERNS.length,
           accounts: 2,
         };
@@ -9828,7 +9849,8 @@ export type DataService = ReturnType<typeof createDataService>;
 export async function insertDemoRecurringPatterns(
   db: Database,
   targetProfileId: string,
-  patternDate: Date
+  patternDate: Date,
+  language: 'nl' | 'en' = getStoredLanguage()
 ) {
   async function importSharedHelper() {
     try {
@@ -9853,11 +9875,12 @@ export async function insertDemoRecurringPatterns(
   let DEMO_RECURRING_PATTERNS: any[] = [];
   try {
     const pkg = await import('@fluxby/shared');
-    DEMO_RECURRING_PATTERNS = pkg.DEMO_RECURRING_PATTERNS;
+    DEMO_RECURRING_PATTERNS = pkg.getDemoSeedData(language).recurringPatterns;
   } catch {
     try {
       const local = await import('../../../../packages/shared/src/seed-data');
-      DEMO_RECURRING_PATTERNS = local.DEMO_RECURRING_PATTERNS;
+      DEMO_RECURRING_PATTERNS =
+        local.getDemoSeedData(language).recurringPatterns;
     } catch {
       DEMO_RECURRING_PATTERNS = [];
     }

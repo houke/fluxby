@@ -150,7 +150,7 @@ export function SecuritySetup({ onSetupComplete }: SecuritySetupProps) {
       }
 
       // Create demo profile
-      const demoProfile = await api.createDemoProfile();
+      const demoProfile = await api.createDemoProfile(language);
       setProgressValue(15);
       setPendingDemoProfile(demoProfile);
 

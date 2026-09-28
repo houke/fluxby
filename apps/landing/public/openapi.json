@@ -970,6 +970,18 @@
       "post": {
         "summary": "Create a new profile",
         "tags": ["Profiles"],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Language",
+            "description": "Language for the new profile's default categories",
+            "schema": {
+              "type": "string",
+              "enum": ["nl", "en"],
+              "default": "nl"
+            }
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -1108,8 +1120,35 @@
             "schema": {
               "type": "integer"
             }
+          },
+          {
+            "in": "header",
+            "name": "X-Language",
+            "description": "Language for the seeded demo data",
+            "schema": {
+              "type": "string",
+              "enum": ["nl", "en"],
+              "default": "nl"
+            }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "language": {
+                    "type": "string",
+                    "enum": ["nl", "en"],
+                    "default": "nl",
+                    "description": "Takes precedence over X-Language"
+                  }
+                }
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Demo data seeded, including uncategorized expenses for Jev categorization"
@@ -1464,6 +1503,18 @@
         "summary": "Reset all data and restore demo profile",
         "description": "Deletes ALL data across all profiles, then creates/restores the demo profile with sample data. This is a destructive operation that cannot be undone.",
         "tags": ["Data"],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Language",
+            "description": "Language for the restored demo categories and accounts",
+            "schema": {
+              "type": "string",
+              "enum": ["nl", "en"],
+              "default": "nl"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Data reset and demo profile restored",

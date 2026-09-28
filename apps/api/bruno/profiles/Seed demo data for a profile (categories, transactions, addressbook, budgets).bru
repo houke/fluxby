@@ -15,13 +15,15 @@ headers {
 }
 
 body:json {
-  {}
+  { "language": "en" }
 }
 
 docs {
   # Seed demo data for a profile (categories, transactions, addressbook, budgets)
   
-  No description provided.
+  Seed demo records in English or Dutch using the optional JSON field `language` (`en` or `nl`).
+  This field takes precedence over the `X-Language` header. Without either, Dutch is used.
+  Account names, category labels, descriptions and generic contact names use the requested language.
   
   ## Endpoint
   `POST /api/profiles/{id}/seed-demo`

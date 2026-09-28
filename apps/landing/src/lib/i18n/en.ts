@@ -571,7 +571,7 @@ export const en: LandingTranslationKeys = {
       listProfilesText: 'Fetch all profiles to see what is available:',
       createProfileTitle: 'Create Profile',
       createProfileText:
-        'Create a new profile with a name and type (personal or business):',
+        'Create a new profile with a name and type (personal or business). Set X-Language to en or nl for its default categories. To create demo records, POST to /api/profiles/{id}/seed-demo with language in the JSON body; this takes precedence over X-Language. Both default to Dutch when omitted. Existing records keep the language they were created in.',
       profileTypesTitle: 'Profile Types',
       tableType: 'Type',
       tableDescription: 'Description',
@@ -1242,7 +1242,7 @@ export const en: LandingTranslationKeys = {
         'Set up Fluxby, import a CSV file, and explore your financial overview.',
       step1Title: 'Step 1: Set up Fluxby',
       step1Text:
-        'Choose a language, enter your name, and set a password of at least 8 characters. Fluxby creates a local demo profile with sample transactions, then opens the tour. You do not need an online Fluxby account.',
+        'Choose a language, enter your name, and set a password of at least 8 characters. Fluxby creates a local demo profile with categories, account names and sample transactions in your selected language, then opens the tour. New profiles also get default categories in your current language. Changing the interface language later keeps existing records as they were created. You do not need an online Fluxby account.',
       step2Title: 'Step 2: Export from your bank',
       step2Text:
         'Log in to your online banking and export your transactions as a CSV file. Most banks offer this in the "Export" or "Download" section.',

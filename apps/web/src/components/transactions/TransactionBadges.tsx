@@ -230,7 +230,7 @@ export const PaymentMethodBadge = memo(function PaymentMethodBadge({
         color: 'bg-pink-100 text-pink-600',
       },
       {
-        value: 'overschrijving',
+        value: 'transfer',
         label: t.transfer,
         icon: <Building2 className='h-3.5 w-3.5' />,
         color: 'bg-purple-100 text-purple-600',

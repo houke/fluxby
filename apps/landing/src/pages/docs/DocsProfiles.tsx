@@ -2,7 +2,7 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import CodeBlock from '../../components/docs/CodeBlock';
 
 export default function DocsProfiles() {
-  const { t } = useLanguage();
+  const { language, t } = useLanguage();
 
   const listProfilesCode = `// List all profiles
 fetch('http://localhost:3001/api/profiles')
@@ -12,7 +12,10 @@ fetch('http://localhost:3001/api/profiles')
   const createProfileCode = `// Create a new profile
 fetch('http://localhost:3001/api/profiles', {
   method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Language': '${language}'
+  },
   body: JSON.stringify({
     name: 'Business Account',
     type: 'business'
@@ -20,6 +23,14 @@ fetch('http://localhost:3001/api/profiles', {
 })
 .then(response => response.json())
 .then(profile => console.log(profile));`;
+
+  const seedDemoCode = `fetch('http://localhost:3001/api/profiles/2/seed-demo', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ language: '${language}' })
+})
+.then(response => response.json())
+.then(result => console.log(result));`;
 
   const responseExample = `[
   {
@@ -124,6 +135,7 @@ fetch('http://localhost:3001/api/profiles', {
       </p>
       <div className='not-prose mt-6'>
         <CodeBlock code={createProfileCode} language='javascript' />
+        <CodeBlock code={seedDemoCode} language='javascript' />
       </div>
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>

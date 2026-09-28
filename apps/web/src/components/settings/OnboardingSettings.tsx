@@ -130,7 +130,7 @@ export function OnboardingSettings() {
 
       if (!demoProfile) {
         // Create demo profile
-        demoProfile = await api.createDemoProfile();
+        demoProfile = await api.createDemoProfile(language);
         await refreshProfiles();
       }
 
