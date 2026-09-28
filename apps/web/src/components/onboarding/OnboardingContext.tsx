@@ -5,7 +5,10 @@ import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { onboardingChapters } from './onboarding-data';
-import { OnboardingContext } from './onboarding-context';
+import {
+  OnboardingContext,
+  ONBOARDING_STORAGE_KEYS,
+} from './onboarding-context';
 import { api } from '@/lib/api';
 import { useProfile } from '@/contexts/ProfileContext';
 import { useDatabase } from '@/contexts/DatabaseContext';
@@ -20,10 +23,11 @@ import {
   isSettingsCacheInitialized,
 } from '@fluxby/database';
 
-const STORAGE_KEY = 'fluxby_onboarding';
-// Synchronous flag to prevent onboarding restart on immediate refresh
-const COMPLETED_FLAG_KEY = 'fluxby_onboarding_complete';
-const RESTART_FLAG_KEY = 'fluxby-onboarding-restart';
+const STORAGE_KEY = ONBOARDING_STORAGE_KEYS.state;
+// Welcome acknowledgement suppresses auto-start; completion tracks the full tour.
+const ACKNOWLEDGED_FLAG_KEY = ONBOARDING_STORAGE_KEYS.acknowledged;
+const COMPLETED_FLAG_KEY = ONBOARDING_STORAGE_KEYS.completed;
+const RESTART_FLAG_KEY = ONBOARDING_STORAGE_KEYS.restart;
 const SWITCHING_OVERLAY_KEY = 'fluxby-switching-overlay';
 
 // Default state
@@ -41,8 +45,8 @@ const defaultState: OnboardingState = {
 const checkRestartFlag = (): boolean => {
   if (!isSettingsCacheInitialized()) return false;
 
-  const restartFlag = readFromOPFSSync<boolean>(RESTART_FLAG_KEY);
-  if (restartFlag === true) {
+  const restartFlag = readFromOPFSSync<boolean | string>(RESTART_FLAG_KEY);
+  if (restartFlag === true || restartFlag === 'true') {
     // Clear the flag immediately (async)
     deleteFromOPFSWithCache(RESTART_FLAG_KEY).catch(() => {
       /* ignore */
@@ -63,7 +67,10 @@ const loadState = (): OnboardingState => {
   const shouldRestart = checkRestartFlag();
 
   if (shouldRestart) {
-    // Clear the completed flag when restarting (async)
+    // Clear both flags when restarting (async)
+    deleteFromOPFSWithCache(ACKNOWLEDGED_FLAG_KEY).catch(() => {
+      /* ignore */
+    });
     deleteFromOPFSWithCache(COMPLETED_FLAG_KEY).catch(() => {
       /* ignore */
     });
@@ -71,20 +78,24 @@ const loadState = (): OnboardingState => {
     return { ...defaultState, isActive: true };
   }
 
-  // Check synchronous completion flag FIRST from OPFS cache
+  // Keep the saved progress even when the welcome tour was acknowledged.
+  // The separate flags also cover a refresh before the full state was saved.
   if (isSettingsCacheInitialized()) {
-    const completedFlag = readFromOPFSSync<boolean>(COMPLETED_FLAG_KEY);
-    if (completedFlag === true) {
-      return { ...defaultState, hasCompletedOnboarding: true, isActive: false };
-    }
-
-    // Try to load full state from OPFS cache
     const stored = readFromOPFSSync<OnboardingState>(STORAGE_KEY);
-    if (stored) {
-      // CRITICAL: Always set isActive: false on page refresh
-      // The user dismissed/closed the modal, so don't auto-restart
-      return { ...defaultState, ...stored, isActive: false };
-    }
+    const acknowledgedFlag = readFromOPFSSync<boolean>(ACKNOWLEDGED_FLAG_KEY);
+    const completedFlag = readFromOPFSSync<boolean | string>(
+      COMPLETED_FLAG_KEY
+    );
+    return {
+      ...defaultState,
+      ...stored,
+      hasCompletedOnboarding:
+        acknowledgedFlag === true ||
+        completedFlag === true ||
+        completedFlag === 'true' ||
+        stored?.hasCompletedOnboarding === true,
+      isActive: false,
+    };
   }
 
   return defaultState;
@@ -293,6 +304,11 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
         ? onboardingChapters[state.currentChapterIndex]
         : null;
 
+      if (restart && !startAtCurrentPage) {
+        await deleteFromOPFSWithCache(ACKNOWLEDGED_FLAG_KEY);
+        await deleteFromOPFSWithCache(COMPLETED_FLAG_KEY);
+      }
+
       setState((prev) => {
         // If starting at current page (mascot click), always start at that chapter
         // Note: startChapterIndex > 0 because index 0 is welcome, and we found a content chapter
@@ -319,10 +335,6 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
 
         // If restarting, start from beginning
         if (restart) {
-          // Also clear the completed flag in OPFS when restarting
-          deleteFromOPFSWithCache(COMPLETED_FLAG_KEY).catch(() => {
-            /* ignore */
-          });
           return {
             ...prev,
             isActive: true,
@@ -381,6 +393,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
   const completeOnboarding = useCallback(async () => {
     // Set flag in OPFS to prevent restart on refresh
     // This ensures completion is persisted even if page refreshes before useEffect
+    await writeToOPFSWithCache(ACKNOWLEDGED_FLAG_KEY, true);
     await writeToOPFSWithCache(COMPLETED_FLAG_KEY, true);
 
     // If demo profile exists but not active, switch to it
@@ -403,6 +416,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
   const skipOnboarding = useCallback(async () => {
     // Set flag in OPFS to prevent restart on refresh
     // This ensures completion is persisted even if page refreshes before useEffect
+    await writeToOPFSWithCache(ACKNOWLEDGED_FLAG_KEY, true);
     await writeToOPFSWithCache(COMPLETED_FLAG_KEY, true);
 
     // Create user if name is set (using async/await instead of mutation)
@@ -424,7 +438,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
   // Dismiss onboarding (close modal but preserve progress)
   // Use this when user clicks X to close - they can resume later from settings or mascot
   const dismissOnboarding = useCallback(() => {
-    // Don't set COMPLETED_FLAG_KEY - onboarding is not completed, just paused
+    // Don't set the completion flag - onboarding is not completed, just paused
     // Progress (currentChapterIndex, currentStepIndex) is preserved in state
     // Set hasDismissedOnboarding to prevent auto-start on refresh
     setState((prev) => ({
@@ -443,7 +457,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
     // The welcome modal's "Aan de slag!" starts this session's tour and
     // acknowledges it permanently. Keep the tour active until closed.
     if (chapter.id === 'welcome') {
-      await writeToOPFSWithCache(COMPLETED_FLAG_KEY, true);
+      await writeToOPFSWithCache(ACKNOWLEDGED_FLAG_KEY, true);
       setState((prev) => ({ ...prev, hasCompletedOnboarding: true }));
     }
 

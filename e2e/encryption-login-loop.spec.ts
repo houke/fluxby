@@ -77,7 +77,7 @@ async function unlockApp(page: Page) {
   await page.getByRole('button', { name: /^unlock$|^ontgrendel$/i }).click();
 }
 
-test('login succeeds after restart without looping on lock screen', async ({
+test('onboarding progress survives logout and restart without a login loop', async ({
   page,
 }) => {
   test.setTimeout(120_000);
@@ -95,6 +95,29 @@ test('login succeeds after restart without looping on lock screen', async ({
   });
   await expect(welcome).toBeVisible({ timeout: 30000 });
   await page.getByRole('button', { name: /get started|aan de slag/i }).click();
+  await expect(welcome).not.toBeVisible();
+
+  // Pause after making progress, then record the status shown in Settings.
+  await page.getByRole('button', { name: /^next$|^volgende$/i }).click();
+  await page.getByRole('button', { name: /^skip$|^overslaan$/i }).click();
+  await page.locator('[data-onboarding="nav-settings"]').click();
+  await page.locator('[data-onboarding="settings-app-tab"]').click();
+  const onboardingSettings = page.locator(
+    '[data-onboarding="onboarding-settings"]'
+  );
+  const progress = onboardingSettings.getByText(/^\d+%$/);
+  await expect(progress).toBeVisible();
+  const savedProgress = await progress.innerText();
+  expect(savedProgress).not.toBe('0%');
+
+  // Logout reloads the app, so it must restore the saved tour rather than
+  // replacing it with an acknowledged tour at chapter zero.
+  await page.getByRole('button', { name: /^logout$|^uitloggen$/i }).click();
+  await unlockApp(page);
+  await expect(progress).toHaveText(savedProgress);
+  await expect(
+    onboardingSettings.getByRole('button', { name: /^continue$|^doorgaan$/i })
+  ).toBeVisible();
   await expect(welcome).not.toBeVisible();
 
   // --- SIMULATE RESTART: reload the page ---
@@ -118,6 +141,7 @@ test('login succeeds after restart without looping on lock screen', async ({
   await page.waitForTimeout(1500);
   await expect(page.getByText(/unlock fluxby/i)).not.toBeVisible();
   await expect(welcome).not.toBeVisible();
+  await expect(progress).toHaveText(savedProgress);
 
   // --- SECOND RESTART: confirm stable behaviour ---
   await page.reload();
@@ -131,4 +155,44 @@ test('login succeeds after restart without looping on lock screen', async ({
     .waitFor({ timeout: 30000 });
   await expect(page.getByText(/unlock fluxby/i)).not.toBeVisible();
   await expect(welcome).not.toBeVisible();
+  await expect(progress).toHaveText(savedProgress);
+});
+
+test('completed onboarding remains completed after logout and login', async ({
+  page,
+}) => {
+  test.setTimeout(120_000);
+  await completeFirstTimeSetup(page);
+  await page.getByRole('button', { name: /get started|aan de slag/i }).click();
+
+  // Use the tour's chapter navigation to reach the final chapters.
+  await page
+    .locator('.fixed.bottom-4 button')
+    .filter({ has: page.locator('svg.lucide-settings') })
+    .click();
+  const next = page.getByRole('button', { name: /^next$|^volgende$/i });
+  const finish = page.getByRole('button', { name: /^finish$|^afronden$/i });
+  for (let step = 0; step < 30; step++) {
+    await expect(next.or(finish)).toBeEnabled();
+    if (await finish.isVisible()) break;
+    await next.click();
+  }
+  await expect(finish).toBeVisible();
+  await finish.click();
+
+  await page.locator('[data-onboarding="nav-settings"]').click();
+  await page.locator('[data-onboarding="settings-app-tab"]').click();
+  const completed = page
+    .locator('[data-onboarding="onboarding-settings"]')
+    .getByText(/^completed$|^voltooid$/i);
+  await expect(completed).toBeVisible();
+
+  await page.getByRole('button', { name: /^logout$|^uitloggen$/i }).click();
+  await unlockApp(page);
+  await expect(completed).toBeVisible();
+  await expect(
+    page.getByRole('heading', {
+      name: /welcome to fluxby|welkom bij fluxby/i,
+    })
+  ).not.toBeVisible();
 });

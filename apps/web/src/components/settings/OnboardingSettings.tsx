@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
   Play,
   RotateCcw,
@@ -38,6 +38,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { useOnboarding } from '@/components/onboarding/useOnboarding';
+import { ONBOARDING_STORAGE_KEYS } from '@/components/onboarding/onboarding-context';
 import { onboardingChapters } from '@/components/onboarding/onboarding-data';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useProfile } from '@/contexts/ProfileContext';
@@ -93,19 +94,11 @@ export function OnboardingSettings() {
   }
   completedSteps += state.currentStepIndex;
 
-  // Check if onboarding was completed (stored in OPFS)
-  const [isCompleted, setIsCompleted] = useState(
-    () => readFromOPFSSync('fluxby-onboarding-completed') === 'true'
+  // Welcome acknowledgement and finishing the whole tour are separate states.
+  const completedFlag = readFromOPFSSync<boolean | string>(
+    ONBOARDING_STORAGE_KEYS.completed
   );
-
-  // Keep isCompleted in sync with OPFS state
-  useEffect(() => {
-    const completed =
-      readFromOPFSSync('fluxby-onboarding-completed') === 'true';
-    if (completed !== isCompleted) {
-      setIsCompleted(completed);
-    }
-  }, [state.currentChapterIndex, state.currentStepIndex, isCompleted]);
+  const isCompleted = completedFlag === true || completedFlag === 'true';
 
   // Check if onboarding was ever started (has state saved)
   const wasStarted =
@@ -138,13 +131,14 @@ export function OnboardingSettings() {
       await api.seedDemoData(demoProfile.id, language);
 
       // Clear onboarding completion flag
-      await deleteFromOPFSWithCache('fluxby-onboarding-completed');
+      await deleteFromOPFSWithCache(ONBOARDING_STORAGE_KEYS.acknowledged);
+      await deleteFromOPFSWithCache(ONBOARDING_STORAGE_KEYS.completed);
 
       // Clear onboarding state to force fresh start
-      await deleteFromOPFSWithCache('fluxby_onboarding');
+      await deleteFromOPFSWithCache(ONBOARDING_STORAGE_KEYS.state);
 
       // Set restart flag so onboarding starts after reload
-      await writeToOPFSWithCache('fluxby-onboarding-restart', 'true');
+      await writeToOPFSWithCache(ONBOARDING_STORAGE_KEYS.restart, true);
       // Show blocking overlay during profile switch/reload
       await writeToOPFSWithCache('fluxby-switching-overlay', 'true');
 
