@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.14.2
+
+**Release Date:** 2026-09-28
+
+### Bug Fixes
+
+- **onboarding:** preserve status across logout and login
+
+### Performance Improvements
+
+- **shared:** reduce mobile mascot animation work
+
 ## v1.14.1
 
 **Release Date:** 2026-09-28
