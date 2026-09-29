@@ -18,6 +18,7 @@ export default tseslint.config(
       '**/coverage/**',
       '**/playwright-report/**',
       '**/test-results/**',
+      '.nexus/tmp/**', // Agent scratch files are temporary, not project source
       '**/*.d.ts',
       '**/vite.config.js', // Ignore transpiled vite configs
       '.github/skills/**/examples/**', // Skill reference examples (documentation)

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   isStaleCode,
   hasNewMigrations,
@@ -25,8 +25,14 @@ export function useMigrationCheck(): MigrationCheckResult {
   const [isChecking, setIsChecking] = useState(true);
   const [isStale, setIsStale] = useState(false);
   const [hasPending, setHasPending] = useState(false);
+  const hasCheckedRef = useRef(false);
 
   useEffect(() => {
+    // StrictMode replays mount effects in development. Keep the first result
+    // after consuming the reload marker so the replay cannot block DB init.
+    if (hasCheckedRef.current) return;
+    hasCheckedRef.current = true;
+
     let mounted = true;
 
     function checkMigrations() {
