@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useRef, useState, lazy, Suspense } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useViewTransitionNavigate } from '@/lib/view-transitions';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { format } from 'date-fns';
 import { nl, enUS } from 'date-fns/locale';
@@ -130,7 +130,7 @@ export default function Dashboard() {
   );
   const legendContainerRef = useRef<HTMLDivElement>(null);
   const [accountScrollIndex, setAccountScrollIndex] = useState(0);
-  const navigate = useNavigate();
+  const navigate = useViewTransitionNavigate();
   const { startDate, endDate } = useFilterParams();
   const { setDateRange } = useFilters();
 

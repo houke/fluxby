@@ -1,5 +1,4 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
-import { Link } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
 import {
@@ -45,6 +44,7 @@ import { useProfile } from '@/contexts/ProfileContext';
 import { useToast } from '@/contexts/ToastContext';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { api } from '@/lib/api';
+import { TransitionLink } from '@/components/layout/TransitionLink';
 
 function IconAction({
   label,
@@ -715,7 +715,7 @@ export default function Planning() {
                           {step.label}
                         </label>
                         <Button asChild variant='outline' size='sm'>
-                          <Link
+                          <TransitionLink
                             to={step.route}
                             onClick={() => {
                               const [year, month] = reviewMonth
@@ -733,7 +733,7 @@ export default function Planning() {
                             }}
                           >
                             {p.openArea}
-                          </Link>
+                          </TransitionLink>
                         </Button>
                       </li>
                     ))}

@@ -2,7 +2,8 @@
 // The main modal that displays during onboarding with chapter tabs, step content, and navigation
 
 import { useCallback, useEffect, useState, useMemo, useRef } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
+import { useViewTransitionNavigate } from '@/lib/view-transitions';
 import {
   LayoutDashboard,
   ArrowLeftRight,
@@ -101,7 +102,7 @@ export function OnboardingModal({
   isCreatingDemo = false,
 }: OnboardingModalProps) {
   const t = translations[language].onboarding;
-  const navigate = useNavigate();
+  const navigate = useViewTransitionNavigate();
   const location = useLocation();
   const { profiles } = useProfile();
   const prefersReducedMotion = useReducedMotion();

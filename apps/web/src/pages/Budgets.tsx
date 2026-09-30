@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
+import { useViewTransitionNavigate } from '@/lib/view-transitions';
 import {
   Plus,
   Trash2,
@@ -86,7 +86,7 @@ function formatDateLocal(date: Date): string {
 export default function Budgets() {
   const { t, language } = useLanguage();
   const { activeProfileId } = useProfile();
-  const navigate = useNavigate();
+  const navigate = useViewTransitionNavigate();
   const confirm = useConfirm();
   const toast = useToast();
   const {

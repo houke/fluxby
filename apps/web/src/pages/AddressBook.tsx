@@ -8,7 +8,7 @@ import {
   useDeferredValue,
 } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
+import { useViewTransitionNavigate } from '@/lib/view-transitions';
 import { useToast } from '@/contexts/ToastContext';
 import { Check, Loader2, Plus, Settings2, Sparkles, X } from 'lucide-react';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
@@ -60,7 +60,7 @@ type ContactMatchSuggestion = Awaited<
 export default function AddressBook() {
   const { t } = useLanguage();
   const { activeProfileId } = useProfile();
-  const navigate = useNavigate();
+  const navigate = useViewTransitionNavigate();
   const confirm = useConfirm();
   const {
     setOpposingAccountIbans,

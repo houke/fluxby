@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useViewTransitionNavigate } from '@/lib/view-transitions';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import {
   ExternalLink,
@@ -84,7 +84,7 @@ export default function Analytics() {
   const { activeProfileId } = useProfile();
   const dataService = useDataService();
   useDocumentTitle(t.analytics.title);
-  const navigate = useNavigate();
+  const navigate = useViewTransitionNavigate();
   const {
     filters,
     setCategories,

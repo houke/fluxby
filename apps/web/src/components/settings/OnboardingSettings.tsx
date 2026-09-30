@@ -19,7 +19,7 @@ import {
   Sparkles,
   HelpCircle,
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useViewTransitionNavigate } from '@/lib/view-transitions';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -76,7 +76,7 @@ export function OnboardingSettings() {
   const { language, t } = useLanguage();
   const { state, startOnboarding } = useOnboarding();
   const { switchProfile, refreshProfiles } = useProfile();
-  const navigate = useNavigate();
+  const navigate = useViewTransitionNavigate();
   const queryClient = useQueryClient();
   const [showRestartDialog, setShowRestartDialog] = useState(false);
   const [isRestarting, setIsRestarting] = useState(false);

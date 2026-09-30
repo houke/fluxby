@@ -11,7 +11,8 @@ import {
 } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
+import { useViewTransitionNavigate } from '@/lib/view-transitions';
 import { format } from 'date-fns';
 import { nl, enUS } from 'date-fns/locale';
 import {
@@ -135,7 +136,7 @@ import { useProfile } from '@/contexts/ProfileContext';
 export default function Transactions() {
   const { t, language } = useLanguage();
   const { activeProfileId } = useProfile();
-  const navigate = useNavigate();
+  const navigate = useViewTransitionNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   useDocumentTitle(t.nav.transactions);
   const isMobile = useIsMobile();

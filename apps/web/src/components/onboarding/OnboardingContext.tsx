@@ -3,7 +3,7 @@
 
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
+import { useViewTransitionNavigate } from '@/lib/view-transitions';
 import { onboardingChapters } from './onboarding-data';
 import {
   OnboardingContext,
@@ -110,7 +110,7 @@ const saveState = (state: OnboardingState) => {
 
 // Provider component
 export function OnboardingProvider({ children }: { children: ReactNode }) {
-  const navigate = useNavigate();
+  const navigate = useViewTransitionNavigate();
   const queryClient = useQueryClient();
   const { isReady: isDatabaseReady } = useDatabase();
   const { switchProfile, profiles, activeProfileId, setProfileHidden } =

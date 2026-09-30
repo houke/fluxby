@@ -7,7 +7,7 @@ import {
   useDeferredValue,
   useCallback,
 } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useViewTransitionNavigate } from '@/lib/view-transitions';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import {
@@ -196,7 +196,7 @@ export default function Categories() {
   const confirm = useConfirm();
   useDocumentTitle(t.categories.title);
   const queryClient = useQueryClient();
-  const navigate = useNavigate();
+  const navigate = useViewTransitionNavigate();
   const { setCategories, clearOpposingAccountFilters, filters } = useFilters();
 
   // UI State

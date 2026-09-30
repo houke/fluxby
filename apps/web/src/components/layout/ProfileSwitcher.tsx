@@ -19,7 +19,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useNavigate } from 'react-router-dom';
+import { useViewTransitionNavigate } from '@/lib/view-transitions';
 
 const PROFILE_TYPE_ICONS: Record<string, LucideIcon> = {
   personal: User,
@@ -40,7 +40,7 @@ const PROFILE_TYPE_COLORS: Record<string, string> = {
 export function ProfileSwitcher() {
   const { t } = useLanguage();
   const { activeProfile, profiles, isSwitching, switchProfile } = useProfile();
-  const navigate = useNavigate();
+  const navigate = useViewTransitionNavigate();
 
   if (!activeProfile) {
     return null;

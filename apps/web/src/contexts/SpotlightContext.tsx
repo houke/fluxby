@@ -7,7 +7,8 @@ import {
   useEffect,
   type ReactNode,
 } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
+import { useViewTransitionNavigate } from '@/lib/view-transitions';
 import { useQuery } from '@tanstack/react-query';
 import {
   LayoutDashboard,
@@ -73,7 +74,7 @@ interface SpotlightProviderProps {
 
 export function SpotlightProvider({ children }: SpotlightProviderProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const navigate = useNavigate();
+  const navigate = useViewTransitionNavigate();
   const location = useLocation();
   const { t } = useLanguage();
   const { isPrivacyMode, togglePrivacyMode } = usePrivacy();

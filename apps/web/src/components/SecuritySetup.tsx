@@ -25,7 +25,7 @@ import { useProfile } from '@/contexts/ProfileContext';
 import { FluxbyWebGL } from '@fluxby/shared';
 import { cn } from '@/lib/utils';
 import { api } from '@/lib/api';
-import { useNavigate } from 'react-router-dom';
+import { useViewTransitionNavigate } from '@/lib/view-transitions';
 import { ONBOARDING_STORAGE_KEYS } from './onboarding/onboarding-context';
 import { writeToOPFSWithCache } from '@fluxby/database';
 import { POST_SETUP_ROUTE_KEY } from '@/lib/post-setup-route';
@@ -41,7 +41,7 @@ export function SecuritySetup({ onSetupComplete }: SecuritySetupProps) {
   const { language, setLanguage, t } = useLanguage();
   const { setupEncryption } = useEncryption();
 
-  const navigate = useNavigate();
+  const navigate = useViewTransitionNavigate();
   const [startMode, setStartMode] = useState<'demo' | 'import'>('demo');
   const [step, setStep] = useState<SetupStep>('language');
   const [userName, setUserName] = useState('');

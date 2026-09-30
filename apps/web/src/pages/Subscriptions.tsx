@@ -52,7 +52,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useProfile } from '@/contexts/ProfileContext';
 import { useToast } from '@/contexts/ToastContext';
 import { useConfirm } from '@/contexts/ConfirmContext';
-import { Link } from 'react-router-dom';
+import { TransitionLink } from '@/components/layout/TransitionLink';
 import {
   getCalendarMonthRange,
   isStaleSubscription,
@@ -1106,12 +1106,12 @@ export default function Subscriptions() {
                       : t.subscriptions?.detectPatterns}
                   </button>
                 ) : (
-                  <Link
+                  <TransitionLink
                     to='/import'
                     className='text-sm text-purple-600 hover:text-purple-700 hover:underline dark:text-purple-400 dark:hover:text-purple-300'
                   >
                     {t.dashboard?.goToImport}
-                  </Link>
+                  </TransitionLink>
                 )
               }
             />

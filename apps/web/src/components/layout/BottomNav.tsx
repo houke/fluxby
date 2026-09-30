@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
   ArrowLeftRight,
@@ -24,6 +24,7 @@ import {
 } from '@/components/ui/sheet';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Separator } from '@/components/ui/separator';
+import { TransitionNavLink } from './TransitionLink';
 
 interface BottomNavItem {
   to: string;
@@ -77,7 +78,7 @@ export function BottomNav() {
       {/* Bottom Navigation Bar */}
       <nav className='fixed right-0 bottom-0 left-0 z-30 flex h-16 items-center justify-around border-t bg-card md:hidden'>
         {primaryNavItems.map((item) => (
-          <NavLink
+          <TransitionNavLink
             key={item.to}
             to={item.to}
             className={({ isActive }) =>
@@ -89,7 +90,7 @@ export function BottomNav() {
           >
             <item.icon className='h-5 w-5' />
             <span className='text-[10px] font-medium'>{item.label}</span>
-          </NavLink>
+          </TransitionNavLink>
         ))}
         {/* More button */}
         <button
@@ -117,7 +118,7 @@ export function BottomNav() {
           <div className='mt-6 space-y-1'>
             {/* Secondary navigation items */}
             {moreNavItems.map((item) => (
-              <NavLink
+              <TransitionNavLink
                 key={item.to}
                 to={item.to}
                 onClick={() => setMoreOpen(false)}
@@ -132,14 +133,14 @@ export function BottomNav() {
               >
                 <item.icon className='h-5 w-5' />
                 {item.label}
-              </NavLink>
+              </TransitionNavLink>
             ))}
 
             <Separator className='my-3' />
 
             {/* Settings and help */}
             {settingsNavItems.map((item) => (
-              <NavLink
+              <TransitionNavLink
                 key={item.to}
                 to={item.to}
                 onClick={() => setMoreOpen(false)}
@@ -154,7 +155,7 @@ export function BottomNav() {
               >
                 <item.icon className='h-5 w-5' />
                 {item.label}
-              </NavLink>
+              </TransitionNavLink>
             ))}
 
             <Separator className='my-3' />

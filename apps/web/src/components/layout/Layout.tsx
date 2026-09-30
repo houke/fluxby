@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { NavLink, Outlet, useLocation } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
   LayoutDashboard,
@@ -35,6 +35,7 @@ import {
 import { HeaderFilters } from './HeaderFilters';
 import { ProfileSwitcher } from './ProfileSwitcher';
 import { BottomNav } from './BottomNav';
+import { TransitionNavLink } from './TransitionLink';
 import { useDataService } from '@/contexts/DatabaseContext';
 import { FluxbyWebGL } from '@fluxby/shared';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -287,7 +288,7 @@ export default function Layout() {
               <nav className='space-y-1'>
                 {navItems.map((item) => {
                   return (
-                    <NavLink
+                    <TransitionNavLink
                       key={item.to}
                       to={item.to}
                       data-onboarding={item.onboarding}
@@ -302,7 +303,7 @@ export default function Layout() {
                     >
                       <item.icon className='h-5 w-5' />
                       {item.label}
-                    </NavLink>
+                    </TransitionNavLink>
                   );
                 })}
               </nav>
@@ -314,7 +315,7 @@ export default function Layout() {
             <div className='space-y-1 p-3'>
               {bottomNavItems.map((item) => {
                 return (
-                  <NavLink
+                  <TransitionNavLink
                     key={item.to}
                     to={item.to}
                     data-onboarding={item.onboarding}
@@ -329,7 +330,7 @@ export default function Layout() {
                   >
                     <item.icon className='h-5 w-5' />
                     {item.label}
-                  </NavLink>
+                  </TransitionNavLink>
                 );
               })}
               <button
@@ -456,7 +457,7 @@ export default function Layout() {
             <main
               ref={mainScrollRef}
               data-scroll-container='main'
-              className='flex-1 overflow-auto pb-20 md:p-6 md:pb-6'
+              className='app-page-view-transition flex-1 overflow-auto pb-20 md:p-6 md:pb-6'
             >
               <Outlet />
             </main>
