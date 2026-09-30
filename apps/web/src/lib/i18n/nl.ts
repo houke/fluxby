@@ -537,46 +537,14 @@ export interface TranslationKeys {
     legendLabel: string;
   };
   transactionTools: {
-    entities: Record<string, string>;
-    actions: Record<string, string>;
-    reconcileHelp: string;
-    title: string;
     compact: string;
     comfortable: string;
     savedViews: string;
     saveView: string;
     viewName: string;
-    apply: string;
-    split: string;
-    selectTransaction: string;
-    addSplit: string;
-    splitHelp: string;
-    splitTotal: string;
-    clearSplits: string;
-    splitSaved: string;
-    explanation: string;
-    currentRuleHelp: string;
-    ruleMatch: string;
-    noRule: string;
-    preview: string;
-    matchedCount: string;
-    reconcile: string;
-    account: string;
-    startDate: string;
-    endDate: string;
-    openingBalance: string;
-    closingBalance: string;
-    expectedBalance: string;
-    difference: string;
-    matched: string;
-    history: string;
-    undo: string;
-    undoHelp: string;
-    noHistory: string;
     saved: string;
     deleted: string;
     confirmDelete: string;
-    previewHelp: string;
     invalidFilters: string;
   };
   planning: {
@@ -2457,71 +2425,14 @@ export const nl: TranslationKeys = {
     legendLabel: 'Categoriefilter',
   },
   transactionTools: {
-    entities: {
-      savings_goals: 'Spaardoel',
-      goal_contributions: 'Spaarbijdrage',
-      savings_contributions: 'Spaarbijdrage',
-      planning_preferences: 'Planningvoorkeuren',
-      net_worth_items: 'Vermogenspost',
-      monthly_reviews: 'Maandcontrole',
-      transaction_splits: 'Transactiesplitsing',
-      transactions: 'Transactie',
-      budgets: 'Budget',
-      saved_transaction_views: 'Opgeslagen weergave',
-      statement_reconciliations: 'Afschriftcontrole',
-    },
-    actions: {
-      create: 'Aangemaakt',
-      update: 'Bijgewerkt',
-      delete: 'Verwijderd',
-      split: 'Gesplitst',
-      undo: 'Ongedaan gemaakt',
-      contribution: 'Bijdrage vastgelegd',
-      reconcile: 'Gecontroleerd',
-    },
-    reconcileHelp:
-      'Vergelijk een afschrift met geïmporteerde transacties voor één rekening en een periode inclusief begin- en einddatum. Het beginsaldo is het saldo direct voor de begindatum. Een verschil wijzigt je rekeningsaldo niet.',
-    title: 'Transactiehulpmiddelen',
     compact: 'Compacte weergave',
     comfortable: 'Ruime weergave',
     savedViews: 'Opgeslagen weergaven',
     saveView: 'Huidige filters opslaan',
     viewName: 'Naam van weergave',
-    apply: 'Toepassen',
-    split: 'Transactie splitsen',
-    selectTransaction: 'Transactie selecteren',
-    addSplit: 'Categorie toevoegen',
-    splitHelp:
-      'Vul positieve bedragen in die samen het volledige transactiebedrag vormen. Geldstromen en rekeningtotalen blijven gelijk.',
-    splitTotal: 'Totaal gesplitst',
-    clearSplits: 'Splitsing verwijderen',
-    splitSaved: 'Splitsing opgeslagen',
-    explanation: 'Uitleg over categorisering',
-    currentRuleHelp:
-      'Dit toont welke huidige regels overeenkomen. Eerdere categorisering kan handmatig of met oudere regels zijn gedaan.',
-    ruleMatch: 'Overeenkomende regel',
-    noRule: 'Geen huidige regel komt overeen.',
-    preview: 'Regelvoorbeeld',
-    matchedCount: '{count} overeenkomende transacties',
-    reconcile: 'Afschrift controleren',
-    account: 'Rekening',
-    startDate: 'Begindatum',
-    endDate: 'Einddatum',
-    openingBalance: 'Beginsaldo',
-    closingBalance: 'Eindsaldo op afschrift',
-    expectedBalance: 'Berekend eindsaldo',
-    difference: 'Verschil',
-    matched: 'Saldi komen overeen',
-    history: 'Wijzigingsgeschiedenis',
-    undo: 'Wijziging ongedaan maken',
-    undoHelp:
-      'Ongedaan maken is alleen mogelijk als het record daarna niet opnieuw is gewijzigd.',
-    noHistory: 'Nog geen wijzigingen vastgelegd.',
     saved: 'Opgeslagen',
     deleted: 'Verwijderd',
     confirmDelete: 'Deze opgeslagen weergave verwijderen?',
-    previewHelp:
-      'Het voorbeeld gebruikt de geselecteerde periode en huidige filters.',
     invalidFilters: 'Deze opgeslagen weergave bevat ongeldige filters.',
   },
   planning: {

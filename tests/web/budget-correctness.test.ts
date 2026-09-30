@@ -23,9 +23,7 @@ beforeEach(() => {
     CREATE TABLE categories (id TEXT PRIMARY KEY, profile_id TEXT, name TEXT, icon TEXT, color TEXT, is_deleted INTEGER DEFAULT 0);
     CREATE TABLE accounts (id TEXT PRIMARY KEY, profile_id TEXT);
     CREATE TABLE transactions (id TEXT PRIMARY KEY, category_id TEXT, account_id TEXT, profile_id TEXT, amount REAL, type TEXT, date TEXT, is_deleted INTEGER DEFAULT 0);
-    CREATE TABLE transaction_splits (id TEXT PRIMARY KEY, transaction_id TEXT, category_id TEXT, profile_id TEXT, amount REAL, is_deleted INTEGER DEFAULT 0);
     CREATE TABLE budgets (id TEXT PRIMARY KEY, category_id TEXT, amount REAL, period TEXT, profile_id TEXT, created_at INTEGER, updated_at INTEGER, start_date TEXT, end_date TEXT, rollover_enabled INTEGER DEFAULT 0, is_deleted INTEGER DEFAULT 0);
-    CREATE TABLE change_history (id TEXT PRIMARY KEY, entity_type TEXT, entity_id TEXT, action TEXT, description TEXT, before_json TEXT, after_json TEXT, profile_id TEXT, created_at INTEGER, updated_at INTEGER);
   `);
   const insert = sqlite.prepare(
     'INSERT INTO categories (id, profile_id, name) VALUES (?, ?, ?)'
@@ -125,7 +123,7 @@ describe('budget correctness', () => {
     ).toEqual({ count: 0 });
   });
 
-  it('allocates split expenses across categories and excludes transfers and other profiles', async () => {
+  it('counts each expense in its original category and excludes transfers and other profiles', async () => {
     await service.createBudget({ categoryId: 'groceries', amount: 100 });
     await service.createBudget({ categoryId: 'transport', amount: 80 });
     const insert = sqlite.prepare(
@@ -155,19 +153,13 @@ describe('budget correctness', () => {
       'expense',
       '2026-09-15'
     );
-    const split = sqlite.prepare(
-      'INSERT INTO transaction_splits (id,transaction_id,category_id,profile_id,amount) VALUES (?,?,?,?,?)'
-    );
-    split.run('split-1', 'expense', 'groceries', PROFILE_ID, 40);
-    split.run('split-2', 'expense', 'transport', PROFILE_ID, 60);
     const budgets = await service.getBudgets('2026-09');
     expect(budgets.find((item) => item.categoryId === 'groceries')?.spent).toBe(
-      40
+      100
     );
     expect(budgets.find((item) => item.categoryId === 'transport')?.spent).toBe(
-      60
+      0
     );
-    expect(budgets.reduce((sum, item) => sum + item.spent, 0)).toBe(100);
   });
 
   it('carries unused previous months forward while retaining the raw monthly amount', async () => {

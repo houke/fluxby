@@ -17,7 +17,7 @@ This branch implements the 2026-09-29 application review in three areas. The cha
 
 ## New financial workflows
 
-- Category splits, saved transaction views, statement comparison, categorization explanations, change history, and guarded undo.
+- Saved transaction views and compact transaction density.
 - Savings goals and contributions, budget rollover, a safe-to-spend forecast, subscription renewal reminders, a persistent monthly review, and net-worth assets and liabilities.
 
 ## Validation boundaries

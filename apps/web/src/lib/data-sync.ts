@@ -81,19 +81,11 @@ export const PROFILE_SYNC_TABLES = [
   'planning_preferences',
   'net_worth_items',
   'monthly_reviews',
-  'transaction_splits',
   'saved_transaction_views',
-  'statement_reconciliations',
-  'change_history',
 ] as const;
 const references: Record<string, Record<string, string>> = {
   categories: { parent_id: 'categories' },
   savings_contributions: { goal_id: 'savings_goals' },
-  transaction_splits: {
-    transaction_id: 'transactions',
-    category_id: 'categories',
-  },
-  statement_reconciliations: { account_id: 'accounts' },
   transactions: {
     account_id: 'accounts',
     category_id: 'categories',

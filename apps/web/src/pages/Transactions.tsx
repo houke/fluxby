@@ -103,9 +103,6 @@ import {
 import { TransactionRowBadges } from '@/components/transactions/TransactionRowBadges';
 import { TransactionCard } from '@/components/transactions/TransactionCard';
 import { SavedTransactionViews } from '@/components/transactions/SavedTransactionViews';
-import { TransactionInspector } from '@/components/transactions/TransactionInspector';
-import { StatementReconciliation } from '@/components/transactions/StatementReconciliation';
-import { ChangeHistory } from '@/components/transactions/ChangeHistory';
 import type { TransactionView } from '@/lib/transaction-view';
 import { Currency } from '@/components/ui/currency';
 import { api } from '@/lib/api';
@@ -2298,19 +2295,6 @@ export default function Transactions() {
             onApply={applyView}
             onCompactChange={changeCompact}
           />
-          <div className='flex flex-wrap gap-2'>
-            <TransactionInspector
-              transactions={deferredTransactions || []}
-              categories={categories || []}
-              rules={categoryRules}
-            />
-            <StatementReconciliation
-              accounts={accounts || []}
-              startDate={startDate}
-              endDate={endDate}
-            />
-            <ChangeHistory />
-          </div>
         </div>
 
         {/* Transactions List */}

@@ -71,14 +71,7 @@ import {
   createFinancialPlanningService,
   validateDateOnly,
 } from './data/financial-planning';
-import {
-  createFinancialHistoryService,
-  captureRow,
-  recordFinancialChange,
-  trackedMutation,
-} from './data/financial-history';
-import { createTransactionFeaturesService } from './data/transaction-features';
-import { CATEGORY_TRANSACTIONS_CTE } from './data/category-allocations';
+import { createSavedTransactionViewsService } from './data/saved-transaction-views';
 import { findMatchingRule, matchesCategoryRule } from './transaction-view';
 import {
   FINANCIAL_FEATURE_TABLES,
@@ -393,8 +386,7 @@ export function createDataService(db: Database) {
 
   const service = {
     ...createFinancialPlanningService(db, profileId),
-    ...createFinancialHistoryService(db, profileId),
-    ...createTransactionFeaturesService(db, profileId),
+    ...createSavedTransactionViewsService(db, profileId),
     // ============= Profiles =============
     async getProfiles(): Promise<Profile[]> {
       const rows = await db.queryAsync<{
@@ -833,12 +825,11 @@ export function createDataService(db: Database) {
         cnt: number;
         total: number;
       }>(
-        `${CATEGORY_TRANSACTIONS_CTE}
-         SELECT
+        `SELECT
            category_id as categoryId,
            COUNT(*) as cnt,
            SUM(amount) as total
-         FROM category_transactions
+         FROM transactions
          WHERE is_deleted = 0
            AND profile_id = ?
            AND category_id IS NOT NULL
@@ -1453,12 +1444,10 @@ export function createDataService(db: Database) {
       params.push(id);
       params.push(pid);
 
-      await trackedMutation(db, pid, 'transactions', id, 'update', async () => {
-        await db.runAsync(
-          `UPDATE transactions SET ${updates.join(', ')} WHERE id = ? AND profile_id = ?`,
-          params
-        );
-      });
+      await db.runAsync(
+        `UPDATE transactions SET ${updates.join(', ')} WHERE id = ? AND profile_id = ?`,
+        params
+      );
     },
 
     async deleteTransaction(id: string): Promise<void> {
@@ -1484,21 +1473,9 @@ export function createDataService(db: Database) {
         }
 
         accountId = transaction.account_id;
-        const before = await captureRow(db, pid, 'transactions', id);
-
         await db.runAsync(
           'UPDATE transactions SET is_deleted = 1, updated_at = ? WHERE id = ? AND profile_id = ? AND is_deleted = 0',
           [now, id, pid]
-        );
-        const after = await captureRow(db, pid, 'transactions', id);
-        await recordFinancialChange(
-          db,
-          pid,
-          'transactions',
-          id,
-          'delete',
-          [before],
-          [after]
         );
       });
 
@@ -1522,34 +1499,10 @@ export function createDataService(db: Database) {
         throw new Error('Category does not belong to this profile');
       return db.transactionAsync(async () => {
         const placeholders = transactionIds.map(() => '?').join(',');
-        const rows = await db.queryAsync<
-          Record<string, string | number | null>
-        >(
-          `SELECT * FROM transactions WHERE id IN (${placeholders}) AND profile_id=? AND is_deleted=0`,
-          [...transactionIds, pid]
-        );
-        const before = rows.map((row) => ({
-          table: 'transactions',
-          id: String(row.id),
-          row,
-        }));
         const now = Date.now();
         const result = await db.runAsync(
           `UPDATE transactions SET category_id=?,updated_at=? WHERE id IN (${placeholders}) AND profile_id=? AND is_deleted=0`,
           [categoryId, now, ...transactionIds, pid]
-        );
-        const after = before.map((snapshot) => ({
-          ...snapshot,
-          row: { ...snapshot.row, category_id: categoryId, updated_at: now },
-        }));
-        await recordFinancialChange(
-          db,
-          pid,
-          'transactions',
-          crypto.randomUUID(),
-          'categorize',
-          before,
-          after
         );
         return { updated: result.changes };
       });
@@ -1622,7 +1575,6 @@ export function createDataService(db: Database) {
       // and only count spending from transactions in this profile's accounts
       const rows = await db.queryAsync<DBBudget>(
         `
-        ${CATEGORY_TRANSACTIONS_CTE}
         SELECT
           b.*,
           c.name as category_name,
@@ -1631,7 +1583,7 @@ export function createDataService(db: Database) {
           COALESCE(ABS(SUM(CASE WHEN t.amount < 0 THEN t.amount ELSE 0 END)), 0) as spent
         FROM budgets b
         LEFT JOIN categories c ON b.category_id = c.id
-        LEFT JOIN category_transactions t ON b.category_id = t.category_id
+        LEFT JOIN transactions t ON b.category_id = t.category_id
           AND t.date >= ? AND t.date <= ?
           AND t.profile_id = ?
           AND t.is_deleted = 0 AND t.type != 'transfer'
@@ -1647,9 +1599,8 @@ export function createDataService(db: Database) {
       )
         ? await db.queryAsync<{ id: string; spent: number }>(
             `
-            ${CATEGORY_TRANSACTIONS_CTE}
             SELECT b.id, COALESCE(SUM(CASE WHEN t.amount < 0 THEN ABS(t.amount) ELSE 0 END),0) AS spent
-            FROM budgets b LEFT JOIN category_transactions t ON t.category_id=b.category_id
+            FROM budgets b LEFT JOIN transactions t ON t.category_id=b.category_id
               AND t.profile_id=b.profile_id AND t.is_deleted=0 AND t.type!='transfer'
               AND t.date < ? AND t.date >= COALESCE(b.start_date,strftime('%Y-%m-01',b.created_at/1000,'unixepoch'))
             WHERE b.profile_id=? AND b.is_deleted=0 AND b.rollover_enabled=1 AND b.period='monthly'
@@ -1731,21 +1682,19 @@ export function createDataService(db: Database) {
       const id = crypto.randomUUID();
       const now = Date.now();
 
-      await trackedMutation(db, pid, 'budgets', id, 'create', async () => {
-        await db.runAsync(
-          `INSERT INTO budgets (id, category_id, amount, period, profile_id, created_at, updated_at)
+      await db.runAsync(
+        `INSERT INTO budgets (id, category_id, amount, period, profile_id, created_at, updated_at)
          VALUES (?, ?, ?, ?, ?, ?, ?)`,
-          [
-            id,
-            data.categoryId || null,
-            data.amount,
-            data.period || 'monthly',
-            pid,
-            now,
-            now,
-          ]
-        );
-      });
+        [
+          id,
+          data.categoryId || null,
+          data.amount,
+          data.period || 'monthly',
+          pid,
+          now,
+          now,
+        ]
+      );
 
       const budget = await db.queryOneAsync<Budget>(
         'SELECT * FROM budgets WHERE id = ?',
@@ -1790,19 +1739,6 @@ export function createDataService(db: Database) {
           );
           created.push({ id });
         }
-        const after = await Promise.all(
-          created.map((budget) => captureRow(db, pid, 'budgets', budget.id))
-        );
-        const before = after.map((snapshot) => ({ ...snapshot, row: null }));
-        await recordFinancialChange(
-          db,
-          pid,
-          'budgets',
-          crypto.randomUUID(),
-          'create',
-          before,
-          after
-        );
         return created;
       });
     },
@@ -1835,24 +1771,20 @@ export function createDataService(db: Database) {
         clauses.push('rollover_enabled = ?');
         params.push(Number(data.rolloverEnabled));
       }
-      await trackedMutation(db, pid, 'budgets', id, 'update', async () => {
-        await db.runAsync(
-          `UPDATE budgets SET ${clauses.join(', ')} WHERE id = ? AND profile_id = ?`,
-          [...params, id, pid]
-        );
-      });
+      await db.runAsync(
+        `UPDATE budgets SET ${clauses.join(', ')} WHERE id = ? AND profile_id = ?`,
+        [...params, id, pid]
+      );
     },
 
     async deleteBudget(id: string): Promise<void> {
       const pid = profileId();
       if (!pid) throw new Error('No active profile');
 
-      await trackedMutation(db, pid, 'budgets', id, 'delete', async () => {
-        await db.runAsync(
-          'UPDATE budgets SET is_deleted = 1, updated_at = ? WHERE id = ? AND profile_id = ?',
-          [Date.now(), id, pid]
-        );
-      });
+      await db.runAsync(
+        'UPDATE budgets SET is_deleted = 1, updated_at = ? WHERE id = ? AND profile_id = ?',
+        [Date.now(), id, pid]
+      );
     },
 
     // ============= Analytics =============
@@ -2700,7 +2632,6 @@ export function createDataService(db: Database) {
         type === 'expense' ? 't.amount < 0' : 't.amount > 0';
 
       let sql = `
-        ${CATEGORY_TRANSACTIONS_CTE}
         SELECT
           t.category_id as categoryId,
           COALESCE(c.name, 'Uncategorized') as categoryName,
@@ -2708,7 +2639,7 @@ export function createDataService(db: Database) {
           COALESCE(c.icon, '📦') as icon,
           SUM(ABS(t.amount)) as amount,
           COUNT(*) as transactionCount
-        FROM category_transactions t
+        FROM transactions t
         LEFT JOIN categories c ON t.category_id = c.id
         WHERE t.profile_id = ? AND t.is_deleted = 0 AND ${amountCondition} AND t.type != 'transfer'
       `;
@@ -2767,14 +2698,13 @@ export function createDataService(db: Database) {
       // Query expenses grouped by month and parent category
       // Child categories are aggregated into their parent
       let sql = `
-        ${CATEGORY_TRANSACTIONS_CTE}
         SELECT
           strftime('%Y-%m', t.date) as month,
           COALESCE(parent.id, c.id) as parentCategoryId,
           COALESCE(parent.name, c.name, 'Uncategorized') as parentCategoryName,
           COALESCE(parent.color, c.color, '#9CA3AF') as color,
           SUM(ABS(t.amount)) as amount
-        FROM category_transactions t
+        FROM transactions t
         LEFT JOIN categories c ON t.category_id = c.id
         LEFT JOIN categories parent ON c.parent_id = parent.id
         WHERE t.profile_id = ? AND t.is_deleted = 0
@@ -9326,32 +9256,7 @@ export function createDataService(db: Database) {
           );
         }
 
-        const statementStart = `${formatDateISO(new Date()).slice(0, 7)}-01`;
-        const statementEnd = formatDateISO(new Date());
-        const statementTransactions = txData.filter(
-          (tx) =>
-            tx.account_id === mainAccountId &&
-            tx.date >= statementStart &&
-            tx.date <= statementEnd
-        );
-        await seedFinancialPlanningDemo(db, targetProfileId, language, {
-          accountId: mainAccountId,
-          categoryIds: budgetsToInsert
-            .map((budget) => budget.categoryId)
-            .filter((id): id is string => !!id),
-          transaction: txData.find(
-            (tx) => tx.type === 'expense' && tx.amount < -1
-          ),
-          statement: {
-            startDate: statementStart,
-            endDate: statementEnd,
-            amount: statementTransactions.reduce(
-              (sum, tx) => sum + tx.amount,
-              0
-            ),
-            count: statementTransactions.length,
-          },
-        });
+        await seedFinancialPlanningDemo(db, targetProfileId, language);
 
         // === PERFORMANCE: Commit the transaction ===
         await db.runAsync('COMMIT', []);
@@ -9486,28 +9391,12 @@ export function createDataService(db: Database) {
       );
       if (!matching.length) return { updated: 0 };
       return db.transactionAsync(async () => {
-        const before = await Promise.all(
-          matching.map((tx) => captureRow(db, pid, 'transactions', tx.id))
-        );
         const now = Date.now();
         for (const tx of matching)
           await db.runAsync(
             'UPDATE transactions SET category_id=?,updated_at=? WHERE id=? AND profile_id=? AND is_deleted=0',
             [categoryId, now, tx.id, pid]
           );
-        const after = await Promise.all(
-          matching.map((tx) => captureRow(db, pid, 'transactions', tx.id))
-        );
-        await recordFinancialChange(
-          db,
-          pid,
-          'transactions',
-          crypto.randomUUID(),
-          'categorize',
-          before,
-          after,
-          pattern
-        );
         return { updated: matching.length };
       });
     },

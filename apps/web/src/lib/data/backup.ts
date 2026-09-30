@@ -53,6 +53,13 @@ const CORE_TABLES = [
   'transactions',
   'budgets',
 ];
+// Version 16 backups may contain these retired tables. Their rows are not
+// restored into version 17, while every remaining table is still validated.
+const RETIRED_TRANSACTION_TABLES = new Set([
+  'transaction_splits',
+  'statement_reconciliations',
+  'change_history',
+]);
 
 export interface FinancialBackup {
   version: 3;
@@ -183,13 +190,17 @@ export function previewFinancialBackup(input: unknown): BackupPreview {
   const backup = parseFinancialBackup(input);
   return preview(backup, []);
 }
-function preview(backup: ParsedBackup, missingTables: string[]): BackupPreview {
+function preview(
+  backup: ParsedBackup,
+  missingTables: string[],
+  supportedTables = Object.keys(backup.tables)
+): BackupPreview {
   return {
     profiles: backup.tables.profiles.length,
     accounts: backup.tables.accounts.length,
     transactions: backup.tables.transactions.length,
-    rows: Object.values(backup.tables).reduce(
-      (sum, rows) => sum + rows.length,
+    rows: supportedTables.reduce(
+      (sum, table) => sum + (backup.tables[table]?.length ?? 0),
       0
     ),
     exportedAt: backup.exportedAt,
@@ -261,8 +272,16 @@ async function validate(db: BackupDatabase, input: unknown) {
     missingTables.length
   )
     invalid();
-  for (const table of Object.keys(backup.tables))
-    if (!names.includes(table)) invalid();
+  for (const table of Object.keys(backup.tables)) {
+    if (
+      !names.includes(table) &&
+      !(
+        backup.schemaVersion < currentVersion &&
+        RETIRED_TRANSACTION_TABLES.has(table)
+      )
+    )
+      invalid();
+  }
   const rowsByTable: Record<string, BackupRow[]> = {};
   const foreignKeys: Record<string, ForeignKey[]> = {};
   for (const { name: table, sql } of registry) {
@@ -431,8 +450,8 @@ export async function validateFinancialBackup(
   db: BackupDatabase,
   input: unknown
 ): Promise<BackupPreview> {
-  const { backup, missingTables } = await validate(db, input);
-  return preview(backup, missingTables);
+  const { backup, missingTables, names } = await validate(db, input);
+  return preview(backup, missingTables, names);
 }
 
 /** Replacement is atomic; a failed insert or integrity check rolls back. */

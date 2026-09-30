@@ -5,12 +5,13 @@ import { migration006 } from '../../packages/database/src/migrations/006_recurri
 import { migration013 } from '../../packages/database/src/migrations/013_subscription_dismissed_alerts';
 import { migration015 } from '../../packages/database/src/migrations/015_profile_sync_state';
 import { migration016 } from '../../packages/database/src/migrations/016_financial_planning';
+import { migration017 } from '../../packages/database/src/migrations/017_remove_transaction_tools';
 import { createFinancialPlanningService } from '@/lib/data/financial-planning';
-import { createFinancialHistoryService } from '@/lib/data/financial-history';
-import { createTransactionFeaturesService } from '@/lib/data/transaction-features';
+import { createSavedTransactionViewsService } from '@/lib/data/saved-transaction-views';
 import {
   exportFinancialBackup,
   restoreFinancialBackup,
+  validateFinancialBackup,
 } from '@/lib/data/backup';
 import { seedFinancialPlanningDemo } from '@/lib/data/financial-demo';
 import { getFinancialPlanningDemoData } from '@fluxby/shared';
@@ -57,8 +58,7 @@ function adapter() {
 }
 let db: ReturnType<typeof adapter>;
 let planning: ReturnType<typeof createFinancialPlanningService>;
-let history: ReturnType<typeof createFinancialHistoryService>;
-let transactions: ReturnType<typeof createTransactionFeaturesService>;
+let savedViews: ReturnType<typeof createSavedTransactionViewsService>;
 const transactionId = '00000000-0000-4000-8000-000000000001';
 beforeEach(async () => {
   sqlite = new SQLite(':memory:');
@@ -70,9 +70,10 @@ beforeEach(async () => {
     migration013,
     migration015,
     migration016,
+    migration017,
   ])
     await migration.up(db);
-  sqlite.exec(`INSERT INTO schema_version(version) VALUES(16);
+  sqlite.exec(`INSERT INTO schema_version(version) VALUES(17);
     INSERT INTO users(id,name) VALUES('user','User');
     INSERT INTO profiles(id,user_id,name) VALUES('profile','user','Personal'),('other','user','Other');
     INSERT INTO accounts(id,iban,name,current_balance,profile_id) VALUES('account','NL00TEST','Account',2000,'profile'),('other-account','NL00OTHER','Other',9000,'other');
@@ -81,8 +82,7 @@ beforeEach(async () => {
     INSERT INTO budgets(id,category_id,amount,profile_id,created_at) VALUES('food-budget','food',100,'profile',1767225600000),('household-budget','household',100,'profile',1767225600000);`);
   pid = 'profile';
   planning = createFinancialPlanningService(db, () => pid);
-  history = createFinancialHistoryService(db, () => pid);
-  transactions = createTransactionFeaturesService(db, () => pid);
+  savedViews = createSavedTransactionViewsService(db, () => pid);
   vi.stubGlobal('window', {});
 });
 afterEach(() => {
@@ -141,7 +141,6 @@ describe('financial planning services', () => {
       planning.updatePlanningPreferences({ minimumBalance: -1 })
     ).rejects.toThrow();
     expect(await planning.getSavingsGoals()).toEqual([]);
-    expect(await history.getChangeHistory()).toEqual([]);
   });
   it('calculates next30day obligations in calendar months, excludes income, reserves remaining goal amounts and exposes shortfalls', async () => {
     vi.useFakeTimers();
@@ -225,39 +224,6 @@ describe('financial planning services', () => {
     pid = 'other';
     expect((await planning.getMonthlyReview(month)).status).toBe('open');
   });
-  it('records changes and guarded undo refuses later content changes but tolerates sync author stamps', async () => {
-    const goal = await planning.createSavingsGoal({
-      name: 'Goal',
-      targetAmount: 1000,
-    });
-    const created = (await history.getChangeHistory())[0];
-    expect(created.canUndo).toBe(true);
-    await planning.updateSavingsGoal(goal.id, { name: 'Edited' });
-    expect(
-      (await history.getChangeHistory()).find(
-        (change) => change.id === created.id
-      )?.canUndo
-    ).toBe(false);
-    const edited = (await history.getChangeHistory()).find(
-      (change) => change.action === 'update'
-    );
-    if (!edited) throw new Error('Expected updated goal history');
-    sqlite.exec(
-      `UPDATE savings_goals SET device_id='device',updated_at=updated_at+1 WHERE id='${goal.id}'`
-    );
-    await history.undoChange(edited.id);
-    expect((await planning.getSavingsGoals())[0].name).toBe('Goal');
-    await expect(history.undoChange(edited.id)).rejects.toThrow(
-      'cannot be undone'
-    );
-    expect(
-      (await history.getChangeHistory()).find(
-        (change) => change.id === created.id
-      )?.canUndo
-    ).toBe(true);
-    await history.undoChange(created.id);
-    expect(await planning.getSavingsGoals()).toEqual([]);
-  });
   it('restores all new financial feature data in a complete backup', async () => {
     const goal = await planning.createSavingsGoal({
       name: 'Goal',
@@ -270,125 +236,73 @@ describe('financial planning services', () => {
       type: 'asset',
       amount: 50,
     });
-    await transactions.createSavedView({
+    await savedViews.createSavedView({
       name: 'Expenses',
       filters: { type: 'expense' },
-    });
-    await transactions.reconcileStatement({
-      accountId: 'account',
-      startDate: '2026-01-01',
-      endDate: '2026-01-31',
-      openingBalance: 100,
-      closingBalance: 89.99,
     });
     const backup = await exportFinancialBackup(db);
     await planning.deleteSavingsGoal(goal.id);
     await restoreFinancialBackup(db, backup);
     expect((await exportFinancialBackup(db)).tables).toEqual(backup.tables);
   });
+  it('upgrades a version 16 backup without restoring retired transaction tools', async () => {
+    await migration017.down(db);
+    sqlite.exec(`UPDATE schema_version SET version=16;
+      INSERT INTO transaction_splits(id,transaction_id,category_id,amount,profile_id)
+        VALUES('old-split','${transactionId}','food',10.01,'profile');
+      INSERT INTO statement_reconciliations(id,account_id,start_date,end_date,opening_balance,actual_closing_balance,expected_closing_balance,difference,transaction_count,status,profile_id)
+        VALUES('old-statement','account','2026-01-01','2026-01-31',100,89.99,89.99,0,1,'matched','profile');
+      INSERT INTO change_history(id,entity_type,entity_id,action,description,profile_id)
+        VALUES('old-change','transactions','${transactionId}','update','old','profile');`);
+    const oldBackup = await exportFinancialBackup(db);
+    sqlite.exec('UPDATE schema_version SET version=17');
+    await migration017.up(db);
+    expect(
+      sqlite
+        .prepare(
+          "SELECT name FROM sqlite_master WHERE type='table' AND name IN ('transaction_splits','statement_reconciliations','change_history')"
+        )
+        .all()
+    ).toEqual([]);
+    const preview = await validateFinancialBackup(db, oldBackup);
+    expect(preview.rows).toBe(
+      Object.values(oldBackup.tables).reduce(
+        (sum, rows) => sum + rows.length,
+        0
+      ) - 3
+    );
+    await restoreFinancialBackup(db, oldBackup);
+    expect(
+      sqlite
+        .prepare('SELECT amount,category_id FROM transactions WHERE id=?')
+        .get(transactionId)
+    ).toEqual({ amount: -10.01, category_id: 'food' });
+    expect((await exportFinancialBackup(db)).tableManifest).not.toContain(
+      'transaction_splits'
+    );
+  });
 });
-describe('transaction features and existing financial workflows', () => {
-  it('splits money exactly in cents and allocates category/budget reports without doubling cashflow', async () => {
-    await transactions.setTransactionSplits(transactionId, [
-      { categoryId: 'food', amount: 3.33 },
-      { categoryId: 'household', amount: 6.68 },
-    ]);
-    const ds = createDataService(db as never);
-    const splits = await transactions.getTransactionSplits(transactionId);
-    expect(splits.map((split) => split.amount).sort()).toEqual([3.33, 6.68]);
-    const stats = await ds.getCategoryStats('2026-01-01', '2026-01-31');
-    expect(stats.map((row) => row.amount).sort()).toEqual([3.33, 6.68]);
-    const budgets = await ds.getBudgets('2026-01');
-    expect(budgets.find((budget) => budget.categoryId === 'food')?.spent).toBe(
-      3.33
-    );
-    expect(
-      budgets.find((budget) => budget.categoryId === 'household')?.spent
-    ).toBe(6.68);
-    expect(
-      (await ds.getMonthlyStats('2026-01-01', '2026-01-31'))[0].expenses
-    ).toBe(10.01);
-    expect(
-      (await ds.getDashboardStats('2026-01-01', '2026-01-31')).totalExpenses
-    ).toBe(10.01);
-    const change = (await history.getChangeHistory()).find(
-      (row) => row.entityType === 'transaction_splits'
-    );
-    if (!change) throw new Error('Expected split history');
-    await history.undoChange(change.id);
-    expect(await transactions.getTransactionSplits(transactionId)).toEqual([]);
-  });
-  it('rejects incorrect split totals and categories before modifying saved allocations', async () => {
-    await expect(
-      transactions.setTransactionSplits(transactionId, [
-        { categoryId: 'food', amount: 10 },
-      ])
-    ).rejects.toThrow('equal');
-    await expect(
-      transactions.setTransactionSplits(transactionId, [
-        { categoryId: 'other-category', amount: 10.01 },
-      ])
-    ).rejects.toThrow('profile');
-    await expect(
-      transactions.setTransactionSplits(transactionId, [
-        { categoryId: 'food', amount: -10.01 },
-      ])
-    ).rejects.toThrow();
-    expect(await transactions.getTransactionSplits(transactionId)).toEqual([]);
-  });
+describe('saved views and existing financial workflows', () => {
   it('persists safe saved views and rejects arbitrary JSON/prototype or invalid dates', async () => {
-    const view = await transactions.createSavedView({
+    const view = await savedViews.createSavedView({
       name: 'Bills',
       filters: { search: 'utilities', type: 'expense' },
     });
-    expect((await transactions.getSavedViews())[0]).toEqual(view);
+    expect((await savedViews.getSavedViews())[0]).toEqual(view);
     await expect(
-      transactions.createSavedView({
+      savedViews.createSavedView({
         name: 'Bad',
         filters: { sql: 'DROP TABLE users' },
       })
     ).rejects.toThrow();
     await expect(
-      transactions.createSavedView({
+      savedViews.createSavedView({
         name: 'Bad',
         filters: { startDate: '2026-02-31' },
       })
     ).rejects.toThrow();
-    await transactions.deleteSavedView(view.id);
-    expect(await transactions.getSavedViews()).toEqual([]);
-  });
-  it('reconciles original transactions including own transfers with inclusive dates and exact cents', async () => {
-    sqlite.exec(
-      "INSERT INTO transactions(id,date,amount,type,account_id,profile_id) VALUES('transfer','2026-01-01',-20,'transfer','account','profile'),('income','2026-01-31',50,'income','account','profile'),('outside','2026-02-01',99,'income','account','profile')"
-    );
-    await transactions.setTransactionSplits(transactionId, [
-      { categoryId: 'food', amount: 3.33 },
-      { categoryId: 'household', amount: 6.68 },
-    ]);
-    const result = await transactions.reconcileStatement({
-      accountId: 'account',
-      startDate: '2026-01-01',
-      endDate: '2026-01-31',
-      openingBalance: 100,
-      closingBalance: 119.99,
-    });
-    expect(result).toMatchObject({
-      expectedClosingBalance: 119.99,
-      actualClosingBalance: 119.99,
-      difference: 0,
-      transactionCount: 3,
-      status: 'matched',
-    });
-    expect(await transactions.getReconciliations('account')).toEqual([result]);
-    await expect(
-      transactions.reconcileStatement({
-        accountId: 'other-account',
-        startDate: '2026-01-01',
-        endDate: '2026-01-31',
-        openingBalance: 0,
-        closingBalance: 0,
-      })
-    ).rejects.toThrow('profile');
+    await savedViews.deleteSavedView(view.id);
+    expect(await savedViews.getSavedViews()).toEqual([]);
   });
   it('rolls unused monthly budget forward while editing uses unscaled base amount', async () => {
     const ds = createDataService(db as never);
@@ -408,42 +322,6 @@ describe('transaction features and existing financial workflows', () => {
       (await ds.getBudgets('2026-02')).find((row) => row.id === 'food-budget')
         ?.amount
     ).toBe(189.99);
-  });
-  it('records transaction updates/deletes and bulk categorization for guarded undo', async () => {
-    const ds = createDataService(db as never);
-    await ds.updateTransaction(transactionId, {
-      notes: 'Review',
-      categoryId: 'household',
-    });
-    const updated = (await history.getChangeHistory())[0];
-    await history.undoChange(updated.id);
-    expect(
-      sqlite
-        .prepare('SELECT notes,category_id FROM transactions WHERE id=?')
-        .get(transactionId)
-    ).toEqual({ notes: null, category_id: 'food' });
-    await ds.bulkCategorize([transactionId], 'household');
-    const batch = (await history.getChangeHistory()).find(
-      (row) => row.action === 'categorize'
-    );
-    if (!batch) throw new Error('Expected categorization history');
-    await history.undoChange(batch.id);
-    expect(
-      sqlite
-        .prepare('SELECT category_id FROM transactions WHERE id=?')
-        .get(transactionId)
-    ).toEqual({ category_id: 'food' });
-    await ds.deleteTransaction(transactionId);
-    const deleted = (await history.getChangeHistory()).find(
-      (row) => row.action === 'delete'
-    );
-    if (!deleted) throw new Error('Expected deletion history');
-    await history.undoChange(deleted.id);
-    expect(
-      sqlite
-        .prepare('SELECT is_deleted FROM transactions WHERE id=?')
-        .get(transactionId)
-    ).toEqual({ is_deleted: 0 });
   });
   it('includes unassigned-account expenses consistently and applies accent-insensitive regex rules', async () => {
     sqlite.exec(
@@ -495,17 +373,7 @@ describe('transaction features and existing financial workflows', () => {
     async (language) => {
       const expected = getFinancialPlanningDemoData(language);
       await db.transactionAsync(() =>
-        seedFinancialPlanningDemo(db, 'profile', language, {
-          accountId: 'account',
-          categoryIds: ['food', 'household'],
-          transaction: { id: transactionId, amount: -10.01 },
-          statement: {
-            startDate: '2026-01-01',
-            endDate: '2026-01-31',
-            amount: -10.01,
-            count: 1,
-          },
-        })
+        seedFinancialPlanningDemo(db, 'profile', language)
       );
       expect(
         (await planning.getSavingsGoals()).map((goal) => goal.name).sort()
@@ -515,13 +383,9 @@ describe('transaction features and existing financial workflows', () => {
           .map((goal) => goal.currentAmount)
           .sort()
       ).toEqual([1250, 450]);
-      expect((await transactions.getSavedViews())[0].name).toBe(
+      expect((await savedViews.getSavedViews())[0].name).toBe(
         expected.copy.uncategorizedSpending
       );
-      expect(
-        await transactions.getTransactionSplits(transactionId)
-      ).toHaveLength(2);
-      expect((await history.getChangeHistory()).length).toBeGreaterThan(0);
     }
   );
 });

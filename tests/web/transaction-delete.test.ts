@@ -28,8 +28,6 @@ describe('web data-service single transaction delete', () => {
     const queryOneAsync = vi
       .fn()
       .mockResolvedValueOnce({ account_id: VALID_ACCOUNT_ID })
-      .mockResolvedValueOnce({ id: VALID_TX_ID, account_id: VALID_ACCOUNT_ID })
-      .mockResolvedValueOnce({ id: VALID_TX_ID, account_id: VALID_ACCOUNT_ID })
       .mockResolvedValueOnce({ current_balance: 1000 })
       .mockResolvedValueOnce({ balance_after: 750 });
 
@@ -63,12 +61,12 @@ describe('web data-service single transaction delete', () => {
       ])
     );
     expect(queryOneAsync).toHaveBeenNthCalledWith(
-      4,
+      2,
       'SELECT current_balance FROM accounts WHERE id = ? AND profile_id = ? AND is_deleted = 0',
       [VALID_ACCOUNT_ID, '00000000-0000-0000-0000-000000000001']
     );
     expect(queryOneAsync).toHaveBeenNthCalledWith(
-      5,
+      3,
       expect.stringMatching(
         /SELECT balance_after FROM transactions\s+WHERE account_id = \? AND is_deleted = 0 AND balance_after IS NOT NULL\s+ORDER BY date DESC, id DESC LIMIT 1/
       ),
@@ -146,8 +144,6 @@ describe('web data-service single transaction delete', () => {
     const queryOneAsync = vi
       .fn()
       .mockResolvedValueOnce({ account_id: VALID_ACCOUNT_ID })
-      .mockResolvedValueOnce({ id: VALID_TX_ID, account_id: VALID_ACCOUNT_ID })
-      .mockResolvedValueOnce({ id: VALID_TX_ID, account_id: VALID_ACCOUNT_ID })
       .mockResolvedValueOnce({ current_balance: 1000 })
       .mockResolvedValueOnce({ balance_after: 500 }); // Latest remaining transaction
 
@@ -185,8 +181,6 @@ describe('web data-service single transaction delete', () => {
     const queryOneAsync = vi
       .fn()
       .mockResolvedValueOnce({ account_id: VALID_ACCOUNT_ID })
-      .mockResolvedValueOnce({ id: VALID_TX_ID, account_id: VALID_ACCOUNT_ID })
-      .mockResolvedValueOnce({ id: VALID_TX_ID, account_id: VALID_ACCOUNT_ID })
       .mockResolvedValueOnce({ current_balance: 1000 })
       .mockResolvedValueOnce(null); // No remaining transactions with balance_after
 
@@ -224,8 +218,6 @@ describe('web data-service single transaction delete', () => {
     const queryOneAsync = vi
       .fn()
       .mockResolvedValueOnce({ account_id: VALID_ACCOUNT_ID })
-      .mockResolvedValueOnce({ id: VALID_TX_ID, account_id: VALID_ACCOUNT_ID })
-      .mockResolvedValueOnce({ id: VALID_TX_ID, account_id: VALID_ACCOUNT_ID })
       .mockResolvedValueOnce({ current_balance: 1000 })
       .mockResolvedValueOnce(null) // No balance_after available
       .mockResolvedValueOnce({ total: 375 }); // Fallback SUM(amount)

@@ -3225,14 +3225,6 @@ Object.assign(en, {
           text: 'On Transactions, toggle Compact view to show more rows. Name the current filters and save a view. Select its name to restore the search, date range, categories, transaction type, contacts, payment filters and density. Views belong to the active profile.',
         },
         {
-          title: 'Category splits and rule explanations',
-          text: 'Open Transaction tools, select a transaction and add at least two distinct categories. Positive split amounts must equal the original amount. Splits change category reporting and budgets while cash flow and account totals stay unchanged. Remove the split to use the original category. The explanation shows current rule matches and a preview of the visible period; it does not infer how an old transaction was categorized.',
-        },
-        {
-          title: 'Statement reconciliation and history',
-          text: 'Choose Reconcile statement, an account and an inclusive date range. Enter the opening balance immediately before that range and the statement closing balance. The result compares imported movements with the statement and records any difference; it does not adjust your balance. Change history offers guarded undo where the record has not changed again.',
-        },
-        {
           title: 'Backup preview, recovery and health',
           text: 'In Settings → Data management, export a password-encrypted JSON backup. Keep the file outside this device and remember the password. A started download is reported separately from a verified restore. Before restoring, the app validates the table manifest, checksums and relationships and shows a preview. Replacement saves an encrypted recovery snapshot on this device first. Download that recovery copy if you need to undo the restore; browser storage is not a substitute for an external backup.',
         },

@@ -3,17 +3,10 @@ import {
   formatDateISO,
   getFinancialPlanningDemoData,
 } from '@fluxby/shared';
-import {
-  captureRow,
-  recordFinancialChange,
-  type FinancialDatabase,
-} from './financial-history';
+import type { FinancialDatabase } from './financial-planning';
 
 export const FINANCIAL_FEATURE_TABLES = [
-  'change_history',
-  'statement_reconciliations',
   'saved_transaction_views',
-  'transaction_splits',
   'monthly_reviews',
   'net_worth_items',
   'planning_preferences',
@@ -24,18 +17,7 @@ export const FINANCIAL_FEATURE_TABLES = [
 export async function seedFinancialPlanningDemo(
   db: FinancialDatabase,
   profileId: string,
-  language: 'nl' | 'en',
-  options: {
-    accountId: string;
-    categoryIds: string[];
-    transaction?: { id: string; amount: number };
-    statement: {
-      startDate: string;
-      endDate: string;
-      amount: number;
-      count: number;
-    };
-  }
+  language: 'nl' | 'en'
 ) {
   const data = getFinancialPlanningDemoData(language),
     now = Date.now(),
@@ -58,17 +40,6 @@ export async function seedFinancialPlanningDemo(
     await db.runAsync(
       'INSERT INTO savings_contributions(id,goal_id,amount,profile_id,created_at,updated_at) VALUES(?,?,?,?,?,?)',
       [crypto.randomUUID(), id, goal.currentAmount, profileId, now, now]
-    );
-    const after = await captureRow(db, profileId, 'savings_goals', id);
-    await recordFinancialChange(
-      db,
-      profileId,
-      'savings_goals',
-      id,
-      'create',
-      [{ table: 'savings_goals', id, row: null }],
-      [after],
-      goal.name
     );
   }
   for (const item of data.netWorthItems)
@@ -133,45 +104,6 @@ export async function seedFinancialPlanningDemo(
         subscriptions: false,
         backup: false,
       }),
-      profileId,
-      now,
-      now,
-    ]
-  );
-  if (options.transaction && options.categoryIds.length >= 2) {
-    const total = Math.round(Math.abs(options.transaction.amount) * 100),
-      first = Math.round(total * 0.7),
-      amounts = [first, total - first];
-    if (amounts.every((amount) => amount > 0))
-      for (const [index, amount] of amounts.entries())
-        await db.runAsync(
-          'INSERT INTO transaction_splits(id,transaction_id,category_id,amount,profile_id,created_at,updated_at) VALUES(?,?,?,?,?,?,?)',
-          [
-            crypto.randomUUID(),
-            options.transaction.id,
-            options.categoryIds[index],
-            amount / 100,
-            profileId,
-            now,
-            now,
-          ]
-        );
-  }
-  const opening = 2500,
-    expected = Math.round((opening + options.statement.amount) * 100) / 100;
-  await db.runAsync(
-    'INSERT INTO statement_reconciliations(id,account_id,start_date,end_date,opening_balance,actual_closing_balance,expected_closing_balance,difference,transaction_count,status,profile_id,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)',
-    [
-      crypto.randomUUID(),
-      options.accountId,
-      options.statement.startDate,
-      options.statement.endDate,
-      opening,
-      expected,
-      expected,
-      0,
-      options.statement.count,
-      'matched',
       profileId,
       now,
       now,

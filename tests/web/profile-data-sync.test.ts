@@ -4,6 +4,7 @@ import { SCHEMA_SQL } from '../../packages/database/src/schema';
 import { migration013 } from '../../packages/database/src/migrations/013_subscription_dismissed_alerts';
 import { migration015 } from '../../packages/database/src/migrations/015_profile_sync_state';
 import { migration016 } from '../../packages/database/src/migrations/016_financial_planning';
+import { migration017 } from '../../packages/database/src/migrations/017_remove_transaction_tools';
 import {
   ProfileDataSync,
   subscribeLocalDataChanges,
@@ -61,6 +62,7 @@ beforeEach(async () => {
   await migration013.up(db);
   await migration015.up(db);
   await migration016.up(db);
+  await migration017.up(db);
   sqlite.exec(`
     INSERT INTO users(id,name) VALUES('u','Local');
     INSERT INTO profiles(id,user_id,name) VALUES('local-profile','u','Personal'),('other-profile','u','Work');

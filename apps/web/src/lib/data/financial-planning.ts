@@ -12,7 +12,12 @@ import {
   type MonthlyReview,
   type PatternType,
 } from '@fluxby/shared';
-import { trackedMutation, type FinancialDatabase } from './financial-history';
+import type { Database } from '@fluxby/database';
+
+export type FinancialDatabase = Pick<
+  Database,
+  'queryAsync' | 'queryOneAsync' | 'runAsync' | 'transactionAsync'
+>;
 
 export function moneyCents(value: number, allowNegative = false): number {
   if (
@@ -79,29 +84,21 @@ export function createFinancialPlanningService(
       const pid = profile(),
         id = crypto.randomUUID(),
         now = Date.now();
-      await trackedMutation(
-        db,
-        pid,
-        'savings_goals',
-        id,
-        'create',
-        async () => {
-          await db.runAsync(
-            'INSERT INTO savings_goals(id,name,target_amount,deadline,monthly_contribution,profile_id,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?)',
-            [
-              id,
-              name(input.name),
-              moneyCents(input.targetAmount) / 100,
-              input.deadline ?? null,
-              moneyCents(input.monthlyContribution ?? 0) / 100,
-              pid,
-              now,
-              now,
-            ]
-          );
-        },
-        name(input.name)
-      );
+      await db.transactionAsync(async () => {
+        await db.runAsync(
+          'INSERT INTO savings_goals(id,name,target_amount,deadline,monthly_contribution,profile_id,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?)',
+          [
+            id,
+            name(input.name),
+            moneyCents(input.targetAmount) / 100,
+            input.deadline ?? null,
+            moneyCents(input.monthlyContribution ?? 0) / 100,
+            pid,
+            now,
+            now,
+          ]
+        );
+      });
       const created = (await service.getSavingsGoals()).find(
         (goal) => goal.id === id
       );
@@ -114,57 +111,43 @@ export function createFinancialPlanningService(
     ): Promise<void> {
       goalInput(input);
       const pid = profile();
-      await trackedMutation(
-        db,
-        pid,
-        'savings_goals',
-        id,
-        'update',
-        async () => {
-          const goal = await db.queryOneAsync<{
-            name: string;
-            target_amount: number;
-            deadline: string | null;
-            monthly_contribution: number;
-          }>(
-            'SELECT * FROM savings_goals WHERE id=? AND profile_id=? AND is_deleted=0',
-            [id, pid]
-          );
-          if (!goal) throw new Error('Savings goal not found');
-          await db.runAsync(
-            'UPDATE savings_goals SET name=?,target_amount=?,deadline=?,monthly_contribution=?,updated_at=? WHERE id=? AND profile_id=?',
-            [
-              input.name === undefined ? goal.name : name(input.name),
-              input.targetAmount === undefined
-                ? goal.target_amount
-                : moneyCents(input.targetAmount) / 100,
-              input.deadline === undefined ? goal.deadline : input.deadline,
-              input.monthlyContribution === undefined
-                ? goal.monthly_contribution
-                : moneyCents(input.monthlyContribution) / 100,
-              Date.now(),
-              id,
-              pid,
-            ]
-          );
-        }
-      );
+      await db.transactionAsync(async () => {
+        const goal = await db.queryOneAsync<{
+          name: string;
+          target_amount: number;
+          deadline: string | null;
+          monthly_contribution: number;
+        }>(
+          'SELECT * FROM savings_goals WHERE id=? AND profile_id=? AND is_deleted=0',
+          [id, pid]
+        );
+        if (!goal) throw new Error('Savings goal not found');
+        await db.runAsync(
+          'UPDATE savings_goals SET name=?,target_amount=?,deadline=?,monthly_contribution=?,updated_at=? WHERE id=? AND profile_id=?',
+          [
+            input.name === undefined ? goal.name : name(input.name),
+            input.targetAmount === undefined
+              ? goal.target_amount
+              : moneyCents(input.targetAmount) / 100,
+            input.deadline === undefined ? goal.deadline : input.deadline,
+            input.monthlyContribution === undefined
+              ? goal.monthly_contribution
+              : moneyCents(input.monthlyContribution) / 100,
+            Date.now(),
+            id,
+            pid,
+          ]
+        );
+      });
     },
     async deleteSavingsGoal(id: string): Promise<void> {
       const pid = profile();
-      await trackedMutation(
-        db,
-        pid,
-        'savings_goals',
-        id,
-        'delete',
-        async () => {
-          await db.runAsync(
-            'UPDATE savings_goals SET is_deleted=1,updated_at=? WHERE id=? AND profile_id=?',
-            [Date.now(), id, pid]
-          );
-        }
-      );
+      await db.transactionAsync(async () => {
+        await db.runAsync(
+          'UPDATE savings_goals SET is_deleted=1,updated_at=? WHERE id=? AND profile_id=?',
+          [Date.now(), id, pid]
+        );
+      });
     },
     async addSavingsContribution(
       goalId: string,
@@ -175,24 +158,17 @@ export function createFinancialPlanningService(
       const pid = profile(),
         id = crypto.randomUUID(),
         now = Date.now();
-      await trackedMutation(
-        db,
-        pid,
-        'savings_contributions',
-        id,
-        'create',
-        async () => {
-          const goal = await db.queryOneAsync(
-            'SELECT id FROM savings_goals WHERE id=? AND profile_id=? AND is_deleted=0',
-            [goalId, pid]
-          );
-          if (!goal) throw new Error('Savings goal not found');
-          await db.runAsync(
-            'INSERT INTO savings_contributions(id,goal_id,amount,profile_id,created_at,updated_at) VALUES(?,?,?,?,?,?)',
-            [id, goalId, cents / 100, pid, now, now]
-          );
-        }
-      );
+      await db.transactionAsync(async () => {
+        const goal = await db.queryOneAsync(
+          'SELECT id FROM savings_goals WHERE id=? AND profile_id=? AND is_deleted=0',
+          [goalId, pid]
+        );
+        if (!goal) throw new Error('Savings goal not found');
+        await db.runAsync(
+          'INSERT INTO savings_contributions(id,goal_id,amount,profile_id,created_at,updated_at) VALUES(?,?,?,?,?,?)',
+          [id, goalId, cents / 100, pid, now, now]
+        );
+      });
       const updated = (await service.getSavingsGoals()).find(
         (goal) => goal.id === goalId
       );
@@ -223,31 +199,23 @@ export function createFinancialPlanningService(
       }>('SELECT * FROM planning_preferences WHERE profile_id=?', [pid]);
       const id = existing?.id ?? crypto.randomUUID(),
         now = Date.now();
-      await trackedMutation(
-        db,
-        pid,
-        'planning_preferences',
-        id,
-        existing ? 'update' : 'create',
-        async () => {
-          await db.runAsync(
-            `INSERT INTO planning_preferences(id,minimum_balance,reserved_savings,profile_id,created_at,updated_at)
+      await db.transactionAsync(async () => {
+        await db.runAsync(
+          `INSERT INTO planning_preferences(id,minimum_balance,reserved_savings,profile_id,created_at,updated_at)
           VALUES(?,?,?,?,?,?) ON CONFLICT(profile_id) DO UPDATE SET minimum_balance=excluded.minimum_balance,reserved_savings=excluded.reserved_savings,is_deleted=0,updated_at=excluded.updated_at`,
-            [
-              id,
-              moneyCents(
-                input.minimumBalance ?? existing?.minimum_balance ?? 0
-              ) / 100,
-              moneyCents(
-                input.reservedSavings ?? existing?.reserved_savings ?? 0
-              ) / 100,
-              pid,
-              now,
-              now,
-            ]
-          );
-        }
-      );
+          [
+            id,
+            moneyCents(input.minimumBalance ?? existing?.minimum_balance ?? 0) /
+              100,
+            moneyCents(
+              input.reservedSavings ?? existing?.reserved_savings ?? 0
+            ) / 100,
+            pid,
+            now,
+            now,
+          ]
+        );
+      });
     },
     async getSafeToSpend(): Promise<SafeToSpendSummary> {
       const pid = profile(),
@@ -350,20 +318,12 @@ export function createFinancialPlanningService(
           type: input.type,
           amount: moneyCents(input.amount) / 100,
         };
-      await trackedMutation(
-        db,
-        pid,
-        'net_worth_items',
-        id,
-        'create',
-        async () => {
-          await db.runAsync(
-            'INSERT INTO net_worth_items(id,name,type,amount,profile_id,created_at,updated_at) VALUES(?,?,?,?,?,?,?)',
-            [id, item.name, item.type, item.amount, pid, now, now]
-          );
-        },
-        item.name
-      );
+      await db.transactionAsync(async () => {
+        await db.runAsync(
+          'INSERT INTO net_worth_items(id,name,type,amount,profile_id,created_at,updated_at) VALUES(?,?,?,?,?,?,?)',
+          [id, item.name, item.type, item.amount, pid, now, now]
+        );
+      });
       return item;
     },
     async updateNetWorthItem(
@@ -378,49 +338,35 @@ export function createFinancialPlanningService(
       )
         throw new Error('Invalid net-worth item type');
       const pid = profile();
-      await trackedMutation(
-        db,
-        pid,
-        'net_worth_items',
-        id,
-        'update',
-        async () => {
-          const item = await db.queryOneAsync<NetWorthItem>(
-            'SELECT id,name,type,amount FROM net_worth_items WHERE id=? AND profile_id=? AND is_deleted=0',
-            [id, pid]
-          );
-          if (!item) throw new Error('Net-worth item not found');
-          await db.runAsync(
-            'UPDATE net_worth_items SET name=?,type=?,amount=?,updated_at=? WHERE id=? AND profile_id=?',
-            [
-              input.name === undefined ? item.name : name(input.name),
-              input.type ?? item.type,
-              input.amount === undefined
-                ? item.amount
-                : moneyCents(input.amount) / 100,
-              Date.now(),
-              id,
-              pid,
-            ]
-          );
-        }
-      );
+      await db.transactionAsync(async () => {
+        const item = await db.queryOneAsync<NetWorthItem>(
+          'SELECT id,name,type,amount FROM net_worth_items WHERE id=? AND profile_id=? AND is_deleted=0',
+          [id, pid]
+        );
+        if (!item) throw new Error('Net-worth item not found');
+        await db.runAsync(
+          'UPDATE net_worth_items SET name=?,type=?,amount=?,updated_at=? WHERE id=? AND profile_id=?',
+          [
+            input.name === undefined ? item.name : name(input.name),
+            input.type ?? item.type,
+            input.amount === undefined
+              ? item.amount
+              : moneyCents(input.amount) / 100,
+            Date.now(),
+            id,
+            pid,
+          ]
+        );
+      });
     },
     async deleteNetWorthItem(id: string): Promise<void> {
       const pid = profile();
-      await trackedMutation(
-        db,
-        pid,
-        'net_worth_items',
-        id,
-        'delete',
-        async () => {
-          await db.runAsync(
-            'UPDATE net_worth_items SET is_deleted=1,updated_at=? WHERE id=? AND profile_id=?',
-            [Date.now(), id, pid]
-          );
-        }
-      );
+      await db.transactionAsync(async () => {
+        await db.runAsync(
+          'UPDATE net_worth_items SET is_deleted=1,updated_at=? WHERE id=? AND profile_id=?',
+          [Date.now(), id, pid]
+        );
+      });
     },
     async getMonthlyReview(month: string): Promise<MonthlyReview> {
       if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(month))
@@ -484,20 +430,13 @@ export function createFinancialPlanningService(
       );
       const id = existing?.id ?? crypto.randomUUID(),
         now = Date.now();
-      await trackedMutation(
-        db,
-        pid,
-        'monthly_reviews',
-        id,
-        existing ? 'update' : 'create',
-        async () => {
-          await db.runAsync(
-            `INSERT INTO monthly_reviews(id,month,status,checks_json,profile_id,created_at,updated_at) VALUES(?,?,?,?,?,?,?)
+      await db.transactionAsync(async () => {
+        await db.runAsync(
+          `INSERT INTO monthly_reviews(id,month,status,checks_json,profile_id,created_at,updated_at) VALUES(?,?,?,?,?,?,?)
           ON CONFLICT(profile_id,month) DO UPDATE SET status=excluded.status,checks_json=excluded.checks_json,is_deleted=0,updated_at=excluded.updated_at`,
-            [id, month, status, JSON.stringify(checks), pid, now, now]
-          );
-        }
-      );
+          [id, month, status, JSON.stringify(checks), pid, now, now]
+        );
+      });
     },
   };
   return service;

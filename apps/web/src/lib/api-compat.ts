@@ -1573,17 +1573,7 @@ export const api = {
     return ds.updatePaymentProviderRule(id, updates);
   },
 
-  // ============= Transaction planning and history =============
-  getTransactionSplits: (
-    ...args: Parameters<
-      ReturnType<typeof getDataService>['getTransactionSplits']
-    >
-  ) => getDataService().getTransactionSplits(...args),
-  setTransactionSplits: (
-    ...args: Parameters<
-      ReturnType<typeof getDataService>['setTransactionSplits']
-    >
-  ) => getDataService().setTransactionSplits(...args),
+  // ============= Saved transaction views =============
   getSavedViews: (
     ...args: Parameters<ReturnType<typeof getDataService>['getSavedViews']>
   ) => getDataService().getSavedViews(...args),
@@ -1593,18 +1583,6 @@ export const api = {
   deleteSavedView: (
     ...args: Parameters<ReturnType<typeof getDataService>['deleteSavedView']>
   ) => getDataService().deleteSavedView(...args),
-  reconcileStatement: (
-    ...args: Parameters<ReturnType<typeof getDataService>['reconcileStatement']>
-  ) => getDataService().reconcileStatement(...args),
-  getReconciliations: (
-    ...args: Parameters<ReturnType<typeof getDataService>['getReconciliations']>
-  ) => getDataService().getReconciliations(...args),
-  getChangeHistory: (
-    ...args: Parameters<ReturnType<typeof getDataService>['getChangeHistory']>
-  ) => getDataService().getChangeHistory(...args),
-  undoChange: (
-    ...args: Parameters<ReturnType<typeof getDataService>['undoChange']>
-  ) => getDataService().undoChange(...args),
 
   // ============= Data Management =============
   previewImport: async (data: unknown) => {

@@ -3560,14 +3560,6 @@ Object.assign(nl, {
           text: 'Schakel bij Transacties de compacte weergave in om meer regels te zien. Geef de huidige filters een naam en sla de weergave op. Klik op de naam om zoekopdracht, periode, categorieën, transactietype, contacten, betaalfilters en dichtheid terug te zetten. Weergaven horen bij het actieve profiel.',
         },
         {
-          title: 'Categoriesplitsingen en regeluitleg',
-          text: 'Open Transactiehulpmiddelen, kies een transactie en voeg minimaal twee verschillende categorieën toe. Positieve deelbedragen moeten optellen tot het oorspronkelijke bedrag. Splitsingen veranderen categorierapportages en budgetten terwijl kasstromen en rekeningtotalen gelijk blijven. Verwijder de splitsing om de oorspronkelijke categorie te gebruiken. De uitleg toont huidige regelmatches en een voorbeeld voor de zichtbare periode; deze bepaalt niet hoe een oude transactie is gecategoriseerd.',
-        },
-        {
-          title: 'Afschriftcontrole en geschiedenis',
-          text: 'Kies Afschrift controleren, een rekening en een periode inclusief begin- en einddatum. Voer het beginsaldo vlak vóór die periode en het eindsaldo van het afschrift in. Het resultaat vergelijkt geïmporteerde bewegingen met het afschrift en bewaart een verschil; het past je saldo niet aan. Wijzigingsgeschiedenis biedt ongedaan maken zolang de gegevens niet opnieuw gewijzigd zijn.',
-        },
-        {
           title: 'Back-upvoorbeeld, herstelkopie en status',
           text: 'Exporteer via Instellingen → Gegevensbeheer een JSON-back-up met wachtwoordversleuteling. Bewaar het bestand buiten dit apparaat en onthoud het wachtwoord. Een gestarte download wordt apart gemeld van een gecontroleerd herstel. Voor herstellen valideert de app het tabeloverzicht, controlesommen en relaties en toont een voorbeeld. Voor vervanging wordt eerst een versleutelde herstelkopie op dit apparaat opgeslagen. Download deze kopie als je het herstel wilt terugdraaien; browseropslag vervangt geen externe back-up.',
         },

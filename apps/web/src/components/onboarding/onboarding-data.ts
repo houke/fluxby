@@ -861,39 +861,6 @@ export const onboardingChapters: OnboardingChapter[] = [
         selector: '[data-onboarding="saved-views"]',
         placement: 'bottom',
       },
-      {
-        id: 'transaction-inspector',
-        title: {
-          nl: 'Transacties splitsen en verklaren',
-          en: 'Split and explain transactions',
-        },
-        content: {
-          nl: 'Verdeel een transactie over categorieën en bekijk welke huidige regels overeenkomen. De splitsing behoudt je totale geldstroom.',
-          en: 'Divide a transaction across categories and inspect matching current rules. Splitting preserves your total cash flow.',
-        },
-        selector: '[data-onboarding="transaction-inspector"]',
-        placement: 'top',
-      },
-      {
-        id: 'reconciliation',
-        title: { nl: 'Afschriften controleren', en: 'Reconcile statements' },
-        content: {
-          nl: 'Vergelijk een banksaldo met geïmporteerde transacties voor een rekening en periode om verschillen te vinden.',
-          en: 'Compare a bank statement balance with imported transactions for an account and period to find differences.',
-        },
-        selector: '[data-onboarding="reconciliation"]',
-        placement: 'top',
-      },
-      {
-        id: 'change-history',
-        title: { nl: 'Wijzigingsgeschiedenis', en: 'Change history' },
-        content: {
-          nl: 'Controleer eerdere wijzigingen en maak ondersteunde wijzigingen ongedaan als het record daarna niet opnieuw is aangepast.',
-          en: 'Review previous changes and undo supported changes while the record has not been edited again.',
-        },
-        selector: '[data-onboarding="change-history"]',
-        placement: 'top',
-      },
     ],
   },
   // ==========================================================================

@@ -31,6 +31,7 @@ import { migration013 } from './013_subscription_dismissed_alerts.js';
 import { migration014 } from './014_recurring_pattern_source_decisions.js';
 import { migration015 } from './015_profile_sync_state.js';
 import { migration016 } from './016_financial_planning.js';
+import { migration017 } from './017_remove_transaction_tools.js';
 
 export const migrations: Migration[] = [
   migration001,
@@ -49,10 +50,11 @@ export const migrations: Migration[] = [
   migration014,
   migration015,
   migration016,
+  migration017,
 ];
 
 /**
  * The highest migration version this code knows about.
  * Used to detect stale code (when database has higher version than code knows).
  */
-export const LATEST_MIGRATION_VERSION = 16;
+export const LATEST_MIGRATION_VERSION = 17;

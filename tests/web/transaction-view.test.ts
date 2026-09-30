@@ -42,7 +42,7 @@ describe('saved transaction views', () => {
     expect(decodeTransactionView({ version: '1', view: '{' })).toBeNull();
   });
 });
-describe('current categorization explanations', () => {
+describe('category rule matching', () => {
   const tx = {
     merchantName: 'Café Noord',
     description: 'Diner',
@@ -56,7 +56,7 @@ describe('current categorization explanations', () => {
     expect(findMatchingRule(tx, rules)?.categoryId).toBe('dining');
     expect(rules[0].id).toBe('a');
   });
-  it('ignores invalid patterns and does not invent provenance', () => {
+  it('ignores invalid patterns', () => {
     expect(
       findMatchingRule(tx, [
         { id: 'bad', pattern: '[', categoryId: 'x', priority: 10 },

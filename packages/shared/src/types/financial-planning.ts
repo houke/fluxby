@@ -43,42 +43,9 @@ export interface MonthlyReview {
   status: 'open' | 'complete';
   checks: Record<string, boolean>;
 }
-export interface TransactionSplit {
-  id: string;
-  transactionId: string;
-  categoryId: string;
-  amount: number;
-}
 export interface SavedTransactionView {
   id: string;
   name: string;
   filters: Record<string, string>;
   version: number;
-}
-export interface StatementReconciliationInput {
-  accountId: string;
-  startDate: string;
-  endDate: string;
-  openingBalance: number;
-  closingBalance: number;
-}
-export interface StatementReconciliation {
-  id: string;
-  accountId: string;
-  startDate: string;
-  endDate: string;
-  expectedClosingBalance: number;
-  actualClosingBalance: number;
-  difference: number;
-  transactionCount: number;
-  status: 'matched' | 'difference';
-}
-export interface FinancialChange {
-  id: string;
-  entityType: string;
-  entityId: string;
-  action: string;
-  description: string;
-  createdAt: string;
-  canUndo: boolean;
 }
