@@ -16,6 +16,8 @@ export default defineConfig({
         'apps/api/src/**/*.ts',
         'apps/web/src/**/*.{ts,tsx}',
         'packages/shared/src/**/*.ts',
+        'packages/core/src/**/*.ts',
+        'packages/database/src/**/*.ts',
       ],
       exclude: [
         '**/*.d.ts',
@@ -24,6 +26,12 @@ export default defineConfig({
         '**/*.test.ts',
         '**/*.spec.ts',
       ],
+      thresholds: {
+        statements: 33,
+        branches: 27,
+        functions: 27,
+        lines: 33,
+      },
     },
     setupFiles: ['./tests/setup.ts'],
   },

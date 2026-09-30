@@ -155,7 +155,7 @@ export function ProfileDataSettings() {
                 className={`flex items-center justify-between py-3 ${index > 0 ? 'border-t' : ''}`}
               >
                 <div>
-                  <p className='font-medium text-orange-600'>
+                  <p className='font-medium text-orange-700 dark:text-orange-300'>
                     {getText(
                       item.titleKey as keyof typeof t.settings.profileData
                     )}

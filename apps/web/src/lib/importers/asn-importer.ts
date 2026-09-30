@@ -3,6 +3,7 @@ import { type TransactionCreate } from '@fluxby/shared';
 
 interface ASNImportOptions {
   accountId: string;
+  accountIban?: string;
   profileId: string;
   mapping: {
     date: string; // "Datum"
@@ -207,16 +208,21 @@ export async function processASNRow(
   }
 
   // Get own IBAN for hash generation
-  const account = await db.queryOneAsync<{ iban: string }>(
-    'SELECT iban FROM accounts WHERE id = ? AND profile_id = ?',
-    [accountId, profileId]
-  );
+  const accountIban =
+    options.accountIban ??
+    (
+      await db.queryOneAsync<{ iban: string }>(
+        'SELECT iban FROM accounts WHERE id = ? AND profile_id = ?',
+        [accountId, profileId]
+      )
+    )?.iban ??
+    '';
 
   const hash = helpers.generateHash(
     date,
     amount,
     omschrijving || description, // Use original description for hash consistency
-    account?.iban || ''
+    accountIban
   );
 
   return {

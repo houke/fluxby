@@ -62,6 +62,7 @@ export function ProfileSwitcher() {
       <DropdownMenuTrigger asChild>
         <Button
           variant='ghost'
+          aria-label={`${t.profileSwitcher.currentProfile}: ${activeProfile.name}`}
           className={cn(
             'group flex h-auto items-center gap-2 px-3 py-2 hover:bg-muted/50 focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-0',
             isSwitching && 'pointer-events-none opacity-50'

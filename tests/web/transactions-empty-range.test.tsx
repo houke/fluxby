@@ -7,6 +7,7 @@ import { MemoryRouter } from 'react-router-dom';
 import Transactions from '@/pages/Transactions';
 import { api } from '@/lib/api';
 import { ToastProvider } from '@/contexts/ToastContext';
+import { ConfirmProvider } from '@/contexts/ConfirmContext';
 import * as lang from '@/contexts/LanguageContext';
 import { en } from '@/lib/i18n/en';
 import * as filters from '@/contexts/FilterContext';
@@ -25,7 +26,9 @@ describe('Transactions empty state when period has no matches but full data does
     <QueryClientProvider client={queryClient}>
       <ProfileProvider>
         <MemoryRouter>
-          <ToastProvider>{children}</ToastProvider>
+          <ToastProvider>
+            <ConfirmProvider>{children}</ConfirmProvider>
+          </ToastProvider>
         </MemoryRouter>
       </ProfileProvider>
     </QueryClientProvider>

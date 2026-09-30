@@ -67,6 +67,9 @@ function createMockDb() {
     profiles: [],
     recurring_patterns: [],
     recurring_pattern_source_decisions: [],
+    sync_tombstones: [],
+    sync_row_aliases: [],
+    subscription_dismissed_alerts: [],
   };
 
   const tableColumns: Record<string, string[]> = {
@@ -84,6 +87,27 @@ function createMockDb() {
       'status',
       'profile_id',
       'created_at',
+      'updated_at',
+      'is_deleted',
+      'device_id',
+    ],
+    sync_tombstones: [
+      'profile_id',
+      'table_name',
+      'row_id',
+      'row_data',
+      'updated_at',
+      'device_id',
+    ],
+    sync_row_aliases: [
+      'profile_id',
+      'remote_device_id',
+      'table_name',
+      'remote_id',
+      'local_id',
+    ],
+    subscription_dismissed_alerts: [
+      'id',
       'updated_at',
       'is_deleted',
       'device_id',

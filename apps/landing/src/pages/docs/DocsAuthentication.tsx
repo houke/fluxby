@@ -8,13 +8,16 @@ export default function DocsAuthentication() {
 fetch('http://localhost:3001/api/transactions', {
   headers: {
     'X-Profile-ID': 'your-profile-id',
+    // Required when the API server has API_AUTH_TOKEN configured
+    'Authorization': 'Bearer your-api-token',
     'Content-Type': 'application/json'
   }
 });`;
 
   const curlExample = `curl -X GET "http://localhost:3001/api/transactions" \\
   -H "X-Profile-ID: your-profile-id" \\
-  -H "Content-Type: application/json"`;
+  -H "Content-Type: application/json" \\
+  -H "Authorization: Bearer your-api-token"`;
 
   return (
     <article className='prose prose-gray dark:prose-invert max-w-none'>

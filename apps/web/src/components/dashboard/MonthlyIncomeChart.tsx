@@ -56,7 +56,30 @@ export function MonthlyIncomeChart({
         </CardTitle>
       </CardHeader>
       <CardContent>
-        {hasIncome ? (
+        {hasIncome && monthlyData.length === 1 ? (
+          <div className='grid gap-4 py-6 sm:grid-cols-2'>
+            <div>
+              <p className='text-sm text-muted-foreground'>
+                {t.dashboard.income}
+              </p>
+              <p className='mt-2 text-3xl font-semibold'>
+                <Currency amount={monthlyData[0].income} />
+              </p>
+            </div>
+            <div>
+              <p className='text-sm text-muted-foreground'>
+                {t.dashboard.expenses}
+              </p>
+              <p className='mt-2 text-3xl font-semibold'>
+                <Currency amount={monthlyData[0].expenses} />
+              </p>
+            </div>
+            <p className='text-sm text-muted-foreground sm:col-span-2'>
+              {t.common.months[Number(monthlyData[0].month.split('-')[1]) - 1]}{' '}
+              {monthlyData[0].month.split('-')[0]}
+            </p>
+          </div>
+        ) : hasIncome ? (
           <div className='flex h-[300px] overflow-hidden'>
             {/* Fixed Y-Axis */}
             <div className='h-full w-[50px] flex-shrink-0 border-r bg-card'>

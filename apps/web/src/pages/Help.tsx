@@ -123,6 +123,28 @@ export default function Help() {
       </div>
 
       {/* FAQ */}
+      <Card>
+        <CardHeader>
+          <CardTitle>{t.planning.helpTitle}</CardTitle>
+        </CardHeader>
+        <CardContent className='space-y-4 text-sm text-muted-foreground'>
+          <p>{t.planning.helpGoals}</p>
+          <p>{t.planning.helpForecast}</p>
+          <p>{t.planning.helpNetWorth}</p>
+          <p>{t.planning.helpReview}</p>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>{t.settings.dataManagement.title}</CardTitle>
+        </CardHeader>
+        <CardContent className='space-y-4 text-sm text-muted-foreground'>
+          <p>{t.settings.dataManagement.backupHealthHelp}</p>
+          <p>{t.settings.dataManagement.restoreHelp}</p>
+        </CardContent>
+      </Card>
+
       <div className=''>
         <Card
           className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'

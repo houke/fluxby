@@ -796,10 +796,12 @@ export default function Analytics() {
                             {expenseCategories.map((entry, index) => {
                               const isActive = activeExpenseIndex === index;
                               return (
-                                <div
+                                <button
+                                  type='button'
+                                  aria-pressed={pinnedExpenseIndex === index}
                                   key={index}
                                   data-expense-index={index}
-                                  className={`flex cursor-pointer items-center gap-2 rounded px-1 py-0.5 ${
+                                  className={`flex w-full cursor-pointer items-center gap-2 rounded px-1 py-0.5 text-left focus-visible:outline-2 focus-visible:outline-primary ${
                                     isActive ? 'bg-muted' : 'hover:bg-muted/50'
                                   }`}
                                   onClick={(event) => {
@@ -833,7 +835,7 @@ export default function Analytics() {
                                   >
                                     {entry.categoryName}
                                   </span>
-                                </div>
+                                </button>
                               );
                             })}
                           </div>
@@ -985,10 +987,12 @@ export default function Analytics() {
                             {incomeCategories.map((entry, index) => {
                               const isActive = activeIncomeIndex === index;
                               return (
-                                <div
+                                <button
+                                  type='button'
+                                  aria-pressed={pinnedIncomeIndex === index}
                                   key={index}
                                   data-income-index={index}
-                                  className={`flex cursor-pointer items-center gap-2 rounded px-1 py-0.5 ${
+                                  className={`flex w-full cursor-pointer items-center gap-2 rounded px-1 py-0.5 text-left focus-visible:outline-2 focus-visible:outline-primary ${
                                     isActive ? 'bg-muted' : 'hover:bg-muted/50'
                                   }`}
                                   onClick={(event) => {
@@ -1022,7 +1026,7 @@ export default function Analytics() {
                                   >
                                     {entry.categoryName}
                                   </span>
-                                </div>
+                                </button>
                               );
                             })}
                           </div>

@@ -14,9 +14,14 @@ import {
   type Profile,
   type ProfileCreate,
   type PatternType,
+  type SavingsGoalInput,
+  type PlanningPreferences,
+  type NetWorthItemInput,
+  type MonthlyReview,
 } from '@fluxby/shared';
 import { readFromOPFSSync, isSettingsCacheInitialized } from '@fluxby/database';
 import { getStoredLanguage, translations } from './i18n';
+import type { RestoreBackupOptions } from './data/backup';
 
 // Note: getApiBaseUrl/setApiBaseUrl are only needed for HTTP API mode (api-http.ts)
 // The local-first OPFS mode doesn't need these functions
@@ -354,15 +359,48 @@ export const api = {
     });
   },
 
-  updateBudget: async (id: string, data: { amount?: number }) => {
+  updateBudget: async (
+    id: string,
+    data: { amount?: number; rolloverEnabled?: boolean }
+  ) => {
     const ds = getDataService();
     await ds.updateBudget(id, data);
+  },
+
+  createBudgets: async (budgets: { categoryId: string; amount: number }[]) => {
+    const ds = getDataService();
+    return ds.createBudgets(budgets);
   },
 
   deleteBudget: async (id: string) => {
     const ds = getDataService();
     await ds.deleteBudget(id);
   },
+
+  // ============= Financial planning =============
+  getSavingsGoals: () => getDataService().getSavingsGoals(),
+  createSavingsGoal: (input: SavingsGoalInput) =>
+    getDataService().createSavingsGoal(input),
+  updateSavingsGoal: (id: string, input: Partial<SavingsGoalInput>) =>
+    getDataService().updateSavingsGoal(id, input),
+  deleteSavingsGoal: (id: string) => getDataService().deleteSavingsGoal(id),
+  addSavingsContribution: (goalId: string, amount: number) =>
+    getDataService().addSavingsContribution(goalId, amount),
+  getPlanningPreferences: () => getDataService().getPlanningPreferences(),
+  updatePlanningPreferences: (input: Partial<PlanningPreferences>) =>
+    getDataService().updatePlanningPreferences(input),
+  getSafeToSpend: () => getDataService().getSafeToSpend(),
+  getNetWorth: () => getDataService().getNetWorth(),
+  createNetWorthItem: (input: NetWorthItemInput) =>
+    getDataService().createNetWorthItem(input),
+  updateNetWorthItem: (id: string, input: Partial<NetWorthItemInput>) =>
+    getDataService().updateNetWorthItem(id, input),
+  deleteNetWorthItem: (id: string) => getDataService().deleteNetWorthItem(id),
+  getMonthlyReview: (month: string) => getDataService().getMonthlyReview(month),
+  updateMonthlyReview: (
+    month: string,
+    input: Partial<Pick<MonthlyReview, 'checks' | 'status'>>
+  ) => getDataService().updateMonthlyReview(month, input),
 
   getBudgetSuggestions: async () => {
     const ds = getDataService();
@@ -494,7 +532,13 @@ export const api = {
 
   updateRecurringPattern: async (
     id: string,
-    updates: { merchantName?: string; patternType?: PatternType }
+    updates: {
+      merchantName?: string;
+      patternType?: PatternType;
+      avgAmount?: number;
+      renewalDate?: string | null;
+      cancellationDeadline?: string | null;
+    }
   ) => {
     const ds = getDataService();
     await ds.updateRecurringPattern(id, updates);
@@ -1529,9 +1573,47 @@ export const api = {
     return ds.updatePaymentProviderRule(id, updates);
   },
 
+  // ============= Transaction planning and history =============
+  getTransactionSplits: (
+    ...args: Parameters<
+      ReturnType<typeof getDataService>['getTransactionSplits']
+    >
+  ) => getDataService().getTransactionSplits(...args),
+  setTransactionSplits: (
+    ...args: Parameters<
+      ReturnType<typeof getDataService>['setTransactionSplits']
+    >
+  ) => getDataService().setTransactionSplits(...args),
+  getSavedViews: (
+    ...args: Parameters<ReturnType<typeof getDataService>['getSavedViews']>
+  ) => getDataService().getSavedViews(...args),
+  createSavedView: (
+    ...args: Parameters<ReturnType<typeof getDataService>['createSavedView']>
+  ) => getDataService().createSavedView(...args),
+  deleteSavedView: (
+    ...args: Parameters<ReturnType<typeof getDataService>['deleteSavedView']>
+  ) => getDataService().deleteSavedView(...args),
+  reconcileStatement: (
+    ...args: Parameters<ReturnType<typeof getDataService>['reconcileStatement']>
+  ) => getDataService().reconcileStatement(...args),
+  getReconciliations: (
+    ...args: Parameters<ReturnType<typeof getDataService>['getReconciliations']>
+  ) => getDataService().getReconciliations(...args),
+  getChangeHistory: (
+    ...args: Parameters<ReturnType<typeof getDataService>['getChangeHistory']>
+  ) => getDataService().getChangeHistory(...args),
+  undoChange: (
+    ...args: Parameters<ReturnType<typeof getDataService>['undoChange']>
+  ) => getDataService().undoChange(...args),
+
   // ============= Data Management =============
-  importAll: async (data: unknown) => {
+  previewImport: async (data: unknown) => {
     const ds = getDataService();
-    return ds.importAll(data);
+    return ds.previewImport(data);
+  },
+
+  importAll: async (data: unknown, options?: RestoreBackupOptions) => {
+    const ds = getDataService();
+    return ds.importAll(data, options);
   },
 };

@@ -50,7 +50,7 @@ export const TransactionSelectionToolbar = memo(
     return (
       <div
         className={cn(
-          'flex items-center justify-between gap-4 rounded-lg border bg-card px-4 py-3 shadow-sm transition-all duration-200 motion-reduce:transition-none',
+          'flex items-center justify-between gap-4 rounded-lg border bg-card px-4 py-3 shadow-sm transition-all duration-200 motion-reduce:transition-none motion-reduce:duration-0',
           isVisible ? 'translate-y-0 opacity-100' : '-translate-y-2 opacity-0'
         )}
         role='toolbar'
@@ -101,6 +101,11 @@ export const TransactionSelectionToolbar = memo(
                   size='sm'
                   disabled={isDeleting}
                   data-testid='bulk-delete-button'
+                  aria-label={
+                    isDeleting
+                      ? t.bulkDelete.deleting
+                      : t.bulkDelete.deleteSelected
+                  }
                   className='gap-1.5'
                 >
                   {isDeleting ? (
@@ -147,6 +152,9 @@ export const TransactionSelectionToolbar = memo(
               onClick={onDeleteSelected}
               disabled={isDeleting || selectionCount === 0}
               data-testid='bulk-delete-button'
+              aria-label={
+                isDeleting ? t.bulkDelete.deleting : t.bulkDelete.deleteSelected
+              }
               className='gap-1.5'
             >
               {isDeleting ? (

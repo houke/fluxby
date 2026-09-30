@@ -18,6 +18,7 @@ import { useState, useRef, useLayoutEffect, useMemo } from 'react';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { useFilters } from '@/contexts/FilterContext';
 import { useConfirm } from '@/contexts/ConfirmContext';
+import { useToast } from '@/contexts/ToastContext';
 import {
   Popover,
   PopoverContent,
@@ -83,10 +84,11 @@ function formatDateLocal(date: Date): string {
 }
 
 export default function Budgets() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { activeProfileId } = useProfile();
   const navigate = useNavigate();
   const confirm = useConfirm();
+  const toast = useToast();
   const {
     setCategories,
     setTransactionType,
@@ -170,8 +172,13 @@ export default function Budgets() {
       queryClient.invalidateQueries({ queryKey: ['budgets', activeProfileId] });
       setNewBudgetCategory('');
       setNewBudgetAmount('');
+      queryClient.invalidateQueries({
+        queryKey: ['proposedBudgets', activeProfileId],
+      });
+      toast.success(t.budgets.created);
       // Keep form open for quick entry
     },
+    onError: () => toast.error(t.apiErrors.failedToCreateBudget),
   });
 
   const updateMutation = useMutation({
@@ -181,35 +188,76 @@ export default function Budgets() {
       queryClient.invalidateQueries({ queryKey: ['budgets', activeProfileId] });
       setEditingId(null);
       setEditAmount('');
+      toast.success(t.budgets.updated);
     },
+    onError: () => toast.error(t.apiErrors.failedToUpdateBudget),
   });
 
   const createMultipleMutation = useMutation({
-    mutationFn: async (budgets: { categoryId: string; amount: number }[]) => {
-      for (const budget of budgets) {
-        await api.createBudget(budget);
-      }
-    },
-    onSuccess: () => {
+    mutationFn: api.createBudgets,
+    onSuccess: (_result, budgets) => {
       queryClient.invalidateQueries({ queryKey: ['budgets', activeProfileId] });
       queryClient.invalidateQueries({
         queryKey: ['proposedBudgets', activeProfileId],
       });
       setProposedModalOpen(false);
       setSelectedProposals(new Set());
+      toast.success(
+        t.budgets.createdMultiple.replace('{count}', String(budgets.length))
+      );
     },
+    onError: () => toast.error(t.apiErrors.failedToCreateBudget),
   });
 
   const deleteMutation = useMutation({
     mutationFn: api.deleteBudget,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['budgets', activeProfileId] });
+      queryClient.invalidateQueries({
+        queryKey: ['proposedBudgets', activeProfileId],
+      });
+      toast.success(t.budgets.deleted);
+    },
+    onError: () => toast.error(t.apiErrors.failedToDeleteBudget),
+  });
+
+  const rolloverMutation = useMutation({
+    mutationFn: ({
+      id,
+      rolloverEnabled,
+    }: {
+      id: string;
+      rolloverEnabled: boolean;
+    }) => api.updateBudget(id, { rolloverEnabled }),
+    onMutate: ({ id, rolloverEnabled }) => {
+      const queryKey = ['budgets', activeProfileId];
+      void queryClient.cancelQueries({ queryKey });
+      const previous = queryClient.getQueriesData<Budget[]>({ queryKey });
+      queryClient.setQueriesData<Budget[]>({ queryKey }, (items) =>
+        items?.map((item) =>
+          item.id === id ? { ...item, rolloverEnabled } : item
+        )
+      );
+      return { previous };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['budgets', activeProfileId] });
+      toast.success(t.budgets.updated);
+    },
+    onError: (_error, _variables, context) => {
+      context?.previous.forEach(([queryKey, items]) =>
+        queryClient.setQueryData(queryKey, items)
+      );
+      toast.error(t.apiErrors.failedToUpdateBudget);
     },
   });
 
   const handleCreateBudget = () => {
     const amount = parseFloat(newBudgetAmount);
-    if (isNaN(amount) || amount <= 0) return;
+    if (!Number.isFinite(amount) || amount <= 0) {
+      toast.error(t.budgets.invalidAmount);
+      return;
+    }
 
     createMutation.mutate({
       categoryId: newBudgetCategory || undefined,
@@ -220,13 +268,16 @@ export default function Budgets() {
 
   const startEditing = (budget: Budget) => {
     setEditingId(budget.id);
-    setEditAmount(budget.amount.toString());
+    setEditAmount((budget.baseAmount ?? budget.amount).toString());
   };
 
   const saveEditing = () => {
     if (editingId === null) return;
     const amount = parseFloat(editAmount);
-    if (isNaN(amount) || amount <= 0) return;
+    if (!Number.isFinite(amount) || amount <= 0) {
+      toast.error(t.budgets.invalidAmount);
+      return;
+    }
     updateMutation.mutate({ id: editingId, amount });
   };
 
@@ -264,7 +315,7 @@ export default function Budgets() {
         filtered.sort((a, b) =>
           (a.categoryName || t.budgets.totalBudget).localeCompare(
             b.categoryName || t.budgets.totalBudget,
-            'nl',
+            language,
             { sensitivity: 'base' }
           )
         );
@@ -383,6 +434,7 @@ export default function Budgets() {
                       onClick={handleOpenProposedModal}
                       variant='outline'
                       size='icon'
+                      aria-label={t.budgets.proposedBudgets}
                       data-onboarding='budget-smart-proposals'
                     >
                       <Sparkles className='h-4 w-4' />
@@ -452,7 +504,7 @@ export default function Budgets() {
                         {selectedCategory?.name}
                       </div>
                     ) : (
-                      'Select Category'
+                      t.budgets.selectCategory
                     )}
                     <ChevronUp className='ml-2 h-4 w-4 shrink-0 opacity-50' />
                   </Button>
@@ -461,6 +513,7 @@ export default function Budgets() {
                   <div className='space-y-2'>
                     <Input
                       placeholder={t.common.search}
+                      aria-label={t.common.search}
                       value={categorySearch}
                       onChange={(e) => setCategorySearch(e.target.value)}
                       className='h-8 text-sm'
@@ -523,6 +576,9 @@ export default function Budgets() {
 
               <Input
                 type='number'
+                min='0.01'
+                step='0.01'
+                aria-label={t.budgets.amountPerMonth}
                 placeholder={t.budgets.amountPerMonth}
                 value={newBudgetAmount}
                 onChange={(e) => setNewBudgetAmount(e.target.value)}
@@ -657,6 +713,7 @@ export default function Budgets() {
                 </span>
               </div>
               <Progress
+                aria-label={t.budgets.monthlyOverview}
                 value={Math.min(overallPercentage, 100)}
                 className='h-3'
                 indicatorClassName={cn(
@@ -698,6 +755,7 @@ export default function Budgets() {
                 <Search className='absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
                 <Input
                   placeholder={t.budgets.searchPlaceholder}
+                  aria-label={t.budgets.searchPlaceholder}
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   className='pl-10'
@@ -827,6 +885,9 @@ export default function Budgets() {
                             <>
                               <Input
                                 type='number'
+                                min='0.01'
+                                step='0.01'
+                                aria-label={t.budgets.amountPerMonth}
                                 value={editAmount}
                                 onChange={(e) => setEditAmount(e.target.value)}
                                 className='h-8 w-24'
@@ -838,7 +899,9 @@ export default function Budgets() {
                                     <Button
                                       size='icon'
                                       variant='ghost'
-                                      className='h-8 w-8 rounded-full hover:bg-purple-600 hover:text-white'
+                                      className='h-8 w-8 rounded-md hover:bg-purple-600 hover:text-white'
+                                      aria-label={t.common.save}
+                                      disabled={updateMutation.isPending}
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         saveEditing();
@@ -859,6 +922,7 @@ export default function Budgets() {
                                       size='icon'
                                       variant='ghost'
                                       className='h-7 w-7 rounded-md transition-colors hover:bg-purple-600 hover:text-white'
+                                      aria-label={t.common.cancel}
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         cancelEditing();
@@ -878,43 +942,67 @@ export default function Budgets() {
                               <span className='text-sm text-muted-foreground'>
                                 {(budget.percentage ?? 0).toFixed(0)}%
                               </span>
-                              <Button
-                                variant='ghost'
-                                size='icon'
-                                className='h-7 w-7 rounded-md transition-colors hover:bg-purple-600 hover:text-white'
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  startEditing(budget);
-                                }}
-                                {...(isFirstBudget
-                                  ? { 'data-onboarding': 'budget-edit' }
-                                  : {})}
-                              >
-                                <Pencil className='h-3.5 w-3.5' />
-                              </Button>
-                              <Button
-                                variant='ghost'
-                                size='icon'
-                                className='h-7 w-7 rounded-md text-destructive transition-colors hover:bg-red-600 hover:text-white dark:hover:bg-red-700'
-                                onClick={async (e) => {
-                                  e.stopPropagation();
-                                  const isConfirmed = await confirm({
-                                    title: t.budgets.deleteBudget,
-                                    message: t.budgets.confirmDelete,
-                                    variant: 'danger',
-                                  });
-                                  if (isConfirmed) {
-                                    deleteMutation.mutate(budget.id);
-                                  }
-                                }}
-                              >
-                                <Trash2 className='h-3.5 w-3.5' />
-                              </Button>
+                              <TooltipProvider delayDuration={100}>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      variant='ghost'
+                                      size='icon'
+                                      aria-label={t.budgets.editBudget}
+                                      className='h-7 w-7 rounded-md transition-colors hover:bg-purple-600 hover:text-white'
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        startEditing(budget);
+                                      }}
+                                      {...(isFirstBudget
+                                        ? { 'data-onboarding': 'budget-edit' }
+                                        : {})}
+                                    >
+                                      <Pencil className='h-3.5 w-3.5' />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    {t.budgets.editBudget}
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                              <TooltipProvider delayDuration={100}>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      variant='ghost'
+                                      size='icon'
+                                      aria-label={t.budgets.deleteBudget}
+                                      disabled={deleteMutation.isPending}
+                                      className='h-7 w-7 rounded-md text-destructive transition-colors hover:bg-red-600 hover:text-white dark:hover:bg-red-700'
+                                      onClick={async (e) => {
+                                        e.stopPropagation();
+                                        const isConfirmed = await confirm({
+                                          title: t.budgets.deleteBudget,
+                                          message: t.budgets.confirmDelete,
+                                          variant: 'danger',
+                                        });
+                                        if (isConfirmed) {
+                                          deleteMutation.mutate(budget.id);
+                                        }
+                                      }}
+                                    >
+                                      <Trash2 className='h-3.5 w-3.5' />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    {t.budgets.deleteBudget}
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
                             </>
                           )}
                         </div>
                       </div>
                       <Progress
+                        aria-label={
+                          budget.categoryName || t.budgets.totalBudget
+                        }
                         value={Math.min(budget.percentage, 100)}
                         className='mb-2 h-2 px-3 sm:px-0'
                         data-onboarding='budget-progress-bar'
@@ -954,6 +1042,35 @@ export default function Budgets() {
                           <Currency amount={budget.amount} />
                         </span>
                       </div>
+                      {budget.period === 'monthly' && (
+                        <div
+                          className='mt-3 flex flex-wrap items-center justify-between gap-3 px-3 text-sm sm:px-0'
+                          onClick={(event) => event.stopPropagation()}
+                          data-onboarding='budget-rollover'
+                        >
+                          <label className='flex items-center gap-2'>
+                            <input
+                              type='checkbox'
+                              className='h-4 w-4 accent-purple-600'
+                              checked={Boolean(budget.rolloverEnabled)}
+                              disabled={rolloverMutation.isPending}
+                              onChange={(event) =>
+                                rolloverMutation.mutate({
+                                  id: budget.id,
+                                  rolloverEnabled: event.target.checked,
+                                })
+                              }
+                            />
+                            {t.budgets.rolloverUnused}
+                          </label>
+                          {budget.rolloverEnabled && (
+                            <span className='text-muted-foreground'>
+                              {t.budgets.carriedForward}:{' '}
+                              <Currency amount={budget.carryover ?? 0} />
+                            </span>
+                          )}
+                        </div>
+                      )}
                     </div>
                   );
                 })}

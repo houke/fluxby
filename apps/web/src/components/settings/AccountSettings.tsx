@@ -99,6 +99,8 @@ interface SortableAccountItemProps {
         title: string;
         namePlaceholder: string;
         currentBalance: string;
+        accountType: string;
+        reorderAccount: string;
         deleteConfirm: string;
         deleteAccountTitle: string;
       };
@@ -167,7 +169,10 @@ const SortableAccountItem = React.memo(function SortableAccountItem({
             value={editType}
             onValueChange={(v) => setEditType(v as typeof editType)}
           >
-            <SelectTrigger className='w-full sm:w-40'>
+            <SelectTrigger
+              aria-label={t.settings.accounts.accountType}
+              className='w-full sm:w-40'
+            >
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -227,13 +232,29 @@ const SortableAccountItem = React.memo(function SortableAccountItem({
       ) : (
         <>
           <div className='flex w-full items-center gap-3 sm:w-auto'>
-            <button
-              className='cursor-grab rounded p-1 hover:bg-muted active:cursor-grabbing'
-              {...attributes}
-              {...listeners}
-            >
-              <GripVertical className='h-4 w-4 text-muted-foreground' />
-            </button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    aria-label={t.settings.accounts.reorderAccount.replace(
+                      '{name}',
+                      account.name
+                    )}
+                    className='cursor-grab rounded-md p-1 hover:bg-muted active:cursor-grabbing'
+                    {...attributes}
+                    {...listeners}
+                  >
+                    <GripVertical className='h-4 w-4 text-muted-foreground' />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {t.settings.accounts.reorderAccount.replace(
+                    '{name}',
+                    account.name
+                  )}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
             <div
               className={`rounded-lg p-2 ${
                 account.type === 'checking'
@@ -650,7 +671,10 @@ export function AccountSettings() {
                     value={newType}
                     onValueChange={(v) => setNewType(v as typeof newType)}
                   >
-                    <SelectTrigger className='w-full sm:w-40'>
+                    <SelectTrigger
+                      aria-label={t.settings.accounts.accountType}
+                      className='w-full sm:w-40'
+                    >
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>

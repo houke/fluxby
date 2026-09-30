@@ -497,6 +497,7 @@ export function UpdateChecker() {
                         <div className='mt-2 space-y-1'>
                           <Progress
                             value={progressPercentage}
+                            aria-label={t.updater.downloading}
                             className='h-2'
                           />
                           <div className='flex justify-between text-xs text-muted-foreground'>

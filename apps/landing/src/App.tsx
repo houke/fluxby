@@ -52,6 +52,7 @@ import HelpAddressBook from './pages/help/HelpAddressBook';
 import HelpSync from './pages/help/HelpSync';
 import HelpAI from './pages/help/HelpAI';
 import { HeadManager } from './components/HeadManager';
+import HelpPlanning from './pages/help/HelpPlanning';
 import ScrollToTop from './components/ScrollToTop';
 
 function LegalModals() {
@@ -179,6 +180,7 @@ function App() {
                 <Route path='categories' element={<HelpCategories />} />
                 <Route path='accounts' element={<HelpAccounts />} />
                 <Route path='address-book' element={<HelpAddressBook />} />
+                <Route path='planning' element={<HelpPlanning />} />
                 <Route path='budgeting' element={<HelpBudgeting />} />
                 <Route path='subscriptions' element={<HelpSubscriptions />} />
                 <Route path='analytics' element={<HelpAnalytics />} />

@@ -1,5 +1,9 @@
 import express from 'express';
 import cors from 'cors';
+import {
+  createApiAccessMiddleware,
+  getApiAccessConfig,
+} from './middleware/api-access.js';
 import { existsSync, mkdirSync } from 'fs';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
@@ -38,30 +42,11 @@ initializeDatabase();
 
 // Create Express app
 const app = express();
-app.set('trust proxy', 1); // Trust first proxy
-const _PORT = process.env.PORT || 3001; // Prefixed with _ as it's only used in index.ts
+app.set('trust proxy', false);
 
 // Middleware
-const corsOriginEnv = process.env.CORS_ORIGIN;
-const corsOptions = (() => {
-  if (!corsOriginEnv) {
-    return {
-      origin: ['http://localhost:5177', 'http://localhost:3000'],
-      credentials: true,
-    };
-  }
-
-  const trimmed = corsOriginEnv.trim();
-  if (trimmed === '*') {
-    return { origin: true, credentials: false };
-  }
-
-  const origins = trimmed
-    .split(',')
-    .map((s) => s.trim())
-    .filter(Boolean);
-  return { origin: origins, credentials: true };
-})();
+const accessConfig = getApiAccessConfig();
+const corsOptions = { origin: accessConfig.allowedOrigins, credentials: false };
 
 app.use(cors(corsOptions));
 app.use(express.json());
@@ -69,6 +54,7 @@ app.use(express.json());
 // Rate limiting - global limiter for all API routes
 // See middleware/rate-limit.ts for configuration via environment variables
 app.use('/api', globalRateLimiter);
+app.use('/api', createApiAccessMiddleware(accessConfig));
 
 // Performance logging for API requests
 app.use((req, res, next) => {

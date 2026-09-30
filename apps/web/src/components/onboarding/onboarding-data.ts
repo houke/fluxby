@@ -813,6 +813,19 @@ export const onboardingChapters: OnboardingChapter[] = [
         placement: 'left',
       },
       {
+        id: 'budgets-rollover',
+        title: {
+          nl: 'Ongebruikt budget doorschuiven',
+          en: 'Carry unused budget forward',
+        },
+        content: {
+          nl: 'Schakel doorschuiven in om ongebruikt budget uit eerdere maanden mee te nemen. Bewerken past altijd het oorspronkelijke maandbedrag aan.',
+          en: 'Enable rollover to carry unused budget from previous months forward. Editing always changes the original monthly amount.',
+        },
+        selector: '[data-onboarding="budget-rollover"]',
+        placement: 'top',
+      },
+      {
         id: 'budgets-view-transactions',
         title: {
           nl: 'Bekijk transacties',
@@ -828,6 +841,106 @@ export const onboardingChapters: OnboardingChapter[] = [
     ],
   },
 
+  // ==========================================================================
+  // Transaction tools
+  // ==========================================================================
+  {
+    id: 'transaction-tools',
+    menuItem: 'transactions',
+    route: '/transactions',
+    icon: 'ArrowLeftRight',
+    title: { nl: 'Transactiehulpmiddelen', en: 'Transaction tools' },
+    steps: [
+      {
+        id: 'saved-views',
+        title: { nl: 'Opgeslagen weergaven', en: 'Saved views' },
+        content: {
+          nl: 'Sla je huidige filters op om dezelfde selectie later opnieuw te bekijken. Kies een compacte weergave om veel transacties te controleren.',
+          en: 'Save your current filters to return to the same selection later. Choose a compact view to review many transactions.',
+        },
+        selector: '[data-onboarding="saved-views"]',
+        placement: 'bottom',
+      },
+      {
+        id: 'transaction-inspector',
+        title: {
+          nl: 'Transacties splitsen en verklaren',
+          en: 'Split and explain transactions',
+        },
+        content: {
+          nl: 'Verdeel een transactie over categorieën en bekijk welke huidige regels overeenkomen. De splitsing behoudt je totale geldstroom.',
+          en: 'Divide a transaction across categories and inspect matching current rules. Splitting preserves your total cash flow.',
+        },
+        selector: '[data-onboarding="transaction-inspector"]',
+        placement: 'top',
+      },
+      {
+        id: 'reconciliation',
+        title: { nl: 'Afschriften controleren', en: 'Reconcile statements' },
+        content: {
+          nl: 'Vergelijk een banksaldo met geïmporteerde transacties voor een rekening en periode om verschillen te vinden.',
+          en: 'Compare a bank statement balance with imported transactions for an account and period to find differences.',
+        },
+        selector: '[data-onboarding="reconciliation"]',
+        placement: 'top',
+      },
+      {
+        id: 'change-history',
+        title: { nl: 'Wijzigingsgeschiedenis', en: 'Change history' },
+        content: {
+          nl: 'Controleer eerdere wijzigingen en maak ondersteunde wijzigingen ongedaan als het record daarna niet opnieuw is aangepast.',
+          en: 'Review previous changes and undo supported changes while the record has not been edited again.',
+        },
+        selector: '[data-onboarding="change-history"]',
+        placement: 'top',
+      },
+    ],
+  },
+  // ==========================================================================
+  // Financial planning
+  // ==========================================================================
+  {
+    id: 'planning',
+    menuItem: 'planning',
+    route: '/planning',
+    icon: 'Target',
+    title: { nl: 'Planning', en: 'Planning' },
+    steps: [
+      {
+        id: 'planning-forecast',
+        title: { nl: 'Vrij te besteden', en: 'Safe to spend' },
+        content: {
+          nl: 'Bekijk wat er overblijft na aankomende betalingen, spaarplannen en je minimumsaldo. Pas reserveringen aan je situatie aan.',
+          en: 'See what remains after upcoming payments, savings plans, and your minimum balance. Adjust reserves to fit your plans.',
+        },
+        selector: '[data-onboarding="planning-forecast"]',
+        placement: 'bottom',
+      },
+      {
+        id: 'planning-goals',
+        title: { nl: 'Spaardoelen', en: 'Savings goals' },
+        content: {
+          nl: 'Stel doelen in voor toekomstige uitgaven en leg je bijdragen vast. De voortgang verplaatst geen geld tussen rekeningen.',
+          en: 'Create goals for future expenses and record your contributions. Tracking progress does not move money between accounts.',
+        },
+        selector: '[data-onboarding="planning-goals"]',
+        placement: 'top',
+      },
+      {
+        id: 'planning-tools',
+        title: {
+          nl: 'Vermogen en maandcontrole',
+          en: 'Net worth and monthly review',
+        },
+        content: {
+          nl: 'Gebruik de tabbladen om bezittingen en schulden bij te houden en elke maand je financiën te controleren.',
+          en: 'Use the tabs to track assets and liabilities and review your finances each month.',
+        },
+        selector: '[data-onboarding="planning-greeting"]',
+        placement: 'bottom',
+      },
+    ],
+  },
   // ==========================================================================
   // CHAPTER 5: Subscriptions
   // ==========================================================================
@@ -1506,6 +1619,19 @@ export const onboardingChapters: OnboardingChapter[] = [
         },
         selector: '[data-onboarding="settings-data-management"]',
         placement: 'right',
+      },
+      {
+        id: 'settings-backup-health',
+        title: {
+          nl: 'Backupstatus en veilig herstel',
+          en: 'Backup health and safe restore',
+        },
+        content: {
+          nl: 'Controleer wanneer je laatste backupdownload begon. Backups worden standaard versleuteld. Voor herstel controleer je de inhoud en sla je een versleutelde herstelkopie op.',
+          en: 'Check when your latest backup download started. Exports are encrypted by default. Before restoring, review the contents and save an encrypted recovery copy.',
+        },
+        selector: '[data-onboarding="settings-backup-health"]',
+        placement: 'top',
       },
     ],
   },

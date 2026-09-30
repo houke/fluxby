@@ -22,6 +22,7 @@ const Downloads = () => {
   // Version from build-time injection (falls back for dev)
   const version =
     typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '1.0.0';
+  const appHref = `${import.meta.env.BASE_URL}app/`;
 
   // Direct link to the latest release on GitHub
   const getDownloadLink = (filename: string) => {
@@ -159,15 +160,21 @@ const Downloads = () => {
                 </button>
               ) : pwa.isInstalled ? (
                 <a
-                  href='/app/'
+                  href={appHref}
                   className='flex w-full items-center justify-center gap-2 rounded-xl bg-green-600 py-3 font-bold text-white transition-colors hover:bg-green-700'
                 >
                   <Check className='h-5 w-5' />
                   {t.downloads.pwa.openButton}
                 </a>
               ) : (
-                <div className='rounded-xl bg-gray-100 p-4 text-center text-sm text-gray-600 dark:bg-gray-700 dark:text-gray-300'>
-                  {getPWAInstructions()}
+                <div className='flex flex-col items-center gap-3 rounded-xl bg-gray-100 p-4 text-center text-sm text-gray-600 dark:bg-gray-700 dark:text-gray-300'>
+                  <span>{getPWAInstructions()}</span>
+                  <a
+                    href={appHref}
+                    className='inline-flex items-center justify-center rounded-lg bg-purple-600 px-4 py-2 font-semibold text-white transition-colors hover:bg-purple-700'
+                  >
+                    {t.downloads.pwa.openButton}
+                  </a>
                 </div>
               )}
             </div>

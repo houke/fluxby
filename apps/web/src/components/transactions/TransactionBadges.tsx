@@ -221,7 +221,7 @@ export const PaymentMethodBadge = memo(function PaymentMethodBadge({
         value: 'pin',
         label: t.pin,
         icon: <CreditCard className='h-3.5 w-3.5' />,
-        color: 'bg-blue-100 text-blue-600',
+        color: 'bg-blue-100 text-blue-700',
       },
       {
         value: 'ideal',
@@ -239,7 +239,7 @@ export const PaymentMethodBadge = memo(function PaymentMethodBadge({
         value: 'incasso',
         label: t.incasso,
         icon: <RefreshCcw className='h-3.5 w-3.5' />,
-        color: 'bg-orange-100 text-orange-600',
+        color: 'bg-orange-100 text-orange-700',
       },
       {
         value: 'geldautomaat',

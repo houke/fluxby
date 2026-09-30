@@ -1075,12 +1075,13 @@ export default function Categories() {
               <TooltipProvider delayDuration={100}>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <span
-                      className='inline-flex cursor-pointer'
+                    <button
+                      type='button'
+                      className='inline-flex rounded-md p-0.5'
                       onClick={() => navigateToTransactions(sub.id)}
                     >
-                      <ExternalLink className='h-4 w-4 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100' />
-                    </span>
+                      <ExternalLink className='h-4 w-4 text-muted-foreground opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100' />
+                    </button>
                   </TooltipTrigger>
                   <TooltipContent>
                     {t.categories.viewTransactions}
@@ -1336,7 +1337,7 @@ export default function Categories() {
               <div className='min-w-0 flex-1'>
                 <div className='flex items-center gap-2'>
                   <h3 className='font-semibold'>{category.name}</h3>
-                  <span className='rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground'>
+                  <span className='rounded-full bg-muted px-2 py-0.5 text-xs text-foreground'>
                     {subs.length} {t.categories.subcategories}
                   </span>
                 </div>
@@ -1663,9 +1664,9 @@ export default function Categories() {
                 <div className='flex items-center gap-2'>
                   {/* Amount mode toggle */}
                   <TooltipProvider delayDuration={100}>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <div className='relative inline-flex items-center rounded-lg border border-border bg-muted/50 p-0.5'>
+                    <div className='relative inline-flex items-center rounded-lg border border-border bg-muted/50 p-0.5'>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
                           <button
                             type='button'
                             aria-label={t.categories.amountModeAllTime}
@@ -1680,6 +1681,13 @@ export default function Categories() {
                           >
                             <InfinityIcon className='h-3 w-3' />
                           </button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          {t.categories.amountModeAllTime}
+                        </TooltipContent>
+                      </Tooltip>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
                           <button
                             type='button'
                             aria-label={t.categories.amountModeSelectedPeriod}
@@ -1696,17 +1704,12 @@ export default function Categories() {
                           >
                             <Calendar className='h-3 w-3' />
                           </button>
-                        </div>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>{t.categories.amountModeTooltip}</p>
-                        <p className='mt-1 text-xs text-muted-foreground'>
-                          {amountMode === 'all-time'
-                            ? t.categories.amountModeAllTime
-                            : t.categories.amountModeSelectedPeriod}
-                        </p>
-                      </TooltipContent>
-                    </Tooltip>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          {t.categories.amountModeSelectedPeriod}
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
                   </TooltipProvider>
 
                   {/* Sort switch */}

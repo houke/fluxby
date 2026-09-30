@@ -1,10 +1,18 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { useEffect } from 'react';
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+  useLocation,
+} from 'react-router-dom';
 import { User } from 'lucide-react';
 import Layout from './components/layout/Layout';
 import Dashboard from './pages/Dashboard';
 import Transactions from './pages/Transactions';
 import Analytics from './pages/Analytics';
 import Budgets from './pages/Budgets';
+import Planning from './pages/Planning';
 import Subscriptions from './pages/Subscriptions';
 import Categories from './pages/Categories';
 import AddressBook from './pages/AddressBook';
@@ -35,10 +43,26 @@ import {
 import { SpotlightProvider } from './contexts/SpotlightContext';
 import { MigrationGate } from './components/MigrationGate';
 import { debugLog } from './lib/debug';
+import { POST_SETUP_ROUTE_KEY } from './lib/post-setup-route';
 
 // Inner component that can access onboarding context
+function InitialRoute() {
+  const destination =
+    window.sessionStorage.getItem(POST_SETUP_ROUTE_KEY) === '/import'
+      ? '/import'
+      : '/dashboard';
+  return <Navigate to={destination} replace />;
+}
+
 function AppContent() {
   const { skipOnboarding, state } = useOnboarding();
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.pathname === '/import') {
+      window.sessionStorage.removeItem(POST_SETUP_ROUTE_KEY);
+    }
+  }, [location.pathname]);
 
   const handleError = () => {
     // Close onboarding if it was active
@@ -53,11 +77,12 @@ function AppContent() {
       <Onboarding />
       <Routes>
         <Route path='/' element={<Layout />}>
-          <Route index element={<Navigate to='/dashboard' replace />} />
+          <Route index element={<InitialRoute />} />
           <Route path='dashboard' element={<Dashboard />} />
           <Route path='transactions' element={<Transactions />} />
           <Route path='analytics' element={<Analytics />} />
           <Route path='budgets' element={<Budgets />} />
+          <Route path='planning' element={<Planning />} />
           <Route path='subscriptions' element={<Subscriptions />} />
           <Route path='addressbook' element={<AddressBook />} />
           <Route path='categories' element={<Categories />} />

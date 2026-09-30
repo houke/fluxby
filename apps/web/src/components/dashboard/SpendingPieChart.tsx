@@ -182,10 +182,12 @@ export function SpendingPieChart({
                       content={() => (
                         <div ref={legendContainerRef} className='space-y-1'>
                           {categoryData.map((entry, index) => (
-                            <div
+                            <button
+                              type='button'
+                              aria-pressed={pinnedCategoryIndex === index}
                               key={index}
                               data-category-index={index}
-                              className={`flex cursor-pointer items-center gap-2 rounded px-1 py-0.5 ${
+                              className={`flex w-full cursor-pointer items-center gap-2 rounded px-1 py-0.5 text-left focus-visible:outline-2 focus-visible:outline-primary ${
                                 activeCategoryIndex === index
                                   ? 'bg-muted'
                                   : 'hover:bg-muted/50'
@@ -215,7 +217,7 @@ export function SpendingPieChart({
                               >
                                 {entry.categoryName}
                               </span>
-                            </div>
+                            </button>
                           ))}
                         </div>
                       )}
@@ -254,6 +256,7 @@ export function SpendingPieChart({
                       variant='ghost'
                       size='sm'
                       onClick={() => setShowLegend(false)}
+                      aria-label={t.common.close}
                     >
                       <X className='h-4 w-4' />
                     </Button>

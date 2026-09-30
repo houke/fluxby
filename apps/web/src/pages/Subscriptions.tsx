@@ -53,12 +53,19 @@ import { useProfile } from '@/contexts/ProfileContext';
 import { useToast } from '@/contexts/ToastContext';
 import { useConfirm } from '@/contexts/ConfirmContext';
 import { Link } from 'react-router-dom';
-import type {
-  RecurringPattern,
-  RecurringStats,
-  RecurringCalendarEntry,
-  RecurringPatternSourceSuggestion,
-  PatternType,
+import {
+  getCalendarMonthRange,
+  isStaleSubscription,
+  getSubscriptionReminders,
+} from '@/lib/subscription-calendar';
+import {
+  formatDateISO,
+  parseDateOnly,
+  type RecurringPattern,
+  type RecurringStats,
+  type RecurringCalendarEntry,
+  type RecurringPatternSourceSuggestion,
+  type PatternType,
 } from '@fluxby/shared';
 
 // Helper to capitalize merchant name (first letter of first word only)
@@ -69,12 +76,13 @@ function capitalizeFirst(name: string | null | undefined): string | null {
 }
 
 // Helper to format dates
-function formatDate(dateStr: string): string {
-  const date = new Date(dateStr);
-  return date.toLocaleDateString('nl-NL', {
+function formatDate(dateStr: string, language: string): string {
+  const date = parseDateOnly(dateStr);
+  return date.toLocaleDateString(language === 'en' ? 'en-GB' : 'nl-NL', {
     day: 'numeric',
     month: 'short',
     year: 'numeric',
+    timeZone: 'UTC',
   });
 }
 
@@ -109,7 +117,7 @@ function _getMonthlyEquivalent(
 }
 
 export default function Subscriptions() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { activeProfileId } = useProfile();
   const toast = useToast();
   const confirm = useConfirm();
@@ -130,12 +138,8 @@ export default function Subscriptions() {
 
   // Get current month dates for calendar
   const now = new Date();
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
-    .toISOString()
-    .split('T')[0];
-  const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0)
-    .toISOString()
-    .split('T')[0];
+  const { startDate: startOfMonth, endDate: endOfMonth } =
+    getCalendarMonthRange(now);
 
   // Queries
   const { data: patterns, isLoading: loadingPatterns } = useQuery<
@@ -283,6 +287,9 @@ export default function Subscriptions() {
         queryKey: ['recurring-patterns', activeProfileId],
       });
       queryClient.invalidateQueries({
+        queryKey: ['planning', activeProfileId],
+      });
+      queryClient.invalidateQueries({
         queryKey: ['recurring-stats', activeProfileId],
       });
       toast.success(t.subscriptions?.confirmed);
@@ -334,11 +341,16 @@ export default function Subscriptions() {
         merchantName?: string;
         patternType?: PatternType;
         avgAmount?: number;
+        renewalDate?: string | null;
+        cancellationDeadline?: string | null;
       };
     }) => api.updateRecurringPattern(id, updates),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ['recurring-patterns', activeProfileId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['planning', activeProfileId],
       });
       toast.success(t.subscriptions?.updated);
     },
@@ -397,9 +409,11 @@ export default function Subscriptions() {
         merchantName?: string;
         patternType?: PatternType;
         avgAmount?: number;
+        renewalDate?: string | null;
+        cancellationDeadline?: string | null;
       }
     ) => {
-      updateMutation.mutate({ id, updates });
+      return updateMutation.mutateAsync({ id, updates });
     },
     [updateMutation]
   );
@@ -530,9 +544,7 @@ export default function Subscriptions() {
       isIncrease?: boolean;
     }> = [];
 
-    const today = new Date().toISOString().split('T')[0];
-    const twoMonthsAgo = new Date();
-    twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
+    const today = formatDateISO(new Date());
 
     // Helper to check if an alert type is dismissed for a pattern
     const isAlertDismissed = (
@@ -608,11 +620,10 @@ export default function Subscriptions() {
         });
       }
 
-      // Stale subscription alert (no transactions in 2+ months)
+      // Allow each subscription's expected interval before flagging inactivity.
       // Only show if not dismissed
       if (
-        pattern.lastDate &&
-        new Date(pattern.lastDate) < twoMonthsAgo &&
+        isStaleSubscription(pattern, today) &&
         !isAlertDismissed(pattern.id, 'stale')
       ) {
         alertList.push({
@@ -786,7 +797,7 @@ export default function Subscriptions() {
                       <div className='flex flex-wrap gap-x-4 gap-y-1 pt-1 text-sm text-muted-foreground'>
                         {suggestion.payments.slice(0, 3).map((payment) => (
                           <span key={payment.id} className='inline-flex gap-1'>
-                            <span>{formatDate(payment.date)}</span>
+                            <span>{formatDate(payment.date, language)}</span>
                             <Currency amount={Math.abs(payment.amount)} />
                           </span>
                         ))}
@@ -946,7 +957,7 @@ export default function Subscriptions() {
                           t.transactions.unknown}
                         {alert.type === 'price_change' && alert.newAmount && (
                           <span
-                            className={`ml-2 text-sm ${alert.isIncrease ? 'text-orange-600' : 'text-emerald-600'}`}
+                            className={`ml-2 text-sm ${alert.isIncrease ? 'text-orange-800 dark:text-orange-300' : 'text-emerald-800 dark:text-emerald-300'}`}
                           >
                             <Currency
                               amount={Math.abs(alert.pattern.avgAmount)}
@@ -1200,12 +1211,12 @@ export default function Subscriptions() {
                     <div className='flex items-center gap-3'>
                       <div className='flex h-10 w-10 flex-col items-center justify-center rounded-lg bg-muted text-xs'>
                         <span className='font-medium'>
-                          {new Date(entry.date).getDate()}
+                          {parseDateOnly(entry.date).getUTCDate()}
                         </span>
                         <span className='text-muted-foreground'>
                           {
                             t.common?.monthsShort?.[
-                              new Date(entry.date).getMonth()
+                              parseDateOnly(entry.date).getUTCMonth()
                             ]
                           }
                         </span>
@@ -1240,35 +1251,26 @@ export default function Subscriptions() {
   );
 }
 
-// Helper to check if a subscription is stale (no transactions in 2+ months)
-function isStaleSubscription(pattern: RecurringPattern): boolean {
-  if (!pattern.lastDate) return false;
-  const lastDate = new Date(pattern.lastDate);
-  const twoMonthsAgo = new Date();
-  twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
-  return lastDate < twoMonthsAgo;
-}
-
 // Helper to check if next payment is in the past
 function isNextPaymentOverdue(pattern: RecurringPattern): boolean {
   if (!pattern.nextExpectedDate) return false;
-  const today = new Date().toISOString().split('T')[0];
+  const today = formatDateISO(new Date());
   return pattern.nextExpectedDate < today;
 }
 
 // Helper to check if last transaction is in current month
 function hasTransactionThisMonth(pattern: RecurringPattern): boolean {
   if (!pattern.lastDate) return false;
-  const lastDate = new Date(pattern.lastDate);
+  const lastDate = parseDateOnly(pattern.lastDate);
   const now = new Date();
   return (
-    lastDate.getFullYear() === now.getFullYear() &&
-    lastDate.getMonth() === now.getMonth()
+    lastDate.getUTCFullYear() === now.getFullYear() &&
+    lastDate.getUTCMonth() === now.getMonth()
   );
 }
 
 // Subscription card component
-function SubscriptionCard({
+export function SubscriptionCard({
   pattern,
   t,
   onConfirm,
@@ -1289,7 +1291,9 @@ function SubscriptionCard({
     merchantName?: string;
     patternType?: PatternType;
     avgAmount?: number;
-  }) => void;
+    renewalDate?: string | null;
+    cancellationDeadline?: string | null;
+  }) => void | Promise<void>;
   isExpanded?: boolean;
   onToggleExpand?: () => void;
   transactions?: Array<{
@@ -1300,7 +1304,10 @@ function SubscriptionCard({
   }>;
   isLoadingTransactions?: boolean;
 }) {
+  const { language } = useLanguage();
+  const toast = useToast();
   const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [editName, setEditName] = useState(pattern.merchantName || '');
   const [editFrequency, setEditFrequency] = useState<PatternType>(
     pattern.patternType
@@ -1308,27 +1315,56 @@ function SubscriptionCard({
   const [editAmount, setEditAmount] = useState(
     Math.abs(pattern.avgAmount).toString()
   );
+  const [editRenewalDate, setEditRenewalDate] = useState(
+    pattern.renewalDate ?? ''
+  );
+  const [editCancellationDeadline, setEditCancellationDeadline] = useState(
+    pattern.cancellationDeadline ?? ''
+  );
 
-  const handleSaveEdit = () => {
+  const handleSaveEdit = async () => {
     if (onEdit) {
       const parsedAmount = parseFloat(editAmount);
-      onEdit({
-        merchantName: editName.trim() || undefined,
-        patternType: editFrequency,
-        avgAmount: !isNaN(parsedAmount) ? parsedAmount : undefined,
-      });
+      if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
+        toast.error(t.planning.invalidAmount);
+        return;
+      }
+      setIsSaving(true);
+      try {
+        await onEdit({
+          merchantName: editName.trim() || undefined,
+          patternType: editFrequency,
+          avgAmount:
+            parsedAmount *
+            (pattern.avgAmount < 0 ||
+            (pattern.avgAmount === 0 && pattern.lastAmount < 0)
+              ? -1
+              : 1),
+          renewalDate: editRenewalDate || null,
+          cancellationDeadline: editCancellationDeadline || null,
+        });
+        setIsEditing(false);
+      } catch {
+        // The parent mutation reports failures; keep the form available to retry.
+      } finally {
+        setIsSaving(false);
+      }
     }
-    setIsEditing(false);
   };
 
   const handleCancelEdit = () => {
     setEditName(pattern.merchantName || '');
     setEditFrequency(pattern.patternType);
     setEditAmount(Math.abs(pattern.avgAmount).toString());
+    setEditRenewalDate(pattern.renewalDate ?? '');
+    setEditCancellationDeadline(pattern.cancellationDeadline ?? '');
     setIsEditing(false);
   };
 
   const stale = isStaleSubscription(pattern);
+  const reminders = pattern.isConfirmed
+    ? getSubscriptionReminders(pattern)
+    : [];
   const overdue = isNextPaymentOverdue(pattern);
   const hasThisMonthTransaction = hasTransactionThisMonth(pattern);
   // Show 'awaiting' instead of 'overdue' if we don't have a transaction this month yet
@@ -1345,6 +1381,7 @@ function SubscriptionCard({
                 onChange={(e) => setEditName(e.target.value)}
                 className='h-8 w-48'
                 placeholder={t.subscriptions?.merchantName}
+                aria-label={t.subscriptions.merchantName}
                 autoFocus
               />
             ) : (
@@ -1392,7 +1429,10 @@ function SubscriptionCard({
                 value={editFrequency}
                 onValueChange={(v) => setEditFrequency(v as PatternType)}
               >
-                <SelectTrigger className='h-7 w-32'>
+                <SelectTrigger
+                  className='h-7 w-32'
+                  aria-label={t.subscriptions.frequency}
+                >
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -1423,6 +1463,8 @@ function SubscriptionCard({
                 <Input
                   type='number'
                   step='0.01'
+                  min='0.01'
+                  aria-label={t.subscriptions.avgAmount}
                   value={editAmount}
                   onChange={(e) => setEditAmount(e.target.value)}
                   className='h-7 w-20'
@@ -1461,7 +1503,7 @@ function SubscriptionCard({
                   showAwaiting && 'text-amber-600'
                 )}
               >
-                {formatDate(pattern.nextExpectedDate)}
+                {formatDate(pattern.nextExpectedDate, language)}
                 {showAwaiting ? (
                   <span className='ml-1 text-xs'>
                     ({t.subscriptions?.awaitingTransaction})
@@ -1475,6 +1517,64 @@ function SubscriptionCard({
                 )}
               </span>
             </p>
+          )}
+          {isEditing ? (
+            <div
+              className='mt-3 flex flex-wrap gap-3'
+              data-onboarding='subscription-renewal'
+            >
+              <label className='space-y-1 text-sm'>
+                <span className='block text-muted-foreground'>
+                  {t.subscriptions.renewalDate}
+                </span>
+                <Input
+                  type='date'
+                  value={editRenewalDate}
+                  onChange={(event) => setEditRenewalDate(event.target.value)}
+                />
+              </label>
+              <label className='space-y-1 text-sm'>
+                <span className='block text-muted-foreground'>
+                  {t.subscriptions.cancellationDeadline}
+                </span>
+                <Input
+                  type='date'
+                  value={editCancellationDeadline}
+                  onChange={(event) =>
+                    setEditCancellationDeadline(event.target.value)
+                  }
+                />
+              </label>
+            </div>
+          ) : (
+            <div
+              className='mt-2 space-y-1 text-sm'
+              data-onboarding='subscription-renewal'
+            >
+              {pattern.renewalDate && (
+                <p>
+                  <span className='text-muted-foreground'>
+                    {t.subscriptions.renewalDate}:{' '}
+                  </span>
+                  {formatDate(pattern.renewalDate, language)}
+                </p>
+              )}
+              {pattern.cancellationDeadline && (
+                <p>
+                  <span className='text-muted-foreground'>
+                    {t.subscriptions.cancellationDeadline}:{' '}
+                  </span>
+                  {formatDate(pattern.cancellationDeadline, language)}
+                </p>
+              )}
+              {reminders.map((reminder) => (
+                <p key={reminder} className='font-medium'>
+                  {reminder === 'renewal'
+                    ? t.subscriptions.renewalReminder
+                    : t.subscriptions.cancellationReminder}
+                </p>
+              ))}
+            </div>
           )}
         </div>
 
@@ -1496,6 +1596,7 @@ function SubscriptionCard({
                       variant='ghost'
                       className='h-8 w-8 rounded-md hover:bg-green-600 hover:text-white'
                       onClick={handleSaveEdit}
+                      disabled={isSaving}
                     >
                       <Check className='h-4 w-4' />
                     </Button>
@@ -1565,7 +1666,10 @@ function SubscriptionCard({
                         size='icon'
                         variant='ghost'
                         className='h-8 w-8 rounded-md hover:bg-purple-600 hover:text-white'
-                        onClick={() => setIsEditing(true)}
+                        onClick={() => {
+                          handleCancelEdit();
+                          setIsEditing(true);
+                        }}
                       >
                         <Pencil className='h-4 w-4' />
                       </Button>
@@ -1643,7 +1747,7 @@ function SubscriptionCard({
                   >
                     <div className='flex items-center gap-3'>
                       <span className='text-muted-foreground'>
-                        {formatDate(tx.date)}
+                        {formatDate(tx.date, language)}
                       </span>
                       <span className='max-w-xs truncate text-muted-foreground'>
                         {tx.description}

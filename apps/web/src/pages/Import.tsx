@@ -1490,7 +1490,7 @@ export default function Import() {
                   : 'border-border hover:border-primary/50'
               } ${isProcessing ? 'pointer-events-none opacity-50' : ''} `}
             >
-              <input {...getInputProps()} />
+              <input {...getInputProps({ 'aria-label': t.import.title })} />
               <div className='flex flex-col items-center gap-4'>
                 {isReadingFile || isWorkerProcessing ? (
                   <>
@@ -1499,7 +1499,11 @@ export default function Import() {
                       <p className='mb-2 text-lg font-medium'>
                         {t.import.processingFile}
                       </p>
-                      <Progress value={parseProgress} className='h-2' />
+                      <Progress
+                        value={parseProgress}
+                        className='h-2'
+                        aria-label={t.import.processingFile}
+                      />
                       <p className='mt-2 text-sm text-muted-foreground'>
                         {parseStage || t.import.processingDescription}
                       </p>

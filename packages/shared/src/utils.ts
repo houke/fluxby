@@ -1,11 +1,12 @@
 /**
- * Format a number as European currency (€1.234,56)
+ * Format an amount with an explicit currency and locale (Dutch by default).
  */
 export function formatCurrency(
   amount: number,
-  currency: string = 'EUR'
+  currency: string = 'EUR',
+  locale: string = 'nl-NL'
 ): string {
-  return new Intl.NumberFormat('nl-NL', {
+  return new Intl.NumberFormat(locale, {
     style: 'currency',
     currency,
   }).format(amount);
@@ -24,11 +25,14 @@ export function parseEuropeanNumber(value: string | undefined | null): number {
 /**
  * Format a date as DD-MM-YYYY (European format)
  */
-export function formatDate(date: Date | string): string {
+export function formatDate(
+  date: Date | string,
+  locale: string = 'nl-NL'
+): string {
   const isDateOnlyString =
     typeof date === 'string' && DATE_ONLY_REGEX.test(date);
   const d = typeof date === 'string' ? parseFlexibleDate(date) : date;
-  return new Intl.DateTimeFormat('nl-NL', {
+  return new Intl.DateTimeFormat(locale, {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',

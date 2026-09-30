@@ -30,6 +30,7 @@ import { api } from '@/lib/api';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useConfirm } from '@/contexts/ConfirmContext';
 import { useEncryption } from '@/contexts/EncryptionContext';
+import { useToast } from '@/contexts/ToastContext';
 import { resetAppAndRestartOnboarding } from '@/lib/database-reset';
 import {
   encryptBackup,
@@ -46,20 +47,51 @@ import {
   type BackupEntry,
 } from '@/lib/pre-update-backup';
 import { isRunningInTauri } from '@/lib/tauri-bridge';
+import { InvalidBackupError, type BackupPreview } from '@/lib/data/backup';
+import {
+  readBackupHealth,
+  recordBackupDownload,
+  recordVerifiedRestore,
+  readRecoverySnapshot,
+  saveRecoverySnapshot,
+  type RecoverySnapshot,
+} from '@/lib/backup-health';
+
+function downloadBackup(data: unknown, filename: string) {
+  const blob = new Blob([JSON.stringify(data, null, 2)], {
+    type: 'application/json',
+  });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
 
 export function DataManagementSettings() {
   const { t } = useLanguage();
   const queryClient = useQueryClient();
   const confirm = useConfirm();
   const { isEncryptionEnabled, verifyPassword } = useEncryption();
-  const [dataNotice, setDataNotice] = useState<{
+  const toast = useToast();
+  const setDataNotice = (notice: {
     type: 'success' | 'error' | 'warning';
     text: string;
+  }) => {
+    toast[notice.type](notice.text);
+  };
+  const [backupHealth, setBackupHealth] = useState(readBackupHealth);
+  const [recovery, setRecovery] = useState<RecoverySnapshot | null>(null);
+  const [pendingImport, setPendingImport] = useState<{
+    data: unknown;
+    preview: BackupPreview;
   } | null>(null);
+  const [recoveryPassword, setRecoveryPassword] = useState('');
   const [loadingAction, setLoadingAction] = useState<
     'export' | 'import' | 'delete' | 'restore' | null
   >(null);
-  const [encryptExport, setEncryptExport] = useState(false);
+  const [encryptExport, setEncryptExport] = useState(true);
 
   // Restore-from-backup state (Tauri only)
   const [restoreDialog, setRestoreDialog] = useState(false);
@@ -76,13 +108,47 @@ export function DataManagementSettings() {
   const [passwordInput, setPasswordInput] = useState('');
   const [passwordError, setPasswordError] = useState('');
 
-  // Auto-hide notice (keep warnings visible longer)
   React.useEffect(() => {
-    if (!dataNotice) return;
-    const delay = dataNotice.type === 'warning' ? 10000 : 4000;
-    const timer = setTimeout(() => setDataNotice(null), delay);
-    return () => clearTimeout(timer);
-  }, [dataNotice]);
+    readRecoverySnapshot()
+      .then(setRecovery)
+      .catch(() => {
+        /* no saved snapshot */
+      });
+  }, []);
+
+  const formatBackupDate = (value: string) => new Date(value).toLocaleString();
+
+  const prepareImport = async (data: unknown, password = '') => {
+    const preview = await api.previewImport(data);
+    setPendingImport({ data, preview });
+    setRecoveryPassword(password);
+  };
+
+  const restorePendingImport = async () => {
+    if (!pendingImport || recoveryPassword.length < 4) return;
+    setLoadingAction('import');
+    try {
+      const result = await api.importAll(pendingImport.data, {
+        saveRecovery: async (backup) => {
+          await saveRecoverySnapshot(backup, recoveryPassword);
+          setRecovery(await readRecoverySnapshot());
+        },
+      });
+      setBackupHealth(recordVerifiedRestore(result.verifiedAt));
+      await queryClient.invalidateQueries();
+      setPendingImport(null);
+      setRecoveryPassword('');
+      toast.success(t.settings.dataManagement.importSuccess);
+    } catch (error) {
+      toast.error(
+        error instanceof InvalidBackupError
+          ? t.settings.dataManagement.importInvalid
+          : t.settings.dataManagement.importError
+      );
+    } finally {
+      setLoadingAction(null);
+    }
+  };
 
   const handleOpenRestoreDialog = async () => {
     setRestoreDialog(true);
@@ -157,20 +223,9 @@ export function DataManagementSettings() {
       const dataWithChecksum = await addChecksumToBackup(data as PlainBackup);
       const encrypted = await encryptBackup(dataWithChecksum, password);
 
-      const blob = new Blob([JSON.stringify(encrypted, null, 2)], {
-        type: 'application/json',
-      });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = getBackupFilename(new Date(), true);
-      a.click();
-      URL.revokeObjectURL(url);
-
-      setDataNotice({
-        type: 'success',
-        text: t.settings.dataManagement?.exportEncryptedSuccess,
-      });
+      downloadBackup(encrypted, getBackupFilename(new Date(), true));
+      setBackupHealth(recordBackupDownload(true));
+      toast.success(t.settings.dataManagement.backupDownloaded);
     } catch {
       setDataNotice({
         type: 'error',
@@ -181,142 +236,52 @@ export function DataManagementSettings() {
     }
   };
 
-  // Handle encrypted import
+  // Decrypt and validate first; replacement is a separate preview action.
   const handleEncryptedImport = async (password: string) => {
     if (!passwordDialog.pendingFile) return;
-
+    setLoadingAction('import');
     try {
-      const text = await passwordDialog.pendingFile.text();
-      const parsed = JSON.parse(text);
-
+      const parsed = JSON.parse(await passwordDialog.pendingFile.text());
       const decrypted = await decryptBackup(parsed, password);
-
+      await prepareImport(decrypted, password);
       setPasswordDialog({ open: false, mode: 'import' });
       setPasswordInput('');
       setPasswordError('');
-      setLoadingAction('import');
-
-      const result = await api.importAll(decrypted);
-      queryClient.invalidateQueries();
-
-      // Check if any category rules were skipped
-      const skippedRules = (
-        result as {
-          categoryRulesSkipped?: Array<{
-            pattern: string;
-            reason: string;
-          }>;
-        }
-      )?.categoryRulesSkipped;
-
-      if (skippedRules && skippedRules.length > 0) {
-        const skippedList = skippedRules
-          .map((r) => `• "${r.pattern}": ${r.reason}`)
-          .join('\n');
-        setDataNotice({
-          type: 'warning',
-          text: `${t.settings.dataManagement.importSuccess}\n\n${t.settings.dataManagement.skippedRules}:\n${skippedList}`,
-        });
+    } catch (error) {
+      if (
+        error instanceof Error &&
+        error.message.includes('incorrect password')
+      ) {
+        setPasswordError(t.settings.dataManagement.wrongPassword);
       } else {
-        setDataNotice({
-          type: 'success',
-          text: t.settings.dataManagement.importSuccess,
-        });
-      }
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : 'Decryption failed';
-      if (errorMessage.includes('incorrect password')) {
-        setPasswordError(t.settings.dataManagement?.wrongPassword);
-      } else if (errorMessage.includes('Checksum mismatch')) {
         setPasswordDialog({ open: false, mode: 'import' });
-        setPasswordInput('');
-        setPasswordError('');
-        setDataNotice({
-          type: 'error',
-          text: t.settings.dataManagement?.checksumMismatch,
-        });
-      } else {
-        setPasswordError(errorMessage);
+        toast.error(
+          error instanceof InvalidBackupError
+            ? t.settings.dataManagement.importInvalid
+            : t.settings.dataManagement.importError
+        );
       }
     } finally {
       setLoadingAction(null);
     }
   };
 
-  // Handle file import (detects encrypted vs plain)
   const handleFileImport = async (file: File) => {
-    const isConfirmed = await confirm({
-      title: t.settings.dataManagement.importTitle,
-      message: t.settings.dataManagement.importConfirm,
-      variant: 'default',
-    });
-    if (!isConfirmed) return;
-
+    setLoadingAction('import');
     try {
-      const text = await file.text();
-      const parsed = JSON.parse(text);
-
-      // Check if encrypted
+      const parsed = JSON.parse(await file.text());
       if (isEncryptedBackup(parsed)) {
-        setPasswordDialog({
-          open: true,
-          mode: 'import',
-          pendingFile: file,
-        });
+        setPasswordDialog({ open: true, mode: 'import', pendingFile: file });
         return;
       }
-
-      // Plain backup - verify checksum if present
-      setLoadingAction('import');
-      const { valid, hasChecksum } = await verifyBackupChecksum(
-        parsed as PlainBackup
-      );
-
-      if (hasChecksum && !valid) {
-        const proceed = await confirm({
-          title: t.settings.dataManagement?.checksumWarningTitle,
-          message: t.settings.dataManagement?.checksumWarningMessage,
-          variant: 'danger',
-        });
-        if (!proceed) {
-          setLoadingAction(null);
-          return;
-        }
+      const { valid } = await verifyBackupChecksum(parsed as PlainBackup);
+      if (!valid) {
+        toast.error(t.settings.dataManagement.backupChecksumInvalid);
+        return;
       }
-
-      const result = await api.importAll(parsed);
-      queryClient.invalidateQueries();
-
-      // Check if any category rules were skipped
-      const skippedRules = (
-        result as {
-          categoryRulesSkipped?: Array<{
-            pattern: string;
-            reason: string;
-          }>;
-        }
-      )?.categoryRulesSkipped;
-
-      if (skippedRules && skippedRules.length > 0) {
-        const skippedList = skippedRules
-          .map((r) => `• "${r.pattern}": ${r.reason}`)
-          .join('\n');
-        setDataNotice({
-          type: 'warning',
-          text: `${t.settings.dataManagement.importSuccess}\n\n${t.settings.dataManagement.skippedRules}:\n${skippedList}`,
-        });
-      } else {
-        setDataNotice({
-          type: 'success',
-          text: t.settings.dataManagement.importSuccess,
-        });
-      }
+      await prepareImport(parsed);
     } catch {
-      setDataNotice({
-        type: 'error',
-        text: t.settings.dataManagement.importError,
-      });
+      toast.error(t.settings.dataManagement.importInvalid);
     } finally {
       setLoadingAction(null);
     }
@@ -338,19 +303,52 @@ export function DataManagementSettings() {
         </CardHeader>
         <CardContent className='px-3 pt-0 pb-3 sm:px-6 sm:pt-0 sm:pb-6'>
           <div className='space-y-2'>
-            {dataNotice && (
-              <div
-                className={`rounded border px-3 py-2 text-sm whitespace-pre-wrap ${
-                  dataNotice.type === 'success'
-                    ? 'border-emerald-300 bg-emerald-50 text-emerald-800'
-                    : dataNotice.type === 'warning'
-                      ? 'border-amber-300 bg-amber-50 text-amber-800'
-                      : 'border-rose-300 bg-rose-50 text-rose-800'
-                }`}
-              >
-                {dataNotice.text}
-              </div>
-            )}
+            <div
+              className='rounded-lg border p-3'
+              data-onboarding='settings-backup-health'
+            >
+              <p className='text-sm font-medium'>
+                {t.settings.dataManagement.backupHealthTitle}
+              </p>
+              <p className='mt-1 text-xs text-muted-foreground'>
+                {backupHealth.lastDownloadStartedAt
+                  ? t.settings.dataManagement.lastBackup.replace(
+                      '{date}',
+                      formatBackupDate(backupHealth.lastDownloadStartedAt)
+                    )
+                  : t.settings.dataManagement.noBackupYet}
+                {backupHealth.lastDownloadStartedAt &&
+                  ` · ${
+                    backupHealth.lastDownloadEncrypted
+                      ? t.settings.dataManagement.backupEncrypted
+                      : t.settings.dataManagement.backupPlain
+                  }`}
+              </p>
+              <p className='mt-1 text-xs text-muted-foreground'>
+                {backupHealth.lastVerifiedRestoreAt
+                  ? t.settings.dataManagement.backupVerification.replace(
+                      '{date}',
+                      formatBackupDate(backupHealth.lastVerifiedRestoreAt)
+                    )
+                  : t.settings.dataManagement.noVerifiedRestore}
+              </p>
+              {recovery && (
+                <Button
+                  variant='outline'
+                  className='mt-2'
+                  disabled={loadingAction !== null}
+                  onClick={() => {
+                    downloadBackup(
+                      recovery.encrypted,
+                      `fluxby-recovery-${recovery.createdAt.slice(0, 10)}.fluxby-encrypted`
+                    );
+                    toast.info(t.settings.dataManagement.recoveryDownload);
+                  }}
+                >
+                  {t.settings.dataManagement.recoveryAvailable}
+                </Button>
+              )}
+            </div>
 
             <div className='rounded-lg border p-3'>
               <div className='flex items-center justify-between'>
@@ -377,20 +375,14 @@ export function DataManagementSettings() {
                         const dataWithChecksum = await addChecksumToBackup(
                           data as PlainBackup
                         );
-                        const blob = new Blob(
-                          [JSON.stringify(dataWithChecksum, null, 2)],
-                          { type: 'application/json' }
+                        downloadBackup(
+                          dataWithChecksum,
+                          getBackupFilename(new Date(), false)
                         );
-                        const url = URL.createObjectURL(blob);
-                        const a = document.createElement('a');
-                        a.href = url;
-                        a.download = getBackupFilename(new Date(), false);
-                        a.click();
-                        URL.revokeObjectURL(url);
-                        setDataNotice({
-                          type: 'success',
-                          text: t.settings.dataManagement.exportSuccess,
-                        });
+                        setBackupHealth(recordBackupDownload(false));
+                        toast.success(
+                          t.settings.dataManagement.backupDownloaded
+                        );
                       } catch {
                         setDataNotice({
                           type: 'error',
@@ -442,6 +434,7 @@ export function DataManagementSettings() {
                 accept='application/json,.fluxby-encrypted'
                 className='hidden'
                 id='import-json-input'
+                aria-label={t.settings.dataManagement.importButton}
                 onChange={async (e) => {
                   const file = e.target.files?.[0];
                   if (!file) {
@@ -532,6 +525,89 @@ export function DataManagementSettings() {
           </div>
         </CardContent>
       </Card>
+
+      <Dialog
+        open={pendingImport !== null}
+        onOpenChange={(open) => {
+          if (!open && loadingAction === null) {
+            setPendingImport(null);
+            setRecoveryPassword('');
+          }
+        }}
+      >
+        <DialogContent className='sm:max-w-lg'>
+          <DialogHeader>
+            <DialogTitle>{t.settings.dataManagement.previewTitle}</DialogTitle>
+            <DialogDescription>
+              {pendingImport &&
+                t.settings.dataManagement.previewDescription
+                  .replace('{profiles}', String(pendingImport.preview.profiles))
+                  .replace('{accounts}', String(pendingImport.preview.accounts))
+                  .replace(
+                    '{transactions}',
+                    String(pendingImport.preview.transactions)
+                  )
+                  .replace('{rows}', String(pendingImport.preview.rows))
+                  .replace(
+                    '{date}',
+                    formatBackupDate(pendingImport.preview.exportedAt)
+                  )}
+            </DialogDescription>
+          </DialogHeader>
+          <div className='space-y-3'>
+            {pendingImport &&
+              (pendingImport.preview.legacy ||
+                pendingImport.preview.missingTables.length > 0) && (
+                <p className='text-sm text-amber-800 dark:text-amber-200'>
+                  {t.settings.dataManagement.previewLegacy}
+                </p>
+              )}
+            <p className='text-sm'>{t.settings.dataManagement.importConfirm}</p>
+            <p className='text-sm text-muted-foreground'>
+              {t.settings.dataManagement.recoveryDescription}
+            </p>
+            <Label htmlFor='recovery-password'>
+              {t.settings.dataManagement.recoveryPassword}
+            </Label>
+            <Input
+              id='recovery-password'
+              type='password'
+              autoComplete='new-password'
+              value={recoveryPassword}
+              disabled={loadingAction !== null}
+              onChange={(event) => setRecoveryPassword(event.target.value)}
+            />
+            <p className='text-xs text-muted-foreground'>
+              {t.settings.dataManagement.recoveryPasswordDescription}
+            </p>
+          </div>
+          <DialogFooter>
+            <Button
+              variant='outline'
+              disabled={loadingAction !== null}
+              onClick={() => {
+                setPendingImport(null);
+                setRecoveryPassword('');
+              }}
+            >
+              {t.common.cancel}
+            </Button>
+            <Button
+              variant='destructive'
+              disabled={loadingAction !== null || recoveryPassword.length < 4}
+              onClick={restorePendingImport}
+            >
+              {loadingAction === 'import' && (
+                <RefreshCcw
+                  aria-hidden='true'
+                  className='mr-2 h-4 w-4 animate-spin'
+                />
+              )}
+              {t.settings.dataManagement.previewRestore}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Password dialog for encrypted backup/import */}
       <Dialog

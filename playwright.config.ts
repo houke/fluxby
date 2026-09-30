@@ -25,6 +25,7 @@ export default defineConfig({
   use: {
     // Base URL for the web app (landing page proxies to /app/)
     baseURL,
+    ignoreHTTPSErrors: true,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
@@ -35,20 +36,16 @@ export default defineConfig({
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
     },
-    // Add more browsers for CI
-    // {
-    //   name: 'firefox',
-    //   use: { ...devices['Desktop Firefox'] },
-    // },
-    // {
-    //   name: 'webkit',
-    //   use: { ...devices['Desktop Safari'] },
-    // },
-    // Mobile
-    // {
-    //   name: 'Mobile Chrome',
-    //   use: { ...devices['Pixel 5'] },
-    // },
+    {
+      name: 'webkit',
+      testMatch: /app-accessibility\.spec\.ts/,
+      use: { ...devices['Desktop Safari'] },
+    },
+    {
+      name: 'mobile',
+      testMatch: /accessibility\.spec\.ts|app-review\.spec\.ts/,
+      use: { ...devices['Pixel 5'] },
+    },
   ],
 
   // Start dev server before running tests

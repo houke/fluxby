@@ -196,6 +196,7 @@ export function OnboardingSettings() {
               </div>
               <Progress
                 value={progressPercentage}
+                aria-label={t.onboarding.settings.progress}
                 className='h-2'
                 indicatorClassName={
                   isCompleted ? 'bg-green-600' : 'bg-purple-600'

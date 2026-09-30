@@ -19,6 +19,7 @@ export async function setupApp(page: Page) {
 
   // Step 1: Handle language selection (if shown)
   await handleLanguageSelection(page);
+  await unlockTestApp(page);
 
   // Check if we are already on a main page or need setup
   const url = page.url();
@@ -49,6 +50,19 @@ export async function setupApp(page: Page) {
       await dashboardLink.click();
       await page.waitForLoadState('networkidle');
     }
+  }
+}
+
+/** Unlock only disposable profiles created by these fixtures. */
+export async function unlockTestApp(page: Page) {
+  const unlockButton = page.getByRole('button', {
+    name: 'Unlock',
+    exact: true,
+  });
+  if (await unlockButton.isVisible()) {
+    await page.getByPlaceholder('Enter password').fill('test1234');
+    await unlockButton.click();
+    await expect(unlockButton).not.toBeVisible({ timeout: 30000 });
   }
 }
 
@@ -150,6 +164,8 @@ async function completeOnboarding(page: Page) {
 
   // Wait for main app to load (loading screen + dashboard)
   await page.waitForTimeout(5000);
+
+  await unlockTestApp(page);
 
   // Wait for dashboard to appear (indicates setup complete)
   // Use a more specific selector to avoid matching multiple elements

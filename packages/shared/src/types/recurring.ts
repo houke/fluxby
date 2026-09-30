@@ -12,6 +12,8 @@ export interface RecurringPattern {
   lastAmount: number;
   lastDate: string;
   nextExpectedDate: string | null;
+  renewalDate?: string | null;
+  cancellationDeadline?: string | null;
   isActive: boolean;
   isConfirmed: boolean;
   isDismissed: boolean;

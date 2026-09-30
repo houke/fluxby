@@ -18,11 +18,12 @@ export class EncryptionVFS extends FacadeVFS {
   private tailSize: number = 28; // 12 (IV) + 16 (Tag)
   private blockSize: number;
 
-  // Track if we've already checked for legacy unencrypted data
-  private legacyChecked: boolean = false;
+  // SQLite can keep the database and journal open at the same time.
+  private legacyChecked = new Set<number>();
 
   // Simple one-page cache to handle small reads (header, etc.)
   private cache: {
+    pFile: number;
     pageIndex: number;
     data: Uint8Array;
     isDirty: boolean;
@@ -118,17 +119,18 @@ export class EncryptionVFS extends FacadeVFS {
   ): Promise<number> {
     const result = await this.baseVFS.jOpen(filename, pFile, flags, pOutFlags);
 
-    // Reset legacy check for new file handle
+    // A recycled file handle must be checked against its newly opened file.
     if (result === VFS.SQLITE_OK) {
-      this.legacyChecked = false;
+      this.legacyChecked.delete(pFile);
+      if (this.cache?.pFile === pFile) this.cache = null;
     }
 
     return result;
   }
 
   async jClose(pFile: number): Promise<number> {
-    this.cache = null; // Clear cache on close
-    this.legacyChecked = false;
+    if (this.cache?.pFile === pFile) this.cache = null;
+    this.legacyChecked.delete(pFile);
     return this.baseVFS.jClose(pFile);
   }
 
@@ -138,8 +140,8 @@ export class EncryptionVFS extends FacadeVFS {
    * SQLite surfaces a clean error rather than silently reading garbage.
    */
   private async checkIfLegacy(pFile: number): Promise<void> {
-    if (this.legacyChecked) return;
-    this.legacyChecked = true;
+    if (this.legacyChecked.has(pFile)) return;
+    this.legacyChecked.add(pFile);
 
     // Read first 16 bytes to check SQLite header
     const header = new Uint8Array(16);
@@ -233,7 +235,7 @@ export class EncryptionVFS extends FacadeVFS {
         await this.writeEncryptedPage(pFile, pageIndex, pageData);
 
         // Update cache if it matches
-        if (this.cache && this.cache.pageIndex === pageIndex) {
+        if (this.cache?.pFile === pFile && this.cache.pageIndex === pageIndex) {
           this.cache.data.set(pageData);
         }
 
@@ -251,7 +253,7 @@ export class EncryptionVFS extends FacadeVFS {
 
   async jTruncate(pFile: number, size: number): Promise<number> {
     const physicalSize = Math.ceil(size / this.pageSize) * this.blockSize;
-    this.cache = null;
+    if (this.cache?.pFile === pFile) this.cache = null;
     return this.baseVFS.jTruncate(pFile, physicalSize);
   }
 
@@ -309,7 +311,7 @@ export class EncryptionVFS extends FacadeVFS {
     pFile: number,
     pageIndex: number
   ): Promise<Uint8Array | null> {
-    if (this.cache && this.cache.pageIndex === pageIndex) {
+    if (this.cache?.pFile === pFile && this.cache.pageIndex === pageIndex) {
       return this.cache.data;
     }
 
@@ -333,7 +335,7 @@ export class EncryptionVFS extends FacadeVFS {
     }
 
     const decrypted = await this.decryptPage(encryptedBlock);
-    this.cache = { pageIndex, data: decrypted, isDirty: false };
+    this.cache = { pFile, pageIndex, data: decrypted, isDirty: false };
     return decrypted;
   }
 

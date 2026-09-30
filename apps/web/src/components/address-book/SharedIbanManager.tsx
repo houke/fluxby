@@ -78,7 +78,7 @@ export const SharedIbanManager: React.FC<SharedIbanManagerProps> = ({
           <CardTitle className='flex items-center gap-2 text-amber-700 dark:text-amber-400'>
             <AlertTriangle className='h-5 w-5' />
             {t.addressBook?.sharedIbans}
-            <span className='rounded-full bg-amber-200 px-2 py-0.5 text-xs font-normal dark:bg-amber-800'>
+            <span className='rounded-full bg-amber-200 px-2 py-0.5 text-xs font-normal text-amber-900 dark:bg-amber-800 dark:text-amber-50'>
               {sharedIbans.length}
             </span>
             {showSharedIbans ? (

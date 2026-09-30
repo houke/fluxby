@@ -313,9 +313,11 @@ export const nl: LandingTranslationKeys = {
       installedBadge: 'Geïnstalleerd',
       openButton: 'Fluxby openen',
       browserInstructions: {
-        ios: 'Tik op het Deel-icoon en dan "Zet op beginscherm"',
-        android: 'Tik op het menu (⋮) en dan "Toevoegen aan startscherm"',
-        desktop: 'Klik op het installatie-icoon in de adresbalk',
+        ios: 'Tik in Fluxby op het Deel-icoon en dan "Zet op beginscherm"',
+        android:
+          'Tik in Fluxby op het menu (⋮) en dan "Toevoegen aan startscherm"',
+        desktop:
+          'Open Fluxby in je browser en klik daarna op het installatie-icoon in de adresbalk',
       },
     },
     note: 'Je hoeft niets te installeren om Fluxby te gebruiken; het werkt volledig in je browser. Deze downloads zijn beschikbaar voor gebruikers die de voorkeur geven aan een dedicated applicatie op hun systeem.',
@@ -704,10 +706,10 @@ export const nl: LandingTranslationKeys = {
       subtitle: 'Leer hoe je je API requests authenticeert met Fluxby.',
       localNote: 'Lokale Ontwikkeling',
       localNoteText:
-        'Fluxby draait volledig op je lokale machine. Er zijn geen API keys of OAuth flows nodig - neem simpelweg je Profiel ID op in requests.',
+        'De ontwikkelaars-API luistert standaard op 127.0.0.1. Externe toegang vereist HOST=0.0.0.0, API_ALLOW_REMOTE=1, een API_AUTH_TOKEN van minimaal 32 tekens en een expliciete CORS_ORIGIN. Stuur het token als Authorization: Bearer <token>.',
       profileIdTitle: 'De Profiel ID gebruiken',
       profileIdText:
-        'Alle API requests moeten de X-Profile-ID header bevatten. Dit identificeert welke profiel data je wilt benaderen.',
+        'X-Profile-ID selecteert de API-gegevensset. Het is geen authenticatie en geeft geen toegang tot de aparte webdatabase.',
       getProfileIdTitle: 'Je Profiel ID ophalen',
       option1Title: 'Optie 1: Vanuit de App',
       option1Text:
@@ -727,25 +729,27 @@ export const nl: LandingTranslationKeys = {
         'Fluxby gebruikt een local-first architectuur waarbij al je data lokaal wordt opgeslagen en versleuteld. Geen cloud, geen servers die je data kunnen lezen.',
       zeroKnowledgeTitle: 'Zero-Knowledge Design',
       zeroKnowledgeText:
-        'Alleen jij hebt toegang tot je data. De master key bestaat alleen in het geheugen en wordt nooit opgeslagen.',
+        'De ontgrendelde hoofdsleutel staat in het geheugen. Een kopie, versleuteld met een sleutel afgeleid van je wachtwoord, wordt lokaal opgeslagen zodat je de database opnieuw kunt ontgrendelen.',
       platformsTitle: 'Ondersteunde Platformen',
       webDesc:
         'Draait in de browser met SQLite WASM. Data opgeslagen in OPFS (Origin Private File System).',
       desktopDesc: 'Native app voor Windows, macOS en Linux met Tauri 2.0.',
       headlessDesc:
         'Lokale API server voor scripts, automations en externe tools.',
+      securityExample:
+        'Opgeslagen database: versleutelde pagina’s in OPFS\nWachtwoordcontrole: PBKDF2-hash met salt in OPFS\nHoofdsleutel: versleuteld in OPFS; ontgrendeld in geheugen\nBack-ups: standaard apart versleutelde JSON met wachtwoord\nOntwikkelaars-API: aparte SQLite-database zonder versleuteling',
       securityTitle: 'Privacy Lock & Beveiliging',
       securityText:
-        'Je data wordt beschermd door een PIN/wachtwoord vergrendeling. Het wachtwoord wordt geverifieerd via PBKDF2 (100k iteraties). Alle data blijft lokaal in je browser - het wordt nooit naar externe servers verzonden.',
+        'De webdatabase gebruikt paginaversleuteling met een willekeurige hoofdsleutel. PBKDF2-SHA256 (100.000 iteraties) leidt de wachtwoordsleutel af die deze beschermt. Verificatiegegevens en de versleutelde hoofdsleutel staan in OPFS.',
       privacyNote:
-        'Let op: Het wachtwoord beschermt toegang tot je data via de UI. De database zelf wordt onversleuteld opgeslagen in OPFS. Voor bescherming tegen meekijkers en ongeautoriseerde toegang.',
+        'Versleuteling beschermt opgeslagen databasepagina’s. Een ontgrendelde sessie kan je gegevens lezen. Optionele AI stuurt de beperkte context die je toestaat naar TypeSafe; gekoppelde synchronisatie stuurt gegevens naar het apparaat dat je goedkeurt. De ontwikkelaars-API gebruikt een aparte SQLite-database zonder versleuteling.',
       autoLockTitle: 'Auto-Lock',
       autoLockWeb: 'Master key wordt gewist bij page refresh of tab sluiten',
       autoLockDesktop: 'Master key wordt gewist bij app sluiten',
       autoLockIdle: 'Na 15 minuten inactiviteit wordt automatisch vergrendeld',
       syncTitle: 'Synchronisatie',
       syncText:
-        'Fluxby gebruikt peer-to-peer synchronisatie via WebRTC. Data gaat direct tussen je apparaten zonder tussenkomst van een server.',
+        'Fluxby koppelt een expliciet goedgekeurd profiel tussen apparaten via WebRTC. Financiële gegevens gaan naar gekoppelde apparaten; signalerings- en relaydiensten kunnen de verbinding helpen opzetten. Wachtwoorden en lokale apparaatgegevens worden uitgesloten.',
       syncSchemaTitle: 'Sync Schema',
       conflictTitle: 'Conflict Resolutie (LWW)',
       conflictText:
@@ -753,14 +757,16 @@ export const nl: LandingTranslationKeys = {
       storageTitle: 'Storage Adapters',
       backupTitle: 'Backup & Herstel',
       backupText:
-        'Je kunt op elk moment een backup maken van je data. Backups bevatten je complete database en kunnen worden hersteld op elk apparaat.',
+        'Instellingen → Gegevensbeheer exporteert alle financiële tabellen. Herstellen valideert het bestand en toont de inhoud voordat gegevens worden vervangen. Vooraf wordt een herstelkopie opgeslagen.',
       backupDesktop:
-        'Bestand → Backup opslaan... exporteert naar je Documents map',
-      backupWeb: 'Instellingen → Backup download een .fluxby bestand',
-      backupFormat: '.fluxby bestanden bevatten metadata + database dump',
+        'Gebruik Instellingen → Gegevensbeheer om een back-up te exporteren.',
+      backupWeb:
+        'Instellingen → Gegevensbeheer start een JSON-back-updownload.',
+      backupFormat:
+        'JSON-back-ups bevatten een schemaversie, tabeloverzicht en controlesommen. Wachtwoordversleuteling staat standaard aan; een onversleutelde export bevat leesbare financiële gegevens.',
       tipTitle: 'Tip',
       tipText:
-        'Maak regelmatig backups! Bij verlies van je PIN/wachtwoord kun je alleen herstellen vanaf een backup.',
+        'Bewaar back-ups buiten dit apparaat en onthoud het wachtwoord. Een gestarte download bewijst niet dat het bestand is opgeslagen; succesvol herstellen bevestigt dat de back-up leesbaar is.',
 
       apiVsWebTitle: 'API Server vs Web App: aparte databases',
       apiVsWebIntro:
@@ -3347,8 +3353,8 @@ Object.assign(nl, {
           ],
           [
             'Beveiliging',
-            'Wachtwoord vergrendelt de interface',
-            'Alleen lokaal (SQLite zonder versleuteling)',
+            'Versleutelde databasepagina’s en wachtwoordvergrendeling',
+            'Aparte SQLite zonder versleuteling; standaard loopback; token vereist voor externe toegang',
           ],
           [
             'Toegang',
@@ -3364,9 +3370,9 @@ Object.assign(nl, {
         dataFlowSteps: [
           [
             'Exporteren vanuit de web-app',
-            'Ga naar Instellingen → Back-up → JSON-export downloaden',
+            'Ga naar Instellingen → Gegevensbeheer → Exporteren (onversleutelde JSON voor de ontwikkelaars-API)',
           ],
-          ['De API-server starten', 'npm run dev (of alleen npm run dev:api)'],
+          ['De API-server starten', 'npm run dev:api'],
           [
             'Importeren via de API',
             'Stuur een POST-aanvraag naar /api/data/import met je JSON-export',
@@ -3518,5 +3524,54 @@ Object.assign(nl, {
   legal: {
     ...nl.legal,
     downloads: nl.downloads,
+  },
+});
+
+Object.assign(nl, {
+  helpCenter: {
+    ...nl.helpCenter,
+    planning: {
+      title: 'Financiële planning en transactiehulpmiddelen',
+      intro:
+        'Reserveer geld en controleer je financiën via Planning. Gebruik de hulpmiddelen bij Transacties om gegevens te onderzoeken en afschriften te vergelijken. Alle gegevens horen bij het actieve profiel.',
+      sections: [
+        {
+          title: 'Spaardoelen en reserveringspotjes',
+          text: 'Maak in Planning een doel met een streefbedrag en optionele einddatum. Kies een reserveringspotje voor terugkerende uitgaven. Bijdragen zijn reserveringen: ze maken geen banktransacties en verplaatsen geen geld. Bewerk of verwijder een doel via de kaart.',
+        },
+        {
+          title: 'Vrij te besteden',
+          text: 'Stel in Planning een minimumsaldo en extra reserveringen in. De prognose trekt komende terugkerende uitgaven, doelreserveringen en het minimumsaldo af van geregistreerde rekeningsaldi. Importeer recente transacties en controleer abonnementsdatums voordat je het resultaat gebruikt. Het is een planningsschatting, geen banksaldo.',
+        },
+        {
+          title: 'Budget meenemen',
+          text: 'Schakel het meenemen van ongebruikt budget in bij een maandbudget. Het oorspronkelijke maandbedrag blijft bewerkbaar; periodetotalen en meegenomen bedragen worden apart getoond.',
+        },
+        {
+          title: 'Nettovermogen en maandcontrole',
+          text: 'Voeg in Planning beleggingen, andere bezittingen of openstaande schulden toe. Het nettovermogen combineert die waardes met rekeningsaldi. Werk waarderingen regelmatig bij. De maandcontrole bewaart checklistvoortgang per maand en profiel.',
+        },
+        {
+          title: 'Abonnementsherinneringen',
+          text: 'Leg bij Abonnementen een verlengdatum en opzegdeadline vast. De app markeert naderende deadlines zolang deze open is; er komen geen meldingen als de app gesloten is. Controleer de voorwaarden van de aanbieder voordat je opzegt.',
+        },
+        {
+          title: 'Compacte transacties en opgeslagen weergaven',
+          text: 'Schakel bij Transacties de compacte weergave in om meer regels te zien. Geef de huidige filters een naam en sla de weergave op. Klik op de naam om zoekopdracht, periode, categorieën, transactietype, contacten, betaalfilters en dichtheid terug te zetten. Weergaven horen bij het actieve profiel.',
+        },
+        {
+          title: 'Categoriesplitsingen en regeluitleg',
+          text: 'Open Transactiehulpmiddelen, kies een transactie en voeg minimaal twee verschillende categorieën toe. Positieve deelbedragen moeten optellen tot het oorspronkelijke bedrag. Splitsingen veranderen categorierapportages en budgetten terwijl kasstromen en rekeningtotalen gelijk blijven. Verwijder de splitsing om de oorspronkelijke categorie te gebruiken. De uitleg toont huidige regelmatches en een voorbeeld voor de zichtbare periode; deze bepaalt niet hoe een oude transactie is gecategoriseerd.',
+        },
+        {
+          title: 'Afschriftcontrole en geschiedenis',
+          text: 'Kies Afschrift controleren, een rekening en een periode inclusief begin- en einddatum. Voer het beginsaldo vlak vóór die periode en het eindsaldo van het afschrift in. Het resultaat vergelijkt geïmporteerde bewegingen met het afschrift en bewaart een verschil; het past je saldo niet aan. Wijzigingsgeschiedenis biedt ongedaan maken zolang de gegevens niet opnieuw gewijzigd zijn.',
+        },
+        {
+          title: 'Back-upvoorbeeld, herstelkopie en status',
+          text: 'Exporteer via Instellingen → Gegevensbeheer een JSON-back-up met wachtwoordversleuteling. Bewaar het bestand buiten dit apparaat en onthoud het wachtwoord. Een gestarte download wordt apart gemeld van een gecontroleerd herstel. Voor herstellen valideert de app het tabeloverzicht, controlesommen en relaties en toont een voorbeeld. Voor vervanging wordt eerst een versleutelde herstelkopie op dit apparaat opgeslagen. Download deze kopie als je het herstel wilt terugdraaien; browseropslag vervangt geen externe back-up.',
+        },
+      ],
+    },
   },
 });

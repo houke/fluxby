@@ -7,6 +7,7 @@ import {
   Upload,
   MoreHorizontal,
   Wallet,
+  Target,
   CalendarClock,
   Tags,
   BookUser,
@@ -46,6 +47,7 @@ export function BottomNav() {
   // Secondary items for "More" sheet
   const moreNavItems: BottomNavItem[] = [
     { to: '/budgets', icon: Wallet, label: t.nav.budgets },
+    { to: '/planning', icon: Target, label: t.nav.planning },
     {
       to: '/subscriptions',
       icon: CalendarClock,

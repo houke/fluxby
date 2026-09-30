@@ -7,6 +7,7 @@ import {
   BarChart3,
   Wallet,
   CalendarClock,
+  Target,
   Tags,
   Upload,
   Settings,
@@ -132,6 +133,13 @@ export default function Layout() {
       label: t.nav.subscriptions,
       onboarding: 'nav-subscriptions',
       menuKey: 'subscriptions',
+    },
+    {
+      to: '/planning',
+      icon: Target,
+      label: t.nav.planning,
+      onboarding: 'nav-planning',
+      menuKey: 'planning',
     },
     {
       to: '/addressbook',

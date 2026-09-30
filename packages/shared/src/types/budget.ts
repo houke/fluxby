@@ -18,6 +18,10 @@ export interface BudgetCreate {
 }
 
 export interface BudgetWithStats extends Budget {
+  /** Unscaled amount saved for the budget's monthly or yearly period. */
+  baseAmount?: number;
+  rolloverEnabled?: boolean;
+  carryover?: number;
   spent: number;
   remaining: number;
   percentage: number;

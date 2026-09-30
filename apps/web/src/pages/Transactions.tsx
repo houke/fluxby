@@ -102,6 +102,11 @@ import {
 } from '@/components/transactions/OptimizedFilters';
 import { TransactionRowBadges } from '@/components/transactions/TransactionRowBadges';
 import { TransactionCard } from '@/components/transactions/TransactionCard';
+import { SavedTransactionViews } from '@/components/transactions/SavedTransactionViews';
+import { TransactionInspector } from '@/components/transactions/TransactionInspector';
+import { StatementReconciliation } from '@/components/transactions/StatementReconciliation';
+import { ChangeHistory } from '@/components/transactions/ChangeHistory';
+import type { TransactionView } from '@/lib/transaction-view';
 import { Currency } from '@/components/ui/currency';
 import { api } from '@/lib/api';
 import {
@@ -137,6 +142,7 @@ export default function Transactions() {
   const [searchParams, setSearchParams] = useSearchParams();
   useDocumentTitle(t.nav.transactions);
   const isMobile = useIsMobile();
+  const [compact, setCompact] = useState(false);
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const {
@@ -394,6 +400,59 @@ export default function Transactions() {
     selectedAddressBookId !== null ||
     selectedPaymentMethods.length > 0 ||
     selectedPaymentProcessors.length > 0;
+
+  useEffect(() => {
+    try {
+      setCompact(
+        localStorage.getItem(`fluxby-compact-${activeProfileId}`) === 'true'
+      );
+    } catch {
+      setCompact(false);
+    }
+  }, [activeProfileId]);
+  const changeCompact = (value: boolean) => {
+    setCompact(value);
+    try {
+      localStorage.setItem(`fluxby-compact-${activeProfileId}`, String(value));
+    } catch {
+      /* Optional preference storage. */
+    }
+  };
+  const currentView: TransactionView = {
+    search,
+    type: transactionType,
+    startDate,
+    endDate,
+    categories: selectedCategoryIds,
+    ibans: selectedIbans,
+    accountName: selectedAccountName,
+    addressBookId: selectedAddressBookId,
+    methods: selectedPaymentMethods,
+    providers: selectedPaymentProcessors,
+    compact,
+  };
+  const applyView = (view: TransactionView) => {
+    setSearch(view.search);
+    setDebouncedSearch(view.search);
+    setContextTransactionType(view.type);
+    setTransactionType(view.type);
+    setDebouncedType(view.type);
+    setDateRange(
+      new Date(`${view.startDate}T12:00:00`),
+      new Date(`${view.endDate}T12:00:00`)
+    );
+    setCategories(view.categories);
+    setSelectedCategoryIds(view.categories);
+    setOpposingAccountIbans(view.ibans);
+    setSelectedIbans(view.ibans);
+    setOpposingAccountName(view.accountName);
+    setSelectedAccountName(view.accountName);
+    setAddressBookId(view.addressBookId);
+    setSelectedAddressBookId(view.addressBookId);
+    setSelectedPaymentMethods(view.methods);
+    setSelectedPaymentProcessors(view.providers);
+    changeCompact(view.compact);
+  };
 
   const queryClient = useQueryClient();
 
@@ -1796,7 +1855,7 @@ export default function Transactions() {
       value: 'pin',
       label: t.transactions.paymentMethods.pin,
       icon: <CreditCard className='h-3.5 w-3.5' />,
-      color: 'text-blue-600 bg-blue-100',
+      color: 'text-blue-700 bg-blue-100',
     },
     {
       value: 'ideal',
@@ -1814,13 +1873,13 @@ export default function Transactions() {
       value: 'incasso',
       label: t.transactions.paymentMethods.incasso,
       icon: <RefreshCcw className='h-3.5 w-3.5' />,
-      color: 'text-orange-500 bg-orange-50',
+      color: 'text-orange-700 bg-orange-50',
     },
     {
       value: 'geldautomaat',
       label: t.transactions.paymentMethods.atm,
       icon: <CreditCard className='h-3.5 w-3.5' />,
-      color: 'text-green-600 bg-green-100',
+      color: 'text-green-700 bg-green-100',
     },
   ];
 
@@ -1830,7 +1889,7 @@ export default function Transactions() {
       pin: {
         iconType: 'creditCard' as const,
         label: t.transactions.paymentMethods.pin,
-        color: 'text-blue-600 bg-blue-100',
+        color: 'text-blue-700 bg-blue-100',
       },
       ideal: {
         iconType: 'smartphone' as const,
@@ -1845,12 +1904,12 @@ export default function Transactions() {
       incasso: {
         iconType: 'refresh' as const,
         label: t.transactions.paymentMethods.incasso,
-        color: 'text-orange-500 bg-orange-50',
+        color: 'text-orange-700 bg-orange-50',
       },
       geldautomaat: {
         iconType: 'creditCard' as const,
         label: t.transactions.paymentMethods.atm,
-        color: 'text-green-600 bg-green-100',
+        color: 'text-green-700 bg-green-100',
       },
       other: {
         iconType: null,
@@ -2130,7 +2189,7 @@ export default function Transactions() {
                     value={search}
                     onChange={setSearch}
                     placeholder={t.transactions.searchPlaceholder}
-                    debounceMs={300}
+                    debounceMs={0}
                   />
                 </div>
                 <div
@@ -2231,6 +2290,27 @@ export default function Transactions() {
               </div>
             </CardContent>
           </Card>
+        </div>
+
+        <div className='space-y-3 px-3 sm:px-0'>
+          <SavedTransactionViews
+            view={currentView}
+            onApply={applyView}
+            onCompactChange={changeCompact}
+          />
+          <div className='flex flex-wrap gap-2'>
+            <TransactionInspector
+              transactions={deferredTransactions || []}
+              categories={categories || []}
+              rules={categoryRules}
+            />
+            <StatementReconciliation
+              accounts={accounts || []}
+              startDate={startDate}
+              endDate={endDate}
+            />
+            <ChangeHistory />
+          </div>
         </div>
 
         {/* Transactions List */}
@@ -2374,6 +2454,11 @@ export default function Transactions() {
                             categoryColor={getCategoryColor(tx.categoryId)}
                             addressBookEntry={addressBookEntry}
                             isRecurring={recurring}
+                            compact={compact}
+                            selected={transactionSelection.isSelected(tx.id)}
+                            onSelect={() =>
+                              transactionSelection.toggleSelection(tx.id)
+                            }
                             onClick={() => {
                               if (recurring) {
                                 setExpandedMerchant(
@@ -2394,7 +2479,8 @@ export default function Transactions() {
                         >
                           <div
                             className={cn(
-                              'group flex items-center justify-between p-0 transition-colors hover:bg-muted/50 sm:rounded-lg sm:p-4',
+                              'group flex items-center justify-between p-0 transition-colors hover:bg-muted/50 sm:rounded-lg',
+                              compact ? 'sm:px-4 sm:py-1' : 'sm:p-4',
                               recurring && 'cursor-pointer',
                               transactionSelection.isSelected(tx.id) &&
                                 'bg-purple-50 dark:bg-purple-900/20'
@@ -2432,34 +2518,32 @@ export default function Transactions() {
                                   // doesn't fire (e.g., clicking hidden input directly in tests)
                                   e.stopPropagation();
                                 }}
-                                onClickCapture={(e) => {
-                                  // Use capture phase to intercept BEFORE checkbox processes
-                                  if (e.shiftKey) {
-                                    // For shift-clicks, prevent checkbox from processing
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    const visibleIds =
-                                      deferredTransactions
-                                        ?.slice(0, visibleCount)
-                                        .map((t) => t.id) || [];
-                                    selectRange(
-                                      lastSelectedId || tx.id,
-                                      tx.id,
-                                      visibleIds
-                                    );
-                                  }
-                                  // For normal clicks, let event continue to checkbox
-                                  // onChange will fire, then onClick above will stop propagation
-                                }}
                               >
                                 <Checkbox
                                   data-testid='transaction-checkbox'
                                   checked={transactionSelection.isSelected(
                                     tx.id
                                   )}
-                                  onChange={() =>
-                                    transactionSelection.toggleSelection(tx.id)
-                                  }
+                                  onChange={(event) => {
+                                    if (
+                                      event.nativeEvent instanceof MouseEvent &&
+                                      event.nativeEvent.shiftKey
+                                    ) {
+                                      const visibleIds =
+                                        deferredTransactions
+                                          ?.slice(0, visibleCount)
+                                          .map((item) => item.id) || [];
+                                      selectRange(
+                                        lastSelectedId || tx.id,
+                                        tx.id,
+                                        visibleIds
+                                      );
+                                    } else {
+                                      transactionSelection.toggleSelection(
+                                        tx.id
+                                      );
+                                    }
+                                  }}
                                   aria-label={t.bulkDelete.selectTransaction
                                     .replace(
                                       '{description}',

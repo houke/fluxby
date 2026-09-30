@@ -44,6 +44,7 @@ import {
 import { useSync } from '@/contexts/SyncContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/contexts/ToastContext';
+import { useConfirm } from '@/contexts/ConfirmContext';
 import { cn } from '@/lib/utils';
 import { SyncDebugPanel } from './SyncDebugPanel';
 import { SyncHistoryViewer } from './SyncHistoryViewer';
@@ -52,6 +53,7 @@ import { QRPairingDialog } from './QRPairingDialog';
 export function SyncSettings() {
   const { t } = useLanguage();
   const toast = useToast();
+  const confirm = useConfirm();
   const {
     deviceId,
     deviceName,
@@ -111,6 +113,13 @@ export function SyncSettings() {
   // Handle connect with code
   const handleConnect = async () => {
     if (!pairingInput.trim()) return;
+    if (
+      !(await confirm({
+        title: t.settings.sync.mergeConfirmTitle,
+        message: t.settings.sync.mergeConfirmDescription,
+      }))
+    )
+      return;
 
     setIsConnecting(true);
     setConnectionError(null); // Clear previous errors
@@ -292,7 +301,7 @@ export function SyncSettings() {
                       <p className='font-medium'>{t.settings?.sync?.syncNow}</p>
                       <p className='text-xs text-muted-foreground'>
                         {syncStatus.connectedPeers === 0
-                          ? 'Connect to a device to sync'
+                          ? t.settings.sync.connectToSync
                           : t.settings?.sync?.syncNowTooltip}
                       </p>
                     </div>
@@ -322,8 +331,8 @@ export function SyncSettings() {
                       </p>
                       <p className='text-xs text-muted-foreground'>
                         {autoSyncEnabled
-                          ? 'Changes sync automatically'
-                          : 'Manual sync only'}
+                          ? t.settings.sync.autoSyncOnTooltip
+                          : t.settings.sync.autoSyncOffTooltip}
                       </p>
                     </div>
                   </TooltipContent>
@@ -570,7 +579,8 @@ export function SyncSettings() {
                   {t.settings?.sync?.pairingRequestDescription?.replace(
                     '{device}',
                     pendingPairingRequest?.deviceName || ''
-                  )}
+                  )}{' '}
+                  {t.settings.sync.mergeConfirmDescription}
                 </DialogDescription>
               </DialogHeader>
               <DialogFooter>

@@ -7,6 +7,7 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { formatDate, cn } from '@/lib/utils';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Currency } from '@/components/ui/currency';
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -19,6 +20,9 @@ interface TransactionCardProps {
   addressBookEntry: AddressBookEntry | null;
   isRecurring: boolean;
   onClick: () => void;
+  compact?: boolean;
+  selected?: boolean;
+  onSelect?: () => void;
 }
 
 /**
@@ -32,6 +36,9 @@ export const TransactionCard = memo(function TransactionCard({
   addressBookEntry,
   isRecurring,
   onClick,
+  compact,
+  selected,
+  onSelect,
 }: TransactionCardProps) {
   const { t } = useLanguage();
   // Get display name
@@ -45,92 +52,112 @@ export const TransactionCard = memo(function TransactionCard({
   const description = addressBookEntry?.description || tx.notes || null;
 
   return (
-    <button
-      onClick={onClick}
-      className='group flex w-full items-start gap-3 rounded-xl border bg-card p-3 text-left transition-colors hover:bg-muted/50 active:bg-muted/70'
+    <div
+      className='flex items-center gap-2 rounded-xl border bg-card px-2'
+      data-onboarding='transaction-row'
     >
-      {/* Transaction type icon */}
-      <div
+      {onSelect && (
+        <Checkbox
+          data-testid='transaction-checkbox'
+          checked={selected}
+          onChange={onSelect}
+          aria-label={t.bulkDelete.selectTransaction
+            .replace('{description}', displayName)
+            .replace('{amount}', String(tx.amount))}
+        />
+      )}
+      <button
+        onClick={onClick}
         className={cn(
-          'flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full',
-          tx.type === 'transfer'
-            ? 'bg-blue-100 dark:bg-blue-950'
-            : tx.amount > 0
-              ? 'bg-emerald-100 dark:bg-emerald-950'
-              : 'bg-rose-100 dark:bg-rose-950'
+          'group flex w-full items-start gap-3 rounded-xl text-left transition-colors hover:bg-muted/50 active:bg-muted/70',
+          compact ? 'px-2 py-1' : 'p-3'
         )}
       >
-        {tx.type === 'transfer' ? (
-          <ArrowLeftRight className='h-5 w-5 text-blue-600' />
-        ) : tx.amount > 0 ? (
-          <ArrowUpRight className='h-5 w-5 text-emerald-600' />
-        ) : (
-          <ArrowDownRight className='h-5 w-5 text-rose-600' />
-        )}
-      </div>
+        {/* Transaction type icon */}
+        <div
+          className={cn(
+            'flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full',
+            tx.type === 'transfer'
+              ? 'bg-blue-100 dark:bg-blue-950'
+              : tx.amount > 0
+                ? 'bg-emerald-100 dark:bg-emerald-950'
+                : 'bg-rose-100 dark:bg-rose-950'
+          )}
+        >
+          {tx.type === 'transfer' ? (
+            <ArrowLeftRight className='h-5 w-5 text-blue-600' />
+          ) : tx.amount > 0 ? (
+            <ArrowUpRight className='h-5 w-5 text-emerald-600' />
+          ) : (
+            <ArrowDownRight className='h-5 w-5 text-rose-600' />
+          )}
+        </div>
 
-      {/* Main content */}
-      <div className='min-w-0 flex-1'>
-        {/* Top row: Name and amount */}
-        <div className='flex items-start justify-between gap-2'>
-          <div className='min-w-0 flex-1'>
-            <p className='truncate leading-tight font-medium'>{displayName}</p>
-            {description && (
-              <p className='mt-0.5 truncate text-xs text-muted-foreground'>
-                {description}
+        {/* Main content */}
+        <div className='min-w-0 flex-1'>
+          {/* Top row: Name and amount */}
+          <div className='flex items-start justify-between gap-2'>
+            <div className='min-w-0 flex-1'>
+              <p className='truncate leading-tight font-medium'>
+                {displayName}
               </p>
-            )}
+              {description && (
+                <p className='mt-0.5 truncate text-xs text-muted-foreground'>
+                  {description}
+                </p>
+              )}
+            </div>
+            <p
+              className={cn(
+                'flex-shrink-0 text-right font-bold',
+                tx.type === 'transfer'
+                  ? 'text-blue-600'
+                  : tx.amount > 0
+                    ? 'text-emerald-600'
+                    : 'text-rose-600'
+              )}
+            >
+              {tx.type === 'transfer' ? '' : tx.amount > 0 ? '+' : ''}
+              <Currency amount={tx.amount} />
+            </p>
           </div>
-          <p
-            className={cn(
-              'flex-shrink-0 text-right font-bold',
-              tx.type === 'transfer'
-                ? 'text-blue-600'
-                : tx.amount > 0
-                  ? 'text-emerald-600'
-                  : 'text-rose-600'
-            )}
-          >
-            {tx.type === 'transfer' ? '' : tx.amount > 0 ? '+' : ''}
-            <Currency amount={tx.amount} />
-          </p>
-        </div>
 
-        {/* Bottom row: Date, category, recurring badge */}
-        <div className='mt-2 flex items-center gap-2'>
-          <span className='text-xs text-muted-foreground'>
-            {formatDate(tx.date)}
-          </span>
-
-          {/* Category badge */}
-          {tx.categoryId && (
-            <>
-              <span className='text-muted-foreground/50'>•</span>
-              <span
-                className='max-w-[120px] truncate rounded-full px-2 py-0.5 text-xs font-medium'
-                style={{
-                  backgroundColor: `${categoryColor}20`,
-                  color: categoryColor,
-                }}
-              >
-                {categoryName}
-              </span>
-            </>
-          )}
-
-          {/* Recurring badge */}
-          {isRecurring && (
-            <span className='inline-flex items-center gap-0.5 rounded-full bg-violet-100 px-1.5 py-0.5 text-xs font-medium text-violet-700 dark:bg-violet-900/30 dark:text-violet-400'>
-              <Repeat className='h-3 w-3' />
+          {/* Bottom row: Date, category, recurring badge */}
+          <div className='mt-2 flex items-center gap-2'>
+            <span className='text-xs text-muted-foreground'>
+              {formatDate(tx.date)}
             </span>
-          )}
 
-          {/* Spacer and chevron */}
-          <div className='flex-1' />
-          <ChevronRight className='h-4 w-4 flex-shrink-0 text-muted-foreground/50 transition-colors group-hover:text-muted-foreground' />
+            {/* Category badge */}
+            {tx.categoryId && (
+              <>
+                <span className='text-muted-foreground/50'>•</span>
+                <span
+                  className='max-w-[120px] truncate rounded-full px-2 py-0.5 text-xs font-medium'
+                  style={{
+                    backgroundColor: `${categoryColor}20`,
+                    color: categoryColor,
+                  }}
+                >
+                  {categoryName}
+                </span>
+              </>
+            )}
+
+            {/* Recurring badge */}
+            {isRecurring && (
+              <span className='inline-flex items-center gap-0.5 rounded-full bg-violet-100 px-1.5 py-0.5 text-xs font-medium text-violet-700 dark:bg-violet-900/30 dark:text-violet-400'>
+                <Repeat className='h-3 w-3' />
+              </span>
+            )}
+
+            {/* Spacer and chevron */}
+            <div className='flex-1' />
+            <ChevronRight className='h-4 w-4 flex-shrink-0 text-muted-foreground/50 transition-colors group-hover:text-muted-foreground' />
+          </div>
         </div>
-      </div>
-    </button>
+      </button>
+    </div>
   );
 });
 

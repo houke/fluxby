@@ -8,6 +8,11 @@
  */
 import { readFromOPFSSync } from '@fluxby/database';
 import { invoke } from './tauri-bridge';
+import {
+  buildCategoryRequest,
+  AUTO_CATEGORY_CONFIDENCE_THRESHOLD,
+} from './typesafe-category-request';
+export { AUTO_CATEGORY_CONFIDENCE_THRESHOLD } from './typesafe-category-request';
 
 const TYPESAFE_API_BASE = 'https://api.typesafe.ai';
 const TYPESAFE_DEV_PROXY = '/typesafe-api';
@@ -92,8 +97,6 @@ export interface ChoiceAnswer {
 }
 
 export type Answer = NoulAnswer | ChoiceAnswer;
-
-export const AUTO_CATEGORY_CONFIDENCE_THRESHOLD = 0.6;
 
 export interface TypeSafeResponse {
   model: string;
@@ -312,32 +315,8 @@ export async function suggestCategories(params: {
   const categoryIds = new Map(
     categories.map((category, index) => [`c${index}`, category.id])
   );
-  const criteria: Record<string, string | null> = Object.fromEntries(
-    categories.map((category, index) => [`c${index}`, category.name])
-  );
-  criteria.none = 'The transaction does not clearly fit any listed category';
-
-  const buildRequest = (batch: typeof transactions) => {
-    const questions: Record<string, Question> = {};
-    batch.forEach((_, index) => {
-      questions[`transaction_${index}`] = {
-        type: 'choice',
-        instructions: `Which category best fits \`transactions[${index}]\`? Use merchant, description, counterparty, amount, and amount sign together. Choose none when the evidence is insufficient or several categories are similarly plausible.`,
-        criteria,
-      };
-    });
-    return {
-      state: {
-        transactions: batch.map((transaction) => ({
-          merchant: transaction.merchantName ?? '',
-          description: transaction.description ?? '',
-          counterparty: transaction.opposingAccountName ?? '',
-          amount: transaction.amount,
-        })),
-      },
-      questions,
-    };
-  };
+  const buildRequest = (batch: typeof transactions) =>
+    buildCategoryRequest(batch, categories);
 
   type Suggestion = { categoryId: string; confidence: number } | null;
   const classify = async (
@@ -359,6 +338,7 @@ export async function suggestCategories(params: {
           answer.choice === 'none' ||
           !categoryId ||
           !Number.isFinite(answer.confidence) ||
+          answer.confidence > 1 ||
           answer.confidence <= AUTO_CATEGORY_CONFIDENCE_THRESHOLD
         ) {
           return null;

@@ -40,6 +40,7 @@ export const SearchInput = memo(function SearchInput({
 
   // Debounce changes to parent
   useEffect(() => {
+    if (debounceMs === 0) return;
     // Skip on initial mount
     if (isInitialMount.current) {
       isInitialMount.current = false;
@@ -68,13 +69,18 @@ export const SearchInput = memo(function SearchInput({
     onChange('');
   };
 
+  const handleInput = (nextValue: string) => {
+    setInternalValue(nextValue);
+    if (debounceMs === 0) onChange(nextValue);
+  };
+
   return (
     <div className={`relative ${className || ''}`}>
       <Search className='absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
       <Input
         placeholder={placeholder}
         value={internalValue}
-        onChange={(e) => setInternalValue(e.target.value)}
+        onChange={(e) => handleInput(e.target.value)}
         className='pr-8 pl-10'
       />
       {internalValue && (

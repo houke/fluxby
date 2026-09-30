@@ -19,8 +19,6 @@ import {
   type PeerDevice,
   type SyncChange,
   type SyncableRow,
-  createSyncEngine,
-  type SyncEngine,
   type SyncStatus,
   type ForceSyncResult,
   formatRelativeTime,
@@ -29,8 +27,13 @@ import {
   readFromOPFSSync,
   writeToOPFSWithCache,
   isSettingsCacheInitialized,
+  LATEST_MIGRATION_VERSION,
 } from '@fluxby/database';
-import { debugLog } from '@/lib/debug';
+import { useQueryClient } from '@tanstack/react-query';
+import { ProfileDataSync, subscribeLocalDataChanges } from '@/lib/data-sync';
+import { useDatabase } from './DatabaseContext';
+import { useProfile } from './ProfileContext';
+import { useEncryption } from './EncryptionContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 // Storage keys (used as OPFS filenames)
@@ -109,10 +112,6 @@ export function useSync() {
 
 interface SyncProviderProps {
   children: ReactNode;
-  /** Callback when sync data is received */
-  onSyncReceived?: (changes: SyncChange<SyncableRow>[]) => void;
-  /** Callback when a peer requests sync - should return local changes to send */
-  onSyncRequested?: (peerId: string) => Promise<SyncChange<SyncableRow>[]>;
 }
 
 // Generate or retrieve device ID from OPFS cache
@@ -163,7 +162,8 @@ function getStoredPairedDevices(): PeerDevice[] {
 
   if (isSettingsCacheInitialized()) {
     const stored = readFromOPFSSync<PeerDevice[]>(PAIRED_DEVICES_KEY);
-    if (stored && Array.isArray(stored)) return stored;
+    if (stored && Array.isArray(stored))
+      return stored.map((device) => ({ ...device, isConnected: false }));
   }
 
   return [];
@@ -187,12 +187,12 @@ function getAutoSyncEnabled(): boolean {
   return true; // Default to enabled
 }
 
-export function SyncProvider({
-  children,
-  onSyncReceived,
-  onSyncRequested,
-}: SyncProviderProps) {
+export function SyncProvider({ children }: SyncProviderProps) {
   const { t } = useLanguage();
+  const { db, isReady } = useDatabase();
+  const { activeProfileId } = useProfile();
+  const { isUnlocked } = useEncryption();
+  const queryClient = useQueryClient();
   const [deviceId] = useState(getOrCreateDeviceId);
   const [deviceName, setDeviceNameState] = useState(() =>
     getDeviceName(t.common.unknownDevice)
@@ -202,343 +202,366 @@ export function SyncProvider({
   const [pairedDevices, setPairedDevices] = useState<PeerDevice[]>(
     getStoredPairedDevices
   );
-  const [pendingPairingRequest, setPendingPairingRequest] = useState<{
-    deviceName: string;
-    accept: () => void;
-    reject: () => void;
-  } | null>(null);
+  const [pendingPairingRequest, setPendingPairingRequest] =
+    useState<SyncContextType['pendingPairingRequest']>(null);
   const [lastError, setLastError] = useState<Error | null>(null);
-  const [peerSync, setPeerSync] = useState<PeerSync | null>(null);
   const [syncStatus, setSyncStatus] = useState<SyncStatus>(defaultSyncStatus);
   const [autoSyncEnabled, setAutoSyncEnabledState] =
     useState(getAutoSyncEnabled);
-
-  // Ref to track if we've already initialized (prevents StrictMode double-init issues)
-  const initRef = useRef(false);
-  const syncRef = useRef<PeerSync | null>(null);
-  const syncEngineRef = useRef<SyncEngine | null>(null);
-
-  // Retry initialization (exported via context but currently internal)
-  const _retryInitialization = useCallback(() => {
-    setLastError(null);
-    initRef.current = false;
-    // Force re-execution of effect by toggling a dummy state or relying on the fact initRef is false?
-    // Actually, just calling the effect logic again or resetting state might work.
-    // Better: let's separate initialization logic into a function.
-    // For now, simpler: invalidate the peerSync and trigger re-init.
-    if (peerSync) {
-      peerSync.destroy();
-      setPeerSync(null);
-    }
-    // The effect depends on [deviceId, ...]. We need to trigger it.
-    // We can do this by forcing a re-render or just calling init logic.
-    // Let's reset initRef and ensure the effect runs.
-    // Since effect has no other dependencies that change, we might need a version counter.
-  }, [peerSync]);
-
   const [initVersion, setInitVersion] = useState(0);
+  const syncRef = useRef<PeerSync | null>(null);
+  const adapterRef = useRef<ProfileDataSync | null>(null);
+  const activeRef = useRef<string | null>(null);
+  activeRef.current = isUnlocked && isReady ? activeProfileId : null;
+  const operationRef = useRef<Promise<ForceSyncResult> | null>(null);
+  const requestRef = useRef<() => Promise<ForceSyncResult>>(async () => ({
+    success: false,
+    changesPushed: 0,
+    changesReceived: 0,
+  }));
+  const autoSyncRef = useRef(autoSyncEnabled);
+  autoSyncRef.current = autoSyncEnabled;
 
-  // Initialize SyncEngine
-  useEffect(() => {
-    if (syncEngineRef.current) return;
-
-    const engine = createSyncEngine({
-      autoSync: autoSyncEnabled,
-      debounceDelay: 500,
-      maxBatchSize: 100,
-    });
-
-    // Subscribe to status changes
-    const unsubscribe = engine.subscribeStatus((status) => {
-      setSyncStatus(status);
-    });
-
-    syncEngineRef.current = engine;
-
-    return () => {
-      unsubscribe();
-      engine.destroy();
-      syncEngineRef.current = null;
-    };
-  }, [autoSyncEnabled]);
-
-  // Update sync engine connected peer count when pairedDevices change
-  useEffect(() => {
-    if (!syncEngineRef.current) return;
-    const connectedCount = pairedDevices.filter((d) => d.isConnected).length;
-    syncEngineRef.current.setConnectedPeers(connectedCount);
-  }, [pairedDevices]);
-
-  useEffect(() => {
-    if (initRef.current && syncRef.current) return;
-
-    initRef.current = true;
-    let active = true;
-
-    const sync = createPeerSync({
-      deviceId,
-      deviceName,
-      onPairingRequest: (name, accept, reject) => {
-        if (!active) return;
-        setPendingPairingRequest({ deviceName: name, accept, reject });
-      },
-      onPaired: (device) => {
-        if (!active) return;
-        setPairedDevices((prev) => {
-          const updated = [...prev.filter((d) => d.id !== device.id), device];
-          savePairedDevices(updated);
-          // Update sync engine connected peers using the updated list
-          if (syncEngineRef.current) {
-            const connectedCount = updated.filter((d) => d.isConnected).length;
-            syncEngineRef.current.setConnectedPeers(connectedCount);
-          }
-          return updated;
-        });
-        setPendingPairingRequest(null);
-      },
-      onSyncReceived: (changes) => {
-        // Notify the sync engine about incoming changes
-        if (syncEngineRef.current) {
-          syncEngineRef.current.shouldApplyIncomingChanges(changes);
-        }
-        // Call the original handler
-        onSyncReceived?.(changes);
-        // Mark sync complete
-        if (syncEngineRef.current) {
-          syncEngineRef.current.markIncomingSyncComplete();
-        }
-      },
-      onConnectionChange: (peerId, connected) => {
-        if (!active) return;
-        setPairedDevices((prev) => {
-          const updated = prev.map((d) =>
-            d.peerId === peerId ? { ...d, isConnected: connected } : d
-          );
-          savePairedDevices(updated);
-          // Update sync engine connected peers
-          if (syncEngineRef.current) {
-            const connectedCount = updated.filter((d) => d.isConnected).length;
-            syncEngineRef.current.setConnectedPeers(connectedCount);
-          }
-          return updated;
-        });
-      },
-      onError: (error) => {
-        if (!active) return;
-        setLastError(error);
-      },
-      onSyncRequested: async (peerId) => {
-        // When a peer requests sync, return our local changes
-        // The caller should provide this callback to fetch changes from the database
-        if (!active) return [];
-        try {
-          const changes = onSyncRequested ? await onSyncRequested(peerId) : [];
-          return changes;
-        } catch (error) {
-          console.error('Error fetching local changes for sync:', error);
-          return [];
-        }
-      },
-    });
-
-    syncRef.current = sync;
-    setPeerSync(sync);
-
-    sync
-      .initialize()
-      .then((peerId) => {
-        if (!active) return;
-        debugLog('Sync initialized with Peer ID:', peerId);
-        setIsInitialized(true);
-      })
-      .catch((err) => {
-        if (!active) return;
-        if (!err?.message?.includes('destroyed')) {
-          console.error('Sync initialization failed:', err);
-          setLastError(err);
-        }
-      });
-
-    return () => {
-      active = false;
-      if (syncRef.current === sync) {
-        sync.destroy();
-        syncRef.current = null;
-        initRef.current = false;
-        setIsInitialized(false);
-      }
-    };
-  }, [deviceId, deviceName, onSyncReceived, onSyncRequested, initVersion]);
-
-  const retryInit = useCallback(() => {
-    setLastError(null);
-    setIsInitialized(false);
-    if (syncRef.current) {
-      syncRef.current.destroy();
-      syncRef.current = null;
-    }
-    initRef.current = false;
-    setInitVersion((v) => v + 1);
+  const reportError = useCallback((error: unknown) => {
+    const failure = error instanceof Error ? error : new Error(String(error));
+    setLastError(failure);
+    setSyncStatus((status) => ({
+      ...status,
+      state: 'error',
+      isSyncing: false,
+      lastError: failure.message,
+    }));
   }, []);
 
-  // Update device name
-  const setDeviceName = useCallback((name: string) => {
-    setDeviceNameState(name);
-    if (typeof window !== 'undefined') {
-      writeToOPFSWithCache(DEVICE_NAME_KEY, name).catch((err) =>
-        console.warn('Failed to save device name to OPFS:', err)
-      );
-    }
-  }, []);
-
-  // Generate a new pairing code
-  const generateNewPairingCode = useCallback(() => {
-    if (!peerSync) return;
-    const peerId = peerSync.getPeerId();
-    if (!peerId) {
-      setLastError(new Error('Peer not fully initialized'));
-      return;
-    }
-    const code = peerSync.startPairing();
-    // Include the peer ID in the code for easier pairing
-    setPairingCode(`${peerId}:${code}`);
-  }, [peerSync]);
-
-  // Connect with peer ID and pairing code
-  const connectWithPairingCode = useCallback(
-    async (combinedCode: string): Promise<boolean> => {
-      if (!peerSync) return false;
-
-      try {
-        const parts = combinedCode.split(':');
-        if (parts.length === 2) {
-          await peerSync.connectWithCode(parts[0], parts[1]);
-        } else {
-          await peerSync.connectWithCode(combinedCode, '');
-        }
-        return true;
-      } catch (err) {
-        setLastError(err instanceof Error ? err : new Error(String(err)));
-        throw err; // Propagate error to the caller
-      }
-    },
-    [peerSync]
-  );
-
-  // Send sync changes
-  const sendSyncChanges = useCallback(
-    (peerId: string, changes: SyncChange[]) => {
-      peerSync?.sendChanges(peerId, changes);
-    },
-    [peerSync]
-  );
-
-  // Request sync
-  const requestSync = useCallback(
-    (peerId: string, sinceTimestamp: number) => {
-      peerSync?.requestSync(peerId, sinceTimestamp);
-    },
-    [peerSync]
-  );
-
-  // Disconnect device
-  const disconnectDevice = useCallback(
-    (deviceIdToRemove: string) => {
-      peerSync?.disconnect(deviceIdToRemove);
-      setPairedDevices((prev) => {
-        const updated = prev.filter((d) => d.id !== deviceIdToRemove);
-        savePairedDevices(updated);
-        return updated;
-      });
-    },
-    [peerSync]
-  );
-
-  // Force sync with all connected peers
   const forceSync = useCallback(async (): Promise<ForceSyncResult> => {
-    if (!syncEngineRef.current) {
+    if (operationRef.current) return operationRef.current;
+    const peer = syncRef.current;
+    const adapter = adapterRef.current;
+    const devices =
+      peer
+        ?.getPairedDevices()
+        .filter(
+          (device) =>
+            device.isConnected && device.localProfileId === activeRef.current
+        ) || [];
+    if (
+      !peer ||
+      !adapter ||
+      adapter.profileId !== activeRef.current ||
+      !devices.length
+    ) {
       return {
         success: false,
         changesPushed: 0,
         changesReceived: 0,
-        error: 'Sync engine not initialized',
+        error: t.settings.sync.notConnected,
       };
     }
-
-    // Set up push handler to broadcast to all connected devices
-    syncEngineRef.current.setPushHandler((changes) => {
-      if (peerSync) {
-        peerSync.broadcastChanges(changes);
+    const operation = (async (): Promise<ForceSyncResult> => {
+      setSyncStatus((status) => ({
+        ...status,
+        state: 'syncing',
+        isSyncing: true,
+        lastError: null,
+      }));
+      try {
+        await adapter.captureLocalChanges();
+        const changes = await adapter.getChanges();
+        if (adapter.profileId !== activeRef.current || syncRef.current !== peer)
+          throw new Error('Active profile changed during sync');
+        // Full profile snapshots include every dependency and tombstone. Status waits for commits and peer acknowledgements.
+        await Promise.all(
+          devices.map((device) => peer.sendChanges(device.id, changes))
+        );
+        const received = await Promise.all(
+          devices.map((device) => peer.requestSync(device.id, 0))
+        );
+        if (adapter.profileId !== activeRef.current || syncRef.current !== peer)
+          throw new Error('Active profile changed during sync');
+        const lastSyncedAt = Date.now();
+        setLastError(null);
+        setSyncStatus((status) => ({
+          ...status,
+          state: 'idle',
+          isSyncing: false,
+          pendingChanges: 0,
+          lastSyncedAt,
+          lastError: null,
+        }));
+        const updated = peer.getPairedDevices();
+        setPairedDevices((previous) => {
+          const merged = previous.map(
+            (device) => updated.find((item) => item.id === device.id) || device
+          );
+          savePairedDevices(merged);
+          return merged;
+        });
+        return {
+          success: true,
+          changesPushed: changes.length,
+          changesReceived: received.reduce((sum, count) => sum + count, 0),
+        };
+      } catch (error) {
+        if (syncRef.current === peer) reportError(error);
+        return {
+          success: false,
+          changesPushed: 0,
+          changesReceived: 0,
+          error: error instanceof Error ? error.message : String(error),
+        };
       }
-    });
+    })();
+    operationRef.current = operation;
+    try {
+      return await operation;
+    } finally {
+      if (operationRef.current === operation) operationRef.current = null;
+    }
+  }, [reportError, t.settings.sync.notConnected]);
+  requestRef.current = forceSync;
 
-    // Set up force sync handler to request from all peers
-    syncEngineRef.current.setForceSyncHandler(async (sinceTimestamp) => {
-      if (peerSync) {
-        const devices = peerSync.getPairedDevices();
-        for (const device of devices) {
-          if (device.isConnected) {
-            peerSync.requestSync(device.id, sinceTimestamp);
-          }
-        }
+  useEffect(() => {
+    if (!db || !isReady || !isUnlocked || !activeProfileId) return;
+    let active = true;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    let pendingReset = false;
+    const adapter = new ProfileDataSync(
+      db,
+      activeProfileId,
+      deviceId,
+      () => active && activeRef.current === activeProfileId
+    );
+    adapterRef.current = adapter;
+    setPairedDevices((previous) =>
+      previous.map((device) => ({ ...device, isConnected: false }))
+    );
+    setSyncStatus({ ...defaultSyncStatus, state: 'offline' });
+    setPendingPairingRequest(null);
+    setPairingCode(null);
+    const peer = createPeerSync({
+      deviceId,
+      deviceName,
+      profileId: activeProfileId,
+      schemaVersion: LATEST_MIGRATION_VERSION,
+      getActiveProfileId: () => activeRef.current,
+      onPairingRequest: (name, accept, reject) => {
+        if (active)
+          setPendingPairingRequest({
+            deviceName: name,
+            accept: () => {
+              accept();
+              setPendingPairingRequest(null);
+            },
+            reject: () => {
+              reject();
+              setPendingPairingRequest(null);
+            },
+          });
+      },
+      onPaired: (device) => {
+        if (!active) return;
+        setPairedDevices((previous) => {
+          const updated = [
+            ...previous.filter((item) => item.id !== device.id),
+            device,
+          ];
+          savePairedDevices(updated);
+          return updated;
+        });
+        setPendingPairingRequest(null);
+        setSyncStatus((status) => ({
+          ...status,
+          connectedPeers: peer
+            .getPairedDevices()
+            .filter((item) => item.isConnected).length,
+        }));
+        // Both users approved merging these two active profiles.
+        timer = setTimeout(() => {
+          void requestRef.current();
+        }, 100);
+      },
+      onSyncReceived: async (changes, device) => {
+        if (
+          !active ||
+          activeRef.current !== adapter.profileId ||
+          device.localProfileId !== adapter.profileId ||
+          !device.remoteProfileId
+        )
+          throw new Error('Sync profile is no longer active');
+        const applied = await adapter.applyChanges(
+          changes,
+          device.remoteProfileId,
+          device.id
+        );
+        if (!active || activeRef.current !== adapter.profileId)
+          throw new Error('Active profile changed during sync');
+        await queryClient.invalidateQueries();
+        return applied;
+      },
+      onSyncRequested: async () => {
+        if (!active || activeRef.current !== adapter.profileId)
+          throw new Error('Sync profile is no longer active');
+        await adapter.captureLocalChanges();
+        return adapter.getChanges();
+      },
+      onConnectionChange: (peerId, connected) => {
+        if (!active) return;
+        setPairedDevices((previous) => {
+          const updated = previous.map((device) =>
+            device.peerId === peerId
+              ? {
+                  ...device,
+                  isConnected:
+                    connected && device.localProfileId === activeRef.current,
+                }
+              : device
+          );
+          savePairedDevices(updated);
+          const count = updated.filter(
+            (device) =>
+              device.isConnected && device.localProfileId === activeRef.current
+          ).length;
+          setSyncStatus((status) => ({
+            ...status,
+            connectedPeers: count,
+            state: count ? status.state : 'offline',
+          }));
+          return updated;
+        });
+      },
+      onError: (error) => {
+        if (active) reportError(error);
+      },
+    });
+    syncRef.current = peer;
+    const unsubscribe = subscribeLocalDataChanges((change) => {
+      if (!active || (change.profileId && change.profileId !== activeProfileId))
+        return;
+      pendingReset ||=
+        !!change.method && /^(restore|reset)/.test(change.method);
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => {
+        const reset = pendingReset;
+        pendingReset = false;
+        void adapter
+          .captureLocalChanges(reset)
+          .then((changes) => {
+            if (!active) return;
+            setSyncStatus((status) => ({
+              ...status,
+              pendingChanges: status.pendingChanges + changes.length,
+            }));
+            if (
+              autoSyncRef.current &&
+              peer.getPairedDevices().some((device) => device.isConnected)
+            )
+              void requestRef.current();
+          })
+          .catch(reportError);
+      }, 500);
+    });
+    void adapter
+      .initialize()
+      .then(() => peer.initialize())
+      .then(() => {
+        if (active) setIsInitialized(true);
+      })
+      .catch((error) => {
+        if (active) reportError(error);
+      });
+    return () => {
+      active = false;
+      unsubscribe();
+      if (timer) clearTimeout(timer);
+      peer.destroy();
+      if (syncRef.current === peer) syncRef.current = null;
+      if (adapterRef.current === adapter) adapterRef.current = null;
+      operationRef.current = null;
+      setIsInitialized(false);
+    };
+  }, [
+    db,
+    isReady,
+    isUnlocked,
+    activeProfileId,
+    deviceId,
+    deviceName,
+    initVersion,
+    queryClient,
+    reportError,
+  ]);
+
+  const setDeviceName = useCallback((name: string) => {
+    setDeviceNameState(name.trim().slice(0, 100));
+    void writeToOPFSWithCache(DEVICE_NAME_KEY, name.trim().slice(0, 100));
+  }, []);
+  const generateNewPairingCode = useCallback(() => {
+    const peer = syncRef.current;
+    if (!peer?.getPeerId()) return;
+    try {
+      setPairingCode(`${peer.getPeerId()}:${peer.startPairing()}`);
+    } catch (error) {
+      reportError(error);
+    }
+  }, [reportError]);
+  const connectWithPairingCode = useCallback(
+    async (code: string): Promise<boolean> => {
+      const peer = syncRef.current;
+      if (!peer) return false;
+      const [peerId, pairing, extra] = code.trim().split(':');
+      if (!peerId || !pairing || extra) throw new Error('Invalid pairing code');
+      try {
+        await peer.connectWithCode(peerId, pairing);
+        return true;
+      } catch (error) {
+        reportError(error);
+        throw error;
       }
+    },
+    [reportError]
+  );
+  const sendSyncChanges = useCallback(
+    (peerId: string, changes: SyncChange[]) => {
+      void syncRef.current?.sendChanges(peerId, changes).catch(reportError);
+    },
+    [reportError]
+  );
+  const requestSync = useCallback(
+    (peerId: string, sinceTimestamp: number) => {
+      void syncRef.current
+        ?.requestSync(peerId, sinceTimestamp)
+        .catch(reportError);
+    },
+    [reportError]
+  );
+  const disconnectDevice = useCallback((id: string) => {
+    syncRef.current?.disconnect(id);
+    setPairedDevices((previous) => {
+      const updated = previous.filter((device) => device.id !== id);
+      savePairedDevices(updated);
+      return updated;
     });
-
-    return await syncEngineRef.current.forceSync();
-  }, [peerSync]);
-
-  // Queue a change for auto-sync
-  const queueChange = useCallback(
-    (change: SyncChange<SyncableRow>) => {
-      if (!syncEngineRef.current) return;
-
-      // Set up push handler
-      syncEngineRef.current.setPushHandler((changes) => {
-        if (peerSync) {
-          peerSync.broadcastChanges(changes);
-        }
-      });
-
-      syncEngineRef.current.queueChange(change);
-    },
-    [peerSync]
-  );
-
-  // Queue multiple changes for auto-sync
-  const queueChanges = useCallback(
-    (changes: SyncChange<SyncableRow>[]) => {
-      if (!syncEngineRef.current) return;
-
-      // Set up push handler
-      syncEngineRef.current.setPushHandler((changesArray) => {
-        if (peerSync) {
-          peerSync.broadcastChanges(changesArray);
-        }
-      });
-
-      syncEngineRef.current.queueChanges(changes);
-    },
-    [peerSync]
-  );
-
-  // Format last synced time
+  }, []);
+  const queueChange = useCallback((_change: SyncChange<SyncableRow>) => {
+    if (autoSyncRef.current) void requestRef.current();
+  }, []);
+  const queueChanges = useCallback((_changes: SyncChange<SyncableRow>[]) => {
+    if (autoSyncRef.current) void requestRef.current();
+  }, []);
   const formatLastSynced = useCallback(
-    (locale: 'en' | 'nl' = 'en'): string => {
-      return formatRelativeTime(syncStatus.lastSyncedAt, locale);
-    },
+    (locale: 'en' | 'nl' = 'en') =>
+      formatRelativeTime(syncStatus.lastSyncedAt, locale),
     [syncStatus.lastSyncedAt]
   );
-
-  // Toggle auto-sync
   const setAutoSyncEnabled = useCallback((enabled: boolean) => {
     setAutoSyncEnabledState(enabled);
-    if (typeof window !== 'undefined') {
-      writeToOPFSWithCache(AUTO_SYNC_KEY, enabled).catch((err) =>
-        console.warn('Failed to save auto-sync setting to OPFS:', err)
-      );
-    }
+    void writeToOPFSWithCache(AUTO_SYNC_KEY, enabled);
+    if (enabled) void requestRef.current();
   }, []);
-
+  const retryInitialization = useCallback(() => {
+    setLastError(null);
+    setInitVersion((version) => version + 1);
+  }, []);
   const value = useMemo(
     () => ({
       deviceId,
@@ -554,7 +577,7 @@ export function SyncProvider({
       requestSync,
       disconnectDevice,
       lastError,
-      retryInitialization: retryInit,
+      retryInitialization,
       syncStatus,
       forceSync,
       queueChange,
@@ -577,7 +600,7 @@ export function SyncProvider({
       requestSync,
       disconnectDevice,
       lastError,
-      retryInit,
+      retryInitialization,
       syncStatus,
       forceSync,
       queueChange,
@@ -587,6 +610,5 @@ export function SyncProvider({
       setAutoSyncEnabled,
     ]
   );
-
   return <SyncContext.Provider value={value}>{children}</SyncContext.Provider>;
 }

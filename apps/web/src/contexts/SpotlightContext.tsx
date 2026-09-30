@@ -25,6 +25,7 @@ import {
   Moon,
   Plus,
   CalendarClock,
+  Target,
   type LucideIcon,
 } from 'lucide-react';
 import { useLanguage } from './LanguageContext';
@@ -175,6 +176,13 @@ export function SpotlightProvider({ children }: SpotlightProviderProps) {
       group: 'pages',
       keywords: t.spotlight.keywords.subscriptions,
       onSelect: () => navigate('/subscriptions'),
+    },
+    {
+      id: 'page-planning',
+      title: t.nav.planning,
+      icon: Target,
+      group: 'pages',
+      onSelect: () => navigate('/planning'),
     },
     {
       id: 'page-addressbook',

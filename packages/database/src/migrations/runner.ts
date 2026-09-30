@@ -338,6 +338,7 @@ const CRITICAL_TABLES_BY_VERSION: Record<number, string[]> = {
   1: ['accounts', 'transactions', 'categories', 'profiles', 'schema_version'],
   5: ['recurring_patterns'],
   14: ['recurring_pattern_source_decisions'],
+  15: ['sync_tombstones', 'sync_row_aliases'],
 };
 
 /**
@@ -347,6 +348,9 @@ const CRITICAL_TABLES_BY_VERSION: Record<number, string[]> = {
  */
 const CRITICAL_COLUMNS_BY_VERSION: Record<number, Record<string, string[]>> = {
   6: { recurring_patterns: ['is_dismissed'] },
+  15: {
+    subscription_dismissed_alerts: ['updated_at', 'is_deleted', 'device_id'],
+  },
 };
 
 /**

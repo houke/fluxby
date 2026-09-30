@@ -3,6 +3,7 @@ import { type TransactionCreate } from '@fluxby/shared';
 
 interface INGImportOptions {
   accountId: string;
+  accountIban?: string;
   profileId: string;
   mapping: {
     date: string;
@@ -163,16 +164,21 @@ export async function processINGRow(
   }
 
   // Get own IBAN for hash
-  const account = await db.queryOneAsync<{ iban: string }>(
-    'SELECT iban FROM accounts WHERE id = ? AND profile_id = ?',
-    [accountId, profileId]
-  );
+  const accountIban =
+    options.accountIban ??
+    (
+      await db.queryOneAsync<{ iban: string }>(
+        'SELECT iban FROM accounts WHERE id = ? AND profile_id = ?',
+        [accountId, profileId]
+      )
+    )?.iban ??
+    '';
 
   const hash = helpers.generateHash(
     date,
     amount,
     rawDescription, // Use original description for hash consistency
-    account?.iban || ''
+    accountIban
   );
 
   return {

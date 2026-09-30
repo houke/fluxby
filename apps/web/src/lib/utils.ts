@@ -1,13 +1,33 @@
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import {
-  formatCurrency,
-  formatDate,
+  formatCurrency as formatCurrencyShared,
+  formatDate as formatDateShared,
   formatPercentage,
   getMonthName,
 } from '@fluxby/shared';
+import { getStoredLanguage } from './i18n';
 
-export { formatCurrency, formatDate, formatPercentage, getMonthName };
+export { formatPercentage, getMonthName };
+
+export function formatCurrency(
+  amount: number,
+  currency = 'EUR',
+  locale?: string
+) {
+  return formatCurrencyShared(
+    amount,
+    currency,
+    locale ?? (getStoredLanguage() === 'en' ? 'en-GB' : 'nl-NL')
+  );
+}
+
+export function formatDate(date: Date | string, locale?: string) {
+  return formatDateShared(
+    date,
+    locale ?? (getStoredLanguage() === 'en' ? 'en-GB' : 'nl-NL')
+  );
+}
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));

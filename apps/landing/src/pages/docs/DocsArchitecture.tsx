@@ -27,15 +27,7 @@ function mergeChanges(local, remote) {
   return local;  // Local wins
 }`;
 
-  const securityExample = `// Password-Protected UI Lock
-1. User sets PIN/Password during onboarding
-2. Password hash stored via PBKDF2 (100k iterations)
-3. App locks on idle/close/refresh
-
-// Data Storage:
-// - Password hash: localStorage (for verification)
-// - Database: OPFS (plain SQLite, not encrypted)
-// - All data stays local (never sent to servers)`;
+  const securityExample = t.docs.architecture.securityExample;
 
   return (
     <article className='prose prose-gray dark:prose-invert max-w-none'>

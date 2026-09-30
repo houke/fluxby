@@ -324,9 +324,10 @@ export const en: LandingTranslationKeys = {
       installedBadge: 'Installed',
       openButton: 'Open Fluxby',
       browserInstructions: {
-        ios: 'Tap the Share icon and then "Add to Home Screen"',
-        android: 'Tap the menu (⋮) and then "Add to Home Screen"',
-        desktop: 'Click the install icon in the address bar',
+        ios: 'In Fluxby, tap the Share icon and then "Add to Home Screen"',
+        android: 'In Fluxby, tap the menu (⋮) and then "Add to Home Screen"',
+        desktop:
+          'Open Fluxby in your browser, then click the install icon in the address bar',
       },
     },
     note: "You don't need to install anything to use Fluxby — it runs fully in your browser. These downloads are provided for users who prefer a dedicated application on their system.",
@@ -470,10 +471,10 @@ export const en: LandingTranslationKeys = {
       subtitle: 'Learn how to authenticate your API requests with Fluxby.',
       localNote: 'Local development',
       localNoteText:
-        'Fluxby runs entirely on your local machine. No API keys or OAuth flows are needed - just add your Profile ID to requests.',
+        'The developer API binds to 127.0.0.1 by default. Remote access requires HOST=0.0.0.0, API_ALLOW_REMOTE=1, an API_AUTH_TOKEN of at least 32 characters, and an explicit CORS_ORIGIN. Send the token as Authorization: Bearer <token>.',
       profileIdTitle: 'Using the Profile ID',
       profileIdText:
-        'All API requests must include the X-Profile-ID header. This identifies which profile data you want to access.',
+        'X-Profile-ID selects the API dataset. It is not authentication and does not grant access to the separate web database.',
       getProfileIdTitle: 'Getting your Profile ID',
       option1Title: 'Option 1: From the App',
       option1Text:
@@ -493,25 +494,27 @@ export const en: LandingTranslationKeys = {
         'Fluxby uses a local-first architecture where your data is stored and encrypted locally. No cloud, no servers that can read your data.',
       zeroKnowledgeTitle: 'Zero-Knowledge Design',
       zeroKnowledgeText:
-        'Only you can access your data. The master key exists only in memory and is never stored.',
+        'The unlocked master key is held in memory. A copy encrypted with a key derived from your password is stored locally so you can unlock the database again.',
       platformsTitle: 'Supported Platforms',
       webDesc:
         'Runs in the browser with SQLite WASM. Data is stored in OPFS (Origin Private File System).',
       desktopDesc: 'Native app for Windows, macOS and Linux using Tauri 2.0.',
       headlessDesc:
         'Local API server for scripts, automations and external tools.',
+      securityExample:
+        'Stored database: encrypted pages in OPFS\nPassword verification: salted PBKDF2 hash in OPFS\nMaster key: password-wrapped in OPFS; unlocked in memory\nBackups: separately password-encrypted JSON by default\nDeveloper API: separate plain SQLite database',
       securityTitle: 'Privacy Lock & Security',
       securityText:
-        'Your data is protected by a PIN/password lock. The password is verified via PBKDF2 (100k iterations). All data stays local in your browser - it is never sent to external servers.',
+        'The web database uses page encryption with a random master key. PBKDF2-SHA256 (100,000 iterations) derives the password key that protects it. Password verification data and the wrapped master key are stored in OPFS.',
       privacyNote:
-        'Note: The password protects access to your data through the UI. The database itself is stored unencrypted in OPFS. For shoulder-surfing protection and casual access prevention.',
+        'Encryption protects stored database pages. An unlocked session can read your data. Optional AI sends the limited context you authorize to TypeSafe; paired sync sends data to the device you approve. The developer API uses a separate plain SQLite database.',
       autoLockTitle: 'Auto-Lock',
       autoLockWeb: 'Master key is wiped on refresh or tab close',
       autoLockDesktop: 'Master key is wiped when the app closes',
       autoLockIdle: 'Automatically locks after 15 minutes of inactivity',
       syncTitle: 'Sync',
       syncText:
-        'Fluxby uses peer-to-peer sync via WebRTC. Data moves directly between devices without a central server.',
+        'Fluxby pairs an explicitly approved profile between devices over WebRTC. Financial records move between paired devices; signaling and connection relay services may help establish the connection. Passwords and local device credentials are excluded.',
       syncSchemaTitle: 'Sync Schema',
       conflictTitle: 'Conflict Resolution (LWW)',
       conflictText:
@@ -519,13 +522,14 @@ export const en: LandingTranslationKeys = {
       storageTitle: 'Storage Adapters',
       backupTitle: 'Backup & Restore',
       backupText:
-        'You can create backups at any time. Backups contain your complete database and can be restored on any device.',
-      backupDesktop: 'File → Save backup... exports to your Documents folder',
-      backupWeb: 'Settings → Backup downloads a .fluxby file',
-      backupFormat: '.fluxby files contain metadata + database dump',
+        'Settings → Data management exports all financial tables. Restore validates the file and previews its contents before replacing data. A recovery snapshot is saved before replacement.',
+      backupDesktop: 'Use Settings → Data management to export a backup.',
+      backupWeb: 'Settings → Data management starts a JSON backup download.',
+      backupFormat:
+        'JSON backups include a schema version, table manifest and checksums. Password encryption is enabled by default; an unencrypted export contains readable financial data.',
       tipTitle: 'Tip',
       tipText:
-        'Create backups regularly! If you lose your PIN/password you can only restore from a backup.',
+        'Keep backups outside this device and remember their password. A started download does not prove the file was saved; a successful restore verifies that the backup can be read.',
 
       apiVsWebTitle: 'API Server vs Web App: separate databases',
       apiVsWebIntro:
@@ -2063,7 +2067,7 @@ export const en: LandingTranslationKeys = {
       v1142Title: 'Release 1.14.2',
       v1142Description: '1 bug fix.',
       v1142F1Title: 'Preserve status across logout and login',
-      v1142F1Desc: 'This shouldn\'t have happened, but it\'s fixed now!',
+      v1142F1Desc: "This shouldn't have happened, but it's fixed now!",
       v1141Date: 'September 28, 2026',
       v1141Title: 'Release 1.14.1',
       v1141Description: '3 bug fixes.',
@@ -3146,7 +3150,11 @@ Object.assign(en, {
             'Browser OPFS (sandbox)',
             'data/ folder in project',
           ],
-          ['Security', 'Password locks the UI', 'Local only (plain SQLite)'],
+          [
+            'Security',
+            'Encrypted database pages and password lock',
+            'Separate plain SQLite; loopback by default; token required for remote access',
+          ],
           [
             'Access',
             'Only through your browser with your password',
@@ -3161,9 +3169,9 @@ Object.assign(en, {
         dataFlowSteps: [
           [
             'Export from the web app',
-            'Go to Settings → Backup → Download JSON export',
+            'Go to Settings → Data management → Export (unencrypted JSON for the developer API)',
           ],
-          ['Start the API server', 'npm run dev (or just npm run dev:api)'],
+          ['Start the API server', 'npm run dev:api'],
           [
             'Import through the API',
             'POST to /api/data/import with your exported JSON',
@@ -3180,6 +3188,55 @@ Object.assign(en, {
           'Serverless:',
         ],
       },
+    },
+  },
+});
+
+Object.assign(en, {
+  helpCenter: {
+    ...en.helpCenter,
+    planning: {
+      title: 'Financial planning and transaction tools',
+      intro:
+        'Use Planning to reserve money and review your finances. Use the tools on Transactions to investigate your records and compare statements. All records belong to the active profile.',
+      sections: [
+        {
+          title: 'Savings goals and sinking funds',
+          text: 'In Planning, create a goal with a target amount and optional deadline. Choose a sinking fund for a recurring expense. Record contributions as reservations; they do not create bank transactions or move cash. Edit or delete a goal from its card.',
+        },
+        {
+          title: 'Safe to spend',
+          text: 'Set a minimum balance and additional reserves in Planning. The forecast subtracts upcoming recurring expenses, goal reservations, and your minimum balance from recorded account balances. Import recent transactions and review subscription dates before using the result. It is a planning estimate, not a bank balance.',
+        },
+        {
+          title: 'Budget rollover',
+          text: 'Enable rollover on a monthly budget to carry unused allowance into later months. The original monthly amount stays editable; selected-period totals and carry-over are displayed separately.',
+        },
+        {
+          title: 'Net worth and monthly review',
+          text: 'Add investment and other asset values or outstanding liabilities in Planning. Net worth combines those values with cash account balances. Update valuations regularly. The monthly review stores your checklist progress separately for each month and profile.',
+        },
+        {
+          title: 'Subscription reminders',
+          text: 'On Subscriptions, record a renewal date and cancellation deadline. The app highlights approaching deadlines while open; it does not send notifications when the app is closed. Check provider terms before cancelling.',
+        },
+        {
+          title: 'Compact transactions and saved views',
+          text: 'On Transactions, toggle Compact view to show more rows. Name the current filters and save a view. Select its name to restore the search, date range, categories, transaction type, contacts, payment filters and density. Views belong to the active profile.',
+        },
+        {
+          title: 'Category splits and rule explanations',
+          text: 'Open Transaction tools, select a transaction and add at least two distinct categories. Positive split amounts must equal the original amount. Splits change category reporting and budgets while cash flow and account totals stay unchanged. Remove the split to use the original category. The explanation shows current rule matches and a preview of the visible period; it does not infer how an old transaction was categorized.',
+        },
+        {
+          title: 'Statement reconciliation and history',
+          text: 'Choose Reconcile statement, an account and an inclusive date range. Enter the opening balance immediately before that range and the statement closing balance. The result compares imported movements with the statement and records any difference; it does not adjust your balance. Change history offers guarded undo where the record has not changed again.',
+        },
+        {
+          title: 'Backup preview, recovery and health',
+          text: 'In Settings → Data management, export a password-encrypted JSON backup. Keep the file outside this device and remember the password. A started download is reported separately from a verified restore. Before restoring, the app validates the table manifest, checksums and relationships and shows a preview. Replacement saves an encrypted recovery snapshot on this device first. Download that recovery copy if you need to undo the restore; browser storage is not a substitute for an external backup.',
+        },
+      ],
     },
   },
 });

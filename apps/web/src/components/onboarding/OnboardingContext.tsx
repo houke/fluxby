@@ -581,7 +581,9 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
       await queryClient.invalidateQueries();
       setState((prev) => ({
         ...prev,
-        isActive: true,
+        isActive: readFromOPFSSync<boolean>(ACKNOWLEDGED_FLAG_KEY) !== true,
+        hasCompletedOnboarding:
+          readFromOPFSSync<boolean>(ACKNOWLEDGED_FLAG_KEY) === true,
         currentChapterIndex: 0,
         currentStepIndex: 0,
       }));
@@ -606,6 +608,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
     isDbTrulyReady &&
     isUserFetched &&
     isEncryptionEnabled &&
+    readFromOPFSSync<boolean>(ACKNOWLEDGED_FLAG_KEY) !== true &&
     !state.hasCompletedOnboarding &&
     (userData === null || !hasDemoProfile);
 

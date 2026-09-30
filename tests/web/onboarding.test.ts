@@ -51,6 +51,7 @@ describe('Onboarding Data', () => {
         '/categories',
         '/analytics',
         '/subscriptions',
+        '/planning',
         '/addressbook',
         '/settings',
         '/help',
