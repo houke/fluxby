@@ -1,3 +1,4 @@
+import { MonthlyAllocation } from '@/components/budgets/MonthlyAllocation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useViewTransitionNavigate } from '@/lib/view-transitions';
 import {
@@ -466,6 +467,8 @@ export default function Budgets() {
           </div>
         }
       />
+
+      <MonthlyAllocation />
 
       {/* Add New Budget - collapsible */}
       {showAddForm && (

@@ -2,9 +2,10 @@ export interface Account {
   id: string;
   iban: string;
   name: string;
-  type: 'checking' | 'savings' | 'credit';
+  type: 'checking' | 'savings' | 'credit' | 'cash' | 'loan' | 'investment';
   bank: string;
   currentBalance: number;
+  color?: string | null;
   orderIndex?: number;
   createdAt: string;
 }
@@ -12,7 +13,7 @@ export interface Account {
 export interface AccountCreate {
   iban: string;
   name: string;
-  type: 'checking' | 'savings' | 'credit';
+  type: 'checking' | 'savings' | 'credit' | 'cash' | 'loan' | 'investment';
   bank?: string;
 }
 

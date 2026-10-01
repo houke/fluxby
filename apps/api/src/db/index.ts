@@ -1,3 +1,4 @@
+import { initializeHouseholdDemoTables } from './household-demo.js';
 import Database, { type Database as DatabaseType } from 'better-sqlite3';
 import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
@@ -38,6 +39,7 @@ export function initializeDatabase(): void {
 
   // Execute schema
   db.exec(schema);
+  initializeHouseholdDemoTables(db);
 
   // Update only legacy global defaults; profile categories retain their language.
   updateCategoriesToDutch();

@@ -1,7 +1,22 @@
+import {
+  householdPlanningNl,
+  type HouseholdPlanningTranslations,
+} from './household-planning';
+import {
+  transactionReviewNl,
+  type TransactionReviewTranslations,
+} from './transaction-review-translations';
+import {
+  householdBudgetNl,
+  type HouseholdBudgetTranslations,
+} from './household-budget-translations';
 // Dutch translations for the Fluxby web app
 import { DEMO_TRANSLATIONS, type DemoTranslations } from '@fluxby/shared';
 
 export interface TranslationKeys {
+  householdPlanning: HouseholdPlanningTranslations;
+  transactionReview: TransactionReviewTranslations;
+  householdBudget: HouseholdBudgetTranslations;
   demoData: DemoTranslations;
   common: {
     save: string;
@@ -1815,6 +1830,9 @@ export interface TranslationKeys {
 }
 
 export const nl: TranslationKeys = {
+  householdPlanning: householdPlanningNl,
+  transactionReview: transactionReviewNl,
+  householdBudget: householdBudgetNl,
   demoData: DEMO_TRANSLATIONS.nl,
   common: {
     save: 'Opslaan',

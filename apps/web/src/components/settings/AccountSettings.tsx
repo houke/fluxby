@@ -1,3 +1,4 @@
+import { AccountColors } from './AccountColors';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
@@ -65,7 +66,8 @@ interface Account {
   id: string;
   iban: string;
   name: string;
-  type: 'checking' | 'savings' | 'credit';
+  type: 'checking' | 'savings' | 'credit' | 'cash' | 'loan' | 'investment';
+  color?: string | null;
   bank: string;
   currentBalance: number;
   balance: number;
@@ -77,10 +79,12 @@ interface SortableAccountItemProps {
   account: Account;
   editingId: string | null;
   editName: string;
-  editType: 'checking' | 'savings' | 'credit';
+  editType: 'checking' | 'savings' | 'credit' | 'cash' | 'loan' | 'investment';
   editBalance: string;
   setEditName: (value: string) => void;
-  setEditType: (value: 'checking' | 'savings' | 'credit') => void;
+  setEditType: (
+    value: 'checking' | 'savings' | 'credit' | 'cash' | 'loan' | 'investment'
+  ) => void;
   setEditBalance: (value: string) => void;
   setEditingId: (value: string | null) => void;
   handleUpdate: () => void;
@@ -147,6 +151,7 @@ const SortableAccountItem = React.memo(function SortableAccountItem({
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
+    borderLeft: account.color ? `3px solid ${account.color}` : undefined,
   };
 
   return (
@@ -356,14 +361,14 @@ export function AccountSettings() {
   const queryClient = useQueryClient();
   const [newIban, setNewIban] = useState('');
   const [newName, setNewName] = useState('');
-  const [newType, setNewType] = useState<'checking' | 'savings' | 'credit'>(
-    'checking'
-  );
+  const [newType, setNewType] = useState<
+    'checking' | 'savings' | 'credit' | 'cash' | 'loan' | 'investment'
+  >('checking');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
-  const [editType, setEditType] = useState<'checking' | 'savings' | 'credit'>(
-    'checking'
-  );
+  const [editType, setEditType] = useState<
+    'checking' | 'savings' | 'credit' | 'cash' | 'loan' | 'investment'
+  >('checking');
   const [editBalance, setEditBalance] = useState('');
   const [accountOrder, setAccountOrder] = useState<string[]>([]);
   const [orderNotice, setOrderNotice] = useState<{
@@ -406,6 +411,13 @@ export function AccountSettings() {
         value: 'credit',
         label: t.settings.accounts.types.credit,
         icon: CreditCard,
+      },
+      { value: 'cash', label: t.householdBudget.cash, icon: Wallet },
+      { value: 'loan', label: t.householdBudget.loan, icon: CreditCard },
+      {
+        value: 'investment',
+        label: t.householdBudget.investment,
+        icon: PiggyBank,
       },
     ],
     [t]
@@ -546,7 +558,11 @@ export function AccountSettings() {
   });
 
   const handleCreate = () => {
-    if (!newIban.trim() || !newName.trim()) return;
+    if (
+      (!newIban.trim() && !['cash', 'loan', 'investment'].includes(newType)) ||
+      !newName.trim()
+    )
+      return;
     createMutation.mutate({
       iban: newIban.trim(),
       name: newName.trim(),
@@ -645,6 +661,10 @@ export function AccountSettings() {
                 </div>
               )}
 
+              <AccountColors />
+              <p className='text-sm text-muted-foreground'>
+                {t.householdBudget.noIban} {t.householdBudget.forecastNote}
+              </p>
               {/* New Account Form (always visible) */}
               <div className='border-t pt-4'>
                 <p className='mb-3 text-sm font-medium'>
@@ -689,7 +709,8 @@ export function AccountSettings() {
                     onClick={handleCreate}
                     disabled={
                       createMutation.isPending ||
-                      !newIban.trim() ||
+                      (!newIban.trim() &&
+                        !['cash', 'loan', 'investment'].includes(newType)) ||
                       !newName.trim()
                     }
                     className='w-full sm:w-auto'

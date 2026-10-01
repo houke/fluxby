@@ -38,7 +38,7 @@ export function withDataChangeNotifications<T extends object>(
   getProfileId: () => string | null
 ): T {
   const prefixes =
-    /^(create|update|delete|reset|import|apply|bulk|merge|seed|dismiss|confirm|decide|undo|restore|accept|reject|set|save|add|remove|discover|detect|recalculate|resolve|reorder|rename)/;
+    /^(create|update|delete|reset|import|apply|bulk|merge|seed|dismiss|confirm|decide|undo|restore|accept|reject|set|save|add|remove|discover|detect|recalculate|resolve|reorder|rename|archive|retire|mark|copy)/;
   let depth = 0;
   for (const key of Object.keys(service) as (keyof T)[]) {
     const original = service[key];
@@ -82,8 +82,41 @@ export const PROFILE_SYNC_TABLES = [
   'net_worth_items',
   'monthly_reviews',
   'saved_transaction_views',
+  'import_profiles',
+  'transaction_review_decisions',
+  'transaction_links',
+  'transaction_category_decisions',
+  'planned_cashflows',
+  'net_worth_snapshots',
+  'weekly_reviews',
+  'goal_transaction_links',
+  'goal_archive_state',
+  'household_planning_preferences',
+  'budget_months',
+  'budget_preferences',
+  'category_preferences',
+  'budget_income_plans',
+  'advanced_category_rules',
 ] as const;
 const references: Record<string, Record<string, string>> = {
+  transaction_links: { source_id: 'transactions', target_id: 'transactions' },
+  transaction_category_decisions: {
+    transaction_id: 'transactions',
+    category_id: 'categories',
+  },
+  planned_cashflows: { recurring_pattern_id: 'recurring_patterns' },
+  goal_transaction_links: {
+    goal_id: 'savings_goals',
+    transaction_id: 'transactions',
+  },
+  goal_archive_state: { goal_id: 'savings_goals' },
+  budget_months: { budget_id: 'budgets' },
+  budget_preferences: { budget_id: 'budgets' },
+  category_preferences: { category_id: 'categories' },
+  advanced_category_rules: {
+    category_id: 'categories',
+    account_id: 'accounts',
+  },
   categories: { parent_id: 'categories' },
   savings_contributions: { goal_id: 'savings_goals' },
   transactions: {
@@ -98,6 +131,17 @@ const references: Record<string, Record<string, string>> = {
   subscription_dismissed_alerts: { pattern_id: 'recurring_patterns' },
 };
 const naturalKeys: Record<string, string[]> = {
+  transaction_review_decisions: ['item_key'],
+  transaction_category_decisions: ['transaction_id'],
+  net_worth_snapshots: ['date'],
+  weekly_reviews: ['week'],
+  goal_transaction_links: ['goal_id', 'transaction_id'],
+  goal_archive_state: ['goal_id'],
+  household_planning_preferences: [],
+  budget_months: ['budget_id', 'month'],
+  budget_preferences: ['budget_id'],
+  category_preferences: ['category_id'],
+  budget_income_plans: ['month'],
   planning_preferences: [],
   monthly_reviews: ['month'],
   budgets: ['category_id', 'period', 'start_date', 'end_date'],
@@ -412,6 +456,40 @@ export class ProfileDataSync {
                 throw new Error(
                   'Sync reference does not belong to the paired profile'
                 );
+            }
+            if (table === 'transaction_review_decisions') {
+              const tokens = String(row.item_key).split(':');
+              const kind = tokens[0];
+              const pair = ['duplicate', 'transfer', 'refund'].includes(kind);
+              const single = ['uncategorized', 'spike', 'newMerchant'].includes(
+                kind
+              );
+              if (
+                (pair && tokens.length !== 3) ||
+                (single && tokens.length !== 2) ||
+                (!pair && !single && kind !== 'categorySpike')
+              )
+                throw new Error('Invalid review key');
+              const positions =
+                kind === 'categorySpike' ? [1] : pair ? [1, 2] : [1];
+              if (
+                kind === 'categorySpike' &&
+                (tokens.length !== 3 || !/^\d{4}-\d{2}$/.test(tokens[2]))
+              )
+                throw new Error('Invalid review period');
+              for (const index of positions) {
+                const parent =
+                  kind === 'categorySpike' ? 'categories' : 'transactions';
+                tokens[index] =
+                  aliases.get(key(parent, tokens[index])) || tokens[index];
+                if (!row.is_deleted && !current.has(key(parent, tokens[index])))
+                  throw new Error(
+                    'Review reference does not belong to profile'
+                  );
+              }
+              if (kind === 'duplicate' || kind === 'transfer')
+                row.item_key = [kind, ...tokens.slice(1).sort()].join(':');
+              else row.item_key = tokens.join(':');
             }
             let localId = aliases.get(key(table, remoteId));
             if (!localId) {

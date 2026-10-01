@@ -1,3 +1,4 @@
+import { householdBudgetHelp } from '../../lib/i18n/household-budget-help';
 import { useLanguage } from '../../contexts/LanguageContext';
 import HelpAnimation from '../../components/help/HelpAnimation';
 
@@ -9,7 +10,8 @@ interface CategoryExample {
 }
 
 export default function HelpCategories() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const householdHelp=householdBudgetHelp[language];
   const examples = t.helpCenter.categories.examples as CategoryExample[];
 
   return (
@@ -104,6 +106,8 @@ export default function HelpCategories() {
       <p className='text-gray-600 dark:text-gray-400'>
         {t.helpCenter?.categories?.deleteText}
       </p>
+      <h2>{householdHelp.categoryTitle}</h2>
+      <p>{householdHelp.categoryText}</p>
     </article>
   );
 }

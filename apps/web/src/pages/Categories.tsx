@@ -1,3 +1,4 @@
+import { CategoryPlanning } from '@/components/categories/CategoryPlanning';
 import {
   useMemo,
   useState,
@@ -1478,6 +1479,7 @@ export default function Categories() {
 
   return (
     <div className='space-y-6'>
+      <CategoryPlanning />
       <PageHeader
         title={t.categories.title}
         subtitle={t.categories.subtitle}

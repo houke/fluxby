@@ -1,4 +1,16 @@
 import { useState, useCallback, useMemo } from 'react';
+import {
+  ImportOptionsPanel,
+  ImportRecoveryPanel,
+} from '@/components/import/ImportTools';
+import {
+  DEFAULT_IMPORT_OPTIONS,
+  parseConfiguredCSV,
+  normalizeImportRow,
+  prepareConfiguredImport,
+  type ImportOptions,
+} from '@/lib/importers/import-options';
+import { importToolsTranslations } from '@/lib/i18n/import-tools';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useDropzone } from 'react-dropzone';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
@@ -129,7 +141,7 @@ interface SkippedRow {
 }
 
 interface GenericImportResult {
-  importId: number;
+  importId: number | string;
   filename: string;
   totalInFile: number;
   imported: number;
@@ -154,7 +166,8 @@ const MAPPING_FIELDS = [
 const DUTCH_BANKS = [
   { id: 'ing', name: 'ING', enabled: true, icon: '🦁' },
   { id: 'asn', name: 'ASN Bank', enabled: true, icon: '🌱' },
-  { id: 'rabobank', name: 'Rabobank', enabled: false, icon: null },
+  { id: 'rabobank', name: 'Rabobank', enabled: true, icon: null },
+  { id: 'abn', name: 'ABN AMRO', enabled: true, icon: null },
   { id: 'knab', name: 'Knab', enabled: false, icon: null },
   { id: 'generic', name: 'Anders / Handmatig', enabled: true, icon: null },
 ] as const;
@@ -208,10 +221,16 @@ const BANK_PRESETS: Record<
     mapping: {
       date: ['Datum', 'Boekdatum'],
       amount: ['Bedrag', 'Amount'],
-      description: ['Omschrijving', 'Description'],
+      description: [
+        'Naam tegenpartij',
+        'Omschrijving-1',
+        'Omschrijving',
+        'Description',
+      ],
+      notes: ['Omschrijving-1', 'Omschrijving'],
       iban: ['IBAN/BBAN', 'Rekening'],
-      counterparty: ['Tegenrekening', 'Naam tegenpartij'],
-      balance: ['Saldo na trn', 'Saldo'],
+      counterparty: ['Tegenrekening IBAN/BBAN', 'Tegenrekening'],
+      balance: ['Saldo na trn', 'Saldo na trn.', 'Saldo'],
     },
   },
   abn: {
@@ -222,7 +241,7 @@ const BANK_PRESETS: Record<
       description: ['Omschrijving'],
       iban: ['Rekeningnummer'],
       counterparty: ['Tegenrekeningnummer'],
-      balance: ['Mutatiesoort'],
+      balance: ['Eindsaldo'],
     },
   },
   generic: {
@@ -363,7 +382,11 @@ function HistoryCard({
 }
 
 export default function Import() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const importText = importToolsTranslations[language];
+  const [importOptions, setImportOptions] = useState<ImportOptions>(
+    DEFAULT_IMPORT_OPTIONS
+  );
   const toast = useToast();
   const { activeProfileId, activeProfile } = useProfile();
 
@@ -596,13 +619,24 @@ export default function Import() {
           requestAnimationFrame(() => resolve())
         );
         const csvContent = await file.text();
-        const data = await workerParseCSV(csvContent);
+        const data = /\.(tab|tsv|txt)$/i.test(file.name)
+          ? parseConfiguredCSV(csvContent, {
+              ...DEFAULT_IMPORT_OPTIONS,
+              delimiter: '\t',
+              decimal: '.',
+            })
+          : await workerParseCSV(csvContent);
 
         setCsvParseResult({
           headers: data.headers,
           sampleRows: data.sampleRows,
           totalRows: data.totalRows,
         });
+        setImportOptions(
+          /\.(tab|tsv|txt)$/i.test(file.name)
+            ? { ...DEFAULT_IMPORT_OPTIONS, delimiter: '\t', decimal: '.' }
+            : DEFAULT_IMPORT_OPTIONS
+        );
         setPendingFile(file);
         setModalError(null);
         setMappingNotice(null);
@@ -691,15 +725,36 @@ export default function Import() {
       mapping: ColumnMapping;
       bank: string;
     }) =>
-      api.importGenericCSV(file, mapping, undefined, bank, (current, total) => {
-        // When we reach total/total, switch to finishing phase
-        if (current === total) {
-          setImportProgress({ phase: 'finishing' });
-        } else {
-          setImportProgress({ phase: 'progress', current, total });
+      (async () => {
+        let prepared;
+        try {
+          prepared = prepareConfiguredImport(
+            await file.text(),
+            mapping,
+            importOptions
+          );
+        } catch {
+          throw new Error(importText.invalid);
         }
-      }) as Promise<GenericImportResult>,
+        return api.importGenericCSV(
+          new File([prepared.csv], file.name, { type: 'text/csv' }),
+          prepared.mapping,
+          undefined,
+          bank,
+          (current, total) => {
+            // When we reach total/total, switch to finishing phase
+            if (current === total) {
+              setImportProgress({ phase: 'finishing' });
+            } else {
+              setImportProgress({ phase: 'progress', current, total });
+            }
+          }
+        ) as Promise<GenericImportResult>;
+      })(),
     onSuccess: (data) => {
+      void queryClient.invalidateQueries({ queryKey: ['import-freshness'] });
+      void queryClient.invalidateQueries({ queryKey: ['import-recovery'] });
+      void queryClient.invalidateQueries({ queryKey: ['import-batches'] });
       setImportResults(data);
       setShowMappingDialog(false);
       setShowResultsDialog(true);
@@ -836,7 +891,11 @@ export default function Import() {
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
-    accept: { 'text/csv': ['.csv'] },
+    accept: {
+      'text/csv': ['.csv'],
+      'text/tab-separated-values': ['.tab', '.tsv'],
+      'text/plain': ['.txt'],
+    },
     maxFiles: 1,
   });
 
@@ -867,9 +926,13 @@ export default function Import() {
 
   const isMappingComplete = useMemo(() => {
     return (
-      columnMapping.date && columnMapping.amount && columnMapping.description
+      columnMapping.date &&
+      (columnMapping.amount ||
+        importOptions.debitColumn ||
+        importOptions.creditColumn) &&
+      columnMapping.description
     );
-  }, [columnMapping]);
+  }, [columnMapping, importOptions.debitColumn, importOptions.creditColumn]);
 
   // Preview data with mapped columns
   const previewData = useMemo(() => {
@@ -878,25 +941,23 @@ export default function Import() {
     const cleanKey = (key: string) => (key ? key.replace('✨ ', '') : '');
 
     return csvParseResult.sampleRows.slice(0, 10).map((row) => {
-      const amountValue = row[cleanKey(columnMapping.amount)] || '-';
-      const directionValue = columnMapping.direction
-        ? row[cleanKey(columnMapping.direction)]
-        : null;
-
-      // Format amount with direction indicator
-      let displayAmount = amountValue;
-      if (directionValue) {
-        const isExpense =
-          directionValue.toLowerCase() === 'af' ||
-          directionValue.toLowerCase() === 'debit';
-        if (isExpense && !amountValue.startsWith('-')) {
-          displayAmount = `-${amountValue}`;
-        }
+      let normalized;
+      try {
+        normalized = normalizeImportRow(row, columnMapping, importOptions);
+      } catch {
+        return {
+          date: '—',
+          amount: '—',
+          description: importText.invalid,
+          iban: undefined,
+          counterparty: undefined,
+          balance: undefined,
+        };
       }
-
+      const amountValue = normalized.__fluxby_amount;
       return {
-        date: row[cleanKey(columnMapping.date)] || '-',
-        amount: displayAmount,
+        date: normalized.__fluxby_date,
+        amount: amountValue,
         description: row[cleanKey(columnMapping.description)] || '-',
         iban: columnMapping.iban
           ? row[cleanKey(columnMapping.iban)]
@@ -909,7 +970,13 @@ export default function Import() {
           : undefined,
       };
     });
-  }, [csvParseResult, columnMapping, isMappingComplete]);
+  }, [
+    csvParseResult,
+    columnMapping,
+    isMappingComplete,
+    importOptions,
+    importText.invalid,
+  ]);
 
   const isProcessing =
     previewMutation.isPending ||
@@ -1122,6 +1189,30 @@ export default function Import() {
               </div>
             </>
 
+            <ImportOptionsPanel
+              options={importOptions}
+              onChange={setImportOptions}
+              headers={csvParseResult?.headers ?? []}
+              mapping={columnMapping}
+              bank={selectedBank}
+              onApply={(mapping, options, bank) => {
+                setColumnMapping(mapping);
+                setImportOptions(options);
+                setSelectedBank(bank);
+              }}
+              onReparse={async () => {
+                if (!pendingFile) return;
+                try {
+                  setCsvParseResult(
+                    parseConfiguredCSV(await pendingFile.text(), importOptions)
+                  );
+                  setModalError(null);
+                } catch {
+                  setModalError(importText.invalid);
+                }
+              }}
+            />
+
             {/* Preview - Show for all banks when mapping is complete and not importing */}
             {selectedBank && isMappingComplete && importProgress === null && (
               <div className='space-y-3'>
@@ -1324,6 +1415,8 @@ export default function Import() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ImportRecoveryPanel />
 
       {/* Import Results Dialog */}
       <Dialog open={showResultsDialog} onOpenChange={setShowResultsDialog}>

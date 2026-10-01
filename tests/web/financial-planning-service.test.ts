@@ -1,3 +1,4 @@
+import { migrations } from '../../packages/database/src/migrations';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import SQLite from 'better-sqlite3';
 import { SCHEMA_SQL } from '../../packages/database/src/schema';
@@ -71,9 +72,10 @@ beforeEach(async () => {
     migration015,
     migration016,
     migration017,
+    ...migrations.filter(m=>m.version>17),
   ])
     await migration.up(db);
-  sqlite.exec(`INSERT INTO schema_version(version) VALUES(17);
+  sqlite.exec(`INSERT INTO schema_version(version) VALUES(21);
     INSERT INTO users(id,name) VALUES('user','User');
     INSERT INTO profiles(id,user_id,name) VALUES('profile','user','Personal'),('other','user','Other');
     INSERT INTO accounts(id,iban,name,current_balance,profile_id) VALUES('account','NL00TEST','Account',2000,'profile'),('other-account','NL00OTHER','Other',9000,'other');

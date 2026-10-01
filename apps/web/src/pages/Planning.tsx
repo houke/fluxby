@@ -44,6 +44,7 @@ import { useProfile } from '@/contexts/ProfileContext';
 import { useToast } from '@/contexts/ToastContext';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { api } from '@/lib/api';
+import { HouseholdPlanning } from '@/components/planning/HouseholdPlanning';
 import { TransitionLink } from '@/components/layout/TransitionLink';
 
 function IconAction({
@@ -477,6 +478,12 @@ export default function Planning() {
           <TabsTrigger value='goals'>{p.goals}</TabsTrigger>
           <TabsTrigger value='net-worth'>{p.netWorth}</TabsTrigger>
           <TabsTrigger value='review'>{p.monthlyReview}</TabsTrigger>
+          <TabsTrigger
+            value='household'
+            data-onboarding='household-planning-tab'
+          >
+            {t.householdPlanning.title}
+          </TabsTrigger>
         </TabsList>
         <TabsContent value='goals'>
           <Card data-onboarding='planning-goals'>
@@ -768,6 +775,9 @@ export default function Planning() {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+        <TabsContent value='household'>
+          <HouseholdPlanning />
         </TabsContent>
       </Tabs>
 

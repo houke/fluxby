@@ -109,6 +109,11 @@ export default function HelpTransactions() {
           {t.helpCenter?.transactions?.proTipText}
         </p>
       </div>
+      <h2>{t.transactionReviewHelp.reviewTitle}</h2>
+      <p>{t.transactionReviewHelp.reviewText}</p>
+      <p>{t.transactionReviewHelp.linksText}</p>
+      <p>{t.transactionReviewHelp.billsText}</p>
+      <p>{t.transactionReviewHelp.exportText}</p>
     </article>
   );
 }

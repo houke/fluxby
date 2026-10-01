@@ -1,8 +1,10 @@
+import { householdBudgetHelp } from '../../lib/i18n/household-budget-help';
 import { useLanguage } from '../../contexts/LanguageContext';
 import HelpAnimation from '../../components/help/HelpAnimation';
 
 export default function HelpAccounts() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const householdHelp=householdBudgetHelp[language];
 
   return (
     <article className='prose prose-gray dark:prose-invert max-w-none'>
@@ -75,6 +77,8 @@ export default function HelpAccounts() {
           {t.helpCenter?.accounts?.warningText}
         </p>
       </div>
+      <h2>{householdHelp.accountTitle}</h2>
+      <p>{householdHelp.accountText}</p>
     </article>
   );
 }

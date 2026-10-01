@@ -33,6 +33,11 @@ import { migration015 } from './015_profile_sync_state.js';
 import { migration016 } from './016_financial_planning.js';
 import { migration017 } from './017_remove_transaction_tools.js';
 
+import { migration018 } from './018_dutch_import_tools.js';
+import { migration019 } from './019_transaction_review.js';
+import { migration020 } from './020_household_planning.js';
+import { migration021 } from './021_household_budgets.js';
+
 export const migrations: Migration[] = [
   migration001,
   migration002,
@@ -51,10 +56,14 @@ export const migrations: Migration[] = [
   migration015,
   migration016,
   migration017,
+  migration018,
+  migration019,
+  migration020,
+  migration021,
 ];
 
 /**
  * The highest migration version this code knows about.
  * Used to detect stale code (when database has higher version than code knows).
  */
-export const LATEST_MIGRATION_VERSION = 17;
+export const LATEST_MIGRATION_VERSION = 21;

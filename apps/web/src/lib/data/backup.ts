@@ -25,6 +25,7 @@ interface ForeignKey {
 // Domain tables are discovered from the schema, including deleted rows, so a
 // newly introduced feature cannot silently disappear from backup round trips.
 const LOCAL_TABLES = new Set([
+  'import_recovery_snapshots',
   'schema_version',
   'devices',
   'sync_log',

@@ -103,6 +103,7 @@ import {
 } from '@/components/transactions/OptimizedFilters';
 import { TransactionRowBadges } from '@/components/transactions/TransactionRowBadges';
 import { TransactionCard } from '@/components/transactions/TransactionCard';
+import { TransactionReview } from '@/components/transaction-review/TransactionReview';
 import { SavedTransactionViews } from '@/components/transactions/SavedTransactionViews';
 import type { TransactionView } from '@/lib/transaction-view';
 import { Currency } from '@/components/ui/currency';
@@ -2291,6 +2292,7 @@ export default function Transactions() {
         </div>
 
         <div className='space-y-3 px-3 sm:px-0'>
+          <TransactionReview view={currentView} />
           <SavedTransactionViews
             view={currentView}
             onApply={applyView}

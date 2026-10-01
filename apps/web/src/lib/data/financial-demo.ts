@@ -1,3 +1,6 @@
+import { seedTransactionReviewDemo } from './transaction-review-demo';
+import { seedImportProfilesDemo } from './import-demo';
+import { seedHouseholdPlanningDemo } from './household-planning-demo';
 import {
   addMonthsToDateOnly,
   formatDateISO,
@@ -6,6 +9,24 @@ import {
 import type { FinancialDatabase } from './financial-planning';
 
 export const FINANCIAL_FEATURE_TABLES = [
+  'import_recovery_snapshots',
+  'import_batches',
+  'advanced_category_rules',
+  'budget_income_plans',
+  'category_preferences',
+  'budget_preferences',
+  'budget_months',
+  'household_planning_preferences',
+  'goal_archive_state',
+  'goal_transaction_links',
+  'weekly_reviews',
+  'net_worth_snapshots',
+  'planned_cashflows',
+  'transaction_category_decisions',
+  'transaction_links',
+  'transaction_review_decisions',
+  'import_profiles',
+
   'saved_transaction_views',
   'monthly_reviews',
   'net_worth_items',
@@ -113,4 +134,10 @@ export async function seedFinancialPlanningDemo(
     'UPDATE recurring_patterns SET renewal_date=?,cancellation_deadline=? WHERE profile_id=? AND merchant_name=?',
     [addMonthsToDateOnly(today, 1), today, profileId, 'Netflix']
   );
+  await seedImportProfilesDemo(db, profileId, language);
+  await seedHouseholdPlanningDemo(db, profileId, language);
+  await seedTransactionReviewDemo(db, profileId, language);  await db.runAsync('INSERT INTO budget_income_plans(id,month,expected_income,profile_id,created_at,updated_at) VALUES(?,?,?,?,?,?)',[crypto.randomUUID(),today.slice(0,7),4200,profileId,now,now]);
+  const category=await db.queryOneAsync<{id:string}>('SELECT category_id id FROM budgets WHERE profile_id=? AND category_id IS NOT NULL AND is_deleted=0 LIMIT 1',[profileId]);
+  if(category)await db.runAsync("INSERT INTO category_preferences(id,category_id,is_fixed,allocation_group,profile_id,created_at,updated_at) VALUES(?,?,1,'needs',?,?,?)",[crypto.randomUUID(),category.id,profileId,now,now]);
+
 }

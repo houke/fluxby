@@ -1,3 +1,5 @@
+import { HOUSEHOLD_BUDGET_SCHEMA_SQL } from '../../packages/database/src/migrations/021_household_budgets';
+import { TRANSACTION_REVIEW_SCHEMA_SQL } from '../../packages/database/src/migrations/019_transaction_review';
 import Sqlite from 'better-sqlite3';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -25,6 +27,8 @@ beforeEach(() => {
     CREATE TABLE transactions (id TEXT PRIMARY KEY, category_id TEXT, account_id TEXT, profile_id TEXT, amount REAL, type TEXT, date TEXT, is_deleted INTEGER DEFAULT 0);
     CREATE TABLE budgets (id TEXT PRIMARY KEY, category_id TEXT, amount REAL, period TEXT, profile_id TEXT, created_at INTEGER, updated_at INTEGER, start_date TEXT, end_date TEXT, rollover_enabled INTEGER DEFAULT 0, is_deleted INTEGER DEFAULT 0);
   `);
+  sqlite.exec(HOUSEHOLD_BUDGET_SCHEMA_SQL);
+  sqlite.exec(TRANSACTION_REVIEW_SCHEMA_SQL);
   const insert = sqlite.prepare(
     'INSERT INTO categories (id, profile_id, name) VALUES (?, ?, ?)'
   );

@@ -391,6 +391,16 @@ export const onboardingChapters: OnboardingChapter[] = [
     },
     steps: [
       {
+        id: 'transaction-review',
+        title: { nl: 'Transacties controleren', en: 'Review transactions' },
+        content: {
+          nl: 'Controleer suggesties, bevestig terugbetalingen of overboekingen en exporteer je huidige selectie. Elke koppeling blijft jouw keuze.',
+          en: 'Review suggestions, confirm repayments or transfers and export your current selection. You decide which records to link.',
+        },
+        selector: '[data-onboarding="transaction-review"]',
+        placement: 'bottom',
+      },
+      {
         id: 'transactions-overview',
         title: {
           nl: 'Al je transacties',
@@ -615,6 +625,16 @@ export const onboardingChapters: OnboardingChapter[] = [
     },
     steps: [
       {
+        id: 'cashflow-analysis',
+        title: { nl: 'Geldstroom vergelijken', en: 'Compare cashflow' },
+        content: {
+          nl: 'Bekijk wat na elke uitgavencategorie overblijft en vergelijk dezelfde verstreken dagen met drie, zes of twaalf maanden historie.',
+          en: 'See what remains after each spending category and compare the same elapsed days against three, six or twelve months of history.',
+        },
+        selector: '[data-onboarding="cashflow-analysis"]',
+        placement: 'bottom',
+      },
+      {
         id: 'analytics-overview',
         title: {
           nl: 'Diepgaande analyse',
@@ -721,6 +741,16 @@ export const onboardingChapters: OnboardingChapter[] = [
       en: 'Budgets',
     },
     steps: [
+      {
+        id: 'budget-monthly-allocation',
+        title: { nl: 'Per maand verdelen', en: 'Allocate by month' },
+        content: {
+          nl: 'Stel inkomsten en maandbedragen in, kopieer de vorige maand en kies of overschrijdingen meetellen. Vaste budgetten blijven beschikbaar.',
+          en: 'Set income and monthly amounts, copy the previous month and choose whether overspending carries forward. Recurring defaults remain available.',
+        },
+        selector: '[data-onboarding="budget-monthly-allocation"]',
+        placement: 'bottom',
+      },
       {
         id: 'budgets-overview',
         title: {
@@ -873,6 +903,19 @@ export const onboardingChapters: OnboardingChapter[] = [
     icon: 'Target',
     title: { nl: 'Planning', en: 'Planning' },
     steps: [
+      {
+        id: 'household-planning-tab',
+        title: {
+          nl: 'Huishouden vooruitplannen',
+          en: 'Plan household cashflow',
+        },
+        content: {
+          nl: 'Open dit tabblad voor inkomsten per maand of vier weken, jaarlijkse reserveringen, een dagelijkse prognose en je weekcontrole.',
+          en: 'Open this tab for monthly or four-week income, annual reserves, a daily forecast and your weekly review.',
+        },
+        selector: '[data-onboarding="household-planning-tab"]',
+        placement: 'bottom',
+      },
       {
         id: 'planning-forecast',
         title: { nl: 'Vrij te besteden', en: 'Safe to spend' },
@@ -1227,6 +1270,16 @@ export const onboardingChapters: OnboardingChapter[] = [
     },
     steps: [
       {
+        id: 'category-planning',
+        title: { nl: 'Vaste kosten en regels', en: 'Fixed costs and rules' },
+        content: {
+          nl: 'Kies vaste of variabele uitgaven, archiveer oude categorieën en bekijk verwijzingen voordat je ze verplaatst. Uitgebreide regels kunnen filteren op richting, bedrag en rekening.',
+          en: 'Choose fixed or variable expenses, archive old categories and review references before moving them. Advanced rules can filter by direction, amount and account.',
+        },
+        selector: '[data-onboarding="category-planning"]',
+        placement: 'bottom',
+      },
+      {
         id: 'categories-overview',
         title: {
           nl: 'Organiseer je uitgaven',
@@ -1360,6 +1413,26 @@ export const onboardingChapters: OnboardingChapter[] = [
       en: 'Import',
     },
     steps: [
+      {
+        id: 'import-tools',
+        title: { nl: 'Importinstellingen bewaren', en: 'Save import settings' },
+        content: {
+          nl: 'Pas de datum, het decimaalteken en kolommen aan en bewaar de indeling voor je volgende bestand. Controleer altijd het voorbeeld.',
+          en: 'Adjust dates, decimals and columns and save the mapping for your next file. Always check the preview.',
+        },
+        selector: '[data-onboarding="import-tools"]',
+        placement: 'bottom',
+      },
+      {
+        id: 'import-recovery',
+        title: { nl: 'Import herstellen', en: 'Recover an import' },
+        content: {
+          nl: 'Bekijk hoe recent je rekeningen zijn en maak een ongewijzigde import ongedaan. Herstelpunten zijn lokaal op dit apparaat beschikbaar.',
+          en: 'Check account freshness and undo an unchanged import. Recovery checkpoints are available locally on this device.',
+        },
+        selector: '[data-onboarding="import-recovery"]',
+        placement: 'bottom',
+      },
       {
         id: 'import-overview',
         title: {

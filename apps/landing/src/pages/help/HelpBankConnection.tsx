@@ -1,8 +1,10 @@
 import { useLanguage } from '../../contexts/LanguageContext';
+import { importWorkflowHelp } from '../../lib/i18n/import-workflows';
 import HelpAnimation from '../../components/help/HelpAnimation';
 
 export default function HelpBankConnection() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const imports = importWorkflowHelp[language];
 
   return (
     <article className='prose prose-gray dark:prose-invert max-w-none'>
@@ -45,6 +47,13 @@ export default function HelpBankConnection() {
       <p className='text-gray-600 dark:text-gray-400'>
         {t.helpCenter?.bankConnection?.supportedText}
       </p>
+      <h2>{imports.title}</h2>
+      <p>{imports.formats}</p>
+      <p>{imports.profiles}</p>
+      <p>{imports.source}</p>
+      <h2>{imports.recoveryTitle}</h2>
+      <p>{imports.recovery}</p>
+      <p>{imports.undo}</p>
     </article>
   );
 }

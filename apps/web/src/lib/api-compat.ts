@@ -909,6 +909,9 @@ export const api = {
       };
     }
 
+    // Recovery must succeed before accounts or transactions are changed.
+    const recoveryId = await ds.createImportRecoverySnapshot(file.name);
+
     // Get or create account
     let targetAccountId = accountId || null;
     if (!targetAccountId) {
@@ -968,8 +971,16 @@ export const api = {
       onProgress: onProgress,
     });
 
+    if (result.importId)
+      await ds.recordImportBatch(
+        file.name,
+        result.importId,
+        result.importedTransactionIds ?? [],
+        recoveryId
+      );
+
     return {
-      importId: Date.now(),
+      importId: result.importId ?? Date.now(),
       filename: file.name,
       totalInFile: parseResult.totalRows,
       imported: result.imported,
@@ -1473,51 +1484,15 @@ export const api = {
   },
 
   getProposedBudgets: async () => {
-    const ds = getDataService();
-
-    // Get date range for last 6 months
-    const endDate = new Date();
-    const startDate = new Date();
-    startDate.setMonth(startDate.getMonth() - 6);
-
-    const startDateStr = startDate.toISOString().split('T')[0];
-    const endDateStr = endDate.toISOString().split('T')[0];
-
-    // Get existing budgets to exclude categories that already have budgets
-    const existingBudgets = await ds.getBudgets();
-    const usedCategoryIds = new Set(
-      existingBudgets.filter((b) => b.categoryId).map((b) => b.categoryId)
-    );
-
-    // Calculate proposed budgets based on average spending per category
-    const stats = await ds.getCategoryStats(
-      startDateStr,
-      endDateStr,
-      'expense'
-    );
-
-    // Get monthly breakdown to count actual months with data per category
-    const monthlyData = await ds.getMonthlyStats(startDateStr, endDateStr);
-    const monthsWithData =
-      monthlyData.filter((m) => m.expenses > 0).length || 1;
-
-    return stats
-      .filter(
-        (cat) =>
-          cat.categoryId &&
-          cat.amount > 0 &&
-          !usedCategoryIds.has(cat.categoryId)
-      )
-      .map((cat) => ({
-        categoryId: cat.categoryId,
-        categoryName: cat.categoryName,
-        categoryIcon: cat.icon || '📦',
-        categoryColor: cat.color || '#9CA3AF',
-        avgMonthlySpent: cat.amount / monthsWithData,
-        basedOnMonths: monthsWithData,
-        // Propose a budget slightly above average (round up to nearest 10)
-        proposedAmount: Math.ceil(cat.amount / monthsWithData / 10) * 10,
-      }));
+    const ds=getDataService();
+    const [suggestions,budgets,categories]=await Promise.all([ds.getMonthlyBudgetSuggestions(6),ds.getBudgets(),ds.getCategories()]);
+    const existing=new Set(budgets.map(b=>b.categoryId));
+    return suggestions.filter(s=>s.suggestedAmount>0&&!existing.has(s.categoryId)).map(s=>({
+      categoryId:s.categoryId,categoryName:s.categoryName,
+      categoryIcon:categories.find(c=>c.id===s.categoryId)?.icon||'📦',
+      categoryColor:categories.find(c=>c.id===s.categoryId)?.color||'#9CA3AF',
+      avgMonthlySpent:s.averageMonthly,basedOnMonths:s.baselineMonths,proposedAmount:s.suggestedAmount
+    }));
   },
 
   // ============= Transaction Methods =============

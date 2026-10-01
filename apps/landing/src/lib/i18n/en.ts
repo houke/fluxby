@@ -1,7 +1,9 @@
+import { transactionReviewHelpEn } from './transaction-review-help';
 // English translations for the Fluxby landing page
 import type { LandingTranslationKeys } from './nl';
 
 export const en: LandingTranslationKeys = {
+  transactionReviewHelp: transactionReviewHelpEn,
   metadata: {
     default: {
       title: 'Fluxby - Makes money management fun',

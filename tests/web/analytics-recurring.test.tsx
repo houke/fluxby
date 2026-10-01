@@ -8,6 +8,10 @@ let AnalyticsComponent: any = null;
 import { api } from '@/lib/api';
 import * as lang from '@/contexts/LanguageContext';
 import * as filters from '@/contexts/FilterContext';
+import { en } from '@/lib/i18n/en';
+vi.mock('@/components/transaction-review/CashflowAnalysis', () => ({
+  CashflowAnalysis: () => null,
+}));
 
 import * as profile from '@/contexts/ProfileContext';
 const queryClient = new QueryClient({
@@ -38,6 +42,7 @@ describe('Analytics recurring patterns', () => {
 
     vi.spyOn(lang, 'useLanguage').mockReturnValue({
       t: {
+        ...en,
         analytics: {
           title: 'Analytics',
           subtitle: 'Subtitle',

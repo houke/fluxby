@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { randomInt, randomUUID } from 'node:crypto';
-import { query, queryOne, run, runMany } from '../db/index.js';
+import { seedHouseholdDemo } from '../db/household-demo.js';
+import { db, query, queryOne, run, runMany } from '../db/index.js';
 import {
   buildRecurringPatternFromTemplate,
   DEMO_TRANSLATIONS,
@@ -1416,6 +1417,8 @@ router.post('/:id/seed-demo', (req, res) => {
         ]
       );
     }
+
+    seedHouseholdDemo(db, profileId, language);
 
     res.json({
       success: true,

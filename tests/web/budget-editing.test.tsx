@@ -13,6 +13,8 @@ import { MemoryRouter } from 'react-router-dom';
 import { en } from '@/lib/i18n/en';
 import Budgets from '@/pages/Budgets';
 
+vi.mock('@/components/budgets/MonthlyAllocation',()=>({MonthlyAllocation:()=>null}));
+
 const mocks = vi.hoisted(() => ({
   updateBudget: vi.fn(),
   success: vi.fn(),

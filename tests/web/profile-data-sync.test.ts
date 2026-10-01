@@ -1,3 +1,4 @@
+import { migrations } from '../../packages/database/src/migrations';
 import Sqlite from 'better-sqlite3';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SCHEMA_SQL } from '../../packages/database/src/schema';
@@ -63,6 +64,7 @@ beforeEach(async () => {
   await migration015.up(db);
   await migration016.up(db);
   await migration017.up(db);
+  for(const m of migrations.filter(m=>m.version>17)) await m.up(db);
   sqlite.exec(`
     INSERT INTO users(id,name) VALUES('u','Local');
     INSERT INTO profiles(id,user_id,name) VALUES('local-profile','u','Personal'),('other-profile','u','Work');

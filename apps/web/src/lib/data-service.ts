@@ -1,3 +1,15 @@
+import { parseConfiguredCSV, DEFAULT_IMPORT_OPTIONS } from './importers/import-options';
+import {
+  effectiveExpenseSQL,
+  effectiveIncomeSQL,
+} from './data/transaction-accounting';
+import {
+  createHouseholdBudgetService,
+  monthlyAllocation,
+} from './data/household-budgets';
+import { createImportToolsService } from './data/import-tools';
+import { createTransactionReviewService } from './data/transaction-review';
+import { createHouseholdPlanningService } from './data/household-planning';
 /**
  * Data Service Layer
  *
@@ -387,6 +399,10 @@ export function createDataService(db: Database) {
   const service = {
     ...createFinancialPlanningService(db, profileId),
     ...createSavedTransactionViewsService(db, profileId),
+    ...createHouseholdBudgetService(db, profileId),
+    ...createImportToolsService(db, profileId),
+    ...createTransactionReviewService(db, profileId),
+    ...createHouseholdPlanningService(db, profileId),
     // ============= Profiles =============
     async getProfiles(): Promise<Profile[]> {
       const rows = await db.queryAsync<{
@@ -660,7 +676,9 @@ export function createDataService(db: Database) {
         id: string;
         iban: string;
         name: string;
-        type: 'checking' | 'savings' | 'credit';
+        type: Account['type'];
+        kind: Account['type'] | null;
+        color: string | null;
         bank: string;
         current_balance: number | null;
         order_index: number | null;
@@ -672,9 +690,10 @@ export function createDataService(db: Database) {
 
       return rows.map((row) => ({
         id: row.id,
-        iban: row.iban,
+        iban: row.iban.startsWith('local:') ? '' : row.iban,
         name: row.name,
-        type: row.type,
+        type: row.kind || row.type,
+        color: row.color,
         bank: row.bank,
         currentBalance: row.current_balance ?? 0,
         orderIndex: row.order_index ?? 0,
@@ -683,9 +702,10 @@ export function createDataService(db: Database) {
     },
 
     async createAccount(data: {
-      iban: string;
+      iban?: string;
       name: string;
       type: string;
+      color?: string;
       bank?: string;
       currentBalance?: number;
       profileId?: string;
@@ -694,17 +714,47 @@ export function createDataService(db: Database) {
       const pid = data.profileId || profileId();
       if (!pid) throw new Error('No active profile');
 
+      if (
+        ![
+          'checking',
+          'savings',
+          'credit',
+          'cash',
+          'loan',
+          'investment',
+        ].includes(data.type)
+      )
+        throw new Error('Invalid account type');
+      if (!data.name.trim()) throw new Error('Account name is required');
+      const manual = ['cash', 'loan', 'investment'].includes(data.type);
+      if (!manual && !data.iban?.trim()) throw new Error('IBAN is required');
+      if (
+        data.currentBalance !== undefined &&
+        (!Number.isFinite(data.currentBalance) ||
+          (data.type === 'loan' && data.currentBalance > 0))
+      )
+        throw new Error('Invalid account balance');
+      if (data.color && !/^#[0-9a-f]{6}$/i.test(data.color))
+        throw new Error('Invalid account color');
       const id = crypto.randomUUID();
       const now = Date.now();
 
       await db.runAsync(
-        `INSERT INTO accounts (id, iban, name, type, bank, current_balance, profile_id, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO accounts (id, iban, name, type, kind, color, bank, current_balance, profile_id, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           id,
-          data.iban,
+          data.iban?.trim() || `local:${id}`,
           data.name,
-          data.type,
+          data.type === 'loan'
+            ? 'credit'
+            : data.type === 'investment'
+              ? 'savings'
+              : data.type === 'cash'
+                ? 'checking'
+                : data.type,
+          manual ? data.type : null,
+          data.color || null,
           data.bank || 'unknown',
           data.currentBalance ?? 0,
           pid,
@@ -715,9 +765,9 @@ export function createDataService(db: Database) {
 
       return {
         id,
-        iban: data.iban,
+        iban: data.iban?.trim() || '',
         name: data.name,
-        type: data.type as 'checking' | 'savings' | 'credit',
+        type: data.type as Account['type'],
         bank: data.bank || 'unknown',
         currentBalance: data.currentBalance ?? 0,
         orderIndex: 0,
@@ -727,7 +777,12 @@ export function createDataService(db: Database) {
 
     async updateAccount(
       id: string,
-      data: { name?: string; type?: string; currentBalance?: number }
+      data: {
+        name?: string;
+        type?: string;
+        currentBalance?: number;
+        color?: string;
+      }
     ): Promise<void> {
       const pid = profileId();
       if (!pid) throw new Error('No active profile');
@@ -740,10 +795,48 @@ export function createDataService(db: Database) {
         params.push(data.name);
       }
       if (data.type !== undefined) {
-        updates.push('type = ?');
-        params.push(data.type);
+        if (
+          ![
+            'checking',
+            'savings',
+            'credit',
+            'cash',
+            'loan',
+            'investment',
+          ].includes(data.type)
+        )
+          throw new Error('Invalid account type');
+        const account=await db.queryOneAsync<{iban:string;current_balance:number}>('SELECT iban,current_balance FROM accounts WHERE id=? AND profile_id=? AND is_deleted=0',[id,pid]);
+        if(!account)throw new Error('Account not found');
+        if(!['cash','loan','investment'].includes(data.type)&&(!account.iban||account.iban.startsWith('local:')))throw new Error('A bank account requires an IBAN');
+        if(data.type==='loan'&&(data.currentBalance??account.current_balance)>0)throw new Error('Loan balance must be negative');
+        updates.push('type = ?', 'kind = ?');
+        params.push(
+          data.type === 'loan'
+            ? 'credit'
+            : data.type === 'investment'
+              ? 'savings'
+              : data.type === 'cash'
+                ? 'checking'
+                : data.type,
+          ['cash', 'loan', 'investment'].includes(data.type) ? data.type : null
+        );
+      }
+      if (data.color !== undefined) {
+        if (!/^#[0-9a-f]{6}$/i.test(data.color))
+          throw new Error('Invalid color');
+        updates.push('color = ?');
+        params.push(data.color);
       }
       if (data.currentBalance !== undefined) {
+        if (!Number.isFinite(data.currentBalance))
+          throw new Error('Invalid balance');
+        const existing = await db.queryOneAsync<{ kind: string }>(
+          'SELECT kind FROM accounts WHERE id=? AND profile_id=?',
+          [id, pid]
+        );
+        if ((data.type || existing?.kind) === 'loan' && data.currentBalance > 0)
+          throw new Error('Loan balance must be negative');
         updates.push('current_balance = ?');
         params.push(data.currentBalance);
       }
@@ -800,7 +893,7 @@ export function createDataService(db: Database) {
       return await db.queryAsync<Category>(
         `SELECT id, name, parent_id as parentId, icon, color, description,
           profile_id, created_at as createdAt, updated_at as updatedAt, is_deleted
-         FROM categories WHERE profile_id = ? AND is_deleted = 0 ORDER BY name ASC`,
+         FROM categories WHERE profile_id = ? AND is_deleted = 0 AND NOT EXISTS (SELECT 1 FROM category_preferences cp WHERE cp.category_id=categories.id AND cp.profile_id=categories.profile_id AND cp.is_deleted=0 AND cp.archived=1) ORDER BY name ASC`,
         [pid]
       );
     },
@@ -1192,8 +1285,8 @@ export function createDataService(db: Database) {
 
       let sql = `
         SELECT
-          COALESCE(SUM(CASE WHEN t.type = 'income' THEN t.amount ELSE 0 END), 0) as income,
-          COALESCE(SUM(CASE WHEN t.type = 'expense' THEN ABS(t.amount) ELSE 0 END), 0) as expenses,
+          COALESCE(SUM(CASE WHEN t.type = 'income' THEN ${effectiveIncomeSQL()} ELSE 0 END), 0) as income,
+          COALESCE(SUM(CASE WHEN t.type = 'expense' THEN ${effectiveExpenseSQL()} ELSE 0 END), 0) as expenses,
           COALESCE(SUM(CASE WHEN t.type = 'transfer' AND t.amount < 0 THEN ABS(t.amount) ELSE 0 END), 0) as transferToSavings,
           COALESCE(SUM(CASE WHEN t.type = 'transfer' AND t.amount > 0 THEN t.amount ELSE 0 END), 0) as transferFromSavings,
           COUNT(*) as count
@@ -1405,6 +1498,14 @@ export function createDataService(db: Database) {
       const pid = profileId();
       if (!pid) throw new Error('No active profile');
 
+      if (data.categoryId) {
+        const category = await db.queryOneAsync(
+          'SELECT id FROM categories WHERE id=? AND profile_id=? AND is_deleted=0',
+          [data.categoryId, pid]
+        );
+        if (!category)
+          throw new Error('Category does not belong to this profile');
+      }
       const updates: string[] = [];
       const params: unknown[] = [];
 
@@ -1444,10 +1545,24 @@ export function createDataService(db: Database) {
       params.push(id);
       params.push(pid);
 
-      await db.runAsync(
-        `UPDATE transactions SET ${updates.join(', ')} WHERE id = ? AND profile_id = ?`,
-        params
-      );
+      await db.transactionAsync(async () => {
+        const result = await db.runAsync(
+          `UPDATE transactions SET ${updates.join(', ')} WHERE id = ? AND profile_id = ? AND is_deleted=0`,
+          params
+        );
+        if (result.changes && data.categoryId !== undefined)
+          await db.runAsync(
+            `INSERT INTO transaction_category_decisions(id,transaction_id,category_id,source,profile_id,created_at,updated_at) VALUES(?,?,?,'manual',?,?,?) ON CONFLICT(profile_id,transaction_id) DO UPDATE SET category_id=excluded.category_id,source='manual',is_deleted=0,updated_at=excluded.updated_at`,
+            [
+              crypto.randomUUID(),
+              id,
+              data.categoryId,
+              pid,
+              Date.now(),
+              Date.now(),
+            ]
+          );
+      });
     },
 
     async deleteTransaction(id: string): Promise<void> {
@@ -1504,6 +1619,11 @@ export function createDataService(db: Database) {
           `UPDATE transactions SET category_id=?,updated_at=? WHERE id IN (${placeholders}) AND profile_id=? AND is_deleted=0`,
           [categoryId, now, ...transactionIds, pid]
         );
+        for (const transactionId of transactionIds)
+          await db.runAsync(
+            `INSERT INTO transaction_category_decisions(id,transaction_id,category_id,source,profile_id,created_at,updated_at) SELECT ?,id,?,'manual',profile_id,?,? FROM transactions WHERE id=? AND profile_id=? AND is_deleted=0 ON CONFLICT(profile_id,transaction_id) DO UPDATE SET category_id=excluded.category_id,source='manual',is_deleted=0,updated_at=excluded.updated_at`,
+            [crypto.randomUUID(), categoryId, now, now, transactionId, pid]
+          );
         return { updated: result.changes };
       });
     },
@@ -1564,12 +1684,6 @@ export function createDataService(db: Database) {
 
       // Calculate number of months in the period for budget scaling
       const start = parseDateOnly(rangeStartDate);
-      const end = parseDateOnly(rangeEndDate);
-      const monthsDiff =
-        (end.getUTCFullYear() - start.getUTCFullYear()) * 12 +
-        (end.getUTCMonth() - start.getUTCMonth()) +
-        1;
-
       // Query budgets with spending calculation
       // Profile-filtered: only show budgets for this profile
       // and only count spending from transactions in this profile's accounts
@@ -1580,7 +1694,7 @@ export function createDataService(db: Database) {
           c.name as category_name,
           c.icon as category_icon,
           c.color as category_color,
-          COALESCE(ABS(SUM(CASE WHEN t.amount < 0 THEN t.amount ELSE 0 END)), 0) as spent
+          COALESCE(SUM(CASE WHEN t.amount < 0 THEN ${effectiveExpenseSQL()} ELSE 0 END), 0) as spent
         FROM budgets b
         LEFT JOIN categories c ON b.category_id = c.id
         LEFT JOIN transactions t ON b.category_id = t.category_id
@@ -1599,7 +1713,7 @@ export function createDataService(db: Database) {
       )
         ? await db.queryAsync<{ id: string; spent: number }>(
             `
-            SELECT b.id, COALESCE(SUM(CASE WHEN t.amount < 0 THEN ABS(t.amount) ELSE 0 END),0) AS spent
+            SELECT b.id, COALESCE(SUM(CASE WHEN t.amount < 0 THEN ${effectiveExpenseSQL()} ELSE 0 END),0) AS spent
             FROM budgets b LEFT JOIN transactions t ON t.category_id=b.category_id
               AND t.profile_id=b.profile_id AND t.is_deleted=0 AND t.type!='transfer'
               AND t.date < ? AND t.date >= COALESCE(b.start_date,strftime('%Y-%m-01',b.created_at/1000,'unixepoch'))
@@ -1612,6 +1726,7 @@ export function createDataService(db: Database) {
         rolloverSpending.map((row) => [row.id, row.spent])
       );
 
+      const extensions = await this.getBudgetExtensions();
       // Transform and calculate derived values
       return rows.map((row) => {
         const spent = row.spent || 0;
@@ -1627,20 +1742,43 @@ export function createDataService(db: Database) {
             1 -
             originMonth
         );
-        const carryover =
-          row.period === 'monthly' && row.rollover_enabled === 1
-            ? Math.max(
-                0,
-                Math.round(
-                  (row.amount * priorMonths -
-                    (priorSpending.get(row.id) ?? 0)) *
-                    100
-                ) / 100
-              )
+        const overrides = new Map(
+          extensions.overrides
+            .filter((o) => o.budget_id === row.id)
+            .map((o) => [o.month, o.amount])
+        );
+        const previousMonth = addMonthsToDateOnly(
+          `${rangeStartDate.slice(0, 7)}-01`,
+          -1
+        ).slice(0, 7);
+        const carryNegative = !!extensions.preferences.find(
+          (p) => p.budget_id === row.id
+        )?.carry_negative;
+        const rawCarry =
+          row.period === 'monthly' &&
+          row.rollover_enabled === 1 &&
+          priorMonths > 0
+            ? Math.round(
+                (monthlyAllocation(
+                  row.amount,
+                  overrides,
+                  origin,
+                  previousMonth
+                ) -
+                  (priorSpending.get(row.id) ?? 0)) *
+                  100
+              ) / 100
             : 0;
+        const carryover = carryNegative ? rawCarry : Math.max(0, rawCarry);
         const scaledAmount =
-          (row.period === 'monthly' ? row.amount * monthsDiff : row.amount) +
-          carryover; // yearly budgets don't scale
+          (row.period === 'monthly'
+            ? monthlyAllocation(
+                row.amount,
+                overrides,
+                rangeStartDate.slice(0, 7),
+                rangeEndDate.slice(0, 7)
+              )
+            : row.amount) + carryover;
         const remaining = scaledAmount - spent;
         const percentage = scaledAmount > 0 ? (spent / scaledAmount) * 100 : 0;
 
@@ -1801,8 +1939,8 @@ export function createDataService(db: Database) {
 
       let sql = `
         SELECT
-          COALESCE(SUM(CASE WHEN t.type = 'income' THEN t.amount ELSE 0 END), 0) as totalIncome,
-          COALESCE(SUM(CASE WHEN t.type = 'expense' THEN ABS(t.amount) ELSE 0 END), 0) as totalExpenses,
+          COALESCE(SUM(CASE WHEN t.type = 'income' THEN ${effectiveIncomeSQL()} ELSE 0 END), 0) as totalIncome,
+          COALESCE(SUM(CASE WHEN t.type = 'expense' THEN ${effectiveExpenseSQL()} ELSE 0 END), 0) as totalExpenses,
           COUNT(t.id) as transactionCount
         FROM transactions t
         LEFT JOIN accounts a ON t.account_id = a.id
@@ -2584,8 +2722,8 @@ export function createDataService(db: Database) {
       let sql = `
         SELECT
           strftime('%Y-%m', t.date) as month,
-          COALESCE(SUM(CASE WHEN t.amount > 0 AND t.type != 'transfer' THEN t.amount ELSE 0 END), 0) as income,
-          COALESCE(SUM(CASE WHEN t.amount < 0 AND t.type != 'transfer' THEN ABS(t.amount) ELSE 0 END), 0) as expenses
+          COALESCE(SUM(CASE WHEN t.amount > 0 AND t.type != 'transfer' THEN ${effectiveIncomeSQL()} ELSE 0 END), 0) as income,
+          COALESCE(SUM(CASE WHEN t.amount < 0 AND t.type != 'transfer' THEN ${effectiveExpenseSQL()} ELSE 0 END), 0) as expenses
         FROM transactions t
         WHERE t.profile_id = ? AND t.is_deleted = 0
       `;
@@ -2637,7 +2775,7 @@ export function createDataService(db: Database) {
           COALESCE(c.name, 'Uncategorized') as categoryName,
           COALESCE(c.color, '#9CA3AF') as color,
           COALESCE(c.icon, '📦') as icon,
-          SUM(ABS(t.amount)) as amount,
+          SUM(${type === 'expense' ? effectiveExpenseSQL() : effectiveIncomeSQL()}) as amount,
           COUNT(*) as transactionCount
         FROM transactions t
         LEFT JOIN categories c ON t.category_id = c.id
@@ -2703,7 +2841,7 @@ export function createDataService(db: Database) {
           COALESCE(parent.id, c.id) as parentCategoryId,
           COALESCE(parent.name, c.name, 'Uncategorized') as parentCategoryName,
           COALESCE(parent.color, c.color, '#9CA3AF') as color,
-          SUM(ABS(t.amount)) as amount
+          SUM(${effectiveExpenseSQL()}) as amount
         FROM transactions t
         LEFT JOIN categories c ON t.category_id = c.id
         LEFT JOIN categories parent ON c.parent_id = parent.id
@@ -2774,7 +2912,7 @@ export function createDataService(db: Database) {
       let sql = `
         SELECT
           t.date,
-          COALESCE(SUM(CASE WHEN t.amount < 0 AND t.type != 'transfer' THEN ABS(t.amount) ELSE 0 END), 0) as expenses
+          COALESCE(SUM(CASE WHEN t.amount < 0 AND t.type != 'transfer' THEN ${effectiveExpenseSQL()} ELSE 0 END), 0) as expenses
         FROM transactions t
         WHERE t.profile_id = ? AND t.is_deleted = 0
       `;
@@ -2848,8 +2986,8 @@ export function createDataService(db: Database) {
           expenses: number;
         }>(
           `SELECT
-            COALESCE(SUM(CASE WHEN t.amount > 0 AND t.type != 'transfer' THEN t.amount ELSE 0 END), 0) as income,
-            COALESCE(SUM(CASE WHEN t.amount < 0 AND t.type != 'transfer' THEN ABS(t.amount) ELSE 0 END), 0) as expenses
+            COALESCE(SUM(CASE WHEN t.amount > 0 AND t.type != 'transfer' THEN ${effectiveIncomeSQL()} ELSE 0 END), 0) as income,
+            COALESCE(SUM(CASE WHEN t.amount < 0 AND t.type != 'transfer' THEN ${effectiveExpenseSQL()} ELSE 0 END), 0) as expenses
           FROM transactions t
           JOIN accounts a ON t.account_id = a.id
           WHERE a.profile_id = ? AND t.is_deleted = 0 AND t.date >= ? AND t.date <= ?`,
@@ -2892,8 +3030,8 @@ export function createDataService(db: Database) {
         expenses: number;
       }>(
         `SELECT
-          COALESCE(SUM(CASE WHEN t.amount > 0 AND t.type != 'transfer' THEN t.amount ELSE 0 END), 0) as income,
-          COALESCE(SUM(CASE WHEN t.amount < 0 AND t.type != 'transfer' THEN ABS(t.amount) ELSE 0 END), 0) as expenses
+          COALESCE(SUM(CASE WHEN t.amount > 0 AND t.type != 'transfer' THEN ${effectiveIncomeSQL()} ELSE 0 END), 0) as income,
+          COALESCE(SUM(CASE WHEN t.amount < 0 AND t.type != 'transfer' THEN ${effectiveExpenseSQL()} ELSE 0 END), 0) as expenses
         FROM transactions t
         JOIN accounts a ON t.account_id = a.id
         WHERE a.profile_id = ? AND t.is_deleted = 0 AND t.date >= ? AND t.date <= ?`,
@@ -2921,8 +3059,8 @@ export function createDataService(db: Database) {
       }>(
         `SELECT
           strftime('%Y-%m', t.date) as month,
-          COALESCE(SUM(CASE WHEN t.amount > 0 AND t.type != 'transfer' THEN t.amount ELSE 0 END), 0) as income,
-          COALESCE(SUM(CASE WHEN t.amount < 0 AND t.type != 'transfer' THEN ABS(t.amount) ELSE 0 END), 0) as expenses
+          COALESCE(SUM(CASE WHEN t.amount > 0 AND t.type != 'transfer' THEN ${effectiveIncomeSQL()} ELSE 0 END), 0) as income,
+          COALESCE(SUM(CASE WHEN t.amount < 0 AND t.type != 'transfer' THEN ${effectiveExpenseSQL()} ELSE 0 END), 0) as expenses
         FROM transactions t
         JOIN accounts a ON t.account_id = a.id
         WHERE a.profile_id = ? AND t.is_deleted = 0 AND t.date >= ? AND t.date <= ?
@@ -3003,6 +3141,7 @@ export function createDataService(db: Database) {
          LEFT JOIN accounts a ON t.account_id = a.id
          WHERE (a.profile_id = ? OR t.profile_id = ?)
            AND ${UNCATEGORIZED_CATEGORY_SQL}
+           AND NOT EXISTS(SELECT 1 FROM transaction_category_decisions d WHERE d.transaction_id=t.id AND d.profile_id=t.profile_id AND d.source='manual' AND d.is_deleted=0)
            AND t.is_deleted = 0`,
         [pid, pid]
       );
@@ -3783,35 +3922,7 @@ export function createDataService(db: Database) {
       const pid = profileId();
       if (!pid) return [];
 
-      // Get average spending by category over last 3 months
-      const threeMonthsAgo = new Date();
-      threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
-      const startDate = threeMonthsAgo.toISOString().split('T')[0];
-
-      const spending = await db.queryAsync<{
-        category_id: string;
-        category_name: string;
-        avg_amount: number;
-      }>(
-        `SELECT
-          t.category_id,
-          c.name as category_name,
-          AVG(ABS(t.amount)) as avg_amount
-        FROM transactions t
-        JOIN categories c ON t.category_id = c.id
-        JOIN accounts a ON t.account_id = a.id
-        WHERE a.profile_id = ? AND t.is_deleted = 0 AND t.type = 'expense' AND t.date >= ?
-        GROUP BY t.category_id
-        HAVING COUNT(*) >= 3
-        ORDER BY avg_amount DESC`,
-        [pid, startDate]
-      );
-
-      return spending.map((s) => ({
-        categoryId: s.category_id,
-        categoryName: s.category_name,
-        suggestedAmount: Math.ceil(s.avg_amount / 10) * 10, // Round up to nearest 10
-      }));
+      return this.getMonthlyBudgetSuggestions(3);
     },
 
     async deleteAllBudgets() {
@@ -4822,38 +4933,8 @@ export function createDataService(db: Database) {
     },
 
     async previewCsvImport(csvContent: string) {
-      // Basic CSV parsing for preview
-      const lines = csvContent.trim().split('\n');
-      if (lines.length < 2)
-        return { headers: [], rows: [], sampleRows: [], totalRows: 0 };
-
-      const firstLine = lines[0];
-      const semicolonCount = (firstLine.match(/;/g) || []).length;
-      const commaCount = (firstLine.match(/,/g) || []).length;
-      const delimiter = semicolonCount > commaCount ? ';' : ',';
-
-      const headers = firstLine
-        .split(delimiter)
-        .map((h) => h.trim().replace(/^"|"$/g, ''));
-
-      const rows: Record<string, string>[] = [];
-      for (let i = 1; i < lines.length; i++) {
-        const values = lines[i]
-          .split(delimiter)
-          .map((v) => v.trim().replace(/^"|"$/g, ''));
-        const row: Record<string, string> = {};
-        headers.forEach((h, idx) => {
-          row[h] = values[idx] || '';
-        });
-        rows.push(row);
-      }
-
-      return {
-        headers,
-        rows,
-        sampleRows: rows.slice(0, 10),
-        totalRows: rows.length,
-      };
+      if(!csvContent.trim()) return {headers:[],rows:[],sampleRows:[],totalRows:0};
+      return parseConfiguredCSV(csvContent, DEFAULT_IMPORT_OPTIONS);
     },
 
     async importCsv(
@@ -5417,6 +5498,8 @@ export function createDataService(db: Database) {
             transactionData.description || null
           );
 
+          transactionData.rawData = JSON.stringify(row);
+
           // Queue for batch insert instead of inserting immediately
           transactionsToInsert.push({
             id,
@@ -5479,7 +5562,8 @@ export function createDataService(db: Database) {
           await db.transactionAsync(async () => {
             const placeholders = batch
               .map(
-                () => '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+                () =>
+                  '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
               )
               .join(', ');
             const values = batch.flatMap((item) => [
@@ -5498,13 +5582,14 @@ export function createDataService(db: Database) {
               item.transactionData.paymentMethod,
               item.paymentProvider,
               item.hash,
+              item.transactionData.rawData ?? null,
               pid,
               now,
               now,
             ]);
             await db.runAsync(
               `INSERT INTO transactions (id, date, amount, type, description, merchant_name, account_id,
-               opposing_account_iban, opposing_account_name, category_id, notes, balance_after, payment_method, payment_provider, import_hash, profile_id, created_at, updated_at)
+               opposing_account_iban, opposing_account_name, category_id, notes, balance_after, payment_method, payment_provider, import_hash, raw_data, profile_id, created_at, updated_at)
                VALUES ${placeholders}`,
               values
             );
@@ -5583,6 +5668,8 @@ export function createDataService(db: Database) {
       }
 
       return {
+        importId,
+        importedTransactionIds: importedTxIds,
         imported,
         skipped: skippedRows.length,
         errors,
@@ -6590,6 +6677,7 @@ export function createDataService(db: Database) {
       );
       const allExistingPatterns = await db.queryAsync<{
         id: string;
+        manual_source?: number;
         merchant_name: string | null;
         is_dismissed: number;
         avg_amount: number;
@@ -6597,8 +6685,7 @@ export function createDataService(db: Database) {
         last_date: string;
         opposing_iban: string | null;
       }>(
-        `SELECT id, merchant_name, is_dismissed, avg_amount, last_amount,
-                last_date, opposing_iban
+        `SELECT *
          FROM recurring_patterns
          WHERE profile_id = ? AND is_deleted = 0`,
         [pid]
@@ -6855,6 +6942,19 @@ export function createDataService(db: Database) {
 
         await db.transactionAsync(async () => {
           for (const group of batch) {
+            // A user-declared bill keeps its chosen schedule and amount until edited.
+            // Do not create a second detected pattern for the same source.
+            if (
+              allExistingPatterns.some(
+                (pattern) =>
+                  pattern.manual_source === 1 &&
+                  recurringSourceKey(
+                    pattern.opposing_iban,
+                    pattern.merchant_name
+                  ) === group.source_key
+              )
+            )
+              continue;
             const dates = group.dates;
             const amounts = group.amounts;
 
@@ -9380,7 +9480,7 @@ export function createDataService(db: Database) {
         description: string | null;
         opposing_account_name: string | null;
       }>(
-        'SELECT id,merchant_name,description,opposing_account_name FROM transactions WHERE profile_id=? AND is_deleted=0',
+        `SELECT id,merchant_name,description,opposing_account_name FROM transactions t WHERE profile_id=? AND is_deleted=0 AND NOT EXISTS(SELECT 1 FROM transaction_category_decisions d WHERE d.transaction_id=t.id AND d.profile_id=t.profile_id AND d.source='manual' AND d.is_deleted=0)`,
         [pid]
       );
       const matching = transactions.filter((tx) =>

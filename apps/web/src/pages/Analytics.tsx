@@ -1,3 +1,4 @@
+import { CashflowAnalysis } from '@/components/transaction-review/CashflowAnalysis';
 import { useQuery } from '@tanstack/react-query';
 import { useState, useRef, useEffect } from 'react';
 import { useViewTransitionNavigate } from '@/lib/view-transitions';
@@ -291,6 +292,14 @@ export default function Analytics() {
         dataOnboarding='analytics-greeting'
         actions={
           <span className='text-muted-foreground'>{formatYearRange()}</span>
+        }
+      />
+
+      <CashflowAnalysis
+        month={
+          String(filters.dateRange.end.getFullYear()) +
+          '-' +
+          String(filters.dateRange.end.getMonth() + 1).padStart(2, '0')
         }
       />
 

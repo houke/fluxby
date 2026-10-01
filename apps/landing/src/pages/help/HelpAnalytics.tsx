@@ -78,6 +78,8 @@ export default function HelpAnalytics() {
           {t.helpCenter?.analytics?.tipText}
         </p>
       </div>
+      <h2>{t.transactionReviewHelp.analyticsTitle}</h2>
+      <p>{t.transactionReviewHelp.analyticsText}</p>
     </article>
   );
 }
