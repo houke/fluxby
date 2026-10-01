@@ -11,6 +11,8 @@ import AddressBook from './pages/AddressBook';
 import Import from './pages/Import';
 import Settings from './pages/Settings';
 import Help from './pages/Help';
+import { WebMcpBridge } from './components/WebMcpBridge';
+import { WebMcpProvider } from './contexts/WebMcpContext';
 import NotFound from './pages/NotFound';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { FilterProvider } from './contexts/FilterContext';
@@ -49,6 +51,7 @@ function AppContent() {
 
   return (
     <ErrorBoundary onError={handleError}>
+      <WebMcpBridge />
       {/* Onboarding overlay - shown on top of the app content */}
       <Onboarding />
       <Routes>
@@ -180,13 +183,15 @@ function App() {
                       <ToastProvider>
                         <ConfirmProvider>
                           <BrowserRouter basename={getRouterBasename()}>
-                            <OnboardingProvider>
-                              <SpotlightProvider>
-                                <SecurityGate>
-                                  <AppContent />
-                                </SecurityGate>
-                              </SpotlightProvider>
-                            </OnboardingProvider>
+                            <WebMcpProvider>
+                              <OnboardingProvider>
+                                <SpotlightProvider>
+                                  <SecurityGate>
+                                    <AppContent />
+                                  </SecurityGate>
+                                </SpotlightProvider>
+                              </OnboardingProvider>
+                            </WebMcpProvider>
                           </BrowserRouter>
                         </ConfirmProvider>
                       </ToastProvider>

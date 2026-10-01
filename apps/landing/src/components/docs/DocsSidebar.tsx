@@ -134,6 +134,11 @@ export default function DocsSidebar({ isOpen, onClose }: DocsSidebarProps) {
           icon: '✨',
         },
         {
+          title: t.webMcp.nav,
+          path: '/docs/webmcp',
+          icon: '🔌',
+        },
+        {
           title: copy.nav.helpCenter,
           path: '/help',
           icon: '❓',

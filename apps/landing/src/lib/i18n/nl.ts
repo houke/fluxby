@@ -1,6 +1,8 @@
+import { webMcpNl, type LandingWebMcpCopy } from './webmcp';
 // Dutch translations for the Fluxby landing page
 
 export interface LandingTranslationKeys {
+  webMcp: LandingWebMcpCopy;
   nav: {
     features: string;
     screenshots: string;
@@ -235,6 +237,7 @@ export interface LandingTranslationKeys {
 }
 
 export const nl: LandingTranslationKeys = {
+  webMcp: webMcpNl,
   metadata: {
     default: {
       title: 'Fluxby - Maakt geldbeheer leuk',

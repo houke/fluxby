@@ -1,7 +1,9 @@
+import { webMcpNl, type WebMcpCopy } from '../webmcp-copy';
 // Dutch translations for the Fluxby web app
 import { DEMO_TRANSLATIONS, type DemoTranslations } from '@fluxby/shared';
 
 export interface TranslationKeys {
+  webMcp: WebMcpCopy;
   demoData: DemoTranslations;
   common: {
     save: string;
@@ -1687,6 +1689,7 @@ export interface TranslationKeys {
 }
 
 export const nl: TranslationKeys = {
+  webMcp: webMcpNl,
   demoData: DEMO_TRANSLATIONS.nl,
   common: {
     save: 'Opslaan',

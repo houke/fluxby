@@ -139,7 +139,7 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
                 {/* Message */}
                 <p
                   id='confirm-message'
-                  className='text-center leading-relaxed text-gray-600 dark:text-gray-300'
+                  className='max-h-52 overflow-y-auto px-2 text-center leading-relaxed break-words text-gray-600 dark:text-gray-300'
                 >
                   {options.message}
                 </p>

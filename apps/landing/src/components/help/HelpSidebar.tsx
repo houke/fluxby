@@ -134,6 +134,11 @@ export default function HelpSidebar({ isOpen, onClose }: HelpSidebarProps) {
           path: '/help/ai',
           icon: '✨',
         },
+        {
+          title: t.webMcp.nav,
+          path: '/help/webmcp',
+          icon: '🔌',
+        },
       ],
     },
     {
