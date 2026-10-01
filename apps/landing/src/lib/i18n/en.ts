@@ -1,7 +1,9 @@
+import { webMcpEn } from './webmcp';
 // English translations for the Fluxby landing page
 import type { LandingTranslationKeys } from './nl';
 
 export const en: LandingTranslationKeys = {
+  webMcp: webMcpEn,
   metadata: {
     default: {
       title: 'Fluxby - Makes money management fun',

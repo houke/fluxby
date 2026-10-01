@@ -35,6 +35,7 @@ import DocsData from './pages/docs/DocsData';
 import DocsArchitecture from './pages/docs/DocsArchitecture';
 import DocsOpenAPI from './pages/docs/DocsOpenAPI';
 import DocsAI from './pages/docs/DocsAI';
+import DocsWebMcp from './pages/docs/DocsWebMcp';
 import HelpLayout from './components/help/HelpLayout';
 import HelpHome from './pages/help/HelpHome';
 import HelpBankConnection from './pages/help/HelpBankConnection';
@@ -51,6 +52,7 @@ import HelpAnalytics from './pages/help/HelpAnalytics';
 import HelpAddressBook from './pages/help/HelpAddressBook';
 import HelpSync from './pages/help/HelpSync';
 import HelpAI from './pages/help/HelpAI';
+import HelpWebMcp from './pages/help/HelpWebMcp';
 import { HeadManager } from './components/HeadManager';
 import ScrollToTop from './components/ScrollToTop';
 
@@ -165,6 +167,7 @@ function App() {
                 <Route path='architecture' element={<DocsArchitecture />} />
                 <Route path='openapi' element={<DocsOpenAPI />} />
                 <Route path='ai' element={<DocsAI />} />
+                <Route path='webmcp' element={<DocsWebMcp />} />
               </Route>
               <Route path='/help' element={<HelpLayout />}>
                 <Route index element={<HelpHome />} />
@@ -185,6 +188,7 @@ function App() {
                 <Route path='sync' element={<HelpSync />} />
                 <Route path='privacy' element={<HelpPrivacy />} />
                 <Route path='ai' element={<HelpAI />} />
+                <Route path='webmcp' element={<HelpWebMcp />} />
               </Route>
               <Route path='*' element={<NotFound />} />
             </Routes>

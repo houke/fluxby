@@ -1,8 +1,10 @@
+import { webMcpEn } from '../webmcp-copy';
 // English translations for the Fluxby web app
 import type { TranslationKeys } from './nl';
 import { DEMO_TRANSLATIONS } from '@fluxby/shared';
 
 export const en: TranslationKeys = {
+  webMcp: webMcpEn,
   demoData: DEMO_TRANSLATIONS.en,
   common: {
     save: 'Save',
