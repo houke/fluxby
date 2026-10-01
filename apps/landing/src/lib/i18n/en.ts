@@ -1,8 +1,10 @@
+import { webMcpEn } from './webmcp';
 import { transactionReviewHelpEn } from './transaction-review-help';
 // English translations for the Fluxby landing page
 import type { LandingTranslationKeys } from './nl';
 
 export const en: LandingTranslationKeys = {
+  webMcp: webMcpEn,
   transactionReviewHelp: transactionReviewHelpEn,
   metadata: {
     default: {

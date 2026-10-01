@@ -1,7 +1,9 @@
+import { webMcpNl, type LandingWebMcpCopy } from './webmcp';
 import { transactionReviewHelpNl, type TransactionReviewHelp } from './transaction-review-help';
 // Dutch translations for the Fluxby landing page
 
 export interface LandingTranslationKeys {
+  webMcp: LandingWebMcpCopy;
   transactionReviewHelp: TransactionReviewHelp;
   nav: {
     features: string;
@@ -237,6 +239,7 @@ export interface LandingTranslationKeys {
 }
 
 export const nl: LandingTranslationKeys = {
+  webMcp: webMcpNl,
   transactionReviewHelp: transactionReviewHelpNl,
   metadata: {
     default: {

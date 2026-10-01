@@ -1,3 +1,4 @@
+import { webMcpNl, type WebMcpCopy } from '../webmcp-copy';
 import {
   householdPlanningNl,
   type HouseholdPlanningTranslations,
@@ -14,6 +15,7 @@ import {
 import { DEMO_TRANSLATIONS, type DemoTranslations } from '@fluxby/shared';
 
 export interface TranslationKeys {
+  webMcp: WebMcpCopy;
   householdPlanning: HouseholdPlanningTranslations;
   transactionReview: TransactionReviewTranslations;
   householdBudget: HouseholdBudgetTranslations;
@@ -1830,6 +1832,7 @@ export interface TranslationKeys {
 }
 
 export const nl: TranslationKeys = {
+  webMcp: webMcpNl,
   householdPlanning: householdPlanningNl,
   transactionReview: transactionReviewNl,
   householdBudget: householdBudgetNl,

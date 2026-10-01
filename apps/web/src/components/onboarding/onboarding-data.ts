@@ -1635,6 +1635,19 @@ export const onboardingChapters: OnboardingChapter[] = [
         placement: 'right',
       },
       {
+        id: 'settings-webmcp',
+        title: {
+          nl: 'Browserassistenten',
+          en: 'Browser assistants',
+        },
+        content: {
+          nl: 'Schakel WebMCP hier tijdelijk in als je een compatibele browserassistent toegang wilt geven tot het actieve profiel. Wijzigingen vereisen jouw bevestiging.',
+          en: 'Temporarily enable WebMCP here when you want a compatible browser assistant to access the active profile. Changes require your confirmation.',
+        },
+        selector: '[data-onboarding="settings-webmcp"]',
+        placement: 'right',
+      },
+      {
         id: 'settings-typesafe-actions',
         title: {
           nl: 'Slim categoriseren',

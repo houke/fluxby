@@ -1,3 +1,4 @@
+import { webMcpEn } from '../webmcp-copy';
 import { householdPlanningEn } from './household-planning';
 import { transactionReviewEn } from './transaction-review-translations';
 import { householdBudgetEn } from './household-budget-translations';
@@ -6,6 +7,7 @@ import type { TranslationKeys } from './nl';
 import { DEMO_TRANSLATIONS } from '@fluxby/shared';
 
 export const en: TranslationKeys = {
+  webMcp: webMcpEn,
   householdPlanning: householdPlanningEn,
   transactionReview: transactionReviewEn,
   householdBudget: householdBudgetEn,
