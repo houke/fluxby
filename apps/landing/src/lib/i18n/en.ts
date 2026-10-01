@@ -2061,6 +2061,17 @@ export const en: LandingTranslationKeys = {
     updatesPage: {
       intro:
         "See what's new in Fluxby. Here you'll find all updates and new features.",
+      v1150Date: 'October 1, 2026',
+      v1150Title: 'Release 1.15.0',
+      v1150Description: '1 new feature and 3 bug fixes.',
+      v1150F1Title: 'Permissioned WebMCP tools and documentation',
+      v1150F1Desc: 'This makes Fluxby even better.',
+      v1150F2Title: 'Force hover on third row in selection mode test',
+      v1150F2Desc: 'An annoying issue has been squashed.',
+      v1150F3Title: 'Npm audit vulnerabilities',
+      v1150F3Desc: 'This shouldn\'t have happened, but it\'s fixed now!',
+      v1150F4Title: 'Prevent migration update reload loop',
+      v1150F4Desc: 'Bugs eliminated, app improved.',
       v1142Date: 'September 28, 2026',
       v1142Title: 'Release 1.14.2',
       v1142Description: '1 bug fix.',
