@@ -24,6 +24,7 @@ function setup() {
         importHash: 'private hash',
       },
     ]),
+    createAccount: vi.fn().mockResolvedValue({ id: 'account-2' }),
     updateTransaction: vi.fn().mockResolvedValue(undefined),
   };
   const confirm = vi.fn().mockResolvedValue(true);
@@ -106,7 +107,7 @@ describe('WebMCP tool surface', () => {
     await expect(tool.execute({ secret: 'x' }, { signal })).rejects.toThrow(
       webMcpEn.invalidInput
     );
-    expect(confirm).not.toHaveBeenCalled();
+    expect(service.createAccount).not.toHaveBeenCalled();
   });
 
   it('requires a confirmation and active-profile ownership before a write', async () => {
@@ -128,6 +129,34 @@ describe('WebMCP tool surface', () => {
       expect.stringContaining('Notes: Reviewed')
     );
     expect(changed).toHaveBeenCalledOnce();
+  });
+
+  it('requires bank IBANs and permits supported manual account types', async () => {
+    const { find, service, confirm } = setup();
+    const tool = find('create_account');
+    await expect(
+      tool.execute({ name: 'Current', type: 'checking' }, { signal })
+    ).rejects.toThrow(webMcpEn.invalidInput);
+    await expect(
+      tool.execute({ name: 'Unsupported', type: 'wallet' }, { signal })
+    ).rejects.toThrow(webMcpEn.invalidInput);
+    expect(service.createAccount).not.toHaveBeenCalled();
+    await expect(
+      tool.execute({ name: 'Cash', type: 'cash' }, { signal })
+    ).resolves.toEqual({ id: 'account-2' });
+    expect(service.createAccount).toHaveBeenCalledWith({
+      name: 'Cash',
+      type: 'cash',
+      iban: undefined,
+      bank: undefined,
+      currentBalance: undefined,
+    });
+    await expect(
+      tool.execute(
+        { name: 'Bank', type: 'checking', iban: 'NL91ABNA0417164300' },
+        { signal }
+      )
+    ).resolves.toEqual({ id: 'account-2' });
   });
 
   it('rejects invalid input and revoked access without writing', async () => {

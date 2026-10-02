@@ -128,8 +128,8 @@ test.describe('Recurring Transaction Expansion', () => {
     await firstCheckbox.click({ force: true });
     await expect(firstCheckbox).toBeChecked();
 
-    // Hover over third row
-    await rows.nth(2).hover();
+    // Hover over third row (force:true to bypass toolbar overlay in selection mode)
+    await rows.nth(2).hover({ force: true });
     await page.waitForTimeout(200);
 
     // Shift-click third checkbox

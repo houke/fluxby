@@ -1,5 +1,24 @@
 # Changelog
 
+## v1.15.0
+
+**Release Date:** 2026-10-01
+
+### Features
+
+- **web:** add permissioned WebMCP tools and documentation
+
+### Bug Fixes
+
+- **e2e:** force hover on third row in selection mode test
+- **deps:** fix npm audit vulnerabilities
+- **web:** prevent migration update reload loop
+
+### Chores
+
+- **deps:** bump tauri-plugin-updater in /apps/tauri (#138)
+- **deps:** bump the dev-dependencies group across 1 directory with 7 updates (#137)
+
 ## v1.14.2
 
 **Release Date:** 2026-09-28

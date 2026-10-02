@@ -444,7 +444,9 @@ export function buildWebMcpTools(deps: ToolDependencies): WebMcpTool[] {
           ].includes(type)
         )
           throw new Error(copy.invalidInput);
-        const iban = optionalString(input.iban, copy, 34);
+        const iban = ['cash', 'loan', 'investment'].includes(type)
+          ? optionalString(input.iban, copy, 34)
+          : requiredString(input.iban, copy, 34);
         const bank = optionalString(input.bank, copy);
         const currentBalance =
           input.currentBalance === undefined

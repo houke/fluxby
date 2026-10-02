@@ -1,6 +1,6 @@
 {
   "name": "fluxby-tauri",
-  "version": "1.14.2",
+  "version": "1.15.0",
   "description": "Fluxby Desktop Application",
   "type": "module",
   "scripts": {
@@ -17,7 +17,7 @@
     "@tauri-apps/plugin-process": "^2.0.0"
   },
   "devDependencies": {
-    "@tauri-apps/cli": "^2.11.4",
+    "@tauri-apps/cli": "^2.11.5",
     "typescript": "^5.7.2"
   }
 }
