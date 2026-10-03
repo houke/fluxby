@@ -990,6 +990,8 @@ export interface TranslationKeys {
     appNameDescription: string;
     appNamePlaceholder: string;
     appNameUnset: string;
+    appNameSaved: string;
+    appNameSaveError: string;
     masterPasswordTitle: string;
     masterPasswordDescription: string;
     masterPasswordDialogTitle: string;
@@ -2254,7 +2256,7 @@ export const nl: TranslationKeys = {
   transactions: {
     title: 'Transacties',
     subtitle: 'Beheer je inkomsten en uitgaven',
-    allTransactions: 'Alle Transacties',
+    allTransactions: 'Alle transacties',
     transactionsFound: 'transacties gevonden',
     searchPlaceholder: 'Zoek op omschrijving, IBAN of categorie...',
     income: 'Inkomsten',
@@ -2559,7 +2561,7 @@ export const nl: TranslationKeys = {
     noBudgets: 'Nog geen budgetten ingesteld',
     createFirst: 'Maak je eerste budget aan om je uitgaven te volgen',
     deleteBudget: 'Budget Verwijderen',
-    monthlyOverview: 'Maandelijks Overzicht',
+    monthlyOverview: 'Maandelijks overzicht',
     budgetsSet: 'budgetten ingesteld',
     addNewBudget: 'Nieuw budget toevoegen',
     totalBudget: 'Totaal budget',
@@ -2950,9 +2952,9 @@ export const nl: TranslationKeys = {
       manageProfiles: 'Profielen beheren',
       appSettings: 'App-instellingen',
     },
-    appSettings: 'App Instellingen',
+    appSettings: 'App-instellingen',
     appSettingsDescription: 'Beheer taal, uiterlijk en appvoorkeuren',
-    versions: 'Versies & Updates',
+    versions: 'Versies en updates',
     versionsDescription: 'App versies en software updates',
     language: 'Taal',
     languageDescription: 'Kies de taal van de interface',
@@ -2967,6 +2969,9 @@ export const nl: TranslationKeys = {
     appNameDescription: 'Wordt gebruikt in de begroeting',
     appNamePlaceholder: 'Je naam...',
     appNameUnset: 'Niet ingesteld',
+    appNameSaved: 'Naam opgeslagen',
+    appNameSaveError:
+      'Je naam kon niet worden opgeslagen. Probeer het opnieuw.',
     masterPasswordTitle: 'Master wachtwoord',
     masterPasswordDescription: 'Versleutelt al je financiële gegevens lokaal',
     masterPasswordDialogTitle: 'Master wachtwoord wijzigen',
@@ -3479,10 +3484,10 @@ export const nl: TranslationKeys = {
     features: 'Functies',
     featuresDescription:
       'Een overzicht van alle beschikbare functies in de app',
-    quickStart: 'Snel Starten',
+    quickStart: 'Snel starten',
     quickStartDescription: 'In 3 stappen aan de slag',
-    faq: 'Veelgestelde Vragen',
-    needHelp: 'Hulp Nodig?',
+    faq: 'Veelgestelde vragen',
+    needHelp: 'Hulp nodig?',
     needHelpDescription:
       'Heb je een vraag die niet in de FAQ staat? Bekijk onze documentatie of neem contact met ons op.',
     externalLinks: 'Meer informatie',
@@ -3492,12 +3497,12 @@ export const nl: TranslationKeys = {
     developerDocsLink: 'Developer documentatie',
     featureList: [
       {
-        title: 'Transacties Importeren',
+        title: 'Transacties importeren',
         description:
           'Upload je bank CSV-export om transacties te importeren. De app herkent automatisch rekeningen en categoriseert transacties.',
       },
       {
-        title: 'Transacties Bekijken',
+        title: 'Transacties bekijken',
         description:
           'Bekijk, filter en zoek door al je transacties. Pas categorieën aan en voeg notities toe.',
       },

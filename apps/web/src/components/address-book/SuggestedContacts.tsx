@@ -1,5 +1,5 @@
 import React from 'react';
-import { UserPlus, ChevronUp, ChevronDown, Plus } from 'lucide-react';
+import { ChevronUp, ChevronDown, Plus } from 'lucide-react';
 import {
   Card,
   CardHeader,
@@ -8,6 +8,12 @@ import {
   CardContent,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import {
   Popover,
   PopoverContent,
@@ -58,25 +64,37 @@ export const SuggestedContacts: React.FC<SuggestedContactsProps> = ({
   return (
     <Card
       data-onboarding='suggested-contacts-card'
-      className='border-blue-500/50 bg-blue-50/50 dark:bg-blue-950/10'
+      className='rounded-none border-x-0 border-blue-500/50 bg-blue-50/50 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm dark:bg-blue-950/10'
     >
-      <CardHeader
-        className='cursor-pointer'
-        onClick={() => setShowSuggestedContacts(!showSuggestedContacts)}
-      >
-        <div className='flex items-center justify-between'>
-          <CardTitle className='flex items-center gap-2 text-blue-700 dark:text-blue-400'>
-            <UserPlus className='h-5 w-5' />
+      <CardHeader className='px-3 py-3 sm:px-6 sm:py-4'>
+        <div className='flex items-center justify-between gap-2'>
+          <CardTitle className='flex min-w-0 flex-wrap items-center gap-2 text-base text-blue-700 sm:text-lg dark:text-blue-400'>
             {t.addressBook?.suggestedContacts}
             <span className='rounded-full bg-blue-200 px-2 py-0.5 text-xs font-normal dark:bg-blue-800'>
               {suggestedContacts.length}
             </span>
-            {showSuggestedContacts ? (
-              <ChevronUp className='ml-1 h-4 w-4' />
-            ) : (
-              <ChevronDown className='ml-1 h-4 w-4' />
-            )}
           </CardTitle>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant='ghost'
+                  size='icon'
+                  className='h-8 w-8 shrink-0 rounded-md'
+                  aria-label={t.addressBook?.suggestedContacts}
+                  aria-expanded={showSuggestedContacts}
+                  onClick={() =>
+                    setShowSuggestedContacts(!showSuggestedContacts)
+                  }
+                >
+                  {showSuggestedContacts ? <ChevronUp /> : <ChevronDown />}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                {t.addressBook?.suggestedContacts}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
         {!showSuggestedContacts && (
           <CardDescription>
@@ -90,14 +108,14 @@ export const SuggestedContacts: React.FC<SuggestedContactsProps> = ({
         )}
       </CardHeader>
       {showSuggestedContacts && (
-        <CardContent className='space-y-2'>
+        <CardContent className='space-y-2 px-3 pb-3 sm:px-6 sm:pb-6'>
           {suggestedContacts.slice(0, 20).map((account) => (
             <div
               key={account.iban}
-              className='flex items-center justify-between rounded-lg border bg-white p-3 dark:bg-card'
+              className='flex flex-wrap items-center justify-between gap-2 rounded-lg border bg-white p-3 dark:bg-card'
             >
               <div className='min-w-0 flex-1'>
-                <div className='flex items-center gap-2'>
+                <div className='flex flex-wrap items-center gap-x-2'>
                   <span className='truncate font-medium'>{account.name}</span>
                   <span className='text-xs text-muted-foreground'>
                     ({account.transactionCount} {t.addressBook?.transactions})
@@ -111,7 +129,9 @@ export const SuggestedContacts: React.FC<SuggestedContactsProps> = ({
                 <span
                   className={cn(
                     'text-sm font-medium',
-                    account.netAmount >= 0 ? 'text-green-600' : 'text-red-500'
+                    account.netAmount >= 0
+                      ? 'text-green-700 dark:text-green-400'
+                      : 'text-red-700 dark:text-red-400'
                   )}
                 >
                   {account.netAmount >= 0 ? '+' : ''}
@@ -129,16 +149,26 @@ export const SuggestedContacts: React.FC<SuggestedContactsProps> = ({
                     }
                   }}
                 >
-                  <PopoverTrigger asChild>
-                    <Button
-                      size='sm'
-                      variant='outline'
-                      className='h-8 w-8 rounded-md p-0 hover:border-purple-600 hover:bg-purple-600 hover:text-white'
-                      disabled={isCreateContactPending}
-                    >
-                      <Plus className='h-4 w-4' />
-                    </Button>
-                  </PopoverTrigger>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <PopoverTrigger asChild>
+                          <Button
+                            size='sm'
+                            variant='outline'
+                            aria-label={t.addressBook?.addContact}
+                            className='h-8 w-8 rounded-md p-0 hover:border-purple-600 hover:bg-purple-600 hover:text-white'
+                            disabled={isCreateContactPending}
+                          >
+                            <Plus className='h-4 w-4' />
+                          </Button>
+                        </PopoverTrigger>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        {t.addressBook?.addContact}
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                   <PopoverContent
                     className='w-72 p-3'
                     align='end'
@@ -151,6 +181,7 @@ export const SuggestedContacts: React.FC<SuggestedContactsProps> = ({
                         </label>
                         <div className='flex gap-2'>
                           <Input
+                            aria-label={t.addressBook?.addAsNewContact}
                             value={suggestedContactEditName}
                             onChange={(e) =>
                               setSuggestedContactEditName(e.target.value)
@@ -158,22 +189,32 @@ export const SuggestedContacts: React.FC<SuggestedContactsProps> = ({
                             className='h-8 text-sm'
                             placeholder={t.addressBook?.enterName}
                           />
-                          <Button
-                            size='sm'
-                            className='h-8 px-3'
-                            onClick={() =>
-                              onCreateContact({
-                                iban: account.iban,
-                                name: suggestedContactEditName.trim(),
-                              })
-                            }
-                            disabled={
-                              isCreateContactPending ||
-                              !suggestedContactEditName.trim()
-                            }
-                          >
-                            <Plus className='h-4 w-4' />
-                          </Button>
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  size='sm'
+                                  aria-label={t.addressBook?.addAsNewContact}
+                                  className='h-8 rounded-md px-3'
+                                  onClick={() =>
+                                    onCreateContact({
+                                      iban: account.iban,
+                                      name: suggestedContactEditName.trim(),
+                                    })
+                                  }
+                                  disabled={
+                                    isCreateContactPending ||
+                                    !suggestedContactEditName.trim()
+                                  }
+                                >
+                                  <Plus className='h-4 w-4' />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                {t.addressBook?.addAsNewContact}
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
                         </div>
                       </div>
                       <div className='flex items-center gap-2'>
@@ -188,6 +229,7 @@ export const SuggestedContacts: React.FC<SuggestedContactsProps> = ({
                           {t.addressBook?.assignToExisting}
                         </label>
                         <Input
+                          aria-label={t.addressBook?.searchContacts}
                           value={suggestedContactSearch}
                           onChange={(e) =>
                             setSuggestedContactSearch(e.target.value)

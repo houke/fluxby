@@ -61,8 +61,21 @@ for (const language of ['nl', 'en'] as const) {
         .getByLabel(nl ? 'Naam' : 'Name', { exact: true })
         .fill(kind === 'income' ? 'QA four-week income' : 'QA annual bill');
       await dialog
-        .getByLabel(nl ? 'Soort' : 'Type', { exact: true })
-        .selectOption(kind);
+        .getByRole('combobox', { name: nl ? 'Soort' : 'Type', exact: true })
+        .click();
+      await page
+        .getByRole('option', {
+          name:
+            kind === 'income'
+              ? nl
+                ? 'Inkomsten'
+                : 'Income'
+              : nl
+                ? 'Uitgave'
+                : 'Expense',
+          exact: true,
+        })
+        .click();
       await dialog
         .getByLabel(nl ? 'Bedrag' : 'Amount', { exact: true })
         .fill(kind === 'income' ? '1400' : '240');
@@ -72,8 +85,24 @@ for (const language of ['nl', 'en'] as const) {
         })
         .fill(dateOffset(kind === 'income' ? 7 : 20));
       await dialog
-        .getByLabel(nl ? 'Herhaling' : 'Frequency', { exact: true })
-        .selectOption(kind === 'income' ? 'fourweekly' : 'yearly');
+        .getByRole('combobox', {
+          name: nl ? 'Herhaling' : 'Frequency',
+          exact: true,
+        })
+        .click();
+      await page
+        .getByRole('option', {
+          name:
+            kind === 'income'
+              ? nl
+                ? 'Elke vier weken'
+                : 'Every four weeks'
+              : nl
+                ? 'Jaarlijks'
+                : 'Yearly',
+          exact: true,
+        })
+        .click();
       if (kind === 'expense')
         await dialog
           .getByLabel(nl ? 'Al gereserveerd' : 'Already reserved', {
@@ -92,13 +121,19 @@ for (const language of ['nl', 'en'] as const) {
       ).toBeVisible();
     }
     await household
-      .getByLabel(nl ? 'Prognoseperiode' : 'Forecast period', { exact: true })
-      .selectOption('90');
+      .getByRole('combobox', {
+        name: nl ? 'Prognoseperiode' : 'Forecast period',
+        exact: true,
+      })
+      .click();
+    await page
+      .getByRole('option', { name: nl ? '90 dagen' : '90 days', exact: true })
+      .click();
     await expect(
       household.getByLabel(nl ? 'Prognoseperiode' : 'Forecast period', {
         exact: true,
       })
-    ).toHaveValue('90');
+    ).toHaveText(nl ? '90 dagen' : '90 days');
     const forecast = page.locator('[data-onboarding="daily-forecast"]');
     await expect(forecast).toContainText(
       nl ? 'Volgende geplande inkomsten' : 'Next planned income'
@@ -119,7 +154,7 @@ for (const language of ['nl', 'en'] as const) {
     );
     const weekly = page.locator('[data-onboarding="weekly-review"]');
     for (const checkbox of await weekly.getByRole('checkbox').all()) {
-      await checkbox.check();
+      await checkbox.click();
       await expect(checkbox).toBeChecked();
       await expect(checkbox).toBeEnabled();
     }

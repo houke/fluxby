@@ -724,7 +724,7 @@ export function ProfileManager() {
                     </div>
                   </div>
                   {isActive && (
-                    <span className='flex h-6 items-center rounded-full bg-primary/10 px-2 text-xs font-medium text-primary'>
+                    <span className='flex h-6 items-center rounded-full bg-primary/10 px-2 text-xs font-medium text-primary dark:text-purple-300'>
                       {t.settings.profileManager.active}
                     </span>
                   )}
@@ -734,7 +734,7 @@ export function ProfileManager() {
                 <div className='flex items-center justify-between'>
                   <div className='text-sm text-muted-foreground'>
                     {t.settings.profileManager.profileId}:{' '}
-                    <code className='rounded bg-muted px-1 py-0.5 font-mono text-xs'>
+                    <code className='rounded bg-muted px-1 py-0.5 font-mono text-xs text-slate-600 dark:text-slate-300'>
                       {profile.id}
                     </code>
                   </div>

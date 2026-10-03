@@ -1,5 +1,6 @@
 import type { Database } from '@fluxby/database';
 import { verifyBackupChecksum, type PlainBackup } from '../backup-crypto';
+import { normalizeManualBillAmounts } from './manual-bill-amounts';
 
 export type BackupRow = Record<string, string | number | null>;
 type BackupDatabase = Pick<
@@ -378,7 +379,7 @@ async function validate(db: BackupDatabase, input: unknown) {
         )
           invalid();
       }
-      return normalized;
+      return normalizeManualBillAmounts(table, normalized);
     });
     // Validate SQLite UNIQUE indexes before any destructive operation. SQLite
     // permits multiple NULLs, so keys containing NULL are intentionally skipped.

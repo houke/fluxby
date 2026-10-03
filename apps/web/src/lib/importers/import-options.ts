@@ -34,6 +34,45 @@ export function headerSignature(headers: string[]) {
     headers.map((h) => h.trim().toLocaleLowerCase('nl-NL'))
   );
 }
+export function isImportMappingComplete(
+  mapping: ImportColumnMapping,
+  options: ImportOptions
+) {
+  return Boolean(
+    mapping.date &&
+    mapping.description &&
+    (mapping.amount || options.debitColumn || options.creditColumn)
+  );
+}
+
+// A saved signature ignores casing and surrounding whitespace. Rebind its
+// column names to this file's actual headers before reading any row values.
+export function rebindImportColumns(
+  mapping: ImportColumnMapping,
+  options: ImportOptions,
+  headers: string[]
+) {
+  const resolve = (column: string | undefined) => {
+    if (!column) return column;
+    const matches = headers.filter(
+      (header) =>
+        header.trim().toLocaleLowerCase('nl-NL') ===
+        column.trim().toLocaleLowerCase('nl-NL')
+    );
+    if (matches.length !== 1) throw new Error('headers');
+    return matches[0];
+  };
+  return {
+    mapping: Object.fromEntries(
+      Object.entries(mapping).map(([key, column]) => [key, resolve(column)])
+    ) as unknown as ImportColumnMapping,
+    options: {
+      ...options,
+      debitColumn: resolve(options.debitColumn) ?? '',
+      creditColumn: resolve(options.creditColumn) ?? '',
+    },
+  };
+}
 export function parseImportAmount(value: string, decimal: ',' | '.') {
   const raw = value.trim().replace(/[€\s\u00a0]/g, '');
   if (!raw) throw new Error('amount');
@@ -131,6 +170,23 @@ export function normalizeImportRow(
   mapping: ImportColumnMapping,
   options: ImportOptions
 ) {
+  if (!isImportMappingComplete(mapping, options)) throw new Error('mapping');
+  const columns = [
+    ...Object.entries(mapping)
+      .filter(
+        ([key]) =>
+          key !== 'amount' || (!options.debitColumn && !options.creditColumn)
+      )
+      .map(([, column]) => column),
+    options.debitColumn,
+    options.creditColumn,
+  ].filter((column): column is string => Boolean(column));
+  if (
+    columns.some((column) => !Object.prototype.hasOwnProperty.call(row, column))
+  )
+    throw new Error('mapping');
+  if (options.debitColumn && options.debitColumn === options.creditColumn)
+    throw new Error('mapping');
   for (const [header, value] of Object.entries(row)) {
     if (
       /^(valuta|valuta saldo|currency|munt)$/i.test(header.trim()) &&

@@ -21,6 +21,7 @@ import {
 } from '@fluxby/shared';
 import { readFromOPFSSync, isSettingsCacheInitialized } from '@fluxby/database';
 import { getStoredLanguage, translations } from './i18n';
+import { importToolsTranslations } from './i18n/import-tools';
 import type { RestoreBackupOptions } from './data/backup';
 
 // Note: getApiBaseUrl/setApiBaseUrl are only needed for HTTP API mode (api-http.ts)
@@ -892,11 +893,25 @@ export const api = {
     bank?: string,
     onProgress?: (current: number, total: number) => void
   ) => {
+    const importProfileId = getActiveProfileIdSync();
+    if (!importProfileId)
+      throw new Error(
+        importToolsTranslations[getStoredLanguage()].profileChanged
+      );
+    const assertImportProfile = () => {
+      if (!importProfileId || getActiveProfileIdSync() !== importProfileId)
+        throw new Error(
+          importToolsTranslations[getStoredLanguage()].profileChanged
+        );
+    };
+    assertImportProfile();
     const csvContent = await file.text();
+    assertImportProfile();
     const ds = getDataService();
 
     // Parse the CSV first
     const parseResult = await ds.previewCsvImport(csvContent);
+    assertImportProfile();
     if (!parseResult.rows || parseResult.rows.length === 0) {
       return {
         importId: Date.now(),
@@ -910,7 +925,11 @@ export const api = {
     }
 
     // Recovery must succeed before accounts or transactions are changed.
-    const recoveryId = await ds.createImportRecoverySnapshot(file.name);
+    const recoveryId = await ds.createImportRecoverySnapshot(
+      file.name,
+      importProfileId
+    );
+    assertImportProfile();
 
     // Get or create account
     let targetAccountId = accountId || null;
@@ -918,6 +937,7 @@ export const api = {
       // Look for existing account by IBAN from first row
       if (mapping.iban && parseResult.rows[0][mapping.iban]) {
         const accounts = await ds.getAccounts();
+        assertImportProfile();
         const iban = parseResult.rows[0][mapping.iban];
         const existing = accounts.find(
           (a: { iban: string }) =>
@@ -932,28 +952,35 @@ export const api = {
             name: iban,
             type: 'checking',
             bank: bank || 'unknown',
+            profileId: importProfileId,
           });
+          assertImportProfile();
           targetAccountId = String(newAccount.id);
         }
       } else {
         // Use first available account or create default
         const accounts = await ds.getAccounts();
+        assertImportProfile();
         if (accounts.length > 0) {
           targetAccountId = String(accounts[0].id);
         } else {
           const newAccount = await ds.createAccount({
             iban: 'UNKNOWN',
-            name: 'Import Account',
+            name: importToolsTranslations[getStoredLanguage()].defaultAccount,
             type: 'checking',
             bank: bank || 'unknown',
+            profileId: importProfileId,
           });
+          assertImportProfile();
           targetAccountId = String(newAccount.id);
         }
       }
     }
 
     // Import using data service
+    assertImportProfile();
     const result = await ds.importCsv(csvContent, {
+      expectedProfileId: importProfileId,
       accountId: targetAccountId,
       mapping: {
         date: mapping.date,
@@ -970,14 +997,15 @@ export const api = {
       bank: bank || 'generic',
       onProgress: onProgress,
     });
-
     if (result.importId)
       await ds.recordImportBatch(
         file.name,
         result.importId,
         result.importedTransactionIds ?? [],
-        recoveryId
+        recoveryId,
+        importProfileId
       );
+    assertImportProfile();
 
     return {
       importId: result.importId ?? Date.now(),
@@ -1484,15 +1512,26 @@ export const api = {
   },
 
   getProposedBudgets: async () => {
-    const ds=getDataService();
-    const [suggestions,budgets,categories]=await Promise.all([ds.getMonthlyBudgetSuggestions(6),ds.getBudgets(),ds.getCategories()]);
-    const existing=new Set(budgets.map(b=>b.categoryId));
-    return suggestions.filter(s=>s.suggestedAmount>0&&!existing.has(s.categoryId)).map(s=>({
-      categoryId:s.categoryId,categoryName:s.categoryName,
-      categoryIcon:categories.find(c=>c.id===s.categoryId)?.icon||'📦',
-      categoryColor:categories.find(c=>c.id===s.categoryId)?.color||'#9CA3AF',
-      avgMonthlySpent:s.averageMonthly,basedOnMonths:s.baselineMonths,proposedAmount:s.suggestedAmount
-    }));
+    const ds = getDataService();
+    const [suggestions, budgets, categories] = await Promise.all([
+      ds.getMonthlyBudgetSuggestions(6),
+      ds.getBudgets(),
+      ds.getCategories(),
+    ]);
+    const existing = new Set(budgets.map((b) => b.categoryId));
+    return suggestions
+      .filter((s) => s.suggestedAmount > 0 && !existing.has(s.categoryId))
+      .map((s) => ({
+        categoryId: s.categoryId,
+        categoryName: s.categoryName,
+        categoryIcon:
+          categories.find((c) => c.id === s.categoryId)?.icon || '📦',
+        categoryColor:
+          categories.find((c) => c.id === s.categoryId)?.color || '#9CA3AF',
+        avgMonthlySpent: s.averageMonthly,
+        basedOnMonths: s.baselineMonths,
+        proposedAmount: s.suggestedAmount,
+      }));
   },
 
   // ============= Transaction Methods =============

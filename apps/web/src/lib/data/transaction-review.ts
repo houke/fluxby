@@ -1,17 +1,18 @@
 import { merchantSimilarity } from './import-tools';
 import {
   addDaysToDateOnly,
-  addMonthsToDateOnly,
   formatDateISO,
   type PatternType,
   type Transaction,
 } from '@fluxby/shared';
 import { moneyCents, type FinancialDatabase } from './financial-planning';
+import { addPlanningMonths } from './household-planning';
 import type { TransactionView } from '../transaction-view';
 
 export interface ReviewTransaction extends Transaction {
   accountName: string;
   categoryName: string | null;
+  parentCategoryId?: string | null;
 }
 export type ReviewKind =
   | 'uncategorized'
@@ -35,6 +36,14 @@ export interface TransactionLink {
   kind: 'refund' | 'transfer';
   relationType: 'refund' | 'reimbursement' | 'transfer';
   amount: number;
+}
+export interface ReviewDecision {
+  status: 'done' | 'later';
+  snoozedUntil: string | null;
+}
+export interface CategoryDecision {
+  categoryId: string | null;
+  source: string;
 }
 const normalized = (s: string) =>
   s
@@ -329,38 +338,92 @@ export function createTransactionReviewService(
     if (!id) throw new Error('No active profile');
     return id;
   };
-  const rows = async () =>
+  const assertProfile = (id: string) => {
+    if (currentProfileId() !== id) throw new Error('Active profile changed');
+  };
+  const rows = async (id = profile()) =>
     db.queryAsync<ReviewTransaction>(
-      `SELECT t.id,t.date,t.amount,t.type,COALESCE(t.description,'') description,t.merchant_name merchantName,t.account_id accountId,t.opposing_account_iban opposingAccountIban,t.opposing_account_name opposingAccountName,t.category_id categoryId,t.notes,t.payment_method paymentMethod,t.raw_data rawData,t.import_hash importHash,t.created_at createdAt,t.payment_provider paymentProvider,t.address_book_id addressBookId,a.name accountName,c.name categoryName FROM transactions t JOIN accounts a ON a.id=t.account_id AND a.profile_id=t.profile_id LEFT JOIN categories c ON c.id=t.category_id AND c.profile_id=t.profile_id WHERE t.profile_id=? AND t.is_deleted=0 AND a.is_deleted=0 ORDER BY t.date DESC,t.id`,
-      [profile()]
+      `SELECT t.id,t.date,t.amount,t.type,COALESCE(t.description,'') description,t.merchant_name merchantName,t.account_id accountId,t.opposing_account_iban opposingAccountIban,t.opposing_account_name opposingAccountName,t.category_id categoryId,t.notes,t.payment_method paymentMethod,t.raw_data rawData,t.import_hash importHash,t.created_at createdAt,t.payment_provider paymentProvider,t.address_book_id addressBookId,a.name accountName,c.name categoryName,c.parent_id parentCategoryId FROM transactions t JOIN accounts a ON a.id=t.account_id AND a.profile_id=t.profile_id LEFT JOIN categories c ON c.id=t.category_id AND c.profile_id=t.profile_id WHERE t.profile_id=? AND t.is_deleted=0 AND a.is_deleted=0 ORDER BY t.date DESC,t.id`,
+      [id]
     );
-  const requireTx = async (id: string) => {
-    const tx = (await rows()).find((t) => t.id === id);
+  const requireTx = async (id: string, profileId: string) => {
+    const tx = (await rows(profileId)).find((t) => t.id === id);
     if (!tx) throw new Error('Transaction not found');
     return tx;
   };
-  const service = {
-    getReviewTransactions: rows,
-    async getTransactionLinks(): Promise<TransactionLink[]> {
-      return db.queryAsync<TransactionLink>(
-        `SELECT l.id,l.source_id sourceId,l.target_id targetId,l.kind,l.relation_type relationType,l.amount FROM transaction_links l JOIN transactions s ON s.id=l.source_id AND s.profile_id=l.profile_id AND s.is_deleted=0 JOIN transactions t ON t.id=l.target_id AND t.profile_id=l.profile_id AND t.is_deleted=0 WHERE l.profile_id=? AND l.is_deleted=0`,
-        [profile()]
+  const getLinks = (id: string) =>
+    db.queryAsync<TransactionLink>(
+      `SELECT l.id,l.source_id sourceId,l.target_id targetId,l.kind,l.relation_type relationType,l.amount FROM transaction_links l JOIN transactions s ON s.id=l.source_id AND s.profile_id=l.profile_id AND s.is_deleted=0 JOIN transactions t ON t.id=l.target_id AND t.profile_id=l.profile_id AND t.is_deleted=0 WHERE l.profile_id=? AND l.is_deleted=0`,
+      [id]
+    );
+  const writeCategory = async (
+    transactionId: string,
+    categoryId: string | null,
+    decision: CategoryDecision | null
+  ) => {
+    const profileId = profile();
+    await requireTx(transactionId, profileId);
+    if (
+      categoryId &&
+      !(await db.queryOneAsync(
+        'SELECT id FROM categories WHERE id=? AND profile_id=? AND is_deleted=0',
+        [categoryId, profileId]
+      ))
+    )
+      throw new Error('Category not found');
+    const now = Date.now();
+    return db.transactionAsync(async () => {
+      const previous = await db.queryOneAsync<CategoryDecision>(
+        'SELECT category_id AS categoryId,source FROM transaction_category_decisions WHERE transaction_id=? AND profile_id=? AND is_deleted=0',
+        [transactionId, profileId]
       );
+      assertProfile(profileId);
+      await db.runAsync(
+        'UPDATE transactions SET category_id=?,updated_at=? WHERE id=? AND profile_id=?',
+        [categoryId, now, transactionId, profileId]
+      );
+      if (decision)
+        await db.runAsync(
+          `INSERT INTO transaction_category_decisions(id,transaction_id,category_id,source,profile_id,created_at,updated_at) VALUES(?,?,?,?,?,?,?) ON CONFLICT(profile_id,transaction_id) DO UPDATE SET category_id=excluded.category_id,source=excluded.source,updated_at=excluded.updated_at,is_deleted=0`,
+          [
+            crypto.randomUUID(),
+            transactionId,
+            decision.categoryId,
+            decision.source,
+            profileId,
+            now,
+            now,
+          ]
+        );
+      else
+        await db.runAsync(
+          'UPDATE transaction_category_decisions SET is_deleted=1,updated_at=? WHERE transaction_id=? AND profile_id=?',
+          [now, transactionId, profileId]
+        );
+      assertProfile(profileId);
+      return previous;
+    });
+  };
+  const service = {
+    getReviewTransactions: () => rows(),
+    async getTransactionLinks(): Promise<TransactionLink[]> {
+      return getLinks(profile());
     },
     async getTransactionReviewInbox(
       includeLater = false
     ): Promise<ReviewItem[]> {
+      const profileId = profile();
       const [transactions, decisions, links] = await Promise.all([
-        rows(),
+        rows(profileId),
         db.queryAsync<{
           item_key: string;
           status: string;
           snoozed_until: string | null;
         }>(
           'SELECT item_key,status,snoozed_until FROM transaction_review_decisions WHERE profile_id=? AND is_deleted=0',
-          [profile()]
+          [profileId]
         ),
-        service.getTransactionLinks(),
+        getLinks(profileId),
       ]);
       const today = formatDateISO(new Date());
       return buildReviewCandidates(transactions).filter(
@@ -384,52 +447,62 @@ export function createTransactionReviewService(
     async saveReviewDecision(key: string, status: 'done' | 'later') {
       if (!key || key.length > 500 || !['done', 'later'].includes(status))
         throw new Error('Invalid review decision');
-      const now = Date.now();
-      await db.runAsync(
-        `INSERT INTO transaction_review_decisions(id,item_key,status,snoozed_until,profile_id,created_at,updated_at) VALUES(?,?,?,?,?,?,?) ON CONFLICT(profile_id,item_key) DO UPDATE SET status=excluded.status,snoozed_until=excluded.snoozed_until,updated_at=excluded.updated_at,is_deleted=0`,
-        [
-          crypto.randomUUID(),
-          key,
-          status,
-          status === 'later'
-            ? addDaysToDateOnly(formatDateISO(new Date()), 7)
-            : null,
-          profile(),
-          now,
-          now,
-        ]
-      );
+      const profileId = profile(),
+        now = Date.now();
+      return db.transactionAsync(async () => {
+        const previous = await db.queryOneAsync<ReviewDecision>(
+          'SELECT status,snoozed_until AS snoozedUntil FROM transaction_review_decisions WHERE profile_id=? AND item_key=? AND is_deleted=0',
+          [profileId, key]
+        );
+        assertProfile(profileId);
+        await db.runAsync(
+          `INSERT INTO transaction_review_decisions(id,item_key,status,snoozed_until,profile_id,created_at,updated_at) VALUES(?,?,?,?,?,?,?) ON CONFLICT(profile_id,item_key) DO UPDATE SET status=excluded.status,snoozed_until=excluded.snoozed_until,updated_at=excluded.updated_at,is_deleted=0`,
+          [
+            crypto.randomUUID(),
+            key,
+            status,
+            status === 'later'
+              ? addDaysToDateOnly(formatDateISO(new Date()), 7)
+              : null,
+            profileId,
+            now,
+            now,
+          ]
+        );
+        assertProfile(profileId);
+        return previous;
+      });
     },
-    async undoReviewDecision(key: string) {
-      await db.runAsync(
-        'UPDATE transaction_review_decisions SET is_deleted=1,updated_at=? WHERE profile_id=? AND item_key=?',
-        [Date.now(), profile(), key]
-      );
+    async undoReviewDecision(key: string, previous?: ReviewDecision) {
+      const profileId = profile();
+      if (previous)
+        await db.runAsync(
+          'UPDATE transaction_review_decisions SET status=?,snoozed_until=?,is_deleted=0,updated_at=? WHERE profile_id=? AND item_key=?',
+          [previous.status, previous.snoozedUntil, Date.now(), profileId, key]
+        );
+      else
+        await db.runAsync(
+          'UPDATE transaction_review_decisions SET is_deleted=1,updated_at=? WHERE profile_id=? AND item_key=?',
+          [Date.now(), profileId, key]
+        );
     },
     async saveReviewedCategory(
       transactionId: string,
       categoryId: string | null
     ) {
-      await requireTx(transactionId);
-      if (
-        categoryId &&
-        !(await db.queryOneAsync(
-          'SELECT id FROM categories WHERE id=? AND profile_id=? AND is_deleted=0',
-          [categoryId, profile()]
-        ))
-      )
-        throw new Error('Category not found');
-      const now = Date.now();
-      await db.transactionAsync(async () => {
-        await db.runAsync(
-          'UPDATE transactions SET category_id=?,updated_at=? WHERE id=? AND profile_id=?',
-          [categoryId, now, transactionId, profile()]
-        );
-        await db.runAsync(
-          `INSERT INTO transaction_category_decisions(id,transaction_id,category_id,source,profile_id,created_at,updated_at) VALUES(?,?,?,'manual',?,?,?) ON CONFLICT(profile_id,transaction_id) DO UPDATE SET category_id=excluded.category_id,source='manual',updated_at=excluded.updated_at,is_deleted=0`,
-          [crypto.randomUUID(), transactionId, categoryId, profile(), now, now]
-        );
+      return writeCategory(transactionId, categoryId, {
+        categoryId,
+        source: 'manual',
       });
+    },
+    async undoReviewedCategory(
+      transactionId: string,
+      categoryId: string | null,
+      previous: CategoryDecision | null
+    ) {
+      if (previous && previous.categoryId !== categoryId)
+        throw new Error('Invalid category undo');
+      await writeCategory(transactionId, categoryId, previous);
     },
     async createTransactionLink(input: {
       sourceId: string;
@@ -446,12 +519,14 @@ export function createTransactionReviewService(
         moneyCents(input.amount) <= 0
       )
         throw new Error('Invalid link');
+      const profileId = profile();
       const id = crypto.randomUUID(),
         now = Date.now();
       await db.transactionAsync(async () => {
-        const source = await requireTx(input.sourceId),
-          target = await requireTx(input.targetId),
-          links = await service.getTransactionLinks();
+        const source = await requireTx(input.sourceId, profileId),
+          target = await requireTx(input.targetId, profileId),
+          links = await getLinks(profileId);
+        assertProfile(profileId);
         if (
           links.some(
             (l) =>
@@ -496,7 +571,7 @@ export function createTransactionReviewService(
             );
           await db.runAsync(
             "UPDATE transactions SET type='transfer',updated_at=? WHERE profile_id=? AND id IN (?,?)",
-            [now, profile(), source.id, target.id]
+            [now, profileId, source.id, target.id]
           );
         }
         await db.runAsync(
@@ -512,15 +587,17 @@ export function createTransactionReviewService(
             moneyCents(input.amount) / 100,
             source.type,
             target.type,
-            profile(),
+            profileId,
             now,
             now,
           ]
         );
+        assertProfile(profileId);
       });
       return id;
     },
     async deleteTransactionLink(id: string) {
+      const profileId = profile();
       await db.transactionAsync(async () => {
         const link = await db.queryOneAsync<{
           source_id: string;
@@ -530,9 +607,10 @@ export function createTransactionReviewService(
           kind: string;
         }>(
           'SELECT * FROM transaction_links WHERE id=? AND profile_id=? AND is_deleted=0',
-          [id, profile()]
+          [id, profileId]
         );
         if (!link) return;
+        assertProfile(profileId);
         const now = Date.now();
         if (link.kind === 'transfer')
           for (const [tx, type] of [
@@ -541,12 +619,13 @@ export function createTransactionReviewService(
           ])
             await db.runAsync(
               "UPDATE transactions SET type=?,updated_at=? WHERE id=? AND profile_id=? AND type='transfer'",
-              [type, now, tx, profile()]
+              [type, now, tx, profileId]
             );
         await db.runAsync(
           'UPDATE transaction_links SET is_deleted=1,updated_at=? WHERE id=? AND profile_id=?',
-          [now, id, profile()]
+          [now, id, profileId]
         );
+        assertProfile(profileId);
       });
     },
     async markTransactionRecurring(
@@ -559,44 +638,74 @@ export function createTransactionReviewService(
         )
       )
         throw new Error('Invalid frequency');
-      const tx = await requireTx(transactionId);
+      const profileId = profile();
+      const tx = await requireTx(transactionId, profileId);
       if (tx.type !== 'expense')
         throw new Error('Only an expense can become a bill');
-      const existing = await db.queryOneAsync<{ id: string }>(
-        `SELECT id FROM recurring_patterns WHERE profile_id=? AND is_deleted=0 AND is_active=1 AND COALESCE(merchant_name,'')=? AND COALESCE(opposing_iban,'')=?`,
+      const existing = await db.queryOneAsync<{
+        id: string;
+        last_date: string;
+        avg_amount: number;
+        last_amount: number;
+      }>(
+        `SELECT id,last_date,avg_amount,last_amount FROM recurring_patterns WHERE profile_id=? AND is_deleted=0 AND is_active=1 AND (avg_amount<0 OR manual_source=1) AND COALESCE(merchant_name,'')=? AND COALESCE(opposing_iban,'')=?`,
         [
-          profile(),
+          profileId,
           tx.merchantName || tx.opposingAccountName || tx.description,
           tx.opposingAccountIban || '',
         ]
       );
-      if (existing) return existing.id;
+      assertProfile(profileId);
       const id = crypto.randomUUID(),
         now = Date.now();
+      const baseDate =
+        existing?.last_date && existing.last_date > tx.date
+          ? existing.last_date
+          : tx.date;
       const next =
         frequency === 'weekly' || frequency === 'biweekly'
-          ? addDaysToDateOnly(tx.date, frequency === 'weekly' ? 7 : 14)
-          : addMonthsToDateOnly(
-              tx.date,
+          ? addDaysToDateOnly(baseDate, frequency === 'weekly' ? 7 : 14)
+          : addPlanningMonths(
+              baseDate,
               frequency === 'yearly' ? 12 : frequency === 'quarterly' ? 3 : 1
             );
-      await db.runAsync(
-        `INSERT INTO recurring_patterns(id,opposing_iban,merchant_name,pattern_type,avg_amount,last_amount,last_date,next_expected_date,is_active,is_confirmed,transaction_count,manual_source,profile_id,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,1,1,1,1,?,?,?)`,
-        [
-          id,
-          tx.opposingAccountIban,
-          tx.merchantName || tx.opposingAccountName || tx.description,
-          frequency,
-          Math.abs(tx.amount),
-          Math.abs(tx.amount),
-          tx.date,
-          next,
-          profile(),
-          now,
-          now,
-        ]
-      );
-      return id;
+      return db.transactionAsync(async () => {
+        assertProfile(profileId);
+        if (existing) {
+          await db.runAsync(
+            'UPDATE recurring_patterns SET pattern_type=?,next_expected_date=?,is_confirmed=1,is_dismissed=0,manual_source=1,avg_amount=?,last_amount=?,updated_at=? WHERE id=? AND profile_id=?',
+            [
+              frequency,
+              next,
+              -Math.abs(existing.avg_amount),
+              -Math.abs(existing.last_amount),
+              now,
+              existing.id,
+              profileId,
+            ]
+          );
+          assertProfile(profileId);
+          return existing.id;
+        }
+        await db.runAsync(
+          `INSERT INTO recurring_patterns(id,opposing_iban,merchant_name,pattern_type,avg_amount,last_amount,last_date,next_expected_date,is_active,is_confirmed,transaction_count,manual_source,profile_id,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,1,1,1,1,?,?,?)`,
+          [
+            id,
+            tx.opposingAccountIban,
+            tx.merchantName || tx.opposingAccountName || tx.description,
+            frequency,
+            -Math.abs(tx.amount),
+            -Math.abs(tx.amount),
+            tx.date,
+            next,
+            profileId,
+            now,
+            now,
+          ]
+        );
+        assertProfile(profileId);
+        return id;
+      });
     },
     async exportFilteredTransactions(
       view: TransactionView,

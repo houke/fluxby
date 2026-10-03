@@ -1,5 +1,6 @@
 import type { SyncChange, SyncableRow } from '@fluxby/core';
 import type { MigrationContext } from '@fluxby/database';
+import { normalizeManualBillAmounts } from './data/manual-bill-amounts';
 
 type Row = Record<string, unknown> & SyncableRow & { profile_id: string };
 type Column = {
@@ -377,7 +378,10 @@ export class ProfileDataSync {
           throw new Error('Missing required sync column');
       }
     }
-    return { ...row, profile_id: this.profileId };
+    return normalizeManualBillAmounts(change.table, {
+      ...row,
+      profile_id: this.profileId,
+    });
   }
   async applyChanges(
     changes: SyncChange[],

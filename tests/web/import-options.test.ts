@@ -6,6 +6,8 @@ import {
   parseConfiguredCSV,
   prepareConfiguredImport,
   headerSignature,
+  isImportMappingComplete,
+  rebindImportColumns,
 } from '@/lib/importers/import-options';
 import { merchantSimilarity } from '@/lib/data/import-tools';
 import { parseASNAmount, parseASNDate } from '@/lib/importers/asn-importer';
@@ -102,6 +104,56 @@ describe('Dutch import normalization', () => {
         { ...custom, skipRows: 0 }
       )
     ).toThrow();
+  });
+  it('accepts debit/credit-only mappings and rejects missing mapped source columns', () => {
+    const mapping = { date: 'Datum', amount: '', description: 'Omschrijving' };
+    const custom = { ...options, debitColumn: 'Af', creditColumn: 'Bij' };
+    expect(isImportMappingComplete(mapping, custom)).toBe(true);
+    expect(isImportMappingComplete(mapping, options)).toBe(false);
+    const source = 'Datum;Af;Bij;Omschrijving\n30-09-2026;12,50;;Supermarkt';
+    expect(
+      prepareConfiguredImport(source, mapping, custom).rows[0].__fluxby_amount
+    ).toBe('-12,50');
+    expect(() =>
+      prepareConfiguredImport(source, mapping, {
+        ...custom,
+        debitColumn: 'Missing',
+      })
+    ).toThrow('mapping');
+    expect(() =>
+      prepareConfiguredImport(source, mapping, {
+        ...custom,
+        creditColumn: 'Af',
+      })
+    ).toThrow('mapping');
+    expect(() =>
+      prepareConfiguredImport(source, { ...mapping, notes: 'Missing' }, custom)
+    ).toThrow('mapping');
+  });
+  it('rebinds saved mappings and debit/credit settings to changed header casing', () => {
+    const rebound = rebindImportColumns(
+      {
+        date: 'Datum',
+        amount: '',
+        description: 'Omschrijving',
+        iban: 'Rekening',
+      },
+      { ...options, debitColumn: 'Af', creditColumn: 'Bij' },
+      ['datum', 'AF', 'bij', 'omschrijving', 'rekening']
+    );
+    expect(rebound.mapping.date).toBe('datum');
+    expect(rebound.options.debitColumn).toBe('AF');
+    expect(rebound.mapping.iban).toBe('rekening');
+    expect(
+      prepareConfiguredImport(
+        'datum;AF;bij;omschrijving;rekening\n30-09-2026;12,50;;Shop;NL91ABNA0417164300',
+        rebound.mapping,
+        rebound.options
+      ).rows[0].__fluxby_amount
+    ).toBe('-12,50');
+    expect(() =>
+      rebindImportColumns(rebound.mapping, rebound.options, ['Datum', 'datum'])
+    ).toThrow('headers');
   });
   it('rejects malformed CSV and ambiguous headers instead of silently shifting fields', () => {
     expect(() => parseConfiguredCSV('Datum;Datum\n1;2', options)).toThrow();

@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import {
   ImportOptionsPanel,
   ImportRecoveryPanel,
@@ -8,6 +8,7 @@ import {
   parseConfiguredCSV,
   normalizeImportRow,
   prepareConfiguredImport,
+  isImportMappingComplete,
   type ImportOptions,
 } from '@/lib/importers/import-options';
 import { importToolsTranslations } from '@/lib/i18n/import-tools';
@@ -37,6 +38,12 @@ import {
   CardDescription,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import {
   Dialog,
   DialogContent,
@@ -173,7 +180,8 @@ const DUTCH_BANKS = [
 ] as const;
 
 // Helper to get display name for bank code
-const getBankDisplayName = (bankCode: string): string => {
+const getBankDisplayName = (bankCode: string, genericLabel: string): string => {
+  if (bankCode.toLowerCase() === 'generic') return genericLabel;
   const bank = DUTCH_BANKS.find(
     (b) => b.id.toLowerCase() === bankCode.toLowerCase()
   );
@@ -268,6 +276,8 @@ function HistoryCard({
   t: any;
   getErrorLabel: (error: string) => string;
 }) {
+  const { language } = useLanguage();
+  const importText = importToolsTranslations[language];
   const [isExpanded, setIsExpanded] = useState(false);
 
   // Get reason badge color based on reason type
@@ -292,7 +302,8 @@ function HistoryCard({
             <p className='text-sm text-muted-foreground'>
               {formatDate(item.importedAt)} • {item.transactionCount}{' '}
               {t.import.transactions}
-              {item.bank && ` • ${getBankDisplayName(item.bank)}`}
+              {item.bank &&
+                ` • ${getBankDisplayName(item.bank, importText.genericBank)}`}
               {totalSkipped > 0 && (
                 <span className='ml-2 text-amber-600 dark:text-amber-400'>
                   • {totalSkipped} {t.import?.skipped}
@@ -305,11 +316,17 @@ function HistoryCard({
           <span
             className={`rounded px-2 py-1 text-sm ${
               item.status === 'completed'
-                ? 'bg-success/10 text-success'
-                : 'bg-destructive/10 text-destructive'
+                ? 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200'
+                : item.status === 'undone'
+                  ? 'bg-muted text-slate-600 dark:text-slate-300'
+                  : 'bg-destructive/10 text-destructive'
             }`}
           >
-            {item.status === 'completed' ? t.import.completed : t.import.failed}
+            {item.status === 'completed'
+              ? t.import.completed
+              : item.status === 'undone'
+                ? importText.undone
+                : t.import.failed}
           </span>
           {hasSkippedRows && (
             <span className='flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-purple-600 hover:text-white'>
@@ -389,6 +406,8 @@ export default function Import() {
   );
   const toast = useToast();
   const { activeProfileId, activeProfile } = useProfile();
+  const activeProfileRef = useRef(activeProfileId);
+  activeProfileRef.current = activeProfileId;
 
   useDocumentTitle(t.import.title);
   const queryClient = useQueryClient();
@@ -399,7 +418,6 @@ export default function Import() {
   const {
     parseCSV: workerParseCSV,
     progress: parseProgress,
-    stage: parseStage,
     isProcessing: isWorkerProcessing,
     error: workerError,
     reset: resetWorker,
@@ -432,6 +450,23 @@ export default function Import() {
   const [selectedBank, setSelectedBank] = useState<string>('');
   const [modalError, setModalError] = useState<string | null>(null);
   const [mappingNotice, setMappingNotice] = useState<string | null>(null);
+
+  useEffect(() => {
+    setPendingFile(null);
+    setShowMappingDialog(false);
+    setCsvParseResult(null);
+    setColumnMapping({ date: '', amount: '', description: '' });
+    setSelectedBank('');
+    setImportOptions(DEFAULT_IMPORT_OPTIONS);
+    setUploadError(null);
+    setModalError(null);
+    setMappingNotice(null);
+    setImportProgress(null);
+    setImportResults(null);
+    setShowResultsDialog(false);
+    setIsReadingFile(false);
+    resetWorker();
+  }, [activeProfileId, resetWorker]);
 
   const autoCategorizeAfterImport = useCallback(() => {
     if (!getTypeSafeApiKey()) return;
@@ -609,6 +644,7 @@ export default function Import() {
   // This replaces the old parseGenericMutation to prevent UI blocking on large files
   const handleParseCSV = useCallback(
     async (file: File) => {
+      const parsingProfile = activeProfileId;
       setIsReadingFile(true);
       try {
         resetWorker();
@@ -626,6 +662,7 @@ export default function Import() {
               decimal: '.',
             })
           : await workerParseCSV(csvContent);
+        if (activeProfileRef.current !== parsingProfile) return;
 
         setCsvParseResult({
           headers: data.headers,
@@ -701,17 +738,30 @@ export default function Import() {
           }
         }
 
+        if (activeProfileRef.current !== parsingProfile) return;
         setColumnMapping(autoMapping);
         setShowMappingDialog(true);
       } catch (error) {
+        if (activeProfileRef.current !== parsingProfile) return;
         setUploadError(
-          error instanceof Error ? error.message : t.import.parseFileError
+          error instanceof Error && error.message === 'currency'
+            ? importText.unsupportedCurrency
+            : t.import.parseFileError
         );
       } finally {
-        setIsReadingFile(false);
+        if (activeProfileRef.current === parsingProfile)
+          setIsReadingFile(false);
       }
     },
-    [workerParseCSV, resetWorker, detectBank, applyBankPreset, t.import]
+    [
+      workerParseCSV,
+      resetWorker,
+      detectBank,
+      applyBankPreset,
+      t.import,
+      importText.unsupportedCurrency,
+      activeProfileId,
+    ]
   );
 
   // Generic CSV import mutation
@@ -720,10 +770,12 @@ export default function Import() {
       file,
       mapping,
       bank,
+      profileId,
     }: {
       file: File;
       mapping: ColumnMapping;
       bank: string;
+      profileId: typeof activeProfileId;
     }) =>
       (async () => {
         let prepared;
@@ -736,6 +788,8 @@ export default function Import() {
         } catch {
           throw new Error(importText.invalid);
         }
+        if (activeProfileRef.current !== profileId)
+          throw new Error(importText.profileChanged);
         return api.importGenericCSV(
           new File([prepared.csv], file.name, { type: 'text/csv' }),
           prepared.mapping,
@@ -751,7 +805,8 @@ export default function Import() {
           }
         ) as Promise<GenericImportResult>;
       })(),
-    onSuccess: (data) => {
+    onSuccess: (data, variables) => {
+      if (activeProfileRef.current !== variables.profileId) return;
       void queryClient.invalidateQueries({ queryKey: ['import-freshness'] });
       void queryClient.invalidateQueries({ queryKey: ['import-recovery'] });
       void queryClient.invalidateQueries({ queryKey: ['import-batches'] });
@@ -761,6 +816,14 @@ export default function Import() {
       setPendingFile(null);
       setCsvParseResult(null);
       setImportProgress(null);
+      toast.success(
+        t.import.importResultsDescription
+          .replace('{imported}', String(data.imported))
+          .replace(
+            '{skipped}',
+            String(data.duplicatesSkipped + data.parseErrors)
+          )
+      );
       queryClient.invalidateQueries({
         queryKey: ['import-history', activeProfileId],
       });
@@ -798,7 +861,8 @@ export default function Import() {
         autoCategorizeAfterImport();
       }
     },
-    onError: (error: Error) => {
+    onError: (error: Error, variables) => {
+      if (activeProfileRef.current !== variables.profileId) return;
       console.error('Import error:', error);
       setModalError(error.message || t.import.importError);
       setImportProgress(null);
@@ -900,12 +964,7 @@ export default function Import() {
   });
 
   const handleStartGenericImport = () => {
-    if (
-      pendingFile &&
-      columnMapping.date &&
-      columnMapping.amount &&
-      columnMapping.description
-    ) {
+    if (pendingFile && isImportMappingComplete(columnMapping, importOptions)) {
       // Remove stars from mapping before sending
       const cleanMapping = Object.fromEntries(
         Object.entries(columnMapping).map(([key, value]) => [
@@ -920,19 +979,14 @@ export default function Import() {
         file: pendingFile,
         mapping: cleanMapping,
         bank: selectedBank,
+        profileId: activeProfileId,
       });
     }
   };
 
   const isMappingComplete = useMemo(() => {
-    return (
-      columnMapping.date &&
-      (columnMapping.amount ||
-        importOptions.debitColumn ||
-        importOptions.creditColumn) &&
-      columnMapping.description
-    );
-  }, [columnMapping, importOptions.debitColumn, importOptions.creditColumn]);
+    return isImportMappingComplete(columnMapping, importOptions);
+  }, [columnMapping, importOptions]);
 
   // Preview data with mapped columns
   const previewData = useMemo(() => {
@@ -966,7 +1020,7 @@ export default function Import() {
           ? row[cleanKey(columnMapping.counterparty)]
           : undefined,
         balance: columnMapping.balance
-          ? row[cleanKey(columnMapping.balance)]
+          ? normalized.__fluxby_balance
           : undefined,
       };
     });
@@ -1076,7 +1130,8 @@ export default function Import() {
                   <button
                     key={bank.id}
                     type='button'
-                    disabled={!bank.enabled}
+                    disabled={!bank.enabled || importGenericMutation.isPending}
+                    aria-pressed={selectedBank === bank.id}
                     onClick={() => {
                       setSelectedBank(bank.id);
                       if (csvParseResult && bank.id !== 'generic') {
@@ -1100,7 +1155,11 @@ export default function Import() {
                     ) : (
                       <Landmark className='h-5 w-5' />
                     )}
-                    <span>{bank.name}</span>
+                    <span>
+                      {bank.id === 'generic'
+                        ? importText.genericBank
+                        : bank.name}
+                    </span>
                     {!bank.enabled && (
                       <span className='text-xs opacity-60'>
                         {t.common.comingSoon}
@@ -1124,9 +1183,15 @@ export default function Import() {
                 {MAPPING_FIELDS.filter((f) => f.required).map((field) => (
                   <div key={field.key} className='space-y-2'>
                     <label className='text-sm font-medium'>
-                      {getFieldLabel(field.key)} *
+                      {getFieldLabel(field.key)}
+                      {field.key !== 'amount' ||
+                      (!importOptions.debitColumn &&
+                        !importOptions.creditColumn)
+                        ? ' *'
+                        : ''}
                     </label>
                     <Select
+                      disabled={importGenericMutation.isPending}
                       value={
                         columnMapping[field.key as keyof ColumnMapping] || ''
                       }
@@ -1137,7 +1202,7 @@ export default function Import() {
                         }))
                       }
                     >
-                      <SelectTrigger>
+                      <SelectTrigger aria-label={getFieldLabel(field.key)}>
                         <SelectValue placeholder={t.import.selectField} />
                       </SelectTrigger>
                       <SelectContent>
@@ -1160,6 +1225,7 @@ export default function Import() {
                       {getFieldLabel(field.key)}
                     </label>
                     <Select
+                      disabled={importGenericMutation.isPending}
                       value={
                         columnMapping[field.key as keyof ColumnMapping] || ''
                       }
@@ -1170,7 +1236,7 @@ export default function Import() {
                         }))
                       }
                     >
-                      <SelectTrigger>
+                      <SelectTrigger aria-label={getFieldLabel(field.key)}>
                         <SelectValue placeholder={t.import.selectField} />
                       </SelectTrigger>
                       <SelectContent>
@@ -1195,6 +1261,7 @@ export default function Import() {
               headers={csvParseResult?.headers ?? []}
               mapping={columnMapping}
               bank={selectedBank}
+              disabled={importGenericMutation.isPending}
               onApply={(mapping, options, bank) => {
                 setColumnMapping(mapping);
                 setImportOptions(options);
@@ -1218,17 +1285,35 @@ export default function Import() {
               <div className='space-y-3'>
                 <div className='flex items-center justify-between'>
                   <h3 className='font-medium'>{t.import.preview}</h3>
-                  <Button
-                    variant='ghost'
-                    size='sm'
-                    onClick={() => setShowPreview(!showPreview)}
-                  >
-                    {showPreview ? (
-                      <ChevronUp className='h-4 w-4' />
-                    ) : (
-                      <ChevronDown className='h-4 w-4' />
-                    )}
-                  </Button>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant='ghost'
+                          size='icon'
+                          className='rounded-md'
+                          aria-label={
+                            showPreview
+                              ? importText.hidePreview
+                              : importText.showPreview
+                          }
+                          aria-expanded={showPreview}
+                          onClick={() => setShowPreview(!showPreview)}
+                        >
+                          {showPreview ? (
+                            <ChevronUp className='h-4 w-4' />
+                          ) : (
+                            <ChevronDown className='h-4 w-4' />
+                          )}
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        {showPreview
+                          ? importText.hidePreview
+                          : importText.showPreview}
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 </div>
                 {showPreview && (
                   <div className='rounded-lg border'>
@@ -1274,7 +1359,15 @@ export default function Import() {
                                 }`}
                               >
                                 <span className='privacy-blur'>
-                                  {row.amount}
+                                  {row.amount === '—' ? (
+                                    '—'
+                                  ) : (
+                                    <Currency
+                                      amount={Number(
+                                        row.amount.replace(',', '.')
+                                      )}
+                                    />
+                                  )}
                                 </span>
                               </td>
                               <td className='max-w-xs truncate px-4 py-2'>
@@ -1293,7 +1386,15 @@ export default function Import() {
                               {columnMapping.balance && (
                                 <td className='px-4 py-2 text-right font-mono'>
                                   <span className='privacy-blur'>
-                                    {row.balance}
+                                    {row.balance ? (
+                                      <Currency
+                                        amount={Number(
+                                          row.balance.replace(',', '.')
+                                        )}
+                                      />
+                                    ) : (
+                                      '—'
+                                    )}
                                   </span>
                                 </td>
                               )}
@@ -1380,6 +1481,7 @@ export default function Import() {
             <div className='flex w-full items-center justify-end gap-2 sm:w-auto'>
               <Button
                 variant='outline'
+                disabled={importGenericMutation.isPending}
                 onClick={() => {
                   setShowMappingDialog(false);
                   setPendingFile(null);
@@ -1464,7 +1566,7 @@ export default function Import() {
                   <div className='text-muted-foreground'>
                     {t.import.imported}
                   </div>
-                  <div className='font-medium text-success'>
+                  <div className='font-medium text-emerald-800 dark:text-emerald-200'>
                     {importResults.imported}
                   </div>
                 </div>
@@ -1598,7 +1700,7 @@ export default function Import() {
                         aria-label={t.import.processingFile}
                       />
                       <p className='mt-2 text-sm text-muted-foreground'>
-                        {parseStage || t.import.processingDescription}
+                        {t.import.processingDescription}
                       </p>
                     </div>
                   </>
@@ -1622,7 +1724,7 @@ export default function Import() {
                     <div>
                       <p className='text-lg font-medium'>{t.import.dragDrop}</p>
                       <p className='mt-1 text-sm text-muted-foreground'>
-                        {t.import.onlyCSV}
+                        {importText.supportedFiles}
                       </p>
                     </div>
                     <Button variant='outline'>{t.import.selectFile}</Button>

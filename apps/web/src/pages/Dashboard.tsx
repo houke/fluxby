@@ -21,6 +21,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { StatsCard } from '@/components/dashboard/StatsCard';
+import { AccountFreshness } from '@/components/import/AccountFreshness';
 import type { RecurringStats, Account, Transaction } from '@fluxby/shared';
 
 // Lazy load chart components
@@ -555,6 +556,8 @@ export default function Dashboard() {
           </Suspense>
         }
       />
+
+      <AccountFreshness />
 
       {/* Stats Cards */}
       <div

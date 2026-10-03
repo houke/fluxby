@@ -88,4 +88,71 @@ describe('cashflow analysis', () => {
     );
     expect(result.expenses).toBe(100);
   });
+  it('separates fixed, variable and savings expenses while adding integer cents', () => {
+    const result = analyzeCashflow(
+      [
+        tx('salary', '2026-09-01', 10),
+        tx('rent', '2026-09-01', -2, 'rent'),
+        tx('food1', '2026-09-01', -0.1),
+        tx('food2', '2026-09-02', -0.2),
+        tx('saving', '2026-09-02', -1, 'savings'),
+        {
+          ...tx('internal', '2026-09-02', -5, 'savings'),
+          type: 'transfer' as const,
+        },
+      ],
+      [],
+      '2026-09',
+      3,
+      '2026-09-15',
+      [
+        { category_id: 'rent', is_fixed: 1, allocation_group: 'needs' },
+        { category_id: 'savings', is_fixed: 1, allocation_group: 'savings' },
+      ]
+    );
+    expect(result).toMatchObject({
+      income: 10,
+      fixedExpenses: 2,
+      variableExpenses: 0.3,
+      savingsExpenses: 1,
+      expenses: 3.3,
+      net: 6.7,
+    });
+  });
+  it('excludes missing baseline months while retaining months with actual zero spending', () => {
+    const result = analyzeCashflow(
+      [
+        tx('first', '2026-05-01', -20),
+        tx('jun', '2026-06-01', -90),
+        tx('aug-income', '2026-08-01', 1000),
+        tx('sep', '2026-09-01', -30),
+      ],
+      [],
+      '2026-09',
+      3,
+      '2026-09-15'
+    );
+    expect(result.baselineMonths).toBe(2);
+    expect(result.baseline).toBe(45);
+  });
+  it('inherits fixed-cost categorization from the parent category like forecasting', () => {
+    const result = analyzeCashflow(
+      [
+        {
+          ...tx('child-rent', '2026-09-01', -120, 'housing-rent'),
+          parentCategoryId: 'housing',
+        },
+      ],
+      [],
+      '2026-09',
+      3,
+      '2026-09-15',
+      [
+        { category_id: 'housing', is_fixed: 1, allocation_group: 'needs' },
+        { category_id: 'housing-rent', is_fixed: 0, allocation_group: 'needs' },
+      ]
+    );
+    expect(result.fixedExpenses).toBe(120);
+    expect(result.variableExpenses).toBe(0);
+  });
 });

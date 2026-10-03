@@ -97,6 +97,10 @@ vi.mock('@/lib/api', () => ({
 let client: QueryClient;
 beforeEach(() => {
   vi.clearAllMocks();
+  Object.defineProperty(Element.prototype, 'scrollIntoView', {
+    configurable: true,
+    value: vi.fn(),
+  });
   mocks.checks = {};
   client = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
@@ -205,7 +209,14 @@ describe('financial planning UI', () => {
       await screen.findByRole('button', { name: en.planning.addItem })
     );
     setInput(en.planning.name, 'Loan');
-    setInput(en.planning.itemType, 'liability');
+    fireEvent.keyDown(
+      screen.getByRole('combobox', { name: en.planning.itemType }),
+      { key: 'ArrowDown' }
+    );
+    fireEvent.keyDown(
+      screen.getByRole('option', { name: en.planning.liability }),
+      { key: 'Enter' }
+    );
     setInput(en.planning.amount, '3000');
     fireEvent.click(screen.getByRole('button', { name: en.common.save }));
     await waitFor(() =>

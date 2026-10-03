@@ -40,7 +40,6 @@ import { Progress } from '@/components/ui/progress';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { api } from '@/lib/api';
 import { useEncryption } from '@/contexts/EncryptionContext';
-import { Toast, type ToastType } from '@/components/ui/toast';
 import { version } from '../../../package.json';
 import {
   getStoredDbVersion,
@@ -85,6 +84,7 @@ export function AppSettings() {
   const { t, language, setLanguage, languages } = useLanguage();
   const { changePassword } = useEncryption();
   const queryClient = useQueryClient();
+  const toast = useToast();
 
   // User data
   const { data: user } = useQuery<{ id: string; name: string }>({
@@ -97,7 +97,9 @@ export function AppSettings() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['user'] });
       setIsEditingName(false);
+      toast.success(t.settings.appNameSaved);
     },
+    onError: () => toast.error(t.settings.appNameSaveError),
   });
 
   // User name state
@@ -111,10 +113,6 @@ export function AppSettings() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
-  const [localToast, setLocalToast] = useState<{
-    message: string;
-    type: ToastType;
-  } | null>(null);
 
   useEffect(() => {
     if (user?.name) {
@@ -165,24 +163,17 @@ export function AppSettings() {
       const success = await changePassword(currentPassword, newPassword);
 
       if (success) {
-        setLocalToast({
-          message: t.security?.passwordChangedSuccess,
-          type: 'success',
-        });
+        toast.success(t.security.passwordChangedSuccess);
         setIsPasswordDialogOpen(false);
         resetPasswordForm();
       } else {
         const message = t.security?.wrongPassword;
         setPasswordError(message);
-        setLocalToast({ message, type: 'error' });
+        toast.error(message);
       }
-    } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : String(err);
-      setPasswordError(errorMessage);
-      setLocalToast({
-        message: errorMessage || t.security?.unlockError,
-        type: 'error',
-      });
+    } catch {
+      setPasswordError(t.security.unlockError);
+      toast.error(t.security.unlockError);
     } finally {
       setIsChangingPassword(false);
     }
@@ -215,7 +206,6 @@ export function AppSettings() {
   };
 
   // Update checker state
-  const updateToast = useToast();
   const [updateStatus, setUpdateStatus] = useState<UpdateStatus>('idle');
   const [updateInfo, setUpdateInfo] = useState<UpdateInfo | null>(null);
   const [downloadProgress, setDownloadProgress] =
@@ -312,14 +302,14 @@ export function AppSettings() {
           } else {
             setUpdateStatus('up-to-date');
             if (showToast) {
-              updateToast.success(t.updater?.upToDate);
+              toast.success(t.updater?.upToDate);
             }
           }
         } catch (err) {
           console.error('Update check failed:', err);
           setUpdateError(err instanceof Error ? err.message : String(err));
           setUpdateStatus('error');
-          updateToast.error(t.updater?.checkFailed);
+          toast.error(t.updater?.checkFailed);
         }
       } else if ('serviceWorker' in navigator) {
         // Web: Check for service worker updates
@@ -358,14 +348,14 @@ export function AppSettings() {
                 if (updateStatusRef.current === 'checking') {
                   setUpdateStatus('up-to-date');
                   if (showToast) {
-                    updateToast.success(t.updater?.upToDate);
+                    toast.success(t.updater?.upToDate);
                   }
                 }
               }, 3000);
             } else {
               setUpdateStatus('up-to-date');
               if (showToast) {
-                updateToast.success(t.updater?.upToDate);
+                toast.success(t.updater?.upToDate);
               }
             }
           } else {
@@ -380,7 +370,7 @@ export function AppSettings() {
         setUpdateStatus('up-to-date');
       }
     },
-    [t, updateToast]
+    [t, toast]
   );
 
   const downloadAndInstall = useCallback(async () => {
@@ -424,7 +414,7 @@ export function AppSettings() {
         });
 
         // Prompt to relaunch
-        updateToast.success(t.updater?.installComplete);
+        toast.success(t.updater?.installComplete);
 
         // Small delay to show the success message
         setTimeout(async () => {
@@ -434,7 +424,7 @@ export function AppSettings() {
         console.error('Update download/install failed:', err);
         setUpdateError(err instanceof Error ? err.message : String(err));
         setUpdateStatus('error');
-        updateToast.error(t.updater?.installFailed);
+        toast.error(t.updater?.installFailed);
       }
     } else if (webUpdateAvailable && swRegistration?.waiting) {
       // Web: Tell SW to skip waiting and activate
@@ -442,7 +432,7 @@ export function AppSettings() {
       swRegistration.waiting.postMessage('skipWaiting');
       // Page will reload via controllerchange listener
     }
-  }, [updateInfo, t, updateToast, webUpdateAvailable]);
+  }, [updateInfo, t, toast, webUpdateAvailable]);
 
   // Auto-check for updates on mount (silent - no toast for "up to date")
   useEffect(() => {
@@ -506,7 +496,7 @@ export function AppSettings() {
                     <TooltipProvider delayDuration={200}>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <div className='cursor-default rounded-md bg-muted px-2 py-1 text-xs text-muted-foreground'>
+                          <div className='cursor-default rounded-md bg-muted px-2 py-1 text-xs text-foreground'>
                             v{version}
                           </div>
                         </TooltipTrigger>
@@ -527,12 +517,12 @@ export function AppSettings() {
                             className={`flex items-center gap-1 rounded-md px-2 py-1 text-xs ${
                               hasVersionMismatch
                                 ? 'cursor-pointer bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50'
-                                : 'cursor-default bg-muted text-muted-foreground'
+                                : 'cursor-default bg-muted text-foreground'
                             }`}
                           >
                             <Database className='h-3 w-3' />
                             <span>{dbVersion ?? '?'}</span>
-                            <span className='text-muted-foreground/50'>/</span>
+                            <span aria-hidden='true'>/</span>
                             <Code className='h-3 w-3' />
                             <span>{codeVersion}</span>
                             {hasVersionMismatch && (
@@ -688,6 +678,7 @@ export function AppSettings() {
                   {isEditingName ? (
                     <>
                       <Input
+                        aria-label={t.settings.appNameLabel}
                         value={editedName}
                         onChange={(e) => setEditedName(e.target.value)}
                         className='h-8 w-32'
@@ -701,14 +692,22 @@ export function AppSettings() {
                         }}
                         autoFocus
                       />
-                      <Button
-                        size='sm'
-                        onClick={handleSaveName}
-                        disabled={updateUserMutation.isPending}
-                        className='h-8 rounded-md hover:bg-purple-600 hover:text-white'
-                      >
-                        <Check className='h-4 w-4' />
-                      </Button>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              size='icon'
+                              aria-label={t.common.save}
+                              onClick={handleSaveName}
+                              disabled={updateUserMutation.isPending}
+                              className='h-8 w-8 rounded-md hover:bg-purple-600 hover:text-white'
+                            >
+                              <Check className='h-4 w-4' />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>{t.common.save}</TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     </>
                   ) : (
                     <>
@@ -721,6 +720,7 @@ export function AppSettings() {
                             <Button
                               variant='ghost'
                               size='icon'
+                              aria-label={t.common.edit}
                               onClick={() => setIsEditingName(true)}
                               className='h-8 w-8 rounded-md hover:bg-purple-600 hover:text-white'
                             >
@@ -839,7 +839,7 @@ export function AppSettings() {
                       </div>
 
                       {passwordError && (
-                        <p className='flex items-center gap-2 text-sm text-red-500'>
+                        <p className='flex items-center gap-2 text-sm text-red-700 dark:text-red-400'>
                           <AlertTriangle className='h-4 w-4' />
                           {passwordError}
                         </p>
@@ -999,14 +999,6 @@ export function AppSettings() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      {localToast && (
-        <Toast
-          message={localToast.message}
-          type={localToast.type}
-          onClose={() => setLocalToast(null)}
-        />
-      )}
     </div>
   );
 }

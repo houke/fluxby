@@ -64,7 +64,7 @@ beforeEach(async () => {
   await migration015.up(db);
   await migration016.up(db);
   await migration017.up(db);
-  for(const m of migrations.filter(m=>m.version>17)) await m.up(db);
+  for (const m of migrations.filter((m) => m.version > 17)) await m.up(db);
   sqlite.exec(`
     INSERT INTO users(id,name) VALUES('u','Local');
     INSERT INTO profiles(id,user_id,name) VALUES('local-profile','u','Personal'),('other-profile','u','Work');
@@ -78,6 +78,57 @@ beforeEach(async () => {
 afterEach(() => sqlite.close());
 
 describe('profile-bound financial data sync', () => {
+  it('normalizes legacy manual bill signs from peers without changing recurring income, cadence or dates', async () => {
+    const bill = {
+      id: 'legacy-bill',
+      merchant_name: 'Manual bill',
+      manual_source: 1,
+      avg_amount: 25,
+      last_amount: 27,
+      pattern_type: 'quarterly',
+      last_date: '2026-09-30',
+      next_expected_date: '2026-12-30',
+      created_at: 100,
+    };
+    const salary = {
+      ...bill,
+      id: 'salary',
+      merchant_name: 'Salary',
+      manual_source: 0,
+      avg_amount: 2500,
+      last_amount: 2500,
+    };
+    expect(
+      await sync.applyChanges(
+        [
+          change('recurring_patterns', bill),
+          change('recurring_patterns', salary),
+        ],
+        'remote-profile',
+        'remote-device'
+      )
+    ).toBe(2);
+    expect(
+      sqlite
+        .prepare(
+          'SELECT avg_amount,last_amount,pattern_type,last_date,next_expected_date FROM recurring_patterns WHERE id=?'
+        )
+        .get(bill.id)
+    ).toEqual({
+      avg_amount: -25,
+      last_amount: -27,
+      pattern_type: 'quarterly',
+      last_date: '2026-09-30',
+      next_expected_date: '2026-12-30',
+    });
+    expect(
+      sqlite
+        .prepare(
+          'SELECT avg_amount,last_amount FROM recurring_patterns WHERE id=?'
+        )
+        .get(salary.id)
+    ).toEqual({ avg_amount: 2500, last_amount: 2500 });
+  });
   it('exports profile financial rows and excludes other profiles, users, credentials and device settings', async () => {
     const changes = await sync.getChanges();
     expect(changes.map((item) => item.table)).not.toContain('users');
@@ -429,6 +480,49 @@ describe('profile-bound financial data sync', () => {
         'remote-device'
       )
     ).rejects.toThrow('Cyclic');
+  });
+  it('remaps persisted review keys to local transaction and category identities', async () => {
+    sqlite
+      .prepare(
+        "INSERT INTO sync_row_aliases(profile_id,remote_device_id,table_name,remote_id,local_id) VALUES('local-profile','remote-device:remote-profile','transactions','remote-t','t')"
+      )
+      .run();
+    await sync.applyChanges(
+      [
+        change('categories', {
+          id: 'remote-c',
+          name: 'Groceries',
+          icon: 'basket',
+          parent_id: null,
+        }),
+        change('transaction_review_decisions', {
+          id: 'tx-decision',
+          created_at: 200,
+          item_key: 'uncategorized:remote-t',
+          status: 'done',
+          snoozed_until: null,
+        }),
+        change('transaction_review_decisions', {
+          id: 'category-decision',
+          created_at: 200,
+          item_key: 'categorySpike:remote-c:2026-09',
+          status: 'later',
+          snoozed_until: '2026-10-09',
+        }),
+      ],
+      'remote-profile',
+      'remote-device'
+    );
+    expect(
+      sqlite
+        .prepare(
+          'SELECT item_key,profile_id FROM transaction_review_decisions ORDER BY item_key'
+        )
+        .all()
+    ).toEqual([
+      { item_key: 'categorySpike:c:2026-09', profile_id: 'local-profile' },
+      { item_key: 'uncategorized:t', profile_id: 'local-profile' },
+    ]);
   });
 });
 

@@ -84,7 +84,9 @@ export function BottomNav() {
             className={({ isActive }) =>
               cn(
                 'flex flex-1 flex-col items-center justify-center gap-1 py-2',
-                isActive ? 'text-primary' : 'text-muted-foreground'
+                isActive
+                  ? 'text-primary dark:text-purple-300'
+                  : 'text-muted-foreground'
               )
             }
           >
@@ -97,7 +99,9 @@ export function BottomNav() {
           onClick={() => setMoreOpen(true)}
           className={cn(
             'flex flex-1 flex-col items-center justify-center gap-1 py-2',
-            isMoreActive ? 'text-primary' : 'text-muted-foreground'
+            isMoreActive
+              ? 'text-primary dark:text-purple-300'
+              : 'text-muted-foreground'
           )}
         >
           <MoreHorizontal className='h-5 w-5' />

@@ -3,6 +3,11 @@ export const transactionReviewNl = {
   cashflow: 'Geldstroom',
   flowIncome: 'Inkomsten',
   flowRemaining: 'Over',
+  flowFixed: 'Vaste lasten',
+  flowVariable: 'Variabele uitgaven',
+  flowSavings: 'Spaarallocaties',
+  flowGroupingHelp:
+    'De indeling volgt je vaste-lasten- en allocatiekeuzes bij categorieën. Eigen overboekingen tellen niet mee.',
   baseline: 'Vergelijk met',
   months: 'maanden',
   comparable:
@@ -11,7 +16,7 @@ export const transactionReviewNl = {
   change: 'Verschil',
   notEnoughHistory: 'Nog onvoldoende historie voor een vergelijking.',
   limitedHistory:
-    'Beperkte historie: de eerste geïmporteerde maand telt niet mee. Ontbrekende bankafschriften kunnen de vergelijking beïnvloeden.',
+    'Beperkte historie: de eerste geïmporteerde maand en maanden zonder transacties tellen niet mee. Ontbrekende bankafschriften kunnen de vergelijking beïnvloeden.',
   relationType: 'Soort koppeling',
   reimbursement: 'Kosten terugbetaald (bijvoorbeeld Tikkie)',
   description:
@@ -20,6 +25,8 @@ export const transactionReviewNl = {
   close: 'Inbox sluiten',
   export: 'Gefilterde CSV downloaden',
   exportDone: 'CSV gedownload',
+  exportHelp:
+    'Alle gefilterde transacties, met Nederlandse kolomnamen, puntkomma’s en decimale komma’s.',
   empty: 'Alles gecontroleerd',
   later: 'Later (7 dagen)',
   done: 'Gecontroleerd',
@@ -87,6 +94,11 @@ export const transactionReviewEn: TransactionReviewTranslations = {
   cashflow: 'Cash flow',
   flowIncome: 'Income',
   flowRemaining: 'Remaining',
+  flowFixed: 'Fixed costs',
+  flowVariable: 'Variable spending',
+  flowSavings: 'Savings allocations',
+  flowGroupingHelp:
+    'Groups follow your fixed-cost and allocation choices for categories. Own-account transfers are excluded.',
   baseline: 'Compare with',
   months: 'months',
   comparable:
@@ -95,7 +107,7 @@ export const transactionReviewEn: TransactionReviewTranslations = {
   change: 'Change',
   notEnoughHistory: 'Not enough history for a comparison yet.',
   limitedHistory:
-    'Limited history: the first imported month is excluded. Missing bank statements may affect the comparison.',
+    'Limited history: the first imported month and months without transactions are excluded. Missing bank statements may affect the comparison.',
   relationType: 'Link type',
   reimbursement: 'Expense reimbursement (for example Tikkie)',
   description:
@@ -104,6 +116,8 @@ export const transactionReviewEn: TransactionReviewTranslations = {
   close: 'Close inbox',
   export: 'Download filtered CSV',
   exportDone: 'CSV downloaded',
+  exportHelp:
+    'All filtered transactions, with English headings, comma separators and decimal points.',
   empty: 'Everything reviewed',
   later: 'Later (7 days)',
   done: 'Reviewed',

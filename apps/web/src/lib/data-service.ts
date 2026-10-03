@@ -1,4 +1,7 @@
-import { parseConfiguredCSV, DEFAULT_IMPORT_OPTIONS } from './importers/import-options';
+import {
+  parseConfiguredCSV,
+  DEFAULT_IMPORT_OPTIONS,
+} from './importers/import-options';
 import {
   effectiveExpenseSQL,
   effectiveIncomeSQL,
@@ -6,8 +9,10 @@ import {
 import {
   createHouseholdBudgetService,
   monthlyAllocation,
+  monthlyRollover,
 } from './data/household-budgets';
 import { createImportToolsService } from './data/import-tools';
+import { importToolsTranslations } from './i18n/import-tools';
 import { createTransactionReviewService } from './data/transaction-review';
 import { createHouseholdPlanningService } from './data/household-planning';
 /**
@@ -806,10 +811,24 @@ export function createDataService(db: Database) {
           ].includes(data.type)
         )
           throw new Error('Invalid account type');
-        const account=await db.queryOneAsync<{iban:string;current_balance:number}>('SELECT iban,current_balance FROM accounts WHERE id=? AND profile_id=? AND is_deleted=0',[id,pid]);
-        if(!account)throw new Error('Account not found');
-        if(!['cash','loan','investment'].includes(data.type)&&(!account.iban||account.iban.startsWith('local:')))throw new Error('A bank account requires an IBAN');
-        if(data.type==='loan'&&(data.currentBalance??account.current_balance)>0)throw new Error('Loan balance must be negative');
+        const account = await db.queryOneAsync<{
+          iban: string;
+          current_balance: number;
+        }>(
+          'SELECT iban,current_balance FROM accounts WHERE id=? AND profile_id=? AND is_deleted=0',
+          [id, pid]
+        );
+        if (!account) throw new Error('Account not found');
+        if (
+          !['cash', 'loan', 'investment'].includes(data.type) &&
+          (!account.iban || account.iban.startsWith('local:'))
+        )
+          throw new Error('A bank account requires an IBAN');
+        if (
+          data.type === 'loan' &&
+          (data.currentBalance ?? account.current_balance) > 0
+        )
+          throw new Error('Loan balance must be negative');
         updates.push('type = ?', 'kind = ?');
         params.push(
           data.type === 'loan'
@@ -1683,7 +1702,7 @@ export function createDataService(db: Database) {
       }
 
       // Calculate number of months in the period for budget scaling
-      const start = parseDateOnly(rangeStartDate);
+      parseDateOnly(rangeStartDate);
       // Query budgets with spending calculation
       // Profile-filtered: only show budgets for this profile
       // and only count spending from transactions in this profile's accounts
@@ -1711,20 +1730,28 @@ export function createDataService(db: Database) {
       const rolloverSpending = rows.some(
         (row) => row.period === 'monthly' && row.rollover_enabled === 1
       )
-        ? await db.queryAsync<{ id: string; spent: number }>(
+        ? await db.queryAsync<{
+            id: string;
+            month: string | null;
+            spent: number;
+          }>(
             `
-            SELECT b.id, COALESCE(SUM(CASE WHEN t.amount < 0 THEN ${effectiveExpenseSQL()} ELSE 0 END),0) AS spent
+            SELECT b.id, substr(t.date,1,7) AS month, COALESCE(SUM(CASE WHEN t.amount < 0 THEN ${effectiveExpenseSQL()} ELSE 0 END),0) AS spent
             FROM budgets b LEFT JOIN transactions t ON t.category_id=b.category_id
               AND t.profile_id=b.profile_id AND t.is_deleted=0 AND t.type!='transfer'
               AND t.date < ? AND t.date >= COALESCE(b.start_date,strftime('%Y-%m-01',b.created_at/1000,'unixepoch'))
             WHERE b.profile_id=? AND b.is_deleted=0 AND b.rollover_enabled=1 AND b.period='monthly'
-            GROUP BY b.id`,
+            GROUP BY b.id,substr(t.date,1,7)`,
             [rangeStartDate, pid]
           )
         : [];
-      const priorSpending = new Map(
-        rolloverSpending.map((row) => [row.id, row.spent])
-      );
+      const priorSpending = new Map<string, Map<string, number>>();
+      for (const row of rolloverSpending) {
+        if (!row.month) continue;
+        const months = priorSpending.get(row.id) ?? new Map<string, number>();
+        months.set(row.month, row.spent);
+        priorSpending.set(row.id, months);
+      }
 
       const extensions = await this.getBudgetExtensions();
       // Transform and calculate derived values
@@ -1734,42 +1761,25 @@ export function createDataService(db: Database) {
         const origin = (
           row.start_date ?? new Date(row.created_at).toISOString().slice(0, 10)
         ).slice(0, 7);
-        const [originYear, originMonth] = origin.split('-').map(Number);
-        const priorMonths = Math.max(
-          0,
-          (start.getUTCFullYear() - originYear) * 12 +
-            start.getUTCMonth() +
-            1 -
-            originMonth
-        );
         const overrides = new Map(
           extensions.overrides
             .filter((o) => o.budget_id === row.id)
             .map((o) => [o.month, o.amount])
         );
-        const previousMonth = addMonthsToDateOnly(
-          `${rangeStartDate.slice(0, 7)}-01`,
-          -1
-        ).slice(0, 7);
         const carryNegative = !!extensions.preferences.find(
           (p) => p.budget_id === row.id
         )?.carry_negative;
-        const rawCarry =
-          row.period === 'monthly' &&
-          row.rollover_enabled === 1 &&
-          priorMonths > 0
-            ? Math.round(
-                (monthlyAllocation(
-                  row.amount,
-                  overrides,
-                  origin,
-                  previousMonth
-                ) -
-                  (priorSpending.get(row.id) ?? 0)) *
-                  100
-              ) / 100
+        const carryover =
+          row.period === 'monthly' && row.rollover_enabled === 1
+            ? monthlyRollover(
+                row.amount,
+                overrides,
+                priorSpending.get(row.id) ?? new Map(),
+                origin,
+                rangeStartDate.slice(0, 7),
+                carryNegative
+              )
             : 0;
-        const carryover = carryNegative ? rawCarry : Math.max(0, rawCarry);
         const scaledAmount =
           (row.period === 'monthly'
             ? monthlyAllocation(
@@ -4899,7 +4909,9 @@ export function createDataService(db: Database) {
         parse_errors: number | null;
         created_at: number;
       }>(
-        `SELECT id, filename, bank, transaction_count, status, skipped_rows, duplicates_skipped, parse_errors, created_at
+        `SELECT id, filename, bank, transaction_count,
+         CASE WHEN EXISTS(SELECT 1 FROM import_batches b WHERE b.import_id=imports.id AND b.profile_id=imports.profile_id AND b.status='undone' AND b.is_deleted=0) THEN 'undone' ELSE status END AS status,
+         skipped_rows, duplicates_skipped, parse_errors, created_at
          FROM imports
          WHERE profile_id = ? AND is_deleted = 0
          ORDER BY created_at DESC
@@ -4933,7 +4945,8 @@ export function createDataService(db: Database) {
     },
 
     async previewCsvImport(csvContent: string) {
-      if(!csvContent.trim()) return {headers:[],rows:[],sampleRows:[],totalRows:0};
+      if (!csvContent.trim())
+        return { headers: [], rows: [], sampleRows: [], totalRows: 0 };
       return parseConfiguredCSV(csvContent, DEFAULT_IMPORT_OPTIONS);
     },
 
@@ -4955,12 +4968,25 @@ export function createDataService(db: Database) {
         filename?: string;
         bank?: string;
         onProgress?: (current: number, total: number) => void;
+        expectedProfileId?: string;
       }
     ) {
       const pid = profileId();
       if (!pid) throw new Error('No active profile');
+      let committingImport = false;
+      const assertImportProfile = () => {
+        if (
+          (!committingImport && profileId() !== pid) ||
+          (options.expectedProfileId && options.expectedProfileId !== pid)
+        )
+          throw new Error(
+            importToolsTranslations[getStoredLanguage()].profileChanged
+          );
+      };
+      assertImportProfile();
 
       const preview = await this.previewCsvImport(csvContent);
+      assertImportProfile();
       if (preview.rows.length === 0)
         return { imported: 0, skipped: 0, errors: [], skippedRows: [] };
 
@@ -4990,15 +5016,19 @@ export function createDataService(db: Database) {
         'SELECT iban FROM accounts WHERE id = ? AND profile_id = ?',
         [options.accountId, pid]
       );
+      if (!account) throw new Error('Account not found in import profile');
 
       // Load cleanup rules for name processing
       const cleanupRules = await this.getCleanupRules();
+      assertImportProfile();
 
       // Load category rules for auto-categorization
       const categoryRules = await this.getCategoryRules();
+      assertImportProfile();
 
       // Load payment provider rules for detection during import
       const providerRules = await this.getPaymentProviderRules();
+      assertImportProfile();
 
       // Helper function to detect payment provider
       const detectPaymentProvider = (
@@ -5152,6 +5182,7 @@ export function createDataService(db: Database) {
 
       // First pass: validate and prepare all transactions
       for (let i = 0; i < preview.rows.length; i++) {
+        assertImportProfile();
         const row = preview.rows[i];
         try {
           let transactionData: TransactionCreate;
@@ -5544,6 +5575,10 @@ export function createDataService(db: Database) {
       // Bound each statement and transaction so OPFS writes do not exceed the
       // database operation timeout as the file grows.
       if (transactionsToInsert.length > 0) {
+        assertImportProfile();
+        // Once committing starts, finish the import and recovery membership
+        // under the captured profile rather than abandoning committed chunks.
+        committingImport = true;
         const CHUNK_SIZE = 200;
         const totalToInsert = transactionsToInsert.length;
         for (
@@ -5560,6 +5595,7 @@ export function createDataService(db: Database) {
           );
           options.onProgress?.(transactionStart, totalToInsert);
           await db.transactionAsync(async () => {
+            assertImportProfile();
             const placeholders = batch
               .map(
                 () =>
@@ -5603,6 +5639,7 @@ export function createDataService(db: Database) {
 
       // Post-import: Add unique IBANs to address book and link transactions
       for (const [iban, name] of uniqueIbanMap) {
+        assertImportProfile();
         try {
           await this._addToAddressBookIfNew(iban, name, pid, now);
         } catch {
@@ -5612,6 +5649,7 @@ export function createDataService(db: Database) {
 
       // Link imported transactions to address book entries
       if (importedTxIds.length > 0) {
+        assertImportProfile();
         await this._linkTransactionsToAddressBook(importedTxIds, pid, now);
       }
 
@@ -5638,6 +5676,7 @@ export function createDataService(db: Database) {
             )
           : null;
 
+      assertImportProfile();
       await db.runAsync(
         `INSERT INTO imports (id, filename, bank, transaction_count, status, skipped_rows, duplicates_skipped, parse_errors, profile_id, created_at, updated_at)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -5664,7 +5703,8 @@ export function createDataService(db: Database) {
         )
       );
       for (const accountId of affectedAccountIds) {
-        await this.recalculateAccountBalance(accountId);
+        assertImportProfile();
+        await this.recalculateAccountBalance(accountId, pid);
       }
 
       return {
@@ -8229,14 +8269,17 @@ export function createDataService(db: Database) {
      * @param accountId - The account ID to recalculate balance for
      * @returns BalanceRecalculationResult with previous and new balance
      */
-    async recalculateAccountBalance(accountId: string): Promise<{
+    async recalculateAccountBalance(
+      accountId: string,
+      importProfileId?: string
+    ): Promise<{
       accountId: string;
       previousBalance: number;
       newBalance: number;
       calculationMethod:
         'latest_balance_after' | 'sum_of_amounts' | 'no_transactions';
     }> {
-      const pid = profileId();
+      const pid = importProfileId ?? profileId();
       if (!pid) throw new Error('No active profile');
 
       // Get current balance

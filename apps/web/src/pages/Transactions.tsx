@@ -9,6 +9,7 @@ import {
   lazy,
   Suspense,
 } from 'react';
+import { createPortal } from 'react-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { useSearchParams } from 'react-router-dom';
@@ -133,6 +134,7 @@ type TransactionTypeFilter = 'all' | 'income' | 'expense' | 'transfer';
 import { useFilterParams, useFilters } from '@/contexts/FilterContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useProfile } from '@/contexts/ProfileContext';
+import { FormSelect } from '@/components/ui/form-select';
 
 export default function Transactions() {
   const { t, language } = useLanguage();
@@ -2113,7 +2115,7 @@ export default function Transactions() {
 
         {/* Stats Cards */}
         <div
-          className='-mx-3 grid grid-cols-2 gap-px bg-border sm:mx-0 sm:gap-4 sm:bg-transparent lg:grid-cols-4'
+          className='grid grid-cols-2 gap-px bg-border sm:gap-4 sm:bg-transparent lg:grid-cols-4'
           data-onboarding='transaction-summary'
         >
           <div className='h-full'>
@@ -2863,8 +2865,8 @@ export default function Transactions() {
                                       ? 'text-blue-800 dark:text-blue-300'
                                       : 'text-blue-500 dark:text-blue-400'
                                     : tx.amount > 0
-                                      ? 'text-emerald-600'
-                                      : 'text-rose-600'
+                                      ? 'text-emerald-700 dark:text-emerald-400'
+                                      : 'text-rose-700 dark:text-rose-400'
                                 )}
                               >
                                 {tx.type === 'transfer' ? (
@@ -3248,8 +3250,8 @@ export default function Transactions() {
                         className={cn(
                           'font-medium',
                           createContactTransaction.amount > 0
-                            ? 'text-emerald-600'
-                            : 'text-rose-600'
+                            ? 'text-emerald-700 dark:text-emerald-400'
+                            : 'text-rose-700 dark:text-rose-400'
                         )}
                       >
                         <Currency amount={createContactTransaction.amount} />
@@ -3431,6 +3433,9 @@ export default function Transactions() {
                                         size='sm'
                                         variant='outline'
                                         className='h-8 w-8 rounded-md p-0 hover:border-purple-600 hover:bg-purple-600 hover:text-white'
+                                        aria-label={
+                                          t.addressBook.assignToExisting
+                                        }
                                         disabled={
                                           addIbanToContactMutation.isPending
                                         }
@@ -3999,8 +4004,8 @@ export default function Transactions() {
                             <td
                               className={`py-2 text-right ${
                                 rt.amount > 0
-                                  ? 'text-emerald-600'
-                                  : 'text-rose-600'
+                                  ? 'text-emerald-700 dark:text-emerald-400'
+                                  : 'text-rose-700 dark:text-rose-400'
                               }`}
                             >
                               <Currency amount={rt.amount} />
@@ -4186,8 +4191,8 @@ export default function Transactions() {
                               pendingTransferTransaction.type === 'transfer'
                                 ? 'text-blue-600'
                                 : pendingTransferTransaction.amount > 0
-                                  ? 'text-emerald-600'
-                                  : 'text-rose-600'
+                                  ? 'text-emerald-700 dark:text-emerald-400'
+                                  : 'text-rose-700 dark:text-rose-400'
                             }`}
                           >
                             <Currency
@@ -4270,8 +4275,8 @@ export default function Transactions() {
                               rt.type === 'transfer'
                                 ? 'text-blue-600'
                                 : rt.amount > 0
-                                  ? 'text-emerald-600'
-                                  : 'text-rose-600'
+                                  ? 'text-emerald-700 dark:text-emerald-400'
+                                  : 'text-rose-700 dark:text-rose-400'
                             }`}
                           >
                             <Currency amount={rt.amount} />
@@ -4364,22 +4369,24 @@ export default function Transactions() {
         />
 
         {/* Selection Toolbar (sticky bottom, centered in content area) */}
-        {transactionSelection.isSelecting && (
-          <div className='fixed right-0 bottom-4 left-0 z-50 flex justify-center px-4 sm:left-[280px]'>
-            <div className='w-full max-w-3xl'>
-              <TransactionSelectionToolbar
-                selectionCount={transactionSelection.selectionCount}
-                onDeleteSelected={() => setBulkDeleteDialogOpen(true)}
-                onDeleteByDateRange={() => setDateRangeDeleteDialogOpen(true)}
-                onCancelSelection={() => {
-                  transactionSelection.clearSelection();
-                  transactionSelection.exitSelectionMode();
-                }}
-                isDeleting={bulkDelete.isDeleting}
-              />
-            </div>
-          </div>
-        )}
+        {transactionSelection.isSelecting &&
+          createPortal(
+            <div className='fixed right-0 bottom-[calc(5rem+env(safe-area-inset-bottom))] left-0 z-40 flex justify-center px-4 md:bottom-4 md:left-64'>
+              <div className='w-full max-w-3xl'>
+                <TransactionSelectionToolbar
+                  selectionCount={transactionSelection.selectionCount}
+                  onDeleteSelected={() => setBulkDeleteDialogOpen(true)}
+                  onDeleteByDateRange={() => setDateRangeDeleteDialogOpen(true)}
+                  onCancelSelection={() => {
+                    transactionSelection.clearSelection();
+                    transactionSelection.exitSelectionMode();
+                  }}
+                  isDeleting={bulkDelete.isDeleting}
+                />
+              </div>
+            </div>,
+            document.body
+          )}
 
         {/* Undo Toast */}
         {bulkDelete.canUndo && (
@@ -4405,7 +4412,7 @@ export default function Transactions() {
                     }
                     setAddTransactionModalOpen(true);
                   }}
-                  className='fixed right-6 bottom-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-purple-600 text-white shadow-lg transition-all hover:scale-105 hover:bg-purple-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2 active:scale-95'
+                  className='fixed right-6 bottom-6 z-40 flex h-14 w-14 items-center justify-center rounded-md bg-purple-600 text-white shadow-lg transition-all hover:scale-105 hover:bg-purple-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2 active:scale-95'
                   aria-label={t.transactions.addTransaction}
                 >
                   <Plus className='h-6 w-6' />
@@ -4437,35 +4444,23 @@ export default function Transactions() {
               <div className='space-y-4 py-2 pr-1'>
                 {/* Type selector */}
                 <div className='space-y-2'>
-                  <label className='text-sm font-medium'>
+                  <label
+                    htmlFor='add-transaction-type'
+                    className='text-sm font-medium'
+                  >
                     {t.transactions.type}
                   </label>
-                  <div className='flex gap-2'>
-                    {(['income', 'expense', 'transfer'] as const).map(
-                      (type) => (
-                        <button
-                          key={type}
-                          onClick={() => setAddTxType(type)}
-                          className={cn(
-                            'flex-1 rounded-md border px-3 py-2 text-sm font-medium transition-colors',
-                            addTxType === type
-                              ? type === 'income'
-                                ? 'border-emerald-500 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400'
-                                : type === 'expense'
-                                  ? 'border-rose-500 bg-rose-50 text-rose-700 dark:bg-rose-950/30 dark:text-rose-400'
-                                  : 'border-blue-500 bg-blue-50 text-blue-700 dark:bg-blue-950/30 dark:text-blue-400'
-                              : 'border-border text-muted-foreground hover:bg-muted'
-                          )}
-                        >
-                          {type === 'income'
-                            ? t.transactions.income
-                            : type === 'expense'
-                              ? t.transactions.expense
-                              : t.transactions.transfer}
-                        </button>
-                      )
+                  <FormSelect
+                    id='add-transaction-type'
+                    label={t.transactions.type}
+                    value={addTxType}
+                    onChange={(value) =>
+                      setAddTxType(value as 'income' | 'expense' | 'transfer')
+                    }
+                    options={(['income', 'expense', 'transfer'] as const).map(
+                      (type) => ({ value: type, label: t.transactions[type] })
                     )}
-                  </div>
+                  />
                 </div>
 
                 {/* Transfer direction toggle — only for transfer type */}
@@ -4506,7 +4501,10 @@ export default function Transactions() {
                 {/* Amount + Date — two columns */}
                 <div className='grid grid-cols-2 gap-3'>
                   <div className='space-y-1'>
-                    <label className='flex items-center gap-1 text-sm font-medium'>
+                    <label
+                      htmlFor='add-transaction-amount'
+                      className='flex items-center gap-1 text-sm font-medium'
+                    >
                       {t.transactions.amount}
                       <span className='text-destructive'>*</span>
                     </label>
@@ -4515,6 +4513,7 @@ export default function Transactions() {
                         €
                       </span>
                       <Input
+                        id='add-transaction-amount'
                         type='text'
                         inputMode='decimal'
                         value={addTxAmount}
@@ -4545,11 +4544,15 @@ export default function Transactions() {
                     )}
                   </div>
                   <div className='space-y-1'>
-                    <label className='flex items-center gap-1 text-sm font-medium'>
+                    <label
+                      htmlFor='add-transaction-date'
+                      className='flex items-center gap-1 text-sm font-medium'
+                    >
                       {t.transactions.date}
                       <span className='text-destructive'>*</span>
                     </label>
                     <Input
+                      id='add-transaction-date'
                       type='date'
                       value={addTxDate}
                       onChange={(e) => {
@@ -4576,10 +4579,14 @@ export default function Transactions() {
 
                 {/* Description */}
                 <div className='space-y-2'>
-                  <label className='text-sm font-medium'>
+                  <label
+                    htmlFor='add-transaction-description'
+                    className='text-sm font-medium'
+                  >
                     {t.transactions.description}
                   </label>
                   <Input
+                    id='add-transaction-description'
                     value={addTxDescription}
                     onChange={(e) => setAddTxDescription(e.target.value)}
                     placeholder={t.transactions.descriptionPlaceholder}
@@ -4588,7 +4595,10 @@ export default function Transactions() {
 
                 {/* Counterparty / Address book */}
                 <div className='space-y-2'>
-                  <label className='text-sm font-medium'>
+                  <label
+                    htmlFor='add-transaction-counterparty'
+                    className='text-sm font-medium'
+                  >
                     {t.transactions.manualCounterparty}
                   </label>
                   {addTxAddressBookId ? (
@@ -4598,16 +4608,25 @@ export default function Transactions() {
                         {addressBook?.find((e) => e.id === addTxAddressBookId)
                           ?.name || ''}
                       </span>
-                      <button
-                        className='text-muted-foreground hover:text-foreground'
-                        onClick={() => setAddTxAddressBookId(null)}
-                      >
-                        <X className='h-4 w-4' />
-                      </button>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              aria-label={t.common.remove}
+                              className='rounded-md text-muted-foreground hover:text-foreground'
+                              onClick={() => setAddTxAddressBookId(null)}
+                            >
+                              <X className='h-4 w-4' />
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent>{t.common.remove}</TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     </div>
                   ) : (
                     <div className='relative'>
                       <Input
+                        id='add-transaction-counterparty'
                         value={addTxCounterparty}
                         onChange={(e) => setAddTxCounterparty(e.target.value)}
                         placeholder={
@@ -4625,7 +4644,10 @@ export default function Transactions() {
                               <PopoverTrigger asChild>
                                 <button
                                   type='button'
-                                  className='absolute top-1/2 right-2 -translate-y-1/2 rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground'
+                                  aria-label={
+                                    t.transactions.orSelectFromAddressBook
+                                  }
+                                  className='absolute top-1/2 right-2 -translate-y-1/2 rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground'
                                   onClick={() => {
                                     setAddTxAddressBookSearch('');
                                     setAddTxAddressBookOpen(true);
@@ -4698,89 +4720,99 @@ export default function Transactions() {
 
                 {/* Category */}
                 <div className='space-y-2'>
-                  <label className='text-sm font-medium'>
+                  <label
+                    htmlFor='add-transaction-category'
+                    className='text-sm font-medium'
+                  >
                     {t.transactions.categories}
                   </label>
-                  <select
+                  <FormSelect
+                    id='add-transaction-category'
+                    label={t.transactions.categories}
                     value={addTxCategoryId || ''}
-                    onChange={(e) => setAddTxCategoryId(e.target.value || null)}
-                    className='w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:ring-2 focus:ring-ring focus:outline-none'
-                  >
-                    <option value=''>{t.transactions.noCategory}</option>
-                    {groupedCategories.map((cat) => (
-                      <option key={cat.id} value={cat.id}>
-                        {cat.isChild
+                    onChange={(value) => setAddTxCategoryId(value || null)}
+                    options={[
+                      { value: '', label: t.transactions.noCategory },
+                      ...groupedCategories.map((cat) => ({
+                        value: cat.id,
+                        label: cat.isChild
                           ? `  ${cat.icon || ''} ${cat.name}`.trim()
-                          : `${cat.icon || ''} ${cat.name}`.trim()}
-                      </option>
-                    ))}
-                  </select>
+                          : `${cat.icon || ''} ${cat.name}`.trim(),
+                      })),
+                    ]}
+                  />
                 </div>
 
                 {/* Account + Payment method — two columns */}
                 <div className='grid grid-cols-2 gap-3'>
                   <div className='space-y-2'>
-                    <label className='text-sm font-medium'>
+                    <label
+                      htmlFor='add-transaction-account'
+                      className='text-sm font-medium'
+                    >
                       {t.transactions.account}
                     </label>
-                    <select
+                    <FormSelect
+                      id='add-transaction-account'
+                      label={t.transactions.account}
                       value={addTxAccountId || ''}
-                      onChange={(e) =>
-                        setAddTxAccountId(e.target.value || null)
-                      }
-                      className='w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:ring-2 focus:ring-ring focus:outline-none'
-                    >
-                      <option value=''>{t.transactions.noAccount}</option>
-                      {accounts?.map((acc) => (
-                        <option key={acc.id} value={acc.id}>
-                          {acc.name}
-                        </option>
-                      ))}
-                    </select>
+                      onChange={(value) => setAddTxAccountId(value || null)}
+                      options={[
+                        { value: '', label: t.transactions.noAccount },
+                        ...(accounts || []).map((account) => ({
+                          value: account.id,
+                          label: account.name,
+                        })),
+                      ]}
+                    />
                   </div>
                   <div className='space-y-2'>
-                    <label className='text-sm font-medium'>
+                    <label
+                      htmlFor='add-transaction-method'
+                      className='text-sm font-medium'
+                    >
                       {t.transactions.paymentMethodFilter}
                     </label>
-                    <select
+                    <FormSelect
+                      id='add-transaction-method'
+                      label={t.transactions.paymentMethodFilter}
                       value={addTxPaymentMethod || ''}
-                      onChange={(e) =>
-                        setAddTxPaymentMethod(e.target.value || null)
-                      }
-                      className='w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:ring-2 focus:ring-ring focus:outline-none'
-                    >
-                      <option value=''>{t.transactions.noPaymentMethod}</option>
-                      {paymentMethods.map((m) => (
-                        <option key={m.value} value={m.value}>
-                          {m.label}
-                        </option>
-                      ))}
-                    </select>
+                      onChange={(value) => setAddTxPaymentMethod(value || null)}
+                      options={[
+                        { value: '', label: t.transactions.noPaymentMethod },
+                        ...paymentMethods.map((method) => ({
+                          value: method.value,
+                          label: method.label,
+                        })),
+                      ]}
+                    />
                   </div>
                 </div>
 
                 {/* Payment processor */}
                 {paymentProviderRules.length > 0 && (
                   <div className='space-y-2'>
-                    <label className='text-sm font-medium'>
+                    <label
+                      htmlFor='add-transaction-provider'
+                      className='text-sm font-medium'
+                    >
                       {t.transactions.paymentProcessorFilter}
                     </label>
-                    <select
+                    <FormSelect
+                      id='add-transaction-provider'
+                      label={t.transactions.paymentProcessorFilter}
                       value={addTxPaymentProcessor || ''}
-                      onChange={(e) =>
-                        setAddTxPaymentProcessor(e.target.value || null)
+                      onChange={(value) =>
+                        setAddTxPaymentProcessor(value || null)
                       }
-                      className='w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:ring-2 focus:ring-ring focus:outline-none'
-                    >
-                      <option value=''>
-                        {t.transactions.noPaymentProcessor}
-                      </option>
-                      {paymentProviderRules.map((r) => (
-                        <option key={r.id} value={r.name}>
-                          {r.name}
-                        </option>
-                      ))}
-                    </select>
+                      options={[
+                        { value: '', label: t.transactions.noPaymentProcessor },
+                        ...paymentProviderRules.map((rule) => ({
+                          value: rule.name,
+                          label: rule.name,
+                        })),
+                      ]}
+                    />
                   </div>
                 )}
               </div>

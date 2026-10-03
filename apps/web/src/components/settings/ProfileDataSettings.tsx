@@ -152,7 +152,7 @@ export function ProfileDataSettings() {
             {deleteItems.map((item, index) => (
               <div
                 key={item.titleKey}
-                className={`flex items-center justify-between py-3 ${index > 0 ? 'border-t' : ''}`}
+                className={`flex flex-wrap items-center justify-between gap-3 py-3 ${index > 0 ? 'border-t' : ''}`}
               >
                 <div>
                   <p className='font-medium text-orange-700 dark:text-orange-300'>
@@ -168,7 +168,7 @@ export function ProfileDataSettings() {
                 </div>
                 <Button
                   variant='outline'
-                  className='border-orange-500 bg-orange-50 text-orange-700 hover:border-orange-600 hover:bg-orange-100 hover:text-orange-800 dark:border-orange-700 dark:bg-orange-950 dark:text-orange-400 dark:hover:bg-orange-900'
+                  className='h-auto min-h-10 max-w-full border-orange-500 bg-orange-50 whitespace-normal text-orange-700 hover:border-orange-600 hover:bg-orange-100 hover:text-orange-800 dark:border-orange-700 dark:bg-orange-950 dark:text-orange-400 dark:hover:bg-orange-900'
                   disabled={isLoading}
                   onClick={async () => {
                     const confirmMsg = getText(

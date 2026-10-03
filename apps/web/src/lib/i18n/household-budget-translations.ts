@@ -1,9 +1,13 @@
 export const householdBudgetEn = {
-  commitmentsNote: 'Use these commitments when choosing your allocations; they are not subtracted again from assigned budgets.',
+  commitmentsNote:
+    'Use these commitments when choosing your allocations; they are not subtracted again from assigned budgets.',
   title: 'Monthly allocation',
   description:
     'Set this month’s income and allocations without changing recurring defaults.',
   month: 'Month',
+  monthlyOnly:
+    'This allocation includes monthly budgets. Yearly spending limits remain separate.',
+  matchMode: 'Match type',
   expectedIncome: 'Expected income',
   assigned: 'Assigned',
   unassigned: 'Left to assign',
@@ -14,10 +18,14 @@ export const householdBudgetEn = {
   reset: 'Use recurring default',
   override: 'This month',
   negativeRollover: 'Carry overspending forward',
+  negativeRolloverHelp:
+    'With this option, unused money and overspending carry forward. Setting a month to zero resets its carry.',
   needs: 'Needs',
   wants: 'Wants',
   savings: 'Savings',
   fixed: 'Fixed expense',
+  fixedParentHelp:
+    'A fixed parent category also marks its child transactions as fixed in forecasts and cash flow.',
   variable: 'Variable expense',
   categories: 'Category planning',
   category: 'Category',
@@ -69,11 +77,15 @@ export const householdBudgetEn = {
 };
 export type HouseholdBudgetTranslations = typeof householdBudgetEn;
 export const householdBudgetNl: HouseholdBudgetTranslations = {
-  commitmentsNote: 'Houd hiermee rekening bij je verdeling; deze bedragen worden niet nogmaals van verdeelde budgetten afgetrokken.',
+  commitmentsNote:
+    'Houd hiermee rekening bij je verdeling; deze bedragen worden niet nogmaals van verdeelde budgetten afgetrokken.',
   title: 'Maandverdeling',
   description:
     'Stel inkomsten en bedragen voor deze maand in zonder vaste budgetten te wijzigen.',
   month: 'Maand',
+  monthlyOnly:
+    'Deze verdeling bevat maandbudgetten. Jaarlijkse uitgavenlimieten blijven apart.',
+  matchMode: 'Patroontype',
   expectedIncome: 'Verwachte inkomsten',
   assigned: 'Verdeeld',
   unassigned: 'Nog te verdelen',
@@ -84,10 +96,14 @@ export const householdBudgetNl: HouseholdBudgetTranslations = {
   reset: 'Vast budget gebruiken',
   override: 'Deze maand',
   negativeRollover: 'Overschrijding meenemen',
+  negativeRolloverHelp:
+    'Met deze optie neem je ongebruikt geld en overschrijdingen mee. Een maand op nul zetten wist het meegenomen saldo.',
   needs: 'Noodzakelijk',
   wants: 'Wensen',
   savings: 'Sparen',
   fixed: 'Vaste uitgave',
+  fixedParentHelp:
+    'Een vaste hoofdcategorie maakt ook de transacties van subcategorieën vast in prognoses en geldstromen.',
   variable: 'Variabele uitgave',
   categories: 'Categorieplanning',
   category: 'Categorie',

@@ -197,8 +197,7 @@ export function SyncHistoryViewer({ onClose }: SyncHistoryViewerProps) {
     <Card className='border-border bg-card'>
       <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-4'>
         <div>
-          <CardTitle className='flex items-center gap-2 text-lg'>
-            <History className='h-5 w-5' />
+          <CardTitle className='text-lg'>
             {t.settings?.sync?.syncHistory}
           </CardTitle>
           <CardDescription>

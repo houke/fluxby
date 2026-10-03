@@ -27,6 +27,8 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
+import { FormSelect } from '@/components/ui/form-select';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -363,8 +365,11 @@ export default function Planning() {
         dataOnboarding='planning-greeting'
       />
       {hasError && (
-        <Card role='alert'>
-          <CardContent className='flex items-center justify-between pt-6'>
+        <Card
+          role='alert'
+          className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'
+        >
+          <CardContent className='flex items-center justify-between px-3 pt-6 sm:px-6'>
             <p>{p.loadFailed}</p>
             <Button variant='outline' onClick={() => refresh()}>
               {p.retry}
@@ -372,12 +377,17 @@ export default function Planning() {
           </CardContent>
         </Card>
       )}
-      <Card data-onboarding='planning-forecast'>
-        <CardHeader>
-          <CardTitle>{p.safeToSpend}</CardTitle>
+      <Card
+        data-onboarding='planning-forecast'
+        className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'
+      >
+        <CardHeader className='px-3 sm:px-6'>
+          <CardTitle className='text-base sm:text-lg'>
+            {p.safeToSpend}
+          </CardTitle>
           <CardDescription>{p.safeToSpendDescription}</CardDescription>
         </CardHeader>
-        <CardContent className='space-y-6'>
+        <CardContent className='space-y-6 px-3 sm:px-6'>
           {forecast.isPending ? (
             <Skeleton className='h-16' />
           ) : (
@@ -486,10 +496,15 @@ export default function Planning() {
           </TabsTrigger>
         </TabsList>
         <TabsContent value='goals'>
-          <Card data-onboarding='planning-goals'>
-            <CardHeader className='flex flex-wrap items-start justify-between gap-3 sm:flex-row'>
+          <Card
+            data-onboarding='planning-goals'
+            className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'
+          >
+            <CardHeader className='flex flex-wrap items-start justify-between gap-3 px-3 sm:flex-row sm:px-6'>
               <div className='space-y-2'>
-                <CardTitle>{p.goals}</CardTitle>
+                <CardTitle className='text-base sm:text-lg'>
+                  {p.goals}
+                </CardTitle>
                 <CardDescription>{p.goalsDescription}</CardDescription>
               </div>
               <Button onClick={() => openGoal()}>
@@ -497,7 +512,7 @@ export default function Planning() {
                 {p.addGoal}
               </Button>
             </CardHeader>
-            <CardContent className='space-y-4'>
+            <CardContent className='space-y-4 px-3 sm:px-6'>
               {goals.isPending ? (
                 <Skeleton className='h-28' />
               ) : !goals.data?.length ? (
@@ -581,10 +596,15 @@ export default function Planning() {
           </Card>
         </TabsContent>
         <TabsContent value='net-worth'>
-          <Card data-onboarding='planning-net-worth'>
-            <CardHeader className='flex flex-wrap items-start justify-between gap-3 sm:flex-row'>
+          <Card
+            data-onboarding='planning-net-worth'
+            className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'
+          >
+            <CardHeader className='flex flex-wrap items-start justify-between gap-3 px-3 sm:flex-row sm:px-6'>
               <div className='space-y-2'>
-                <CardTitle>{p.netWorth}</CardTitle>
+                <CardTitle className='text-base sm:text-lg'>
+                  {p.netWorth}
+                </CardTitle>
                 <CardDescription>{p.netWorthDescription}</CardDescription>
               </div>
               <Button onClick={() => openItem()}>
@@ -592,7 +612,7 @@ export default function Planning() {
                 {p.addItem}
               </Button>
             </CardHeader>
-            <CardContent className='space-y-6'>
+            <CardContent className='space-y-6 px-3 sm:px-6'>
               {netWorth.isPending ? (
                 <Skeleton className='h-28' />
               ) : (
@@ -670,12 +690,17 @@ export default function Planning() {
           </Card>
         </TabsContent>
         <TabsContent value='review'>
-          <Card data-onboarding='planning-review'>
-            <CardHeader>
-              <CardTitle>{p.monthlyReview}</CardTitle>
+          <Card
+            data-onboarding='planning-review'
+            className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'
+          >
+            <CardHeader className='px-3 sm:px-6'>
+              <CardTitle className='text-base sm:text-lg'>
+                {p.monthlyReview}
+              </CardTitle>
               <CardDescription>{p.monthlyReviewDescription}</CardDescription>
             </CardHeader>
-            <CardContent className='space-y-4'>
+            <CardContent className='space-y-4 px-3 sm:px-6'>
               <div className='max-w-xs space-y-2'>
                 <Label htmlFor='planning-review-month'>{p.reviewMonth}</Label>
                 <Input
@@ -703,9 +728,7 @@ export default function Planning() {
                         className='flex flex-wrap items-center justify-between gap-3 rounded-lg border p-3'
                       >
                         <label className='flex items-center gap-3'>
-                          <input
-                            type='checkbox'
-                            className='h-4 w-4 accent-purple-600'
+                          <Checkbox
                             checked={Boolean(review.data?.checks[step.id])}
                             disabled={saveReview.isPending}
                             onChange={(event) =>
@@ -777,7 +800,7 @@ export default function Planning() {
           </Card>
         </TabsContent>
         <TabsContent value='household'>
-          <HouseholdPlanning />
+          <HouseholdPlanning key={activeProfileId} />
         </TabsContent>
       </Tabs>
 
@@ -942,20 +965,21 @@ export default function Planning() {
             </div>
             <div className='space-y-2'>
               <Label htmlFor='worth-type'>{p.itemType}</Label>
-              <select
+              <FormSelect
                 id='worth-type'
-                className='h-10 w-full rounded-md border bg-background px-3 text-sm'
+                label={p.itemType}
                 value={itemForm.type}
-                onChange={(event) =>
+                onChange={(value) =>
                   setItemForm({
                     ...itemForm,
-                    type: event.target.value as 'asset' | 'liability',
+                    type: value as 'asset' | 'liability',
                   })
                 }
-              >
-                <option value='asset'>{p.asset}</option>
-                <option value='liability'>{p.liability}</option>
-              </select>
+                options={[
+                  { value: 'asset', label: p.asset },
+                  { value: 'liability', label: p.liability },
+                ]}
+              />
             </div>
             <div className='space-y-2'>
               <Label htmlFor='worth-amount'>{p.amount}</Label>

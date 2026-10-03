@@ -133,19 +133,19 @@ export function HeaderFilters() {
   };
 
   return (
-    <div className='flex items-center gap-2'>
+    <div className='flex max-w-full min-w-0 items-center gap-2'>
       {/* Date Range Picker */}
       <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
         <PopoverTrigger asChild>
           <Button
             variant='outline'
             className={cn(
-              'min-w-[200px] justify-start text-left font-normal',
+              'w-full min-w-0 justify-start px-2 text-left text-xs font-normal sm:min-w-[200px] sm:px-4 sm:text-sm',
               !filters.dateRange && 'text-muted-foreground'
             )}
           >
-            <CalendarIcon className='mr-2 h-4 w-4' />
-            {formatDateRange()}
+            <CalendarIcon className='h-4 w-4 shrink-0 sm:mr-2' />
+            <span className='truncate'>{formatDateRange()}</span>
           </Button>
         </PopoverTrigger>
         <PopoverContent className='w-auto p-0' align='start'>

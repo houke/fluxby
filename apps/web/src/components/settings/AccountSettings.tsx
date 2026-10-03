@@ -661,7 +661,7 @@ export function AccountSettings() {
                 </div>
               )}
 
-              <AccountColors />
+              <AccountColors key={activeProfileId} />
               <p className='text-sm text-muted-foreground'>
                 {t.householdBudget.noIban} {t.householdBudget.forecastNote}
               </p>

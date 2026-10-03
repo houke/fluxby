@@ -121,6 +121,40 @@ describe('financial backup safety and completeness', () => {
     await restoreFinancialBackup(db, decrypted);
     expect((await exportFinancialBackup(db)).tables).toEqual(original.tables);
   });
+  it('repairs legacy manual bill signs on restore while preserving real recurring income and dates', async () => {
+    sqlite.exec(
+      'ALTER TABLE recurring_patterns ADD COLUMN manual_source INTEGER NOT NULL DEFAULT 0'
+    );
+    const original = await exportFinancialBackup(db);
+    const legacy = original.tables.recurring_patterns[0];
+    Object.assign(legacy, {
+      manual_source: 1,
+      avg_amount: 25,
+      last_amount: 27,
+      last_date: '2026-09-30',
+      next_expected_date: '2026-12-30',
+      pattern_type: 'quarterly',
+    });
+    original.tables.recurring_patterns.push({
+      ...legacy,
+      id: 'salary',
+      merchant_name: 'Salary',
+      manual_source: 0,
+      avg_amount: 2500,
+      last_amount: 2500,
+    });
+    await restoreFinancialBackup(db, original);
+    const restored = (await exportFinancialBackup(db)).tables
+      .recurring_patterns;
+    expect(restored.find((row) => row.id === legacy.id)).toEqual({
+      ...legacy,
+      avg_amount: -25,
+      last_amount: -27,
+    });
+    expect(restored.find((row) => row.id === 'salary')).toEqual(
+      original.tables.recurring_patterns[1]
+    );
+  });
 
   it.each([
     'unknown table',

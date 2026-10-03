@@ -346,7 +346,7 @@ export default function AddressBook() {
         title={t.addressBook?.title || t.settings.addressBook.title}
         subtitle={t.addressBook?.subtitle}
         actions={
-          <div className='flex gap-2'>
+          <div className='flex flex-wrap gap-2'>
             {hasTypeSafeKey && (
               <Button
                 variant='secondary'

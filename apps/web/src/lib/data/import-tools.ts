@@ -21,6 +21,17 @@ interface CandidateTransaction {
   amount: number;
   description: string;
 }
+interface ImportAccountBaseline {
+  balance?: number;
+  sum?: number;
+  committedBalance?: number;
+  statementBalance?: boolean;
+}
+interface StoredImportBatch {
+  id: string;
+  created_at: number;
+  account_baselines_json: string;
+}
 export function merchantSimilarity(a: string, b: string) {
   const tokens = (value: string) =>
     new Set(
@@ -87,10 +98,15 @@ export function createImportToolsService(
       );
       return id;
     },
-    async createImportRecoverySnapshot(filename: string) {
+    async createImportRecoverySnapshot(
+      filename: string,
+      expectedProfileId?: string
+    ) {
       const pid = profile(),
         id = crypto.randomUUID(),
         now = Date.now();
+      if (expectedProfileId && pid !== expectedProfileId)
+        throw new Error('importProfileChanged');
       const backup = await exportFinancialBackup(db);
       await db.transactionAsync(async () => {
         await db.runAsync(
@@ -122,12 +138,20 @@ export function createImportToolsService(
       filename: string,
       importId: string,
       transactionIds: string[],
-      recoveryId?: string
+      recoveryId?: string,
+      expectedProfileId?: string
     ) {
-      const pid = profile(),
-        id = crypto.randomUUID(),
-        now = Date.now();
-      const baselines: Record<string, { balance: number; sum: number }> = {};
+      const pid = expectedProfileId ?? profile(),
+        id = crypto.randomUUID();
+      // Completion belongs to the profile captured by the import, even if
+      // the UI switched after the final transaction commit.
+      const previous = await db.queryOneAsync<{ latest: number | null }>(
+        'SELECT MAX(created_at) AS latest FROM import_batches WHERE profile_id=?',
+        [pid]
+      );
+      // Imports can finish in the same millisecond; preserve their actual order.
+      const now = Math.max(Date.now(), (previous?.latest ?? 0) + 1);
+      const baselines: Record<string, ImportAccountBaseline> = {};
       if (recoveryId) {
         const snapshot = await db.queryOneAsync<{ backup_json: string }>(
           'SELECT backup_json FROM import_recovery_snapshots WHERE id=? AND profile_id=?',
@@ -157,8 +181,32 @@ export function createImportToolsService(
             };
         for (const tx of backup.tables.transactions)
           if (!tx.is_deleted && baselines[tx.account_id])
-            baselines[tx.account_id].sum += tx.amount;
+            baselines[tx.account_id].sum =
+              (baselines[tx.account_id].sum ?? 0) + tx.amount;
       }
+      const accounts = await db.queryAsync<{
+        id: string;
+        current_balance: number;
+      }>(
+        'SELECT id,current_balance FROM accounts WHERE profile_id=? AND is_deleted=0',
+        [pid]
+      );
+      for (const account of accounts)
+        baselines[account.id] = {
+          ...baselines[account.id],
+          committedBalance: account.current_balance ?? 0,
+        };
+      const importedAccounts = await db.queryAsync<{
+        account_id: string;
+        statement_balance: number;
+      }>(
+        'SELECT account_id,MAX(balance_after IS NOT NULL) AS statement_balance FROM transactions WHERE profile_id=? AND id IN (SELECT value FROM json_each(?)) GROUP BY account_id',
+        [pid, JSON.stringify(transactionIds)]
+      );
+      for (const account of importedAccounts)
+        baselines[account.account_id].statementBalance = Boolean(
+          account.statement_balance
+        );
       // Membership comes from IDs actually committed by this import, never from time windows.
       await db.runAsync(
         "INSERT INTO import_batches(id,import_id,filename,transaction_ids_json,account_baselines_json,status,profile_id,created_at,updated_at) VALUES(?,?,?,?,?,'completed',?,?,?)",
@@ -207,23 +255,37 @@ export function createImportToolsService(
         const ids = JSON.parse(batch.transaction_ids_json) as string[];
         const baselines = JSON.parse(batch.account_baselines_json) as Record<
           string,
-          { balance: number; sum: number }
+          ImportAccountBaseline
         >;
+        const laterBatches = await db.queryAsync<StoredImportBatch>(
+          "SELECT id,created_at,account_baselines_json FROM import_batches WHERE profile_id=? AND is_deleted=0 AND status='completed' AND created_at>? ORDER BY created_at,id",
+          [pid, batch.created_at]
+        );
+        const laterAnchors = laterBatches.map((later) => ({
+          ...later,
+          baselines: JSON.parse(later.account_baselines_json) as Record<
+            string,
+            ImportAccountBaseline
+          >,
+        }));
         let removed = 0;
         const accounts = new Map<string, number>();
+        const statementAccounts = new Set<string>();
         for (const txId of ids) {
           const row = await db.queryOneAsync<{
             account_id: string;
             amount: number;
             updated_at: number;
+            balance_after: number | null;
           }>(
-            'SELECT account_id,amount,updated_at FROM transactions WHERE id=? AND profile_id=? AND is_deleted=0',
+            'SELECT account_id,amount,updated_at,balance_after FROM transactions WHERE id=? AND profile_id=? AND is_deleted=0',
             [txId, pid]
           );
           if (!row) continue;
           // Later edits or sync changes must not silently disappear during batch undo.
           if (row.updated_at > batch.created_at)
             throw new Error('importBatchChanged');
+          if (row.balance_after !== null) statementAccounts.add(row.account_id);
           accounts.set(
             row.account_id,
             (accounts.get(row.account_id) ?? 0) + row.amount
@@ -235,6 +297,46 @@ export function createImportToolsService(
           removed++;
         }
         for (const [accountId, total] of accounts) {
+          // Bank-provided statement anchors are authoritative at their dates.
+          // Require the later anchor to be undone first rather than rebasing
+          // a historical statement across another surviving bank balance.
+          if (
+            statementAccounts.has(accountId) &&
+            laterAnchors.some(
+              (later) => later.baselines[accountId]?.statementBalance
+            )
+          )
+            throw new Error('importBatchBalanceAnchor');
+          const account = await db.queryOneAsync<{
+            current_balance: number;
+            updated_at: number;
+          }>(
+            'SELECT current_balance,updated_at FROM accounts WHERE id=? AND profile_id=? AND is_deleted=0',
+            [accountId, pid]
+          );
+          if (!account) throw new Error('importBatchChanged');
+          const sameBalance = (a: number, b: number) =>
+            Math.round(a * 100) === Math.round(b * 100);
+          let expectedBalance = baselines[accountId]?.committedBalance;
+          for (const later of laterAnchors) {
+            const anchor = later.baselines[accountId];
+            if (!anchor || anchor.committedBalance === undefined) continue;
+            // A manual balance correction between imports must not be erased
+            // simply because another statement was imported afterwards.
+            if (
+              expectedBalance !== undefined &&
+              anchor.balance !== undefined &&
+              !sameBalance(expectedBalance, anchor.balance)
+            )
+              throw new Error('importBatchChanged');
+            expectedBalance = anchor.committedBalance;
+          }
+          if (
+            expectedBalance === undefined
+              ? account.updated_at > batch.created_at
+              : !sameBalance(account.current_balance, expectedBalance)
+          )
+            throw new Error('importBatchChanged');
           const latest = await db.queryOneAsync<{
             balance_after: number;
             date: string;
@@ -245,7 +347,11 @@ export function createImportToolsService(
             [accountId, pid]
           );
           const baseline = baselines[accountId];
-          if (baseline && (!latest || latest.created_at <= batch.created_at)) {
+          if (
+            baseline?.balance !== undefined &&
+            baseline.sum !== undefined &&
+            (!latest || latest.created_at <= batch.created_at)
+          ) {
             const remaining = await db.queryOneAsync<{ total: number }>(
               'SELECT COALESCE(SUM(amount),0) AS total FROM transactions WHERE account_id=? AND profile_id=? AND is_deleted=0',
               [accountId, pid]
@@ -283,13 +389,40 @@ export function createImportToolsService(
               'UPDATE accounts SET current_balance=ROUND(current_balance-?,2),updated_at=? WHERE id=? AND profile_id=?',
               [total, now, accountId, pid]
             );
+          const updated = await db.queryOneAsync<{ current_balance: number }>(
+            'SELECT current_balance FROM accounts WHERE id=? AND profile_id=?',
+            [accountId, pid]
+          );
+          const balanceChange =
+            (updated?.current_balance ?? account.current_balance) -
+            account.current_balance;
+          // Later imports survive this undo. Rebase their before/after anchors
+          // so they can themselves be undone safely in either order.
+          for (const later of laterAnchors) {
+            const anchor = later.baselines[accountId];
+            if (!anchor) continue;
+            if (anchor.balance !== undefined)
+              anchor.balance =
+                Math.round((anchor.balance + balanceChange) * 100) / 100;
+            if (anchor.sum !== undefined)
+              anchor.sum = Math.round((anchor.sum - total) * 100) / 100;
+            if (anchor.committedBalance !== undefined)
+              anchor.committedBalance =
+                Math.round((anchor.committedBalance + balanceChange) * 100) /
+                100;
+          }
         }
+        for (const later of laterAnchors)
+          await db.runAsync(
+            'UPDATE import_batches SET account_baselines_json=?,updated_at=? WHERE id=? AND profile_id=?',
+            [JSON.stringify(later.baselines), now, later.id, pid]
+          );
         await db.runAsync(
           "UPDATE import_batches SET status='undone',updated_at=? WHERE id=? AND profile_id=?",
           [now, id, pid]
         );
         await db.runAsync(
-          "UPDATE imports SET status='undone',updated_at=? WHERE id=? AND profile_id=?",
+          'UPDATE imports SET transaction_count=0,updated_at=? WHERE id=? AND profile_id=?',
           [now, batch.import_id, pid]
         );
         return removed;
@@ -302,7 +435,7 @@ export function createImportToolsService(
         lastImportedAt: number | null;
         newestTransactionDate: string | null;
       }>(
-        `SELECT a.id,a.name,MAX(CASE WHEN t.import_hash IS NOT NULL THEN t.created_at END) AS lastImportedAt,MAX(t.date) AS newestTransactionDate FROM accounts a LEFT JOIN transactions t ON t.account_id=a.id AND t.profile_id=a.profile_id AND t.is_deleted=0 WHERE a.profile_id=? AND a.is_deleted=0 GROUP BY a.id ORDER BY a.name`,
+        `SELECT a.id,a.name,MAX(CASE WHEN t.import_hash IS NOT NULL THEN t.created_at END) AS lastImportedAt,MAX(CASE WHEN t.import_hash IS NOT NULL THEN t.date END) AS newestTransactionDate FROM accounts a LEFT JOIN transactions t ON t.account_id=a.id AND t.profile_id=a.profile_id AND t.is_deleted=0 WHERE a.profile_id=? AND a.is_deleted=0 GROUP BY a.id ORDER BY a.name`,
         [profile()]
       );
     },

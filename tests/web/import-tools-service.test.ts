@@ -91,6 +91,26 @@ describe('import recovery and offline review', () => {
     ).toEqual({ current_balance: 90 });
     expect(await service.getImportBatches()).toEqual([]);
   });
+  it('undoes a persisted import without violating the legacy status constraint', async () => {
+    transaction('batch', -20);
+    sqlite.exec(
+      "INSERT INTO imports(id,filename,transaction_count,status,profile_id) VALUES('real-import','bank.csv',1,'completed','profile')"
+    );
+    const batch = await service.recordImportBatch('bank.csv', 'real-import', [
+      'batch',
+    ]);
+    expect(await service.undoImportBatch(batch)).toBe(1);
+    expect(
+      sqlite
+        .prepare(
+          "SELECT transaction_count,status FROM imports WHERE id='real-import'"
+        )
+        .get()
+    ).toEqual({ transaction_count: 0, status: 'completed' });
+    expect(
+      sqlite.prepare('SELECT status FROM import_batches WHERE id=?').get(batch)
+    ).toEqual({ status: 'undone' });
+  });
   it('restores the preimport account anchor when imported bank balances changed it', async () => {
     transaction('before', -10);
     sqlite.exec("UPDATE accounts SET current_balance=2000 WHERE id='account'");
@@ -129,6 +149,175 @@ describe('import recovery and offline review', () => {
         .get()
     ).toEqual({ deleted: 0 });
   });
+  it('preserves later imports and keeps undo safe in either batch order', async () => {
+    transaction('first', -20);
+    const first = await service.recordImportBatch('first.csv', 'first-import', [
+      'first',
+    ]);
+    const recovery = await service.createImportRecoverySnapshot('second.csv');
+    transaction('second', -10);
+    sqlite.exec("UPDATE accounts SET current_balance=60 WHERE id='account'");
+    const second = await service.recordImportBatch(
+      'second.csv',
+      'second-import',
+      ['second'],
+      recovery
+    );
+    expect(await service.undoImportBatch(first)).toBe(1);
+    expect(
+      sqlite
+        .prepare("SELECT current_balance FROM accounts WHERE id='account'")
+        .get()
+    ).toEqual({ current_balance: 80 });
+    expect(
+      sqlite
+        .prepare("SELECT is_deleted FROM transactions WHERE id='second'")
+        .get()
+    ).toEqual({ is_deleted: 0 });
+    expect(await service.undoImportBatch(second)).toBe(1);
+    expect(
+      sqlite
+        .prepare("SELECT current_balance FROM accounts WHERE id='account'")
+        .get()
+    ).toEqual({ current_balance: 90 });
+  });
+  it('rolls back all transactions and account recalculations after a manual balance edit', async () => {
+    sqlite.exec(
+      "INSERT INTO accounts(id,iban,name,current_balance,profile_id) VALUES('second-account','NL00SECOND','Second',100,'profile')"
+    );
+    transaction('first', -20);
+    sqlite.exec(
+      "INSERT INTO transactions(id,date,amount,type,description,account_id,profile_id,created_at,updated_at,import_hash) VALUES('second','2026-09-30',-10,'expense','Other','second-account','profile',1,1,'second')"
+    );
+    const batch = await service.recordImportBatch('both.csv', 'import', [
+      'first',
+      'second',
+    ]);
+    sqlite.exec(
+      "UPDATE accounts SET current_balance=999,updated_at=updated_at+10000 WHERE id='second-account'"
+    );
+    await expect(service.undoImportBatch(batch)).rejects.toThrow(
+      'importBatchChanged'
+    );
+    expect(
+      sqlite
+        .prepare('SELECT SUM(is_deleted) AS deleted FROM transactions')
+        .get()
+    ).toEqual({ deleted: 0 });
+    expect(
+      sqlite
+        .prepare("SELECT current_balance FROM accounts WHERE id='account'")
+        .get()
+    ).toEqual({ current_balance: 70 });
+    expect(
+      sqlite
+        .prepare(
+          "SELECT current_balance FROM accounts WHERE id='second-account'"
+        )
+        .get()
+    ).toEqual({ current_balance: 999 });
+    expect(await service.getImportBatches()).toHaveLength(1);
+  });
+  it('protects a manual balance correction even when another import follows it', async () => {
+    transaction('first', -20);
+    const first = await service.recordImportBatch('first.csv', 'first-import', [
+      'first',
+    ]);
+    sqlite.exec("UPDATE accounts SET current_balance=500 WHERE id='account'");
+    const recovery = await service.createImportRecoverySnapshot('second.csv');
+    transaction('second', -10);
+    sqlite.exec("UPDATE accounts SET current_balance=490 WHERE id='account'");
+    await service.recordImportBatch(
+      'second.csv',
+      'second-import',
+      ['second'],
+      recovery
+    );
+    await expect(service.undoImportBatch(first)).rejects.toThrow(
+      'importBatchChanged'
+    );
+    expect(
+      sqlite
+        .prepare("SELECT current_balance FROM accounts WHERE id='account'")
+        .get()
+    ).toEqual({ current_balance: 490 });
+    expect(
+      sqlite
+        .prepare('SELECT SUM(is_deleted) AS deleted FROM transactions')
+        .get()
+    ).toEqual({ deleted: 0 });
+  });
+  it('keeps successive bank statement anchors safe by requiring newest-first undo', async () => {
+    sqlite.exec("UPDATE accounts SET current_balance=2000 WHERE id='account'");
+    const firstRecovery =
+      await service.createImportRecoverySnapshot('first.csv');
+    transaction('first', -20);
+    sqlite.exec(
+      "UPDATE transactions SET balance_after=1000 WHERE id='first';UPDATE accounts SET current_balance=1000 WHERE id='account'"
+    );
+    const first = await service.recordImportBatch(
+      'first.csv',
+      'first-import',
+      ['first'],
+      firstRecovery
+    );
+    const secondRecovery =
+      await service.createImportRecoverySnapshot('second.csv');
+    transaction('second', -10);
+    sqlite
+      .prepare(
+        "UPDATE transactions SET date='2026-10-01',balance_after=990,created_at=? WHERE id='second'"
+      )
+      .run(Date.now() + 1);
+    sqlite.exec("UPDATE accounts SET current_balance=990 WHERE id='account'");
+    const second = await service.recordImportBatch(
+      'second.csv',
+      'second-import',
+      ['second'],
+      secondRecovery
+    );
+    await expect(service.undoImportBatch(first)).rejects.toThrow(
+      'importBatchBalanceAnchor'
+    );
+    expect(
+      sqlite
+        .prepare('SELECT SUM(is_deleted) AS deleted FROM transactions')
+        .get()
+    ).toEqual({ deleted: 0 });
+    expect(await service.undoImportBatch(second)).toBe(1);
+    expect(
+      sqlite
+        .prepare("SELECT current_balance FROM accounts WHERE id='account'")
+        .get()
+    ).toEqual({ current_balance: 1000 });
+    expect(await service.undoImportBatch(first)).toBe(1);
+    expect(
+      sqlite
+        .prepare("SELECT current_balance FROM accounts WHERE id='account'")
+        .get()
+    ).toEqual({ current_balance: 2000 });
+  });
+  it('records an already committed import in its captured profile after a UI switch', async () => {
+    transaction('batch', -20);
+    const recovery =
+      await service.createImportRecoverySnapshot('committed.csv');
+    pid = 'other';
+    const batch = await service.recordImportBatch(
+      'committed.csv',
+      'original-import',
+      ['batch'],
+      recovery,
+      'profile'
+    );
+    expect(await service.getImportBatches()).toEqual([]);
+    expect(
+      sqlite
+        .prepare('SELECT profile_id FROM import_batches WHERE id=?')
+        .get(batch)
+    ).toEqual({ profile_id: 'profile' });
+    pid = 'profile';
+    expect(await service.undoImportBatch(batch)).toBe(1);
+  });
   it('enforces profile ownership for undo and snapshots', async () => {
     transaction('batch', -20);
     const batch = await service.recordImportBatch('test.csv', 'import-id', [
@@ -161,5 +350,30 @@ describe('import recovery and offline review', () => {
     const freshness = await service.getAccountImportFreshness();
     expect(freshness[0].lastImportedAt).toBe(1);
     expect(freshness[0].newestTransactionDate).toBe('2026-09-30');
+  });
+  it('does not treat manual transactions or device updates as current bank data', async () => {
+    transaction('statement', -20);
+    sqlite.exec(
+      "INSERT INTO transactions(id,date,amount,type,description,account_id,profile_id,created_at,updated_at) VALUES('manual','2026-10-02',50,'income','Manual correction','account','profile',2000,3000)"
+    );
+    sqlite.exec("UPDATE accounts SET updated_at=4000 WHERE id='account'");
+    const freshness = await service.getAccountImportFreshness();
+    expect(freshness).toEqual([
+      {
+        id: 'account',
+        name: 'Account',
+        lastImportedAt: 1,
+        newestTransactionDate: '2026-09-30',
+      },
+    ]);
+    pid = 'other';
+    expect(await service.getAccountImportFreshness()).toEqual([
+      {
+        id: 'other-account',
+        name: 'Other',
+        lastImportedAt: null,
+        newestTransactionDate: null,
+      },
+    ]);
   });
 });

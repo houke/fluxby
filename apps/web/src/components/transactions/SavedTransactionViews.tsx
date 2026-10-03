@@ -7,6 +7,7 @@ import { useToast } from '@/contexts/ToastContext';
 import { useConfirm } from '@/contexts/ConfirmContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Card, CardContent } from '@/components/ui/card';
 import {
   decodeTransactionView,
   encodeTransactionView,
@@ -38,109 +39,108 @@ export function SavedTransactionViews({
   const refresh = () =>
     client.invalidateQueries({ queryKey: ['savedViews', activeProfileId] });
   return (
-    <div
-      className='space-y-3 rounded-lg border bg-card p-3'
-      data-onboarding='saved-views'
-    >
-      <div className='flex flex-wrap items-center gap-2'>
-        <Button
-          variant='outline'
-          size='sm'
-          aria-pressed={view.compact}
-          onClick={() => onCompactChange(!view.compact)}
-        >
-          {view.compact ? copy.comfortable : copy.compact}
-        </Button>
-        <form
-          className='flex flex-wrap items-center gap-2'
-          onSubmit={async (event) => {
-            event.preventDefault();
-            setBusy(true);
-            try {
-              await api.createSavedView({
-                name: name.trim(),
-                filters: encodeTransactionView(view),
-              });
-              setName('');
-              await refresh();
-              toast.success(copy.saved);
-            } catch (err) {
-              toast.error(err as Error);
-            } finally {
-              setBusy(false);
-            }
-          }}
-        >
-          <Input
-            className='w-44'
-            value={name}
-            aria-label={copy.viewName}
-            placeholder={copy.viewName}
-            maxLength={100}
-            onChange={(event) => setName(event.target.value)}
-          />
+    <Card data-onboarding='saved-views'>
+      <CardContent className='space-y-3 p-4 sm:p-6'>
+        <div className='flex flex-wrap items-center gap-2'>
           <Button
             variant='outline'
             size='sm'
-            type='submit'
-            disabled={!name.trim() || busy}
+            aria-pressed={view.compact}
+            onClick={() => onCompactChange(!view.compact)}
           >
-            {copy.saveView}
+            {view.compact ? copy.comfortable : copy.compact}
           </Button>
-        </form>
-      </div>
-      {error && <p role='alert'>{t.common.error}</p>}
-      {views.length > 0 && (
-        <div className='flex flex-wrap gap-2' aria-label={copy.savedViews}>
-          {views.map((saved) => (
-            <div
-              key={saved.id}
-              className='flex items-center gap-1 rounded-md border p-1'
+          <form
+            className='flex flex-wrap items-center gap-2'
+            onSubmit={async (event) => {
+              event.preventDefault();
+              setBusy(true);
+              try {
+                await api.createSavedView({
+                  name: name.trim(),
+                  filters: encodeTransactionView(view),
+                });
+                setName('');
+                await refresh();
+                toast.success(copy.saved);
+              } catch (err) {
+                toast.error(err as Error);
+              } finally {
+                setBusy(false);
+              }
+            }}
+          >
+            <Input
+              className='w-44'
+              value={name}
+              aria-label={copy.viewName}
+              placeholder={copy.viewName}
+              maxLength={100}
+              onChange={(event) => setName(event.target.value)}
+            />
+            <Button
+              variant='outline'
+              size='sm'
+              type='submit'
+              disabled={!name.trim() || busy}
             >
-              <Button
-                variant='ghost'
-                size='sm'
-                onClick={() => {
-                  const parsed = decodeTransactionView(saved.filters);
-                  if (parsed) onApply(parsed);
-                  else toast.error(copy.invalidFilters);
-                }}
-              >
-                {saved.name}
-              </Button>
-              <Button
-                variant='ghost'
-                size='sm'
-                disabled={busy}
-                onClick={async () => {
-                  if (
-                    !(await confirm({
-                      title: t.common.delete,
-                      message: copy.confirmDelete,
-                      confirmLabel: t.common.delete,
-                      cancelLabel: t.common.cancel,
-                      variant: 'danger',
-                    }))
-                  )
-                    return;
-                  setBusy(true);
-                  try {
-                    await api.deleteSavedView(saved.id);
-                    await refresh();
-                    toast.success(copy.deleted);
-                  } catch (err) {
-                    toast.error(err as Error);
-                  } finally {
-                    setBusy(false);
-                  }
-                }}
-              >
-                {t.common.delete}
-              </Button>
-            </div>
-          ))}
+              {copy.saveView}
+            </Button>
+          </form>
         </div>
-      )}
-    </div>
+        {error && <p role='alert'>{t.common.error}</p>}
+        {views.length > 0 && (
+          <div className='flex flex-wrap gap-2' aria-label={copy.savedViews}>
+            {views.map((saved) => (
+              <div
+                key={saved.id}
+                className='flex items-center gap-1 rounded-md border p-1'
+              >
+                <Button
+                  variant='ghost'
+                  size='sm'
+                  onClick={() => {
+                    const parsed = decodeTransactionView(saved.filters);
+                    if (parsed) onApply(parsed);
+                    else toast.error(copy.invalidFilters);
+                  }}
+                >
+                  {saved.name}
+                </Button>
+                <Button
+                  variant='ghost'
+                  size='sm'
+                  disabled={busy}
+                  onClick={async () => {
+                    if (
+                      !(await confirm({
+                        title: t.common.delete,
+                        message: copy.confirmDelete,
+                        confirmLabel: t.common.delete,
+                        cancelLabel: t.common.cancel,
+                        variant: 'danger',
+                      }))
+                    )
+                      return;
+                    setBusy(true);
+                    try {
+                      await api.deleteSavedView(saved.id);
+                      await refresh();
+                      toast.success(copy.deleted);
+                    } catch (err) {
+                      toast.error(err as Error);
+                    } finally {
+                      setBusy(false);
+                    }
+                  }}
+                >
+                  {t.common.delete}
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }

@@ -50,10 +50,40 @@ export function monthlyAllocation(
     total += moneyCents(overrides.get(date.slice(0, 7)) ?? base);
   return total / 100;
 }
-export function isSafeRulePattern(pattern:string):boolean {
+export function monthlyRollover(
+  base: number,
+  overrides: Map<string, number>,
+  spending: Map<string, number>,
+  origin: string,
+  selectedMonth: string,
+  carryNegative: boolean
+): number {
+  validateMonth(origin);
+  validateMonth(selectedMonth);
+  if (origin >= selectedMonth) return 0;
+  if (carryNegative && (overrides.get(selectedMonth) ?? base) === 0) return 0;
+  let carry = 0;
+  for (
+    let date = `${origin}-01`;
+    date.slice(0, 7) < selectedMonth;
+    date = addMonthsToDateOnly(date, 1)
+  ) {
+    const month = date.slice(0, 7);
+    const allocation = moneyCents(overrides.get(month) ?? base);
+    if (carryNegative && allocation === 0) carry = 0;
+    else carry += allocation - moneyCents(spending.get(month) ?? 0);
+  }
+  // Preserve the existing surplus-only policy unless carrying deficits is chosen.
+  return (carryNegative ? carry : Math.max(0, carry)) / 100;
+}
+export function isSafeRulePattern(pattern: string): boolean {
   // Keep browser-side matching bounded: disallow quantified groups, lookarounds,
   // backreferences and multiple variable repetitions. Plain text is the default.
-  return pattern.length<=200 && !/\)[+*{]|\\[1-9]|\(\?/.test(pattern) && (pattern.match(/[+*{]/g)||[]).length<=1;
+  return (
+    pattern.length <= 200 &&
+    !/\)[+*{]|\\[1-9]|\(\?/.test(pattern) &&
+    (pattern.match(/[+*{]/g) || []).length <= 1
+  );
 }
 export function matchesAdvancedRule(
   rule: AdvancedRuleInput,
@@ -78,7 +108,7 @@ export function matchesAdvancedRule(
         : `${tx.merchantName} ${tx.description}`;
   if (rule.matchMode === 'contains')
     return text.toLocaleLowerCase().includes(rule.pattern.toLocaleLowerCase());
-  if(!isSafeRulePattern(rule.pattern)) return false;
+  if (!isSafeRulePattern(rule.pattern)) return false;
   try {
     return new RegExp(rule.pattern, 'iu').test(text.slice(0, 2000));
   } catch {
@@ -96,15 +126,19 @@ export function createHouseholdBudgetService(
   };
   const owned = async (
     table: 'budgets' | 'categories' | 'accounts',
-    id: string
+    id: string,
+    profile = pid()
   ) => {
     if (
       !(await db.queryOneAsync(
         `SELECT id FROM ${table} WHERE id=? AND profile_id=? AND is_deleted=0`,
-        [id, pid()]
+        [id, profile]
       ))
     )
       throw new Error('Item does not belong to profile');
+  };
+  const assertProfile = (profile: string) => {
+    if (profileId() !== profile) throw new Error('Active profile changed');
   };
   return {
     async getBudgetExtensions() {
@@ -137,9 +171,10 @@ export function createHouseholdBudgetService(
       amount: number | null
     ) {
       validateMonth(month);
-      await owned('budgets', budgetId);
-      const p = pid(),
-        now = Date.now();
+      const p = pid();
+      await owned('budgets', budgetId, p);
+      assertProfile(p);
+      const now = Date.now();
       if (amount === null) {
         await db.runAsync(
           'UPDATE budget_months SET is_deleted=1,updated_at=? WHERE profile_id=? AND budget_id=? AND month=?',
@@ -163,18 +198,58 @@ export function createHouseholdBudgetService(
         `SELECT b.id,COALESCE(m.amount,b.amount) amount FROM budgets b LEFT JOIN budget_months m ON m.budget_id=b.id AND m.profile_id=b.profile_id AND m.month=? AND m.is_deleted=0 WHERE b.profile_id=? AND b.is_deleted=0 AND b.period='monthly'`,
         [previous, p]
       );
+      assertProfile(p);
       await db.transactionAsync(async () => {
-        for (const row of rows)
+        for (const row of rows) {
+          assertProfile(p);
           await this.setBudgetMonth(row.id, month, row.amount);
+        }
+        assertProfile(p);
       });
       return rows.length;
     },
+    async applyMonthlyBudgetSuggestion(
+      categoryId: string,
+      month: string,
+      amount: number
+    ) {
+      validateMonth(month);
+      const p = pid();
+      await owned('categories', categoryId, p);
+      assertProfile(p);
+      if (!Number.isFinite(amount) || amount <= 0)
+        throw new Error('Invalid suggestion');
+      return db.transactionAsync(async () => {
+        assertProfile(p);
+        const existing = await db.queryOneAsync<{ id: string }>(
+          "SELECT id FROM budgets WHERE profile_id=? AND category_id=? AND period='monthly' AND is_deleted=0 ORDER BY created_at,id LIMIT 1",
+          [p, categoryId]
+        );
+        assertProfile(p);
+        const id = existing?.id ?? crypto.randomUUID();
+        if (!existing) {
+          const now = Date.now();
+          // A suggestion belongs to the selected envelope, including historical months.
+          // Future months stay unallocated until the user chooses a recurring default.
+          await db.runAsync(
+            'INSERT INTO budgets(id,category_id,amount,period,start_date,profile_id,created_at,updated_at) VALUES(?,?,0,?,?,?,?,?)',
+            [id, categoryId, 'monthly', `${month}-01`, p, now, now]
+          );
+        }
+        assertProfile(p);
+        await this.setBudgetMonth(id, month, amount);
+        assertProfile(p);
+        return id;
+      });
+    },
     async setBudgetNegativeRollover(budgetId: string, enabled: boolean) {
-      await owned('budgets', budgetId);
+      const p = pid();
+      await owned('budgets', budgetId, p);
+      assertProfile(p);
       const now = Date.now();
       await db.runAsync(
         `INSERT INTO budget_preferences(id,budget_id,carry_negative,profile_id,created_at,updated_at) VALUES(?,?,?,?,?,?) ON CONFLICT(profile_id,budget_id) DO UPDATE SET carry_negative=excluded.carry_negative,is_deleted=0,updated_at=excluded.updated_at`,
-        [crypto.randomUUID(), budgetId, Number(enabled), pid(), now, now]
+        [crypto.randomUUID(), budgetId, Number(enabled), p, now, now]
       );
     },
     async getBudgetIncomePlan(month: string) {
@@ -212,7 +287,9 @@ export function createHouseholdBudgetService(
         archived: boolean;
       }
     ) {
-      await owned('categories', categoryId);
+      const p = pid();
+      await owned('categories', categoryId, p);
+      assertProfile(p);
       if (!['needs', 'wants', 'savings'].includes(input.allocationGroup))
         throw new Error('Invalid allocation group');
       const now = Date.now();
@@ -224,7 +301,7 @@ export function createHouseholdBudgetService(
           Number(input.isFixed),
           input.allocationGroup,
           Number(input.archived),
-          pid(),
+          p,
           now,
           now,
         ]
@@ -236,6 +313,7 @@ export function createHouseholdBudgetService(
       const result: Record<string, number> = {};
       for (const [table, column] of [
         ['transactions', 'category_id'],
+        ['transaction_category_decisions', 'category_id'],
         ['budgets', 'category_id'],
         ['category_rules', 'category_id'],
         ['advanced_category_rules', 'category_id'],
@@ -251,12 +329,14 @@ export function createHouseholdBudgetService(
       return result;
     },
     async retireCategory(categoryId: string, replacementId?: string) {
-      await owned('categories', categoryId);
+      const p = pid();
+      await owned('categories', categoryId, p);
+      assertProfile(p);
       if (categoryId === replacementId)
         throw new Error('Choose another category');
-      if (replacementId) await owned('categories', replacementId);
-      const p = pid(),
-        now = Date.now();
+      if (replacementId) await owned('categories', replacementId, p);
+      assertProfile(p);
+      const now = Date.now();
       if (replacementId) {
         const descendants = await db.queryAsync<{ id: string }>(
           `WITH RECURSIVE children(id) AS (SELECT id FROM categories WHERE parent_id=? AND profile_id=? UNION SELECT c.id FROM categories c JOIN children ch ON c.parent_id=ch.id WHERE c.profile_id=?) SELECT id FROM children`,
@@ -266,9 +346,11 @@ export function createHouseholdBudgetService(
           throw new Error('Replacement cannot be a child category');
       }
       await db.transactionAsync(async () => {
+        assertProfile(p);
         if (replacementId)
           for (const [table, column] of [
             ['transactions', 'category_id'],
+            ['transaction_category_decisions', 'category_id'],
             ['budgets', 'category_id'],
             ['category_rules', 'category_id'],
             ['advanced_category_rules', 'category_id'],
@@ -278,35 +360,94 @@ export function createHouseholdBudgetService(
               `UPDATE ${table} SET ${column}=?,updated_at=? WHERE ${column}=? AND profile_id=? AND is_deleted=0`,
               [replacementId, now, categoryId, p]
             );
+        assertProfile(p);
         const existing = (await this.getCategoryPreferences()).find(
           (c) => c.category_id === categoryId
         );
+        assertProfile(p);
         await this.saveCategoryPreference(categoryId, {
           isFixed: !!existing?.is_fixed,
           allocationGroup: existing?.allocation_group ?? 'needs',
           archived: true,
         });
+        assertProfile(p);
       });
     },
     async getBudgetCommitments() {
-      const p=pid(),today=formatDateISO(new Date());
-      const [flows,bills,goals]=await Promise.all([
-        db.queryAsync<{kind:string;amount_cents:number;reserved_cents:number;due_date:string;frequency:'once'|'monthly'|'fourweekly'|'quarterly'|'yearly';recurring_pattern_id:string|null}>('SELECT * FROM planned_cashflows WHERE profile_id=? AND is_deleted=0',[p]),
-        db.queryAsync<{id:string;avg_amount:number;pattern_type:string}>("SELECT id,avg_amount,pattern_type FROM recurring_patterns WHERE profile_id=? AND is_deleted=0 AND is_active=1 AND is_dismissed=0 AND avg_amount<0",[p]),
-        db.queryOneAsync<{total:number}>("SELECT COALESCE(SUM(monthly_contribution),0) total FROM savings_goals g WHERE g.profile_id=? AND g.is_deleted=0 AND NOT EXISTS(SELECT 1 FROM goal_archive_state a WHERE a.goal_id=g.id AND a.profile_id=g.profile_id AND a.archived=1 AND a.is_deleted=0)",[p])
+      const p = pid(),
+        today = formatDateISO(new Date());
+      const [flows, bills, goals] = await Promise.all([
+        db.queryAsync<{
+          kind: string;
+          amount_cents: number;
+          reserved_cents: number;
+          due_date: string;
+          frequency: 'once' | 'monthly' | 'fourweekly' | 'quarterly' | 'yearly';
+          recurring_pattern_id: string | null;
+        }>(
+          'SELECT * FROM planned_cashflows WHERE profile_id=? AND is_deleted=0',
+          [p]
+        ),
+        db.queryAsync<{ id: string; avg_amount: number; pattern_type: string }>(
+          'SELECT id,avg_amount,pattern_type FROM recurring_patterns WHERE profile_id=? AND is_deleted=0 AND is_active=1 AND is_dismissed=0 AND avg_amount<0',
+          [p]
+        ),
+        db.queryOneAsync<{ total: number }>(
+          'SELECT COALESCE(SUM(monthly_contribution),0) total FROM savings_goals g WHERE g.profile_id=? AND g.is_deleted=0 AND NOT EXISTS(SELECT 1 FROM goal_archive_state a WHERE a.goal_id=g.id AND a.profile_id=g.profile_id AND a.archived=1 AND a.is_deleted=0)',
+          [p]
+        ),
       ]);
-      let billsCents=0,reserveCents=0;
-      for(const bill of bills) if(!flows.some(f=>f.kind==='expense'&&f.recurring_pattern_id===bill.id)) billsCents+=Math.round(Math.abs(bill.avg_amount)*100*({weekly:52/12,biweekly:26/12,monthly:1,quarterly:1/3,yearly:1/12}[bill.pattern_type]??1));
-      for(const flow of flows.filter(f=>f.kind==='expense')) {
-        const due=cashflowDates(flow.due_date,flow.frequency,today,addMonthsToDateOnly(today,24))[0];
-        if(!due)continue;
-        if(flow.frequency==='monthly'||flow.frequency==='fourweekly') billsCents+=Math.round(flow.amount_cents*(flow.frequency==='monthly'?1:13/12));
+      let billsCents = 0,
+        reserveCents = 0;
+      for (const bill of bills)
+        if (
+          !flows.some(
+            (f) => f.kind === 'expense' && f.recurring_pattern_id === bill.id
+          )
+        )
+          billsCents += Math.round(
+            Math.abs(bill.avg_amount) *
+              100 *
+              ({
+                weekly: 52 / 12,
+                biweekly: 26 / 12,
+                monthly: 1,
+                quarterly: 1 / 3,
+                yearly: 1 / 12,
+              }[bill.pattern_type] ?? 1)
+          );
+      for (const flow of flows.filter((f) => f.kind === 'expense')) {
+        const due = cashflowDates(
+          flow.due_date,
+          flow.frequency,
+          today,
+          addMonthsToDateOnly(today, 24)
+        )[0];
+        if (!due) continue;
+        if (flow.frequency === 'monthly' || flow.frequency === 'fourweekly')
+          billsCents += Math.round(
+            flow.amount_cents * (flow.frequency === 'monthly' ? 1 : 13 / 12)
+          );
         else {
-          const months=Math.max(1,Math.ceil((Date.parse(due+'T00:00:00Z')-Date.parse(today+'T00:00:00Z'))/86400000/30.4375));
-          reserveCents+=Math.ceil(Math.max(0,flow.amount_cents-flow.reserved_cents)/months);
+          const months = Math.max(
+            1,
+            Math.ceil(
+              (Date.parse(due + 'T00:00:00Z') -
+                Date.parse(today + 'T00:00:00Z')) /
+                86400000 /
+                30.4375
+            )
+          );
+          reserveCents += Math.ceil(
+            Math.max(0, flow.amount_cents - flow.reserved_cents) / months
+          );
         }
       }
-      return {bills:billsCents/100,reserves:reserveCents/100,goals:round(goals?.total??0)};
+      return {
+        bills: billsCents / 100,
+        reserves: reserveCents / 100,
+        goals: round(goals?.total ?? 0),
+      };
     },
     async getMonthlyBudgetSuggestions(months: 3 | 6 | 12 = 3) {
       if (![3, 6, 12].includes(months)) throw new Error('Invalid baseline');
@@ -336,8 +477,11 @@ export function createHouseholdBudgetService(
       );
     },
     async createAdvancedCategoryRule(input: AdvancedRuleInput) {
-      await owned('categories', input.categoryId);
-      if (input.accountId) await owned('accounts', input.accountId);
+      const p = pid();
+      await owned('categories', input.categoryId, p);
+      assertProfile(p);
+      if (input.accountId) await owned('accounts', input.accountId, p);
+      assertProfile(p);
       if (
         !input.pattern.trim() ||
         input.pattern.length > 200 ||
@@ -347,10 +491,12 @@ export function createHouseholdBudgetService(
       )
         throw new Error('Invalid rule');
       if (input.matchMode === 'regex') {
-        if(!isSafeRulePattern(input.pattern))throw new Error('Unsupported complex expression');
-        new RegExp(input.pattern,'iu');
+        if (!isSafeRulePattern(input.pattern))
+          throw new Error('Unsupported complex expression');
+        new RegExp(input.pattern, 'iu');
       }
-      if(!Number.isFinite(input.priority)||!Number.isInteger(input.priority))throw new Error('Invalid priority');
+      if (!Number.isFinite(input.priority) || !Number.isInteger(input.priority))
+        throw new Error('Invalid priority');
       for (const amount of [input.minimumAmount, input.maximumAmount])
         if (amount != null && (!Number.isFinite(amount) || amount < 0))
           throw new Error('Invalid amount');
@@ -375,7 +521,7 @@ export function createHouseholdBudgetService(
           input.accountId ?? null,
           input.categoryId,
           input.priority,
-          pid(),
+          p,
           now,
           now,
         ]

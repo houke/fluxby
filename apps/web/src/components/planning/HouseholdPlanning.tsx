@@ -18,6 +18,7 @@ import { getDataService } from '@/lib/db-singleton';
 import {
   WEEKLY_CHECKS,
   cashflowDates,
+  weekStart,
   type CashflowInput,
   type PlannedCashflow,
 } from '@/lib/data/household-planning';
@@ -30,6 +31,8 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
+import { FormSelect } from '@/components/ui/form-select';
 import { Currency } from '@/components/ui/currency';
 import {
   Dialog,
@@ -39,6 +42,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { TransitionLink } from '@/components/layout/TransitionLink';
+import { AccountFreshness } from '@/components/import/AccountFreshness';
 const today = () => formatDateISO(new Date());
 const emptyFlow = (): CashflowInput => ({
   name: '',
@@ -49,8 +53,6 @@ const emptyFlow = (): CashflowInput => ({
   reserved: 0,
   recurringPatternId: null,
 });
-const selectClass =
-  'h-10 w-full rounded-md border border-input bg-background px-3 text-sm';
 
 export function HouseholdPlanning() {
   const { t, language } = useLanguage(),
@@ -63,7 +65,7 @@ export function HouseholdPlanning() {
     key = ['household-planning', activeProfileId];
   const [horizon, setHorizon] = useState<30 | 60 | 90>(30),
     [variable, setVariable] = useState('0'),
-    [week, setWeek] = useState(today());
+    [week, setWeek] = useState(weekStart(today()));
   const [editor, setEditor] = useState<PlannedCashflow | null | undefined>(
       undefined
     ),
@@ -149,14 +151,11 @@ export function HouseholdPlanning() {
       today(),
       addDaysToDateOnly(today(), 366)
     )[0];
-    const months = next
-      ? Math.max(
-          1,
-          Math.ceil(
-            (Date.parse(next) - Date.parse(today())) / 86400000 / 30.4375
-          )
-        )
-      : 1;
+    if (!next) return 0;
+    const months = Math.max(
+      1,
+      Math.ceil((Date.parse(next) - Date.parse(today())) / 86400000 / 30.4375)
+    );
     return (
       Math.ceil(
         Math.max(
@@ -173,7 +172,8 @@ export function HouseholdPlanning() {
     review.isError ||
     goals.isError ||
     bills.isError ||
-    links.isError;
+    links.isError ||
+    sources.isError;
   return (
     <section
       className='space-y-6'
@@ -185,16 +185,16 @@ export function HouseholdPlanning() {
         <p className='text-sm text-muted-foreground'>{p.intro}</p>
       </div>
       {hasError && (
-        <p role='alert' className='text-destructive'>
+        <p role='alert' className='text-destructive dark:text-red-400'>
           {p.failed}
         </p>
       )}
-      <Card>
-        <CardHeader>
-          <CardTitle>{p.cashflows}</CardTitle>
+      <Card className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'>
+        <CardHeader className='px-3 sm:px-6'>
+          <CardTitle className='text-base sm:text-lg'>{p.cashflows}</CardTitle>
           <CardDescription>{p.reserveHelp}</CardDescription>
         </CardHeader>
-        <CardContent className='space-y-4'>
+        <CardContent className='space-y-4 px-3 sm:px-6'>
           <Button onClick={() => open(null)}>{p.add}</Button>
           {!flows.data?.length && (
             <p className='text-sm text-muted-foreground'>{p.empty}</p>
@@ -227,6 +227,7 @@ export function HouseholdPlanning() {
                 </Button>
                 <Button
                   variant='outline'
+                  className='text-destructive hover:bg-red-600 hover:text-white dark:text-red-400 dark:hover:bg-red-700 dark:hover:text-white'
                   disabled={change.isPending}
                   onClick={async () => {
                     if (
@@ -248,27 +249,27 @@ export function HouseholdPlanning() {
           ))}
         </CardContent>
       </Card>
-      <Card data-onboarding='daily-forecast'>
-        <CardHeader>
-          <CardTitle>{p.forecast}</CardTitle>
+      <AccountFreshness />
+      <Card
+        data-onboarding='daily-forecast'
+        className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'
+      >
+        <CardHeader className='px-3 sm:px-6'>
+          <CardTitle className='text-base sm:text-lg'>{p.forecast}</CardTitle>
         </CardHeader>
-        <CardContent className='space-y-4'>
+        <CardContent className='space-y-4 px-3 sm:px-6'>
           <div className='grid gap-4 sm:grid-cols-2'>
-            <label className='space-y-1 text-sm'>
+            <label className='block space-y-2 text-sm font-medium'>
               {p.horizon}
-              <select
-                className={selectClass}
-                value={horizon}
-                onChange={(e) =>
-                  setHorizon(Number(e.target.value) as 30 | 60 | 90)
-                }
-              >
-                {([30, 60, 90] as const).map((days) => (
-                  <option key={days} value={days}>
-                    {days} {p.days}
-                  </option>
-                ))}
-              </select>
+              <FormSelect
+                label={p.horizon}
+                value={String(horizon)}
+                onChange={(value) => setHorizon(Number(value) as 30 | 60 | 90)}
+                options={[30, 60, 90].map((days) => ({
+                  value: String(days),
+                  label: `${days} ${p.days}`,
+                }))}
+              />
             </label>
             <form
               className='flex items-end gap-2'
@@ -279,7 +280,7 @@ export function HouseholdPlanning() {
                 );
               }}
             >
-              <label className='flex-1 space-y-1 text-sm'>
+              <label className='flex-1 space-y-2 text-sm font-medium'>
                 {p.variableDaily}
                 <Input
                   type='number'
@@ -435,12 +436,12 @@ export function HouseholdPlanning() {
           )}
         </CardContent>
       </Card>
-      <Card>
-        <CardHeader>
-          <CardTitle>{p.history}</CardTitle>
+      <Card className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'>
+        <CardHeader className='px-3 sm:px-6'>
+          <CardTitle className='text-base sm:text-lg'>{p.history}</CardTitle>
           <CardDescription>{p.captureHelp}</CardDescription>
         </CardHeader>
-        <CardContent className='space-y-4'>
+        <CardContent className='space-y-4 px-3 sm:px-6'>
           <Button
             disabled={change.isPending}
             onClick={() =>
@@ -490,19 +491,22 @@ export function HouseholdPlanning() {
           )}
         </CardContent>
       </Card>
-      <Card data-onboarding='weekly-review'>
-        <CardHeader>
-          <CardTitle>{p.weekly}</CardTitle>
+      <Card
+        data-onboarding='weekly-review'
+        className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'
+      >
+        <CardHeader className='px-3 sm:px-6'>
+          <CardTitle className='text-base sm:text-lg'>{p.weekly}</CardTitle>
         </CardHeader>
-        <CardContent className='space-y-3'>
-          <label className='block max-w-xs space-y-1 text-sm'>
+        <CardContent className='space-y-3 px-3 sm:px-6'>
+          <label className='block max-w-xs space-y-2 text-sm font-medium'>
             {p.week}
             <Input
               type='date'
               value={week}
               max={today()}
               onChange={(e) => {
-                if (e.target.value) setWeek(e.target.value);
+                if (e.target.value) setWeek(weekStart(e.target.value));
               }}
             />
           </label>
@@ -515,18 +519,18 @@ export function HouseholdPlanning() {
               className='flex items-center justify-between gap-3'
             >
               <label className='flex items-center gap-2'>
-                <input
-                  type='checkbox'
+                <Checkbox
                   disabled={change.isPending || !review.data}
                   checked={review.data?.checks[check] ?? false}
-                  onChange={(e) =>
+                  onChange={(e) => {
+                    const checks = {
+                      ...review.data?.checks,
+                      [check]: e.target.checked,
+                    };
                     change.mutate(() =>
-                      getDataService().updateWeeklyReview(week, {
-                        ...review.data?.checks,
-                        [check]: e.target.checked,
-                      })
-                    )
-                  }
+                      getDataService().updateWeeklyReview(week, checks)
+                    );
+                  }}
                 />
                 {p[check]}
               </label>
@@ -547,12 +551,12 @@ export function HouseholdPlanning() {
           ))}
         </CardContent>
       </Card>
-      <Card>
-        <CardHeader>
-          <CardTitle>{p.goals}</CardTitle>
+      <Card className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'>
+        <CardHeader className='px-3 sm:px-6'>
+          <CardTitle className='text-base sm:text-lg'>{p.goals}</CardTitle>
           <CardDescription>{p.contributionHelp}</CardDescription>
         </CardHeader>
-        <CardContent className='space-y-4'>
+        <CardContent className='space-y-4 px-3 sm:px-6'>
           {goals.data?.map((goal) => (
             <div key={goal.id} className='rounded-md border p-3'>
               <div className='flex flex-wrap items-start justify-between gap-2'>
@@ -649,7 +653,7 @@ export function HouseholdPlanning() {
             <DialogDescription>{p.reserveHelp}</DialogDescription>
           </DialogHeader>
           <form className='space-y-3' onSubmit={saveFlow}>
-            <label className='block space-y-1 text-sm'>
+            <label className='block space-y-2 text-sm font-medium'>
               {p.name}
               <Input
                 required
@@ -658,26 +662,27 @@ export function HouseholdPlanning() {
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
               />
             </label>
-            <div className='grid grid-cols-2 gap-3'>
-              <label className='space-y-1 text-sm'>
+            <div className='grid gap-3 sm:grid-cols-2'>
+              <label className='block space-y-2 text-sm font-medium'>
                 {p.kind}
-                <select
-                  className={selectClass}
+                <FormSelect
+                  label={p.kind}
                   value={form.kind}
-                  onChange={(e) =>
+                  onChange={(value) =>
                     setForm({
                       ...form,
-                      kind: e.target.value as 'income' | 'expense',
+                      kind: value as 'income' | 'expense',
                       reserved: 0,
                       recurringPatternId: null,
                     })
                   }
-                >
-                  <option value='income'>{p.income}</option>
-                  <option value='expense'>{p.expense}</option>
-                </select>
+                  options={[
+                    { value: 'income', label: p.income },
+                    { value: 'expense', label: p.expense },
+                  ]}
+                />
               </label>
-              <label className='space-y-1 text-sm'>
+              <label className='block space-y-2 text-sm font-medium'>
                 {p.amount}
                 <Input
                   required
@@ -691,8 +696,8 @@ export function HouseholdPlanning() {
                 />
               </label>
             </div>
-            <div className='grid grid-cols-2 gap-3'>
-              <label className='space-y-1 text-sm'>
+            <div className='grid gap-3 sm:grid-cols-2'>
+              <label className='block space-y-2 text-sm font-medium'>
                 {p.dueDate}
                 <Input
                   required
@@ -703,19 +708,18 @@ export function HouseholdPlanning() {
                   }
                 />
               </label>
-              <label className='space-y-1 text-sm'>
+              <label className='block space-y-2 text-sm font-medium'>
                 {p.frequency}
-                <select
-                  className={selectClass}
+                <FormSelect
+                  label={p.frequency}
                   value={form.frequency}
-                  onChange={(e) =>
+                  onChange={(value) =>
                     setForm({
                       ...form,
-                      frequency: e.target.value as CashflowInput['frequency'],
+                      frequency: value as CashflowInput['frequency'],
                     })
                   }
-                >
-                  {(
+                  options={(
                     [
                       'once',
                       'monthly',
@@ -723,17 +727,16 @@ export function HouseholdPlanning() {
                       'quarterly',
                       'yearly',
                     ] as const
-                  ).map((frequency) => (
-                    <option key={frequency} value={frequency}>
-                      {p[frequency]}
-                    </option>
-                  ))}
-                </select>
+                  ).map((frequency) => ({
+                    value: frequency,
+                    label: p[frequency],
+                  }))}
+                />
               </label>
             </div>
             {form.kind === 'expense' && (
               <>
-                <label className='block space-y-1 text-sm'>
+                <label className='block space-y-2 text-sm font-medium'>
                   {p.reserved}
                   <Input
                     type='number'
@@ -747,25 +750,22 @@ export function HouseholdPlanning() {
                     }
                   />
                 </label>
-                <label className='block space-y-1 text-sm'>
+                <label className='block space-y-2 text-sm font-medium'>
                   {p.recurringBill}
-                  <select
-                    className={selectClass}
+                  <FormSelect
+                    label={p.recurringBill}
                     value={form.recurringPatternId ?? ''}
-                    onChange={(e) =>
-                      setForm({
-                        ...form,
-                        recurringPatternId: e.target.value || null,
-                      })
+                    onChange={(value) =>
+                      setForm({ ...form, recurringPatternId: value || null })
                     }
-                  >
-                    <option value=''>{p.noBill}</option>
-                    {bills.data?.map((bill) => (
-                      <option key={bill.id} value={bill.id}>
-                        {bill.name}
-                      </option>
-                    ))}
-                  </select>
+                    options={[
+                      { value: '', label: p.noBill },
+                      ...(bills.data ?? []).map((bill) => ({
+                        value: bill.id,
+                        label: bill.name,
+                      })),
+                    ]}
+                  />
                 </label>
                 <p className='text-sm text-muted-foreground'>
                   {p.duplicateHelp}
@@ -813,38 +813,34 @@ export function HouseholdPlanning() {
                 });
             }}
           >
-            <label className='block space-y-1 text-sm'>
+            <label className='block space-y-2 text-sm font-medium'>
               {p.transaction}
-              <select
-                className={selectClass}
+              <FormSelect
+                label={p.transaction}
                 required
+                disabled={sources.isPending}
                 value={transactionId}
-                onChange={(e) => {
-                  setTransactionId(e.target.value);
+                onChange={(value) => {
+                  setTransactionId(value);
                   setContribution(
                     String(
                       Math.abs(
-                        sources.data?.find(
-                          (source) => source.id === e.target.value
-                        )?.amount ?? 0
+                        sources.data?.find((source) => source.id === value)
+                          ?.amount ?? 0
                       )
                     )
                   );
                 }}
-              >
-                <option value=''>{p.selectTransaction}</option>
-                {sources.data?.map((source) => (
-                  <option key={source.id} value={source.id}>
-                    {dateLabel(source.date)} · {source.description} ·{' '}
-                    {source.amount.toLocaleString(locale, {
-                      style: 'currency',
-                      currency: 'EUR',
-                    })}
-                  </option>
-                ))}
-              </select>
+                options={[
+                  { value: '', label: p.selectTransaction },
+                  ...(sources.data ?? []).map((source) => ({
+                    value: source.id,
+                    label: `${dateLabel(source.date)} · ${source.description} · ${source.amount.toLocaleString(locale, { style: 'currency', currency: 'EUR' })}`,
+                  })),
+                ]}
+              />
             </label>
-            <label className='block space-y-1 text-sm'>
+            <label className='block space-y-2 text-sm font-medium'>
               {p.amount}
               <Input
                 type='number'

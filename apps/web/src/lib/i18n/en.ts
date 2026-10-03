@@ -173,7 +173,7 @@ export const en: TranslationKeys = {
     finish: 'Finish',
     next: 'Next',
     settings: {
-      title: 'Onboarding Tour',
+      title: 'Onboarding tour',
       progress: 'Progress',
       completed: 'Completed',
       notStarted: 'Not started',
@@ -429,7 +429,7 @@ export const en: TranslationKeys = {
   transactions: {
     title: 'Transactions',
     subtitle: 'Manage your income and expenses',
-    allTransactions: 'All Transactions',
+    allTransactions: 'All transactions',
     transactionsFound: 'transactions found',
     searchPlaceholder: 'Search by description, IBAN or category...',
     income: 'Income',
@@ -728,7 +728,7 @@ export const en: TranslationKeys = {
     noBudgets: 'No budgets set yet',
     createFirst: 'Create your first budget to track your spending',
     deleteBudget: 'Delete Budget',
-    monthlyOverview: 'Monthly Overview',
+    monthlyOverview: 'Monthly overview',
     budgetsSet: 'budgets set',
     addNewBudget: 'Add new budget',
     totalBudget: 'Total budget',
@@ -1115,9 +1115,9 @@ export const en: TranslationKeys = {
       manageProfiles: 'Manage profiles',
       appSettings: 'App settings',
     },
-    appSettings: 'App Settings',
+    appSettings: 'App settings',
     appSettingsDescription: 'Manage language, appearance and app preferences',
-    versions: 'Versions & Updates',
+    versions: 'Versions and updates',
     versionsDescription: 'App versions and software updates',
     language: 'Language',
     languageDescription: 'Choose the interface language',
@@ -1132,6 +1132,8 @@ export const en: TranslationKeys = {
     appNameDescription: 'Used in the greeting',
     appNamePlaceholder: 'Your name...',
     appNameUnset: 'Not set',
+    appNameSaved: 'Name saved',
+    appNameSaveError: 'Your name could not be saved. Try again.',
     masterPasswordTitle: 'Master password',
     masterPasswordDescription: 'Encrypts all your financial data locally',
     masterPasswordDialogTitle: 'Change master password',
@@ -1633,10 +1635,10 @@ export const en: TranslationKeys = {
     subtitle: 'Learn how to make the most of the Financial Dashboard',
     features: 'Features',
     featuresDescription: 'An overview of all available features in the app',
-    quickStart: 'Quick Start',
+    quickStart: 'Quick start',
     quickStartDescription: 'Get started in 3 steps',
-    faq: 'Frequently Asked Questions',
-    needHelp: 'Need Help?',
+    faq: 'Frequently asked questions',
+    needHelp: 'Need help?',
     needHelpDescription:
       'Have a question not in the FAQ? Check out our documentation or get in touch with us.',
     externalLinks: 'More information',
@@ -1646,12 +1648,12 @@ export const en: TranslationKeys = {
     developerDocsLink: 'Developer documentation',
     featureList: [
       {
-        title: 'Import Transactions',
+        title: 'Import transactions',
         description:
           'Upload your bank CSV export to import transactions. The app automatically recognizes accounts and categorizes transactions.',
       },
       {
-        title: 'View Transactions',
+        title: 'View transactions',
         description:
           'View, filter and search through all your transactions. Adjust categories and add notes.',
       },
@@ -1676,7 +1678,7 @@ export const en: TranslationKeys = {
           'Manage your bank accounts and view current balances per account.',
       },
       {
-        title: 'Address Book',
+        title: 'Address book',
         description:
           'Manage your contacts and keep track of people and businesses you transact with.',
       },

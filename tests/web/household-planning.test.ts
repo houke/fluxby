@@ -83,6 +83,101 @@ const expense = {
   recurringPatternId: null,
 };
 describe('household cashflow planning', () => {
+  it('rejects a profile switch during goal-link validation without creating a contribution', async () => {
+    const goal = await base.createSavingsGoal({
+      name: 'Holiday',
+      targetAmount: 1000,
+    });
+    const db = adapter();
+    const query = db.queryOneAsync;
+    let release!: () => void;
+    let validated!: () => void;
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const ready = new Promise<void>((resolve) => {
+      validated = resolve;
+    });
+    db.queryOneAsync = async <T>(
+      sql: string,
+      params: unknown[] = []
+    ): Promise<T | null> => {
+      const row = await query<T>(sql, params);
+      if (sql.startsWith('SELECT id FROM savings_goals')) {
+        validated();
+        await gate;
+      }
+      return row;
+    };
+    const guarded = createHouseholdPlanningService(db, () => pid);
+    const action = guarded.addGoalTransactionContribution(
+      goal.id,
+      'income',
+      50
+    );
+    await ready;
+    pid = 'other';
+    release();
+    await expect(action).rejects.toThrow('Active profile changed');
+    expect(
+      sqlite.prepare('SELECT COUNT(*) count FROM goal_transaction_links').get()
+    ).toEqual({ count: 0 });
+  });
+  it('rolls back a contribution if the active profile switches during the write', async () => {
+    const goal = await base.createSavingsGoal({
+      name: 'Holiday',
+      targetAmount: 1000,
+    });
+    const db = adapter();
+    const run = db.runAsync;
+    db.runAsync = async (sql, params) => {
+      const result = await run(sql, params);
+      if (sql.includes('INSERT INTO goal_transaction_links')) pid = 'other';
+      return result;
+    };
+    const guarded = createHouseholdPlanningService(db, () => pid);
+    await expect(
+      guarded.addGoalTransactionContribution(goal.id, 'income', 50)
+    ).rejects.toThrow('Active profile changed');
+    expect(
+      sqlite.prepare('SELECT COUNT(*) count FROM goal_transaction_links').get()
+    ).toEqual({ count: 0 });
+  });
+  it('does not count both halves of a paired savings transfer twice across goals', async () => {
+    sqlite.exec(`INSERT INTO transactions(id,date,amount,type,account_id,profile_id) VALUES('out','2026-01-01',-200,'transfer','account','profile'),('in','2026-01-01',200,'transfer','investment','profile');
+    INSERT INTO transaction_links(id,source_id,target_id,kind,relation_type,amount,profile_id,created_at,updated_at) VALUES('pair','out','in','transfer','transfer',200,'profile',0,0);`);
+    const goal = await base.createSavingsGoal({
+      name: 'Holiday',
+      targetAmount: 1000,
+    });
+    const second = await base.createSavingsGoal({
+      name: 'Buffer',
+      targetAmount: 1000,
+    });
+    await service.addGoalTransactionContribution(goal.id, 'out', 150);
+    await expect(
+      service.addGoalTransactionContribution(goal.id, 'in', 51)
+    ).rejects.toThrow('exceeds');
+    await expect(
+      service.addGoalTransactionContribution(second.id, 'in', 51)
+    ).rejects.toThrow('exceeds');
+    await service.addGoalTransactionContribution(second.id, 'in', 50);
+    await service.addGoalTransactionContribution(goal.id, 'out', 140);
+    expect(
+      (await service.getSavingsGoals()).reduce(
+        (sum, item) => sum + item.currentAmount,
+        0
+      )
+    ).toBe(190);
+  });
+  it('keeps four-week income dates stable through Amsterdam daylight-saving boundaries', () => {
+    expect(
+      cashflowDates('2026-03-01', 'fourweekly', '2026-03-01', '2026-04-27')
+    ).toEqual(['2026-03-01', '2026-03-29', '2026-04-26']);
+    expect(
+      cashflowDates('2026-10-04', 'fourweekly', '2026-10-04', '2026-11-02')
+    ).toEqual(['2026-10-04', '2026-11-01']);
+  });
   it('anchors calendar months and Dutch four-week pay across month boundaries', () => {
     expect(
       cashflowDates('2026-01-31', 'monthly', '2026-01-01', '2026-04-01')

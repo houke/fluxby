@@ -9,7 +9,10 @@ const nl = {
   recoveryTitle: 'Herstellen na een import',
   recovery:
     'Fluxby bewaart maximaal drie lokale herstelbestanden van vóór een import. Onder Herstel en import ongedaan maken kun je een herstelbestand downloaden. Open daarna Instellingen → Back-up om het bestand te herstellen. Een herstelbestand bevat alle profielen en vervangt de financiële gegevens bij herstel.',
-  undo: 'Import ongedaan maken verwijdert alleen transacties uit de gekozen import en berekent saldi opnieuw. Later gewijzigde transacties blokkeren deze actie, zodat bewerkingen niet stil verdwijnen. Categorieën en contacten worden behouden. Bij Actualiteit per rekening zie je wanneer een rekening voor het laatst is geïmporteerd en wat de nieuwste transactiedatum is.',
+  undo: 'Import ongedaan maken verwijdert alleen transacties uit de gekozen import en berekent saldi opnieuw. Later gewijzigde transacties of handmatig aangepaste saldi blokkeren deze actie, zodat bewerkingen niet stil verdwijnen. Als opeenvolgende imports banksaldi bevatten, maak je de nieuwste import eerst ongedaan. Categorieën en contacten worden behouden. Bij Actualiteit per rekening zie je wanneer een rekening voor het laatst is geïmporteerd en wat de nieuwste transactiedatum is.',
+  freshnessTitle: 'Controleren hoe actueel je saldo is',
+  freshness:
+    'Op het dashboard, bij de dagelijkse prognose en bij Import zie je de actualiteit per rekening. Tot en met 7 dagen is het saldo actueel, tot en met 30 dagen verouderend en daarna verouderd. De oudste van de importtijd en de laatste geïmporteerde transactiedatum bepaalt deze status. Een oud afschrift vandaag uploaden maakt het saldo dus niet actueel. Handmatige transacties en synchronisatie tussen apparaten tellen niet als nieuwe bankgegevens. Bij Nog geen import is er geen geïmporteerde transactie voor deze rekening.',
 };
 const en: typeof nl = {
   title: 'Import profiles and Dutch bank files',
@@ -22,6 +25,9 @@ const en: typeof nl = {
   recoveryTitle: 'Recovering after an import',
   recovery:
     'Fluxby keeps up to three local recovery files from before an import. Download a recovery file under Recovery and import undo. Then open Settings → Backup to restore the file. A recovery file contains all profiles and replaces financial data when restored.',
-  undo: 'Undo import removes only transactions from the selected import and recalculates balances. Subsequent transaction edits block the action, so those changes cannot silently disappear. Categories and contacts are retained. Account freshness shows when an account was last imported and its latest transaction date.',
+  undo: 'Undo import removes only transactions from the selected import and recalculates balances. Subsequent transaction edits or manual balance corrections block the action, so those changes cannot silently disappear. When successive imports contain bank balances, undo the newest import first. Categories and contacts are retained. Account freshness shows when an account was last imported and its latest transaction date.',
+  freshnessTitle: 'Check how current your balance is',
+  freshness:
+    'The dashboard, daily forecast and Import show account freshness. A balance is fresh through 7 days, aging through 30 days and stale afterwards. The older of the import time and latest imported transaction date determines this status. Uploading an old statement today does not make the balance fresh. Manual transactions and device synchronization do not count as new bank data. No import yet means this account has no imported transaction.',
 };
 export const importWorkflowHelp = { nl, en };

@@ -66,6 +66,108 @@ afterEach(() => {
   vi.useRealTimers();
 });
 describe('household budgets', () => {
+  it('rejects a profile switch while suggestion ownership validation is awaiting the database', async () => {
+    const db = adapter();
+    const query = db.queryOneAsync;
+    let release!: () => void;
+    let validated!: () => void;
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const ready = new Promise<void>((resolve) => {
+      validated = resolve;
+    });
+    db.queryOneAsync = async <T>(sql: string, params: unknown[] = []) => {
+      const row = await query<T>(sql, params);
+      if (sql.startsWith('SELECT id FROM categories')) {
+        validated();
+        await gate;
+      }
+      return row;
+    };
+    const guarded = createHouseholdBudgetService(db, () => pid);
+    const action = guarded.applyMonthlyBudgetSuggestion('other', '2026-02', 50);
+    await ready;
+    pid = 'q';
+    release();
+    await expect(action).rejects.toThrow('Active profile changed');
+    expect(
+      sqlite
+        .prepare("SELECT COUNT(*) count FROM budgets WHERE category_id='other'")
+        .get()
+    ).toEqual({ count: 0 });
+  });
+  it('rolls back a newly created envelope when its profile switches before the override write', async () => {
+    const db = adapter();
+    const run = db.runAsync;
+    db.runAsync = async (sql, params) => {
+      const result = await run(sql, params);
+      if (sql.startsWith('INSERT INTO budgets')) pid = 'q';
+      return result;
+    };
+    const guarded = createHouseholdBudgetService(db, () => pid);
+    await expect(
+      guarded.applyMonthlyBudgetSuggestion('other', '2026-02', 50)
+    ).rejects.toThrow('Active profile changed');
+    expect(
+      sqlite
+        .prepare("SELECT COUNT(*) count FROM budgets WHERE category_id='other'")
+        .get()
+    ).toEqual({ count: 0 });
+    expect(
+      sqlite.prepare('SELECT COUNT(*) count FROM budget_months').get()
+    ).toEqual({ count: 0 });
+  });
+  it('applies a suggestion to the chosen month without changing yearly budgets or future defaults', async () => {
+    sqlite.exec(
+      "INSERT INTO budgets(id,category_id,amount,period,profile_id) VALUES('yearly','other',1200,'yearly','p')"
+    );
+    const id = await service.applyMonthlyBudgetSuggestion(
+      'other',
+      '2025-11',
+      80
+    );
+    expect(
+      (await full.getBudgets('2025-11')).find((budget) => budget.id === id)
+    ).toMatchObject({
+      amount: 80,
+      baseAmount: 0,
+      period: 'monthly',
+      startDate: '2025-11-01',
+    });
+    expect(
+      (await full.getBudgets('2025-12')).find((budget) => budget.id === id)
+        ?.amount
+    ).toBe(0);
+    expect(
+      (await full.getBudgets('2025-11')).find(
+        (budget) => budget.id === 'yearly'
+      )?.amount
+    ).toBe(1200);
+    expect(
+      await service.applyMonthlyBudgetSuggestion('other', '2025-11', 90)
+    ).toBe(id);
+    expect(
+      (await full.getBudgets('2025-11')).find((budget) => budget.id === id)
+        ?.amount
+    ).toBe(90);
+  });
+  it('keeps existing recurring defaults when applying a monthly suggestion and rejects foreign categories', async () => {
+    expect(
+      await service.applyMonthlyBudgetSuggestion('food', '2026-02', 50)
+    ).toBe('b');
+    expect((await full.getBudgets('2026-02'))[0]).toMatchObject({
+      amount: 50,
+      baseAmount: 100,
+    });
+    expect((await full.getBudgets('2026-03'))[0].baseAmount).toBe(100);
+    await expect(
+      service.applyMonthlyBudgetSuggestion('foreign', '2026-02', 50)
+    ).rejects.toThrow();
+    await expect(
+      service.applyMonthlyBudgetSuggestion('food', '2026-02', NaN)
+    ).rejects.toThrow();
+  });
   it('preserves base budget and other months while copying prior overrides', async () => {
     await service.setBudgetMonth('b', '2026-02', 130);
     await service.copyPreviousBudgetMonth('2026-03');
@@ -91,6 +193,42 @@ describe('household budgets', () => {
       amount: 130,
     });
   });
+  it('resets deficit carry at an unallocated month and starts the next envelope without old spending', async () => {
+    await service.setBudgetNegativeRollover('b', true);
+    await service.setBudgetMonth('b', '2026-02', 0);
+    sqlite.exec(
+      "INSERT INTO transactions(id,date,amount,type,account_id,category_id,profile_id) VALUES('unallocated-spend','2026-02-10',-50,'expense','a','food','p')"
+    );
+    expect((await full.getBudgets('2026-02'))[0]).toMatchObject({
+      carryover: 0,
+      amount: 0,
+      spent: 50,
+    });
+    expect((await full.getBudgets('2026-03'))[0]).toMatchObject({
+      carryover: 0,
+      amount: 100,
+    });
+    expect(
+      (await full.getBudgets(undefined, '2026-02-01', '2026-03-31'))[0]
+    ).toMatchObject({ carryover: 0, amount: 100 });
+  });
+  it('preserves the existing surplus-only policy while opt-in carry-both resets at zero', async () => {
+    sqlite.exec("UPDATE transactions SET amount=-20 WHERE id='e'");
+    await service.setBudgetMonth('b', '2026-02', 0);
+    expect((await full.getBudgets('2026-02'))[0]).toMatchObject({
+      carryover: 80,
+      amount: 80,
+    });
+    await service.setBudgetNegativeRollover('b', true);
+    expect((await full.getBudgets('2026-02'))[0]).toMatchObject({
+      carryover: 0,
+      amount: 0,
+    });
+    expect((await full.getBudgets('2026-03'))[0]).toMatchObject({
+      carryover: 0,
+      amount: 100,
+    });
+  });
   it('reduces spending in original period, income in repayment period, but keeps bank balance', async () => {
     await full.createTransactionLink({
       sourceId: 'r',
@@ -105,6 +243,7 @@ describe('household budgets', () => {
     expect((await full.getAccounts())[0].currentBalance).toBe(1000);
   });
   it('archives and moves references transactionally with profile checks', async () => {
+    await full.updateTransaction('e', { categoryId: 'food' });
     await expect(service.retireCategory('food', 'foreign')).rejects.toThrow();
     expect((await service.getCategoryReferences('food')).transactions).toBe(1);
     await service.retireCategory('food', 'other');
@@ -115,6 +254,10 @@ describe('household budgets', () => {
       true
     );
     expect((await service.getCategoryReferences('other')).transactions).toBe(1);
+    expect(
+      (await service.getCategoryReferences('other'))
+        .transaction_category_decisions
+    ).toBe(1);
   });
   it('uses monthly totals over completed months, including zero-spend months', async () => {
     vi.useFakeTimers();

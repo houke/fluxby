@@ -3,6 +3,7 @@
 // Note: Language, name, and password setup are handled by SecuritySetup component before onboarding
 
 import type { OnboardingChapter } from './types';
+import { importToolsTranslations } from '@/lib/i18n/import-tools';
 
 export const onboardingChapters: OnboardingChapter[] = [
   // ==========================================================================
@@ -190,6 +191,19 @@ export const onboardingChapters: OnboardingChapter[] = [
           en: 'Here you can see the balance of all your bank accounts: checking, savings, and credit card.\n\nYour accounts are automatically created when importing transactions, or you can add them manually via Settings → Accounts.',
         },
         selector: '[data-onboarding="dashboard-accounts"]',
+        placement: 'bottom',
+      },
+      {
+        id: 'dashboard-freshness',
+        title: {
+          nl: importToolsTranslations.nl.freshness,
+          en: importToolsTranslations.en.freshness,
+        },
+        content: {
+          nl: importToolsTranslations.nl.freshnessHelp,
+          en: importToolsTranslations.en.freshnessHelp,
+        },
+        selector: '[data-onboarding="account-freshness"]',
         placement: 'bottom',
       },
       {
@@ -914,6 +928,19 @@ export const onboardingChapters: OnboardingChapter[] = [
           en: 'Open this tab for monthly or four-week income, annual reserves, a daily forecast and your weekly review.',
         },
         selector: '[data-onboarding="household-planning-tab"]',
+        placement: 'bottom',
+      },
+      {
+        id: 'planning-freshness',
+        title: {
+          nl: importToolsTranslations.nl.freshness,
+          en: importToolsTranslations.en.freshness,
+        },
+        content: {
+          nl: importToolsTranslations.nl.freshnessHelp,
+          en: importToolsTranslations.en.freshnessHelp,
+        },
+        selector: '[data-onboarding="account-freshness"]',
         placement: 'bottom',
       },
       {

@@ -153,6 +153,9 @@ export function createHouseholdPlanningService(
     if (!pid) throw new Error('No active profile');
     return pid;
   };
+  const assertProfile = (pid: string) => {
+    if (currentProfileId() !== pid) throw new Error('Active profile changed');
+  };
   const service = {
     async getPlanningRecurringBills() {
       return db.queryAsync<{ id: string; name: string }>(
@@ -189,6 +192,7 @@ export function createHouseholdPlanningService(
       )
         throw new Error('Invalid amount');
       await db.transactionAsync(async () => {
+        assertProfile(pid);
         if (input.recurringPatternId) {
           const pattern = await db.queryOneAsync(
             'SELECT id FROM recurring_patterns WHERE id=? AND profile_id=? AND is_deleted=0',
@@ -201,6 +205,7 @@ export function createHouseholdPlanningService(
             [input.recurringPatternId, pid, id ?? '']
           );
           if (duplicate) throw new Error('Bill already has a plan');
+          assertProfile(pid);
         }
         if (id) {
           const existing = await db.queryOneAsync(
@@ -208,6 +213,7 @@ export function createHouseholdPlanningService(
             [id, pid]
           );
           if (!existing) throw new Error('Cashflow not found');
+          assertProfile(pid);
           await db.runAsync(
             'UPDATE planned_cashflows SET name=?,kind=?,amount_cents=?,due_date=?,frequency=?,reserved_cents=?,recurring_pattern_id=?,updated_at=? WHERE id=? AND profile_id=?',
             [
@@ -223,7 +229,8 @@ export function createHouseholdPlanningService(
               pid,
             ]
           );
-        } else
+        } else {
+          assertProfile(pid);
           await db.runAsync(
             'INSERT INTO planned_cashflows(id,name,kind,amount_cents,due_date,frequency,reserved_cents,recurring_pattern_id,profile_id,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?)',
             [
@@ -240,6 +247,8 @@ export function createHouseholdPlanningService(
               now,
             ]
           );
+        }
+        assertProfile(pid);
       });
     },
     async deletePlannedCashflow(id: string) {
@@ -300,6 +309,7 @@ export function createHouseholdPlanningService(
         [goalId, pid]
       );
       if (!goal) throw new Error('Goal not found');
+      assertProfile(pid);
       await db.runAsync(
         `INSERT INTO goal_archive_state(id,goal_id,archived,profile_id,created_at,updated_at) VALUES(?,?,?,?,?,?) ON CONFLICT(profile_id,goal_id) DO UPDATE SET archived=excluded.archived,is_deleted=0,updated_at=excluded.updated_at`,
         [crypto.randomUUID(), goalId, Number(archived), pid, now, now]
@@ -338,10 +348,12 @@ export function createHouseholdPlanningService(
         now = Date.now();
       if (cents <= 0) throw new Error('Invalid contribution');
       await db.transactionAsync(async () => {
+        assertProfile(pid);
         const goal = await db.queryOneAsync(
           'SELECT id FROM savings_goals WHERE id=? AND profile_id=? AND is_deleted=0',
           [goalId, pid]
         );
+        assertProfile(pid);
         const transaction = await db.queryOneAsync<{
           amount: number;
           type: string;
@@ -349,6 +361,7 @@ export function createHouseholdPlanningService(
           'SELECT amount,type FROM transactions WHERE id=? AND profile_id=? AND is_deleted=0',
           [transactionId, pid]
         );
+        assertProfile(pid);
         if (
           !goal ||
           !transaction ||
@@ -356,9 +369,25 @@ export function createHouseholdPlanningService(
         )
           throw new Error('Contribution source not found');
         const assigned = await db.queryOneAsync<{ amount: number }>(
-          'SELECT COALESCE(SUM(amount_cents),0) AS amount FROM goal_transaction_links WHERE transaction_id=? AND profile_id=? AND is_deleted=0 AND goal_id<>?',
-          [transactionId, pid, goalId]
+          `SELECT COALESCE(SUM(l.amount_cents),0) AS amount FROM goal_transaction_links l
+          JOIN savings_goals g ON g.id=l.goal_id AND g.profile_id=l.profile_id AND g.is_deleted=0
+          WHERE l.profile_id=? AND l.is_deleted=0
+          AND (l.transaction_id=? OR l.transaction_id IN (
+            SELECT CASE WHEN source_id=? THEN target_id ELSE source_id END FROM transaction_links
+            WHERE profile_id=? AND kind='transfer' AND is_deleted=0 AND (source_id=? OR target_id=?)
+          )) AND NOT (l.transaction_id=? AND l.goal_id=?)`,
+          [
+            pid,
+            transactionId,
+            transactionId,
+            pid,
+            transactionId,
+            transactionId,
+            transactionId,
+            goalId,
+          ]
         );
+        assertProfile(pid);
         if (
           cents + (assigned?.amount ?? 0) >
           moneyCents(Math.abs(transaction.amount))
@@ -368,6 +397,7 @@ export function createHouseholdPlanningService(
           `INSERT INTO goal_transaction_links(id,goal_id,transaction_id,amount_cents,profile_id,created_at,updated_at) VALUES(?,?,?,?,?,?,?) ON CONFLICT(profile_id,goal_id,transaction_id) DO UPDATE SET amount_cents=excluded.amount_cents,is_deleted=0,updated_at=excluded.updated_at`,
           [crypto.randomUUID(), goalId, transactionId, cents, pid, now, now]
         );
+        assertProfile(pid);
       });
     },
     async deleteGoalTransactionContribution(id: string) {
@@ -440,6 +470,7 @@ export function createHouseholdPlanningService(
             [pid]
           ),
         ]);
+      assertProfile(pid);
       const events = new Map<
         string,
         { income: number; expense: number; release: number }
@@ -553,6 +584,7 @@ export function createHouseholdPlanningService(
         upcoming = 0;
       const variableDaily =
         variable?.amount ?? (await service.getHistoricalVariableDaily(today));
+      assertProfile(pid);
       const fixedReserve =
         moneyCents(prefs.minimumBalance) +
         moneyCents(prefs.reservedSavings) +
@@ -645,6 +677,7 @@ export function createHouseholdPlanningService(
         date = dateToday(),
         now = Date.now(),
         worth = await service.getNetWorth();
+      assertProfile(pid);
       await db.runAsync(
         `INSERT INTO net_worth_snapshots(id,date,cash_cents,assets_cents,liabilities_cents,complete,profile_id,created_at,updated_at) VALUES(?,?,?,?,?,1,?,?,?) ON CONFLICT(profile_id,date) DO UPDATE SET cash_cents=excluded.cash_cents,assets_cents=excluded.assets_cents,liabilities_cents=excluded.liabilities_cents,complete=1,is_deleted=0,updated_at=excluded.updated_at`,
         [

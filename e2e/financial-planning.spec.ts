@@ -63,8 +63,9 @@ test('planning goals, contributions, reserves, net worth, and review persist', a
     .fill('QA loan');
   await page
     .getByRole('dialog')
-    .getByLabel('Type', { exact: true })
-    .selectOption('liability');
+    .getByRole('combobox', { name: 'Type', exact: true })
+    .click();
+  await page.getByRole('option', { name: 'Liability', exact: true }).click();
   await page
     .getByRole('dialog')
     .getByLabel('Current value', { exact: true })
@@ -151,7 +152,8 @@ test('budget rollover persists and annual editing uses the stored monthly amount
   await editButton.click();
   const amount = page.getByRole('spinbutton', { name: 'Amount per month' });
   await amount.fill('123');
-  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  const row = page.locator('.group').filter({ has: amount });
+  await row.getByRole('button', { name: 'Save', exact: true }).click();
   await expect(amount).not.toBeVisible();
   await page
     .locator('button')
@@ -161,7 +163,7 @@ test('budget rollover persists and annual editing uses the stored monthly amount
   await page.getByRole('button', { name: 'This year', exact: true }).click();
   await editButton.click();
   await expect(amount).toHaveValue('123');
-  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  await row.getByRole('button', { name: 'Save', exact: true }).click();
   await expect(amount).not.toBeVisible();
   const rollover = page
     .getByLabel('Carry unused budget forward', { exact: true })

@@ -839,7 +839,7 @@ export default function Subscriptions() {
 
       {/* Stats Cards */}
       <div
-        className='-mx-3 grid grid-cols-2 gap-px bg-border sm:mx-0 sm:gap-4 sm:bg-transparent lg:grid-cols-4'
+        className='grid grid-cols-2 gap-px bg-border sm:gap-4 sm:bg-transparent lg:grid-cols-4'
         data-onboarding='subscriptions-stats'
       >
         <Card className='group relative h-full overflow-hidden rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'>
@@ -927,10 +927,7 @@ export default function Subscriptions() {
       {alerts.length > 0 && (
         <Card data-onboarding='subscriptions-alerts'>
           <CardHeader>
-            <CardTitle className='flex items-center gap-2'>
-              <AlertTriangle className='h-5 w-5 text-orange-500' />
-              {t.subscriptions?.alerts}
-            </CardTitle>
+            <CardTitle>{t.subscriptions?.alerts}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className='space-y-2'>
@@ -1123,10 +1120,7 @@ export default function Subscriptions() {
           {pendingPatterns.length > 0 ? (
             <Card data-onboarding='subscriptions-pending'>
               <CardHeader>
-                <CardTitle className='flex items-center gap-2'>
-                  <Sparkles className='h-5 w-5 text-purple-500' />
-                  {t.subscriptions?.suggestedSubscriptions}
-                </CardTitle>
+                <CardTitle>{t.subscriptions?.suggestedSubscriptions}</CardTitle>
                 <CardDescription>
                   {t.subscriptions?.suggestedDescription}
                 </CardDescription>
@@ -1372,9 +1366,9 @@ export function SubscriptionCard({
 
   return (
     <div className='rounded-lg border'>
-      <div className='flex items-center justify-between p-4'>
-        <div className='flex-1'>
-          <div className='flex items-center gap-2'>
+      <div className='flex flex-wrap items-center justify-between gap-3 p-3 sm:p-4'>
+        <div className='min-w-0 flex-1 basis-full sm:basis-auto'>
+          <div className='flex flex-wrap items-center gap-2'>
             {isEditing ? (
               <Input
                 value={editName}
@@ -1385,7 +1379,7 @@ export function SubscriptionCard({
                 autoFocus
               />
             ) : (
-              <p className='font-medium'>
+              <p className='min-w-0 font-medium break-words'>
                 {capitalizeFirst(pattern.merchantName) ||
                   t.transactions.unknown}
               </p>
@@ -1500,7 +1494,7 @@ export function SubscriptionCard({
                 className={cn(
                   'font-medium',
                   overdue && !showAwaiting && 'text-red-600',
-                  showAwaiting && 'text-amber-600'
+                  showAwaiting && 'text-amber-700 dark:text-amber-400'
                 )}
               >
                 {formatDate(pattern.nextExpectedDate, language)}
@@ -1579,7 +1573,7 @@ export function SubscriptionCard({
         </div>
 
         <div
-          className='flex items-center gap-2'
+          className='flex max-w-full flex-wrap items-center gap-2'
           data-onboarding='subscription-actions'
         >
           <p className='mr-4 text-lg font-semibold'>

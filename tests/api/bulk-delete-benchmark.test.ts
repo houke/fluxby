@@ -476,30 +476,31 @@ describe('Stress Test: Edge Cases', () => {
   });
 
   it('handles repeated bulk operations without degradation', () => {
-    const txCount = 1000;
+    const txCount = 10000;
     const batchSize = 500;
-    const rounds = 5;
+    const rounds = 10;
+    const warmupRounds = 2;
     const times: number[] = [];
 
-    for (let round = 0; round < rounds; round++) {
+    for (let round = 0; round < rounds + warmupRounds; round++) {
       const ids = createManyTransactions(accountId, profileId, txCount);
       const result = softDeleteWithBatchSize(ids, profileId, batchSize);
-      times.push(result.timeMs);
+      expect(result.deletedCount).toBe(txCount);
+      if (round >= warmupRounds) times.push(result.timeMs);
       resetTransactions(profileId);
     }
 
-    // Check there's no significant degradation over multiple rounds
-    const firstHalf = times.slice(0, Math.floor(times.length / 2));
-    const secondHalf = times.slice(Math.floor(times.length / 2));
-
-    const firstHalfAvg =
-      firstHalf.reduce((a, b) => a + b, 0) / firstHalf.length;
-    const secondHalfAvg =
-      secondHalf.reduce((a, b) => a + b, 0) / secondHalf.length;
-
-    // Second half shouldn't be more than 3x slower than first half
-    // (generous tolerance to avoid flakiness on CI runners with variable scheduling)
-    expect(secondHalfAvg).toBeLessThan(firstHalfAvg * 3);
+    // Larger warmed samples avoid comparing sub-millisecond startup noise.
+    // Medians resist isolated GC/scheduling pauses while detecting sustained
+    // degradation; every sample must still meet the existing absolute target.
+    const median = (values: number[]) => {
+      const sorted = [...values].sort((a, b) => a - b);
+      return sorted[Math.floor(sorted.length / 2)];
+    };
+    const firstHalfMedian = median(times.slice(0, rounds / 2));
+    const secondHalfMedian = median(times.slice(rounds / 2));
+    expect(secondHalfMedian).toBeLessThan(firstHalfMedian * 3);
+    expect(Math.max(...times)).toBeLessThan(BENCHMARK_CONFIG.targetTime10k);
   });
 
   it('handles odd-sized batches (not divisible by batch size)', () => {

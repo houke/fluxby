@@ -53,7 +53,7 @@ export const TransactionCard = memo(function TransactionCard({
 
   return (
     <div
-      className='flex items-center gap-2 rounded-xl border bg-card px-2'
+      className='flex min-w-0 items-center gap-2 rounded-xl border bg-card px-2'
       data-onboarding='transaction-row'
     >
       {onSelect && (
@@ -69,7 +69,7 @@ export const TransactionCard = memo(function TransactionCard({
       <button
         onClick={onClick}
         className={cn(
-          'group flex w-full items-start gap-3 rounded-xl text-left transition-colors hover:bg-muted/50 active:bg-muted/70',
+          'group flex min-w-0 flex-1 items-start gap-3 rounded-xl text-left transition-colors hover:bg-muted/50 active:bg-muted/70',
           compact ? 'px-2 py-1' : 'p-3'
         )}
       >
@@ -113,8 +113,8 @@ export const TransactionCard = memo(function TransactionCard({
                 tx.type === 'transfer'
                   ? 'text-blue-600'
                   : tx.amount > 0
-                    ? 'text-emerald-600'
-                    : 'text-rose-600'
+                    ? 'text-emerald-700 dark:text-emerald-400'
+                    : 'text-rose-700 dark:text-rose-400'
               )}
             >
               {tx.type === 'transfer' ? '' : tx.amount > 0 ? '+' : ''}
@@ -133,10 +133,9 @@ export const TransactionCard = memo(function TransactionCard({
               <>
                 <span className='text-muted-foreground/50'>•</span>
                 <span
-                  className='max-w-[120px] truncate rounded-full px-2 py-0.5 text-xs font-medium'
+                  className='max-w-[120px] truncate rounded-full px-2 py-0.5 text-xs font-medium text-gray-900 dark:text-gray-100'
                   style={{
                     backgroundColor: `${categoryColor}20`,
-                    color: categoryColor,
                   }}
                 >
                   {categoryName}

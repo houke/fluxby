@@ -23,6 +23,7 @@ const isDev = process.env.NODE_ENV !== 'production';
 const packagesPath = resolve(__dirname, '../../packages');
 const devHost = process.env.FLUXBY_DEV_HOST;
 const devPort = Number(process.env.FLUXBY_DEV_PORT || 5177);
+const webDevPort = Number(process.env.FLUXBY_WEB_DEV_PORT || 5178);
 const useLocalHttps = process.env.FLUXBY_DEV_HTTPS === 'true';
 const localHttpsOptions = useLocalHttps ? getLocalHttpsOptions() : undefined;
 const appProtocol = useLocalHttps ? 'https' : 'http';
@@ -63,7 +64,7 @@ export default defineConfig({
       // Proxy /app to the web app dev server
       // The web app is configured with base: '/app/' so we forward requests directly
       '/app': {
-        target: `${appProtocol}://${appHost}:5178`,
+        target: `${appProtocol}://${appHost}:${webDevPort}`,
         changeOrigin: true,
         secure: false,
         // Enable WebSocket proxy for Vite HMR (Hot Module Replacement)

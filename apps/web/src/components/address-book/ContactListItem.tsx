@@ -64,6 +64,25 @@ interface ContactListItemProps {
   translations: any;
 }
 
+function ContactAction({
+  label,
+  children,
+  ...props
+}: React.ComponentProps<typeof Button> & { label: string }) {
+  return (
+    <TooltipProvider delayDuration={100}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button {...props} aria-label={label}>
+            {children}
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>{label}</TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+}
+
 /**
  * A single contact list item, extracted for use with virtualization.
  * Memoized to prevent unnecessary re-renders when scrolling.
@@ -124,12 +143,14 @@ export const ContactListItem = memo(function ContactListItem({
         {isEditing ? (
           <div className='flex flex-1 items-center gap-3'>
             <Input
+              aria-label={t.settings.addressBook.namePlaceholder}
               value={editContactName}
               onChange={(e) => setEditContactName(e.target.value)}
               placeholder={t.settings.addressBook.namePlaceholder}
               className='flex-1'
             />
             <Input
+              aria-label={t.settings.addressBook.descriptionPlaceholder}
               value={editContactDescription}
               onChange={(e) => setEditContactDescription(e.target.value)}
               placeholder={t.settings.addressBook.descriptionPlaceholder}
@@ -147,9 +168,10 @@ export const ContactListItem = memo(function ContactListItem({
                   <TooltipTrigger asChild>
                     <PopoverTrigger asChild>
                       <Button
+                        aria-label={t.addressBook?.assignToExisting}
                         size='sm'
                         variant='ghost'
-                        className='h-8 w-8 rounded-full p-0 hover:border-purple-600 hover:bg-purple-600 hover:text-white'
+                        className='h-8 w-8 rounded-md p-0 hover:border-purple-600 hover:bg-purple-600 hover:text-white'
                         disabled={isMergePending}
                       >
                         <UserPlus className='h-4 w-4' />
@@ -169,6 +191,7 @@ export const ContactListItem = memo(function ContactListItem({
               >
                 <div className='space-y-2'>
                   <Input
+                    aria-label={t.addressBook?.searchContacts}
                     placeholder={t.addressBook?.searchContacts}
                     value={assignSearchTerm}
                     onChange={(e) => setAssignSearchTerm(e.target.value)}
@@ -224,22 +247,24 @@ export const ContactListItem = memo(function ContactListItem({
                 </div>
               </PopoverContent>
             </Popover>
-            <Button
+            <ContactAction
+              label={t.common.save}
               size='sm'
               variant='ghost'
-              className='h-8 w-8 rounded-full hover:bg-purple-600 hover:text-white'
+              className='h-8 w-8 rounded-md hover:bg-purple-600 hover:text-white'
               onClick={onUpdateContact}
             >
               <Check className='h-4 w-4' />
-            </Button>
-            <Button
+            </ContactAction>
+            <ContactAction
+              label={t.common.cancel}
               size='sm'
               variant='ghost'
-              className='h-8 w-8 rounded-full hover:bg-purple-600 hover:text-white'
+              className='h-8 w-8 rounded-md hover:bg-purple-600 hover:text-white'
               onClick={onCancelEdit}
             >
               <X className='h-4 w-4' />
-            </Button>
+            </ContactAction>
           </div>
         ) : (
           <>
@@ -258,7 +283,8 @@ export const ContactListItem = memo(function ContactListItem({
                 <div className='flex items-center gap-2'>
                   <p className='font-medium'>{contact.name}</p>
                   {isMergedWithMultipleIbans && (
-                    <Button
+                    <ContactAction
+                      label={t.addressBook?.splitIntoSeparate}
                       size='icon'
                       variant='ghost'
                       className='h-6 w-6 rounded-md text-purple-600 hover:bg-purple-600 hover:text-white'
@@ -268,7 +294,7 @@ export const ContactListItem = memo(function ContactListItem({
                       }}
                     >
                       <Scissors className='h-3 w-3' />
-                    </Button>
+                    </ContactAction>
                   )}
                   <ExternalLink className='h-4 w-4 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100' />
                 </div>
@@ -280,7 +306,7 @@ export const ContactListItem = memo(function ContactListItem({
                 <p className='text-sm text-muted-foreground'>
                   {contact.iban}
                   {isMergedWithMultipleIbans && (
-                    <span className='ml-1 font-medium text-purple-500'>
+                    <span className='ml-1 font-medium text-purple-700 dark:text-purple-300'>
                       {t.addressBook?.moreIbans?.replace(
                         '{count}',
                         String((contact.ibans?.length || 0) - 1)
@@ -324,23 +350,31 @@ export const ContactListItem = memo(function ContactListItem({
                 </div>
               </div>
               <div className='flex gap-1'>
-                <Button
+                <ContactAction
+                  label={t.common.edit}
                   size='icon'
                   variant='ghost'
                   className='h-8 w-8 rounded-md transition-colors hover:bg-purple-600 hover:text-white'
                   onClick={() => onEditContact(contact)}
                 >
                   <Edit2 className='h-4 w-4' />
-                </Button>
-                <Button
+                </ContactAction>
+                <ContactAction
+                  label={t.common.delete}
                   size='icon'
                   variant='ghost'
                   className='h-8 w-8 rounded-md text-destructive transition-colors hover:bg-red-600 hover:text-white dark:hover:bg-red-700'
                   onClick={() => onDeleteContact(contact.id)}
                 >
                   <Trash2 className='h-4 w-4' />
-                </Button>
-                <Button
+                </ContactAction>
+                <ContactAction
+                  label={
+                    isExpanded
+                      ? t.common.collapse
+                      : t.addressBook?.showTransactions
+                  }
+                  aria-expanded={isExpanded}
                   size='icon'
                   variant='ghost'
                   className='h-8 w-8 rounded-md text-muted-foreground transition-colors hover:bg-purple-600 hover:text-white'
@@ -354,7 +388,7 @@ export const ContactListItem = memo(function ContactListItem({
                   ) : (
                     <ChevronDown className='h-4 w-4' />
                   )}
-                </Button>
+                </ContactAction>
               </div>
             </div>
           </>

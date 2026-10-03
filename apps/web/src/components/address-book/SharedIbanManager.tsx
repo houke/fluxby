@@ -1,6 +1,5 @@
 import React from 'react';
 import {
-  AlertTriangle,
   ChevronUp,
   ChevronDown,
   RefreshCw,
@@ -49,12 +48,6 @@ export const SharedIbanManager: React.FC<SharedIbanManagerProps> = ({
   cleanupRules,
   translations: t,
 }) => {
-  // eslint-disable-next-line no-console
-  console.log('[SharedIbanManager] Render:', {
-    sharedIbansLength: sharedIbans.length,
-    isLoading,
-  });
-
   if (sharedIbans.length === 0) return null;
 
   const groupColors = [
@@ -68,47 +61,59 @@ export const SharedIbanManager: React.FC<SharedIbanManagerProps> = ({
   return (
     <Card
       data-onboarding='shared-ibans-card'
-      className='border-amber-500/50 bg-amber-50/50 dark:bg-amber-950/10'
+      className='rounded-none border-x-0 border-amber-500/50 bg-amber-50/50 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm dark:bg-amber-950/10'
     >
-      <CardHeader
-        className='cursor-pointer'
-        onClick={() => setShowSharedIbans(!showSharedIbans)}
-      >
-        <div className='flex items-center justify-between'>
-          <CardTitle className='flex items-center gap-2 text-amber-700 dark:text-amber-400'>
-            <AlertTriangle className='h-5 w-5' />
+      <CardHeader className='px-3 py-3 sm:px-6 sm:py-4'>
+        <div className='flex items-center justify-between gap-2'>
+          <CardTitle className='flex min-w-0 flex-wrap items-center gap-2 text-base text-amber-700 sm:text-lg dark:text-amber-400'>
             {t.addressBook?.sharedIbans}
             <span className='rounded-full bg-amber-200 px-2 py-0.5 text-xs font-normal text-amber-900 dark:bg-amber-800 dark:text-amber-50'>
               {sharedIbans.length}
             </span>
-            {showSharedIbans ? (
-              <ChevronUp className='ml-1 h-4 w-4' />
-            ) : (
-              <ChevronDown className='ml-1 h-4 w-4' />
-            )}
           </CardTitle>
           <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant='ghost'
-                  size='sm'
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onDetectShared();
-                  }}
-                  disabled={isDetectPending}
-                  className='text-muted-foreground hover:bg-muted hover:text-foreground'
-                >
-                  <RefreshCw
-                    className={cn('h-4 w-4', isDetectPending && 'animate-spin')}
-                  />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>{t.addressBook?.rescanSharedIbans}</p>
-              </TooltipContent>
-            </Tooltip>
+            <div className='flex shrink-0 items-center gap-1'>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant='ghost'
+                    size='icon'
+                    className='h-8 w-8 rounded-md'
+                    aria-label={t.addressBook?.sharedIbans}
+                    aria-expanded={showSharedIbans}
+                    onClick={() => setShowSharedIbans(!showSharedIbans)}
+                  >
+                    {showSharedIbans ? <ChevronUp /> : <ChevronDown />}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>{t.addressBook?.sharedIbans}</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant='ghost'
+                    size='sm'
+                    aria-label={t.addressBook?.rescanSharedIbans}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDetectShared();
+                    }}
+                    disabled={isDetectPending}
+                    className='h-8 w-8 rounded-md p-0 text-muted-foreground hover:bg-muted hover:text-foreground'
+                  >
+                    <RefreshCw
+                      className={cn(
+                        'h-4 w-4',
+                        isDetectPending && 'animate-spin'
+                      )}
+                    />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{t.addressBook?.rescanSharedIbans}</p>
+                </TooltipContent>
+              </Tooltip>
+            </div>
           </TooltipProvider>
         </div>
         {!showSharedIbans && (
@@ -123,7 +128,7 @@ export const SharedIbanManager: React.FC<SharedIbanManagerProps> = ({
         )}
       </CardHeader>
       {showSharedIbans && (
-        <CardContent className='space-y-3'>
+        <CardContent className='space-y-3 px-3 pb-3 sm:px-6 sm:pb-6'>
           <TooltipProvider>
             {isLoading ? (
               <div className='space-y-2'>
@@ -210,14 +215,20 @@ export const SharedIbanManager: React.FC<SharedIbanManagerProps> = ({
                       </div>
                     </div>
                     <div className='flex flex-shrink-0 gap-1'>
-                      <Button
-                        variant='ghost'
-                        size='icon'
-                        className='h-8 w-8 rounded-md transition-colors hover:bg-purple-600 hover:text-white'
-                        onClick={() => onEditShared(shared)}
-                      >
-                        <Edit2 className='h-4 w-4' />
-                      </Button>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant='ghost'
+                            size='icon'
+                            aria-label={t.common?.edit}
+                            className='h-8 w-8 rounded-md transition-colors hover:bg-purple-600 hover:text-white'
+                            onClick={() => onEditShared(shared)}
+                          >
+                            <Edit2 className='h-4 w-4' />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>{t.common?.edit}</TooltipContent>
+                      </Tooltip>
                     </div>
                   </div>
                 </div>

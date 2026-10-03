@@ -39,12 +39,17 @@ for (const language of ['nl', 'en'] as const) {
     ).toBeVisible({ timeout: 60000 });
     await dismissOnboardingTour(page);
     await page.getByRole('link', { name: /^import/i }).click();
-    const upload = async (name: string, date: string, description: string) => {
+    const upload = async (
+      name: string,
+      date: string,
+      description: string,
+      lowercaseHeaders = false
+    ) => {
       await page.locator('input[type="file"]').setInputFiles({
         name,
         mimeType: 'text/csv',
         buffer: Buffer.from(
-          `Datum;Bedrag;Omschrijving;Rekening\n${date};-12,50;${description};NL91ABNA0417164300`
+          `${lowercaseHeaders ? 'datum;bedrag;omschrijving;rekening' : 'Datum;Bedrag;Omschrijving;Rekening'}\n${date};-12,50;${description};NL91ABNA0417164300`
         ),
       });
       await expect(page.getByRole('dialog')).toBeVisible();
@@ -68,7 +73,9 @@ for (const language of ['nl', 'en'] as const) {
       })
     ).toBeVisible();
     await expect(page.getByRole('dialog')).toContainText('2026-09-30');
-    await expect(page.getByRole('dialog')).toContainText('-12,50');
+    await expect(page.getByRole('dialog')).toContainText(
+      nl ? '12,50' : '12.50'
+    );
     await page
       .getByRole('button', {
         name: nl ? 'Start import' : 'Start import',
@@ -89,12 +96,15 @@ for (const language of ['nl', 'en'] as const) {
       .getByRole('button', { name: /^(Close|Sluiten)$/, exact: true })
       .first()
       .click();
-    await upload('qa-second.csv', '01-10-2026', 'QA second purchase');
+    await upload('qa-second.csv', '01-10-2026', 'QA second purchase', true);
     await page
       .getByLabel(nl ? 'Opgeslagen importprofiel' : 'Saved import profile', {
         exact: true,
       })
-      .selectOption({ label: 'QA saved layout' });
+      .click();
+    await page
+      .getByRole('option', { name: 'QA saved layout', exact: true })
+      .click();
     await expect(
       page.getByText(
         nl ? 'Importprofiel toegepast' : 'Import profile applied',
@@ -139,6 +149,68 @@ for (const language of ['nl', 'en'] as const) {
         name: nl ? 'Herstelbestand downloaden' : 'Download recovery file',
       })
     ).toHaveCount(2);
+    // A single amount column is optional when separate debit/credit columns
+    // are configured. This previously enabled Start import but did nothing.
+    await page.locator('input[type="file"]').setInputFiles({
+      name: 'qa-debit-credit.csv',
+      mimeType: 'text/csv',
+      buffer: Buffer.from(
+        'Datum;Af;Bij;Omschrijving;Rekening\n02-10-2026;9,99;;QA debit purchase;NL91ABNA0417164300\n02-10-2026;;20,00;QA credit repayment;NL91ABNA0417164300'
+      ),
+    });
+    const mappingDialog = page.getByRole('dialog');
+    await expect(mappingDialog).toBeVisible();
+    await mappingDialog
+      .locator('[data-onboarding="import-tools"] summary')
+      .click();
+    await mappingDialog
+      .getByRole('combobox', {
+        name: nl ? 'Kolom afschrijvingen' : 'Debit column',
+        exact: true,
+      })
+      .click();
+    await page.getByRole('option', { name: 'Af', exact: true }).click();
+    await mappingDialog
+      .getByRole('combobox', {
+        name: nl ? 'Kolom bijschrijvingen' : 'Credit column',
+        exact: true,
+      })
+      .click();
+    await page.getByRole('option', { name: 'Bij', exact: true }).click();
+    await expect(mappingDialog).toContainText(nl ? '9,99' : '9.99');
+    await expect(mappingDialog).toContainText(nl ? '20,00' : '20.00');
+    await mappingDialog
+      .getByRole('button', { name: 'Start import', exact: true })
+      .click();
+    await expect(
+      page
+        .getByRole('dialog')
+        .getByText(
+          nl
+            ? '2 transacties geïmporteerd, 0 overgeslagen'
+            : '2 transactions imported, 0 skipped'
+        )
+    ).toBeVisible({ timeout: 30000 });
+    await page
+      .getByRole('dialog')
+      .getByRole('button', { name: /^(Close|Sluiten)$/, exact: true })
+      .first()
+      .click();
+    await page
+      .getByRole('link', {
+        name: nl ? 'Transacties' : 'Transactions',
+        exact: true,
+      })
+      .click();
+    const debitRow = page
+      .locator('[data-onboarding="transaction-row"]')
+      .filter({ hasText: 'QA debit purchase' });
+    const creditRow = page
+      .locator('[data-onboarding="transaction-row"]')
+      .filter({ hasText: 'QA credit repayment' });
+    await expect(debitRow).toContainText(nl ? '€ -9,99' : '-€9.99');
+    await expect(creditRow).toContainText(nl ? '€ 20,00' : '€20.00');
+    await page.getByRole('link', { name: /^import/i }).click();
     await page.screenshot({
       path: `.nexus/tmp/import-workflows-${language}.png`,
       fullPage: true,

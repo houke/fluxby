@@ -42,6 +42,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -468,7 +469,7 @@ export default function Budgets() {
         }
       />
 
-      <MonthlyAllocation />
+      <MonthlyAllocation key={activeProfileId} />
 
       {/* Add New Budget - collapsible */}
       {showAddForm && (
@@ -618,8 +619,8 @@ export default function Budgets() {
                 className='flex items-center justify-between rounded-lg border p-3 hover:bg-muted/50'
               >
                 <div className='flex items-center gap-3'>
-                  <input
-                    type='checkbox'
+                  <Checkbox
+                    aria-label={`${t.budgets.proposedBudgets}: ${proposal.categoryName}`}
                     checked={selectedProposals.has(proposal.categoryId)}
                     onChange={(e) => {
                       const newSet = new Set(selectedProposals);
@@ -630,7 +631,6 @@ export default function Budgets() {
                       }
                       setSelectedProposals(newSet);
                     }}
-                    className='h-4 w-4 cursor-pointer rounded border-gray-300'
                   />
                   <div className='flex items-center gap-2'>
                     <span
@@ -1052,9 +1052,7 @@ export default function Budgets() {
                           data-onboarding='budget-rollover'
                         >
                           <label className='flex items-center gap-2'>
-                            <input
-                              type='checkbox'
-                              className='h-4 w-4 accent-purple-600'
+                            <Checkbox
                               checked={Boolean(budget.rolloverEnabled)}
                               disabled={rolloverMutation.isPending}
                               onChange={(event) =>

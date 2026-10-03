@@ -15,6 +15,7 @@ import type { TransactionView } from '@/lib/transaction-view';
 let sqlite: SQLite.Database;
 let pid = 'p';
 let service: ReturnType<typeof createTransactionReviewService>;
+let afterQuery: (() => void) | null = null;
 beforeEach(() => {
   sqlite = new SQLite(':memory:');
   sqlite.pragma('foreign_keys=ON');
@@ -24,12 +25,19 @@ beforeEach(() => {
     'ALTER TABLE recurring_patterns ADD COLUMN manual_source INTEGER NOT NULL DEFAULT 0'
   );
   sqlite.exec(
+    'ALTER TABLE recurring_patterns ADD COLUMN is_dismissed INTEGER NOT NULL DEFAULT 0'
+  );
+  sqlite.exec(
     `INSERT INTO users(id,name) VALUES('u','User');INSERT INTO profiles(id,user_id,name) VALUES('p','u','Personal'),('q','u','Other');INSERT INTO accounts(id,iban,name,profile_id) VALUES('a','NL1','Account','p'),('b','NL2','Savings','p'),('c','NL3','Other','q');INSERT INTO categories(id,name,profile_id) VALUES('cat','Food','p'),('othercat','Other','q');`
   );
   pid = 'p';
+  afterQuery = null;
   const db = {
-    queryAsync: async <T>(sql: string, params: unknown[] = []) =>
-      sqlite.prepare(sql).all(...params) as T[],
+    queryAsync: async <T>(sql: string, params: unknown[] = []) => {
+      const rows = sqlite.prepare(sql).all(...params) as T[];
+      afterQuery?.();
+      return rows;
+    },
     queryOneAsync: async <T>(sql: string, params: unknown[] = []) =>
       (sqlite.prepare(sql).get(...params) as T) || null,
     runAsync: async (sql: string, params: unknown[] = []) => {
@@ -198,6 +206,24 @@ describe('transaction review', () => {
       )
     ).toBe(false);
   });
+  it('undoes both the category and its deliberate-review protection', async () => {
+    tx('expense', -20);
+    const previous = await service.saveReviewedCategory('expense', 'cat');
+    expect(previous).toBeNull();
+    await service.undoReviewedCategory('expense', null, previous);
+    expect(
+      sqlite
+        .prepare("SELECT category_id FROM transactions WHERE id='expense'")
+        .get()
+    ).toEqual({ category_id: null });
+    expect(
+      sqlite
+        .prepare(
+          'SELECT COUNT(*) count FROM transaction_category_decisions WHERE is_deleted=0'
+        )
+        .get()
+    ).toEqual({ count: 0 });
+  });
   it('marks a single expense as a confirmed bill idempotently', async () => {
     tx('e', -20);
     const id = await service.markTransactionRecurring('e', 'monthly');
@@ -205,14 +231,109 @@ describe('transaction review', () => {
     expect(
       sqlite
         .prepare(
-          'SELECT next_expected_date,is_confirmed,transaction_count FROM recurring_patterns'
+          'SELECT next_expected_date,is_confirmed,transaction_count,avg_amount,last_amount,manual_source FROM recurring_patterns'
         )
         .get()
     ).toEqual({
       next_expected_date: '2026-10-01',
       is_confirmed: 1,
       transaction_count: 1,
+      avg_amount: -20,
+      last_amount: -20,
+      manual_source: 1,
     });
+  });
+  it.each([
+    ['2026-01-31', 'monthly', '2026-02-28'],
+    ['2026-11-30', 'quarterly', '2027-02-28'],
+    ['2024-02-29', 'yearly', '2025-02-28'],
+  ] as const)(
+    'clamps a %s manual bill to the next %s due month',
+    async (date, frequency, expected) => {
+      tx('month-end-bill', -20, date);
+      const id = await service.markTransactionRecurring(
+        'month-end-bill',
+        frequency
+      );
+      expect(
+        sqlite
+          .prepare(
+            'SELECT next_expected_date FROM recurring_patterns WHERE id=?'
+          )
+          .get(id)
+      ).toEqual({ next_expected_date: expected });
+    }
+  );
+  it('restores the previous snooze when undoing a later done decision', async () => {
+    tx('expense', -10);
+    const key = 'uncategorized:expense';
+    await service.saveReviewDecision(key, 'later');
+    const previous = await service.saveReviewDecision(key, 'done');
+    expect(previous?.status).toBe('later');
+    await service.undoReviewDecision(key, previous || undefined);
+    expect(
+      (await service.getTransactionReviewInbox()).some(
+        (item) => item.key === key
+      )
+    ).toBe(false);
+    expect(
+      (await service.getTransactionReviewInbox(true)).some(
+        (item) => item.key === key
+      )
+    ).toBe(true);
+  });
+  it('confirms an existing detected bill and applies its chosen cadence without duplicating it', async () => {
+    tx('expense', -20);
+    const id = await service.markTransactionRecurring('expense', 'monthly');
+    sqlite
+      .prepare(
+        'UPDATE recurring_patterns SET is_confirmed=0,manual_source=0 WHERE id=?'
+      )
+      .run(id);
+    expect(await service.markTransactionRecurring('expense', 'biweekly')).toBe(
+      id
+    );
+    expect(
+      sqlite
+        .prepare(
+          'SELECT pattern_type,next_expected_date,is_confirmed,manual_source,avg_amount FROM recurring_patterns'
+        )
+        .get()
+    ).toEqual({
+      pattern_type: 'biweekly',
+      next_expected_date: '2026-09-15',
+      is_confirmed: 1,
+      manual_source: 1,
+      avg_amount: -20,
+    });
+    expect(
+      sqlite.prepare('SELECT COUNT(*) count FROM recurring_patterns').get()
+    ).toEqual({ count: 1 });
+  });
+  it('aborts link and bill creation if the profile changes during validation', async () => {
+    tx('expense', -10);
+    tx('refund', 10);
+    afterQuery = () => {
+      pid = 'q';
+    };
+    await expect(
+      service.createTransactionLink({
+        sourceId: 'refund',
+        targetId: 'expense',
+        kind: 'refund',
+        amount: 10,
+      })
+    ).rejects.toThrow('Active profile changed');
+    expect(
+      sqlite.prepare('SELECT COUNT(*) count FROM transaction_links').get()
+    ).toEqual({ count: 0 });
+    pid = 'p';
+    await expect(
+      service.markTransactionRecurring('expense', 'monthly')
+    ).rejects.toThrow('Active profile changed');
+    expect(
+      sqlite.prepare('SELECT COUNT(*) count FROM recurring_patterns').get()
+    ).toEqual({ count: 0 });
   });
   it('exports all matching transactions safely in Dutch CSV format', async () => {
     tx('e', -20);

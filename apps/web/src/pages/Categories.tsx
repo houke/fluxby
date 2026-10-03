@@ -651,7 +651,7 @@ export default function Categories() {
       );
     }
     return (
-      <span className='flex items-center text-rose-600'>
+      <span className='flex items-center text-rose-700 dark:text-rose-400'>
         <ArrowDownRight className='mr-1 h-3 w-3' />
         <Currency amount={normalizeCategoryAmount(amount)} />
       </span>
@@ -1479,7 +1479,6 @@ export default function Categories() {
 
   return (
     <div className='space-y-6'>
-      <CategoryPlanning />
       <PageHeader
         title={t.categories.title}
         subtitle={t.categories.subtitle}
@@ -1533,12 +1532,13 @@ export default function Categories() {
         }
       />
 
+      <CategoryPlanning key={activeProfileId} />
+
       {/* Add Category Form */}
       {showAddForm && (
         <Card data-onboarding='add-category-card'>
           <CardHeader>
-            <CardTitle className='flex items-center gap-2'>
-              <Plus className='h-5 w-5' />
+            <CardTitle>
               {newParentId
                 ? t.categories.addSubcategory
                 : t.categories.addNewCategory}
@@ -1652,7 +1652,7 @@ export default function Categories() {
                 />
               </div>
 
-              <div className='flex items-center justify-between'>
+              <div className='flex flex-wrap items-center justify-between gap-3'>
                 <span className='text-sm text-muted-foreground'>
                   {filteredSortedParents.length} {t.categories.categoriesCount}
                   {' • '}
@@ -1663,7 +1663,7 @@ export default function Categories() {
                   )}{' '}
                   {t.categories.subcategoriesCount}
                 </span>
-                <div className='flex items-center gap-2'>
+                <div className='flex flex-wrap items-center gap-2'>
                   {/* Amount mode toggle */}
                   <TooltipProvider delayDuration={100}>
                     <div className='relative inline-flex items-center rounded-lg border border-border bg-muted/50 p-0.5'>
@@ -1785,7 +1785,7 @@ export default function Categories() {
                 variant='outline'
                 onClick={handleSeedClick}
                 data-onboarding='seed-categories'
-                className='mt-4'
+                className='mt-4 h-auto min-h-10 max-w-full whitespace-normal'
               >
                 <Sparkles className='mr-2 h-4 w-4' />
                 {t.categories.seedWithDefaultData}

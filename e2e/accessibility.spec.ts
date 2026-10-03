@@ -9,6 +9,17 @@ async function openDeleteDialog(page: Page) {
   await page.getByRole('menuitem', { name: 'Delete', exact: true }).click();
   const dialog = page.getByRole('dialog');
   await expect(dialog).toBeVisible();
+  // Visibility begins during the entrance fade; audit the settled surface.
+  await dialog.evaluate(async (element) => {
+    await Promise.all(
+      element
+        .getAnimations({ subtree: true })
+        .filter(
+          (animation) => animation.effect?.getTiming().iterations !== Infinity
+        )
+        .map((animation) => animation.finished.catch(() => undefined))
+    );
+  });
   return dialog;
 }
 
@@ -117,6 +128,33 @@ test.describe('Accessible transaction workflows', () => {
     await expect(
       page.getByTestId('transaction-checkbox').first()
     ).toBeChecked();
+  });
+
+  test('confirmed deletion removes the selected transaction and Undo restores it', async ({
+    page,
+  }) => {
+    const name = await page
+      .getByTestId('transaction-checkbox')
+      .first()
+      .getAttribute('aria-label');
+    if (!name) throw new Error('Selected transaction has no accessible name');
+    const matchingTransactions = page.getByRole('checkbox', {
+      name,
+      exact: true,
+    });
+    const beforeCount = await matchingTransactions.count();
+    const dialog = await openDeleteDialog(page);
+    await dialog
+      .getByRole('button', { name: 'Delete selected', exact: true })
+      .click();
+    await expect(dialog).not.toBeVisible();
+    await expect(matchingTransactions).toHaveCount(beforeCount - 1);
+    const undo = page.getByTestId('undo-toast');
+    await expect(undo).toBeVisible();
+    await audit(page, '[data-testid="undo-toast"]');
+    await undo.getByRole('button', { name: 'Undo', exact: true }).click();
+    await expect(matchingTransactions).toHaveCount(beforeCount);
+    await expect(undo).not.toBeVisible();
   });
 
   test('reduced motion keeps the selection toolbar usable', async ({

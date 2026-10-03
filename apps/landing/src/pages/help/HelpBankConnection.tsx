@@ -51,6 +51,8 @@ export default function HelpBankConnection() {
       <p>{imports.formats}</p>
       <p>{imports.profiles}</p>
       <p>{imports.source}</p>
+      <h2>{imports.freshnessTitle}</h2>
+      <p>{imports.freshness}</p>
       <h2>{imports.recoveryTitle}</h2>
       <p>{imports.recovery}</p>
       <p>{imports.undo}</p>

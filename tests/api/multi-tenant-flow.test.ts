@@ -1,22 +1,31 @@
-import { describe, it, expect, beforeAll } from 'vitest';
+import { createServer, type Server } from 'node:http';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import request from 'supertest';
 
 // DB_PATH is set to :memory: in tests/setup.ts
 
 describe('Multi-Tenant Integration Flow', () => {
-  let app: any;
+  let app: Server;
   const personalProfileId = 1; // Default
   let businessProfileId: number;
 
   beforeAll(async () => {
-    // Import app using dynamic import to ensure ENV is preserved
+    // Import after setup has selected the in-memory database.
     const mod = await import('../../apps/api/src/app.js');
-    app = mod.default;
+    app = createServer(mod.default);
+    // Supertest sends requests to IPv4. A default IPv6 listener can share a
+    // port with an unrelated IPv4 service on macOS, so bind the same address.
+    await new Promise<void>((resolve, reject) => {
+      app.once('error', reject);
+      app.listen(0, '127.0.0.1', resolve);
+    });
+  });
 
-    // Check if initial profile exists (it should from initializeDatabase call in app.ts)
-    const { queryOne: _queryOne } =
-      await import('../../apps/api/src/db/index.js');
-    // ...
+  afterAll(async () => {
+    if (!app?.listening) return;
+    await new Promise<void>((resolve, reject) => {
+      app.close((error) => (error ? reject(error) : resolve()));
+    });
   });
 
   it('should create a second profile (Business)', async () => {
@@ -25,7 +34,10 @@ describe('Multi-Tenant Integration Flow', () => {
       type: 'business',
     });
 
-    expect(res.status).toBe(201);
+    expect(
+      res.status,
+      JSON.stringify({ body: res.body, url: res.request.url })
+    ).toBe(201);
     expect(res.body.success).toBe(true);
     businessProfileId = res.body.data.id;
     expect(businessProfileId).toBeDefined();

@@ -46,20 +46,26 @@ export default function Settings() {
         className='space-y-0 sm:space-y-6'
         data-onboarding='settings-tabs'
       >
-        <TabsList>
+        <TabsList className='grid h-auto w-full grid-cols-3 sm:inline-flex sm:w-auto'>
           <TabsTrigger
             value='active-profile'
             data-onboarding='settings-profile-tab'
+            className='min-w-0 px-2 text-xs whitespace-normal sm:px-3 sm:text-sm sm:whitespace-nowrap'
           >
             {t.settings.tabs?.activeProfile}
           </TabsTrigger>
           <TabsTrigger
             value='manage-profiles'
             data-onboarding='settings-manage-tab'
+            className='min-w-0 px-2 text-xs whitespace-normal sm:px-3 sm:text-sm sm:whitespace-nowrap'
           >
             {t.settings.tabs?.manageProfiles}
           </TabsTrigger>
-          <TabsTrigger value='app-settings' data-onboarding='settings-app-tab'>
+          <TabsTrigger
+            value='app-settings'
+            data-onboarding='settings-app-tab'
+            className='min-w-0 px-2 text-xs whitespace-normal sm:px-3 sm:text-sm sm:whitespace-nowrap'
+          >
             {t.settings.tabs?.appSettings}
           </TabsTrigger>
         </TabsList>
