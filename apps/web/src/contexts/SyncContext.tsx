@@ -462,7 +462,9 @@ export function SyncProvider({ children }: SyncProviderProps) {
     });
     void adapter
       .initialize()
-      .then(() => peer.initialize())
+      .then(() => {
+        if (active) return peer.initialize();
+      })
       .then(() => {
         if (active) setIsInitialized(true);
       })

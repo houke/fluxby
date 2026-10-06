@@ -2,7 +2,7 @@
  * Sync Database Adapter
  * Bridges the SyncService from @fluxby/core with the actual SQLite database
  */
-import type { Database } from './wa-sqlite.js';
+import type { AsyncDatabaseConnection } from './types.js';
 
 /**
  * Interface for sync database operations
@@ -19,7 +19,7 @@ export interface SyncDatabaseAdapter {
   run(sql: string, params?: unknown[]): Promise<{ changes: number }>;
 
   /** Run operations in a transaction */
-  transaction<T>(fn: () => Promise<T>): Promise<T>;
+  transaction<T>(fn: (adapter: SyncDatabaseAdapter) => Promise<T>): Promise<T>;
 
   /** Get current profile ID for filtering data */
   getProfileId(): string;
@@ -94,7 +94,7 @@ export interface ManifestDiff {
  * Create a sync adapter from a Database instance
  */
 export function createSyncAdapter(
-  db: Database,
+  db: AsyncDatabaseConnection,
   profileId: string
 ): SyncDatabaseAdapter {
   return {
@@ -110,8 +110,12 @@ export function createSyncAdapter(
       return { changes: result.changes };
     },
 
-    async transaction<T>(fn: () => Promise<T>): Promise<T> {
-      return db.transactionAsync(fn);
+    async transaction<T>(
+      fn: (adapter: SyncDatabaseAdapter) => Promise<T>
+    ): Promise<T> {
+      return db.transactionAsync((connection) =>
+        fn(createSyncAdapter(connection, profileId))
+      );
     },
 
     getProfileId(): string {
@@ -255,7 +259,7 @@ export async function applySyncData(
   let applied = 0;
   let skipped = 0;
 
-  await adapter.transaction(async () => {
+  await adapter.transaction(async (adapter) => {
     for (const row of rows) {
       // Skip rows from our own device (shouldn't happen, but safety check)
       if (row.device_id === localDeviceId) {
@@ -318,7 +322,7 @@ export async function markRowsDeleted(
   const now = Date.now();
   let totalChanges = 0;
 
-  await adapter.transaction(async () => {
+  await adapter.transaction(async (adapter) => {
     for (const id of ids) {
       const result = await adapter.run(
         `UPDATE ${table} SET is_deleted = 1, updated_at = ?, device_id = ? WHERE id = ? AND profile_id = ?`,
@@ -359,7 +363,7 @@ export async function purgeDeletedRows(
   const threshold = Date.now() - olderThanMs;
   let totalPurged = 0;
 
-  await adapter.transaction(async () => {
+  await adapter.transaction(async (adapter) => {
     for (const table of SYNCABLE_TABLES) {
       const result = await adapter.run(
         `DELETE FROM ${table} WHERE profile_id = ? AND is_deleted = 1 AND updated_at < ?`,

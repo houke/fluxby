@@ -1632,7 +1632,8 @@ export const en: LandingTranslationKeys = {
       manage1: 'Click on a contact to view details',
       manage2: 'Use the search bar to find contacts',
       manage3: 'Create name cleanup rules for better categorization',
-      manage4: 'View transaction history per contact',
+      manage4:
+        'Expand a contact to view its transaction history. Use Previous and Next to browse older transactions.',
     },
     // Help pages - Analytics
     analytics: {

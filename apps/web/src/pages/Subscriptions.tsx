@@ -50,6 +50,8 @@ import { cn } from '@/lib/utils';
 import { Currency } from '@/components/ui/currency';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useProfile } from '@/contexts/ProfileContext';
+import { useProfileDetailSelection } from '@/hooks/useProfileDetailSelection';
+import { PaginatedHistoryList } from '@/components/ui/PaginatedHistoryList';
 import { useToast } from '@/contexts/ToastContext';
 import { useConfirm } from '@/contexts/ConfirmContext';
 import { TransitionLink } from '@/components/layout/TransitionLink';
@@ -360,19 +362,18 @@ export default function Subscriptions() {
   });
 
   // State for expanded patterns and their transactions
-  const [expandedPatternId, setExpandedPatternId] = useState<string | null>(
-    null
-  );
+  const [expandedPatternId, setExpandedPatternId] =
+    useProfileDetailSelection(activeProfileId);
 
   // Query for transactions when a pattern is expanded
   const { data: patternTransactions, isLoading: loadingPatternTransactions } =
     useQuery({
-      queryKey: ['pattern-transactions', expandedPatternId],
+      queryKey: ['pattern-transactions', activeProfileId, expandedPatternId],
       queryFn: () =>
         expandedPatternId
           ? api.getTransactionsForPattern(expandedPatternId)
           : null,
-      enabled: !!expandedPatternId,
+      enabled: !!activeProfileId && !!expandedPatternId,
     });
 
   // Handlers
@@ -418,9 +419,12 @@ export default function Subscriptions() {
     [updateMutation]
   );
 
-  const handleToggleExpand = useCallback((id: string) => {
-    setExpandedPatternId((prev) => (prev === id ? null : id));
-  }, []);
+  const handleToggleExpand = useCallback(
+    (id: string) => {
+      setExpandedPatternId((prev) => (prev === id ? null : id));
+    },
+    [setExpandedPatternId]
+  );
 
   const handleDismiss = async (id: string) => {
     const confirmed = await confirm({
@@ -1733,8 +1737,12 @@ export function SubscriptionCard({
               <h4 className='mb-2 text-sm font-medium'>
                 {t.subscriptions?.transactionHistory}
               </h4>
-              <div className='max-h-64 overflow-y-auto'>
-                {transactions.map((tx) => (
+              <PaginatedHistoryList
+                items={transactions}
+                className='max-h-64 overflow-y-auto'
+                previousLabel={t.common.previous}
+                nextLabel={t.common.next}
+                renderItem={(tx) => (
                   <div
                     key={tx.id}
                     className='flex items-center justify-between border-b border-dashed py-2 text-sm last:border-0'
@@ -1751,8 +1759,8 @@ export function SubscriptionCard({
                       <Currency amount={tx.amount} />
                     </span>
                   </div>
-                ))}
-              </div>
+                )}
+              />
             </div>
           ) : (
             <p className='text-center text-sm text-muted-foreground'>

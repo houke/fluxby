@@ -235,31 +235,65 @@ export class ProfileDataSync {
     return this.exclusive(async () => {
       const current = await this.load();
       const changes: SyncChange[] = [];
-      await this.db.transactionAsync(async () => {
+      const stamps = new Map<
+        string,
+        Array<{ id: string; updatedAt: number }>
+      >();
+      // Compare snapshots before taking the database transaction lock. A large
+      // import should only keep foreground queries waiting for its writes.
+      for (const [rowKey, row] of current) {
+        const old = this.previous.get(rowKey);
+        if (reset || !old || JSON.stringify(old) !== JSON.stringify(row)) {
+          const table = rowKey.slice(0, rowKey.indexOf(':'));
+          row.device_id = this.deviceId;
+          row.updated_at = Math.max(row.updated_at, (old?.updated_at || 0) + 1);
+          const tableStamps = stamps.get(table) || [];
+          tableStamps.push({ id: row.id, updatedAt: row.updated_at });
+          stamps.set(table, tableStamps);
+          changes.push({ table, row });
+        }
+      }
+      await this.db.transactionAsync(async (db) => {
         if (reset) {
-          await this.db.runAsync(
+          await db.runAsync(
             'DELETE FROM sync_tombstones WHERE profile_id = ?',
             [this.profileId]
           );
-          await this.db.runAsync(
+          await db.runAsync(
             'DELETE FROM sync_row_aliases WHERE profile_id = ?',
             [this.profileId]
           );
         }
-        for (const [rowKey, row] of current) {
-          const old = this.previous.get(rowKey);
-          if (reset || !old || JSON.stringify(old) !== JSON.stringify(row)) {
-            const table = rowKey.slice(0, rowKey.indexOf(':'));
-            row.device_id = this.deviceId;
-            row.updated_at = Math.max(
-              row.updated_at,
-              (old?.updated_at || 0) + 1
+        for (const [table, tableStamps] of stamps) {
+          for (let offset = 0; offset < tableStamps.length; offset += 200) {
+            const batch = tableStamps.slice(offset, offset + 200);
+            const sharedClock = batch.every(
+              ({ updatedAt }) => updatedAt === batch[0].updatedAt
             );
-            await this.db.runAsync(
-              `UPDATE ${table} SET updated_at = ?, device_id = ? WHERE id = ? AND ${scoped(table)}`,
-              [row.updated_at, this.deviceId, row.id, this.profileId]
+            // A direct CASE avoids correlated CTE materialization into OPFS.
+            // Imports usually share a clock; bind it once instead of making
+            // SQLite compare every id twice against every CASE arm.
+            // OR FAIL lets our enclosing transaction roll back the entire batch
+            // on any error, without a separate per-statement rollback journal.
+            const clock = sharedClock
+              ? '?'
+              : `CASE id ${batch.map(() => 'WHEN ? THEN ?').join(' ')} END`;
+            const clockBindings = sharedClock
+              ? [batch[0].updatedAt]
+              : batch.flatMap(({ id, updatedAt }) => [id, updatedAt]);
+            await db.runAsync(
+              `UPDATE OR FAIL ${table} SET updated_at = ${clock}, device_id = ?
+               WHERE ${scoped(table)} AND id IN (${batch.map(() => '?').join(', ')})
+                 AND (updated_at IS NOT ${clock} OR device_id IS NOT ?)`,
+              [
+                ...clockBindings,
+                this.deviceId,
+                this.profileId,
+                ...batch.map(({ id }) => id),
+                ...clockBindings,
+                this.deviceId,
+              ]
             );
-            changes.push({ table, row });
           }
         }
         if (this.ready && !reset) {
@@ -272,7 +306,7 @@ export class ProfileDataSync {
               updated_at: Math.max(Date.now(), old.updated_at + 1),
               device_id: this.deviceId,
             };
-            await this.saveTombstone(table, row);
+            await this.saveTombstone(table, row, db);
             changes.push({ table, row });
           }
         }
@@ -282,8 +316,12 @@ export class ProfileDataSync {
       return changes;
     });
   }
-  private async saveTombstone(table: string, row: Row): Promise<void> {
-    await this.db.runAsync(
+  private async saveTombstone(
+    table: string,
+    row: Row,
+    db = this.db
+  ): Promise<void> {
+    await db.runAsync(
       `INSERT INTO sync_tombstones (profile_id, table_name, row_id, row_data, updated_at, device_id)
       VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(profile_id, table_name, row_id) DO UPDATE SET
       row_data = excluded.row_data, updated_at = excluded.updated_at, device_id = excluded.device_id`,
@@ -425,7 +463,7 @@ export class ProfileDataSync {
           JSON.parse(deleted.row_data) as Row
         );
       let applied = 0;
-      await this.db.transactionAsync(async () => {
+      await this.db.transactionAsync(async (db) => {
         this.assertActive();
         for (const table of PROFILE_SYNC_TABLES) {
           const remaining = incoming.filter((change) => change.table === table);
@@ -511,14 +549,14 @@ export class ProfileDataSync {
               }
               localId ||= remoteId;
               // IDs may never overwrite rows in an unrelated local profile.
-              const elsewhere = await this.db.queryAsync<{ id: string }>(
+              const elsewhere = await db.queryAsync<{ id: string }>(
                 `SELECT id FROM ${table} WHERE id = ? AND NOT (${scoped(table)})`,
                 [localId, this.profileId]
               );
               if (elsewhere.length)
                 throw new Error('Sync row belongs to another local profile');
               aliases.set(key(table, remoteId), localId);
-              await this.db.runAsync(
+              await db.runAsync(
                 `INSERT INTO sync_row_aliases (profile_id, remote_device_id, table_name, remote_id, local_id)
                 VALUES (?, ?, ?, ?, ?) ON CONFLICT(profile_id, remote_device_id, table_name, remote_id) DO UPDATE SET local_id = excluded.local_id`,
                 [this.profileId, bindingIdentity, table, remoteId, localId]
@@ -531,10 +569,10 @@ export class ProfileDataSync {
             if (!versionWins(row, local) || !versionWins(row, tombstone))
               continue;
             if (row.is_deleted) {
-              await this.saveTombstone(table, row);
+              await this.saveTombstone(table, row, db);
               tombstones.set(rowKey, row);
               if (local) {
-                await this.db.runAsync(
+                await db.runAsync(
                   `UPDATE ${table} SET is_deleted = 1, updated_at = ?, device_id = ? WHERE id = ? AND ${scoped(table)}`,
                   [row.updated_at, row.device_id, row.id, this.profileId]
                 );
@@ -547,7 +585,7 @@ export class ProfileDataSync {
               const values = names.map((name) =>
                 typeof row[name] === 'boolean' ? Number(row[name]) : row[name]
               );
-              await this.db.runAsync(
+              await db.runAsync(
                 `INSERT INTO ${table} (${names.join(', ')}) VALUES (${names.map(() => '?').join(', ')})
                 ON CONFLICT(id) DO UPDATE SET ${names
                   .filter((name) => name !== 'id')
@@ -555,7 +593,7 @@ export class ProfileDataSync {
                   .join(', ')}`,
                 values
               );
-              await this.db.runAsync(
+              await db.runAsync(
                 'DELETE FROM sync_tombstones WHERE profile_id = ? AND table_name = ? AND row_id = ?',
                 [this.profileId, table, row.id]
               );

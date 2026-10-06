@@ -61,6 +61,8 @@ interface AvatarRenderCache {
   bellyTexture: HTMLCanvasElement | null;
   earTextures: (HTMLCanvasElement | null)[];
   bodyFrames: (HTMLCanvasElement | null | undefined)[];
+  movingBody: HTMLCanvasElement | null | undefined;
+  movingBodyTime: number;
 }
 
 const QUALITY_PRESETS: Record<MotionTier, QualitySettings> = {
@@ -78,7 +80,7 @@ const QUALITY_PRESETS: Record<MotionTier, QualitySettings> = {
     scrollResumeDelay: 0,
     allowEyeTracking: true,
     maxDpr: 3,
-    bodyFps: 30,
+    bodyFps: 12,
     bodyFrameCount: 0,
   },
   medium: {
@@ -556,9 +558,14 @@ export function FluxbyWebGL({
       return layer;
     };
 
-    const bodyFrameCount = enableEyeTracking
-      ? 0
-      : qualitySettings.bodyFrameCount;
+    const isCompactAvatar = Math.min(width, height) <= 100;
+    const bodyFrameCount =
+      enableEyeTracking && !isCompactAvatar
+        ? 0
+        : qualitySettings.bodyFrameCount || (isCompactAvatar ? 8 : 0);
+    const bodyFps = isCompactAvatar
+      ? Math.min(8, qualitySettings.bodyFps)
+      : qualitySettings.bodyFps;
     let renderCache = renderCacheRef.current;
     if (
       !renderCache ||
@@ -575,6 +582,8 @@ export function FluxbyWebGL({
           createLayer((layerCtx) => drawEarTexture(layerCtx, ear))
         ),
         bodyFrames: Array.from({ length: bodyFrameCount }, () => undefined),
+        movingBody: undefined,
+        movingBodyTime: -Infinity,
       };
       renderCacheRef.current = renderCache;
     }
@@ -944,9 +953,9 @@ export function FluxbyWebGL({
       ctx.restore();
     };
 
-    // Breathing and facial animation stay at the target frame rate. The touch
-    // tiers lazily cache a bounded sequence of fur poses and play it forward
-    // and backward, avoiding a jump at the loop boundary or a startup burst.
+    // Breathing and facial animation stay at the target frame rate. Touch
+    // tiers and compact logos reuse a bounded sequence of fur poses. Larger
+    // desktop instances retain one refreshed pose for their interactive lighting.
     const drawFluxbyAvatar = (
       ctx: CanvasRenderingContext2D,
       centerX: number,
@@ -971,13 +980,12 @@ export function FluxbyWebGL({
 
       if (bodyFrameCount > 0) {
         const cycleLength = Math.max(1, (bodyFrameCount - 1) * 2);
-        const cycleFrame =
-          Math.floor(time * qualitySettings.bodyFps) % cycleLength;
+        const cycleFrame = Math.floor(time * bodyFps) % cycleLength;
         const bodyFrame =
           cycleFrame < bodyFrameCount ? cycleFrame : cycleLength - cycleFrame;
         let bodyLayer = cachedLayers.bodyFrames[bodyFrame];
         if (bodyLayer === undefined) {
-          const furTime = bodyFrame / Math.max(1, qualitySettings.bodyFps);
+          const furTime = bodyFrame / Math.max(1, bodyFps);
           bodyLayer = createLayer((bodyCtx) =>
             drawAvatarBody(bodyCtx, tiltX, tiltY, furTime)
           );
@@ -986,7 +994,25 @@ export function FluxbyWebGL({
         if (bodyLayer) ctx.drawImage(bodyLayer, -50, -50, 100, 100);
         else drawAvatarBody(ctx, tiltX, tiltY, time);
       } else {
-        drawAvatarBody(ctx, tiltX, tiltY, time);
+        if (
+          cachedLayers.movingBody === undefined ||
+          time - cachedLayers.movingBodyTime >= 1 / Math.max(1, bodyFps)
+        ) {
+          if (cachedLayers.movingBody === undefined) {
+            cachedLayers.movingBody = createLayer();
+          }
+          const bodyCtx = cachedLayers.movingBody?.getContext('2d');
+          if (bodyCtx) {
+            bodyCtx.clearRect(-50, -50, 100, 100);
+            drawAvatarBody(bodyCtx, tiltX, tiltY, time);
+          }
+          cachedLayers.movingBodyTime = time;
+        }
+        if (cachedLayers.movingBody) {
+          ctx.drawImage(cachedLayers.movingBody, -50, -50, 100, 100);
+        } else {
+          drawAvatarBody(ctx, tiltX, tiltY, time);
+        }
       }
 
       // Eyes (drawn LAST to be on top of everything)
@@ -1141,8 +1167,11 @@ export function FluxbyWebGL({
       ctx.restore();
     };
 
-    const targetFPS =
+    const configuredFPS =
       qualitySettings.targetFps > 0 ? qualitySettings.targetFps : 30;
+    const targetFPS = isCompactAvatar
+      ? Math.min(15, configuredFPS)
+      : configuredFPS;
     const frameInterval = 1000 / targetFPS;
 
     const animate = (timestamp: number = 0) => {
@@ -1200,12 +1229,13 @@ export function FluxbyWebGL({
       }
       const isBlinking = animationActive && time < blinkTimeRef.current;
 
+      const canvasRect = canvas.getBoundingClientRect();
+
       // Eye tracking (smooth follow) - eyes look towards the mouse relative to avatar position
       if (enableEyeTracking) {
         const eyeSpeed = 0.2;
-        const rect = canvas.getBoundingClientRect();
-        const avatarCenterX = rect.left + rect.width / 2;
-        const avatarCenterY = rect.top + rect.height / 2;
+        const avatarCenterX = canvasRect.left + canvasRect.width / 2;
+        const avatarCenterY = canvasRect.top + canvasRect.height / 2;
         const mouseX = mouseRef.current.x;
         const mouseY = mouseRef.current.y;
 
@@ -1239,7 +1269,6 @@ export function FluxbyWebGL({
       }
 
       // Determine normalized avatar X position (-1 left .. 1 right)
-      const canvasRect = canvas.getBoundingClientRect();
       const avatarPosXNormalizedRaw =
         (canvasRect.left + canvasRect.width / 2 - window.innerWidth / 2) /
           (window.innerWidth / 2) || 0;

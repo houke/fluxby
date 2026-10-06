@@ -1,8 +1,9 @@
+import PageLoading from '../PageLoading';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import HelpSidebar from './HelpSidebar';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useTheme } from '../../contexts/ThemeContext';
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 
 export default function HelpLayout() {
   const { language, setLanguage, t } = useLanguage();
@@ -124,7 +125,9 @@ export default function HelpLayout() {
         {/* Main content */}
         <main className='min-w-0 flex-1 overflow-x-auto px-4 py-8 lg:px-8 lg:py-12'>
           <div className='mx-auto max-w-4xl min-w-0 [overflow-wrap:anywhere]'>
-            <Outlet />
+            <Suspense fallback={<PageLoading />}>
+              <Outlet />
+            </Suspense>
           </div>
         </main>
 

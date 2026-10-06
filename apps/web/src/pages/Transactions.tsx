@@ -116,7 +116,6 @@ import {
   formatCurrency,
 } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/useMediaQuery';
-import { useSuggestions, CategorySuggestion } from '@/hooks/useSuggestions';
 import { useAddressBook } from '@/hooks/useAddressBook';
 import { useSharedIbans } from '@/hooks/useSharedIbans';
 
@@ -556,49 +555,6 @@ export default function Transactions() {
     staleTime: 30 * 1000, // 30 seconds - prevent constant refetching on focus
   });
 
-  // Use centralized suggestions hook
-  const suggestions = useSuggestions(transactions);
-
-  // Also fetch matching transactions across ALL data (no date range) so we can
-  // show a specialized empty state when the current period has no matches but
-  // the full dataset does.
-  const { data: transactionsAllData } = useQuery<Transaction[]>({
-    queryKey: [
-      'transactions-all',
-      activeProfileId,
-      {
-        search: debouncedSearch,
-        type: typeParam,
-        categoryIds: categoryIdsParam,
-        opposingAccountIbans: ibansParam,
-        opposingAccountName: nameParam,
-        addressBookId: addressBookIdParam,
-        paymentMethods: paymentMethodsParam,
-        paymentProviders: paymentProvidersParam,
-      },
-    ],
-    queryFn: () =>
-      api.getTransactions({
-        search: debouncedSearch,
-        type: typeParam || '',
-        ...(categoryIdsParam
-          ? { categoryIds: categoryIdsParam.join(',') }
-          : {}),
-        opposingAccountIbans: ibansParam?.join(',') || '',
-        opposingAccountName: nameParam || '',
-        addressBookId: addressBookIdParam?.toString() || '',
-        paymentMethods: paymentMethodsParam?.join(',') || '',
-        paymentProviders: paymentProvidersParam?.join(',') || '',
-      }) as Promise<Transaction[]>,
-    // Only run when filters are active and the current period returned zero
-    // transactions to avoid extra work during normal browsing.
-    enabled:
-      !!activeProfileId &&
-      hasActiveFilters &&
-      (transactions?.length ?? 0) === 0,
-    staleTime: 30 * 1000,
-  });
-
   // React 19: Use deferred value with initial empty array for smoother first render
   // This allows the search input to remain responsive while the list updates
   const deferredTransactions = useDeferredValue(transactions, []);
@@ -768,7 +724,7 @@ export default function Transactions() {
         paymentMethods: paymentMethodsParam?.join(',') || '',
         paymentProviders: paymentProvidersParam?.join(',') || '',
       }) as Promise<{ before: number; after: number; total: number }>,
-    enabled: !!activeProfileId && !!startDate && !!endDate,
+    enabled: !!activeProfileId && hasActiveFilters && !!startDate && !!endDate,
   });
 
   // Determine suggested period based on available data (for empty state)
@@ -946,7 +902,6 @@ export default function Transactions() {
     }
   };
 
-  // Fetch suggestions for uncategorized transactions
   useEffect(() => {
     // Reset visible count when date range changes
     setVisibleCount(50);
@@ -1959,34 +1914,6 @@ export default function Transactions() {
     [paymentMethodData]
   );
 
-  const _handleAcceptSuggestion = (
-    tx: Transaction,
-    suggestion: CategorySuggestion
-  ) => {
-    updateMutation.mutate({
-      id: tx.id,
-      data: { categoryId: suggestion.categoryId },
-    });
-  };
-
-  const _handleAcceptAndCreateRule = (
-    tx: Transaction,
-    suggestion: CategorySuggestion
-  ) => {
-    updateMutation.mutate({
-      id: tx.id,
-      data: { categoryId: suggestion.categoryId },
-    });
-
-    if (tx.merchantName && suggestion.categoryId) {
-      const pattern = tx.merchantName.split(' ')[0].toLowerCase();
-      createRuleMutation.mutate({
-        pattern,
-        categoryId: suggestion.categoryId,
-      });
-    }
-  };
-
   // Get totals via optimized database query (doesn't require loading all transactions)
   // This ensures accurate totals even with pagination limits
   const { totals: dbTotals } = useTransactionTotalsQuery({
@@ -2423,15 +2350,14 @@ export default function Transactions() {
                       const isExpanded =
                         expandedMerchant === `${merchantKey}-${tx.id}`;
                       const history = recurring ? getRecurringHistory(tx) : [];
-                      const _suggestion = suggestions[tx.id];
                       const addressBookEntry = findAddressBookEntry(tx);
                       const _sharedData = getSharedIbanData(
                         tx.opposingAccountIban
                       );
-                      const historyTotal = history.reduce(
-                        (sum, h) => sum + h.amount,
-                        0
-                      );
+                      const historyTotal =
+                        isExpanded && !isMobile
+                          ? history.reduce((sum, h) => sum + h.amount, 0)
+                          : 0;
 
                       // Mobile card view
                       if (isMobile) {
@@ -3086,7 +3012,7 @@ export default function Transactions() {
                 // If the filters returned no transactions in the current date range
                 // but *do* return transactions across the full dataset, show a
                 // specialized empty-state with a CTA to view all data.
-                (transactionsAllData?.length || 0) > 0 ? (
+                (outsideRangeCount?.total || 0) > 0 ? (
                   <EmptyState
                     icon={Search}
                     title={t.transactions.noTransactionsInRangeTitle}

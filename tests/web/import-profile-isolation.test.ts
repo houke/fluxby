@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SCHEMA_SQL } from '../../packages/database/src/schema';
 import { migration018 } from '../../packages/database/src/migrations/018_dutch_import_tools';
 import { createDataService } from '@/lib/data-service';
-import type { Database } from '@fluxby/database';
+import type { Database, AsyncDatabaseConnection } from '@fluxby/database';
 
 const state = vi.hoisted(() => ({ profile: 'profile', switchOnInsert: false }));
 vi.mock('@fluxby/database', async (importOriginal) => ({
@@ -36,10 +36,13 @@ beforeEach(async () => {
         lastInsertRowId: Number(result.lastInsertRowid),
       };
     },
-    transactionAsync: async <T>(callback: () => Promise<T>) => {
+    transactionAsync: async function <T>(
+      this: unknown,
+      callback: (connection: AsyncDatabaseConnection) => Promise<T>
+    ) {
       sqlite.exec('BEGIN');
       try {
-        const result = await callback();
+        const result = await callback(this as AsyncDatabaseConnection);
         sqlite.exec('COMMIT');
         return result;
       } catch (error) {

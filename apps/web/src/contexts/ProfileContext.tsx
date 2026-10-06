@@ -21,6 +21,52 @@ import {
 } from '@fluxby/database';
 
 const ACTIVE_PROFILE_KEY = 'fluxby.activeProfileId';
+const PROFILE_SCOPED_QUERY_KEYS = new Set([
+  'accounts',
+  'transactions',
+  'categories',
+  'budgets',
+  'dashboard',
+  'analytics',
+  'addressbook',
+  'addressBook',
+  'sharedIbans',
+  'categoryRules',
+  'min-max-dates',
+  'transactions-all',
+  'transaction-totals',
+  'available-years',
+  'recurring-patterns',
+  'recurring-stats',
+  'dismissed-alerts',
+  'has-transactions',
+  'recurring-calendar',
+  'monthly-data',
+  'category-breakdown',
+  'recurring-patterns-history',
+  'recurring-payments-from-transactions',
+  'dailyExpenses',
+  'balanceForecast',
+  'topAccounts',
+  'paymentProviderRules',
+  'cleanupRules',
+  'suggestedContacts',
+  'transactions-outside-range',
+  'recentTransactions',
+  'proposedBudgets',
+  'categoryStatsByPeriod',
+  'monthly-expenses-by-category',
+  'planning',
+  'household-planning',
+  'import-history',
+  'import-profiles',
+  'import-recovery',
+  'import-batches',
+  'import-freshness',
+  'spotlight-transactions',
+  'contact-transactions',
+  'pattern-transactions',
+]);
 
 // Helper to get initial value from OPFS cache
 function getInitialProfileId(): string | null {
@@ -66,6 +112,7 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [isSwitching, setIsSwitching] = useState(false);
   const mountedRef = useRef(true);
+  const switchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Debug logging in Tauri
   const isTauri = typeof window !== 'undefined' && '__TAURI__' in window;
@@ -88,6 +135,9 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
 
     return () => {
       mountedRef.current = false;
+      if (switchTimeoutRef.current !== null) {
+        clearTimeout(switchTimeoutRef.current);
+      }
     };
   }, []);
 
@@ -153,41 +203,6 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
         console.warn('Failed to save profile ID to OPFS:', err)
       );
 
-      // Smart query handling: remove old profile data and prefetch new
-      // This is more efficient than blindly invalidating everything
-      const profileScopedQueryKeys = [
-        'accounts',
-        'transactions',
-        'categories',
-        'budgets',
-        'dashboard',
-        'analytics',
-        'addressbook',
-        'addressBook',
-        'sharedIbans',
-        'categoryRules',
-        'min-max-dates',
-        'transactions-all',
-        'transaction-totals',
-        'available-years',
-        'recurring-patterns',
-        'recurring-stats',
-        'dismissed-alerts',
-        'has-transactions',
-        'recurring-calendar',
-        'monthly-data',
-        'category-breakdown',
-        'recurring-patterns-history',
-        'recurring-payments-from-transactions',
-        'dailyExpenses',
-        'balanceForecast',
-        'topAccounts',
-        'paymentProviderRules',
-        'cleanupRules',
-        'suggestedContacts',
-        'transactions-outside-range',
-      ];
-
       // Remove cached data for queries from previous profile
       // This frees memory and ensures fresh data for new profile
       queryClient.removeQueries({
@@ -195,7 +210,7 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
           const [queryType, queryProfileId] = query.queryKey;
           // Only remove if it's a profile-scoped query AND has a different profile ID
           return (
-            profileScopedQueryKeys.includes(queryType as string) &&
+            PROFILE_SCOPED_QUERY_KEYS.has(queryType as string) &&
             queryProfileId !== undefined &&
             queryProfileId !== id
           );
@@ -204,12 +219,20 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
 
       // Invalidate queries that will be used on the new profile
       // This triggers immediate refetch when components mount
-      profileScopedQueryKeys.forEach((key) => {
-        queryClient.invalidateQueries({ queryKey: [key, id] });
+      queryClient.invalidateQueries({
+        predicate: (query) =>
+          PROFILE_SCOPED_QUERY_KEYS.has(query.queryKey[0] as string) &&
+          query.queryKey[1] === id,
       });
 
       // Brief delay to show switching state
-      setTimeout(() => setIsSwitching(false), 300);
+      if (switchTimeoutRef.current !== null) {
+        clearTimeout(switchTimeoutRef.current);
+      }
+      switchTimeoutRef.current = setTimeout(() => {
+        switchTimeoutRef.current = null;
+        setIsSwitching(false);
+      }, 300);
     },
     [activeProfileId, queryClient]
   );

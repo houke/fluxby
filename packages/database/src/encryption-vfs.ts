@@ -21,6 +21,11 @@ export class EncryptionVFS extends FacadeVFS {
   // SQLite can keep the database and journal open at the same time.
   private legacyChecked = new Set<number>();
 
+  // OPFS jFileSize closes the current writable stream. Keep successful stats
+  // within the SQLite lock epoch, and extend them only after successful writes.
+  // This avoids copying the growing journal on every new partial page append.
+  private physicalSizes = new Map<number, number>();
+
   // Simple one-page cache to handle small reads (header, etc.)
   private cache: {
     pFile: number;
@@ -122,6 +127,7 @@ export class EncryptionVFS extends FacadeVFS {
     // A recycled file handle must be checked against its newly opened file.
     if (result === VFS.SQLITE_OK) {
       this.legacyChecked.delete(pFile);
+      this.physicalSizes.delete(pFile);
       if (this.cache?.pFile === pFile) this.cache = null;
     }
 
@@ -131,6 +137,7 @@ export class EncryptionVFS extends FacadeVFS {
   async jClose(pFile: number): Promise<number> {
     if (this.cache?.pFile === pFile) this.cache = null;
     this.legacyChecked.delete(pFile);
+    this.physicalSizes.delete(pFile);
     return this.baseVFS.jClose(pFile);
   }
 
@@ -214,12 +221,9 @@ export class EncryptionVFS extends FacadeVFS {
 
         let pageData: Uint8Array;
         if (count === this.pageSize) {
-          // Full page write
-          pageData = new Uint8Array(
-            pData.buffer,
-            pData.byteOffset + bytesWritten,
-            this.pageSize
-          );
+          // Copy before the asynchronous write: SQLite/callers can reuse the
+          // source buffer, while the cache must match the encrypted bytes.
+          pageData = pData.slice(bytesWritten, bytesWritten + this.pageSize);
         } else {
           // Partial page write - need to read existing page first
           const existing = await this.getOrFetchPage(pFile, pageIndex);
@@ -234,10 +238,10 @@ export class EncryptionVFS extends FacadeVFS {
 
         await this.writeEncryptedPage(pFile, pageIndex, pageData);
 
-        // Update cache if it matches
-        if (this.cache?.pFile === pFile && this.cache.pageIndex === pageIndex) {
-          this.cache.data.set(pageData);
-        }
+        // The successfully written page is already known plaintext. Retain it
+        // in the existing single-page cache so a following partial write does
+        // not close/read the OPFS writable stream to fetch those same bytes.
+        this.cache = { pFile, pageIndex, data: pageData, isDirty: false };
 
         bytesWritten += count;
         currentOffset += count;
@@ -254,11 +258,17 @@ export class EncryptionVFS extends FacadeVFS {
   async jTruncate(pFile: number, size: number): Promise<number> {
     const physicalSize = Math.ceil(size / this.pageSize) * this.blockSize;
     if (this.cache?.pFile === pFile) this.cache = null;
-    return this.baseVFS.jTruncate(pFile, physicalSize);
+    const result = await this.baseVFS.jTruncate(pFile, physicalSize);
+    if (result === VFS.SQLITE_OK) {
+      this.physicalSizes.set(pFile, physicalSize);
+    } else {
+      this.physicalSizes.delete(pFile);
+    }
+    return result;
   }
 
   async jFileSize(pFile: number, pSize: DataView): Promise<number> {
-    const result = await this.baseVFS.jFileSize(pFile, pSize);
+    const result = await this.physicalFileSize(pFile, pSize);
 
     if (result === VFS.SQLITE_OK) {
       const physicalSize = Number(pSize.getBigInt64(0, true));
@@ -278,10 +288,22 @@ export class EncryptionVFS extends FacadeVFS {
     return Promise.resolve(this.baseVFS.jSync(pFile, flags));
   }
   async jLock(pFile: number, lockType: number): Promise<number> {
-    return Promise.resolve(this.baseVFS.jLock(pFile, lockType));
+    const result = await Promise.resolve(this.baseVFS.jLock(pFile, lockType));
+    if (result === VFS.SQLITE_OK && lockType === VFS.SQLITE_LOCK_SHARED) {
+      // Another tab may have written the database and its journal while the
+      // previous lock was released. The base VFS refreshes its Blob here too.
+      this.physicalSizes.clear();
+      this.cache = null;
+    }
+    return result;
   }
   async jUnlock(pFile: number, lockType: number): Promise<number> {
-    return Promise.resolve(this.baseVFS.jUnlock(pFile, lockType));
+    const result = await Promise.resolve(this.baseVFS.jUnlock(pFile, lockType));
+    if (result === VFS.SQLITE_OK && lockType === VFS.SQLITE_LOCK_NONE) {
+      this.physicalSizes.clear();
+      this.cache = null;
+    }
+    return result;
   }
   async jCheckReservedLock(pFile: number, pResOut: DataView): Promise<number> {
     return Promise.resolve(this.baseVFS.jCheckReservedLock(pFile, pResOut));
@@ -307,6 +329,22 @@ export class EncryptionVFS extends FacadeVFS {
    * Internal helpers
    */
 
+  private async physicalFileSize(
+    pFile: number,
+    pSize: DataView
+  ): Promise<number> {
+    const cachedSize = this.physicalSizes.get(pFile);
+    if (cachedSize !== undefined) {
+      pSize.setBigInt64(0, BigInt(cachedSize), true);
+      return VFS.SQLITE_OK;
+    }
+    const result = await this.baseVFS.jFileSize(pFile, pSize);
+    if (result === VFS.SQLITE_OK) {
+      this.physicalSizes.set(pFile, Number(pSize.getBigInt64(0, true)));
+    }
+    return result;
+  }
+
   private async getOrFetchPage(
     pFile: number,
     pageIndex: number
@@ -320,7 +358,10 @@ export class EncryptionVFS extends FacadeVFS {
 
     // Check file size first
     const pSize = new DataView(new ArrayBuffer(8));
-    await this.baseVFS.jFileSize(pFile, pSize);
+    const sizeResult = await this.physicalFileSize(pFile, pSize);
+    if (sizeResult !== VFS.SQLITE_OK) {
+      throw new Error(`Physical file size failed with code ${sizeResult}`);
+    }
     const actualSize = Number(pSize.getBigInt64(0, true));
 
     if (physicalOffset >= actualSize) {
@@ -418,6 +459,13 @@ export class EncryptionVFS extends FacadeVFS {
     const rc = await this.baseVFS.jWrite(pFile, block, physicalOffset);
     if (rc !== VFS.SQLITE_OK) {
       throw new Error(`Physical write failed with code ${rc}`);
+    }
+    const knownSize = this.physicalSizes.get(pFile);
+    if (knownSize !== undefined) {
+      this.physicalSizes.set(
+        pFile,
+        Math.max(knownSize, physicalOffset + this.blockSize)
+      );
     }
   }
 }

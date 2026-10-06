@@ -1,4 +1,4 @@
-import { type Database } from '@fluxby/database';
+import { type AsyncDatabaseConnection } from '@fluxby/database';
 import { type TransactionCreate } from '@fluxby/shared';
 
 interface INGImportOptions {
@@ -23,7 +23,7 @@ interface INGImportOptions {
  * ING Specific row processor
  */
 export async function processINGRow(
-  db: Database,
+  db: Pick<AsyncDatabaseConnection, 'queryOneAsync' | 'runAsync'>,
   row: Record<string, string>,
   options: INGImportOptions,
   helpers: {

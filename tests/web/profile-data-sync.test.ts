@@ -1,3 +1,4 @@
+import type { AsyncDatabaseConnection } from '@fluxby/database';
 import { migrations } from '../../packages/database/src/migrations';
 import Sqlite from 'better-sqlite3';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -28,10 +29,13 @@ function database() {
         lastInsertRowId: Number(result.lastInsertRowid),
       };
     },
-    transactionAsync: async <T>(work: () => Promise<T>) => {
+    transactionAsync: async function <T>(
+      this: unknown,
+      work: (connection: AsyncDatabaseConnection) => Promise<T>
+    ) {
       sqlite.exec('BEGIN');
       try {
-        const result = await work();
+        const result = await work(this as AsyncDatabaseConnection);
         sqlite.exec('COMMIT');
         return result;
       } catch (error) {
@@ -60,6 +64,7 @@ beforeEach(async () => {
   sqlite.pragma('foreign_keys = ON');
   sqlite.exec(SCHEMA_SQL);
   const db = database();
+  await migrations.find((migration) => migration.version === 6)!.up(db);
   await migration013.up(db);
   await migration015.up(db);
   await migration016.up(db);
@@ -76,6 +81,288 @@ beforeEach(async () => {
   await sync.initialize();
 });
 afterEach(() => sqlite.close());
+
+function addImportedTransactions(count: number, author: string | null = null) {
+  const insert = sqlite.prepare(`INSERT INTO transactions
+    (id,date,amount,type,account_id,category_id,profile_id,updated_at,device_id)
+    VALUES(?, '2026-09-29', -1, 'expense', 'a', 'c', 'local-profile', 500, ?)`);
+  sqlite.transaction(() => {
+    for (let index = 0; index < count; index++)
+      insert.run(`import-${index}`, author);
+  })();
+}
+
+describe('bounded local sync stamps', () => {
+  it('stamps a large import in bounded batches, preserves unchanged/foreign rows and persists hard deletions', async () => {
+    const db = database();
+    const run = vi.spyOn(db, 'runAsync');
+    const captured = new ProfileDataSync(db, 'local-profile', 'local-device');
+    await captured.initialize();
+    addImportedTransactions(405);
+    sqlite.exec(
+      "UPDATE accounts SET name = 'Changed' WHERE id = 'a'; DELETE FROM transactions WHERE id = 't';"
+    );
+
+    const changes = await captured.captureLocalChanges();
+    expect(changes).toHaveLength(407);
+    const stamps = run.mock.calls.filter(([sql]) =>
+      /UPDATE(?: OR FAIL)? transactions/.test(sql)
+    );
+    expect(stamps).toHaveLength(3);
+    expect(stamps.every(([sql]) => !sql.includes('CASE id'))).toBe(true);
+    expect(stamps.every(([, params]) => (params?.length ?? 0) <= 205)).toBe(
+      true
+    );
+    expect(
+      sqlite
+        .prepare(
+          "SELECT COUNT(*) AS count FROM transactions WHERE id LIKE 'import-%' AND device_id='local-device' AND updated_at=500"
+        )
+        .get()
+    ).toEqual({ count: 405 });
+    expect(
+      sqlite
+        .prepare("SELECT updated_at,device_id FROM accounts WHERE id='a'")
+        .get()
+    ).toEqual({ updated_at: 101, device_id: 'local-device' });
+    expect(
+      sqlite
+        .prepare(
+          "SELECT updated_at,device_id FROM accounts WHERE id='private-a'"
+        )
+        .get()
+    ).toEqual({ updated_at: 100, device_id: 'local-device' });
+    expect(
+      sqlite
+        .prepare("SELECT updated_at,device_id FROM categories WHERE id='c'")
+        .get()
+    ).toEqual({ updated_at: 100, device_id: 'local-device' });
+    expect(changes).toContainEqual(
+      expect.objectContaining({
+        table: 'transactions',
+        row: expect.objectContaining({ id: 't', is_deleted: true }),
+      })
+    );
+
+    const restarted = new ProfileDataSync(
+      database(),
+      'local-profile',
+      'local-device'
+    );
+    await restarted.initialize();
+    expect(await restarted.getChanges()).toContainEqual(
+      expect.objectContaining({
+        table: 'transactions',
+        row: expect.objectContaining({ id: 't', is_deleted: true }),
+      })
+    );
+    run.mockClear();
+    expect(await captured.captureLocalChanges()).toEqual([]);
+    expect(run).not.toHaveBeenCalled();
+  });
+
+  it('retains individual monotonic clocks when changed rows do not share an import clock', async () => {
+    addImportedTransactions(405, 'old-author');
+    const clock = sqlite.prepare(
+      'UPDATE transactions SET updated_at = ? WHERE id = ?'
+    );
+    sqlite.transaction(() => {
+      for (let index = 0; index < 405; index++)
+        clock.run(500 + index, `import-${index}`);
+    })();
+    const db = database();
+    const run = vi.spyOn(db, 'runAsync');
+    const captured = new ProfileDataSync(db, 'local-profile', 'local-device');
+    await captured.initialize();
+    sqlite.exec(`UPDATE transactions SET amount = -2,
+      updated_at = CASE WHEN id = 'import-0' THEN 1 ELSE updated_at + 20 END
+      WHERE id LIKE 'import-%'`);
+
+    const changes = await captured.captureLocalChanges();
+    expect(changes).toHaveLength(405);
+    const stamps = run.mock.calls.filter(([sql]) =>
+      /UPDATE(?: OR FAIL)? transactions/.test(sql)
+    );
+    expect(stamps).toHaveLength(3);
+    expect(stamps.every(([, params]) => (params?.length ?? 0) <= 1003)).toBe(
+      true
+    );
+    const rows = sqlite
+      .prepare(
+        "SELECT id,updated_at,device_id FROM transactions WHERE id LIKE 'import-%'"
+      )
+      .all() as { id: string; updated_at: number; device_id: string }[];
+    for (const row of rows) {
+      const index = Number(row.id.slice('import-'.length));
+      expect(row.updated_at).toBe(index === 0 ? 501 : 520 + index);
+      expect(row.device_id).toBe('local-device');
+      expect(changes).toContainEqual({
+        table: 'transactions',
+        row: expect.objectContaining(row),
+      });
+    }
+    expect(await captured.captureLocalChanges()).toEqual([]);
+  });
+
+  it('captures changed rows without rewriting already correct stored author/clock metadata', async () => {
+    addImportedTransactions(3, 'local-device');
+    sqlite.exec(`CREATE TABLE stamp_audit(id TEXT);
+      CREATE TRIGGER audit_stamp AFTER UPDATE OF updated_at,device_id ON transactions
+      BEGIN INSERT INTO stamp_audit VALUES(new.id); END;`);
+    const changes = await sync.captureLocalChanges();
+    expect(
+      changes.filter((change) => change.table === 'transactions')
+    ).toHaveLength(3);
+    expect(
+      sqlite.prepare('SELECT COUNT(*) AS count FROM stamp_audit').get()
+    ).toEqual({ count: 0 });
+    expect(await sync.captureLocalChanges()).toEqual([]);
+  });
+
+  it('rolls back all stamp batches on failure and retains the prior snapshot for retry', async () => {
+    const db = database();
+    const originalRun = db.runAsync;
+    let batches = 0;
+    let fail = true;
+    db.runAsync = async (sql, params) => {
+      if (
+        /UPDATE(?: OR FAIL)? transactions/.test(sql) &&
+        ++batches === 2 &&
+        fail
+      )
+        throw new Error('Stamp write failed');
+      return originalRun(sql, params);
+    };
+    const captured = new ProfileDataSync(db, 'local-profile', 'local-device');
+    await captured.initialize();
+    addImportedTransactions(405);
+    await expect(captured.captureLocalChanges()).rejects.toThrow(
+      'Stamp write failed'
+    );
+    expect(
+      sqlite
+        .prepare(
+          "SELECT COUNT(*) AS count FROM transactions WHERE id LIKE 'import-%' AND device_id IS NULL"
+        )
+        .get()
+    ).toEqual({ count: 405 });
+    fail = false;
+    expect(await captured.captureLocalChanges()).toHaveLength(405);
+    expect(
+      sqlite
+        .prepare(
+          "SELECT COUNT(*) AS count FROM transactions WHERE id LIKE 'import-%' AND device_id='local-device'"
+        )
+        .get()
+    ).toEqual({ count: 405 });
+  });
+
+  it('preserves contact scoping and reset snapshots while clearing obsolete transport state', async () => {
+    sqlite.exec(`
+      INSERT INTO address_book(id,iban,name,profile_id,updated_at,device_id)
+      VALUES('local-contact','NLCONTACT','Local','local-profile',100,'local-device'),
+        ('foreign-contact','NLFOREIGN','Foreign','other-profile',100,'local-device');
+      INSERT INTO contact_ibans(id,contact_id,iban,updated_at,device_id)
+      VALUES('local-iban','local-contact','NLLOCAL',100,'old-author'),
+        ('foreign-iban','foreign-contact','NLFOREIGN',100,'foreign-author');
+    `);
+    await sync.initialize();
+    sqlite.exec(
+      "UPDATE contact_ibans SET iban='NLCHANGED' WHERE id='local-iban'"
+    );
+    const edits = await sync.captureLocalChanges();
+    expect(edits).toContainEqual(
+      expect.objectContaining({
+        table: 'contact_ibans',
+        row: expect.objectContaining({
+          id: 'local-iban',
+          updated_at: 101,
+          device_id: 'local-device',
+        }),
+      })
+    );
+    expect(
+      sqlite
+        .prepare(
+          "SELECT updated_at,device_id FROM contact_ibans WHERE id='foreign-iban'"
+        )
+        .get()
+    ).toEqual({ updated_at: 100, device_id: 'foreign-author' });
+
+    sqlite.exec(`
+      DELETE FROM transactions WHERE id='t';
+      INSERT INTO sync_row_aliases(profile_id,remote_device_id,table_name,remote_id,local_id)
+      VALUES('local-profile','remote:profile','transactions','remote-t','t');
+    `);
+    await sync.captureLocalChanges();
+    expect(
+      sqlite.prepare('SELECT COUNT(*) AS count FROM sync_tombstones').get()
+    ).toEqual({ count: 1 });
+    const reset = await sync.captureLocalChanges(true);
+    expect(reset).toHaveLength(4);
+    expect(
+      reset.every(
+        (change) =>
+          change.row.profile_id === 'local-profile' &&
+          change.row.device_id === 'local-device'
+      )
+    ).toBe(true);
+    expect(
+      reset.some(
+        (change) => change.row.id === 't' || change.row.id === 'foreign-iban'
+      )
+    ).toBe(false);
+    expect(
+      sqlite.prepare('SELECT COUNT(*) AS count FROM sync_tombstones').get()
+    ).toEqual({ count: 0 });
+    expect(
+      sqlite.prepare('SELECT COUNT(*) AS count FROM sync_row_aliases').get()
+    ).toEqual({ count: 0 });
+    expect(await sync.captureLocalChanges()).toEqual([]);
+  });
+
+  it('rolls back earlier rows and stamp batches after a mid-statement uniqueness failure', async () => {
+    const db = database();
+    const run = db.runAsync;
+    let partiallyStamped = 0;
+    db.runAsync = async (sql, params) => {
+      try {
+        return await run(sql, params);
+      } catch (error) {
+        partiallyStamped = Number(
+          (
+            sqlite
+              .prepare(
+                "SELECT COUNT(*) AS count FROM transactions WHERE id LIKE 'import-%' AND device_id='local-device'"
+              )
+              .get() as { count: number }
+          ).count
+        );
+        throw error;
+      }
+    };
+    const captured = new ProfileDataSync(db, 'local-profile', 'local-device');
+    await captured.initialize();
+    addImportedTransactions(405);
+    sqlite.exec(`
+      UPDATE transactions SET amount=-2 WHERE id='import-250';
+      CREATE UNIQUE INDEX stamp_unique ON transactions(amount) WHERE device_id='local-device' AND amount=-2;
+      INSERT INTO transactions(id,date,amount,type,account_id,profile_id,updated_at,device_id)
+      VALUES('stamp-conflict','2026-09-29',-2,'expense','a','local-profile',500,'local-device');
+    `);
+    await expect(captured.captureLocalChanges()).rejects.toThrow('UNIQUE');
+    expect(partiallyStamped).toBeGreaterThan(200);
+    expect(
+      sqlite
+        .prepare(
+          "SELECT COUNT(*) AS count FROM transactions WHERE id LIKE 'import-%' AND device_id IS NULL"
+        )
+        .get()
+    ).toEqual({ count: 405 });
+    sqlite.exec("DELETE FROM transactions WHERE id='stamp-conflict'");
+    expect(await captured.captureLocalChanges()).toHaveLength(405);
+  });
+});
 
 describe('profile-bound financial data sync', () => {
   it('normalizes legacy manual bill signs from peers without changing recurring income, cadence or dates', async () => {

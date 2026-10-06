@@ -174,6 +174,41 @@ html {
   }
 }
 
+/* Scrolling demonstrations can animate their layer without rebuilding React
+   lists on each frame. Their containing section owns pause/resume behavior. */
+@keyframes demo-scroll-vertical {
+  to {
+    transform: translateY(var(--demo-scroll-offset));
+  }
+}
+
+@keyframes demo-scroll-horizontal {
+  to {
+    transform: translateX(var(--demo-scroll-offset));
+  }
+}
+
+.demo-scroll-vertical,
+.demo-scroll-horizontal {
+  animation-duration: var(--demo-scroll-duration);
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+.demo-scroll-vertical {
+  animation-name: demo-scroll-vertical;
+}
+
+.demo-scroll-horizontal {
+  animation-name: demo-scroll-horizontal;
+}
+
+[data-animation-paused='true'] *,
+[data-animation-paused='true'] *::before,
+[data-animation-paused='true'] *::after {
+  animation-play-state: paused !important;
+}
+
 /* Remove margins from tables in prose content */
 .prose table {
   margin: 0;

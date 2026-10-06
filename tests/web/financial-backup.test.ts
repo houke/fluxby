@@ -1,3 +1,4 @@
+import type { AsyncDatabaseConnection } from '@fluxby/database';
 import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
 import SQLite from 'better-sqlite3';
 import { SCHEMA_SQL } from '../../packages/database/src/schema';
@@ -29,10 +30,13 @@ function adapter() {
         lastInsertRowId: Number(result.lastInsertRowid),
       };
     },
-    transactionAsync: async <T>(operation: () => Promise<T>): Promise<T> => {
+    transactionAsync: async function <T>(
+      this: unknown,
+      operation: (connection: AsyncDatabaseConnection) => Promise<T>
+    ): Promise<T> {
       sqlite.exec('BEGIN');
       try {
-        const result = await operation();
+        const result = await operation(this as AsyncDatabaseConnection);
         sqlite.exec('COMMIT');
         return result;
       } catch (error) {
@@ -309,7 +313,7 @@ describe('financial backup safety and completeness', () => {
     const original = await exportFinancialBackup(db);
     const run = db.runAsync;
     vi.spyOn(db, 'runAsync').mockImplementation(async (sql, params) => {
-      if (sql.startsWith('INSERT INTO "transactions"'))
+      if (/^INSERT(?: OR FAIL)? INTO "transactions"/.test(sql))
         throw new Error('Write failed');
       return run(sql, params);
     });
@@ -317,6 +321,126 @@ describe('financial backup safety and completeness', () => {
       restoreFinancialBackup(db, replacement(original))
     ).rejects.toThrow('Write failed');
     expect((await exportFinancialBackup(db)).tables).toEqual(original.tables);
+  });
+
+  it('restores a large dataset with bounded insert statements', async () => {
+    const backup = await exportFinancialBackup(db);
+    const transaction = backup.tables.transactions[0];
+    backup.tables.transactions = Array.from({ length: 1001 }, (_, index) => ({
+      ...transaction,
+      id: `transaction-${index}`,
+      amount: -(index + 1),
+    }));
+    await restoreFinancialBackup(db, backup);
+    expect(
+      sqlite
+        .prepare('SELECT COUNT(*) count, SUM(amount) total FROM transactions')
+        .get()
+    ).toEqual({ count: 1001, total: -501501 });
+    expect(
+      writes.filter((sql) =>
+        /^INSERT(?: OR FAIL)? INTO "transactions"/.test(sql)
+      ).length
+    ).toBeLessThan(50);
+    expect((await exportFinancialBackup(db)).tables.transactions).toEqual(
+      [...backup.tables.transactions].sort((a, b) =>
+        String(a.id).localeCompare(String(b.id))
+      )
+    );
+  });
+
+  it('preserves omitted defaults and explicit nulls across changing row shapes', async () => {
+    sqlite.exec(
+      "CREATE TABLE restore_defaults(id TEXT PRIMARY KEY, profile_id TEXT REFERENCES profiles(id), label TEXT DEFAULT 'Default label')"
+    );
+    const backup = await exportFinancialBackup(db);
+    backup.tables.restore_defaults = [
+      { id: 'one', profile_id: 'profile' },
+      { profile_id: 'profile', id: 'two', label: null },
+      { label: 'Known', id: 'three', profile_id: 'profile' },
+      { id: 'four', profile_id: 'profile', label: 'Stored' },
+    ];
+    await restoreFinancialBackup(db, backup);
+    expect(
+      sqlite.prepare('SELECT id, label FROM restore_defaults ORDER BY id').all()
+    ).toEqual([
+      { id: 'four', label: 'Stored' },
+      { id: 'one', label: 'Default label' },
+      { id: 'three', label: 'Known' },
+      { id: 'two', label: null },
+    ]);
+  });
+
+  it('rolls back earlier insert batches when a later batch fails', async () => {
+    const original = await exportFinancialBackup(db);
+    const backup = replacement(original);
+    backup.tables.transactions = Array.from({ length: 501 }, (_, index) => ({
+      ...original.tables.transactions[0],
+      id: `batch-transaction-${index}`,
+    }));
+    const run = db.runAsync;
+    let insertedBatches = 0;
+    vi.spyOn(db, 'runAsync').mockImplementation(async (sql, params) => {
+      if (
+        /^INSERT(?: OR FAIL)? INTO "transactions"/.test(sql) &&
+        ++insertedBatches === 2
+      )
+        throw new Error('Later batch failed');
+      return run(sql, params);
+    });
+    await expect(restoreFinancialBackup(db, backup)).rejects.toThrow(
+      'Later batch failed'
+    );
+    expect((await exportFinancialBackup(db)).tables).toEqual(original.tables);
+  });
+
+  it('rolls back the full restore after a unique violation partway through a later insert batch', async () => {
+    sqlite.exec(
+      'CREATE UNIQUE INDEX restore_partial_unique ON transactions(amount) WHERE amount > 0'
+    );
+    const original = await exportFinancialBackup(db);
+    const backup = replacement(original);
+    backup.tables.transactions = Array.from({ length: 501 }, (_, index) => ({
+      ...original.tables.transactions[0],
+      id: `restore-${index}`,
+      amount: index === 250 ? 1 : index + 1,
+    }));
+    const run = db.runAsync;
+    let partialRows = 0;
+    vi.spyOn(db, 'runAsync').mockImplementation(async (sql, params) => {
+      try {
+        return await run(sql, params);
+      } catch (error) {
+        partialRows = Number(
+          (
+            sqlite
+              .prepare('SELECT COUNT(*) AS count FROM transactions')
+              .get() as { count: number }
+          ).count
+        );
+        throw error;
+      }
+    });
+    await expect(restoreFinancialBackup(db, backup)).rejects.toThrow('UNIQUE');
+    // OR FAIL may retain earlier rows until the enclosing transaction rolls back.
+    expect(partialRows).toBe(250);
+    expect((await exportFinancialBackup(db)).tables).toEqual(original.tables);
+  });
+
+  it('rolls back every replacement table when a trigger introduces an invalid deferred foreign key', async () => {
+    sqlite.exec(`CREATE TRIGGER corrupt_restore_fk AFTER INSERT ON transactions
+      WHEN new.id='invalid-restored-tx'
+      BEGIN UPDATE transactions SET account_id='missing-account' WHERE id=new.id; END;`);
+    const original = await exportFinancialBackup(db);
+    const backup = replacement(original);
+    backup.tables.transactions = [
+      { ...original.tables.transactions[0], id: 'valid-restored-tx' },
+      { ...original.tables.transactions[0], id: 'invalid-restored-tx' },
+    ];
+    await expect(restoreFinancialBackup(db, backup)).rejects.toThrow('Invalid');
+    expect(deletedTables().length).toBeGreaterThan(0);
+    expect((await exportFinancialBackup(db)).tables).toEqual(original.tables);
+    expect(sqlite.pragma('foreign_key_check')).toEqual([]);
   });
 
   it('clears stale local sync tombstones and aliases after a verified replacement', async () => {

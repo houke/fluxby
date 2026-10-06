@@ -4,38 +4,23 @@ export const migration002: Migration = {
   version: 2,
   name: 'v5_transaction_columns',
   up: async (db: MigrationContext) => {
+    const columns = new Set(
+      (
+        await db.queryAsync<{ name: string }>('PRAGMA table_info(transactions)')
+      ).map(({ name }) => name)
+    );
     // Add payment_provider
-    try {
+    if (!columns.has('payment_provider')) {
       await db.execAsync(
         'ALTER TABLE transactions ADD COLUMN payment_provider TEXT;'
       );
-    } catch (err) {
-      if (
-        err instanceof Error &&
-        (err.message.includes('duplicate column') ||
-          err.message.includes('already exists'))
-      ) {
-        // Already exists, ignore
-      } else {
-        throw err;
-      }
     }
 
     // Add address_book_id
-    try {
+    if (!columns.has('address_book_id')) {
       await db.execAsync(
         'ALTER TABLE transactions ADD COLUMN address_book_id TEXT;'
       );
-    } catch (err) {
-      if (
-        err instanceof Error &&
-        (err.message.includes('duplicate column') ||
-          err.message.includes('already exists'))
-      ) {
-        // Already exists, ignore
-      } else {
-        throw err;
-      }
     }
   },
   down: async (_db: MigrationContext) => {

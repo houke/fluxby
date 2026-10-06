@@ -67,71 +67,35 @@ export default function SubscriptionsAnimation({
   const [highlightedIndex, setHighlightedIndex] = useState<number | null>(null);
   const [showPriceAlert, setShowPriceAlert] = useState(false);
   const [confirming, setConfirming] = useState(false);
-  const animationRef = useRef<number | null>(null);
   const phaseRef = useRef(0);
-  const timeRef = useRef(0);
 
   useEffect(() => {
-    if (isVisible) {
-      let lastTime = performance.now();
-
-      const animate = (currentTime: number) => {
-        const delta = currentTime - lastTime;
-        lastTime = currentTime;
-        timeRef.current += delta;
-
-        // Animation phases:
-        // 0-2s: Show subscriptions list
-        // 2-4s: Highlight one subscription
-        // 4-6s: Show price change alert
-        // 6-7s: Confirm the subscription
-        // 7-8s: Reset
-
-        const phase = Math.floor(timeRef.current / 1000);
-
-        if (phase !== phaseRef.current) {
-          phaseRef.current = phase;
-
-          if (phase === 2) {
-            // Highlight the Disney+ entry (lookup by name so removing items won't break the index)
-            setHighlightedIndex(
-              subscriptionData.findIndex((s) => s.name === 'Disney+')
-            );
-          } else if (phase === 4) {
-            setShowPriceAlert(true);
-          } else if (phase === 6) {
-            setConfirming(true);
-          } else if (phase >= 8) {
-            // Reset
-            setHighlightedIndex(null);
-            setShowPriceAlert(false);
-            setConfirming(false);
-            timeRef.current = 0;
-            phaseRef.current = 0;
-          }
-        }
-
-        animationRef.current = requestAnimationFrame(animate);
-      };
-
-      animationRef.current = requestAnimationFrame(animate);
-    } else {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-        animationRef.current = null;
-      }
-      timeRef.current = 0;
+    if (!isVisible) {
       phaseRef.current = 0;
       setHighlightedIndex(null);
       setShowPriceAlert(false);
       setConfirming(false);
+      return;
     }
-
-    return () => {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
+    const timer = setInterval(() => {
+      phaseRef.current += 1;
+      const phase = phaseRef.current;
+      if (phase === 2) {
+        setHighlightedIndex(
+          subscriptionData.findIndex((s) => s.name === 'Disney+')
+        );
+      } else if (phase === 4) {
+        setShowPriceAlert(true);
+      } else if (phase === 6) {
+        setConfirming(true);
+      } else if (phase >= 8) {
+        setHighlightedIndex(null);
+        setShowPriceAlert(false);
+        setConfirming(false);
+        phaseRef.current = 0;
       }
-    };
+    }, 1000);
+    return () => clearInterval(timer);
   }, [isVisible]);
 
   // Calculate total monthly spend

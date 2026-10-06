@@ -38,7 +38,8 @@ export default defineConfig({
     },
     {
       name: 'webkit',
-      testMatch: /app-accessibility\.spec\.ts/,
+      testMatch:
+        /app-accessibility\.spec\.ts|opfs-encryption-recovery\.spec\.ts/,
       use: { ...devices['Desktop Safari'] },
     },
     {

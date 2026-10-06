@@ -180,26 +180,22 @@ The API server (`apps/api`) is **optional** and intended only for developers who
 When inserting, updating, or deleting multiple rows, **always** wrap the operations in a transaction:
 
 ```typescript
-// ❌ Wrong - each INSERT triggers an OPFS sync
+// ❌ Wrong - each INSERT commits separately
 for (const item of items) {
   await db.runAsync('INSERT INTO table VALUES (?)', [item]);
 }
 
-// ✅ Correct - all INSERTs happen in one transaction, single OPFS sync
-await db.transactionAsync(async () => {
+// ✅ Correct - all INSERTs share one transaction and commit
+await db.transactionAsync(async (transaction) => {
   for (const item of items) {
-    await db.runAsync('INSERT INTO table VALUES (?)', [item]);
+    await transaction.runAsync('INSERT INTO table VALUES (?)', [item]);
   }
 });
 ```
 
-**Why**: Each individual `db.runAsync()` outside a transaction causes:
+**Why**: Each write outside an explicit transaction commits independently, repeating journal and OPFS durability work. Bulk operations share a commit to reduce this overhead; SQLite may still perform multiple physical writes and syncs within a transaction.
 
-1. A Main Thread → Worker hop
-2. A disk sync to OPFS
-3. High latency per operation (~10-50ms)
-
-With transactions, all operations share a single commit/sync, dramatically improving performance.
+**Transaction ownership**: Always use the connection supplied to the callback for its reads, writes, helpers, and nested transactions. Pass that connection into helpers instead of closing over the original `db`. The original connection waits until commit or rollback finishes; using it inside the callback would wait behind that same transaction. Nested transactions on the supplied connection use savepoints.
 
 #### When to Use Transactions
 
@@ -215,11 +211,11 @@ With transactions, all operations share a single commit/sync, dramatically impro
 - Consider pagination for large result sets
 - Cache frequently accessed static data (categories, rules)
 
-#### OPFS Worker Communication
+#### Async Database Operations
 
-- The database runs in a Web Worker to avoid blocking the UI
-- All database operations are async and go through the worker
-- Minimize worker communication by batching operations
+- The current SQLite WASM connection runs asynchronously on the main thread; the CSV import parser uses a Web Worker
+- Await database operations and batch bulk writes into scoped transactions
+- Keep result sets and main-thread transformations bounded to preserve UI responsiveness
 - Use `queryClient.invalidateQueries()` efficiently after mutations
 
 ## Code Style

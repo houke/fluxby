@@ -191,7 +191,7 @@ export function createHouseholdPlanningService(
         (input.kind === 'income' && reserved > 0)
       )
         throw new Error('Invalid amount');
-      await db.transactionAsync(async () => {
+      await db.transactionAsync(async (db) => {
         assertProfile(pid);
         if (input.recurringPatternId) {
           const pattern = await db.queryOneAsync(
@@ -347,7 +347,7 @@ export function createHouseholdPlanningService(
         cents = moneyCents(amount),
         now = Date.now();
       if (cents <= 0) throw new Error('Invalid contribution');
-      await db.transactionAsync(async () => {
+      await db.transactionAsync(async (db) => {
         assertProfile(pid);
         const goal = await db.queryOneAsync(
           'SELECT id FROM savings_goals WHERE id=? AND profile_id=? AND is_deleted=0',

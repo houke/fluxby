@@ -237,17 +237,77 @@ describe('Fluxby animation workload', () => {
     expect(frames.size).toBe(0);
   });
 
-  it('keeps full-rate fur and eye tracking on a capable desktop', () => {
+  it('refreshes desktop fur less often while keeping eyes and breathing at full rate', () => {
     motion.tier = 'full';
     motion.touch = false;
     const { container } = render(<FluxbyWebGL width={240} height={240} />);
     const main = getMainContext(container);
-    expect(contexts.size).toBe(5);
-    const furDraws = main.createLinearGradient.mock.calls.length;
+    expect(contexts.size).toBe(6);
+    const body = [...contexts.values()].find(
+      (context) =>
+        context !== main && context.createLinearGradient.mock.calls.length > 0
+    );
+    if (!body) throw new Error('Expected a cached desktop body');
+    const furDraws = body.createLinearGradient.mock.calls.length;
+    fireEvent.mouseMove(window, { clientX: 600, clientY: 200 });
     advanceFrame(1050);
-    expect(main.createLinearGradient.mock.calls.length).toBeGreaterThan(
+    expect(main.clearRect).toHaveBeenCalledTimes(2);
+    expect(main.rotate.mock.calls[1][0]).not.toBe(main.rotate.mock.calls[0][0]);
+    expect(body.createLinearGradient).toHaveBeenCalledTimes(furDraws);
+    advanceFrame(1100);
+    expect(body.createLinearGradient.mock.calls.length).toBeGreaterThan(
       furDraws
     );
-    expect(contexts.size).toBe(5);
+    for (let timestamp = 1150; timestamp <= 7000; timestamp += 50) {
+      advanceFrame(timestamp);
+    }
+    expect(contexts.size).toBe(6);
+    expect(frames.size).toBe(1);
+  });
+
+  it('reuses a bounded fur cycle on small desktop logos while preserving facial motion', () => {
+    motion.tier = 'full';
+    motion.touch = false;
+    const { container } = render(<FluxbyWebGL size={48} />);
+    const main = getMainContext(container);
+    const body = [...contexts.values()].find(
+      (context) =>
+        context !== main && context.createLinearGradient.mock.calls.length > 0
+    );
+    if (!body) throw new Error('Expected a cached logo body');
+    advanceFrame(1050);
+    expect(main.clearRect).toHaveBeenCalledTimes(1);
+    advanceFrame(1100);
+    expect(main.clearRect).toHaveBeenCalledTimes(2);
+    advanceFrame(1150);
+    expect(main.clearRect).toHaveBeenCalledTimes(2);
+    for (let timestamp = 1200; timestamp <= 5000; timestamp += 16) {
+      advanceFrame(timestamp);
+    }
+    expect(contexts.size).toBe(13);
+    const gradientDraws = [...contexts.values()].reduce(
+      (count, context) =>
+        count + context.createLinearGradient.mock.calls.length,
+      0
+    );
+    const frameDraws = main.clearRect.mock.calls.length;
+    const rotation = main.rotate.mock.calls.at(-1)?.[0];
+    const position = main.translate.mock.calls.at(-1)?.[1];
+    fireEvent.mouseMove(window, { clientX: 600, clientY: 200 });
+    for (let timestamp = 5016; timestamp <= 10000; timestamp += 16) {
+      advanceFrame(timestamp);
+    }
+    expect(contexts.size).toBe(13);
+    expect(
+      [...contexts.values()].reduce(
+        (count, context) =>
+          count + context.createLinearGradient.mock.calls.length,
+        0
+      )
+    ).toBe(gradientDraws);
+    expect(main.clearRect.mock.calls.length).toBeGreaterThan(frameDraws);
+    expect(main.rotate.mock.calls.at(-1)?.[0]).not.toBe(rotation);
+    expect(main.translate.mock.calls.at(-1)?.[1]).not.toBe(position);
+    expect(frames.size).toBe(1);
   });
 });

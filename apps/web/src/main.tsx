@@ -9,6 +9,7 @@ import {
 } from './lib/error-tracking';
 import App from './App';
 import { debugLog, debugWarn } from './lib/debug';
+import { registerAppServiceWorker } from './lib/service-worker';
 import './index.css';
 
 // Initialize error tracking before anything else
@@ -116,45 +117,29 @@ async function ensureServiceWorkerReady(): Promise<void> {
     return;
   }
 
-  // Clean up any stale SW registrations at scopes other than our base path.
-  // These accumulate when the app has been served at different paths (e.g. root
-  // vs /app/) and cause harmless but noisy 404 update errors in the console.
-  const allRegistrations = await navigator.serviceWorker.getRegistrations();
-  for (const reg of allRegistrations) {
-    if (!reg.scope.endsWith(basePath)) {
-      debugLog('[SW] Unregistering stale SW at scope:', reg.scope);
-      await reg.unregister();
-    }
-  }
-
   const swPath = `${basePath}sw.js`;
 
   try {
-    // Check if we already have an active SW controlling this page
-    if (navigator.serviceWorker.controller) {
+    const appWasControlling =
+      navigator.serviceWorker.controller?.scriptURL ===
+      new URL(swPath, window.location.href).href;
+    if (appWasControlling) {
       debugLog('[SW] Already controlling page');
       return;
     }
 
     debugLog('[SW] First visit - registering and waiting for activation...');
 
-    // Register the service worker
-    const registration = await navigator.serviceWorker.register(swPath, {
-      scope: basePath,
-    });
-    debugLog('[SW] Registered:', registration.scope);
-
-    // Wait for the SW to be ready (installed and activated)
-    // This ensures COOP/COEP headers will be applied on next navigation
-    await navigator.serviceWorker.ready;
+    // A valid parent landing worker must remain registered. Its ready promise
+    // can resolve before the app's scoped worker has cached all route chunks.
+    await registerAppServiceWorker(navigator.serviceWorker, basePath);
     debugLog('[SW] Ready');
 
     // For first-time visitors, the SW won't control the page until reload.
     // Check if we need to reload to get the SW-provided headers.
     // Only do this on browsers that need it (check for cross-origin isolation)
     const needsCOI =
-      typeof SharedArrayBuffer === 'undefined' &&
-      !navigator.serviceWorker.controller;
+      typeof SharedArrayBuffer === 'undefined' && !appWasControlling;
 
     if (needsCOI) {
       debugLog(

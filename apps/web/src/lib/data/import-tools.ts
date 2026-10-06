@@ -108,7 +108,7 @@ export function createImportToolsService(
       if (expectedProfileId && pid !== expectedProfileId)
         throw new Error('importProfileChanged');
       const backup = await exportFinancialBackup(db);
-      await db.transactionAsync(async () => {
+      await db.transactionAsync(async (db) => {
         await db.runAsync(
           'INSERT INTO import_recovery_snapshots(id,filename,backup_json,profile_id,created_at,updated_at) VALUES(?,?,?,?,?,?)',
           [id, filename, JSON.stringify(backup), pid, now, now]
@@ -241,7 +241,7 @@ export function createImportToolsService(
     async undoImportBatch(id: string) {
       const pid = profile(),
         now = Date.now();
-      return db.transactionAsync(async () => {
+      return db.transactionAsync(async (db) => {
         const batch = await db.queryOneAsync<{
           transaction_ids_json: string;
           created_at: number;

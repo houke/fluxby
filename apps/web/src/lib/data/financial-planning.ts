@@ -84,7 +84,7 @@ export function createFinancialPlanningService(
       const pid = profile(),
         id = crypto.randomUUID(),
         now = Date.now();
-      await db.transactionAsync(async () => {
+      await db.transactionAsync(async (db) => {
         await db.runAsync(
           'INSERT INTO savings_goals(id,name,target_amount,deadline,monthly_contribution,profile_id,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?)',
           [
@@ -111,7 +111,7 @@ export function createFinancialPlanningService(
     ): Promise<void> {
       goalInput(input);
       const pid = profile();
-      await db.transactionAsync(async () => {
+      await db.transactionAsync(async (db) => {
         const goal = await db.queryOneAsync<{
           name: string;
           target_amount: number;
@@ -142,7 +142,7 @@ export function createFinancialPlanningService(
     },
     async deleteSavingsGoal(id: string): Promise<void> {
       const pid = profile();
-      await db.transactionAsync(async () => {
+      await db.transactionAsync(async (db) => {
         await db.runAsync(
           'UPDATE savings_goals SET is_deleted=1,updated_at=? WHERE id=? AND profile_id=?',
           [Date.now(), id, pid]
@@ -158,7 +158,7 @@ export function createFinancialPlanningService(
       const pid = profile(),
         id = crypto.randomUUID(),
         now = Date.now();
-      await db.transactionAsync(async () => {
+      await db.transactionAsync(async (db) => {
         const goal = await db.queryOneAsync(
           'SELECT id FROM savings_goals WHERE id=? AND profile_id=? AND is_deleted=0',
           [goalId, pid]
@@ -199,7 +199,7 @@ export function createFinancialPlanningService(
       }>('SELECT * FROM planning_preferences WHERE profile_id=?', [pid]);
       const id = existing?.id ?? crypto.randomUUID(),
         now = Date.now();
-      await db.transactionAsync(async () => {
+      await db.transactionAsync(async (db) => {
         await db.runAsync(
           `INSERT INTO planning_preferences(id,minimum_balance,reserved_savings,profile_id,created_at,updated_at)
           VALUES(?,?,?,?,?,?) ON CONFLICT(profile_id) DO UPDATE SET minimum_balance=excluded.minimum_balance,reserved_savings=excluded.reserved_savings,is_deleted=0,updated_at=excluded.updated_at`,
@@ -318,7 +318,7 @@ export function createFinancialPlanningService(
           type: input.type,
           amount: moneyCents(input.amount) / 100,
         };
-      await db.transactionAsync(async () => {
+      await db.transactionAsync(async (db) => {
         await db.runAsync(
           'INSERT INTO net_worth_items(id,name,type,amount,profile_id,created_at,updated_at) VALUES(?,?,?,?,?,?,?)',
           [id, item.name, item.type, item.amount, pid, now, now]
@@ -338,7 +338,7 @@ export function createFinancialPlanningService(
       )
         throw new Error('Invalid net-worth item type');
       const pid = profile();
-      await db.transactionAsync(async () => {
+      await db.transactionAsync(async (db) => {
         const item = await db.queryOneAsync<NetWorthItem>(
           'SELECT id,name,type,amount FROM net_worth_items WHERE id=? AND profile_id=? AND is_deleted=0',
           [id, pid]
@@ -361,7 +361,7 @@ export function createFinancialPlanningService(
     },
     async deleteNetWorthItem(id: string): Promise<void> {
       const pid = profile();
-      await db.transactionAsync(async () => {
+      await db.transactionAsync(async (db) => {
         await db.runAsync(
           'UPDATE net_worth_items SET is_deleted=1,updated_at=? WHERE id=? AND profile_id=?',
           [Date.now(), id, pid]
@@ -430,7 +430,7 @@ export function createFinancialPlanningService(
       );
       const id = existing?.id ?? crypto.randomUUID(),
         now = Date.now();
-      await db.transactionAsync(async () => {
+      await db.transactionAsync(async (db) => {
         await db.runAsync(
           `INSERT INTO monthly_reviews(id,month,status,checks_json,profile_id,created_at,updated_at) VALUES(?,?,?,?,?,?,?)
           ON CONFLICT(profile_id,month) DO UPDATE SET status=excluded.status,checks_json=excluded.checks_json,is_deleted=0,updated_at=excluded.updated_at`,

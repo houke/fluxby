@@ -593,6 +593,26 @@ describe('calculateAverageSpending', () => {
     // Only January transactions: 200 total
     expect(result).toBeLessThan(20);
   });
+
+  it('calculates spending for 200,000 expenses without exceeding the argument limit', () => {
+    const firstDay = createTransaction({ date: '2024-01-01', amount: -2 });
+    const lastDay = createTransaction({ date: '2024-01-11', amount: -2 });
+    const transactions = Array.from({ length: 200_000 }, (_, index) =>
+      index % 2 === 0 ? firstDay : lastDay
+    );
+    transactions.push(
+      createTransaction({ amount: -1000, type: 'transfer' }),
+      createTransaction({ amount: 1000, type: 'income' }),
+      createTransaction({ date: '2024-02-01', amount: -1000 })
+    );
+
+    expect(
+      calculateAverageSpending(transactions, {
+        startDate: '2024-01-01',
+        endDate: '2024-01-31',
+      })
+    ).toBe(40_000);
+  });
 });
 
 describe('findRecurringTransactions', () => {

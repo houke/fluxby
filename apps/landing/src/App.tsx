@@ -1,139 +1,54 @@
+import { lazy, Suspense } from 'react';
+import PageLoading from './components/PageLoading';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Hero from './components/Hero';
-import Features from './components/Features';
-import Screenshots from './components/Screenshots';
-import Developer from './components/Developer';
-import HelpCenter from './components/HelpCenter';
-import Downloads from './components/Downloads';
-import CTA from './components/CTA';
-import Footer from './components/Footer';
-import LegalModal from './components/LegalModal';
-import PrivacyPolicyContent from './pages/legal/PrivacyPolicyContent';
-import TermsOfUseContent from './pages/legal/TermsOfUseContent';
-import FeaturesContent from './pages/legal/FeaturesContent';
-import PricingContent from './pages/legal/PricingContent';
-import UpdatesContent from './pages/legal/UpdatesContent';
-import AboutContent from './pages/legal/AboutContent';
-import NotFound from './pages/NotFound';
-import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
+import { LanguageProvider } from './contexts/LanguageContext';
 import { ThemeProvider } from './contexts/ThemeContext';
-import { LegalProvider, useLegal } from './contexts/LegalContext';
+import { LegalProvider } from './contexts/LegalContext';
 import DocsLayout from './components/docs/DocsLayout';
-import DocsIntroduction from './pages/docs/DocsIntroduction';
-import DocsAuthentication from './pages/docs/DocsAuthentication';
-import DocsProfiles from './pages/docs/DocsProfiles';
-import DocsErrors from './pages/docs/DocsErrors';
-import DocsAccounts from './pages/docs/DocsAccounts';
-import DocsTransactions from './pages/docs/DocsTransactions';
-import DocsCategories from './pages/docs/DocsCategories';
-import DocsBudgets from './pages/docs/DocsBudgets';
-import DocsSubscriptions from './pages/docs/DocsSubscriptions';
-import DocsAnalytics from './pages/docs/DocsAnalytics';
-import DocsAddressBook from './pages/docs/DocsAddressBook';
-import DocsImport from './pages/docs/DocsImport';
-import DocsData from './pages/docs/DocsData';
-import DocsArchitecture from './pages/docs/DocsArchitecture';
-import DocsOpenAPI from './pages/docs/DocsOpenAPI';
-import DocsAI from './pages/docs/DocsAI';
-import DocsWebMcp from './pages/docs/DocsWebMcp';
 import HelpLayout from './components/help/HelpLayout';
-import HelpHome from './pages/help/HelpHome';
-import HelpBankConnection from './pages/help/HelpBankConnection';
-import HelpBudgeting from './pages/help/HelpBudgeting';
-import HelpSubscriptions from './pages/help/HelpSubscriptions';
-import HelpPrivacy from './pages/help/HelpPrivacy';
-import HelpFirstSteps from './pages/help/HelpFirstSteps';
-import HelpInstallation from './pages/help/HelpInstallation';
-import HelpTransactions from './pages/help/HelpTransactions';
-import HelpBulkDelete from './pages/help/HelpBulkDelete';
-import HelpCategories from './pages/help/HelpCategories';
-import HelpAccounts from './pages/help/HelpAccounts';
-import HelpAnalytics from './pages/help/HelpAnalytics';
-import HelpAddressBook from './pages/help/HelpAddressBook';
-import HelpSync from './pages/help/HelpSync';
-import HelpAI from './pages/help/HelpAI';
-import HelpWebMcp from './pages/help/HelpWebMcp';
 import { HeadManager } from './components/HeadManager';
-import HelpPlanning from './pages/help/HelpPlanning';
 import ScrollToTop from './components/ScrollToTop';
 
-function LegalModals() {
-  const { activeModal, closeModal } = useLegal();
-  const { t } = useLanguage();
-
-  return (
-    <>
-      <LegalModal
-        isOpen={activeModal === 'privacy'}
-        onClose={closeModal}
-        title={t.legal.privacyTitle}
-      >
-        <PrivacyPolicyContent />
-      </LegalModal>
-      <LegalModal
-        isOpen={activeModal === 'terms'}
-        onClose={closeModal}
-        title={t.legal.termsTitle}
-      >
-        <TermsOfUseContent />
-      </LegalModal>
-      <LegalModal
-        isOpen={activeModal === 'features'}
-        onClose={closeModal}
-        title={t.legal.featuresTitle}
-      >
-        <FeaturesContent />
-      </LegalModal>
-      <LegalModal
-        isOpen={activeModal === 'pricing'}
-        onClose={closeModal}
-        title={t.legal.pricingTitle}
-      >
-        <PricingContent />
-      </LegalModal>
-      <LegalModal
-        isOpen={activeModal === 'updates'}
-        onClose={closeModal}
-        title={t.legal.updatesTitle}
-      >
-        <UpdatesContent />
-      </LegalModal>
-      <LegalModal
-        isOpen={activeModal === 'about'}
-        onClose={closeModal}
-        title={t.legal.aboutTitle}
-      >
-        <AboutContent />
-      </LegalModal>
-    </>
-  );
-}
-
-function LandingPage() {
-  const { activeModal } = useLegal();
-
-  return (
-    <div className='bg-black transition-colors duration-500'>
-      <div
-        className={`min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-indigo-100 transition-all duration-500 ease-out dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 ${
-          activeModal
-            ? 'origin-top scale-[0.92] rounded-3xl opacity-50 brightness-50'
-            : ''
-        }`}
-      >
-        <Hero />
-        <Features />
-        <Screenshots />
-        <Developer />
-        <HelpCenter />
-        <Downloads />
-        <CTA />
-        <Footer />
-      </div>
-      <LegalModals />
-    </div>
-  );
-}
+const LandingPage = lazy(() => import('./pages/LandingPage'));
+const NotFound = lazy(() => import('./pages/NotFound'));
+const DocsIntroduction = lazy(() => import('./pages/docs/DocsIntroduction'));
+const DocsAuthentication = lazy(
+  () => import('./pages/docs/DocsAuthentication')
+);
+const DocsProfiles = lazy(() => import('./pages/docs/DocsProfiles'));
+const DocsErrors = lazy(() => import('./pages/docs/DocsErrors'));
+const DocsAccounts = lazy(() => import('./pages/docs/DocsAccounts'));
+const DocsTransactions = lazy(() => import('./pages/docs/DocsTransactions'));
+const DocsCategories = lazy(() => import('./pages/docs/DocsCategories'));
+const DocsBudgets = lazy(() => import('./pages/docs/DocsBudgets'));
+const DocsSubscriptions = lazy(() => import('./pages/docs/DocsSubscriptions'));
+const DocsAnalytics = lazy(() => import('./pages/docs/DocsAnalytics'));
+const DocsAddressBook = lazy(() => import('./pages/docs/DocsAddressBook'));
+const DocsImport = lazy(() => import('./pages/docs/DocsImport'));
+const DocsData = lazy(() => import('./pages/docs/DocsData'));
+const DocsArchitecture = lazy(() => import('./pages/docs/DocsArchitecture'));
+const DocsOpenAPI = lazy(() => import('./pages/docs/DocsOpenAPI'));
+const DocsAI = lazy(() => import('./pages/docs/DocsAI'));
+const DocsWebMcp = lazy(() => import('./pages/docs/DocsWebMcp'));
+const HelpHome = lazy(() => import('./pages/help/HelpHome'));
+const HelpBankConnection = lazy(
+  () => import('./pages/help/HelpBankConnection')
+);
+const HelpBudgeting = lazy(() => import('./pages/help/HelpBudgeting'));
+const HelpSubscriptions = lazy(() => import('./pages/help/HelpSubscriptions'));
+const HelpPrivacy = lazy(() => import('./pages/help/HelpPrivacy'));
+const HelpFirstSteps = lazy(() => import('./pages/help/HelpFirstSteps'));
+const HelpInstallation = lazy(() => import('./pages/help/HelpInstallation'));
+const HelpTransactions = lazy(() => import('./pages/help/HelpTransactions'));
+const HelpBulkDelete = lazy(() => import('./pages/help/HelpBulkDelete'));
+const HelpCategories = lazy(() => import('./pages/help/HelpCategories'));
+const HelpAccounts = lazy(() => import('./pages/help/HelpAccounts'));
+const HelpAnalytics = lazy(() => import('./pages/help/HelpAnalytics'));
+const HelpAddressBook = lazy(() => import('./pages/help/HelpAddressBook'));
+const HelpSync = lazy(() => import('./pages/help/HelpSync'));
+const HelpAI = lazy(() => import('./pages/help/HelpAI'));
+const HelpWebMcp = lazy(() => import('./pages/help/HelpWebMcp'));
+const HelpPlanning = lazy(() => import('./pages/help/HelpPlanning'));
 
 function App() {
   return (
@@ -143,57 +58,62 @@ function App() {
           <ScrollToTop />
           <HeadManager />
           <LegalProvider>
-            <Routes>
-              <Route path='/' element={<LandingPage />} />
-              <Route path='/privacy' element={<LandingPage />} />
-              <Route path='/terms' element={<LandingPage />} />
-              <Route path='/features' element={<LandingPage />} />
-              <Route path='/pricing' element={<LandingPage />} />
-              <Route path='/updates' element={<LandingPage />} />
-              <Route path='/about' element={<LandingPage />} />
-              <Route path='/docs' element={<DocsLayout />}>
-                <Route index element={<DocsIntroduction />} />
-                <Route path='authentication' element={<DocsAuthentication />} />
-                <Route path='profiles' element={<DocsProfiles />} />
-                <Route path='errors' element={<DocsErrors />} />
-                <Route path='accounts' element={<DocsAccounts />} />
-                <Route path='transactions' element={<DocsTransactions />} />
-                <Route path='categories' element={<DocsCategories />} />
-                <Route path='budgets' element={<DocsBudgets />} />
-                <Route path='subscriptions' element={<DocsSubscriptions />} />
-                <Route path='analytics' element={<DocsAnalytics />} />
-                <Route path='addressbook' element={<DocsAddressBook />} />
-                <Route path='import' element={<DocsImport />} />
-                <Route path='data' element={<DocsData />} />
-                <Route path='architecture' element={<DocsArchitecture />} />
-                <Route path='openapi' element={<DocsOpenAPI />} />
-                <Route path='ai' element={<DocsAI />} />
-                <Route path='webmcp' element={<DocsWebMcp />} />
-              </Route>
-              <Route path='/help' element={<HelpLayout />}>
-                <Route index element={<HelpHome />} />
-                <Route path='first-steps' element={<HelpFirstSteps />} />
-                <Route path='installation' element={<HelpInstallation />} />
-                <Route
-                  path='bank-connection'
-                  element={<HelpBankConnection />}
-                />
-                <Route path='transactions' element={<HelpTransactions />} />
-                <Route path='bulk-delete' element={<HelpBulkDelete />} />
-                <Route path='categories' element={<HelpCategories />} />
-                <Route path='accounts' element={<HelpAccounts />} />
-                <Route path='address-book' element={<HelpAddressBook />} />
-                <Route path='planning' element={<HelpPlanning />} />
-                <Route path='budgeting' element={<HelpBudgeting />} />
-                <Route path='subscriptions' element={<HelpSubscriptions />} />
-                <Route path='analytics' element={<HelpAnalytics />} />
-                <Route path='sync' element={<HelpSync />} />
-                <Route path='privacy' element={<HelpPrivacy />} />
-                <Route path='ai' element={<HelpAI />} />
-                <Route path='webmcp' element={<HelpWebMcp />} />
-              </Route>
-              <Route path='*' element={<NotFound />} />
-            </Routes>
+            <Suspense fallback={<PageLoading />}>
+              <Routes>
+                <Route path='/' element={<LandingPage />} />
+                <Route path='/privacy' element={<LandingPage />} />
+                <Route path='/terms' element={<LandingPage />} />
+                <Route path='/features' element={<LandingPage />} />
+                <Route path='/pricing' element={<LandingPage />} />
+                <Route path='/updates' element={<LandingPage />} />
+                <Route path='/about' element={<LandingPage />} />
+                <Route path='/docs' element={<DocsLayout />}>
+                  <Route index element={<DocsIntroduction />} />
+                  <Route
+                    path='authentication'
+                    element={<DocsAuthentication />}
+                  />
+                  <Route path='profiles' element={<DocsProfiles />} />
+                  <Route path='errors' element={<DocsErrors />} />
+                  <Route path='accounts' element={<DocsAccounts />} />
+                  <Route path='transactions' element={<DocsTransactions />} />
+                  <Route path='categories' element={<DocsCategories />} />
+                  <Route path='budgets' element={<DocsBudgets />} />
+                  <Route path='subscriptions' element={<DocsSubscriptions />} />
+                  <Route path='analytics' element={<DocsAnalytics />} />
+                  <Route path='addressbook' element={<DocsAddressBook />} />
+                  <Route path='import' element={<DocsImport />} />
+                  <Route path='data' element={<DocsData />} />
+                  <Route path='architecture' element={<DocsArchitecture />} />
+                  <Route path='openapi' element={<DocsOpenAPI />} />
+                  <Route path='ai' element={<DocsAI />} />
+                  <Route path='webmcp' element={<DocsWebMcp />} />
+                </Route>
+                <Route path='/help' element={<HelpLayout />}>
+                  <Route index element={<HelpHome />} />
+                  <Route path='first-steps' element={<HelpFirstSteps />} />
+                  <Route path='installation' element={<HelpInstallation />} />
+                  <Route
+                    path='bank-connection'
+                    element={<HelpBankConnection />}
+                  />
+                  <Route path='transactions' element={<HelpTransactions />} />
+                  <Route path='bulk-delete' element={<HelpBulkDelete />} />
+                  <Route path='categories' element={<HelpCategories />} />
+                  <Route path='accounts' element={<HelpAccounts />} />
+                  <Route path='address-book' element={<HelpAddressBook />} />
+                  <Route path='planning' element={<HelpPlanning />} />
+                  <Route path='budgeting' element={<HelpBudgeting />} />
+                  <Route path='subscriptions' element={<HelpSubscriptions />} />
+                  <Route path='analytics' element={<HelpAnalytics />} />
+                  <Route path='sync' element={<HelpSync />} />
+                  <Route path='privacy' element={<HelpPrivacy />} />
+                  <Route path='ai' element={<HelpAI />} />
+                  <Route path='webmcp' element={<HelpWebMcp />} />
+                </Route>
+                <Route path='*' element={<NotFound />} />
+              </Routes>
+            </Suspense>
           </LegalProvider>
         </Router>
       </LanguageProvider>

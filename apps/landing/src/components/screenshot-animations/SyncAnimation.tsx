@@ -1,153 +1,121 @@
-import { useEffect, useState, useRef } from 'react';
+import { useState, useRef } from 'react';
+import { useDemoAnimationFrame } from '../../hooks/useAnimationActivity';
 import { useLanguage } from '../../contexts/LanguageContext';
+
+type SyncPhase = 'discover' | 'connect' | 'sync' | 'complete';
+
+const DeviceIcon = ({
+  type,
+  isActive,
+  label,
+  phase,
+}: {
+  type: 'laptop' | 'phone';
+  isActive: boolean;
+  label: string;
+  phase: SyncPhase;
+}) => (
+  <div className='flex flex-col items-center'>
+    <div
+      className={`relative rounded-2xl p-4 transition-all duration-500 ${
+        isActive
+          ? 'bg-gradient-to-br from-purple-500 to-pink-500 shadow-lg shadow-purple-500/30'
+          : 'bg-gray-200 dark:bg-white/10'
+      }`}
+    >
+      {type === 'laptop' ? (
+        <svg
+          className={`h-12 w-12 ${isActive ? 'text-white' : 'text-gray-500 dark:text-white/50'}`}
+          fill='none'
+          viewBox='0 0 24 24'
+          stroke='currentColor'
+        >
+          <path
+            strokeLinecap='round'
+            strokeLinejoin='round'
+            strokeWidth={1.5}
+            d='M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z'
+          />
+        </svg>
+      ) : (
+        <svg
+          className={`h-12 w-12 ${isActive ? 'text-white' : 'text-gray-500 dark:text-white/50'}`}
+          fill='none'
+          viewBox='0 0 24 24'
+          stroke='currentColor'
+        >
+          <path
+            strokeLinecap='round'
+            strokeLinejoin='round'
+            strokeWidth={1.5}
+            d='M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z'
+          />
+        </svg>
+      )}
+      {/* Pulse ring when active */}
+      {isActive && phase !== 'discover' && (
+        <div className='absolute inset-0 animate-ping rounded-2xl bg-purple-400 opacity-20' />
+      )}
+    </div>
+    <span
+      className={`mt-2 text-xs font-medium ${isActive ? 'text-purple-600 dark:text-purple-400' : 'text-gray-500 dark:text-white/50'}`}
+    >
+      {label}
+    </span>
+  </div>
+);
 
 export default function SyncAnimation({ isVisible }: { isVisible: boolean }) {
   const { t } = useLanguage();
   const anim = t.animations.sync;
-  const [phase, setPhase] = useState<
-    'discover' | 'connect' | 'sync' | 'complete'
-  >('discover');
+  const [phase, setPhase] = useState<SyncPhase>('discover');
   const [progress, setProgress] = useState(0);
   const [dataPackets, setDataPackets] = useState<
     { id: number; direction: 'left' | 'right'; progress: number }[]
   >([]);
-  const animationRef = useRef<number | null>(null);
-  const lastTimeRef = useRef<number>(0);
   const packetIdRef = useRef(0);
 
-  useEffect(() => {
-    if (isVisible) {
-      const animate = (currentTime: number) => {
-        if (!lastTimeRef.current) lastTimeRef.current = currentTime;
-        const delta = currentTime - lastTimeRef.current;
-        lastTimeRef.current = currentTime;
-
-        setProgress((prev) => {
-          const speed = phase === 'sync' ? 15 : 40;
-          const newProgress = prev + (delta / 1000) * speed;
-
-          if (phase === 'discover' && newProgress >= 100) {
-            setPhase('connect');
-            return 0;
-          } else if (phase === 'connect' && newProgress >= 100) {
-            setPhase('sync');
-            return 0;
-          } else if (phase === 'sync' && newProgress >= 100) {
-            setPhase('complete');
-            return 100;
-          } else if (phase === 'complete' && newProgress >= 150) {
-            setPhase('discover');
-            setDataPackets([]);
-            return 0;
-          }
-          return newProgress;
-        });
-
-        // Add data packets during sync phase
-        if (phase === 'sync') {
-          setDataPackets((prev) => {
-            // Add new packet occasionally
-            const shouldAddPacket = Math.random() < 0.03;
-            let updated = [...prev];
-
-            if (shouldAddPacket && updated.length < 6) {
-              packetIdRef.current += 1;
-              updated.push({
-                id: packetIdRef.current,
-                direction: Math.random() > 0.5 ? 'left' : 'right',
-                progress: 0,
-              });
-            }
-
-            // Update packet progress
-            updated = updated
-              .map((p) => ({
-                ...p,
-                progress: p.progress + (delta / 1000) * 120,
-              }))
-              .filter((p) => p.progress < 100);
-
-            return updated;
-          });
-        }
-
-        animationRef.current = requestAnimationFrame(animate);
-      };
-
-      animationRef.current = requestAnimationFrame(animate);
-    } else {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-        animationRef.current = null;
-      }
-      lastTimeRef.current = 0;
+  useDemoAnimationFrame(isVisible, (delta) => {
+    const speed = phase === 'sync' ? 15 : 40;
+    let nextProgress = progress + (delta / 1000) * speed;
+    if (phase === 'discover' && nextProgress >= 100) {
+      setPhase('connect');
+      nextProgress = 0;
+    } else if (phase === 'connect' && nextProgress >= 100) {
+      setPhase('sync');
+      nextProgress = 0;
+    } else if (phase === 'sync' && nextProgress >= 100) {
+      setPhase('complete');
+      nextProgress = 100;
+    } else if (phase === 'complete' && nextProgress >= 150) {
+      setPhase('discover');
+      setDataPackets([]);
+      nextProgress = 0;
     }
-
-    return () => {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
-    };
-  }, [isVisible, phase]);
-
-  const DeviceIcon = ({
-    type,
-    isActive,
-    label,
-  }: {
-    type: 'laptop' | 'phone';
-    isActive: boolean;
-    label: string;
-  }) => (
-    <div className='flex flex-col items-center'>
-      <div
-        className={`relative rounded-2xl p-4 transition-all duration-500 ${
-          isActive
-            ? 'bg-gradient-to-br from-purple-500 to-pink-500 shadow-lg shadow-purple-500/30'
-            : 'bg-gray-200 dark:bg-white/10'
-        }`}
-      >
-        {type === 'laptop' ? (
-          <svg
-            className={`h-12 w-12 ${isActive ? 'text-white' : 'text-gray-500 dark:text-white/50'}`}
-            fill='none'
-            viewBox='0 0 24 24'
-            stroke='currentColor'
-          >
-            <path
-              strokeLinecap='round'
-              strokeLinejoin='round'
-              strokeWidth={1.5}
-              d='M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z'
-            />
-          </svg>
-        ) : (
-          <svg
-            className={`h-12 w-12 ${isActive ? 'text-white' : 'text-gray-500 dark:text-white/50'}`}
-            fill='none'
-            viewBox='0 0 24 24'
-            stroke='currentColor'
-          >
-            <path
-              strokeLinecap='round'
-              strokeLinejoin='round'
-              strokeWidth={1.5}
-              d='M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z'
-            />
-          </svg>
-        )}
-        {/* Pulse ring when active */}
-        {isActive && phase !== 'discover' && (
-          <div className='absolute inset-0 animate-ping rounded-2xl bg-purple-400 opacity-20' />
-        )}
-      </div>
-      <span
-        className={`mt-2 text-xs font-medium ${isActive ? 'text-purple-600 dark:text-purple-400' : 'text-gray-500 dark:text-white/50'}`}
-      >
-        {label}
-      </span>
-    </div>
-  );
+    setProgress(nextProgress);
+    if (phase === 'sync') {
+      // Preserve the packet rate when rendering at 30Hz instead of 60Hz.
+      const shouldAdd = Math.random() < 1 - Math.pow(0.97, (delta * 60) / 1000);
+      const packet = shouldAdd
+        ? {
+            id: ++packetIdRef.current,
+            direction:
+              Math.random() > 0.5 ? ('left' as const) : ('right' as const),
+            progress: 0,
+          }
+        : undefined;
+      setDataPackets((previous) => {
+        const updated = previous
+          .map((p) => ({
+            ...p,
+            progress: p.progress + (delta / 1000) * 120,
+          }))
+          .filter((p) => p.progress < 100);
+        if (packet && updated.length < 6) updated.push(packet);
+        return updated;
+      });
+    }
+  });
 
   return (
     <div className='flex h-full w-full flex-col items-center justify-center p-8'>
@@ -172,6 +140,7 @@ export default function SyncAnimation({ isVisible }: { isVisible: boolean }) {
       {/* Devices with connection */}
       <div className='relative flex w-full max-w-sm items-center justify-between'>
         <DeviceIcon
+          phase={phase}
           type='laptop'
           isActive={phase !== 'discover' || progress > 30}
           label={anim.device1}
@@ -240,6 +209,7 @@ export default function SyncAnimation({ isVisible }: { isVisible: boolean }) {
         </div>
 
         <DeviceIcon
+          phase={phase}
           type='phone'
           isActive={phase !== 'discover' || progress > 60}
           label={anim.device2}

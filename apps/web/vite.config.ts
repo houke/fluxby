@@ -4,6 +4,7 @@ import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import path from 'path';
 import { getLocalHttpsOptions } from '../../scripts/dev-cert.mjs';
+import { offlinePrecache } from '../../scripts/offline-precache.mjs';
 
 // For GitHub Pages: VITE_BASE_URL is set during CI
 // For local development: use '/app/'
@@ -28,6 +29,14 @@ export default defineConfig({
   plugins: [
     tailwindcss(),
     react(),
+    ...(!isTauri
+      ? [
+          offlinePrecache({
+            serviceWorkerPath: path.resolve(__dirname, 'public/sw.js'),
+            base,
+          }),
+        ]
+      : []),
     // Only add redirect middleware when not in Tauri mode
     ...(!isTauri
       ? [

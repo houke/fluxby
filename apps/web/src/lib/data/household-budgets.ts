@@ -199,10 +199,14 @@ export function createHouseholdBudgetService(
         [previous, p]
       );
       assertProfile(p);
-      await db.transactionAsync(async () => {
+      await db.transactionAsync(async (db) => {
         for (const row of rows) {
           assertProfile(p);
-          await this.setBudgetMonth(row.id, month, row.amount);
+          await createHouseholdBudgetService(db, profileId).setBudgetMonth(
+            row.id,
+            month,
+            row.amount
+          );
         }
         assertProfile(p);
       });
@@ -219,7 +223,7 @@ export function createHouseholdBudgetService(
       assertProfile(p);
       if (!Number.isFinite(amount) || amount <= 0)
         throw new Error('Invalid suggestion');
-      return db.transactionAsync(async () => {
+      return db.transactionAsync(async (db) => {
         assertProfile(p);
         const existing = await db.queryOneAsync<{ id: string }>(
           "SELECT id FROM budgets WHERE profile_id=? AND category_id=? AND period='monthly' AND is_deleted=0 ORDER BY created_at,id LIMIT 1",
@@ -237,7 +241,11 @@ export function createHouseholdBudgetService(
           );
         }
         assertProfile(p);
-        await this.setBudgetMonth(id, month, amount);
+        await createHouseholdBudgetService(db, profileId).setBudgetMonth(
+          id,
+          month,
+          amount
+        );
         assertProfile(p);
         return id;
       });
@@ -345,7 +353,7 @@ export function createHouseholdBudgetService(
         if (descendants.some((c) => c.id === replacementId))
           throw new Error('Replacement cannot be a child category');
       }
-      await db.transactionAsync(async () => {
+      await db.transactionAsync(async (db) => {
         assertProfile(p);
         if (replacementId)
           for (const [table, column] of [
@@ -361,11 +369,17 @@ export function createHouseholdBudgetService(
               [replacementId, now, categoryId, p]
             );
         assertProfile(p);
-        const existing = (await this.getCategoryPreferences()).find(
-          (c) => c.category_id === categoryId
-        );
+        const existing = (
+          await createHouseholdBudgetService(
+            db,
+            profileId
+          ).getCategoryPreferences()
+        ).find((c) => c.category_id === categoryId);
         assertProfile(p);
-        await this.saveCategoryPreference(categoryId, {
+        await createHouseholdBudgetService(
+          db,
+          profileId
+        ).saveCategoryPreference(categoryId, {
           isFixed: !!existing?.is_fixed,
           allocationGroup: existing?.allocation_group ?? 'needs',
           archived: true,
@@ -549,7 +563,7 @@ export function createHouseholdBudgetService(
         [p]
       );
       let updated = 0;
-      await db.transactionAsync(async () => {
+      await db.transactionAsync(async (db) => {
         for (const tx of transactions) {
           const rule = rules.find((r) => matchesAdvancedRule(r, tx));
           if (rule) {

@@ -26,11 +26,7 @@ import { createHouseholdPlanningService } from './data/household-planning';
  * The API server is an optional layer for external integrations.
  */
 
-import {
-  type Database,
-  readFromOPFSSync,
-  isSettingsCacheInitialized,
-} from '@fluxby/database';
+import { readFromOPFSSync, isSettingsCacheInitialized } from '@fluxby/database';
 import {
   suggestCategories,
   detectDirectionConvention,
@@ -86,6 +82,7 @@ import {
 import { withDataChangeNotifications } from './data-sync';
 import {
   createFinancialPlanningService,
+  type FinancialDatabase,
   validateDateOnly,
 } from './data/financial-planning';
 import { createSavedTransactionViewsService } from './data/saved-transaction-views';
@@ -203,7 +200,7 @@ function recurringSourceCondition(
 }
 
 async function getTransactionsForRecurringPattern(
-  db: Database,
+  db: FinancialDatabase,
   profileId: string,
   patternId: string
 ): Promise<Transaction[]> {
@@ -292,7 +289,7 @@ async function getTransactionsForRecurringPattern(
 }
 
 async function refreshRecurringPatternMetrics(
-  db: Database,
+  db: FinancialDatabase,
   profileId: string,
   patternId: string
 ): Promise<void> {
@@ -375,7 +372,7 @@ function getActiveProfileId(): string | null {
 /**
  * Create a data service instance using the local database
  */
-export function createDataService(db: Database) {
+export function createDataService(db: FinancialDatabase) {
   const profileId = () => getActiveProfileId();
 
   // Helper to ensure a user exists before creating profiles
@@ -486,7 +483,7 @@ export function createDataService(db: Database) {
       const userId = await ensureUserExists();
 
       // Use a transaction to batch all inserts - prevents OPFS sync overhead per row
-      await db.transactionAsync(async () => {
+      await db.transactionAsync(async (db) => {
         await db.runAsync(
           `INSERT INTO profiles (id, user_id, name, type, avatar_url, created_at, updated_at)
            VALUES (?, ?, ?, ?, ?, ?, ?)`,
@@ -621,48 +618,50 @@ export function createDataService(db: Database) {
     async deleteProfile(id: string): Promise<void> {
       const now = Date.now();
 
-      // Soft-delete all related data to ensure clean state for duplicates/reimport
-      // Transactions
-      await db.runAsync(
-        'UPDATE transactions SET is_deleted = 1, updated_at = ? WHERE profile_id = ?',
-        [now, id]
-      );
-      // Accounts
-      await db.runAsync(
-        'UPDATE accounts SET is_deleted = 1, updated_at = ? WHERE profile_id = ?',
-        [now, id]
-      );
-      // Categories
-      await db.runAsync(
-        'UPDATE categories SET is_deleted = 1, updated_at = ? WHERE profile_id = ?',
-        [now, id]
-      );
-      // Budgets
-      await db.runAsync(
-        'UPDATE budgets SET is_deleted = 1, updated_at = ? WHERE profile_id = ?',
-        [now, id]
-      );
-      // Category rules (for categories in this profile)
-      await db.runAsync(
-        `UPDATE category_rules SET is_deleted = 1, updated_at = ?
+      await db.transactionAsync(async (db) => {
+        // Soft-delete all related data to ensure clean state for duplicates/reimport
+        // Transactions
+        await db.runAsync(
+          'UPDATE transactions SET is_deleted = 1, updated_at = ? WHERE profile_id = ?',
+          [now, id]
+        );
+        // Accounts
+        await db.runAsync(
+          'UPDATE accounts SET is_deleted = 1, updated_at = ? WHERE profile_id = ?',
+          [now, id]
+        );
+        // Categories
+        await db.runAsync(
+          'UPDATE categories SET is_deleted = 1, updated_at = ? WHERE profile_id = ?',
+          [now, id]
+        );
+        // Budgets
+        await db.runAsync(
+          'UPDATE budgets SET is_deleted = 1, updated_at = ? WHERE profile_id = ?',
+          [now, id]
+        );
+        // Category rules (for categories in this profile)
+        await db.runAsync(
+          `UPDATE category_rules SET is_deleted = 1, updated_at = ?
          WHERE category_id IN (SELECT id FROM categories WHERE profile_id = ?)`,
-        [now, id]
-      );
-      // Imports
-      await db.runAsync(
-        'UPDATE imports SET is_deleted = 1, updated_at = ? WHERE profile_id = ?',
-        [now, id]
-      );
-      // Address book
-      await db.runAsync(
-        'UPDATE address_book SET is_deleted = 1, updated_at = ? WHERE profile_id = ?',
-        [now, id]
-      );
-      // Finally, soft-delete the profile itself
-      await db.runAsync(
-        'UPDATE profiles SET is_deleted = 1, updated_at = ? WHERE id = ?',
-        [now, id]
-      );
+          [now, id]
+        );
+        // Imports
+        await db.runAsync(
+          'UPDATE imports SET is_deleted = 1, updated_at = ? WHERE profile_id = ?',
+          [now, id]
+        );
+        // Address book
+        await db.runAsync(
+          'UPDATE address_book SET is_deleted = 1, updated_at = ? WHERE profile_id = ?',
+          [now, id]
+        );
+        // Finally, soft-delete the profile itself
+        await db.runAsync(
+          'UPDATE profiles SET is_deleted = 1, updated_at = ? WHERE id = ?',
+          [now, id]
+        );
+      });
     },
 
     async setProfileHidden(id: string, isHidden: boolean): Promise<void> {
@@ -1564,7 +1563,7 @@ export function createDataService(db: Database) {
       params.push(id);
       params.push(pid);
 
-      await db.transactionAsync(async () => {
+      await db.transactionAsync(async (db) => {
         const result = await db.runAsync(
           `UPDATE transactions SET ${updates.join(', ')} WHERE id = ? AND profile_id = ? AND is_deleted=0`,
           params
@@ -1596,7 +1595,7 @@ export function createDataService(db: Database) {
       const now = Date.now();
       let accountId: string | null = null;
 
-      await db.transactionAsync(async () => {
+      await db.transactionAsync(async (db) => {
         const transaction = await db.queryOneAsync<{ account_id: string }>(
           'SELECT account_id FROM transactions WHERE id = ? AND profile_id = ? AND is_deleted = 0',
           [id, pid]
@@ -1631,7 +1630,7 @@ export function createDataService(db: Database) {
       );
       if (!category)
         throw new Error('Category does not belong to this profile');
-      return db.transactionAsync(async () => {
+      return db.transactionAsync(async (db) => {
         const placeholders = transactionIds.map(() => '?').join(',');
         const now = Date.now();
         const result = await db.runAsync(
@@ -1875,7 +1874,7 @@ export function createDataService(db: Database) {
       if (budgets.some((budget) => !categoryIds.has(budget.categoryId))) {
         throw new Error('Budget category does not belong to this profile');
       }
-      return db.transactionAsync(async () => {
+      return db.transactionAsync(async (db) => {
         const now = Date.now();
         const created = [];
         for (const budget of budgets) {
@@ -2418,7 +2417,8 @@ export function createDataService(db: Database) {
      */
     async getTransactionsForContact(
       contactId: string,
-      limit = 50
+      limit = 50,
+      offset = 0
     ): Promise<
       Array<{
         id: string;
@@ -2432,10 +2432,12 @@ export function createDataService(db: Database) {
 
       // Get the contact's IBANs from contact_ibans table
       const ibans = await db.queryAsync<{ iban: string }>(
-        `SELECT iban FROM contact_ibans WHERE contact_id = ?
+        `SELECT ci.iban FROM contact_ibans ci
+         JOIN address_book ab ON ab.id = ci.contact_id
+         WHERE ci.contact_id = ? AND ab.profile_id = ? AND ab.is_deleted = 0
          UNION
          SELECT iban FROM address_book WHERE id = ? AND profile_id = ? AND is_deleted = 0`,
-        [contactId, contactId, pid]
+        [contactId, pid, contactId, pid]
       );
 
       if (ibans.length === 0) return [];
@@ -2453,9 +2455,9 @@ export function createDataService(db: Database) {
          FROM transactions
          WHERE profile_id = ? AND is_deleted = 0
            AND (address_book_id = ? OR opposing_account_iban IN (${placeholders}))
-         ORDER BY date DESC
-         LIMIT ?`,
-        [pid, contactId, ...ibanList, limit]
+         ORDER BY date DESC, id DESC
+         LIMIT ? OFFSET ?`,
+        [pid, contactId, ...ibanList, limit, offset]
       );
 
       return rows;
@@ -3187,7 +3189,7 @@ export function createDataService(db: Database) {
       }
 
       if (ruleUpdates.length > 0) {
-        await db.transactionAsync(async () => {
+        await db.transactionAsync(async (db) => {
           for (const update of ruleUpdates) {
             await db.runAsync(
               `UPDATE transactions SET category_id = ?, updated_at = ? WHERE id = ? AND profile_id = ? AND (category_id IS NULL OR category_id = '')`,
@@ -3228,7 +3230,7 @@ export function createDataService(db: Database) {
               apiKey: tsKey,
             });
 
-            await db.transactionAsync(async () => {
+            await db.transactionAsync(async (db) => {
               for (let i = 0; i < batch.length; i++) {
                 const suggestion = suggestions[i];
                 if (!suggestion) continue;
@@ -3314,7 +3316,7 @@ export function createDataService(db: Database) {
       let created = 0;
       let categorized = 0;
       const now = Date.now();
-      await db.transactionAsync(async () => {
+      await db.transactionAsync(async (db) => {
         for (let index = 0; index < candidates.length; index++) {
           const suggestion = suggestions[index];
           if (!suggestion) continue;
@@ -3732,7 +3734,7 @@ export function createDataService(db: Database) {
       );
       const now = Date.now();
       let updated = 0;
-      await db.transactionAsync(async () => {
+      await db.transactionAsync(async (db) => {
         for (const id of uniqueIds) {
           const result = await db.runAsync(
             `UPDATE transactions SET type = 'transfer',
@@ -3840,14 +3842,16 @@ export function createDataService(db: Database) {
       if (!pid) throw new Error('No active profile');
 
       const created: Array<number | string> = [];
-      for (const seed of seedCategories) {
-        const category = await this.createCategory({
-          name: seed.name,
-          icon: seed.icon,
-          color: seed.color,
-        });
-        created.push(category.id);
-      }
+      await db.transactionAsync(async (db) => {
+        for (const seed of seedCategories) {
+          const category = await createDataService(db).createCategory({
+            name: seed.name,
+            icon: seed.icon,
+            color: seed.color,
+          });
+          created.push(category.id);
+        }
+      });
 
       return { created: created.length, ids: created };
     },
@@ -3873,7 +3877,7 @@ export function createDataService(db: Database) {
       let updated = 0;
 
       // Use a transaction for batch updates to prevent OPFS sync overhead per row
-      await db.transactionAsync(async () => {
+      await db.transactionAsync(async (db) => {
         for (let i = 0; i < orderedIds.length; i++) {
           const result = await db.runAsync(
             'UPDATE accounts SET order_index = ?, updated_at = ? WHERE id = ? AND profile_id = ?',
@@ -3904,27 +3908,29 @@ export function createDataService(db: Database) {
 
       const now = Date.now();
 
-      // Delete contact_ibans for contacts in this profile
-      await db.runAsync(
-        `UPDATE contact_ibans SET is_deleted = 1, updated_at = ?
+      return db.transactionAsync(async (db) => {
+        // Delete contact_ibans for contacts in this profile
+        await db.runAsync(
+          `UPDATE contact_ibans SET is_deleted = 1, updated_at = ?
          WHERE contact_id IN (SELECT id FROM address_book WHERE profile_id = ? AND is_deleted = 0)`,
-        [now, pid]
-      );
+          [now, pid]
+        );
 
-      // Delete address book entries
-      const result = await db.runAsync(
-        'UPDATE address_book SET is_deleted = 1, updated_at = ? WHERE profile_id = ? AND is_deleted = 0',
-        [now, pid]
-      );
+        // Delete address book entries
+        const result = await db.runAsync(
+          'UPDATE address_book SET is_deleted = 1, updated_at = ? WHERE profile_id = ? AND is_deleted = 0',
+          [now, pid]
+        );
 
-      // Clear address_book_id from transactions so they show up in proposed addresses
-      await db.runAsync(
-        `UPDATE transactions SET address_book_id = NULL, updated_at = ?
+        // Clear address_book_id from transactions so they show up in proposed addresses
+        await db.runAsync(
+          `UPDATE transactions SET address_book_id = NULL, updated_at = ?
          WHERE profile_id = ? AND address_book_id IS NOT NULL`,
-        [now, pid]
-      );
+          [now, pid]
+        );
 
-      return { deleted: result.changes };
+        return { deleted: result.changes };
+      });
     },
 
     // ============= Budget Methods =============
@@ -3971,15 +3977,16 @@ export function createDataService(db: Database) {
 
       if (contacts.length === 0) return [];
 
-      // Step 2: Get all contact_ibans in one query
-      const contactIds = contacts.map((c) => c.id);
-      const placeholders = contactIds.map(() => '?').join(',');
+      // Select active contacts through a join instead of an unbounded ID list.
+      // A large address book must not exceed SQLite's parameter limit.
       const contactIbans = await db.queryAsync<{
         contact_id: string;
         iban: string;
       }>(
-        `SELECT contact_id, iban FROM contact_ibans WHERE contact_id IN (${placeholders})`,
-        contactIds
+        `SELECT ci.contact_id, ci.iban FROM contact_ibans ci
+         JOIN address_book ab ON ab.id = ci.contact_id
+         WHERE ab.profile_id = ? AND ab.is_deleted = 0 AND ci.is_deleted = 0`,
+        [pid]
       );
 
       // Build a map of contact_id -> ibans[]
@@ -4082,41 +4089,43 @@ export function createDataService(db: Database) {
       const now = Date.now();
       const name = targetName || target.name;
 
-      // Update target name if provided
-      if (targetName) {
-        await db.runAsync(
-          'UPDATE address_book SET name = ?, updated_at = ? WHERE id = ?',
-          [name, now, targetId]
-        );
-      }
-
-      // Soft delete the other contacts and update their transactions
-      const otherIds = contactIds.slice(1);
-      for (const otherId of otherIds) {
-        // Get the other contact's IBAN
-        const other = await db.queryOneAsync<{ iban: string }>(
-          'SELECT iban FROM address_book WHERE id = ? AND profile_id = ?',
-          [otherId, pid]
-        );
-
-        if (other) {
-          // Update transactions that reference this contact's IBAN
+      return db.transactionAsync(async (db) => {
+        // Update target name if provided
+        if (targetName) {
           await db.runAsync(
-            `UPDATE transactions SET merchant_name = ?, updated_at = ?
-             WHERE opposing_account_iban = ?
-             AND account_id IN (SELECT id FROM accounts WHERE profile_id = ?)`,
-            [name, now, other.iban, pid]
+            'UPDATE address_book SET name = ?, updated_at = ? WHERE id = ?',
+            [name, now, targetId]
           );
         }
 
-        // Soft delete the contact
-        await db.runAsync(
-          'UPDATE address_book SET is_deleted = 1, updated_at = ? WHERE id = ?',
-          [now, otherId]
-        );
-      }
+        // Soft delete the other contacts and update their transactions
+        const otherIds = contactIds.slice(1);
+        for (const otherId of otherIds) {
+          // Get the other contact's IBAN
+          const other = await db.queryOneAsync<{ iban: string }>(
+            'SELECT iban FROM address_book WHERE id = ? AND profile_id = ?',
+            [otherId, pid]
+          );
 
-      return { merged: otherIds.length };
+          if (other) {
+            // Update transactions that reference this contact's IBAN
+            await db.runAsync(
+              `UPDATE transactions SET merchant_name = ?, updated_at = ?
+             WHERE opposing_account_iban = ?
+             AND account_id IN (SELECT id FROM accounts WHERE profile_id = ?)`,
+              [name, now, other.iban, pid]
+            );
+          }
+
+          // Soft delete the contact
+          await db.runAsync(
+            'UPDATE address_book SET is_deleted = 1, updated_at = ? WHERE id = ?',
+            [now, otherId]
+          );
+        }
+
+        return { merged: otherIds.length };
+      });
     },
 
     // ============= Cleanup Rules Methods =============
@@ -4183,7 +4192,7 @@ export function createDataService(db: Database) {
       let updated = 0;
       const now = Date.now();
 
-      await db.transactionAsync(async () => {
+      await db.transactionAsync(async (db) => {
         for (const entry of entries) {
           const name = entry.name || '';
           let cleaned = name;
@@ -4252,7 +4261,7 @@ export function createDataService(db: Database) {
       let updated = 0;
       const now = Date.now();
 
-      await db.transactionAsync(async () => {
+      await db.transactionAsync(async (db) => {
         for (const tx of transactions) {
           const name = tx.merchant_name || tx.opposing_account_name || '';
           let cleaned = name;
@@ -4858,7 +4867,7 @@ export function createDataService(db: Database) {
       const now = Date.now();
 
       // Use transaction for bulk update
-      await db.transactionAsync(async () => {
+      await db.transactionAsync(async (db) => {
         for (const tx of transactions) {
           const detected = detectProvider(
             tx.opposing_account_iban,
@@ -5594,7 +5603,7 @@ export function createDataService(db: Database) {
             transactionStart + CHUNK_SIZE
           );
           options.onProgress?.(transactionStart, totalToInsert);
-          await db.transactionAsync(async () => {
+          await db.transactionAsync(async (db) => {
             assertImportProfile();
             const placeholders = batch
               .map(
@@ -5638,13 +5647,33 @@ export function createDataService(db: Database) {
       }
 
       // Post-import: Add unique IBANs to address book and link transactions
-      for (const [iban, name] of uniqueIbanMap) {
-        assertImportProfile();
-        try {
-          await this._addToAddressBookIfNew(iban, name, pid, now);
-        } catch {
-          // Ignore errors - contact may already exist
-        }
+      const contactCandidates = Array.from(uniqueIbanMap);
+      const CONTACT_CHUNK_SIZE = 100;
+      for (
+        let start = 0;
+        start < contactCandidates.length;
+        start += CONTACT_CHUNK_SIZE
+      ) {
+        await db.transactionAsync(async (db) => {
+          for (const [iban, name] of contactCandidates.slice(
+            start,
+            start + CONTACT_CHUNK_SIZE
+          )) {
+            assertImportProfile();
+            try {
+              await createDataService(db)._addToAddressBookIfNew(
+                iban,
+                name,
+                pid,
+                now
+              );
+            } catch {
+              // Ignore errors - contact may already exist
+            }
+          }
+        });
+        if (start + CONTACT_CHUNK_SIZE < contactCandidates.length)
+          await new Promise((resolve) => setTimeout(resolve, 0));
       }
 
       // Link imported transactions to address book entries
@@ -5895,7 +5924,7 @@ export function createDataService(db: Database) {
       const existingLink = await db.queryOneAsync<{ contact_id: string }>(
         `SELECT ci.contact_id FROM contact_ibans ci
          JOIN address_book ab ON ab.id = ci.contact_id
-         WHERE ci.iban = ? AND ab.profile_id = ? AND ab.is_deleted = 0`,
+         WHERE ci.iban = ? AND ab.profile_id = ? AND ab.is_deleted = 0 AND ci.is_deleted = 0`,
         [normalizedIban, pid]
       );
       if (existingLink) return false;
@@ -6541,7 +6570,7 @@ export function createDataService(db: Database) {
         )
         .map((row) => row.id);
 
-      await db.transactionAsync(async () => {
+      await db.transactionAsync(async (db) => {
         await db.runAsync(
           `INSERT INTO recurring_pattern_source_decisions (
              id, pattern_id, source_key, opposing_iban, merchant_name, status,
@@ -6980,7 +7009,7 @@ export function createDataService(db: Database) {
       for (let i = 0; i < groups.length; i += BATCH_SIZE) {
         const batch = groups.slice(i, i + BATCH_SIZE);
 
-        await db.transactionAsync(async () => {
+        await db.transactionAsync(async (db) => {
           for (const group of batch) {
             // A user-declared bill keeps its chosen schedule and amount until edited.
             // Do not create a second detected pattern for the same source.
@@ -7936,7 +7965,7 @@ export function createDataService(db: Database) {
 
       const now = Date.now();
 
-      await db.transactionAsync(async () => {
+      await db.transactionAsync(async (db) => {
         // Update the pattern's average amount
         await db.runAsync(
           `UPDATE recurring_patterns SET avg_amount = ?, updated_at = ?
@@ -7983,9 +8012,12 @@ export function createDataService(db: Database) {
         const chunk = txIds.slice(i, i + CHUNK_SIZE);
         const placeholders = chunk.map(() => '?').join(',');
 
-        // Link via direct address_book IBAN match
-        await db.runAsync(
-          `UPDATE transactions
+        // Commit both link paths together. EXISTS skips unmatched transactions,
+        // including shared IBANs, rather than rewriting them with a null link.
+        await db.transactionAsync(async (db) => {
+          // Link via direct address_book IBAN match
+          await db.runAsync(
+            `UPDATE transactions
            SET address_book_id = (
              SELECT ab.id FROM address_book ab
              WHERE ab.iban = transactions.opposing_account_iban
@@ -7994,27 +8026,42 @@ export function createDataService(db: Database) {
            ),
            updated_at = ?
            WHERE id IN (${placeholders})
+             AND profile_id = ?
              AND address_book_id IS NULL
-             AND opposing_account_iban IS NOT NULL`,
-          [pid, now, ...chunk]
-        );
+             AND opposing_account_iban IS NOT NULL
+             AND EXISTS (
+               SELECT 1 FROM address_book ab
+               WHERE ab.iban = transactions.opposing_account_iban
+               AND ab.profile_id = ? AND ab.is_deleted = 0
+             )`,
+            [pid, now, ...chunk, pid, pid]
+          );
 
-        // Link via contact_ibans junction table
-        await db.runAsync(
-          `UPDATE transactions
+          // Link via contact_ibans junction table
+          await db.runAsync(
+            `UPDATE transactions
            SET address_book_id = (
              SELECT ci.contact_id FROM contact_ibans ci
              JOIN address_book ab ON ab.id = ci.contact_id
              WHERE ci.iban = transactions.opposing_account_iban
              AND ab.profile_id = ?
              AND ab.is_deleted = 0
+             AND ci.is_deleted = 0
            ),
            updated_at = ?
            WHERE id IN (${placeholders})
+             AND profile_id = ?
              AND address_book_id IS NULL
-             AND opposing_account_iban IS NOT NULL`,
-          [pid, now, ...chunk]
-        );
+             AND opposing_account_iban IS NOT NULL
+             AND EXISTS (
+               SELECT 1 FROM contact_ibans ci
+               JOIN address_book ab ON ab.id = ci.contact_id
+               WHERE ci.iban = transactions.opposing_account_iban
+               AND ab.profile_id = ? AND ab.is_deleted = 0 AND ci.is_deleted = 0
+             )`,
+            [pid, now, ...chunk, pid, pid]
+          );
+        });
 
         // Yield to event loop between chunks
         if (i + CHUNK_SIZE < txIds.length) {
@@ -8088,7 +8135,7 @@ export function createDataService(db: Database) {
       const affectedAccountIds = new Set<string>();
 
       // Use a transaction for OPFS performance (single disk sync)
-      await db.transactionAsync(async () => {
+      await db.transactionAsync(async (db) => {
         // Batch IDs in groups for SQL IN() clauses
         for (
           let i = 0;
@@ -8236,7 +8283,7 @@ export function createDataService(db: Database) {
 
       // Use a transaction for OPFS performance (single disk sync)
       let deletedCount = 0;
-      await db.transactionAsync(async () => {
+      await db.transactionAsync(async (db) => {
         const result = await db.runAsync(
           `UPDATE transactions SET is_deleted = 1, updated_at = ? WHERE ${whereClause}`,
           [now, ...params]
@@ -8378,7 +8425,7 @@ export function createDataService(db: Database) {
       const affectedAccountIds = new Set<string>();
 
       // Use a transaction for OPFS performance (single disk sync)
-      await db.transactionAsync(async () => {
+      await db.transactionAsync(async (db) => {
         // Batch IDs in groups for SQL IN() clauses
         for (
           let i = 0;
@@ -8449,10 +8496,8 @@ export function createDataService(db: Database) {
       } = getDemoSeedData(language);
       const categoryNames = getSeedCategoryNameMap(language);
 
-      // === PERFORMANCE: Wrap all operations in a single transaction ===
-      await db.runAsync('BEGIN TRANSACTION', []);
-
-      try {
+      // Use the scoped connection so background reads/writes cannot join the seed.
+      return db.transactionAsync(async (db) => {
         // 1. Clear existing data for this profile
         for (const table of FINANCIAL_FEATURE_TABLES) {
           await db.runAsync(`DELETE FROM ${table} WHERE profile_id = ?`, [
@@ -9401,9 +9446,6 @@ export function createDataService(db: Database) {
 
         await seedFinancialPlanningDemo(db, targetProfileId, language);
 
-        // === PERFORMANCE: Commit the transaction ===
-        await db.runAsync('COMMIT', []);
-
         return {
           profileId: targetProfileId,
           categories: Object.keys(categoryIdMap).length,
@@ -9413,11 +9455,7 @@ export function createDataService(db: Database) {
           recurringPatterns: DEMO_RECURRING_PATTERNS.length,
           accounts: 2,
         };
-      } catch (error) {
-        // Rollback on any error
-        await db.runAsync('ROLLBACK', []);
-        throw error;
-      }
+      });
     },
 
     async getUser() {
@@ -9533,7 +9571,7 @@ export function createDataService(db: Database) {
         )
       );
       if (!matching.length) return { updated: 0 };
-      return db.transactionAsync(async () => {
+      return db.transactionAsync(async (db) => {
         const now = Date.now();
         for (const tx of matching)
           await db.runAsync(
@@ -9658,7 +9696,7 @@ export function createDataService(db: Database) {
 export type DataService = ReturnType<typeof createDataService>;
 
 export async function insertDemoRecurringPatterns(
-  db: Database,
+  db: FinancialDatabase,
   targetProfileId: string,
   patternDate: Date,
   language: 'nl' | 'en' = getStoredLanguage()

@@ -1,3 +1,4 @@
+import type { AsyncDatabaseConnection } from '@fluxby/database';
 /**
  * Tests for migration system
  * Verifies migration runner handles various scenarios correctly
@@ -160,9 +161,12 @@ function createMockDb() {
       // Simplistic mock for runAsync
       return { changes: 1, lastInsertRowId: 1 };
     }),
-    transactionAsync: vi.fn(async (fn: () => Promise<any>) => {
+    transactionAsync: vi.fn(async function (
+      this: unknown,
+      fn: (connection: AsyncDatabaseConnection) => Promise<any>
+    ) {
       // Transactions just execute the inner function in our mock
-      return await fn();
+      return await fn(this as AsyncDatabaseConnection);
     }),
     queryAsync: vi.fn(
       async <T>(sql: string, params?: unknown[]): Promise<T[]> => {

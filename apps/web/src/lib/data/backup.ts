@@ -244,7 +244,7 @@ async function snapshot(db: BackupDatabase): Promise<FinancialBackup> {
 export async function exportFinancialBackup(
   db: BackupDatabase
 ): Promise<FinancialBackup> {
-  return db.transactionAsync(() => snapshot(db));
+  return db.transactionAsync((db) => snapshot(db));
 }
 
 function validDate(value: string | number | null) {
@@ -290,6 +290,9 @@ async function validate(db: BackupDatabase, input: unknown) {
     const columns = await db.queryAsync<Column>(
       `PRAGMA table_info(${identifier(table)})`
     );
+    const columnsByName = new Map(
+      columns.map((column) => [column.name, column])
+    );
     foreignKeys[table] = await db.queryAsync<ForeignKey>(
       `PRAGMA foreign_key_list(${identifier(table)})`
     );
@@ -299,9 +302,7 @@ async function validate(db: BackupDatabase, input: unknown) {
         const columnName = backup.legacy
           ? key.replace(/[A-Z]/g, (c) => `_${c.toLowerCase()}`)
           : key;
-        const column = columns.find(
-          (candidate) => candidate.name === columnName
-        );
+        const column = columnsByName.get(columnName);
         if (!column) {
           // Legacy API exports included derived display fields.
           if (backup.legacy) continue;
@@ -463,7 +464,7 @@ export async function restoreFinancialBackup(
   options: RestoreBackupOptions = {}
 ) {
   const { rowsByTable, names } = await validate(db, input);
-  await db.transactionAsync(async () => {
+  await db.transactionAsync(async (db) => {
     // Save outside the financial dataset so replacement cannot overwrite it.
     // A failed recovery write aborts before the first deletion.
     if (options.saveRecovery) await options.saveRecovery(await snapshot(db));
@@ -471,13 +472,38 @@ export async function restoreFinancialBackup(
     for (const table of names)
       await db.runAsync(`DELETE FROM ${identifier(table)}`);
     for (const table of names) {
-      for (const row of rowsByTable[table]) {
-        const columns = Object.keys(row);
+      let columns: string[] = [];
+      let columnKey = '';
+      let batch: BackupRow[] = [];
+      const flush = async () => {
+        if (batch.length === 0) return;
+        const placeholders = `(${columns.map(() => '?').join(', ')})`;
+        // Any statement failure escapes this callback and rolls back the whole
+        // replacement. OR FAIL therefore preserves atomic restore while avoiding
+        // an additional statement journal for every multi-row INSERT.
         await db.runAsync(
-          `INSERT INTO ${identifier(table)} (${columns.map(identifier).join(', ')}) VALUES (${columns.map(() => '?').join(', ')})`,
-          Object.values(row)
+          `INSERT OR FAIL INTO ${identifier(table)} (${columns.map(identifier).join(', ')}) VALUES ${batch.map(() => placeholders).join(', ')}`,
+          batch.flatMap((row) => columns.map((column) => row[column]))
         );
+        batch = [];
+      };
+      for (const row of rowsByTable[table]) {
+        const rowColumns = Object.keys(row).sort();
+        const rowKey = JSON.stringify(rowColumns);
+        // Keep absent columns absent so legacy/defaulted rows remain valid.
+        // Bound rows and bindings instead of preparing an INSERT for every row.
+        if (
+          rowKey !== columnKey ||
+          batch.length >= 200 ||
+          (batch.length + 1) * rowColumns.length > 32766
+        ) {
+          await flush();
+          columns = rowColumns;
+          columnKey = rowKey;
+        }
+        batch.push(row);
       }
+      await flush();
     }
     const violations = await db.queryAsync('PRAGMA foreign_key_check');
     if (violations.length) invalid();

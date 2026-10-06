@@ -1,7 +1,12 @@
 import { mkdir, writeFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 import { dismissOnboardingTour } from './fixtures';
+
+const outputRoot = resolve(
+  process.env.APP_REVIEW_OUTPUT || '.nexus/tmp/full-app-review'
+);
 
 const routes = [
   'dashboard',
@@ -129,7 +134,7 @@ for (const language of ['nl', 'en'] as const) {
       await unlock.click();
     }
     await expect(page.locator('main h1')).toBeVisible({ timeout: 30000 });
-    const snapshotRoot = '.nexus/tmp/full-app-review/screenshots';
+    const snapshotRoot = resolve(outputRoot, 'screenshots');
     await mkdir(snapshotRoot, { recursive: true });
     const findings: unknown[] = [];
     const layouts: unknown[] = [];
@@ -288,7 +293,7 @@ for (const language of ['nl', 'en'] as const) {
       }
     }
     await writeFile(
-      `.nexus/tmp/full-app-review/findings-${language}.json`,
+      resolve(outputRoot, `findings-${language}.json`),
       JSON.stringify({ errors, findings, layouts }, null, 2)
     );
     expect(errors).toEqual([]);

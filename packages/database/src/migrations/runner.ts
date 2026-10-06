@@ -189,7 +189,7 @@ export async function runMigrations(db: MigrationContext): Promise<void> {
   );
 
   // Use a single transaction for all migrations to improve performance on OPFS
-  await db.transactionAsync(async () => {
+  await db.transactionAsync(async (db) => {
     for (const migration of pendingMigrations) {
       dbLog(
         `[MigrationRunner] Running migration ${migration.version}: ${migration.name}`

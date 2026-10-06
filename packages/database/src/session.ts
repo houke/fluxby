@@ -22,6 +22,13 @@ export interface SessionEvent {
  * Default auto-lock timeout (15 minutes)
  */
 const DEFAULT_AUTO_LOCK_TIMEOUT = 15 * 60 * 1000;
+const ACTIVITY_EVENTS = [
+  'mousedown',
+  'mousemove',
+  'keydown',
+  'scroll',
+  'touchstart',
+];
 
 /**
  * Session Manager
@@ -33,6 +40,7 @@ export class SessionManager {
   private listeners: Set<(event: SessionEvent) => void> = new Set();
   private idleTimer: ReturnType<typeof setTimeout> | null = null;
   private activityHandler: (() => void) | null = null;
+  private visibilityHandler: (() => void) | null = null;
 
   constructor(autoLockTimeoutMs: number = DEFAULT_AUTO_LOCK_TIMEOUT) {
     this.state = {
@@ -140,32 +148,27 @@ export class SessionManager {
    * Start tracking idle time
    */
   private startIdleTracking(): void {
-    if (typeof window === 'undefined') return;
+    this.stopIdleTracking();
+    if (!this.state.isUnlocked || typeof window === 'undefined') return;
 
     // Setup activity listeners
     this.activityHandler = () => this.recordActivity();
 
-    const events = [
-      'mousedown',
-      'mousemove',
-      'keydown',
-      'scroll',
-      'touchstart',
-    ];
     const handler = this.activityHandler;
-    events.forEach((event) => {
+    ACTIVITY_EVENTS.forEach((event) => {
       window.addEventListener(event, handler, { passive: true });
     });
 
     // Handle visibility change
-    document.addEventListener('visibilitychange', () => {
+    this.visibilityHandler = () => {
       if (document.hidden) {
         // Page is hidden, could lock immediately or reduce timeout
       } else {
         // Page is visible again
         this.recordActivity();
       }
-    });
+    };
+    document.addEventListener('visibilitychange', this.visibilityHandler);
 
     // Start idle timer
     this.resetIdleTimer();
@@ -175,24 +178,22 @@ export class SessionManager {
    * Stop idle tracking
    */
   private stopIdleTracking(): void {
-    if (this.idleTimer) {
+    if (this.idleTimer !== null) {
       clearTimeout(this.idleTimer);
       this.idleTimer = null;
     }
 
     if (typeof window !== 'undefined' && this.activityHandler) {
-      const events = [
-        'mousedown',
-        'mousemove',
-        'keydown',
-        'scroll',
-        'touchstart',
-      ];
       const handler = this.activityHandler;
-      events.forEach((event) => {
+      ACTIVITY_EVENTS.forEach((event) => {
         window.removeEventListener(event, handler);
       });
       this.activityHandler = null;
+    }
+
+    if (typeof document !== 'undefined' && this.visibilityHandler) {
+      document.removeEventListener('visibilitychange', this.visibilityHandler);
+      this.visibilityHandler = null;
     }
   }
 
@@ -200,7 +201,7 @@ export class SessionManager {
    * Reset the idle timer
    */
   private resetIdleTimer(): void {
-    if (this.idleTimer) {
+    if (this.idleTimer !== null) {
       clearTimeout(this.idleTimer);
     }
 

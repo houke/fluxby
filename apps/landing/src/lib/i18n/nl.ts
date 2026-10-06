@@ -2927,7 +2927,8 @@ Object.assign(nl, {
       manage1: 'Klik op een contact om de gegevens te bekijken',
       manage2: 'Zoek contacten met de zoekbalk',
       manage3: 'Maak opschoonregels voor betere categorisatie',
-      manage4: 'Bekijk de transactiegeschiedenis per contact',
+      manage4:
+        'Klap een contact uit om de transactiegeschiedenis te bekijken. Gebruik Vorige en Volgende om door oudere transacties te bladeren.',
     },
     analytics: {
       title: 'Analyses en inzichten',

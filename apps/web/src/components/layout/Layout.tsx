@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { Suspense, useState, useEffect, useRef } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -459,7 +459,18 @@ export default function Layout() {
               data-scroll-container='main'
               className='app-page-view-transition min-w-0 flex-1 overflow-auto pb-20 md:p-6 md:pb-6'
             >
-              <Outlet />
+              <Suspense
+                fallback={
+                  <div
+                    role='status'
+                    className='flex min-h-40 items-center justify-center text-muted-foreground'
+                  >
+                    {t.common.loading}
+                  </div>
+                }
+              >
+                <Outlet />
+              </Suspense>
             </main>
           </div>
 

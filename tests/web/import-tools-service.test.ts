@@ -3,7 +3,7 @@ import SQLite from 'better-sqlite3';
 import { SCHEMA_SQL } from '../../packages/database/src/schema';
 import { migration018 } from '../../packages/database/src/migrations/018_dutch_import_tools';
 import { createDataService } from '@/lib/data-service';
-import type { Database } from '@fluxby/database';
+import type { Database, AsyncDatabaseConnection } from '@fluxby/database';
 import { createImportToolsService } from '@/lib/data/import-tools';
 let sqlite: SQLite.Database;
 let pid = 'profile';
@@ -23,10 +23,13 @@ function adapter() {
         lastInsertRowId: Number(result.lastInsertRowid),
       };
     },
-    transactionAsync: async <T>(action: () => Promise<T>) => {
+    transactionAsync: async function <T>(
+      this: unknown,
+      action: (connection: AsyncDatabaseConnection) => Promise<T>
+    ) {
       sqlite.exec('BEGIN');
       try {
-        const result = await action();
+        const result = await action(this as AsyncDatabaseConnection);
         sqlite.exec('COMMIT');
         return result;
       } catch (error) {

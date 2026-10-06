@@ -91,6 +91,30 @@ describe('motion quality detection', () => {
     expect(createCanvas).toHaveBeenCalledOnce();
   });
 
+  it('reuses desktop GPU capability without ignoring changed motion preferences', () => {
+    expect(detectMotionTier()).toBe('full');
+    expect(detectMotionTier()).toBe('full');
+    expect(createCanvas).toHaveBeenCalledOnce();
+    mediaQueries.add('(prefers-reduced-motion: reduce)');
+    expect(detectMotionTier()).toBe('minimal');
+    mediaQueries.clear();
+    expect(detectMotionTier()).toBe('full');
+    expect(createCanvas).toHaveBeenCalledOnce();
+  });
+
+  it('releases the temporary GPU context after capability detection', () => {
+    const loseContext = vi.fn();
+    const gl = {
+      MAX_TEXTURE_SIZE: 3379,
+      getExtension: (extension: string) =>
+        extension === 'WEBGL_lose_context' ? { loseContext } : null,
+      getParameter: () => 16384,
+    };
+    createCanvas.mockReturnValue({ getContext: () => gl });
+    expect(detectMotionTier()).toBe('full');
+    expect(loseContext).toHaveBeenCalledOnce();
+  });
+
   it('uses medium quality on a desktop without WebGL or hardware hints', () => {
     createCanvas.mockReturnValue({ getContext: () => null });
     delete navigatorMock.hardwareConcurrency;

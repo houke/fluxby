@@ -341,18 +341,22 @@ export function createTransactionReviewService(
   const assertProfile = (id: string) => {
     if (currentProfileId() !== id) throw new Error('Active profile changed');
   };
-  const rows = async (id = profile()) =>
-    db.queryAsync<ReviewTransaction>(
-      `SELECT t.id,t.date,t.amount,t.type,COALESCE(t.description,'') description,t.merchant_name merchantName,t.account_id accountId,t.opposing_account_iban opposingAccountIban,t.opposing_account_name opposingAccountName,t.category_id categoryId,t.notes,t.payment_method paymentMethod,t.raw_data rawData,t.import_hash importHash,t.created_at createdAt,t.payment_provider paymentProvider,t.address_book_id addressBookId,a.name accountName,c.name categoryName,c.parent_id parentCategoryId FROM transactions t JOIN accounts a ON a.id=t.account_id AND a.profile_id=t.profile_id LEFT JOIN categories c ON c.id=t.category_id AND c.profile_id=t.profile_id WHERE t.profile_id=? AND t.is_deleted=0 AND a.is_deleted=0 ORDER BY t.date DESC,t.id`,
+  const transactionSQL = `SELECT t.id,t.date,t.amount,t.type,COALESCE(t.description,'') description,t.merchant_name merchantName,t.account_id accountId,t.opposing_account_iban opposingAccountIban,t.opposing_account_name opposingAccountName,t.category_id categoryId,t.notes,t.payment_method paymentMethod,t.raw_data rawData,t.import_hash importHash,t.created_at createdAt,t.payment_provider paymentProvider,t.address_book_id addressBookId,a.name accountName,c.name categoryName,c.parent_id parentCategoryId FROM transactions t JOIN accounts a ON a.id=t.account_id AND a.profile_id=t.profile_id LEFT JOIN categories c ON c.id=t.category_id AND c.profile_id=t.profile_id WHERE t.profile_id=? AND t.is_deleted=0 AND a.is_deleted=0`;
+  const rows = async (id = profile(), connection = db) =>
+    connection.queryAsync<ReviewTransaction>(
+      `${transactionSQL} ORDER BY t.date DESC,t.id`,
       [id]
     );
-  const requireTx = async (id: string, profileId: string) => {
-    const tx = (await rows(profileId)).find((t) => t.id === id);
+  const requireTx = async (id: string, profileId: string, connection = db) => {
+    const tx = await connection.queryOneAsync<ReviewTransaction>(
+      `${transactionSQL} AND t.id=? LIMIT 1`,
+      [profileId, id]
+    );
     if (!tx) throw new Error('Transaction not found');
     return tx;
   };
-  const getLinks = (id: string) =>
-    db.queryAsync<TransactionLink>(
+  const getLinks = (id: string, connection = db) =>
+    connection.queryAsync<TransactionLink>(
       `SELECT l.id,l.source_id sourceId,l.target_id targetId,l.kind,l.relation_type relationType,l.amount FROM transaction_links l JOIN transactions s ON s.id=l.source_id AND s.profile_id=l.profile_id AND s.is_deleted=0 JOIN transactions t ON t.id=l.target_id AND t.profile_id=l.profile_id AND t.is_deleted=0 WHERE l.profile_id=? AND l.is_deleted=0`,
       [id]
     );
@@ -372,7 +376,7 @@ export function createTransactionReviewService(
     )
       throw new Error('Category not found');
     const now = Date.now();
-    return db.transactionAsync(async () => {
+    return db.transactionAsync(async (db) => {
       const previous = await db.queryOneAsync<CategoryDecision>(
         'SELECT category_id AS categoryId,source FROM transaction_category_decisions WHERE transaction_id=? AND profile_id=? AND is_deleted=0',
         [transactionId, profileId]
@@ -449,7 +453,7 @@ export function createTransactionReviewService(
         throw new Error('Invalid review decision');
       const profileId = profile(),
         now = Date.now();
-      return db.transactionAsync(async () => {
+      return db.transactionAsync(async (db) => {
         const previous = await db.queryOneAsync<ReviewDecision>(
           'SELECT status,snoozed_until AS snoozedUntil FROM transaction_review_decisions WHERE profile_id=? AND item_key=? AND is_deleted=0',
           [profileId, key]
@@ -522,10 +526,10 @@ export function createTransactionReviewService(
       const profileId = profile();
       const id = crypto.randomUUID(),
         now = Date.now();
-      await db.transactionAsync(async () => {
-        const source = await requireTx(input.sourceId, profileId),
-          target = await requireTx(input.targetId, profileId),
-          links = await getLinks(profileId);
+      await db.transactionAsync(async (db) => {
+        const source = await requireTx(input.sourceId, profileId, db),
+          target = await requireTx(input.targetId, profileId, db),
+          links = await getLinks(profileId, db);
         assertProfile(profileId);
         if (
           links.some(
@@ -598,7 +602,7 @@ export function createTransactionReviewService(
     },
     async deleteTransactionLink(id: string) {
       const profileId = profile();
-      await db.transactionAsync(async () => {
+      await db.transactionAsync(async (db) => {
         const link = await db.queryOneAsync<{
           source_id: string;
           target_id: string;
@@ -669,7 +673,7 @@ export function createTransactionReviewService(
               baseDate,
               frequency === 'yearly' ? 12 : frequency === 'quarterly' ? 3 : 1
             );
-      return db.transactionAsync(async () => {
+      return db.transactionAsync(async (db) => {
         assertProfile(profileId);
         if (existing) {
           await db.runAsync(

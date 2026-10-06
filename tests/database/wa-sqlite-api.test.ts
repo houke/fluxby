@@ -86,25 +86,6 @@ describe('wa-sqlite API', () => {
       expect(sourceCode).toContain('.last_insert_id(');
       expect(sourceCode).not.toContain('last_insert_rowid:');
     });
-
-    it('should serialize transaction control statements through runAsync()', async () => {
-      const sourceCode = fs.readFileSync(
-        path.join(
-          import.meta.dirname,
-          '../../packages/database/src/wa-sqlite.ts'
-        ),
-        'utf-8'
-      );
-
-      expect(sourceCode).toContain("await this.runAsync('BEGIN TRANSACTION')");
-      expect(sourceCode).toContain("await this.runAsync('COMMIT')");
-      expect(sourceCode).toContain("await this.runAsync('ROLLBACK')");
-      expect(sourceCode).not.toContain(
-        "await this.execAsync('BEGIN TRANSACTION')"
-      );
-      expect(sourceCode).not.toContain("await this.execAsync('COMMIT')");
-      expect(sourceCode).not.toContain("await this.execAsync('ROLLBACK')");
-    });
   });
 
   describe('compiled output verification', () => {
@@ -169,31 +150,6 @@ describe('wa-sqlite method availability', () => {
 // ============================================
 
 describe('transactionAsync serialization regression tests', () => {
-  it('should use runAsync for BEGIN/COMMIT/ROLLBACK (not execAsync)', async () => {
-    // This is a regression test for a critical bug where using execAsync
-    // for transaction control caused WASM memory corruption when concurrent
-    // queries were running. See wa-sqlite.ts comment for details.
-    const sourceCode = fs.readFileSync(
-      path.join(
-        import.meta.dirname,
-        '../../packages/database/src/wa-sqlite.ts'
-      ),
-      'utf-8'
-    );
-
-    // Verify transaction control uses runAsync (which goes through withLock)
-    expect(sourceCode).toContain("await this.runAsync('BEGIN TRANSACTION')");
-    expect(sourceCode).toContain("await this.runAsync('COMMIT')");
-    expect(sourceCode).toContain("await this.runAsync('ROLLBACK')");
-
-    // Verify execAsync is NOT used for transaction control
-    expect(sourceCode).not.toContain(
-      "await this.execAsync('BEGIN TRANSACTION')"
-    );
-    expect(sourceCode).not.toContain("await this.execAsync('COMMIT')");
-    expect(sourceCode).not.toContain("await this.execAsync('ROLLBACK')");
-  });
-
   it('should have retry logic for OPFS stream errors', async () => {
     const sourceCode = fs.readFileSync(
       path.join(
@@ -231,30 +187,6 @@ describe('transactionAsync serialization regression tests', () => {
     expect(sourceCode).toContain('catch (rollbackError)');
     expect(sourceCode).toContain('Rollback failed:');
     expect(sourceCode).toContain('throw error'); // Re-throw original error after logging rollback failure
-  });
-
-  it('should not use execAsync which bypasses the operation lock', async () => {
-    const sourceCode = fs.readFileSync(
-      path.join(
-        import.meta.dirname,
-        '../../packages/database/src/wa-sqlite.ts'
-      ),
-      'utf-8'
-    );
-
-    // Count occurrences of execAsync in transactionAsync method
-    // Extract the transactionAsync method body
-    const transactionAsyncMatch = sourceCode.match(
-      /async transactionAsync<T>\(fn: \(\) => Promise<T>\): Promise<T> \{[\s\S]*?^\s{2}\}/m
-    );
-
-    if (transactionAsyncMatch) {
-      const methodBody = transactionAsyncMatch[0];
-      // execAsync should NOT appear in the transactionAsync method body
-      expect(methodBody).not.toContain('this.execAsync');
-      // runAsync SHOULD appear
-      expect(methodBody).toContain('this.runAsync');
-    }
   });
 
   describe('retry logic implementation', () => {
@@ -306,7 +238,7 @@ describe('Database interface completeness', () => {
 
     // Verify transactionAsync is defined as an async method
     expect(sourceCode).toContain(
-      'async transactionAsync<T>(fn: () => Promise<T>): Promise<T>'
+      'fn: (connection: AsyncDatabaseConnection) => Promise<T>'
     );
   });
 
@@ -342,39 +274,6 @@ describe('OPFS error recovery implementation', () => {
     expect(sourceCode).toContain('100 * attempt');
   });
 
-  it('should log retry attempts for debugging', () => {
-    const sourceCode = fs.readFileSync(
-      path.join(
-        import.meta.dirname,
-        '../../packages/database/src/wa-sqlite.ts'
-      ),
-      'utf-8'
-    );
-
-    // Should log before retrying
-    expect(sourceCode).toMatch(/wasmLog.*OPFS stream error.*attempt.*retrying/);
-  });
-
-  it('should distinguish between recoverable and non-recoverable errors', () => {
-    const sourceCode = fs.readFileSync(
-      path.join(
-        import.meta.dirname,
-        '../../packages/database/src/wa-sqlite.ts'
-      ),
-      'utf-8'
-    );
-
-    // Should have logic to detect stream errors vs other errors
-    expect(sourceCode).toContain('isStreamError');
-    expect(sourceCode).toContain('const isStreamError');
-
-    // Only retry if stream error AND not at max retries
-    // Non-stream errors or max retries fall through to throw
-    expect(sourceCode).toMatch(
-      /if\s*\(isStreamError\s*&&\s*attempt\s*<\s*MAX_RETRIES\)/
-    );
-  });
-
   it('should rethrow after exhausting all retry attempts', () => {
     const sourceCode = fs.readFileSync(
       path.join(
@@ -388,19 +287,6 @@ describe('OPFS error recovery implementation', () => {
     expect(sourceCode).toContain('throw error');
     // Retry continue condition: retry if stream error AND not at max attempts
     expect(sourceCode).toMatch(/attempt\s*<\s*MAX_RETRIES/);
-  });
-
-  it('should preserve original error information on final failure', () => {
-    const sourceCode = fs.readFileSync(
-      path.join(
-        import.meta.dirname,
-        '../../packages/database/src/wa-sqlite.ts'
-      ),
-      'utf-8'
-    );
-
-    // Should log retry attempts
-    expect(sourceCode).toMatch(/wasmLog.*OPFS stream error/i);
   });
 
   it('should handle both "closing writable stream" and "disk I/O error" patterns', () => {

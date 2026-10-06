@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import type { CSSProperties } from 'react';
 import { useLanguage } from '../../contexts/LanguageContext';
 
 // Monthly data with month keys for translation
@@ -23,9 +23,6 @@ export default function AnalyticsAnimation({
   isVisible: boolean;
 }) {
   const { t } = useLanguage();
-  const [scrollX, setScrollX] = useState(0);
-  const animationRef = useRef<number | null>(null);
-  const lastTimeRef = useRef<number>(0);
 
   // Get translated labels
   const anim = t.animations.analytics;
@@ -50,41 +47,6 @@ export default function AnalyticsAnimation({
         ].indexOf(d.monthKey)
       ],
   }));
-
-  useEffect(() => {
-    if (isVisible) {
-      const animate = (currentTime: number) => {
-        if (!lastTimeRef.current) lastTimeRef.current = currentTime;
-        const delta = currentTime - lastTimeRef.current;
-        lastTimeRef.current = currentTime;
-
-        // Scroll at 40px per second
-        setScrollX((prev) => {
-          const barWidth = 48; // Width of each bar group
-          const totalWidth = monthlyData.length * barWidth;
-          const newX = prev + (delta / 1000) * 40;
-          return newX % totalWidth;
-        });
-
-        animationRef.current = requestAnimationFrame(animate);
-      };
-
-      animationRef.current = requestAnimationFrame(animate);
-    } else {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-        animationRef.current = null;
-      }
-      lastTimeRef.current = 0;
-    }
-
-    return () => {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isVisible]);
 
   const maxValue = Math.max(
     ...monthlyData.flatMap((d) => [d.income, d.expenses])
@@ -118,8 +80,14 @@ export default function AnalyticsAnimation({
 
         {/* Scrolling bars */}
         <div
-          className='absolute bottom-6 flex items-end gap-1'
-          style={{ transform: `translateX(-${scrollX}px)` }}
+          className='demo-scroll-horizontal absolute bottom-6 flex items-end gap-1'
+          style={
+            {
+              '--demo-scroll-offset': `-${monthlyData.length * 48}px`,
+              '--demo-scroll-duration': `${(monthlyData.length * 48) / 40}s`,
+              animationPlayState: isVisible ? 'running' : 'paused',
+            } as CSSProperties
+          }
         >
           {doubledData.map((data, idx) => {
             const incomeHeight = (data.income / maxValue) * 140;

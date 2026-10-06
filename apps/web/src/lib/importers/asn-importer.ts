@@ -1,4 +1,4 @@
-import { type Database } from '@fluxby/database';
+import { type AsyncDatabaseConnection } from '@fluxby/database';
 import { type TransactionCreate } from '@fluxby/shared';
 
 interface ASNImportOptions {
@@ -124,7 +124,7 @@ export function parseASNDate(value: string | null | undefined): string | null {
  * "Valutadatum";"Code";"Type";"Volgnummer";"Betalingskenmerk";"Omschrijving";"Afschriftnummer"
  */
 export async function processASNRow(
-  db: Database,
+  db: Pick<AsyncDatabaseConnection, 'queryOneAsync'>,
   row: Record<string, string>,
   options: ASNImportOptions,
   helpers: {

@@ -5,7 +5,9 @@ export interface MigrationContext {
     sql: string,
     params?: unknown[]
   ): Promise<{ changes: number; lastInsertRowId: number }>;
-  transactionAsync<T>(fn: () => Promise<T>): Promise<T>;
+  transactionAsync<T>(
+    fn: (connection: MigrationContext) => Promise<T>
+  ): Promise<T>;
 }
 
 export interface Migration {
@@ -38,6 +40,7 @@ import { migration019 } from './019_transaction_review.js';
 import { migration020 } from './020_household_planning.js';
 import { migration021 } from './021_household_budgets.js';
 import { migration022 } from './022_manual_bill_amounts.js';
+import { migration023 } from './023_repair_performance_indexes.js';
 
 export const migrations: Migration[] = [
   migration001,
@@ -62,10 +65,11 @@ export const migrations: Migration[] = [
   migration020,
   migration021,
   migration022,
+  migration023,
 ];
 
 /**
  * The highest migration version this code knows about.
  * Used to detect stale code (when database has higher version than code knows).
  */
-export const LATEST_MIGRATION_VERSION = 22;
+export const LATEST_MIGRATION_VERSION = 23;

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useAnimationEnabled } from '../hooks/useAnimationActivity';
 import {
   DashboardAnimation,
   TransactionsAnimation,
@@ -25,6 +26,7 @@ const AnimationComponents = [
 
 const Screenshots = () => {
   const { t } = useLanguage();
+  const animationEnabled = useAnimationEnabled();
   const [visibleSections, setVisibleSections] = useState<Set<number>>(
     new Set()
   );
@@ -40,6 +42,7 @@ const Screenshots = () => {
         (entries) => {
           entries.forEach((entry) => {
             setVisibleSections((prev) => {
+              if (prev.has(index) === entry.isIntersecting) return prev;
               const next = new Set(prev);
               if (entry.isIntersecting) {
                 next.add(index);
@@ -126,12 +129,17 @@ const Screenshots = () => {
                   <div className='relative md:px-0'>
                     <div className='from-fluxby-purple to-fluxby-pink absolute inset-0 hidden scale-105 transform rounded-3xl bg-gradient-to-r opacity-20 blur-2xl md:block dark:opacity-30'></div>
                     <div
+                      data-animation-paused={
+                        !animationEnabled || !visibleSections.has(index)
+                      }
                       className='relative -ml-8 aspect-[4/3] w-[calc(100%+4rem)] overflow-hidden border-0 border-purple-200 bg-gradient-to-br from-purple-50 via-pink-50 to-indigo-100 shadow-none select-none md:ml-0 md:w-full md:rounded-2xl md:border md:shadow-2xl dark:border-purple-700/30 dark:from-gray-800 dark:via-gray-700 dark:to-gray-800'
                       style={{ pointerEvents: 'none' }}
                     >
                       {AnimationComponent && (
                         <AnimationComponent
-                          isVisible={visibleSections.has(index)}
+                          isVisible={
+                            animationEnabled && visibleSections.has(index)
+                          }
                         />
                       )}
                     </div>

@@ -14,6 +14,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { PaginatedHistoryList } from '@/components/ui/PaginatedHistoryList';
 import { Input } from '@/components/ui/input';
 import {
   Tooltip,
@@ -48,6 +49,8 @@ interface ContactListItemProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   contactTransactions: any[] | undefined;
   isLoadingTransactions: boolean;
+  transactionPage?: number;
+  onTransactionPageChange?: (page: number) => void;
   onSplitContact: (contact: AddressBookEntryWithStats) => void;
   onSelectContactTransactions: (contact: AddressBookEntryWithStats) => void;
   hasSharedIban: boolean;
@@ -104,6 +107,8 @@ export const ContactListItem = memo(function ContactListItem({
   onToggleExpand,
   contactTransactions,
   isLoadingTransactions,
+  transactionPage,
+  onTransactionPageChange,
   onSplitContact,
   onSelectContactTransactions,
   hasSharedIban,
@@ -400,9 +405,21 @@ export const ContactListItem = memo(function ContactListItem({
             <div className='flex items-center justify-center py-4'>
               <Loader2 className='h-5 w-5 animate-spin text-muted-foreground' />
             </div>
-          ) : contactTransactions && contactTransactions.length > 0 ? (
-            <div className='max-h-[500px] space-y-1 overflow-y-auto'>
-              {contactTransactions.map((tx) => (
+          ) : contactTransactions &&
+            (contactTransactions.length > 0 || (transactionPage ?? 0) > 0) ? (
+            <PaginatedHistoryList
+              items={contactTransactions}
+              className='max-h-[500px] space-y-1 overflow-y-auto'
+              previousLabel={t.common.previous}
+              nextLabel={t.common.next}
+              page={transactionPage}
+              totalItems={
+                transactionPage === undefined
+                  ? undefined
+                  : contact.transactionCount || contactTransactions.length
+              }
+              onPageChange={onTransactionPageChange}
+              renderItem={(tx) => (
                 <div
                   key={tx.id}
                   className='flex flex-col gap-1 rounded-lg bg-card/50 p-3 text-sm sm:flex-row sm:items-center sm:justify-between'
@@ -425,8 +442,8 @@ export const ContactListItem = memo(function ContactListItem({
                     <Currency amount={tx.amount} />
                   </div>
                 </div>
-              ))}
-            </div>
+              )}
+            />
           ) : (
             <div className='py-4 text-center text-sm text-muted-foreground'>
               {t.addressBook?.noTransactions}

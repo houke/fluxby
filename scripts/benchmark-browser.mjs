@@ -1,3 +1,4 @@
+/* global navigator */
 /** Isolated Chromium benchmark of the real browser database and UI. */
 import { chromium } from '@playwright/test';
 import { mkdir, writeFile } from 'node:fs/promises';
@@ -6,6 +7,7 @@ import { performance } from 'node:perf_hooks';
 import { URL } from 'node:url';
 import { Buffer } from 'node:buffer';
 import { setTimeout } from 'node:timers';
+import { installVfsDiagnostics } from './performance-vfs-diagnostics.mjs';
 
 const base =
   process.env.PERFORMANCE_BASE_URL || 'https://fluxby.local:5177/app/';
@@ -17,13 +19,21 @@ const password = 'PerformanceTest1234';
 const importSizes = (process.env.PERFORMANCE_IMPORT_ROWS || '1000,10000')
   .split(',')
   .map((value) => Number(value.trim()));
+const idleWindows = Number(process.env.PERFORMANCE_IDLE_WINDOWS || '3');
 if (
   importSizes.length === 0 ||
   importSizes.some((count) => !Number.isSafeInteger(count) || count <= 0)
 ) {
   throw new Error('PERFORMANCE_IMPORT_ROWS must be positive integers');
 }
-const browser = await chromium.launch({ headless: true });
+if (!Number.isSafeInteger(idleWindows) || idleWindows <= 0) {
+  throw new Error('PERFORMANCE_IDLE_WINDOWS must be a positive integer');
+}
+const minimizeForBackground =
+  process.env.PERFORMANCE_BACKGROUND_MODE === 'minimize';
+const collectVfsDiagnostics =
+  process.env.PERFORMANCE_VFS_DIAGNOSTICS === 'true';
+const browser = await chromium.launch({ headless: !minimizeForBackground });
 const context = await browser.newContext({
   ignoreHTTPSErrors: true,
   viewport: { width: 1440, height: 1000 },
@@ -37,7 +47,10 @@ page.on('framenavigated', (frame) => {
 });
 page.on('crash', () => console.log('BENCHMARK_CRASH'));
 page.on('console', (message) => {
-  if (message.text().startsWith('BENCHMARK_PROGRESS'))
+  if (
+    message.text().startsWith('BENCHMARK_PROGRESS') ||
+    message.text().startsWith('BENCHMARK_VFS')
+  )
     console.log(message.text());
   if (message.type() === 'error') errors.push(message.text());
 });
@@ -47,6 +60,7 @@ const report = {
   browser: browser.version(),
   mode: 'development',
   isolatedContext: true,
+  idleWindows,
   startup: {},
   imports: [],
   queries: [],
@@ -81,6 +95,7 @@ try {
     .getByRole('button', { name: /english/i })
     .waitFor({ timeout: 30000 });
   report.startup.freshToSetupMs = elapsed(started);
+  if (collectVfsDiagnostics) await installVfsDiagnostics(page);
   await page.getByRole('button', { name: /english/i }).click();
   await page.locator('input[type=text]').first().fill('Performance Test');
   await page.getByRole('button', { name: /^next$/i }).click();
@@ -99,6 +114,7 @@ try {
   await page.reload({ waitUntil: 'domcontentloaded' });
   await page.getByText(/unlock fluxby/i).waitFor({ timeout: 30000 });
   report.startup.encryptedToLockMs = elapsed(started);
+  if (collectVfsDiagnostics) await installVfsDiagnostics(page);
   started = performance.now();
   await unlockIfNeeded();
   await page
@@ -131,6 +147,44 @@ try {
     };
   }, singletonsPath);
   report.schemaVersion = ids.schemaVersion;
+  report.databaseSettings = await page.evaluate(async (path) => {
+    const { getGlobalDatabase } = await import(path);
+    const db = getGlobalDatabase();
+    const settings = {};
+    for (const name of [
+      'cache_size',
+      'cache_spill',
+      'page_count',
+      'page_size',
+      'journal_mode',
+      'synchronous',
+    ]) {
+      settings[name] = await db.queryOneAsync(`PRAGMA ${name}`);
+    }
+    return settings;
+  }, singletonsPath);
+  console.log(
+    JSON.stringify({
+      stage: 'databaseSettings',
+      result: report.databaseSettings,
+    })
+  );
+  report.storage = await page.evaluate(async () => {
+    const root = await navigator.storage.getDirectory();
+    const file = await (await root.getFileHandle('fluxby.db')).getFile();
+    return {
+      backend: file.size > 0 ? 'opfs' : 'indexeddb',
+      encrypted:
+        file.size > 0 &&
+        !(await file.slice(0, 16).text()).startsWith('SQLite format 3'),
+    };
+  });
+  if (
+    new URL(base).hostname === 'fluxby.local' &&
+    (report.storage.backend !== 'opfs' || !report.storage.encrypted)
+  ) {
+    throw new Error('Expected encrypted OPFS storage on fluxby.local');
+  }
   const importOptions = {
     accountId: ids.accountId,
     filename: 'synthetic-performance.csv',
@@ -147,21 +201,28 @@ try {
     },
   };
   let importedRows = 0;
+  // Keep the synthetic rows in the browser's default current-month filter.
+  // A fixed month silently turns the rendering benchmark into an empty view.
+  const importMonth = await page.evaluate(() => {
+    const now = new Date();
+    return `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}`;
+  });
   for (const count of importSizes) {
     const csv = [
       '"Date","Name / Description","Account","Counterparty","Debit/credit","Amount (EUR)","Transaction type","Notifications"',
       ...Array.from(
         { length: count },
         (_, i) =>
-          `"202609${String((i % 28) + 1).padStart(2, '0')}","Perf merchant ${count}-${i % 10}","NL91ABNA0417164300","NL89ABNA0400404040","Debit","${((i % 499) + 1) / 100}","Payment terminal","Quoted, note ${count}-${i} with ""word"""`
+          `"${importMonth}${String((i % 28) + 1).padStart(2, '0')}","Perf merchant ${count}-${i % 10}","NL91ABNA0417164300","NL89ABNA0400404040","Debit","${((i % 499) + 1) / 100}","Payment terminal","Quoted, note ${count}-${i} with ""word"""`
       ),
     ].join('\n');
     const result = await page.evaluate(
-      async ({ path, csv, options }) => {
+      async ({ path, csv, options, diagnostic }) => {
         const { getDataService } = await import(path);
         const service = getDataService();
         const started = performance.now();
         let lastProgress = -1;
+        if (diagnostic) globalThis.__fluxbyVfsDiagnostics.reset();
         const result = await service.importCsv(csv, {
           ...options,
           onProgress: (current, total) => {
@@ -170,6 +231,10 @@ try {
               console.log(
                 `BENCHMARK_PROGRESS ${current}/${total} ${Math.round(performance.now() - started)}ms`
               );
+              if (diagnostic)
+                console.log(
+                  `BENCHMARK_VFS ${current}/${total} ${JSON.stringify(globalThis.__fluxbyVfsDiagnostics.snapshot())}`
+                );
             }
           },
         });
@@ -178,9 +243,17 @@ try {
           imported: result.imported,
           skipped: result.skipped,
           errors: result.errors.length,
+          ...(diagnostic
+            ? { vfs: globalThis.__fluxbyVfsDiagnostics.snapshot() }
+            : {}),
         };
       },
-      { path: singletonsPath, csv, options: importOptions }
+      {
+        path: singletonsPath,
+        csv,
+        options: importOptions,
+        diagnostic: collectVfsDiagnostics,
+      }
     );
     report.imports.push({
       rows: count,
@@ -249,50 +322,143 @@ try {
         item.value,
       ])
     );
+  if (process.env.PERFORMANCE_TRACE === 'true') {
+    await cdp.send('Tracing.start', {
+      categories: 'devtools.timeline,v8,disabled-by-default-v8.cpu_profiler',
+      transferMode: 'ReturnAsStream',
+    });
+  }
   let before = await metrics();
-  for (let i = 0; i < 3; i++) {
+  for (let i = 0; i < idleWindows; i++) {
     await page.waitForTimeout(20000);
     const after = await metrics();
+    const transactionViewVisible = await page
+      .locator('[data-onboarding="transaction-row"]')
+      .first()
+      .isVisible();
     report.idle.push({
       elapsedSeconds: (i + 1) * 20,
+      sampleSeconds: +(after.Timestamp - before.Timestamp).toFixed(3),
       rendererTaskSeconds: +(after.TaskDuration - before.TaskDuration).toFixed(
         3
       ),
       rendererTaskPercent: +(
-        ((after.TaskDuration - before.TaskDuration) / 20) *
+        ((after.TaskDuration - before.TaskDuration) /
+          (after.Timestamp - before.Timestamp)) *
         100
       ).toFixed(2),
+      scriptSeconds: +(after.ScriptDuration - before.ScriptDuration).toFixed(3),
+      layoutSeconds: +(after.LayoutDuration - before.LayoutDuration).toFixed(3),
       jsHeapMB: +(after.JSHeapUsedSize / 1048576).toFixed(2),
       nodes: after.Nodes,
       documents: after.Documents,
       frames: after.Frames,
       state: 'visible',
+      transactionViewVisible,
     });
     before = after;
     console.log(JSON.stringify({ stage: 'idle', result: report.idle.at(-1) }));
+    if (!transactionViewVisible) {
+      throw new Error('Transaction view disappeared during idle measurement');
+    }
   }
-  await cdp.send('Page.setWebLifecycleState', { state: 'frozen' });
+  let windowId;
+  // Read page state while JavaScript can still execute. A Runtime.evaluate on
+  // a truly frozen page waits indefinitely until the page is resumed.
+  let backgroundVisibilityState;
+  if (minimizeForBackground) {
+    ({ windowId } = await cdp.send('Browser.getWindowForTarget'));
+    await cdp.send('Browser.setWindowBounds', {
+      windowId,
+      bounds: { windowState: 'minimized' },
+    });
+    await page.waitForFunction(() => globalThis.document.hidden, undefined, {
+      polling: 100,
+      timeout: 10000,
+    });
+    backgroundVisibilityState = await page.evaluate(
+      () => globalThis.document.visibilityState
+    );
+  } else {
+    backgroundVisibilityState = await page.evaluate(
+      () => globalThis.document.visibilityState
+    );
+    await cdp.send('Page.setWebLifecycleState', { state: 'frozen' });
+  }
   before = await metrics();
   await new Promise((resolve) => setTimeout(resolve, 10000));
   const frozen = await metrics();
   report.idle.push({
-    elapsedSeconds: 70,
-    state: 'frozen',
+    elapsedSeconds: idleWindows * 20 + 10,
+    state: minimizeForBackground ? 'minimized' : 'cdp-freeze-request',
+    visibilityState: backgroundVisibilityState,
+    visibilityObservation: minimizeForBackground
+      ? 'after-minimizing'
+      : 'before-freeze-request',
+    sampleSeconds: +(frozen.Timestamp - before.Timestamp).toFixed(3),
     rendererTaskSeconds: +(frozen.TaskDuration - before.TaskDuration).toFixed(
       3
     ),
     rendererTaskPercent: +(
-      ((frozen.TaskDuration - before.TaskDuration) / 10) *
+      ((frozen.TaskDuration - before.TaskDuration) /
+        (frozen.Timestamp - before.Timestamp)) *
       100
     ).toFixed(2),
+    scriptSeconds: +(frozen.ScriptDuration - before.ScriptDuration).toFixed(3),
+    layoutSeconds: +(frozen.LayoutDuration - before.LayoutDuration).toFixed(3),
     jsHeapMB: +(frozen.JSHeapUsedSize / 1048576).toFixed(2),
   });
-  await cdp.send('Page.setWebLifecycleState', { state: 'active' });
+  if (minimizeForBackground) {
+    await cdp.send('Browser.setWindowBounds', {
+      windowId,
+      bounds: { windowState: 'normal' },
+    });
+    await page.bringToFront();
+    await page.waitForFunction(() => !globalThis.document.hidden, undefined, {
+      polling: 100,
+      timeout: 10000,
+    });
+  } else {
+    await cdp.send('Page.setWebLifecycleState', { state: 'active' });
+  }
+  if (process.env.PERFORMANCE_TRACE === 'true') {
+    const completed = new Promise((resolve) =>
+      cdp.once('Tracing.tracingComplete', resolve)
+    );
+    await cdp.send('Tracing.end');
+    const { stream } = await completed;
+    let trace = '';
+    try {
+      while (true) {
+        const chunk = await cdp.send('IO.read', { handle: stream });
+        trace += chunk.base64Encoded
+          ? Buffer.from(chunk.data, 'base64').toString('utf8')
+          : chunk.data;
+        if (chunk.eof) break;
+      }
+    } finally {
+      await cdp.send('IO.close', { handle: stream });
+    }
+    await mkdir(resolve(output, '..'), { recursive: true });
+    report.idleTrace = output.replace(/\.json$/, '-idle-trace.json');
+    await writeFile(report.idleTrace, trace);
+  }
   await unlockIfNeeded();
   const restored = await page.evaluate(async (path) => {
     const { getDataService } = await import(path);
     const service = getDataService();
-    const backup = await service.exportAll();
+    console.log('BENCHMARK_BACKUP_EXPORT_START');
+    const exportStarted = performance.now();
+    const diagnostics = globalThis.__fluxbyVfsDiagnostics;
+    diagnostics?.startPhase('export');
+    let backup;
+    try {
+      backup = await service.exportAll();
+    } finally {
+      diagnostics?.stopPhase();
+    }
+    const exportMs = Math.round(performance.now() - exportStarted);
+    console.log(`BENCHMARK_BACKUP_EXPORT_COMPLETE ${exportMs}ms`);
     const db = (await import(path)).getGlobalDatabase();
     const countRows = async () =>
       (
@@ -302,6 +468,8 @@ try {
       )[0].count;
     const before = await countRows();
     const started = performance.now();
+    console.log(`BENCHMARK_RESTORE_START ${before} rows`);
+    diagnostics?.startPhase('restore');
     try {
       await service.importAll(backup);
       return {
@@ -309,6 +477,7 @@ try {
         before,
         after: await countRows(),
         elapsedMs: Math.round(performance.now() - started),
+        exportMs,
         tables: backup.tableManifest,
       };
     } catch (error) {
@@ -319,10 +488,27 @@ try {
         after: await countRows(),
         elapsedMs: Math.round(performance.now() - started),
       };
+    } finally {
+      diagnostics?.stopPhase();
     }
   }, singletonsPath);
   report.restore = restored;
   console.log(JSON.stringify({ stage: 'restore', result: restored }));
+  if (
+    !restored.success ||
+    restored.before !== importedRows ||
+    restored.after !== importedRows
+  ) {
+    throw new Error('Backup restore did not preserve every imported row');
+  }
+  const integrityAfterRestore = await page.evaluate(async (path) => {
+    const { getGlobalDatabase } = await import(path);
+    return getGlobalDatabase().queryAsync('PRAGMA integrity_check');
+  }, singletonsPath);
+  report.restore.integrity = integrityAfterRestore;
+  if (integrityAfterRestore[0]?.integrity_check !== 'ok') {
+    throw new Error('SQLite integrity_check failed after restore');
+  }
 } catch (error) {
   report.failure = error.message;
   const detail = page.locator('details');

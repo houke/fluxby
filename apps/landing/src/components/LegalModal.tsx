@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import PageLoading from './PageLoading';
+import { Suspense, useEffect, useState } from 'react';
 import { X } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useTheme } from '../contexts/ThemeContext';
@@ -173,7 +174,7 @@ const LegalModal = ({ isOpen, onClose, title, children }: LegalModalProps) => {
                   : ''
               }`}
             >
-              {children}
+              <Suspense fallback={<PageLoading />}>{children}</Suspense>
             </div>
           </div>
         </div>

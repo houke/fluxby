@@ -4,6 +4,7 @@ import tailwindcss from '@tailwindcss/vite';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
 import { getLocalHttpsOptions } from '../../scripts/dev-cert.mjs';
+import { offlinePrecache } from '../../scripts/offline-precache.mjs';
 
 // Read root package.json for app version
 const rootPackageJson = JSON.parse(
@@ -31,7 +32,15 @@ const appHost = devHost || 'localhost';
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [tailwindcss(), react()],
+  plugins: [
+    tailwindcss(),
+    react(),
+    offlinePrecache({
+      serviceWorkerPath: resolve(__dirname, 'public/sw.js'),
+      base,
+      publicAssets: ['openapi.json'],
+    }),
+  ],
   resolve: {
     alias: {
       // In dev mode, resolve @fluxby/* packages to source files for hot-reload

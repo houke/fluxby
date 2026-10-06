@@ -1,3 +1,4 @@
+import type { AsyncDatabaseConnection } from '@fluxby/database';
 import { HOUSEHOLD_BUDGET_SCHEMA_SQL } from '../../packages/database/src/migrations/021_household_budgets';
 import { TRANSACTION_REVIEW_SCHEMA_SQL } from '../../packages/database/src/migrations/019_transaction_review';
 import Sqlite from 'better-sqlite3';
@@ -50,10 +51,13 @@ beforeEach(() => {
       }
       return sqlite.prepare(sql).run(...params);
     },
-    transactionAsync: async (fn: () => Promise<unknown>) => {
+    transactionAsync: async function (
+      this: unknown,
+      fn: (connection: AsyncDatabaseConnection) => Promise<unknown>
+    ) {
       sqlite.exec('BEGIN');
       try {
-        const result = await fn();
+        const result = await fn(this as AsyncDatabaseConnection);
         sqlite.exec('COMMIT');
         return result;
       } catch (error) {

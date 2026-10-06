@@ -38,7 +38,12 @@ function createMockAdapter(
       return [] as T[];
     }),
     run: vi.fn(async () => ({ changes: 1 })),
-    transaction: vi.fn(async <T>(fn: () => Promise<T>): Promise<T> => fn()),
+    transaction: vi.fn(async function <T>(
+      this: unknown,
+      fn: (adapter: SyncDatabaseAdapter) => Promise<T>
+    ): Promise<T> {
+      return fn(this as SyncDatabaseAdapter);
+    }),
     getProfileId: vi.fn(() => profileId),
   };
 }

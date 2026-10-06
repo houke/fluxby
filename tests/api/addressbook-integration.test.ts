@@ -1,4 +1,5 @@
-import { describe, it, expect, beforeAll } from 'vitest';
+import { createServer, type Server } from 'node:http';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import request from 'supertest';
 
 // DB_PATH is set to :memory: in tests/setup.ts
@@ -14,7 +15,7 @@ import request from 'supertest';
  */
 
 describe('AddressBook Integration Tests', () => {
-  let app: any;
+  let app: Server;
   const PROFILE_ID = 1;
   const SHARED_IBAN = 'NL04ADYB2017400157'; // Simulated payment processor
   const REGULAR_IBAN = 'NL91ABNA0417164300';
@@ -22,7 +23,13 @@ describe('AddressBook Integration Tests', () => {
 
   beforeAll(async () => {
     const mod = await import('../../apps/api/src/app.js');
-    app = mod.default;
+    app = createServer(mod.default);
+    // Supertest connects through IPv4; bind that address explicitly so its
+    // request cannot reach an unrelated IPv4 listener sharing an IPv6 port.
+    await new Promise<void>((resolve, reject) => {
+      app.once('error', reject);
+      app.listen(0, '127.0.0.1', resolve);
+    });
 
     // Create an account for transactions
     const accRes = await request(app)
@@ -34,7 +41,15 @@ describe('AddressBook Integration Tests', () => {
         type: 'checking',
       });
     expect(accRes.status).toBe(201);
-    accountId = accRes.body.data?.id || 1;
+    accountId = accRes.body.data.id;
+    expect(accountId).toBeDefined();
+  });
+
+  afterAll(async () => {
+    if (!app?.listening) return;
+    await new Promise<void>((resolve, reject) => {
+      app.close((error) => (error ? reject(error) : resolve()));
+    });
   });
 
   describe('Shared IBAN Detection', () => {
@@ -233,7 +248,7 @@ describe('AddressBook Integration Tests', () => {
           originalNames: ['Merchant A via Adyen'],
         });
 
-      expect(resolveRes.status).toBe(201);
+      expect(resolveRes.status, JSON.stringify(resolveRes.body)).toBe(201);
       expect(resolveRes.body.success).toBe(true);
       expect(resolveRes.body.data.transactionsUpdated).toBe(1);
       merchantAContactId = resolveRes.body.data.addressBookId;

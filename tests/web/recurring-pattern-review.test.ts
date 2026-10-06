@@ -1,3 +1,4 @@
+import type { AsyncDatabaseConnection } from '@fluxby/database';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const { readFromOPFSSyncMock, askTypeSafeMock, getTypeSafeApiKeyMock } =
@@ -34,7 +35,12 @@ function createMockDb(
     queryAsync: vi.fn(async (sql: string) => queryHandler(sql)),
     queryOneAsync: vi.fn(async (sql: string) => queryOneHandler(sql)),
     runAsync: vi.fn(async () => ({ changes: 1 })),
-    transactionAsync: vi.fn(async (fn: () => Promise<unknown>) => fn()),
+    transactionAsync: vi.fn(async function (
+      this: unknown,
+      fn: (connection: AsyncDatabaseConnection) => Promise<unknown>
+    ) {
+      return fn(this as AsyncDatabaseConnection);
+    }),
   };
 }
 

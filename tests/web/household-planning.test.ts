@@ -1,3 +1,4 @@
+import type { AsyncDatabaseConnection } from '@fluxby/database';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import SQLite from 'better-sqlite3';
 import { SCHEMA_SQL } from '../../packages/database/src/schema';
@@ -30,10 +31,13 @@ function adapter() {
       const r = sqlite.prepare(sql).run(...params);
       return { changes: r.changes, lastInsertRowId: Number(r.lastInsertRowid) };
     },
-    transactionAsync: async <T>(fn: () => Promise<T>) => {
+    transactionAsync: async function <T>(
+      this: unknown,
+      fn: (connection: AsyncDatabaseConnection) => Promise<T>
+    ) {
       sqlite.exec('BEGIN');
       try {
-        const result = await fn();
+        const result = await fn(this as AsyncDatabaseConnection);
         sqlite.exec('COMMIT');
         return result;
       } catch (e) {

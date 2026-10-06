@@ -11,12 +11,14 @@ import type {
   DatabaseConnection,
   PreparedStatement,
   DatabaseOptions,
+  AsyncDatabaseConnection,
 } from './types.js';
 import { getSeedSQL } from './schema.js';
 import { runMigrations, checkPendingMigrations } from './migrations/runner.js';
 import { EncryptionVFS } from './encryption-vfs.js';
 import { getDeviceId, isTauri } from './environment.js';
 import { dbLog } from './logger.js';
+import { isolateOPFSWriteBuffers } from './opfs-write-buffers.js';
 
 // SQLite constants
 const SQLITE_OK = 0;
@@ -28,6 +30,15 @@ const SQLITE_DONE = 101;
 let cachedModule: any = null;
 let cachedSqlite3: SQLiteAPI | null = null;
 let cachedDbHandle: number | null = null;
+type ConnectionState = {
+  usable: boolean;
+  queue: { promise: Promise<unknown> };
+  retiring?: boolean;
+  retirement?: Promise<void>;
+  cleanup?: Promise<void>;
+  closed?: boolean;
+};
+let cachedConnectionState: ConnectionState | null = null;
 let vfsRegistered = false;
 let cachedVfsName: string | undefined;
 let migrationCompleted = false; // Prevent double migrations in React StrictMode
@@ -66,11 +77,23 @@ function resetSingletonState(): void {
   cachedModule = null;
   cachedSqlite3 = null;
   cachedDbHandle = null;
+  cachedConnectionState = null;
   vfsRegistered = false;
   cachedVfsName = undefined;
   migrationCompleted = false;
   globalInitPromise = null;
   globalDbInstance = null;
+}
+
+function resetHandleForReinit(): void {
+  cachedDbHandle = null;
+  cachedConnectionState = null;
+  globalDbInstance = null;
+  globalInitPromise = null;
+  vfsRegistered = false;
+  cachedVfsName = undefined;
+  migrationCompleted = false;
+  // Keep the WASM module and SQLite API so Asyncify remains stable.
 }
 
 // Dynamic import types (will be loaded at runtime)
@@ -111,17 +134,33 @@ const DEFAULT_OPERATION_TIMEOUT = 60000;
 
 // Counter for tracking operations
 let operationIdCounter = 0;
+let transactionIdCounter = 0;
 
 /**
  * SQLite Database class using @journeyapps/wa-sqlite
  */
-export class Database implements DatabaseConnection {
+export class Database implements DatabaseConnection, AsyncDatabaseConnection {
   private db: number | null = null;
   private sqlite3: SQLiteAPI | null = null;
   private options: DatabaseOptions;
   private _isOpen = false;
   // Mutex for serializing database operations
-  private operationQueue: Promise<unknown> = Promise.resolve();
+  private operationQueueState = {
+    promise: Promise.resolve() as Promise<unknown>,
+  };
+  private get operationQueue(): Promise<unknown> {
+    return this.operationQueueState.promise;
+  }
+  private set operationQueue(value: Promise<unknown>) {
+    this.operationQueueState.promise = value;
+  }
+  private transactionDepth = 0;
+  private operationTimedOut = false;
+  private acceptsOperations = true;
+  private connectionState: ConnectionState = {
+    usable: true,
+    queue: this.operationQueueState,
+  };
   // Track pending operations for debugging
   private pendingOperations = new Map<
     number,
@@ -138,11 +177,25 @@ export class Database implements DatabaseConnection {
    */
   private async withLock<T>(
     operation: () => Promise<T>,
-    debugInfo?: string
+    debugInfo?: string,
+    timeoutWhileRunning = true,
+    transactionControl = false
   ): Promise<T> {
+    if (
+      !transactionControl &&
+      (!this.acceptsOperations ||
+        !this.connectionState.usable ||
+        (this.connectionState.retiring && this.transactionDepth === 0))
+    ) {
+      throw new Error('Database transaction connection is not open');
+    }
     const opId = ++operationIdCounter;
     const startTime = Date.now();
     const info = debugInfo || 'unknown';
+    let timedOut = false;
+    const timeoutError = new Error(
+      `Database operation timed out after ${DEFAULT_OPERATION_TIMEOUT}ms: ${info.substring(0, 100)}`
+    );
 
     // Track this operation
     this.pendingOperations.set(opId, { sql: info, startTime });
@@ -159,19 +212,25 @@ export class Database implements DatabaseConnection {
     }
 
     // Create a timeout promise that rejects after DEFAULT_OPERATION_TIMEOUT
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
     const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(() => {
-        reject(
-          new Error(
-            `Database operation timed out after ${DEFAULT_OPERATION_TIMEOUT}ms: ${info.substring(0, 100)}`
-          )
-        );
+      timeoutId = setTimeout(() => {
+        timedOut = true;
+        this.operationTimedOut = true;
+        reject(timeoutError);
       }, DEFAULT_OPERATION_TIMEOUT);
     });
 
     // Wrap the operation with cleanup
     const wrappedOperation = async (): Promise<T> => {
       try {
+        // An expired queued mutation must never execute after its caller has
+        // already handled the timeout. Active work still owns the queue until
+        // SQLite finishes, because racing a timeout cannot cancel Asyncify.
+        if (timedOut) throw timeoutError;
+        // Whole transactions retain the queue until all their scoped work and
+        // rollback/commit finish. Only their waiting time has a deadline.
+        if (!timeoutWhileRunning) clearTimeout(timeoutId);
         const result = await operation();
         return result;
       } finally {
@@ -191,7 +250,8 @@ export class Database implements DatabaseConnection {
     );
 
     // Update the queue to wait for this operation (ignore errors/timeouts for queue)
-    // We use a resolved version to prevent timeout from blocking subsequent operations
+    // Only the actual operation settles this queue; a caller deadline never
+    // releases a statement that is still running inside SQLite.
     this.operationQueue = operationPromise.catch(() => {});
 
     // Race the operation against the timeout
@@ -201,6 +261,10 @@ export class Database implements DatabaseConnection {
       // Clean up on error
       this.pendingOperations.delete(opId);
       throw err;
+    } finally {
+      // A completed query must not retain its closures until the deadline.
+      // Bulk imports/restores can otherwise leave thousands of live timers.
+      clearTimeout(timeoutId);
     }
   }
 
@@ -214,6 +278,7 @@ export class Database implements DatabaseConnection {
     globalDbInstance = null;
     globalInitPromise = null;
     cachedDbHandle = null;
+    cachedConnectionState = null;
     vfsRegistered = false;
     cachedVfsName = undefined;
     migrationCompleted = false;
@@ -228,8 +293,13 @@ export class Database implements DatabaseConnection {
   }
 
   static async getSingleton(options: DatabaseOptions): Promise<Database> {
+    // A key change may arrive while the previous connection still owns work.
+    // Initialization waits for its native close instead of reviving that handle.
+    if (cachedConnectionState?.retiring) {
+      await cachedConnectionState.retirement;
+    }
     // Fast path - already initialized
-    if (globalDbInstance && globalDbInstance._isOpen) {
+    if (globalDbInstance?.isOpen()) {
       wasmLog('Returning existing singleton');
       return globalDbInstance;
     }
@@ -239,7 +309,7 @@ export class Database implements DatabaseConnection {
       wasmLog('Waiting for existing init...');
       try {
         const db = await globalInitPromise;
-        if (db && db._isOpen) {
+        if (db?.isOpen()) {
           return db;
         }
         wasmLog('Wait for init returned closed DB, restarting...');
@@ -304,6 +374,7 @@ export class Database implements DatabaseConnection {
             cachedModule = null;
             cachedSqlite3 = null;
             cachedDbHandle = null;
+            cachedConnectionState = null;
             cachedVfsName = undefined;
             vfsRegistered = false;
             migrationCompleted = false;
@@ -331,6 +402,13 @@ export class Database implements DatabaseConnection {
    * Initialize the database connection (for backwards compatibility)
    */
   async initialize(): Promise<void> {
+    if (
+      !this.acceptsOperations ||
+      !this.connectionState.usable ||
+      this.connectionState.retiring
+    ) {
+      throw new Error('Database connection is not open');
+    }
     // If already open, nothing to do
     if (this._isOpen) {
       return;
@@ -338,9 +416,11 @@ export class Database implements DatabaseConnection {
 
     // If this instance is the global one being initialized, do the work
     // Otherwise, just copy state from the global instance
-    if (globalDbInstance && globalDbInstance._isOpen) {
+    if (globalDbInstance?.isOpen()) {
       this.sqlite3 = globalDbInstance.sqlite3;
       this.db = globalDbInstance.db;
+      this.connectionState = globalDbInstance.connectionState;
+      this.operationQueueState = this.connectionState.queue;
       this._isOpen = true;
       return;
     }
@@ -354,9 +434,16 @@ export class Database implements DatabaseConnection {
 
     // If we already have a cached DB handle, reuse it
     if (cachedDbHandle !== null && cachedSqlite3) {
+      if (cachedConnectionState && !cachedConnectionState.usable) {
+        throw new Error(
+          'Database connection could not be closed after rollback failed. Reload the app to continue.'
+        );
+      }
       wasmLog('Using cached DB handle:', cachedDbHandle);
       this.sqlite3 = cachedSqlite3;
       this.db = cachedDbHandle;
+      this.connectionState = cachedConnectionState ?? this.connectionState;
+      this.operationQueueState = this.connectionState.queue;
       this._isOpen = true;
       return;
     }
@@ -492,6 +579,8 @@ export class Database implements DatabaseConnection {
             throw new Error('OPFSAnyContextVFS.create returned null/undefined');
           }
 
+          isolateOPFSWriteBuffers(vfs);
+
           // Wrap with encryption VFS if key is provided (use already captured encryptionKey)
           if (encryptionKey) {
             wasmLog('Wrapping OPFS VFS with EncryptionVFS');
@@ -585,12 +674,25 @@ export class Database implements DatabaseConnection {
       wasmLog('Opening database:', dbPath);
       this.db = await this.sqlite3.open_v2(dbPath, undefined, cachedVfsName);
       cachedDbHandle = this.db;
+      cachedConnectionState = this.connectionState;
       wasmLog('Database opened, handle:', this.db);
     } else {
       wasmLog('Using cached DB handle:', cachedDbHandle);
       this.db = cachedDbHandle;
+      this.connectionState = cachedConnectionState ?? this.connectionState;
+      this.operationQueueState = this.connectionState.queue;
     }
     this._isOpen = true;
+
+    if (cachedVfsName?.startsWith('opfs-')) {
+      // The Any Context VFS closes its writable stream for reads, and opening
+      // another writable copies the existing file. The default 2 MiB SQLite
+      // cache spills dirty index pages during moderate import batches, causing
+      // repeated read/write switches and whole-file copies as the database grows.
+      // Give this connection an on-demand 32 MiB page-cache budget. Spilling and
+      // durable journal/sync settings stay enabled for larger working sets.
+      await this.execAsync('PRAGMA main.cache_size = -32768');
+    }
 
     // Leave SQLite's journal and synchronous modes at their defaults.
     // With the encrypted async VFS, both PRAGMAs route through Asyncify and
@@ -650,6 +752,10 @@ export class Database implements DatabaseConnection {
    * Execute raw SQL (async version for migrations)
    */
   public async execAsync(sql: string): Promise<void> {
+    return this.withLock(() => this.executeSql(sql), sql.substring(0, 100));
+  }
+
+  private async executeSql(sql: string): Promise<void> {
     this.ensureOpen();
     if (!this.sqlite3 || this.db === null) {
       throw new Error('Database not initialized');
@@ -697,6 +803,14 @@ export class Database implements DatabaseConnection {
     sql: string,
     params?: unknown[]
   ): Promise<T[]> {
+    return this.queryRowsAsync<T>(sql, params);
+  }
+
+  private async queryRowsAsync<T>(
+    sql: string,
+    params?: unknown[],
+    firstRowOnly = false
+  ): Promise<T[]> {
     return this.withLock(
       async () => {
         this.ensureOpen();
@@ -719,8 +833,10 @@ export class Database implements DatabaseConnection {
 
             // Fetch rows
             let stepResult = await this.sqlite3.step(stmt);
+            let columns: string[] | undefined;
             while (stepResult === SQLITE_ROW) {
-              const columns = this.sqlite3.column_names(stmt);
+              // Columns are fixed for this statement, even for a large result.
+              columns ??= this.sqlite3.column_names(stmt);
               const values = this.sqlite3.row(stmt);
               const row: Record<string, unknown> = {};
 
@@ -729,6 +845,7 @@ export class Database implements DatabaseConnection {
               });
 
               results.push(row as T);
+              if (firstRowOnly) break;
               stepResult = await this.sqlite3.step(stmt);
             }
 
@@ -776,7 +893,7 @@ export class Database implements DatabaseConnection {
     sql: string,
     params?: unknown[]
   ): Promise<T | null> {
-    const results = await this.queryAsync<T>(sql, params);
+    const results = await this.queryRowsAsync<T>(sql, params, true);
     return results[0] ?? null;
   }
 
@@ -889,64 +1006,145 @@ export class Database implements DatabaseConnection {
   }
 
   /**
-   * Run operations in a transaction (async)
-   * Includes retry logic for OPFS stream errors that can occur during long transactions
+   * Own the connection until commit/rollback finishes. Callback operations use
+   * a scoped queue on the same handle, so ordinary connection operations wait.
+   * Nested scoped transactions use savepoints rather than a second BEGIN.
    */
-  async transactionAsync<T>(fn: () => Promise<T>): Promise<T> {
+  async transactionAsync<T>(
+    fn: (connection: AsyncDatabaseConnection) => Promise<T>
+  ): Promise<T> {
     this.ensureOpen();
-
-    const MAX_RETRIES = 3;
-    let lastError: unknown = null;
-
-    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
-      try {
-        // Use runAsync (which goes through withLock) instead of execAsync so that
-        // BEGIN/COMMIT/ROLLBACK are serialized through the same operation queue as all
-        // other db calls.  execAsync bypasses the lock, which can cause concurrent WASM
-        // SQLite access when a background query is mid-execution → "memory access out of
-        // bounds" / WASM corruption.
-        await this.runAsync('BEGIN TRANSACTION');
-        try {
-          const result = await fn();
-          await this.runAsync('COMMIT');
-          return result;
-        } catch (error) {
-          // Try to rollback, but don't fail if rollback fails
+    return this.withLock(
+      async () => {
+        this.ensureOpen();
+        const MAX_RETRIES = 3;
+        for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+          // Each retry gets a new scope. A retained scope from a failed attempt
+          // must remain closed while the next callback owns the same handle.
+          const scoped = new Database(this.options);
+          scoped.db = this.db;
+          scoped.sqlite3 = this.sqlite3;
+          scoped._isOpen = true;
+          scoped.transactionDepth = this.transactionDepth + 1;
+          scoped.connectionState = this.connectionState;
+          const control = (sql: string) =>
+            scoped.withLock(() => scoped.executeSql(sql), sql, false, true);
           try {
-            await this.runAsync('ROLLBACK');
-          } catch (rollbackError) {
-            // Log but don't throw - the original error is more important
-            wasmLog('Rollback failed:', rollbackError);
+            const savepoint =
+              this.transactionDepth > 0
+                ? `fluxby_transaction_${++transactionIdCounter}`
+                : null;
+            let begun = false;
+            scoped.operationTimedOut = false;
+            try {
+              await control(
+                savepoint ? `SAVEPOINT ${savepoint}` : 'BEGIN TRANSACTION'
+              );
+              begun = true;
+              let result: T;
+              try {
+                result = await fn(scoped);
+              } finally {
+                // Stop accepting work before draining or committing. Already
+                // queued work retains its lifetime until the queue settles.
+                scoped.acceptsOperations = false;
+              }
+              // A caller timeout cannot stop an active Asyncify statement. Drain
+              // actual work before deciding whether to commit or rollback.
+              await scoped.operationQueue;
+              if (scoped.operationTimedOut) {
+                throw new Error(
+                  'Database transaction contains a timed-out operation'
+                );
+              }
+              await control(
+                savepoint ? `RELEASE SAVEPOINT ${savepoint}` : 'COMMIT'
+              );
+              return result;
+            } catch (error) {
+              await scoped.operationQueue;
+              if (begun) {
+                try {
+                  if (savepoint) {
+                    await control(`ROLLBACK TO SAVEPOINT ${savepoint}`);
+                    await control(`RELEASE SAVEPOINT ${savepoint}`);
+                  } else {
+                    await control('ROLLBACK');
+                  }
+                } catch (rollbackError) {
+                  // The connection's transaction state is unknown. Reject future
+                  // work instead of allowing unrelated writes into that state.
+                  await this.invalidateConnection();
+                  wasmLog('Rollback failed:', rollbackError);
+                  throw error;
+                }
+              }
+              const errorMessage =
+                error instanceof Error ? error.message : String(error);
+              const isStreamError =
+                errorMessage.includes('closing writable stream') ||
+                errorMessage.includes('disk I/O error') ||
+                errorMessage.includes('cannot rollback');
+              if (
+                begun &&
+                isStreamError &&
+                attempt < MAX_RETRIES &&
+                !scoped.operationTimedOut
+              ) {
+                wasmLog(
+                  `OPFS stream error on attempt ${attempt}, retrying...`,
+                  { error: errorMessage }
+                );
+                await new Promise((resolve) =>
+                  setTimeout(resolve, 100 * attempt)
+                );
+                continue;
+              }
+              throw error;
+            }
+          } finally {
+            scoped.acceptsOperations = false;
+            scoped._isOpen = false;
           }
-          throw error;
         }
-      } catch (error) {
-        lastError = error;
-        const errorMessage =
-          error instanceof Error ? error.message : String(error);
+        throw new Error('Database transaction did not complete');
+      },
+      'TRANSACTION',
+      false
+    );
+  }
 
-        // Check if this is a recoverable OPFS stream error
-        const isStreamError =
-          errorMessage.includes('closing writable stream') ||
-          errorMessage.includes('disk I/O error') ||
-          errorMessage.includes('cannot rollback');
-
-        if (isStreamError && attempt < MAX_RETRIES) {
-          wasmLog(`OPFS stream error on attempt ${attempt}, retrying...`, {
-            error: errorMessage,
-          });
-          // Wait a bit before retrying to let OPFS streams stabilize
-          await new Promise((resolve) => setTimeout(resolve, 100 * attempt));
-          continue;
+  private async invalidateConnection(): Promise<void> {
+    // Every nested transaction and initialized wrapper shares this state, so
+    // catching a failed savepoint rollback cannot revive the parent connection.
+    const state = this.connectionState;
+    state.usable = false;
+    this._isOpen = false;
+    if (!state.cleanup) {
+      state.cleanup = (async () => {
+        try {
+          if (this.sqlite3 && this.db !== null) {
+            const result = await this.sqlite3.close(this.db);
+            if (result !== SQLITE_OK) {
+              throw new Error(`Database close failed with code ${result}`);
+            }
+            state.closed = true;
+            if (cachedDbHandle === this.db) {
+              cachedDbHandle = null;
+              cachedConnectionState = null;
+              globalDbInstance = null;
+              globalInitPromise = null;
+              migrationCompleted = false;
+            }
+          }
+        } catch (error) {
+          // Keep an unusable cached handle marked as such; initialization must
+          // reject it rather than opening another wrapper into its transaction.
+          wasmLog('Failed to close connection after rollback failure:', error);
         }
-
-        // Non-recoverable error or max retries reached
-        throw error;
-      }
+      })();
     }
-
-    // Should not reach here, but TypeScript needs this
-    throw lastError;
+    await state.cleanup;
   }
 
   /**
@@ -969,7 +1167,7 @@ export class Database implements DatabaseConnection {
    * Check if database is open
    */
   isOpen(): boolean {
-    return this._isOpen;
+    return this._isOpen && this.connectionState.usable;
   }
 
   /**
@@ -996,12 +1194,10 @@ export class Database implements DatabaseConnection {
    * Only call this during cleanup (HMR, page unload) — not during normal operation.
    */
   static async forceClose(): Promise<void> {
-    if (cachedSqlite3 && cachedDbHandle !== null) {
-      try {
-        await cachedSqlite3.close(cachedDbHandle);
-      } catch {
-        // Best-effort — ignore errors during cleanup
-      }
+    try {
+      await Database.closeHandleForReinit();
+    } catch {
+      // Best-effort — ignore errors during cleanup
     }
     resetSingletonState();
   }
@@ -1014,27 +1210,46 @@ export class Database implements DatabaseConnection {
    * Asyncify state remains stable across the reinit.
    */
   static async closeHandleForReinit(): Promise<void> {
-    if (cachedSqlite3 && cachedDbHandle !== null) {
-      try {
-        await cachedSqlite3.close(cachedDbHandle);
-      } catch {
-        // Best-effort
+    const state = cachedConnectionState;
+    const sqlite3 = cachedSqlite3;
+    const handle = cachedDbHandle;
+    if (state && sqlite3 && handle !== null) {
+      if (!state.retirement) {
+        // Block new root work now, but let accepted statements and active
+        // transaction callbacks finish on their existing queues before closing.
+        state.retiring = true;
+        state.retirement = (async () => {
+          await state.queue.promise;
+          state.usable = false;
+          await state.cleanup;
+          if (!state.closed) {
+            const result = await sqlite3.close(handle);
+            if (result !== SQLITE_OK) {
+              throw new Error(`Database close failed with code ${result}`);
+            }
+            state.closed = true;
+          }
+          if (cachedConnectionState === state || cachedDbHandle === null) {
+            resetHandleForReinit();
+          }
+        })();
+      }
+      await state.retirement;
+      return;
+    } else if (sqlite3 && handle !== null) {
+      const result = await sqlite3.close(handle);
+      if (result !== SQLITE_OK) {
+        throw new Error(`Database close failed with code ${result}`);
       }
     }
-    cachedDbHandle = null;
-    globalDbInstance = null;
-    globalInitPromise = null;
-    vfsRegistered = false;
-    cachedVfsName = undefined;
-    migrationCompleted = false;
-    // Intentionally NOT clearing cachedModule or cachedSqlite3
+    resetHandleForReinit();
   }
 
   /**
    * Ensure database is open
    */
   private ensureOpen(): void {
-    if (!this._isOpen) {
+    if (!this._isOpen || !this.connectionState.usable) {
       throw new Error('Database is not open');
     }
   }
@@ -1061,13 +1276,13 @@ export class Database implements DatabaseConnection {
    * Returns the count of pending migrations
    */
   async checkPendingMigrations(): Promise<number> {
-    return this.withLock(async () => {
-      this.ensureOpen();
-      if (!this.db || !this.sqlite3) {
-        throw new Error('Database not initialized');
-      }
-      return checkPendingMigrations(this);
-    }, 'checkPendingMigrations');
+    this.ensureOpen();
+    if (!this.db || !this.sqlite3) {
+      throw new Error('Database not initialized');
+    }
+    // The runner uses queryAsync, which already acquires the operation lock.
+    // Holding that lock here would enqueue the query behind its own caller.
+    return checkPendingMigrations(this);
   }
 
   /**
@@ -1242,26 +1457,16 @@ export type { DatabaseConnection, DatabaseOptions };
 if (typeof window !== 'undefined') {
   // Page close / navigation
   window.addEventListener('beforeunload', () => {
-    if (cachedSqlite3 && cachedDbHandle !== null) {
-      // SQLite close is async but beforeunload must be synchronous.
-      // We schedule the close and let the browser attempt it; modern browsers
-      // keep the page alive briefly to let microtasks flush.
-      const sqlite3 = cachedSqlite3;
-      const dbHandle = cachedDbHandle;
-      void (async () => {
-        try {
-          await sqlite3.close(dbHandle);
-        } catch {
-          /* best-effort */
-        }
-      })();
-    }
+    // Unload cannot await asynchronous work. Attempt the same queued cleanup as
+    // HMR without racing native close against an active Asyncify statement.
+    // The browser may terminate the page before that best-effort drain finishes.
+    void Database.forceClose();
   });
 }
 
 // Vite HMR: properly close the database before the module is replaced
-// This guarantees the OPFS FileSystemSyncAccessHandle is released before
-// the next module instance tries to acquire it.
+// Attempt to release handles after queued SQLite work has finished. Vite's
+// disposal callback does not guarantee that it awaits asynchronous cleanup.
 if (typeof (import.meta as any).hot !== 'undefined') {
   (import.meta as any).hot.dispose(async () => {
     await Database.forceClose();

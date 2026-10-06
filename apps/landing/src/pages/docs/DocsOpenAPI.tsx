@@ -13,7 +13,7 @@ export default function DocsOpenAPI() {
   );
 
   useEffect(() => {
-    fetch('/openapi.json')
+    fetch(`${import.meta.env.BASE_URL}openapi.json`)
       .then((res) => res.json())
       .then(setSpec)
       .catch(() => setSpec(null));

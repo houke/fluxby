@@ -11,6 +11,11 @@
  */
 
 import Papa from 'papaparse';
+import {
+  parseConfiguredCSV,
+  prepareConfiguredImport,
+  type ImportOptions,
+} from '../lib/importers/import-options';
 
 // Message types for worker communication
 export interface WorkerMessage {
@@ -22,6 +27,8 @@ export interface ParseRequest {
   csvContent: string;
   mapping?: ColumnMapping;
   bank?: string;
+  options?: ImportOptions;
+  prepare?: boolean;
 }
 
 export interface ColumnMapping {
@@ -37,10 +44,10 @@ export interface ColumnMapping {
 }
 
 export interface WorkerResponse {
-  type: 'progress' | 'preview' | 'result' | 'error';
+  type: 'progress' | 'preview' | 'prepared' | 'result' | 'error';
   progress?: number;
   stage?: string;
-  data?: ParseResult | PreviewResult;
+  data?: ParseResult | PreviewResult | PreparedImportResult;
   error?: string;
 }
 
@@ -48,6 +55,11 @@ export interface PreviewResult {
   headers: string[];
   sampleRows: Record<string, string>[];
   totalRows: number;
+}
+
+export interface PreparedImportResult {
+  csv: string;
+  mapping: ColumnMapping;
 }
 
 export interface ParsedRow {
@@ -215,9 +227,36 @@ self.onmessage = async (event: MessageEvent<WorkerMessage>) => {
  * Handle CSV parsing request
  */
 async function handleParse(request: ParseRequest): Promise<void> {
-  const { csvContent, mapping } = request;
+  const { csvContent, mapping, options, prepare } = request;
 
   try {
+    if (options) {
+      postProgress(5);
+      if (prepare) {
+        if (!mapping) throw new Error('mapping');
+        const prepared = prepareConfiguredImport(csvContent, mapping, options);
+        // The page needs the normalized CSV and mapping, not a second copy of
+        // every parsed row in its React state or worker message payload.
+        const response: WorkerResponse = {
+          type: 'prepared',
+          progress: 100,
+          data: { csv: prepared.csv, mapping: prepared.mapping },
+        };
+        self.postMessage(response);
+      } else {
+        const { headers, sampleRows, totalRows } = parseConfiguredCSV(
+          csvContent,
+          options
+        );
+        const response: WorkerResponse = {
+          type: 'preview',
+          data: { headers, sampleRows, totalRows },
+        };
+        self.postMessage(response);
+      }
+      return;
+    }
+
     // Stage 1: Detect delimiter and parse CSV (10%)
     postProgress(5, 'Detecting format...');
 

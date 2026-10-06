@@ -1,5 +1,6 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { useDemoAnimationFrame } from '../../hooks/useAnimationActivity';
 
 export default function ImportAnimation({ isVisible }: { isVisible: boolean }) {
   const { t } = useLanguage();
@@ -9,60 +10,26 @@ export default function ImportAnimation({ isVisible }: { isVisible: boolean }) {
   );
   const [dropProgress, setDropProgress] = useState(0); // 0-100 for drop animation
   const [processProgress, setProcessProgress] = useState(0); // 0-100 for processing
-  const animationRef = useRef<number | null>(null);
-  const lastTimeRef = useRef<number>(0);
+  useDemoAnimationFrame(isVisible && phase !== 'complete', (delta) => {
+    if (phase === 'drop') {
+      const progress = Math.min(100, dropProgress + (delta / 1000) * 100);
+      setDropProgress(progress);
+      if (progress === 100) setPhase('processing');
+    } else if (phase === 'processing') {
+      const progress = Math.min(100, processProgress + (delta / 1000) * 25);
+      setProcessProgress(progress);
+      if (progress === 100) setPhase('complete');
+    }
+  });
 
   useEffect(() => {
-    if (isVisible) {
-      const animate = (currentTime: number) => {
-        if (!lastTimeRef.current) lastTimeRef.current = currentTime;
-        const delta = currentTime - lastTimeRef.current;
-        lastTimeRef.current = currentTime;
-
-        if (phase === 'drop') {
-          setDropProgress((prev) => {
-            const newProgress = prev + (delta / 1000) * 100; // 1 second drop
-            if (newProgress >= 100) {
-              setPhase('processing');
-              return 100;
-            }
-            return newProgress;
-          });
-        } else if (phase === 'processing') {
-          setProcessProgress((prev) => {
-            const newProgress = prev + (delta / 1000) * 25; // 4 seconds to process
-            if (newProgress >= 100) {
-              setPhase('complete');
-              return 100;
-            }
-            return newProgress;
-          });
-        } else if (phase === 'complete') {
-          // Wait a moment then reset
-          setTimeout(() => {
-            setPhase('drop');
-            setDropProgress(0);
-            setProcessProgress(0);
-          }, 1500);
-        }
-
-        animationRef.current = requestAnimationFrame(animate);
-      };
-
-      animationRef.current = requestAnimationFrame(animate);
-    } else {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-        animationRef.current = null;
-      }
-      lastTimeRef.current = 0;
-    }
-
-    return () => {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
-    };
+    if (!isVisible || phase !== 'complete') return;
+    const timer = setTimeout(() => {
+      setPhase('drop');
+      setDropProgress(0);
+      setProcessProgress(0);
+    }, 1500);
+    return () => clearTimeout(timer);
   }, [isVisible, phase]);
 
   return (

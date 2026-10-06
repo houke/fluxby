@@ -1,3 +1,4 @@
+import type { AsyncDatabaseConnection } from '@fluxby/database';
 import { migrations } from '../../packages/database/src/migrations';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import SQLite from 'better-sqlite3';
@@ -43,10 +44,13 @@ function adapter() {
         lastInsertRowId: Number(result.lastInsertRowid),
       };
     },
-    transactionAsync: async <T>(operation: () => Promise<T>): Promise<T> => {
+    transactionAsync: async function <T>(
+      this: unknown,
+      operation: (connection: AsyncDatabaseConnection) => Promise<T>
+    ): Promise<T> {
       sqlite.exec('BEGIN');
       try {
-        const result = await operation();
+        const result = await operation(this as AsyncDatabaseConnection);
         sqlite.exec('COMMIT');
         return result;
       } catch (error) {
@@ -72,7 +76,7 @@ beforeEach(async () => {
     migration015,
     migration016,
     migration017,
-    ...migrations.filter(m=>m.version>17),
+    ...migrations.filter((m) => m.version > 17),
   ])
     await migration.up(db);
   sqlite.exec(`INSERT INTO schema_version(version) VALUES(21);
@@ -374,7 +378,7 @@ describe('saved views and existing financial workflows', () => {
     'creates planning demo data in %s at creation time',
     async (language) => {
       const expected = getFinancialPlanningDemoData(language);
-      await db.transactionAsync(() =>
+      await db.transactionAsync((db) =>
         seedFinancialPlanningDemo(db, 'profile', language)
       );
       expect(

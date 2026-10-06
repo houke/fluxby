@@ -1,4 +1,5 @@
-import { afterEach, beforeEach, describe, it, expect } from 'vitest';
+import type { AsyncDatabaseConnection } from '@fluxby/database';
+import { afterEach, beforeEach, describe, it, expect, vi } from 'vitest';
 import SQLite from 'better-sqlite3';
 import { SCHEMA_SQL } from '../../packages/database/src/schema';
 import { TRANSACTION_REVIEW_SCHEMA_SQL } from '../../packages/database/src/migrations/019_transaction_review';
@@ -16,6 +17,7 @@ let sqlite: SQLite.Database;
 let pid = 'p';
 let service: ReturnType<typeof createTransactionReviewService>;
 let afterQuery: (() => void) | null = null;
+let pointQueries: { sql: string; params: unknown[] }[];
 beforeEach(() => {
   sqlite = new SQLite(':memory:');
   sqlite.pragma('foreign_keys=ON');
@@ -32,14 +34,19 @@ beforeEach(() => {
   );
   pid = 'p';
   afterQuery = null;
+  pointQueries = [];
   const db = {
     queryAsync: async <T>(sql: string, params: unknown[] = []) => {
       const rows = sqlite.prepare(sql).all(...params) as T[];
       afterQuery?.();
       return rows;
     },
-    queryOneAsync: async <T>(sql: string, params: unknown[] = []) =>
-      (sqlite.prepare(sql).get(...params) as T) || null,
+    queryOneAsync: async <T>(sql: string, params: unknown[] = []) => {
+      pointQueries.push({ sql, params });
+      const row = (sqlite.prepare(sql).get(...params) as T) || null;
+      afterQuery?.();
+      return row;
+    },
     runAsync: async (sql: string, params: unknown[] = []) => {
       const result = sqlite.prepare(sql).run(...params);
       return {
@@ -47,10 +54,13 @@ beforeEach(() => {
         lastInsertRowId: Number(result.lastInsertRowid),
       };
     },
-    transactionAsync: async <T>(fn: () => Promise<T>) => {
+    transactionAsync: async function <T>(
+      this: unknown,
+      fn: (connection: AsyncDatabaseConnection) => Promise<T>
+    ) {
       sqlite.exec('BEGIN');
       try {
-        const result = await fn();
+        const result = await fn(this as AsyncDatabaseConnection);
         sqlite.exec('COMMIT');
         return result;
       } catch (e) {
@@ -98,6 +108,39 @@ const view: TransactionView = {
   compact: false,
 };
 describe('transaction review', () => {
+  it('looks up a single owned transaction without loading its profile history', async () => {
+    for (let i = 0; i < 1000; i++) tx(`history-${i}`, -10);
+    tx('foreign', -20, '2026-09-01', 'c');
+    tx('deleted', -30);
+    sqlite.exec("UPDATE transactions SET is_deleted=1 WHERE id='deleted'");
+    const fullHistory = vi.spyOn(sqlite, 'prepare');
+    await service.saveReviewedCategory('history-500', 'cat');
+    const lookup = pointQueries.find(({ sql }) =>
+      sql.includes('FROM transactions t')
+    );
+    expect(lookup?.sql).toContain('AND t.id=? LIMIT 1');
+    expect(lookup?.params).toEqual(['p', 'history-500']);
+    expect(
+      fullHistory.mock.calls.some(([sql]) =>
+        sql.includes('ORDER BY t.date DESC,t.id')
+      )
+    ).toBe(false);
+    expect(
+      sqlite
+        .prepare("SELECT category_id FROM transactions WHERE id='history-500'")
+        .get()
+    ).toEqual({ category_id: 'cat' });
+    await expect(
+      service.saveReviewedCategory('foreign', 'cat')
+    ).rejects.toThrow('Transaction not found');
+    await expect(
+      service.saveReviewedCategory('deleted', 'cat')
+    ).rejects.toThrow('Transaction not found');
+    sqlite.exec("UPDATE accounts SET is_deleted=1 WHERE id='a'");
+    await expect(
+      service.saveReviewedCategory('history-500', 'cat')
+    ).rejects.toThrow('Transaction not found');
+  });
   it('persists snoozes and decisions and undo without leaking profiles', async () => {
     tx('e', -100);
     tx('f', -100, '2026-09-02');
@@ -404,7 +447,12 @@ describe('transaction review', () => {
           lastInsertRowId: Number(result.lastInsertRowid),
         };
       },
-      transactionAsync: async <T>(fn: () => Promise<T>) => fn(),
+      transactionAsync: async function <T>(
+        this: unknown,
+        fn: (connection: AsyncDatabaseConnection) => Promise<T>
+      ) {
+        return fn(this as AsyncDatabaseConnection);
+      },
     };
     await seedTransactionReviewDemo(db, 'p', 'nl');
     expect(

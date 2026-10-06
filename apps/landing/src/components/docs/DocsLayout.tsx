@@ -1,8 +1,9 @@
+import PageLoading from '../PageLoading';
 import { Link, Outlet } from 'react-router-dom';
 import DocsSidebar from './DocsSidebar';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useTheme } from '../../contexts/ThemeContext';
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 
 export default function DocsLayout() {
   const { language, setLanguage, t } = useLanguage();
@@ -119,7 +120,9 @@ export default function DocsLayout() {
         {/* Main content */}
         <main className='min-w-0 flex-1 overflow-x-hidden px-4 py-8 lg:px-8 lg:py-12'>
           <div className='mx-auto max-w-4xl min-w-0'>
-            <Outlet />
+            <Suspense fallback={<PageLoading />}>
+              <Outlet />
+            </Suspense>
           </div>
         </main>
 

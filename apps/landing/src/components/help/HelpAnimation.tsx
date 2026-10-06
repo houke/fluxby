@@ -1,5 +1,21 @@
-import { useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useRef, useState } from 'react';
+import { useAnimationActivity } from '../../hooks/useAnimationActivity';
 import { useLanguage } from '../../contexts/LanguageContext';
+
+const AnimationActivityContext = createContext(false);
+
+function useDemoInterval(onTick: () => void, delay: number) {
+  const active = useContext(AnimationActivityContext);
+  const callback = useRef(onTick);
+  useEffect(() => {
+    callback.current = onTick;
+  }, [onTick]);
+  useEffect(() => {
+    if (!active) return;
+    const interval = setInterval(() => callback.current(), delay);
+    return () => clearInterval(interval);
+  }, [active, delay]);
+}
 
 type AnimationType =
   | 'profile'
@@ -25,38 +41,50 @@ export default function HelpAnimation({
 }: HelpAnimationProps) {
   const { t } = useLanguage();
   const anim = t.helpCenter?.animations;
+  const { ref, active } = useAnimationActivity();
 
   // Render animation based on type
-  switch (type) {
-    case 'profile':
-      return <ProfileAnimation height={height} anim={anim?.profile} />;
-    case 'import':
-      return <ImportAnimation height={height} anim={anim?.import} />;
-    case 'dashboard':
-      return <DashboardAnimation height={height} anim={anim?.dashboard} />;
-    case 'transactions':
-      return (
-        <TransactionsAnimation height={height} anim={anim?.transactions} />
-      );
-    case 'categories':
-      return <CategoriesAnimation height={height} anim={anim?.categories} />;
-    case 'budget':
-      return <BudgetAnimation height={height} anim={anim?.budget} />;
-    case 'subscriptions':
-      return (
-        <SubscriptionsAnimation height={height} anim={anim?.subscriptions} />
-      );
-    case 'accounts':
-      return <AccountsAnimation height={height} anim={anim?.accounts} />;
-    case 'trends':
-      return <TrendsAnimation height={height} anim={anim?.trends} />;
-    case 'addressBook':
-      return <AddressBookAnimation height={height} anim={anim?.addressBook} />;
-    case 'export':
-      return <ExportAnimation height={height} anim={anim?.export} />;
-    default:
-      return null;
-  }
+  const renderAnimation = () => {
+    switch (type) {
+      case 'profile':
+        return <ProfileAnimation height={height} anim={anim?.profile} />;
+      case 'import':
+        return <ImportAnimation height={height} anim={anim?.import} />;
+      case 'dashboard':
+        return <DashboardAnimation height={height} anim={anim?.dashboard} />;
+      case 'transactions':
+        return (
+          <TransactionsAnimation height={height} anim={anim?.transactions} />
+        );
+      case 'categories':
+        return <CategoriesAnimation height={height} anim={anim?.categories} />;
+      case 'budget':
+        return <BudgetAnimation height={height} anim={anim?.budget} />;
+      case 'subscriptions':
+        return (
+          <SubscriptionsAnimation height={height} anim={anim?.subscriptions} />
+        );
+      case 'accounts':
+        return <AccountsAnimation height={height} anim={anim?.accounts} />;
+      case 'trends':
+        return <TrendsAnimation height={height} anim={anim?.trends} />;
+      case 'addressBook':
+        return (
+          <AddressBookAnimation height={height} anim={anim?.addressBook} />
+        );
+      case 'export':
+        return <ExportAnimation height={height} anim={anim?.export} />;
+      default:
+        return null;
+    }
+  };
+  return (
+    <div ref={ref} data-animation-paused={!active}>
+      <AnimationActivityContext.Provider value={active}>
+        {renderAnimation()}
+      </AnimationActivityContext.Provider>
+    </div>
+  );
 }
 
 // Base wrapper for all animations
@@ -88,12 +116,9 @@ function ProfileAnimation({
   const [typing, setTyping] = useState(0);
   const name = anim?.placeholder ?? '';
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setTyping((prev) => (prev >= name.length ? 0 : prev + 1));
-    }, 200);
-    return () => clearInterval(interval);
-  }, [name.length]);
+  useDemoInterval(() => {
+    setTyping((prev) => (prev >= name.length ? 0 : prev + 1));
+  }, 200);
 
   return (
     <AnimationWrapper height={height}>
@@ -128,12 +153,9 @@ function ImportAnimation({
 }) {
   const [phase, setPhase] = useState(0);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setPhase((prev) => (prev + 1) % 4);
-    }, 1500);
-    return () => clearInterval(interval);
-  }, []);
+  useDemoInterval(() => {
+    setPhase((prev) => (prev + 1) % 4);
+  }, 1500);
 
   return (
     <AnimationWrapper height={height}>
@@ -203,12 +225,9 @@ function DashboardAnimation({
     { color: '#8B5CF6', pct: 20, label: 'Overig', amount: '€248' },
   ];
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setActiveSlice((prev) => (prev + 1) % slices.length);
-    }, 1500);
-    return () => clearInterval(interval);
-  }, [slices.length]);
+  useDemoInterval(() => {
+    setActiveSlice((prev) => (prev + 1) % slices.length);
+  }, 1500);
 
   return (
     <AnimationWrapper height={height}>
@@ -304,12 +323,9 @@ function TransactionsAnimation({
   const [highlighted, setHighlighted] = useState(0);
   const items = anim?.items ?? [];
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setHighlighted((prev) => (prev + 1) % items.length);
-    }, 1200);
-    return () => clearInterval(interval);
-  }, [items.length]);
+  useDemoInterval(() => {
+    setHighlighted((prev) => (prev + 1) % items.length);
+  }, 1200);
 
   return (
     <AnimationWrapper height={height}>
@@ -358,12 +374,9 @@ function CategoriesAnimation({
   const [selected, setSelected] = useState(0);
   const items = anim?.items ?? [];
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setSelected((prev) => (prev + 1) % items.length);
-    }, 1500);
-    return () => clearInterval(interval);
-  }, [items.length]);
+  useDemoInterval(() => {
+    setSelected((prev) => (prev + 1) % items.length);
+  }, 1500);
 
   return (
     <AnimationWrapper height={height}>
@@ -406,12 +419,9 @@ function BudgetAnimation({
 }) {
   const [progress, setProgress] = useState(0);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setProgress((prev) => (prev >= 75 ? 0 : prev + 5));
-    }, 200);
-    return () => clearInterval(interval);
-  }, []);
+  useDemoInterval(() => {
+    setProgress((prev) => (prev >= 75 ? 0 : prev + 5));
+  }, 200);
 
   const spent = Math.round(progress * 4);
   const remaining = 300 - spent;
@@ -510,12 +520,9 @@ function SubscriptionsAnimation({
     },
   ];
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setActiveIndex((prev) => (prev + 1) % subscriptions.length);
-    }, 2000);
-    return () => clearInterval(interval);
-  }, [subscriptions.length]);
+  useDemoInterval(() => {
+    setActiveIndex((prev) => (prev + 1) % subscriptions.length);
+  }, 2000);
 
   const totalMonthly = subscriptions.reduce((sum, s) => sum + s.amount, 0);
 
@@ -589,15 +596,12 @@ function AccountsAnimation({
 }) {
   const [balances, setBalances] = useState([3450, 8920]);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setBalances((prev) => [
-        prev[0] + Math.floor(Math.random() * 100 - 50),
-        prev[1] + Math.floor(Math.random() * 50 - 20),
-      ]);
-    }, 2000);
-    return () => clearInterval(interval);
-  }, []);
+  useDemoInterval(() => {
+    setBalances((prev) => [
+      prev[0] + Math.floor(Math.random() * 100 - 50),
+      prev[1] + Math.floor(Math.random() * 50 - 20),
+    ]);
+  }, 2000);
 
   return (
     <AnimationWrapper height={height}>
@@ -640,12 +644,9 @@ function TrendsAnimation({
   const expenseData = [2100, 2400, 1800, 2600, 2200];
   const maxValue = Math.max(...incomeData, ...expenseData);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setActiveMonth((prev) => (prev + 1) % months.length);
-    }, 1500);
-    return () => clearInterval(interval);
-  }, [months.length]);
+  useDemoInterval(() => {
+    setActiveMonth((prev) => (prev + 1) % months.length);
+  }, 1500);
 
   return (
     <AnimationWrapper height={height}>
@@ -736,12 +737,9 @@ function AddressBookAnimation({
   const [selected, setSelected] = useState(0);
   const contacts = anim?.contacts ?? [];
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setSelected((prev) => (prev + 1) % contacts.length);
-    }, 1500);
-    return () => clearInterval(interval);
-  }, [contacts.length]);
+  useDemoInterval(() => {
+    setSelected((prev) => (prev + 1) % contacts.length);
+  }, 1500);
 
   return (
     <AnimationWrapper height={height}>
@@ -784,12 +782,9 @@ function ExportAnimation({
   const [step, setStep] = useState(0);
   const formats = anim?.formats ?? [];
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setStep((prev) => (prev + 1) % 4);
-    }, 1500);
-    return () => clearInterval(interval);
-  }, []);
+  useDemoInterval(() => {
+    setStep((prev) => (prev + 1) % 4);
+  }, 1500);
 
   return (
     <AnimationWrapper height={height}>
