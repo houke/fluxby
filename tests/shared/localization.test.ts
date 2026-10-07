@@ -83,6 +83,17 @@ function localeShapeDifferences(
     ];
   }
 
+  if (typeof dutch === 'string' && typeof english === 'string') {
+    const placeholders = (value: string) =>
+      [...new Set(value.match(/\{[A-Za-z][A-Za-z0-9_]*\}/g) || [])].sort();
+    if (
+      JSON.stringify(placeholders(dutch)) !==
+      JSON.stringify(placeholders(english))
+    ) {
+      return [`${currentPath}: interpolation placeholders differ`];
+    }
+  }
+
   return [];
 }
 
@@ -543,7 +554,7 @@ describe('locale coverage', () => {
     );
   });
 
-  it('keeps Dutch and English translation dictionaries in sync', () => {
+  it('keeps Dutch and English dictionary shapes and interpolation placeholders in sync', () => {
     expect(localeShapeDifferences(webNl, webEn, 'web')).toEqual([]);
     expect(localeShapeDifferences(landingNl, landingEn, 'landing')).toEqual([]);
   });

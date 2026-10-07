@@ -13,7 +13,7 @@ const params = new URLSearchParams({
 });
 
 fetch(\`http://localhost:3001/api/transactions?\${params}\`, {
-  headers: { 'X-Profile-ID': 'your-profile-id' }
+  headers: { 'X-Profile-ID': '1' }
 })
 .then(response => response.json())
 .then(data => console.log(data));`;
@@ -22,7 +22,7 @@ fetch(\`http://localhost:3001/api/transactions?\${params}\`, {
 fetch('http://localhost:3001/api/transactions/txn_123abc', {
   method: 'PATCH',
   headers: {
-    'X-Profile-ID': 'your-profile-id',
+    'X-Profile-ID': '1',
     'Content-Type': 'application/json'
   },
   body: JSON.stringify({
@@ -261,7 +261,7 @@ formData.append('accountId', 'acc_123abc');
 
 fetch('http://localhost:3001/api/import/csv', {
   method: 'POST',
-  headers: { 'X-Profile-ID': 'your-profile-id' },
+  headers: { 'X-Profile-ID': '1' },
   body: formData
 })
 .then(response => response.json())

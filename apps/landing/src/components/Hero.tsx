@@ -10,6 +10,7 @@ import {
 import { Loader2 } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useTheme } from '../contexts/ThemeContext';
+import { useAnimationActivity } from '../hooks/useAnimationActivity';
 
 // Extended CSSProperties to support CSS custom properties
 type CustomCSSProperties = CSSProperties & {
@@ -115,7 +116,6 @@ const bokehStyles = `
       animation-delay: var(--emoji-delay, 0s);
       animation-direction: var(--emoji-dir, alternate);
       animation-fill-mode: both;
-      will-change: transform, opacity;
       display: inline-block;
       transform-origin: center;
     }
@@ -149,6 +149,7 @@ const Hero = () => {
   const { theme, toggleTheme } = useTheme();
   const appHref = `${import.meta.env.BASE_URL}app/`;
   const [isNavigating, setIsNavigating] = useState(false);
+  const { ref, active } = useAnimationActivity();
 
   // Handle Get Started click with loading feedback
   const handleGetStartedClick = useCallback(
@@ -317,7 +318,11 @@ const Hero = () => {
   };
 
   return (
-    <section className='gradient-bg relative flex min-h-screen items-center justify-center overflow-hidden pt-32 pb-12'>
+    <section
+      ref={ref}
+      data-animation-paused={!active}
+      className='gradient-bg relative flex min-h-screen items-center justify-center overflow-hidden pt-32 pb-12'
+    >
       {/* Header with language selector */}
       <header className='absolute top-0 right-0 left-0 z-30 py-4'>
         <div className='container mx-auto flex items-center justify-between px-6'>

@@ -6,7 +6,7 @@ export default function DocsBudgets() {
 
   const listBudgetsCode = `// List all budgets with spending progress
 fetch('http://localhost:3001/api/budgets', {
-  headers: { 'X-Profile-ID': 'your-profile-id' }
+  headers: { 'X-Profile-ID': '1' }
 })
 .then(response => response.json())
 .then(budgets => console.log(budgets));`;
@@ -15,7 +15,7 @@ fetch('http://localhost:3001/api/budgets', {
 fetch('http://localhost:3001/api/budgets', {
   method: 'POST',
   headers: {
-    'X-Profile-ID': 'your-profile-id',
+    'X-Profile-ID': '1',
     'Content-Type': 'application/json'
   },
   body: JSON.stringify({

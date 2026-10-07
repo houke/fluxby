@@ -6,7 +6,7 @@ export default function DocsAccounts() {
 
   const listAccountsCode = `// List all accounts
 fetch('http://localhost:3001/api/accounts', {
-  headers: { 'X-Profile-ID': 'your-profile-id' }
+  headers: { 'X-Profile-ID': '1' }
 })
 .then(response => response.json())
 .then(accounts => console.log(accounts));`;
@@ -15,7 +15,7 @@ fetch('http://localhost:3001/api/accounts', {
 fetch('http://localhost:3001/api/accounts', {
   method: 'POST',
   headers: {
-    'X-Profile-ID': 'your-profile-id',
+    'X-Profile-ID': '1',
     'Content-Type': 'application/json'
   },
   body: JSON.stringify({

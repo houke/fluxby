@@ -39,9 +39,9 @@ export default function ImportAnimation({ isVisible }: { isVisible: boolean }) {
         {/* Dropping file animation */}
         {phase === 'drop' && (
           <div
-            className='absolute transition-all duration-100'
+            className='absolute top-0 transition-[transform,opacity] duration-100'
             style={{
-              top: `${-20 + dropProgress * 0.6}%`,
+              transform: `translateY(${-32 + dropProgress * 0.96}px)`,
               opacity: dropProgress < 90 ? 1 : 1 - (dropProgress - 90) / 10,
             }}
           >
@@ -118,8 +118,8 @@ export default function ImportAnimation({ isVisible }: { isVisible: boolean }) {
             </div>
             <div className='h-2 overflow-hidden rounded-full bg-gray-200 dark:bg-white/20'>
               <div
-                className='h-full rounded-full bg-purple-500 transition-all duration-100 dark:bg-purple-400'
-                style={{ width: `${processProgress}%` }}
+                className='h-full w-full origin-left rounded-full bg-purple-500 transition-transform duration-100 dark:bg-purple-400'
+                style={{ transform: `scaleX(${processProgress / 100})` }}
               />
             </div>
           </div>

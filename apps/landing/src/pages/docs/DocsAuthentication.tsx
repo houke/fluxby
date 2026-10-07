@@ -7,7 +7,7 @@ export default function DocsAuthentication() {
   const headerExample = `// Include the Profile ID in all requests
 fetch('http://localhost:3001/api/transactions', {
   headers: {
-    'X-Profile-ID': 'your-profile-id',
+    'X-Profile-ID': '1',
     // Required when the API server has API_AUTH_TOKEN configured
     'Authorization': 'Bearer your-api-token',
     'Content-Type': 'application/json'
@@ -15,7 +15,7 @@ fetch('http://localhost:3001/api/transactions', {
 });`;
 
   const curlExample = `curl -X GET "http://localhost:3001/api/transactions" \\
-  -H "X-Profile-ID: your-profile-id" \\
+  -H "X-Profile-ID: 1" \\
   -H "Content-Type: application/json" \\
   -H "Authorization: Bearer your-api-token"`;
 
@@ -77,10 +77,13 @@ fetch('http://localhost:3001/api/transactions', {
             code={`GET http://localhost:3001/api/profiles
 
 // Response:
-[
-  { "id": "abc123", "name": "Personal", "type": "personal" },
-  { "id": "def456", "name": "Business", "type": "business" }
-]`}
+{
+  "success": true,
+  "data": [
+    { "id": "1", "userId": "1", "name": "Personal", "type": "personal", "avatarUrl": null, "createdAt": "2026-01-15T10:30:00Z" },
+    { "id": "2", "userId": "1", "name": "Business", "type": "business", "avatarUrl": null, "createdAt": "2026-02-20T14:45:00Z" }
+  ]
+}`}
             language='http'
           />
         </div>
@@ -94,12 +97,10 @@ fetch('http://localhost:3001/api/transactions', {
       </p>
       <div className='not-prose mt-6'>
         <CodeBlock
-          code={`{
-  "error": "Profile ID is required",
-  "message": "Include X-Profile-ID header in your request"
-}`}
-          language='json'
-          title={t.docs.authentication.errorResponse}
+          code={`GET http://localhost:3001/api/transactions
+X-Profile-ID: 1
+Authorization: Bearer your-api-token`}
+          language='http'
         />
       </div>
     </article>

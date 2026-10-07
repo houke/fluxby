@@ -6,7 +6,7 @@ export default function DocsData() {
 
   const exportCode = `// Export all data as JSON
 fetch('http://localhost:3001/api/data/export', {
-  headers: { 'X-Profile-ID': 'your-profile-id' }
+  headers: { 'X-Profile-ID': '1' }
 })
 .then(response => response.json())
 .then(data => console.log(data));`;
@@ -36,7 +36,7 @@ fetch('http://localhost:3001/api/data/import', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
-    'X-Profile-ID': 'your-profile-id'
+    'X-Profile-ID': '1'
   },
   body: JSON.stringify({
     categories: [...],

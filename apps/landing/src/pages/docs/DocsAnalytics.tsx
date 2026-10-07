@@ -6,7 +6,7 @@ export default function DocsAnalytics() {
 
   const dashboardCode = `// Get dashboard statistics
 fetch('http://localhost:3001/api/analytics/dashboard', {
-  headers: { 'X-Profile-ID': 'your-profile-id' }
+  headers: { 'X-Profile-ID': '1' }
 })
 .then(response => response.json())
 .then(stats => console.log(stats));`;
@@ -18,14 +18,14 @@ const params = new URLSearchParams({
 });
 
 fetch(\`http://localhost:3001/api/analytics/monthly?\${params}\`, {
-  headers: { 'X-Profile-ID': 'your-profile-id' }
+  headers: { 'X-Profile-ID': '1' }
 })
 .then(response => response.json())
 .then(data => console.log(data));`;
 
   const categoriesCode = `// Get category breakdown
 fetch('http://localhost:3001/api/analytics/categories', {
-  headers: { 'X-Profile-ID': 'your-profile-id' }
+  headers: { 'X-Profile-ID': '1' }
 })
 .then(response => response.json())
 .then(categories => console.log(categories));`;

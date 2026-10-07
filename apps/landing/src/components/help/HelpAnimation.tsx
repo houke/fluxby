@@ -161,7 +161,7 @@ function ImportAnimation({
     <AnimationWrapper height={height}>
       <div className='flex w-72 flex-col items-center gap-4 p-6'>
         <div
-          className={`flex h-36 w-full flex-col items-center justify-center rounded-xl border-2 border-dashed transition-all duration-500 ${
+          className={`flex h-36 w-full flex-col items-center justify-center rounded-xl border-2 border-dashed transition-[border-color,background-color] duration-500 ${
             phase === 0
               ? 'border-gray-400 bg-gray-200 dark:border-gray-500 dark:bg-gray-700'
               : phase === 1
@@ -194,8 +194,8 @@ function ImportAnimation({
             <div className='flex flex-col items-center gap-2'>
               <div className='h-2 w-48 overflow-hidden rounded-full bg-gray-300 dark:bg-gray-600'>
                 <div
-                  className='h-full rounded-full bg-purple-600 transition-all duration-1000'
-                  style={{ width: phase === 2 ? '60%' : '100%' }}
+                  className='h-full w-full origin-left rounded-full bg-purple-600 transition-transform duration-1000'
+                  style={{ transform: `scaleX(${phase === 2 ? 0.6 : 1})` }}
                 />
               </div>
               <p className='text-sm text-gray-600 dark:text-gray-300'>
@@ -217,12 +217,14 @@ function DashboardAnimation({
   height: string;
   anim?: { balance?: string; income?: string; expenses?: string };
 }) {
+  const { t } = useLanguage();
+  const labels = t.helpCenter.animations.dashboard.categories;
   const [activeSlice, setActiveSlice] = useState(0);
   const slices = [
-    { color: '#34D399', pct: 35, label: 'Boodschappen', amount: '€435' },
-    { color: '#F59E0B', pct: 25, label: 'Vervoer', amount: '€312' },
-    { color: '#3B82F6', pct: 20, label: 'Wonen', amount: '€250' },
-    { color: '#8B5CF6', pct: 20, label: 'Overig', amount: '€248' },
+    { color: '#34D399', pct: 35, label: labels[0], amount: '€435' },
+    { color: '#F59E0B', pct: 25, label: labels[1], amount: '€312' },
+    { color: '#3B82F6', pct: 20, label: labels[2], amount: '€250' },
+    { color: '#8B5CF6', pct: 20, label: labels[3], amount: '€248' },
   ];
 
   useDemoInterval(() => {
@@ -277,7 +279,7 @@ function DashboardAnimation({
                   d={`M 50 50 L ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2} Z`}
                   fill={slice.color}
                   opacity={i === activeSlice ? 1 : 0.7}
-                  className='transition-all duration-300'
+                  className='transition-opacity duration-300'
                 />
               );
             })}
@@ -287,7 +289,7 @@ function DashboardAnimation({
             {slices.map((slice, i) => (
               <div
                 key={i}
-                className={`flex items-center gap-2 rounded px-2 py-1 transition-all duration-300 ${
+                className={`flex items-center gap-2 rounded px-2 py-1 transition-[transform,background-color,box-shadow] duration-300 ${
                   i === activeSlice
                     ? 'scale-105 bg-white shadow-sm dark:bg-gray-700'
                     : ''
@@ -340,7 +342,7 @@ function TransactionsAnimation({
           {items.map((item, i) => (
             <div
               key={i}
-              className={`flex items-center justify-between rounded-lg px-3 py-2 transition-all duration-300 ${
+              className={`flex items-center justify-between rounded-lg px-3 py-2 transition-[transform,background-color] duration-300 ${
                 i === highlighted
                   ? 'scale-105 bg-purple-100 dark:bg-purple-900/40'
                   : 'bg-white dark:bg-gray-700'
@@ -353,7 +355,7 @@ function TransactionsAnimation({
                 className={`text-sm font-medium ${i % 2 === 0 ? 'text-red-500' : 'text-green-600'}`}
               >
                 {i % 2 === 0 ? '-€' : '+€'}
-                {(Math.random() * 100 + 10).toFixed(2)}
+                {(24.8 + i * 17.5).toFixed(2)}
               </span>
             </div>
           ))}
@@ -384,7 +386,7 @@ function CategoriesAnimation({
         {items.map((item, i) => (
           <div
             key={i}
-            className={`flex items-center gap-3 rounded-lg px-4 py-3 transition-all duration-300 ${
+            className={`flex items-center gap-3 rounded-lg px-4 py-3 transition-[transform,background-color,box-shadow] duration-300 ${
               i === selected
                 ? 'scale-105 ring-2 ring-purple-500'
                 : 'bg-white dark:bg-gray-700'
@@ -453,7 +455,7 @@ function BudgetAnimation({
               strokeDasharray={`${(progress / 100) * 345} 345`}
               strokeLinecap='round'
               transform='rotate(-90 70 70)'
-              className='transition-all duration-200'
+              className='transition-[stroke-dasharray,stroke] duration-200'
             />
           </svg>
           <div className='absolute inset-0 flex flex-col items-center justify-center'>
@@ -544,7 +546,7 @@ function SubscriptionsAnimation({
           {subscriptions.map((sub, idx) => (
             <div
               key={sub.name}
-              className={`flex items-center justify-between rounded-lg p-2 transition-all duration-300 ${
+              className={`flex items-center justify-between rounded-lg p-2 transition-[background-color,box-shadow] duration-300 ${
                 idx === activeIndex
                   ? 'bg-purple-50 ring-2 ring-purple-400 dark:bg-purple-900/30 dark:ring-purple-500'
                   : 'bg-gray-50 dark:bg-gray-700'
@@ -573,10 +575,10 @@ function SubscriptionsAnimation({
           {subscriptions.map((_, idx) => (
             <div
               key={idx}
-              className={`h-1.5 w-1.5 rounded-full transition-all duration-300 ${
+              className={`h-1.5 w-3 rounded-full transition-[transform,background-color] duration-300 ${
                 idx === activeIndex
-                  ? 'w-3 bg-purple-500'
-                  : 'bg-gray-300 dark:bg-gray-600'
+                  ? 'scale-x-100 bg-purple-500'
+                  : 'scale-x-50 bg-gray-300 dark:bg-gray-600'
               }`}
             />
           ))}
@@ -667,27 +669,34 @@ function TrendsAnimation({
           </div>
         </div>
         {/* Bar chart */}
-        <div className='flex h-32 items-end justify-around gap-1'>
+        <div
+          data-help-chart='trends'
+          className='flex h-32 items-end justify-around gap-1'
+        >
           {months.map((month, i) => (
             <div key={i} className='flex flex-col items-center gap-1'>
-              <div className='flex items-end gap-0.5'>
+              <div className='flex h-24 items-end gap-0.5'>
                 {/* Income bar */}
                 <div
-                  className={`w-5 rounded-t transition-all duration-300 ${
+                  role='img'
+                  aria-label={`${month} ${anim?.income}: €${incomeData[i]}`}
+                  className={`h-full w-5 origin-bottom rounded-t transition-[transform,background-color] duration-300 ${
                     i === activeMonth
                       ? 'bg-green-500'
                       : 'bg-green-300 dark:bg-green-700'
                   }`}
-                  style={{ height: `${(incomeData[i] / maxValue) * 100}%` }}
+                  style={{ transform: `scaleY(${incomeData[i] / maxValue})` }}
                 />
                 {/* Expense bar */}
                 <div
-                  className={`w-5 rounded-t transition-all duration-300 ${
+                  role='img'
+                  aria-label={`${month} ${anim?.expenses}: €${expenseData[i]}`}
+                  className={`h-full w-5 origin-bottom rounded-t transition-[transform,background-color] duration-300 ${
                     i === activeMonth
                       ? 'bg-red-400'
                       : 'bg-red-200 dark:bg-red-800'
                   }`}
-                  style={{ height: `${(expenseData[i] / maxValue) * 100}%` }}
+                  style={{ transform: `scaleY(${expenseData[i] / maxValue})` }}
                 />
               </div>
               <span
@@ -747,7 +756,7 @@ function AddressBookAnimation({
         {contacts.map((contact, i) => (
           <div
             key={i}
-            className={`flex items-center justify-between rounded-lg p-3 transition-all duration-300 ${
+            className={`flex items-center justify-between rounded-lg p-3 transition-[transform,background-color,box-shadow] duration-300 ${
               i === selected
                 ? 'scale-105 bg-purple-100 ring-2 ring-purple-500 dark:bg-purple-900/40'
                 : 'bg-white dark:bg-gray-700'
@@ -794,7 +803,7 @@ function ExportAnimation({
             {formats.map((format, i) => (
               <button
                 key={format}
-                className={`rounded-lg px-6 py-3 font-medium transition-all ${
+                className={`rounded-lg px-6 py-3 font-medium transition-[transform,background-color,color] ${
                   step === 1 && i === 0
                     ? 'scale-105 bg-purple-600 text-white'
                     : 'bg-white text-gray-700 dark:bg-gray-700 dark:text-gray-200'
@@ -808,7 +817,7 @@ function ExportAnimation({
         {step >= 2 && (
           <div className='flex flex-col items-center gap-3'>
             <div
-              className={`text-5xl transition-all duration-500 ${step === 3 ? 'scale-110' : ''}`}
+              className={`text-5xl transition-transform duration-500 ${step === 3 ? 'scale-110' : ''}`}
             >
               {step === 2 ? '⏳' : '✅'}
             </div>

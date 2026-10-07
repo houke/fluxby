@@ -47,9 +47,9 @@ export default function BudgetsAnimation({
         {/* Progress bar */}
         <div className='mb-3 h-3 overflow-hidden rounded-full bg-gray-200 dark:bg-white/20'>
           <div
-            className='h-full rounded-full transition-all duration-100'
+            className='h-full w-full origin-left rounded-full transition-[transform,background-color] duration-100'
             style={{
-              width: `${displayProgress}%`,
+              transform: `scaleX(${displayProgress / 100})`,
               backgroundColor: isExceeded ? '#EF4444' : '#34D399',
             }}
           />

@@ -1198,7 +1198,7 @@ export const en: TranslationKeys = {
       save: 'Save Changes',
       accountsTipTitle: 'Tip: Add your savings account',
       accountsTip:
-        'After importing transactions, you can set up your savings account in Settings → Accounts. Transfers between your accounts will be automatically detected and will not count towards your income and expenses analysis.',
+        'After importing transactions, you can set up your savings account in Settings → Bank accounts. Transfers between your accounts will be automatically detected and will not count towards your income and expenses analysis.',
       addAccountsTitle: 'Add Accounts',
       addAccountsDescription:
         'Add bank accounts to your new profile. You can also do this later via Settings.',
@@ -1224,7 +1224,7 @@ export const en: TranslationKeys = {
       successReset: 'API server reset to local (same host).',
     },
     accounts: {
-      title: 'Accounts',
+      title: 'Bank accounts',
       description:
         'Manage your bank accounts. The order is used on the dashboard.',
       types: {
@@ -1673,7 +1673,7 @@ export const en: TranslationKeys = {
           'Manage categories and set rules for automatic categorization of transactions.',
       },
       {
-        title: 'Accounts',
+        title: 'Bank accounts',
         description:
           'Manage your bank accounts and view current balances per account.',
       },
@@ -1719,7 +1719,7 @@ export const en: TranslationKeys = {
       {
         question: 'Is my data stored online?',
         answer:
-          'No, all your data is stored locally on your computer. Nothing is sent to external servers.',
+          'Your financial database is stored locally. Optional sync shares records with paired devices. If you add a TypeSafe key, enabled AI features send limited request data to TypeSafe; the web app uses a Fluxby gateway.',
       },
       {
         question: "How can I change a transaction's category?",
@@ -1734,12 +1734,12 @@ export const en: TranslationKeys = {
       {
         question: 'How do I set a budget?',
         answer:
-          'Go to "Budgets" and click "New Budget". Choose a category, set the amount and select whether the budget is monthly or yearly.',
+          'Go to Budgets and click Add budget. Choose a category and enter a monthly limit, then click Save. You can also enable rollover to carry unused allowance into later months.',
       },
       {
         question: 'Can I add transactions manually?',
         answer:
-          'Currently, transactions are only added via CSV import. Manual entry will be added in a future version.',
+          'Yes. On Transactions, click Add transaction. Choose the type, enter a positive amount and date, and optionally select an account, category and counterparty. Click Add; the app applies the correct sign for the chosen type.',
       },
     ],
   },

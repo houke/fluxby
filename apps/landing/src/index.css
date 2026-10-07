@@ -130,7 +130,8 @@ html {
 
 /* Component styles */
 .btn-primary {
-  @apply bg-fluxby-purple hover:bg-fluxby-dark transform rounded-full px-8 py-4 text-lg font-bold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl;
+  @apply bg-fluxby-purple hover:bg-fluxby-dark transform rounded-full px-8 py-4 text-lg font-bold text-white shadow-lg duration-300 hover:scale-105 hover:shadow-xl;
+  transition-property: transform, background-color, box-shadow;
 }
 
 .section-padding {
@@ -165,7 +166,6 @@ html {
 
 .avatar-breathe {
   animation: avatarBreathe 6s ease-in-out infinite;
-  will-change: transform;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -251,4 +251,17 @@ html {
 h3.m-0 {
   margin-top: 0 !important;
   margin-bottom: 0 !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0s !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0s !important;
+    transition-delay: 0s !important;
+    scroll-behavior: auto !important;
+  }
 }

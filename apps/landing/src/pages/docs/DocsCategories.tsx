@@ -6,7 +6,7 @@ export default function DocsCategories() {
 
   const listCategoriesCode = `// List all categories
 fetch('http://localhost:3001/api/categories', {
-  headers: { 'X-Profile-ID': 'your-profile-id' }
+  headers: { 'X-Profile-ID': '1' }
 })
 .then(response => response.json())
 .then(categories => console.log(categories));`;
@@ -15,7 +15,7 @@ fetch('http://localhost:3001/api/categories', {
 fetch('http://localhost:3001/api/categories', {
   method: 'POST',
   headers: {
-    'X-Profile-ID': 'your-profile-id',
+    'X-Profile-ID': '1',
     'Content-Type': 'application/json'
   },
   body: JSON.stringify({

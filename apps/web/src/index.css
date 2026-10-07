@@ -230,7 +230,7 @@ body {
 
 /* Card hover effects */
 .card-hover {
-  transition-property: all;
+  transition-property: transform, box-shadow;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   transition-duration: 200ms;
 }
@@ -275,4 +275,19 @@ body {
 html,
 body {
   overscroll-behavior: none;
+}
+
+/* Finish entrance/exit animations so content and completion events survive,
+   while removing repeated motion, delays, and smooth scrolling. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0s !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0s !important;
+    transition-delay: 0s !important;
+    scroll-behavior: auto !important;
+  }
 }

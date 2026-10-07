@@ -355,7 +355,7 @@ export const nl: LandingTranslationKeys = {
       {
         title: 'Slimme transactie tracking',
         description:
-          'Categoriseer automatisch je uitgaven en inkomsten met AI-gestuurde herkenning. Fluxby leert je uitgavenpatronen en suggereert betere manieren om te sparen.',
+          'Categoriseer uitgaven en inkomsten met je eigen regels. Optionele TypeSafe AI helpt bij transacties zonder passende regel wanneer je je API-sleutel toevoegt.',
       },
       {
         title: 'Mooie analytics',
@@ -370,12 +370,12 @@ export const nl: LandingTranslationKeys = {
       {
         title: '100% lokaal & privé',
         description:
-          'Je financiële data verlaat nooit je apparaat. Geen cloud, geen servers, geen tracking - alles blijft op je computer waar het thuishoort.',
+          'Je financiële database blijft op je apparaat. Optionele synchronisatie deelt gegevens met gekoppelde apparaten; optionele TypeSafe AI verstuurt beperkte gegevens voor de functies die je inschakelt.',
       },
       {
         title: 'Apparaat synchronisatie',
         description:
-          'Synchroniseer je data tussen apparaten op hetzelfde netwerk. Peer-to-peer sync betekent dat je data direct tussen je apparaten reist - geen cloud nodig.',
+          'Synchroniseer gegevens tussen gekoppelde apparaten terwijl beide online zijn. Peer-to-peersynchronisatie deelt gegevens zonder centrale financiële database.',
       },
       {
         title: 'Bank CSV import',
@@ -720,14 +720,14 @@ export const nl: LandingTranslationKeys = {
       profileIdText:
         'X-Profile-ID selecteert de API-gegevensset. Het is geen authenticatie en geeft geen toegang tot de aparte webdatabase.',
       getProfileIdTitle: 'Je Profiel ID ophalen',
-      option1Title: 'Optie 1: Vanuit de App',
+      option1Title: 'Gebruik een profiel uit de API-database',
       option1Text:
-        'Open Fluxby in je browser, ga naar Instellingen → Profiel, en kopieer je Profiel ID.',
-      option2Title: 'Optie 2: API Call',
+        'De API gebruikt een aparte database. Haal het profiel-ID op via GET /api/profiles; profiel-UUID’s uit de browser selecteren geen API-profielen.',
+      option2Title: 'API-profielen ophalen',
       option2Text: 'Lijst alle profielen via het profielen endpoint:',
-      errorHandlingTitle: 'Ontbrekende Profiel ID',
+      errorHandlingTitle: 'Standaardprofiel selecteren',
       errorHandlingText:
-        'Als je de X-Profile-ID header niet opneemt, ontvang je een 401 foutmelding:',
+        'Bij profielgebonden routes selecteert een verzoek zonder X-Profile-ID het oudste profiel van de API-gebruiker (met ID 1 als terugval). Stuur een numeriek profiel-ID om een andere gegevensset te selecteren. Een 401-antwoord wijst op een ontbrekend of ongeldig bearer-token wanneer tokenauthenticatie is ingeschakeld.',
       errorResponse: 'Foutmelding Response',
     },
 
@@ -782,8 +782,8 @@ export const nl: LandingTranslationKeys = {
         'Het is belangrijk om te begrijpen dat de API server en de web app volledig gescheiden databases gebruiken. Dit is een bewuste architectuurbeslissing voor maximale privacy.',
       importantTitle: 'Belangrijk',
       apiSeparateDbText:
-        'De API server kan NIET verbinden met je versleutelde web app database. Je master password wordt nooit gedeeld met de API server. Als je data wilt gebruiken via de API, moet je eerst een JSON export maken vanuit de web app en deze importeren in de API server.',
-      dataFlowTitle: 'Data migratie workflow',
+        'De API-server heeft geen toegang tot de versleutelde webdatabase en ontvangt je hoofdwachtwoord niet. Webback-ups en API-exports hebben verschillende schema’s en zijn niet rechtstreeks uitwisselbaar. Gebruik een bank-CSV voor de API of bouw een gecontroleerde omzetting van gegevens en ID’s.',
+      dataFlowTitle: 'De ontwikkelaars-API gebruiken',
       dataFlowText:
         'Om je data te gebruiken met de API server voor automations of custom integraties:',
       whySeparateTitle: 'Waarom gescheiden databases?',
@@ -1365,7 +1365,7 @@ export const nl: LandingTranslationKeys = {
         'Exporteer alle data als JSON-bestand voor backup of migratie doeleinden.',
       importTitle: 'Data importeren',
       importText:
-        'Importeer een volledige dataset uit een JSON-backup. Let op: dit vervangt alle bestaande data.',
+        'Stuur het data-object uit een API-JSON-export rechtstreeks als aanvraaginhoud. Dit vervangt de financiële API-tabellen voor alle profielen; X-Profile-ID beperkt deze handeling niet. Webback-ups hebben een ander schema en kunnen niet rechtstreeks worden geïmporteerd.',
       resetTitle: 'Data resetten',
       resetText:
         'Reset alle data en herstel de demo-status. Dit verwijdert ALLE data over alle profielen en maakt een nieuw demo-profiel aan met standaard categorieën. Dit kan niet ongedaan gemaakt worden.',
@@ -1673,7 +1673,7 @@ export const nl: LandingTranslationKeys = {
         'In de webapp staan gegevens in OPFS (Origin Private File System); de desktopapp gebruikt lokale app-opslag. Synchronisatie kopieert gegevens naar gekoppelde apparaten. Jev-aanvragen sturen beperkte gegevens naar TypeSafe, zoals beschreven bij Slimme AI-functies.',
       backupTitle: 'Een back-up maken en herstellen',
       backupText:
-        'Open Instellingen > Gegevensbeheer en exporteer een JSON-back-up. Je kunt de back-up met een wachtwoord versleutelen. Gebruik Importeren om een back-up terug te zetten; voor een versleuteld bestand heb je het back-upwachtwoord nodig.',
+        'Open Instellingen > App-instellingen > Gegevensbeheer om een JSON-back-up te exporteren, standaard versleuteld. Herstel deze vanuit dezelfde sectie en controleer het voorbeeld voordat je gegevens vervangt. Voor versleutelde bestanden heb je het back-upwachtwoord nodig.',
       deleteDataTitle: 'Je data verwijderen',
       deleteDataText:
         'Gebruik Instellingen > Gegevensbeheer om je Fluxby-gegevens te verwijderen. Je kunt ook de browsergegevens wissen van de browser waarin je Fluxby gebruikt. Maak eerst een back-up als je de gegevens later wilt terugzetten.',
@@ -1736,6 +1736,7 @@ export const nl: LandingTranslationKeys = {
         balance: 'Saldo',
         income: 'Inkomsten',
         expenses: 'Uitgaven',
+        categories: ['Boodschappen', 'Vervoer', 'Wonen', 'Overig'],
       },
       transactions: {
         search: 'Zoeken...',
@@ -1790,14 +1791,14 @@ export const nl: LandingTranslationKeys = {
     termsTitle: 'Gebruiksvoorwaarden',
     privacy: {
       lastUpdated: 'Laatst bijgewerkt:',
-      lastUpdatedDate: '4 januari 2026',
+      lastUpdatedDate: '7 oktober 2026',
       introTitle: '1. Introductie',
       introText:
         'Dit Privacybeleid beschrijft hoe Fluxby ("wij", "ons" of "de App") met jouw gegevens omgaat.',
       introPhilosophy:
-        'Wij geloven dat jouw financiële gegevens alleen van jou zijn. De kernfilosofie van deze App is absolute privacy. Wij beheren geen servers, wij vereisen geen gebruikersaccounts, en wij volgen jouw gedrag niet.',
+        'Je financiële database wordt lokaal opgeslagen. Je hebt geen online Fluxby-account nodig en we gebruiken geen advertentietrackers. Optionele synchronisatie gebruikt verbindingsdiensten en de web-app gebruikt een Fluxby-gateway voor optionele TypeSafe-verzoeken.',
       localFirstTitle: '2. De "Local-First" Architectuur',
-      localFirstSubtitle: 'Alle gegevens blijven op jouw apparaat.',
+      localFirstSubtitle: 'Je financiële database staat op je apparaat.',
       localFirstText:
         'Deze App werkt als een standalone hulpmiddel. Wanneer je uitgaven invoert, transacties categoriseert, of bankafschriften importeert, wordt die informatie lokaal opgeslagen in de interne opslag van jouw apparaat.',
       noCloudTitle: 'Geen Cloud Sync:',
@@ -1805,21 +1806,21 @@ export const nl: LandingTranslationKeys = {
       noAccountsTitle: 'Geen Accounts:',
       noAccountsText:
         'Je hoeft geen gebruikersnaam of wachtwoord bij ons aan te maken.',
-      noAITitle: 'Geen Third-Party AI:',
+      noAITitle: 'Optionele TypeSafe AI:',
       noAIText:
-        'Wij sturen jouw financiële beschrijvingen of adresboekgegevens niet naar externe AI-modellen (zoals OpenAI of Google Gemini) voor verwerking. Alle logica wordt lokaal uitgevoerd op de processor van je apparaat.',
+        'AI is optioneel en vereist je eigen TypeSafe API-sleutel. Ingeschakelde functies sturen beperkte context, zoals winkelnamen, omschrijvingen, bedragen of mogelijke contactnamen, naar TypeSafe. De web-app gebruikt een Fluxby-gateway; de desktop-app maakt rechtstreeks verbinding. Zie Slimme AI-functies voor de gegevens per functie.',
       dataAccessTitle: '3. Gegevens Die We Benaderen',
       dataAccessText:
         'Om functionaliteit te bieden, kan de App toestemming vragen om specifieke gegevens op jouw apparaat te benaderen.',
       transactionDataTitle: 'A. Financiële Transactiegegevens',
       transactionDataText:
-        "Wanneer je handmatig gegevens invoert of bestanden importeert (zoals CSV's of bankafschriften), verwerkt de App deze informatie om grafieken en categorieën te maken. Deze verwerking gebeurt direct op jouw apparaat. Wij zien (en kunnen) deze gegevens niet zien.",
+        'CSV-verwerking, grafieken en categorisatie op basis van regels werken op je apparaat. Als je TypeSafe AI instelt, versturen ingeschakelde AI-functies beperkte transactiecontext via het hierboven beschreven transport.',
       localStorageTitle: 'B. Lokale opslag',
       localStorageText:
-        'De App slaat alle gegevens op in een lokale database op je apparaat. Dit omvat transacties, categorieën, budgetten en instellingen. De database verlaat je apparaat nooit en is alleen toegankelijk voor de App.',
+        'De App bewaart transacties, categorieën, budgetten en instellingen lokaal. Optionele synchronisatie deelt financiële gegevens met gekoppelde apparaten. Optionele AI verstuurt beperkte aanvraaggegevens naar TypeSafe. Geëxporteerde back-ups bevatten de gegevens die je exporteert.',
       addressBookTitle: 'B. Adresboek / Contacten',
       addressBookText:
-        'De App heeft een adresboekfunctie om transacties te koppelen aan specifieke personen of entiteiten. Als je toegang geeft tot je contacten, leest de App alleen deze gegevens om namen weer te geven binnen de App. Je contactenlijst wordt nooit geüpload of gedeeld.',
+        'Het adresboek bewaart contacten die je toevoegt of bevestigt uit transactiesuggesties. Fluxby leest niet de contactenlijst van je besturingssysteem. Gekoppelde synchronisatie neemt adresboekgegevens mee; optionele Jev-matching verstuurt mogelijke contactnamen voor de gekozen controle.',
       fileStorageTitle: 'C. Bestandsopslag',
       fileStorageText:
         'De App heeft toegang tot je bestandsopslag nodig om bankafschriften te importeren en back-ups van je administratie op te slaan.',
@@ -1836,7 +1837,7 @@ export const nl: LandingTranslationKeys = {
         'Jij bent verantwoordelijk voor de beveiliging van je fysieke apparaat.',
       backupsTitle: 'Back-ups:',
       backupsText:
-        'Als je de App verwijdert of je telefoon verliest, zijn je financiële gegevens verloren, tenzij je gebruik hebt gemaakt van de ingebouwde back-upfuncties van je apparaat (bijv. iCloud Backup of Android Backup) of handmatig je gegevens hebt geëxporteerd.',
+        'Browseropslag wissen, de App verwijderen of een apparaat verliezen kan je gegevens verwijderen. Exporteer een met een wachtwoord versleutelde back-up en bewaar die buiten het apparaat. Synchronisatie en systeemkopieën zijn geen geverifieerde herstelkopie; test het herstellen van een geëxporteerde back-up.',
       thirdPartyTitle: '6. Third-Party Diensten',
       thirdPartyText:
         'De App integreert niet met third-party analytics of advertentienetwerken.',
@@ -1927,7 +1928,7 @@ export const nl: LandingTranslationKeys = {
       smartTracking: {
         title: 'Slimme transactie tracking',
         description:
-          'Categoriseer automatisch je uitgaven en inkomsten met AI-gestuurde herkenning. Fluxby leert je uitgavenpatronen en suggereert betere manieren om te sparen.',
+          'Categoriseer uitgaven en inkomsten met je eigen regels. Optionele TypeSafe AI helpt bij transacties zonder passende regel wanneer je je API-sleutel toevoegt.',
         highlights: [
           'Automatische categorisatie',
           'Patroonherkenning',
@@ -1957,7 +1958,7 @@ export const nl: LandingTranslationKeys = {
       privacy: {
         title: '100% lokaal & privé',
         description:
-          'Je financiële data verlaat nooit je apparaat. Geen cloud, geen servers, geen tracking - alles blijft op je computer.',
+          'Je financiële database staat op je apparaat. Optionele synchronisatie deelt gegevens met gekoppelde apparaten; optionele TypeSafe AI verwerkt beperkte aanvraaggegevens.',
         highlights: [
           'Geen cloud opslag',
           'Geen accounts nodig',
@@ -2119,7 +2120,7 @@ export const nl: LandingTranslationKeys = {
       feature8: 'Toekomstige updates',
       whyFreeTitle: 'Waarom gratis?',
       whyFreeText:
-        'Fluxby is gebouwd met de overtuiging dat iedereen toegang zou moeten hebben tot goede financiële tools. Omdat alle data lokaal blijft en we geen servers draaien, hebben we geen lopende kosten. Dit maakt het mogelijk om Fluxby voor altijd gratis aan te bieden.',
+        'Fluxby is gratis te gebruiken en bewaart je financiële database lokaal. De kernfuncties werken zonder betaalde diensten. Optionele TypeSafe AI gebruikt je eigen API-sleutel en providertegoed; bekijk TypeSafe voor actuele prijzen.',
       promiseTitle: 'Onze belofte',
       promiseText:
         'Er komt geen premium versie. Er komt geen abonnement. Er komen geen "pro" features achter een betaalmuur. Alles wat we bouwen blijft gratis beschikbaar voor iedereen.',
@@ -2137,27 +2138,28 @@ export const nl: LandingTranslationKeys = {
       v1150Date: '1 oktober 2026',
       v1150Title: 'Release 1.15.0',
       v1150Description: '1 nieuwe functie en 3 bugfixes.',
-      v1150F1Title: 'Toegevoegd permissioned webmcp tools and documentation',
+      v1150F1Title:
+        'WebMCP-tools met toegangscontrole en documentatie toegevoegd',
       v1150F1Desc: 'Er is weer wat bijgekomen. Ontdek het zelf!',
-      v1150F2Title: 'Force hover on third row in selection mode test',
+      v1150F2Title: 'Hovergedrag in de test voor transactieselectie hersteld',
       v1150F2Desc: 'Dit had niet moeten gebeuren, maar nu is het gefixed!',
-      v1150F3Title: 'Opgelost npm audit vulnerabilities',
+      v1150F3Title: 'Kwetsbaarheden uit npm audit opgelost',
       v1150F3Desc: 'Bugs gedood, app verbeterd.',
-      v1150F4Title: 'Prevent migration bijgewerkt reload loop',
+      v1150F4Title: 'Herhaald herladen na een migratie-update voorkomen',
       v1150F4Desc: 'Dit had niet moeten gebeuren, maar nu is het gefixed!',
       v1142Date: '28 september 2026',
       v1142Title: 'Release 1.14.2',
       v1142Description: '1 bugfix.',
-      v1142F1Title: 'Preserve status across logout and login',
+      v1142F1Title: 'Status behouden bij uitloggen en opnieuw inloggen',
       v1142F1Desc: 'Kleine fix, groot verschil.',
       v1141Date: '28 september 2026',
       v1141Title: 'Release 1.14.1',
       v1141Description: '3 bugfixes.',
-      v1141F1Title: 'Create demo data in the selected language',
+      v1141F1Title: 'Demogegevens aanmaken in de geselecteerde taal',
       v1141F1Desc: 'Kleine fix, groot verschil.',
-      v1141F2Title: 'Generate and validate bilingual notes',
+      v1141F2Title: 'Tweetalige release-informatie genereren en controleren',
       v1141F2Desc: 'Een vervelend probleempje opgelost.',
-      v1141F3Title: 'Correct release copy and verwijderd fallbacks',
+      v1141F3Title: 'Releaseteksten gecorrigeerd en terugvalteksten verwijderd',
       v1141F3Desc: 'Bugs gedood, app verbeterd.',
       v1140Date: '26 september 2026',
       v1140Title: 'Release 1.14.0',
@@ -2198,7 +2200,7 @@ export const nl: LandingTranslationKeys = {
       v1130F1Title: 'Webproxy en verbeteringen voor responsieve documentatie',
       v1130F1Desc:
         'We hebben iets nieuws voor je! Bekijk de release notes voor alle details.',
-      v1130F2Title: 'Move frame ancestors policy to response headers',
+      v1130F2Title: 'Frame-ancestorsbeleid verplaatst naar antwoordheaders',
       v1130F2Desc: 'Kleine fix, groot verschil.',
       v1122Date: '21 september 2026',
       v1122Title: 'Release 1.12.2',
@@ -2213,7 +2215,8 @@ export const nl: LandingTranslationKeys = {
       v1120Date: '20 september 2026',
       v1120Title: 'Release 1.12.0',
       v1120Description: '1 nieuwe feature en 4 bugfixes.',
-      v1120F1Title: 'Opgelost tab scroll reset and categorie sign handling',
+      v1120F1Title:
+        'Scrollpositie bij tabwisselingen en verwerking van categorietekens hersteld',
       v1120F1Desc:
         'We hebben iets nieuws voor je! Bekijk de release notes voor alle details.',
       v1120F2Title: 'Bugfixes',
@@ -2222,7 +2225,7 @@ export const nl: LandingTranslationKeys = {
       v1110Title: 'Release 1.11.0',
       v1110Description: '3 nieuwe features en 11 bugfixes.',
       v1110F1Title:
-        'Toegevoegd typesafe ai docs to developer hub and help center',
+        'TypeSafe AI-documentatie toegevoegd aan de ontwikkelaars- en helpsectie',
       v1110F1Desc: 'Er is weer wat bijgekomen. Ontdek het zelf!',
       v1110F2Title: 'Nieuwe web app mogelijkheden',
       v1110F2Desc: '2 nieuwe features. Bekijk de release op GitHub!',
@@ -2234,7 +2237,7 @@ export const nl: LandingTranslationKeys = {
       v1100F1Title: 'Web app uitbreidingen',
       v1100F1Desc:
         '6 nieuwe mogelijkheden om te ontdekken. Bekijk de release notes!',
-      v1100F2Title: 'Toegevoegd csp headers for xss protection',
+      v1100F2Title: 'CSP-headers toegevoegd ter bescherming tegen XSS',
       v1100F2Desc:
         'We hebben iets nieuws voor je! Bekijk de release notes voor alle details.',
       v1100F3Title: 'API verbeteringen',
@@ -2254,7 +2257,7 @@ export const nl: LandingTranslationKeys = {
       v182Date: '8 maart 2026',
       v182Title: 'Release 1.8.2',
       v182Description: '1 bugfix.',
-      v182F1Title: 'Resolve wasm memory access fout in transactionasync',
+      v182F1Title: 'WASM-geheugentoegangsfout in transactionAsync opgelost',
       v182F1Desc: 'Bugs gedood, app verbeterd.',
       v181Date: '8 maart 2026',
       v181Title: 'Release 1.8.1',
@@ -2262,44 +2265,42 @@ export const nl: LandingTranslationKeys = {
       v180Date: '7 maart 2026',
       v180Title: 'Release 1.8.0',
       v180Description: '3 nieuwe features en 9 bugfixes.',
-      v180F1Title: 'Complete code review with 19 fixes',
+      v180F1Title: 'Volledige codecontrole met 19 verbeteringen',
       v180F1Desc:
         'We hebben iets nieuws voor je! Bekijk de release notes voor alle details.',
       v180F2Title:
-        'Geïmplementeerd bulk transactie deletion with undo ondersteuning toegevoegd voor',
+        'Meerdere transacties verwijderen met ondersteuning voor ongedaan maken',
       v180F2Desc: 'Nieuwe functionaliteit waar je iets aan hebt.',
-      v180F3Title: 'Toegevoegd ios web app installation instructions',
+      v180F3Title: 'Installatie-instructies voor de web-app op iOS toegevoegd',
       v180F3Desc: 'Nieuwe functionaliteit waar je iets aan hebt.',
       v180F4Title: 'Bugfixes',
       v180F4Desc: '9 bugs opgelost. Zie changelog voor details.',
       v171Date: '22 januari 2026',
       v171Title: 'Release 1.7.1',
       v171Description: '3 bugfixes.',
-      v171F1Title:
-        'Enable macos updater ondersteuning toegevoegd voor and opgelost build warnings',
+      v171F1Title: 'macOS-updater ingeschakeld en bouwwaarschuwingen opgelost',
       v171F1Desc: 'Een vervelend probleempje opgelost.',
       v171F2Title: 'Web app verbeteringen',
       v171F2Desc: '2 bugfixes. Bekijk de release op GitHub!',
       v170Date: '19 januari 2026',
       v170Title: 'Release 1.7.0',
       v170Description: '2 nieuwe features en 10 bugfixes.',
-      v170F1Title:
-        'Toegevoegd sticky y-axis to all charts and verbeterd formatting',
+      v170F1Title: 'Vaste y-assen toegevoegd aan grafieken en opmaak verbeterd',
       v170F1Desc:
         'We hebben iets nieuws voor je! Bekijk de release notes voor alle details.',
-      v170F2Title: 'Require 180-day span for 6 transacties',
+      v170F2Title: 'Een periode van 180 dagen vereist bij zes transacties',
       v170F2Desc: 'Dit maakt Fluxby nog beter.',
       v170F3Title: 'Bugfixes',
       v170F3Desc: '10 bugs opgelost. Zie changelog voor details.',
       v160Date: '17 januari 2026',
       v160Title: 'Release 1.6.0',
       v160Description: '6 nieuwe features en 24 bugfixes.',
-      v160F1Title: 'analytics verbeteringen',
+      v160F1Title: 'Analyse verbeterd',
       v160F1Desc: '2 nieuwe features. Bekijk de release op GitHub!',
       v160F2Title: 'Nieuwe web app mogelijkheden',
       v160F2Desc: '3 nieuwe features. Bekijk de release op GitHub!',
       v160F3Title:
-        'Geïmplementeerd smart amount clustering for multi-tier patterns',
+        'Bedragen slim groeperen voor patronen met meerdere prijsniveaus',
       v160F3Desc: 'Nieuwe functionaliteit waar je iets aan hebt.',
       v160F4Title: 'Bugfixes',
       v160F4Desc: '24 bugs opgelost. Zie changelog voor details.',
@@ -2309,23 +2310,23 @@ export const nl: LandingTranslationKeys = {
       v151F1Title: 'Betere web ervaring',
       v151F1Desc: '2 bugfixes. Bekijk de release op GitHub!',
       v151F2Title:
-        'Switch to universal macos binary and verwijderd redundant artifacts',
+        'Overgestapt op een universele macOS-app en overbodige bestanden verwijderd',
       v151F2Desc: 'Kleine fix, groot verschil.',
       v150Date: '11 januari 2026',
       v150Title: 'Release 1.5.0',
       v150Description: '2 nieuwe features.',
-      v150F1Title: 'sync verbeteringen',
+      v150F1Title: 'Synchronisatie verbeterd',
       v150F1Desc: '2 nieuwe features. Bekijk de release op GitHub!',
       v142Date: '11 januari 2026',
       v142Title: 'Release 1.4.2',
       v142Description: '1 bugfix.',
       v142F1Title:
-        'Verbeterd apparaat-to-apparaat synchronisatie gebruikerservaring and opgelost connection issues',
+        'Apparaatsynchronisatie verbeterd en verbindingsproblemen opgelost',
       v142F1Desc: 'Dit had niet moeten gebeuren, maar nu is het gefixed!',
       v141Date: '11 januari 2026',
       v141Title: 'Release 1.4.1',
       v141Description: '1 bugfix.',
-      v141F1Title: 'Resolve build failure due to missing imports',
+      v141F1Title: 'Bouwfout door ontbrekende imports opgelost',
       v141F1Desc: 'Bugs gedood, app verbeterd.',
       v140Date: '11 januari 2026',
       v140Title: 'Release 1.4.0',
@@ -2334,21 +2335,21 @@ export const nl: LandingTranslationKeys = {
       v140F1Desc:
         '18 nieuwe mogelijkheden om te ontdekken. Bekijk de release notes!',
       v140F2Title:
-        'Toegevoegd menu items and verbeterd apparaat-to-apparaat synchronisatie reliability',
+        'Menu-items toegevoegd en apparaatsynchronisatie betrouwbaarder gemaakt',
       v140F2Desc:
         'We hebben iets nieuws voor je! Bekijk de release notes voor alle details.',
-      v140F3Title: 'Toegevoegd in-app bijgewerkt mechanism via github releases',
+      v140F3Title: 'Updates in de app via GitHub Releases toegevoegd',
       v140F3Desc: 'Dit maakt Fluxby nog beter.',
       v140F4Title: 'Nieuwe data mogelijkheden',
       v140F4Desc:
         '4 nieuwe mogelijkheden om te ontdekken. Bekijk de release notes!',
-      v140F5Title: 'Toegevoegd recurring transactie seeding and demo data',
+      v140F5Title: 'Terugkerende transacties en demogegevens toegevoegd',
       v140F5Desc: 'Nieuwe functionaliteit waar je iets aan hebt.',
-      v140F6Title: 'subscriptions verbeteringen',
+      v140F6Title: 'Abonnementen verbeterd',
       v140F6Desc: '2 nieuwe features. Bekijk de release op GitHub!',
-      v140F7Title: 'Make spotlight zoeken keywords translatable',
+      v140F7Title: 'Zoekwoorden voor Spotlight vertaalbaar gemaakt',
       v140F7Desc: 'Nieuwe functionaliteit waar je iets aan hebt.',
-      v140F8Title: 'Toegevoegd automatic migration prompt for version updates',
+      v140F8Title: 'Automatische migratiemelding bij versie-updates toegevoegd',
       v140F8Desc: 'Dit maakt Fluxby nog beter.',
       v140F9Title: 'Bugfixes',
       v140F9Desc: '32 bugs opgelost. Zie changelog voor details.',
@@ -2358,7 +2359,7 @@ export const nl: LandingTranslationKeys = {
       v131F1Title: 'Release verbeteringen',
       v131F1Desc: '2 bugfixes. Bekijk de release op GitHub!',
       v131F2Title:
-        'Herstel `uselanguage` importeren and toegevoegd `barchart3` icon',
+        'useLanguage-import hersteld en BarChart3-pictogram toegevoegd',
       v131F2Desc: 'Bugs gedood, app verbeterd.',
       v130Date: '8 januari 2026',
       v130Title: 'Release 1.3.0',
@@ -2366,14 +2367,12 @@ export const nl: LandingTranslationKeys = {
       v130F1Title: 'Web app uitbreidingen',
       v130F1Desc:
         '7 nieuwe mogelijkheden om te ontdekken. Bekijk de release notes!',
-      v130F2Title:
-        'Geïmplementeerd file-based migration system and centralized logger',
+      v130F2Title: 'Migraties per bestand en centrale logregistratie ingevoerd',
       v130F2Desc: 'Nieuwe functionaliteit waar je iets aan hebt.',
       v130F3Title:
-        'Toegevoegd apparaat synchronisatie screenshot section with animation',
+        'Animatie van apparaatsynchronisatie toegevoegd aan de schermafbeeldingen',
       v130F3Desc: 'Er is weer wat bijgekomen. Ontdek het zelf!',
-      v130F4Title:
-        'Finalize apparaat-to-apparaat synchronisatie implementation with documentation',
+      v130F4Title: 'Apparaatsynchronisatie afgerond en gedocumenteerd',
       v130F4Desc: 'Dit maakt Fluxby nog beter.',
       v130F5Title: 'Bugfixes',
       v130F5Desc: '15 bugs opgelost. Zie changelog voor details.',
@@ -2385,14 +2384,14 @@ export const nl: LandingTranslationKeys = {
       v120F1Desc: '4 nieuwe features. Zie changelog voor details.',
       v120F2Title: 'Landingspagina verbeteringen',
       v120F2Desc: '2 nieuwe features. Zie changelog voor details.',
-      v120F3Title: 'Add sync database adapter for P2P synchronization',
+      v120F3Title: 'Databaseadapter voor peer-to-peersynchronisatie toegevoegd',
       v120F3Desc: 'Nieuwe functionaliteit toegevoegd.',
       v120F4Title: 'Bugfixes',
       v120F4Desc: '15 bugs opgelost. Zie changelog voor details.',
       v110Date: '5 januari 2026',
       v110Title: 'Release 1.1.0',
       v110Description: '7 nieuwe features en 10 bugfixes.',
-      v110F1Title: 'Remove Install Fluxby card from app settings',
+      v110F1Title: 'Installatiekaart verwijderd uit de app-instellingen',
       v110F1Desc: 'Nieuwe functionaliteit toegevoegd.',
       v110F2Title: 'Web app verbeteringen',
       v110F2Desc: '3 nieuwe features. Zie changelog voor details.',
@@ -2406,7 +2405,8 @@ export const nl: LandingTranslationKeys = {
       v103Date: '4 januari 2026',
       v103Title: 'Release 1.0.3',
       v103Description: '1 bugfix.',
-      v103F1Title: 'Sync versions to tauri files and fix duplicate releases',
+      v103F1Title:
+        'Versies in Tauri-bestanden gelijkgetrokken en dubbele releases opgelost',
       v103F1Desc: 'Bug opgelost.',
       v102Date: '4 januari 2026',
       v102Title: 'Release 1.0.2',
@@ -2437,7 +2437,7 @@ export const nl: LandingTranslationKeys = {
         'Koppel transacties aan contacten en zie hoeveel je uitgeeft bij specifieke winkels of personen. Automatische suggesties maken het makkelijk.',
       f7Title: '100% Privacy',
       f7Desc:
-        'Al je data blijft lokaal op je apparaat. Geen cloud, geen accounts, geen tracking. Jouw financiële gegevens zijn alleen van jou.',
+        'Je financiële database blijft lokaal. Je hebt geen online Fluxby-account nodig. Optionele synchronisatie en TypeSafe AI delen alleen de gegevens die voor die functies nodig zijn.',
       f8Title: 'AI-gestuurde herkenning',
       f8Desc:
         'Lokale AI helpt bij het herkennen en categoriseren van transacties zonder je data te delen met externe diensten.',
@@ -2565,7 +2565,7 @@ export const nl: LandingTranslationKeys = {
           'Dus hier zijn we, ongeveer 375 prompts en 2,5 weken later. Een professioneel ogende, goed werkende financiële applicatie met features die ik niet eens initieel had gepland, compleet gebouwd door AI op basis van mijn prompts, feedback en voortdurende iteraties. De onderliggende regel was dat ik geen code zelf zou schrijven of repareren - ik mocht dit experiment niet "vals spelen" door zelf in de code te duiken.',
           'Sterker nog, ik heb de codebase letterlijk helemaal niet bekeken. Ik gebruikte alleen de chat interface en accepteerde (of suggereerde aanpassingen op) elke wijziging die het model voorstelde. Dit was belangrijk omdat het me dwingt het model echt te gebruiken als een "AI developer" in plaats van als een hulptool.',
           'Dit experiment bewijst dat AI nu echt capabel is voor real-world applicaties. Niet voor alles - edge cases zijn nog steeds lastig, bugs in edge cases lijken vaker voor te komen dan ik had verwacht, en het volgen van design systems is moeilijker dan ik dacht. Maar voor het merendeel van het werk? Absoluut ja. Een single developer kan nu echt sneller productieklare applicaties bouwen door AI als partner in te zetten.',
-          'De toekomst ziet er genuinely spannend uit. Als je me verteld had een jaar geleden dat ik in twee weken een volledige financiële app kon bouwen zonder zelf code te schrijven, zou ik je niet geloofd hebben. Toch is het gebeurd. De vraag is niet meer "kan AI software bouwen?" maar eerder "hoe bouwen we het meest effectief met AI?" en "welke problemen kunnen we nu oplossen die voordien te duur waren?"',
+          'De toekomst ziet er veelbelovend uit. Als je me verteld had een jaar geleden dat ik in twee weken een volledige financiële app kon bouwen zonder zelf code te schrijven, zou ik je niet geloofd hebben. Toch is het gebeurd. De vraag is niet meer "kan AI software bouwen?" maar eerder "hoe bouwen we het meest effectief met AI?" en "welke problemen kunnen we nu oplossen die voordien te duur waren?"',
         ],
       },
       exploreMore: {
@@ -2875,13 +2875,14 @@ Object.assign(nl, {
       subtitle: 'Beheer rekeningen die bij je geïmporteerde transacties horen.',
       overviewTitle: 'Rekeningoverzicht',
       overviewText:
-        'Beheer rekeningen via Instellingen > Rekeningen. Rekeningkaarten en saldi zijn ook zichtbaar op het Dashboard en de pagina Transacties.',
+        'Beheer rekeningen via Instellingen > Actief profiel > Bankrekeningen. Rekeningkaarten en saldi zijn ook zichtbaar op het Dashboard en de pagina Transacties.',
       addTitle: 'Een rekening toevoegen',
       addText: 'Zo voeg je handmatig een rekening toe:',
-      addStep1: 'Ga naar Instellingen > Rekeningen',
-      addStep2: 'Klik op Rekening toevoegen',
-      addStep3: 'Vul een naam en rekeningtype in; de IBAN is optioneel',
-      addStep4: 'Klik op Opslaan',
+      addStep1: 'Ga naar Instellingen > Actief profiel > Bankrekeningen',
+      addStep2: 'Zoek het formulier Rekening toevoegen onder je rekeninglijst',
+      addStep3:
+        'Vul een naam en rekeningtype in. Voor betaal-, spaar- en kredietrekeningen is een IBAN vereist; voor contant geld, leningen en beleggingen niet.',
+      addStep4: 'Klik op Toevoegen om de rekening aan te maken',
       filterTitle: 'Filteren op rekening',
       filterText:
         'Gebruik op de pagina Transacties het rekeningfilter om één rekening of alle rekeningen te bekijken.',
@@ -3040,7 +3041,7 @@ Object.assign(nl, {
           emoji: '📅',
           title: 'CSV-import: datumnotatie herkennen',
           description:
-            'Is 01/02/2024 1 februari of 2 januari? AI herkent de datumnotatie van je bank aan de hand van enkele voorbeelden en voorkomt stille datumfouten.',
+            'Is 01/02/2024 1 februari of 2 januari? AI kan de datumnotatie voorstellen op basis van voorbeeldregels. Controleer de koppeling en het voorbeeld; een AI-voorstel kan onjuist zijn.',
         },
         {
           emoji: '💳',
@@ -3189,7 +3190,7 @@ Object.assign(nl, {
       },
       whatTitle: 'Wat is TypeSafe AI?',
       whatText:
-        'TypeSafe bouwt System One-modellen: kleine, snelle AI-primitieven die gestructureerde antwoorden geven in plaats van tekst te genereren. Jev is het vlaggenschipmodel van TypeSafe. Op basis van een status (JSON of tekst) en een of meer getypeerde vragen geeft het in ongeveer 100 ms kansen voor Choice-, Score- of Noul-antwoorden (ja/nee).',
+        'TypeSafe bouwt System One-modellen: kleine, snelle AI-primitieven die gestructureerde antwoorden geven in plaats van tekst te genereren. Jev is het vlaggenschipmodel van TypeSafe. Op basis van een status (JSON of tekst) en een of meer getypeerde vragen geeft het kansen voor Choice-, Score- of Noul-antwoorden (ja/nee).',
       controlText:
         'De code beheert de besturingsstroom. Jev behandelt alleen taken die semantisch begrip van ongestructureerde tekst vereisen, zoals “welke categorie past bij deze winkelnaam?” of “is deze IBAN van een betaalbemiddelaar?”.',
       architectureTitle: 'Architectuur',
@@ -3218,7 +3219,7 @@ Object.assign(nl, {
       ],
       optInTitle: 'Optioneel — functies blijven werken zonder AI',
       optInText:
-        'Elke TypeSafe-integratie controleert op een API-sleutel voordat de dienst wordt aangeroepen. Ontbreekt de sleutel of mislukt de aanroep, dan blijft de bestaande deterministische logica ongewijzigd actief. Gebruikers die geen sleutel instellen, merken geen verschil.',
+        'Elke TypeSafe-integratie controleert op een API-sleutel voordat de dienst wordt aangeroepen. Zonder sleutel werkt de deterministische logica. Sommige herkenningsfuncties vallen bij fouten daarop terug; expliciete categorisatieacties melden aanvraagfouten zodat je het opnieuw kunt proberen.',
       implementationTitle: 'Clientimplementatie',
       implementationText:
         'Fluxby blijft lokaal werken en gebruikt geen gedeelde TypeSafe-sleutel. De desktop-app roept TypeSafe rechtstreeks aan. De web-app op GitHub Pages stuurt dezelfde aanvraag via de optionele Fluxby Cloudflare Worker, zodat de browser de CORS-preflight veilig kan uitvoeren. apps/web/src/lib/typesafe-client.ts kiest het transport en biedt functies per domein.',
@@ -3230,7 +3231,7 @@ Object.assign(nl, {
       request: 'Aanvraag',
       response: 'Antwoord',
       confidenceText:
-        'Fluxby bundelt onafhankelijke transactievragen in één aanvraag en past een voorstel alleen toe wanneer confidence > 0.7. Bij of onder die grens blijft de transactie ongecategoriseerd voor handmatige controle. Terugkerende winkels kunnen ook exacte tekstregels opleveren wanneer ze dezelfde grens halen.',
+        'Fluxby bundelt onafhankelijke transactievragen in één aanvraag en past een voorstel alleen toe wanneer confidence > 0.6. Bij of onder die grens blijft de transactie ongecategoriseerd voor handmatige controle. Terugkerende winkels kunnen ook exacte tekstregels opleveren wanneer ze dezelfde grens halen.',
       directionExampleTitle: 'Voorbeeld: CSV-richtingskolom herkennen',
       directionText:
         'Bij bankbestanden met afwijkende waarden in de richtingskolom, bijvoorbeeld het Duitse “Belastung” en “Gutschrift”, vraagt Fluxby Jev om elke unieke waarde in één parallelle groep te classificeren voordat de rijen worden verwerkt.',
@@ -3245,7 +3246,7 @@ Object.assign(nl, {
         [
           'Categorisatievoorstel',
           'Choice confidence',
-          '> 0.7',
+          '> 0.6',
           'Categorie automatisch toewijzen',
         ],
         [
@@ -3390,13 +3391,13 @@ Object.assign(nl, {
         ],
         dataFlowSteps: [
           [
-            'Exporteren vanuit de web-app',
-            'Ga naar Instellingen → Gegevensbeheer → Exporteren (onversleutelde JSON voor de ontwikkelaars-API)',
+            'Je webgegevens bewaren',
+            'Exporteer een versleutelde back-up vanuit Instellingen → App-instellingen → Gegevensbeheer. Stuur deze niet naar /api/data/import.',
           ],
           ['De API-server starten', 'npm run dev:api'],
           [
-            'Importeren via de API',
-            'Stuur een POST-aanvraag naar /api/data/import met je JSON-export',
+            'Banktransacties importeren',
+            'Importeer een bank-CSV via /api/import/csv. /api/data/import verwacht het afzonderlijke API-exportformaat en vervangt API-gegevens.',
           ],
           [
             'Je integratie bouwen',
@@ -3480,7 +3481,7 @@ Object.assign(nl, {
         'Houd je gegevens tussen apparaten gesynchroniseerd zonder cloud.',
       howItWorksTitle: 'Hoe het werkt',
       howItWorksText:
-        'Fluxby synchroniseert gegevens rechtstreeks tussen apparaten via een versleutelde peer-to-peerverbinding. De gegevens gaan niet via een centrale server.',
+        'Fluxby synchroniseert goedgekeurde profielen via een versleutelde peer-to-peerverbinding. Signalerings- en relaydiensten kunnen de apparaten verbinden; Fluxby bewaart geen centrale financiële database.',
       directConnection: 'Directe verbinding',
       laptop: 'Laptop',
       phone: 'Telefoon',
@@ -3526,6 +3527,9 @@ Object.assign(nl, {
   helpCenter: {
     ...(nl.helpCenter ?? {}),
     transactions: {
+      manualEntryTitle: 'Een transactie handmatig toevoegen',
+      manualEntryText:
+        'Klik op Transactie toevoegen op de pagina Transacties. Kies inkomsten, uitgaven of overboeking en vul een positief bedrag en een datum in. Een rekening, categorie en tegenpartij zijn optioneel. Kies bij overboekingen of het geld binnenkomt of weggaat. Klik op Toevoegen om op te slaan.',
       ...nl.helpCenter?.transactions,
       bulkTitle: 'Meerdere transacties tegelijk wijzigen',
       bulkText:

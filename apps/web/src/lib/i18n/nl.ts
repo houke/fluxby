@@ -3037,7 +3037,7 @@ export const nl: TranslationKeys = {
       save: 'Opslaan',
       accountsTipTitle: 'Tip: spaarrekening toevoegen',
       accountsTip:
-        'Na het importeren van transacties kun je in Instellingen → Rekeningen je spaarrekening instellen. Overboekingen tussen je rekeningen worden dan automatisch herkend en tellen niet mee in je inkomsten en uitgaven analyse.',
+        'Na het importeren van transacties kun je in Instellingen → Bankrekeningen je spaarrekening instellen. Overboekingen tussen je rekeningen worden dan automatisch herkend en tellen niet mee in je inkomsten en uitgaven analyse.',
       addAccountsTitle: 'Rekeningen toevoegen',
       addAccountsDescription:
         'Voeg bankrekeningen toe aan je nieuwe profiel. Je kunt dit ook later doen via Instellingen.',
@@ -3063,7 +3063,7 @@ export const nl: TranslationKeys = {
       successReset: 'API server gereset naar lokaal (zelfde host).',
     },
     accounts: {
-      title: 'Rekeningen',
+      title: 'Bankrekeningen',
       description:
         'Beheer je bankrekeningen. De volgorde wordt gebruikt op het dashboard.',
       types: {
@@ -3522,7 +3522,7 @@ export const nl: TranslationKeys = {
           'Beheer categorieën en stel regels in voor automatische categorisatie van transacties.',
       },
       {
-        title: 'Rekeningen',
+        title: 'Bankrekeningen',
         description:
           'Beheer je bankrekeningen en bekijk actuele saldi per rekening.',
       },
@@ -3568,7 +3568,7 @@ export const nl: TranslationKeys = {
       {
         question: 'Worden mijn gegevens online opgeslagen?',
         answer:
-          'Nee, al je gegevens worden lokaal opgeslagen op je computer. Er wordt niets naar externe servers verstuurd.',
+          'Je financiële database staat lokaal. Optionele synchronisatie deelt gegevens met gekoppelde apparaten. Als je een TypeSafe-sleutel toevoegt, versturen ingeschakelde AI-functies beperkte aanvraaggegevens naar TypeSafe; de web-app gebruikt een Fluxby-gateway.',
       },
       {
         question: 'Hoe kan ik een categorie wijzigen van een transactie?',
@@ -3583,12 +3583,12 @@ export const nl: TranslationKeys = {
       {
         question: 'Hoe stel ik een budget in?',
         answer:
-          'Ga naar "Budgetten" en klik op "Nieuw Budget". Kies een categorie, stel het bedrag in en selecteer of het budget maandelijks of jaarlijks is.',
+          'Ga naar Budgetten en klik op Budget toevoegen. Kies een categorie en vul een maandlimiet in. Klik daarna op Opslaan. Je kunt ongebruikt budget ook laten doorrollen naar volgende maanden.',
       },
       {
         question: 'Kan ik transacties handmatig toevoegen?',
         answer:
-          'Op dit moment worden transacties alleen via CSV-import toegevoegd. Handmatige invoer wordt in een toekomstige versie toegevoegd.',
+          'Ja. Klik op Transactie toevoegen op de pagina Transacties. Kies het type, vul een positief bedrag en een datum in en kies eventueel een rekening, categorie en tegenpartij. Klik op Toevoegen; de app bepaalt het juiste teken voor het gekozen type.',
       },
     ],
   },
@@ -3777,7 +3777,7 @@ export const nl: TranslationKeys = {
     avatarFormatNotAllowed: 'Avatar-formaat niet toegestaan',
     // Address book errors
     failedToFetchAddressBook: 'Kon adresboek niet ophalen',
-    failedToFetchTopAccounts: 'Kon top accounts niet ophalen',
+    failedToFetchTopAccounts: 'Kon tegenrekeningen niet ophalen',
     failedToCreateAddressBookEntry: 'Kon contact niet aanmaken',
     failedToUpdateAddressBookEntry: 'Kon contact niet bijwerken',
     failedToDeleteAddressBookEntry: 'Kon contact niet verwijderen',
