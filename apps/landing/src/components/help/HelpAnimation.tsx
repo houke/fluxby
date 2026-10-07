@@ -335,7 +335,9 @@ function TransactionsAnimation({
         {/* Search bar */}
         <div className='flex items-center gap-2 rounded-lg bg-white px-3 py-2 dark:bg-gray-700'>
           <span className='text-gray-400'>🔍</span>
-          <span className='text-sm text-gray-400'>{anim?.search}</span>
+          <span className='text-sm text-gray-500 dark:text-gray-300'>
+            {anim?.search}
+          </span>
         </div>
         {/* Transaction list */}
         <div className='flex flex-col gap-2'>
@@ -352,7 +354,7 @@ function TransactionsAnimation({
                 {item}
               </span>
               <span
-                className={`text-sm font-medium ${i % 2 === 0 ? 'text-red-500' : 'text-green-600'}`}
+                className={`text-sm font-medium ${i % 2 === 0 ? 'text-red-700 dark:text-red-300' : 'text-green-700 dark:text-green-300'}`}
               >
                 {i % 2 === 0 ? '-€' : '+€'}
                 {(24.8 + i * 17.5).toFixed(2)}

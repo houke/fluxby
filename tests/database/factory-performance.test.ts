@@ -30,7 +30,7 @@ afterEach(() => {
 describe('database initialization timeout cleanup', () => {
   it('cleans timers for the initializer and concurrent waiters', async () => {
     const instance = {};
-    let finish: (value: object) => void = () => {};
+    let finish: (value: object) => void = () => undefined;
     database.getSingleton.mockReturnValue(
       new Promise((resolve) => {
         finish = resolve;
@@ -47,7 +47,7 @@ describe('database initialization timeout cleanup', () => {
   });
 
   it('cleans failed initialization timers and permits retry', async () => {
-    vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
     database.getSingleton.mockRejectedValueOnce(new Error('Open failed'));
     await expect(createDatabase({ environment: 'node' })).rejects.toThrow(
       'Open failed'

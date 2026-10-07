@@ -136,8 +136,18 @@ export async function seedFinancialPlanningDemo(
   );
   await seedImportProfilesDemo(db, profileId, language);
   await seedHouseholdPlanningDemo(db, profileId, language);
-  await seedTransactionReviewDemo(db, profileId, language);  await db.runAsync('INSERT INTO budget_income_plans(id,month,expected_income,profile_id,created_at,updated_at) VALUES(?,?,?,?,?,?)',[crypto.randomUUID(),today.slice(0,7),4200,profileId,now,now]);
-  const category=await db.queryOneAsync<{id:string}>('SELECT category_id id FROM budgets WHERE profile_id=? AND category_id IS NOT NULL AND is_deleted=0 LIMIT 1',[profileId]);
-  if(category)await db.runAsync("INSERT INTO category_preferences(id,category_id,is_fixed,allocation_group,profile_id,created_at,updated_at) VALUES(?,?,1,'needs',?,?,?)",[crypto.randomUUID(),category.id,profileId,now,now]);
-
+  await seedTransactionReviewDemo(db, profileId, language);
+  await db.runAsync(
+    'INSERT INTO budget_income_plans(id,month,expected_income,profile_id,created_at,updated_at) VALUES(?,?,?,?,?,?)',
+    [crypto.randomUUID(), today.slice(0, 7), 4200, profileId, now, now]
+  );
+  const category = await db.queryOneAsync<{ id: string }>(
+    'SELECT category_id id FROM budgets WHERE profile_id=? AND category_id IS NOT NULL AND is_deleted=0 LIMIT 1',
+    [profileId]
+  );
+  if (category)
+    await db.runAsync(
+      "INSERT INTO category_preferences(id,category_id,is_fixed,allocation_group,profile_id,created_at,updated_at) VALUES(?,?,1,'needs',?,?,?)",
+      [crypto.randomUUID(), category.id, profileId, now, now]
+    );
 }

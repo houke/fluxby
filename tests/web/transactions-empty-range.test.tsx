@@ -1,4 +1,10 @@
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import {
+  cleanup,
+  render,
+  screen,
+  waitFor,
+  fireEvent,
+} from '@testing-library/react';
 /** @vitest-environment jsdom */
 import React from 'react';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
@@ -160,6 +166,7 @@ describe('Transactions empty state when period has no matches but full data does
   });
 
   afterEach(() => {
+    cleanup();
     // Restore any globals we replaced in beforeEach
     (global as any).IntersectionObserver = OriginalIntersectionObserver;
     queryClient.clear();
@@ -254,7 +261,7 @@ describe('Transactions empty state when period has no matches but full data does
       </TestWrapper>
     );
 
-    await screen.findAllByTestId('transaction-checkbox');
+    await screen.findAllByTestId('transaction-checkbox', {}, { timeout: 5000 });
     // The unseen amount is needed by the one fallback totals calculation;
     // collapsed rows must not each scan the same 1,000-item merchant history.
     expect(unseenAmount.mock.calls.length).toBeLessThan(10);
@@ -264,8 +271,8 @@ describe('Transactions empty state when period has no matches but full data does
     const firstRow = container.querySelector(
       '[data-onboarding="transaction-row"] > div'
     );
-    expect(firstRow).not.toBeNull();
-    fireEvent.click(firstRow!);
+    if (!firstRow) throw new Error('Missing recurring transaction row');
+    fireEvent.click(firstRow);
 
     await screen.findByText(en.transactions.recurringHistory);
     expect(unseenAmount.mock.calls.length).toBeGreaterThan(

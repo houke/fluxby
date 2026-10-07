@@ -96,6 +96,10 @@ async function visitEveryHistoryPage(page: Page) {
 
 test.describe('Large-history performance regressions', () => {
   test.setTimeout(120000);
+  test.skip(
+    process.env.PLAYWRIGHT_PRODUCTION === 'true',
+    'Requires Vite source-module access to seed the disposable database'
+  );
 
   test('Spotlight retains contact stats, histories stay bounded and profile changes clear details', async ({
     page,

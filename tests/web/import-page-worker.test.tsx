@@ -388,6 +388,38 @@ describe('Import page configured worker requests', () => {
   });
 
   it.each(['en', 'nl'] as const)(
+    'localizes an unexpected import service failure in %s',
+    async (language) => {
+      harness.language = language;
+      const copy = language === 'en' ? en : nl;
+      harness.api.importGenericCSV.mockRejectedValueOnce(
+        new Error('Failed to save transactions: technical database detail')
+      );
+      mount();
+      const worker = await completePreview(file('import.csv', 'CSV'));
+      fireEvent.click(
+        screen.getByRole('button', { name: copy.import.startImport })
+      );
+      await waitFor(() => expect(worker.postMessage).toHaveBeenCalledTimes(2));
+      await act(async () =>
+        worker.emit({
+          type: 'prepared',
+          data: {
+            csv: 'normalized CSV',
+            mapping: {
+              date: 'Date',
+              amount: 'Amount',
+              description: 'Description',
+            },
+          },
+        })
+      );
+      expect(await screen.findByText(copy.import.importFailed)).toBeTruthy();
+      expect(screen.queryByText(/technical database detail/)).toBeNull();
+    }
+  );
+
+  it.each(['en', 'nl'] as const)(
     'localizes worker validation failures in %s',
     async (language) => {
       harness.language = language;

@@ -132,7 +132,7 @@ const Screenshots = () => {
                       data-animation-paused={
                         !animationEnabled || !visibleSections.has(index)
                       }
-                      className='relative -ml-8 aspect-[4/3] w-[calc(100%+4rem)] overflow-hidden border-0 border-purple-200 bg-gradient-to-br from-purple-50 via-pink-50 to-indigo-100 shadow-none select-none md:ml-0 md:w-full md:rounded-2xl md:border md:shadow-2xl dark:border-purple-700/30 dark:from-gray-800 dark:via-gray-700 dark:to-gray-800'
+                      className='relative -ml-6 aspect-[4/3] w-[calc(100%+3rem)] overflow-hidden border-0 border-purple-200 bg-gradient-to-br from-purple-50 via-pink-50 to-indigo-100 shadow-none select-none md:ml-0 md:w-full md:rounded-2xl md:border md:shadow-2xl dark:border-purple-700/30 dark:from-gray-800 dark:via-gray-700 dark:to-gray-800'
                       style={{ pointerEvents: 'none' }}
                     >
                       {AnimationComponent && (

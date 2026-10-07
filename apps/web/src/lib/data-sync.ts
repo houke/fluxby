@@ -161,6 +161,11 @@ function key(table: string, id: string): string {
 }
 function scoped(table: string, alias = ''): string {
   const prefix = alias ? `${alias}.` : '';
+  // Older browser databases can have transactions without their own profile
+  // field. Their account still provides an explicit owner; a stored transaction
+  // profile takes precedence so a mismatched account cannot expand access.
+  if (table === 'transactions')
+    return `COALESCE(${prefix}profile_id, (SELECT a.profile_id FROM accounts a WHERE a.id = ${alias || table}.account_id)) = ?`;
   return table === 'contact_ibans'
     ? `${prefix}contact_id IN (SELECT id FROM address_book WHERE profile_id = ?)`
     : `${prefix}profile_id = ?`;
@@ -196,19 +201,30 @@ export class ProfileDataSync {
     this.serial = next.catch(() => undefined);
     return next;
   }
-  private async load(): Promise<Map<string, Row>> {
+  private async load(db = this.db): Promise<Map<string, Row>> {
     const rows = new Map<string, Row>();
     for (const table of PROFILE_SYNC_TABLES) {
       if (!this.columns.has(table)) {
         this.columns.set(
           table,
-          await this.db.queryAsync<Column>(`PRAGMA table_info(${table})`)
+          await db.queryAsync<Column>(`PRAGMA table_info(${table})`)
         );
       }
       if (!this.columns.get(table)?.length) continue;
-      for (const record of await this.db.queryAsync<Record<string, unknown>>(
-        `SELECT * FROM ${table} WHERE ${scoped(table)}`,
-        [this.profileId]
+      // Keep direct ownership queries indexed. The legacy account fallback is
+      // limited to rows without a stored profile, rather than evaluating a
+      // correlated COALESCE for every transaction in every local profile.
+      const sql =
+        table === 'transactions'
+          ? `SELECT * FROM transactions WHERE profile_id = ?
+             UNION ALL SELECT * FROM transactions WHERE profile_id IS NULL
+             AND account_id IN (SELECT id FROM accounts WHERE profile_id = ?)`
+          : `SELECT * FROM ${table} WHERE ${scoped(table)}`;
+      for (const record of await db.queryAsync<Record<string, unknown>>(
+        sql,
+        table === 'transactions'
+          ? [this.profileId, this.profileId]
+          : [this.profileId]
       )) {
         const row = {
           ...record,
@@ -233,84 +249,90 @@ export class ProfileDataSync {
   /** Persist hard deletions and stamp local edits with their actual author. */
   async captureLocalChanges(reset = false): Promise<SyncChange[]> {
     return this.exclusive(async () => {
-      const current = await this.load();
-      const changes: SyncChange[] = [];
-      const stamps = new Map<
-        string,
-        Array<{ id: string; updatedAt: number }>
-      >();
-      // Compare snapshots before taking the database transaction lock. A large
-      // import should only keep foreground queries waiting for its writes.
-      for (const [rowKey, row] of current) {
-        const old = this.previous.get(rowKey);
-        if (reset || !old || JSON.stringify(old) !== JSON.stringify(row)) {
-          const table = rowKey.slice(0, rowKey.indexOf(':'));
-          row.device_id = this.deviceId;
-          row.updated_at = Math.max(row.updated_at, (old?.updated_at || 0) + 1);
-          const tableStamps = stamps.get(table) || [];
-          tableStamps.push({ id: row.id, updatedAt: row.updated_at });
-          stamps.set(table, tableStamps);
-          changes.push({ table, row });
-        }
-      }
-      await this.db.transactionAsync(async (db) => {
-        if (reset) {
-          await db.runAsync(
-            'DELETE FROM sync_tombstones WHERE profile_id = ?',
-            [this.profileId]
-          );
-          await db.runAsync(
-            'DELETE FROM sync_row_aliases WHERE profile_id = ?',
-            [this.profileId]
-          );
-        }
-        for (const [table, tableStamps] of stamps) {
-          for (let offset = 0; offset < tableStamps.length; offset += 200) {
-            const batch = tableStamps.slice(offset, offset + 200);
-            const sharedClock = batch.every(
-              ({ updatedAt }) => updatedAt === batch[0].updatedAt
-            );
-            // A direct CASE avoids correlated CTE materialization into OPFS.
-            // Imports usually share a clock; bind it once instead of making
-            // SQLite compare every id twice against every CASE arm.
-            // OR FAIL lets our enclosing transaction roll back the entire batch
-            // on any error, without a separate per-statement rollback journal.
-            const clock = sharedClock
-              ? '?'
-              : `CASE id ${batch.map(() => 'WHEN ? THEN ?').join(' ')} END`;
-            const clockBindings = sharedClock
-              ? [batch[0].updatedAt]
-              : batch.flatMap(({ id, updatedAt }) => [id, updatedAt]);
+      const { current, changes } = await this.db.transactionAsync(
+        async (db) => {
+          const current = await this.load(db);
+          const changes: SyncChange[] = [];
+          const stamps = new Map<
+            string,
+            Array<{ id: string; updatedAt: number }>
+          >();
+          // Read and stamp one owned snapshot. A local edit committed while this
+          // capture was waiting must retain its newer values and clock.
+          for (const [rowKey, row] of current) {
+            const old = this.previous.get(rowKey);
+            if (reset || !old || JSON.stringify(old) !== JSON.stringify(row)) {
+              const table = rowKey.slice(0, rowKey.indexOf(':'));
+              row.device_id = this.deviceId;
+              row.updated_at = Math.max(
+                row.updated_at,
+                (old?.updated_at || 0) + 1
+              );
+              const tableStamps = stamps.get(table) || [];
+              tableStamps.push({ id: row.id, updatedAt: row.updated_at });
+              stamps.set(table, tableStamps);
+              changes.push({ table, row });
+            }
+          }
+          if (reset) {
             await db.runAsync(
-              `UPDATE OR FAIL ${table} SET updated_at = ${clock}, device_id = ?
+              'DELETE FROM sync_tombstones WHERE profile_id = ?',
+              [this.profileId]
+            );
+            await db.runAsync(
+              'DELETE FROM sync_row_aliases WHERE profile_id = ?',
+              [this.profileId]
+            );
+          }
+          for (const [table, tableStamps] of stamps) {
+            for (let offset = 0; offset < tableStamps.length; offset += 200) {
+              const batch = tableStamps.slice(offset, offset + 200);
+              const sharedClock = batch.every(
+                ({ updatedAt }) => updatedAt === batch[0].updatedAt
+              );
+              // A direct CASE avoids correlated CTE materialization into OPFS.
+              // Imports usually share a clock; bind it once instead of making
+              // SQLite compare every id twice against every CASE arm.
+              // OR FAIL lets our enclosing transaction roll back the entire batch
+              // on any error, without a separate per-statement rollback journal.
+              const clock = sharedClock
+                ? '?'
+                : `CASE id ${batch.map(() => 'WHEN ? THEN ?').join(' ')} END`;
+              const clockBindings = sharedClock
+                ? [batch[0].updatedAt]
+                : batch.flatMap(({ id, updatedAt }) => [id, updatedAt]);
+              await db.runAsync(
+                `UPDATE OR FAIL ${table} SET updated_at = ${clock}, device_id = ?
                WHERE ${scoped(table)} AND id IN (${batch.map(() => '?').join(', ')})
                  AND (updated_at IS NOT ${clock} OR device_id IS NOT ?)`,
-              [
-                ...clockBindings,
-                this.deviceId,
-                this.profileId,
-                ...batch.map(({ id }) => id),
-                ...clockBindings,
-                this.deviceId,
-              ]
-            );
+                [
+                  ...clockBindings,
+                  this.deviceId,
+                  this.profileId,
+                  ...batch.map(({ id }) => id),
+                  ...clockBindings,
+                  this.deviceId,
+                ]
+              );
+            }
           }
-        }
-        if (this.ready && !reset) {
-          for (const [rowKey, old] of this.previous) {
-            if (current.has(rowKey)) continue;
-            const table = rowKey.slice(0, rowKey.indexOf(':'));
-            const row = {
-              ...old,
-              is_deleted: true,
-              updated_at: Math.max(Date.now(), old.updated_at + 1),
-              device_id: this.deviceId,
-            };
-            await this.saveTombstone(table, row, db);
-            changes.push({ table, row });
+          if (this.ready && !reset) {
+            for (const [rowKey, old] of this.previous) {
+              if (current.has(rowKey)) continue;
+              const table = rowKey.slice(0, rowKey.indexOf(':'));
+              const row = {
+                ...old,
+                is_deleted: true,
+                updated_at: Math.max(Date.now(), old.updated_at + 1),
+                device_id: this.deviceId,
+              };
+              await this.saveTombstone(table, row, db);
+              changes.push({ table, row });
+            }
           }
+          return { current, changes };
         }
-      });
+      );
       this.previous = current;
       this.ready = true;
       return changes;
@@ -428,43 +450,39 @@ export class ProfileDataSync {
   ): Promise<number> {
     return this.exclusive(async () => {
       this.assertActive();
-      if (
-        !Array.isArray(changes) ||
-        changes.length > 50000 ||
-        JSON.stringify(changes).length > 32000000
-      )
+      if (!Array.isArray(changes) || JSON.stringify(changes).length > 32000000)
         throw new Error('Sync payload is too large');
-      const current = await this.load();
-      const incoming = changes.map((change) => ({
-        table: change.table,
-        row: this.validate(change, remoteProfileId),
-      }));
-      const bindingIdentity = `${remoteDeviceId}:${remoteProfileId}`;
-      const aliases = new Map<string, string>();
-      for (const alias of await this.db.queryAsync<{
-        table_name: string;
-        remote_id: string;
-        local_id: string;
-      }>(
-        'SELECT table_name, remote_id, local_id FROM sync_row_aliases WHERE profile_id = ? AND remote_device_id = ?',
-        [this.profileId, bindingIdentity]
-      ))
-        aliases.set(key(alias.table_name, alias.remote_id), alias.local_id);
-      const tombstones = new Map<string, Row>();
-      for (const deleted of await this.db.queryAsync<{
-        table_name: string;
-        row_data: string;
-      }>(
-        'SELECT table_name, row_data FROM sync_tombstones WHERE profile_id = ?',
-        [this.profileId]
-      ))
-        tombstones.set(
-          key(deleted.table_name, (JSON.parse(deleted.row_data) as Row).id),
-          JSON.parse(deleted.row_data) as Row
-        );
       let applied = 0;
-      await this.db.transactionAsync(async (db) => {
+      const previous = await this.db.transactionAsync(async (db) => {
         this.assertActive();
+        const current = await this.load(db);
+        const incoming = changes.map((change) => ({
+          table: change.table,
+          row: this.validate(change, remoteProfileId),
+        }));
+        const bindingIdentity = `${remoteDeviceId}:${remoteProfileId}`;
+        const aliases = new Map<string, string>();
+        for (const alias of await db.queryAsync<{
+          table_name: string;
+          remote_id: string;
+          local_id: string;
+        }>(
+          'SELECT table_name, remote_id, local_id FROM sync_row_aliases WHERE profile_id = ? AND remote_device_id = ?',
+          [this.profileId, bindingIdentity]
+        ))
+          aliases.set(key(alias.table_name, alias.remote_id), alias.local_id);
+        const tombstones = new Map<string, Row>();
+        for (const deleted of await db.queryAsync<{
+          table_name: string;
+          row_data: string;
+        }>(
+          'SELECT table_name, row_data FROM sync_tombstones WHERE profile_id = ?',
+          [this.profileId]
+        ))
+          tombstones.set(
+            key(deleted.table_name, (JSON.parse(deleted.row_data) as Row).id),
+            JSON.parse(deleted.row_data) as Row
+          );
         for (const table of PROFILE_SYNC_TABLES) {
           const remaining = incoming.filter((change) => change.table === table);
           while (remaining.length) {
@@ -550,7 +568,7 @@ export class ProfileDataSync {
               localId ||= remoteId;
               // IDs may never overwrite rows in an unrelated local profile.
               const elsewhere = await db.queryAsync<{ id: string }>(
-                `SELECT id FROM ${table} WHERE id = ? AND NOT (${scoped(table)})`,
+                `SELECT id FROM ${table} WHERE id = ? AND (${scoped(table)}) IS NOT TRUE`,
                 [localId, this.profileId]
               );
               if (elsewhere.length)
@@ -603,8 +621,11 @@ export class ProfileDataSync {
           }
         }
         this.assertActive();
+        // Include SQLite defaults in the committed peer snapshot, while leaving
+        // any local mutation queued behind this transaction visible to capture.
+        return this.load(db);
       });
-      this.previous = await this.load();
+      this.previous = previous;
       this.ready = true;
       return applied;
     });

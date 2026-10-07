@@ -11,7 +11,7 @@ interface CategoryExample {
 
 export default function HelpCategories() {
   const { t, language } = useLanguage();
-  const householdHelp=householdBudgetHelp[language];
+  const householdHelp = householdBudgetHelp[language];
   const examples = t.helpCenter.categories.examples as CategoryExample[];
 
   return (

@@ -64,7 +64,11 @@ beforeEach(async () => {
   sqlite.pragma('foreign_keys = ON');
   sqlite.exec(SCHEMA_SQL);
   const db = database();
-  await migrations.find((migration) => migration.version === 6)!.up(db);
+  const dismissedMigration = migrations.find(
+    (migration) => migration.version === 6
+  );
+  if (!dismissedMigration) throw new Error('Expected dismissed migration');
+  await dismissedMigration.up(db);
   await migration013.up(db);
   await migration015.up(db);
   await migration016.up(db);
@@ -93,6 +97,34 @@ function addImportedTransactions(count: number, author: string | null = null) {
 }
 
 describe('bounded local sync stamps', () => {
+  it('does not replace a newer local clock while waiting to stamp captured edits', async () => {
+    const db = database();
+    const captured = new ProfileDataSync(db, 'local-profile', 'local-device');
+    await captured.initialize();
+    sqlite.exec(
+      "UPDATE transactions SET amount=-20,updated_at=200 WHERE id='t'"
+    );
+    const transaction = db.transactionAsync;
+    vi.spyOn(db, 'transactionAsync').mockImplementationOnce(async (work) => {
+      sqlite.exec(
+        "UPDATE transactions SET amount=-50,updated_at=500 WHERE id='t'"
+      );
+      return transaction.call(db, work);
+    });
+    const changes = await captured.captureLocalChanges();
+    expect(changes).toContainEqual(
+      expect.objectContaining({
+        table: 'transactions',
+        row: expect.objectContaining({ id: 't', amount: -50, updated_at: 500 }),
+      })
+    );
+    expect(
+      sqlite
+        .prepare('SELECT amount,updated_at FROM transactions WHERE id=?')
+        .get('t')
+    ).toEqual({ amount: -50, updated_at: 500 });
+  });
+
   it('stamps a large import in bounded batches, preserves unchanged/foreign rows and persists hard deletions', async () => {
     const db = database();
     const run = vi.spyOn(db, 'runAsync');
@@ -365,6 +397,194 @@ describe('bounded local sync stamps', () => {
 });
 
 describe('profile-bound financial data sync', () => {
+  it('applies more than 50k valid rows once and rolls back a late invalid reference atomically', async () => {
+    const db = database();
+    const guarded = new ProfileDataSync(db, 'local-profile', 'local-device');
+    await guarded.initialize();
+    const transaction = vi.spyOn(db, 'transactionAsync');
+    const snapshot = Array.from({ length: 50001 }, (_, index) =>
+      change('transactions', {
+        id: `snapshot-${index}`,
+        date: '2026-10-07',
+        amount: -1,
+        type: 'expense',
+        account_id: index === 50000 ? 'private-a' : 'a',
+        category_id: 'c',
+      })
+    );
+    expect(JSON.stringify(snapshot).length).toBeLessThan(32000000);
+    await expect(
+      guarded.applyChanges(snapshot, 'remote-profile', 'remote-device')
+    ).rejects.toThrow('paired profile');
+    expect(transaction).toHaveBeenCalledTimes(1);
+    expect(
+      sqlite.prepare('SELECT COUNT(*) AS count FROM transactions').get()
+    ).toEqual({ count: 1 });
+    expect(
+      sqlite.prepare('SELECT COUNT(*) AS count FROM sync_row_aliases').get()
+    ).toEqual({ count: 0 });
+    snapshot[snapshot.length - 1].row = {
+      ...snapshot[snapshot.length - 1].row,
+      account_id: 'a',
+    } as SyncChange['row'];
+    transaction.mockClear();
+    expect(
+      await guarded.applyChanges(snapshot, 'remote-profile', 'remote-device')
+    ).toBe(50001);
+    expect(transaction).toHaveBeenCalledTimes(1);
+    expect(
+      sqlite
+        .prepare(
+          "SELECT COUNT(*) AS count, SUM(amount) AS total FROM transactions WHERE id LIKE 'snapshot-%' AND profile_id='local-profile'"
+        )
+        .get()
+    ).toEqual({ count: 50001, total: -50001 });
+    expect(sqlite.pragma('foreign_key_check')).toEqual([]);
+  }, 30000);
+
+  it('retains local edits queued after peer commit for the next capture', async () => {
+    const db = database();
+    const guarded = new ProfileDataSync(db, 'local-profile', 'local-device');
+    await guarded.initialize();
+    const transaction = db.transactionAsync;
+    vi.spyOn(db, 'transactionAsync').mockImplementationOnce(async (work) => {
+      const result = await transaction.call(db, work);
+      sqlite.exec(
+        "UPDATE transactions SET amount=-50,updated_at=500 WHERE id='t'"
+      );
+      return result;
+    });
+    await guarded.applyChanges(
+      [
+        change('transactions', {
+          id: 't',
+          date: '2026-09-29',
+          amount: -20,
+          type: 'expense',
+          account_id: 'a',
+          updated_at: 200,
+        }),
+      ],
+      'remote-profile',
+      'remote-device'
+    );
+    expect(await guarded.captureLocalChanges()).toContainEqual(
+      expect.objectContaining({
+        table: 'transactions',
+        row: expect.objectContaining({
+          id: 't',
+          amount: -50,
+          updated_at: 500,
+          device_id: 'local-device',
+        }),
+      })
+    );
+  });
+
+  it('compares incoming versions with edits committed while waiting for the transaction', async () => {
+    const db = database();
+    const guarded = new ProfileDataSync(db, 'local-profile', 'local-device');
+    await guarded.initialize();
+    const transaction = db.transactionAsync;
+    vi.spyOn(db, 'transactionAsync').mockImplementationOnce(async (work) => {
+      sqlite.exec(
+        "UPDATE transactions SET amount=-50,updated_at=500 WHERE id='t'"
+      );
+      return transaction.call(db, work);
+    });
+    expect(
+      await guarded.applyChanges(
+        [
+          change('transactions', {
+            id: 't',
+            date: '2026-09-29',
+            amount: -20,
+            type: 'expense',
+            account_id: 'a',
+            updated_at: 200,
+          }),
+        ],
+        'remote-profile',
+        'remote-device'
+      )
+    ).toBe(0);
+    expect(
+      sqlite
+        .prepare('SELECT amount,updated_at FROM transactions WHERE id=?')
+        .get('t')
+    ).toEqual({ amount: -50, updated_at: 500 });
+  });
+
+  it('includes legacy transactions owned through their account and preserves foreign legacy rows', async () => {
+    sqlite.exec(`
+      UPDATE transactions SET profile_id=NULL WHERE id='t';
+      INSERT INTO transactions(id,date,amount,type,account_id,profile_id,updated_at,device_id)
+      VALUES('legacy-private','2026-09-29',-20,'expense','private-a',NULL,100,'local-device');
+    `);
+    await sync.initialize();
+    const changes = await sync.getChanges();
+    expect(changes).toContainEqual(
+      expect.objectContaining({
+        table: 'transactions',
+        row: expect.objectContaining({ id: 't', profile_id: 'local-profile' }),
+      })
+    );
+    expect(changes.some((item) => item.row.id === 'legacy-private')).toBe(
+      false
+    );
+    sqlite.exec("UPDATE transactions SET amount=-15 WHERE id='t'");
+    expect(await sync.captureLocalChanges()).toContainEqual(
+      expect.objectContaining({
+        table: 'transactions',
+        row: expect.objectContaining({ id: 't', updated_at: 101 }),
+      })
+    );
+    expect(
+      sqlite.prepare('SELECT updated_at FROM transactions WHERE id=?').get('t')
+    ).toEqual({ updated_at: 101 });
+    await expect(
+      sync.applyChanges(
+        [
+          change('transactions', {
+            id: 'legacy-private',
+            date: '2026-09-29',
+            amount: -50,
+            type: 'expense',
+            account_id: 'a',
+          }),
+        ],
+        'remote-profile',
+        'remote-device'
+      )
+    ).rejects.toThrow('another local profile');
+  });
+
+  it('rejects incoming IDs belonging to unassigned records instead of overwriting them', async () => {
+    sqlite.exec(`INSERT INTO accounts(id,iban,name,profile_id,updated_at,device_id)
+      VALUES('unassigned','NLUNASSIGNED','Preserved account',NULL,100,'local-device')`);
+    await expect(
+      sync.applyChanges(
+        [
+          change('accounts', {
+            id: 'unassigned',
+            iban: 'NLNEW',
+            name: 'Overwritten',
+          }),
+        ],
+        'remote-profile',
+        'remote-device'
+      )
+    ).rejects.toThrow('another local profile');
+    expect(
+      sqlite
+        .prepare('SELECT name,profile_id FROM accounts WHERE id=?')
+        .get('unassigned')
+    ).toEqual({ name: 'Preserved account', profile_id: null });
+    expect(
+      sqlite.prepare('SELECT COUNT(*) AS count FROM sync_row_aliases').get()
+    ).toEqual({ count: 0 });
+  });
+
   it('normalizes legacy manual bill signs from peers without changing recurring income, cadence or dates', async () => {
     const bill = {
       id: 'legacy-bill',

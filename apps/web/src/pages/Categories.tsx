@@ -32,7 +32,7 @@ import {
 import { PageHeader } from '@/components/layout/PageHeader';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Button, type ButtonProps } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -174,6 +174,31 @@ const PRESET_COLORS = [
   '#94A3B8',
   '#E2E8F0',
 ];
+
+function CategoryIconButton({
+  label,
+  children,
+  ...props
+}: ButtonProps & { label: string }) {
+  return (
+    <TooltipProvider delayDuration={100}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            type='button'
+            variant='ghost'
+            size='icon'
+            aria-label={label}
+            {...props}
+          >
+            {children}
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>{label}</TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+}
 
 const colorWithOpacity = (hex: string | null | undefined, alpha = 0.2) => {
   const value = (hex || PRESET_COLORS[0]).replace('#', '');
@@ -989,7 +1014,7 @@ export default function Categories() {
                     setEditParentId(v === 'none' ? null : v)
                   }
                 >
-                  <SelectTrigger>
+                  <SelectTrigger aria-label={t.categories.selectParent}>
                     <SelectValue placeholder={t.categories.selectParent} />
                   </SelectTrigger>
                   <SelectContent>
@@ -1005,23 +1030,25 @@ export default function Categories() {
                 </Select>
               </div>
               <div className='flex gap-2'>
-                <Button
+                <CategoryIconButton
+                  label={t.common.save}
                   size='icon'
                   variant='ghost'
-                  className='h-8 w-8 rounded-full hover:bg-purple-600 hover:text-white'
+                  className='h-8 w-8 rounded-md hover:bg-purple-600 hover:text-white'
                   onClick={saveEditing}
                   disabled={updateMutation.isPending || !editName.trim()}
                 >
                   <Check className='h-4 w-4' />
-                </Button>
-                <Button
+                </CategoryIconButton>
+                <CategoryIconButton
+                  label={t.common.cancel}
                   variant='ghost'
                   size='icon'
-                  className='h-8 w-8 rounded-full hover:bg-purple-600 hover:text-white'
+                  className='h-8 w-8 rounded-md hover:bg-purple-600 hover:text-white'
                   onClick={cancelEditing}
                 >
                   <X className='h-4 w-4' />
-                </Button>
+                </CategoryIconButton>
               </div>
             </div>
 
@@ -1031,18 +1058,20 @@ export default function Categories() {
               </p>
               <div className='flex flex-wrap gap-2'>
                 {PRESET_ICONS.map((icon) => (
-                  <button
+                  <CategoryIconButton
                     key={icon}
+                    label={`${t.categories.chooseIcon}: ${icon}`}
+                    aria-pressed={editIcon === icon}
                     onClick={() => setEditIcon(icon)}
                     className={cn(
-                      'flex h-8 w-8 items-center justify-center rounded-lg border-2 text-base transition-colors',
+                      'flex h-8 w-8 items-center justify-center rounded-md border-2 text-base transition-colors',
                       editIcon === icon
                         ? 'border-primary bg-primary/10'
                         : 'border-transparent bg-muted hover:bg-muted/80'
                     )}
                   >
                     {icon}
-                  </button>
+                  </CategoryIconButton>
                 ))}
               </div>
             </div>
@@ -1112,15 +1141,16 @@ export default function Categories() {
               {subRules.map((rule) => (
                 <span
                   key={rule.id}
-                  className='inline-flex items-center gap-1 rounded-md bg-muted px-2 py-0.5 text-xs text-muted-foreground transition-colors hover:bg-muted/80'
+                  className='inline-flex items-center gap-1 rounded-md bg-muted px-2 py-0.5 text-xs text-foreground transition-colors hover:bg-muted/80'
                 >
                   {rule.pattern}
-                  <button
-                    className='ml-0.5 rounded-md p-0.5 transition-colors hover:bg-red-600 hover:text-white'
+                  <CategoryIconButton
+                    label={t.common.delete}
+                    className='ml-0.5 h-auto w-auto rounded-md p-0.5 transition-colors hover:bg-red-600 hover:text-white'
                     onClick={() => handleDeleteRule(rule.id)}
                   >
                     <X className='h-2.5 w-2.5' />
-                  </button>
+                  </CategoryIconButton>
                 </span>
               ))}
               {/* Add rule button */}
@@ -1154,23 +1184,25 @@ export default function Categories() {
                   }}
                   autoFocus
                 />
-                <Button
+                <CategoryIconButton
+                  label={t.common.save}
                   size='icon'
                   variant='ghost'
-                  className='h-8 w-8 rounded-full hover:bg-purple-600 hover:text-white'
+                  className='h-8 w-8 rounded-md hover:bg-purple-600 hover:text-white'
                   onClick={() => addKeywords(sub.id, ruleDrafts[sub.id] || '')}
                   disabled={!ruleDrafts[sub.id]?.trim()}
                 >
                   <Check className='h-4 w-4' />
-                </Button>
-                <Button
+                </CategoryIconButton>
+                <CategoryIconButton
+                  label={t.common.cancel}
                   size='icon'
                   variant='ghost'
-                  className='h-8 w-8 rounded-full hover:bg-purple-600 hover:text-white'
+                  className='h-8 w-8 rounded-md hover:bg-purple-600 hover:text-white'
                   onClick={() => setEditingRulesFor(null)}
                 >
                   <X className='h-4 w-4' />
-                </Button>
+                </CategoryIconButton>
               </div>
             )}
           </div>
@@ -1252,7 +1284,8 @@ export default function Categories() {
                   />
                 </div>
                 <div className='flex gap-2'>
-                  <Button
+                  <CategoryIconButton
+                    label={t.common.save}
                     size='icon'
                     variant='ghost'
                     className='h-8 w-8 hover:bg-purple-600 hover:text-white'
@@ -1260,15 +1293,16 @@ export default function Categories() {
                     disabled={updateMutation.isPending || !editName.trim()}
                   >
                     <Check className='h-4 w-4' />
-                  </Button>
-                  <Button
+                  </CategoryIconButton>
+                  <CategoryIconButton
+                    label={t.common.cancel}
                     variant='ghost'
                     size='icon'
                     className='h-8 w-8 hover:bg-purple-600 hover:text-white'
                     onClick={cancelEditing}
                   >
                     <X className='h-4 w-4' />
-                  </Button>
+                  </CategoryIconButton>
                 </div>
               </div>
 
@@ -1278,18 +1312,20 @@ export default function Categories() {
                 </p>
                 <div className='flex flex-wrap gap-2'>
                   {PRESET_ICONS.map((icon) => (
-                    <button
+                    <CategoryIconButton
                       key={icon}
+                      label={`${t.categories.chooseIcon}: ${icon}`}
+                      aria-pressed={editIcon === icon}
                       onClick={() => setEditIcon(icon)}
                       className={cn(
-                        'flex h-10 w-10 items-center justify-center rounded-lg border-2 text-lg transition-colors',
+                        'flex h-10 w-10 items-center justify-center rounded-md border-2 text-lg transition-colors',
                         editIcon === icon
                           ? 'border-primary bg-primary/10'
                           : 'border-transparent bg-muted hover:bg-muted/80'
                       )}
                     >
                       {icon}
-                    </button>
+                    </CategoryIconButton>
                   ))}
                 </div>
               </div>
@@ -1300,11 +1336,13 @@ export default function Categories() {
                 </p>
                 <div className='flex flex-wrap gap-2'>
                   {PRESET_COLORS.map((color) => (
-                    <button
+                    <CategoryIconButton
                       key={color}
+                      label={`${t.categories.chooseColor}: ${color}`}
+                      aria-pressed={editColor === color}
                       onClick={() => setEditColor(color)}
                       className={cn(
-                        'h-6 w-6 rounded-full transition-transform hover:scale-110',
+                        'h-6 w-6 rounded-md transition-transform hover:scale-110',
                         editColor === color &&
                           'ring-2 ring-primary ring-offset-2'
                       )}
@@ -1336,9 +1374,11 @@ export default function Categories() {
               </div>
 
               <div className='min-w-0 flex-1'>
-                <div className='flex items-center gap-2'>
-                  <h3 className='font-semibold'>{category.name}</h3>
-                  <span className='rounded-full bg-muted px-2 py-0.5 text-xs text-foreground'>
+                <div className='flex flex-wrap items-center gap-2'>
+                  <h3 className='min-w-0 font-semibold [overflow-wrap:anywhere]'>
+                    {category.name}
+                  </h3>
+                  <span className='shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs whitespace-nowrap text-foreground'>
                     {subs.length} {t.categories.subcategories}
                   </span>
                 </div>
@@ -1561,7 +1601,7 @@ export default function Categories() {
                   value={newParentId?.toString() || 'none'}
                   onValueChange={(v) => setNewParentId(v === 'none' ? null : v)}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger aria-label={t.categories.selectParent}>
                     <SelectValue placeholder={t.categories.selectParent} />
                   </SelectTrigger>
                   <SelectContent>
@@ -1592,18 +1632,20 @@ export default function Categories() {
               </p>
               <div className='flex flex-wrap gap-2'>
                 {PRESET_ICONS.map((icon) => (
-                  <button
+                  <CategoryIconButton
                     key={icon}
+                    label={`${t.categories.chooseIcon}: ${icon}`}
+                    aria-pressed={newIcon === icon}
                     onClick={() => setNewIcon(icon)}
                     className={cn(
-                      'flex h-10 w-10 items-center justify-center rounded-lg border-2 text-lg transition-colors',
+                      'flex h-10 w-10 items-center justify-center rounded-md border-2 text-lg transition-colors',
                       newIcon === icon
                         ? 'border-primary bg-primary/10'
                         : 'border-transparent bg-muted hover:bg-muted/80'
                     )}
                   >
                     {icon}
-                  </button>
+                  </CategoryIconButton>
                 ))}
               </div>
             </div>
@@ -1616,11 +1658,13 @@ export default function Categories() {
                 </p>
                 <div className='flex flex-wrap gap-2'>
                   {PRESET_COLORS.map((color) => (
-                    <button
+                    <CategoryIconButton
                       key={color}
+                      label={`${t.categories.chooseColor}: ${color}`}
+                      aria-pressed={newColor === color}
                       onClick={() => setNewColor(color)}
                       className={cn(
-                        'h-6 w-6 rounded-full transition-transform hover:scale-110',
+                        'h-6 w-6 rounded-md transition-transform hover:scale-110',
                         newColor === color &&
                           'ring-2 ring-primary ring-offset-2'
                       )}
@@ -1963,7 +2007,7 @@ export default function Categories() {
                   value={newParentId?.toString() || 'none'}
                   onValueChange={(v) => setNewParentId(v === 'none' ? null : v)}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger aria-label={t.categories.selectParent}>
                     <SelectValue placeholder={t.categories.selectParent} />
                   </SelectTrigger>
                   <SelectContent>
@@ -2009,18 +2053,20 @@ export default function Categories() {
               </label>
               <div className='flex flex-wrap gap-2'>
                 {PRESET_ICONS.map((icon) => (
-                  <button
+                  <CategoryIconButton
                     key={icon}
+                    label={`${t.categories.chooseIcon}: ${icon}`}
+                    aria-pressed={newIcon === icon}
                     onClick={() => setNewIcon(icon)}
                     className={cn(
-                      'flex h-10 w-10 items-center justify-center rounded-lg border-2 text-lg transition-colors',
+                      'flex h-10 w-10 items-center justify-center rounded-md border-2 text-lg transition-colors',
                       newIcon === icon
                         ? 'border-primary bg-primary/10'
                         : 'border-transparent bg-muted hover:bg-muted/80'
                     )}
                   >
                     {icon}
-                  </button>
+                  </CategoryIconButton>
                 ))}
               </div>
             </div>

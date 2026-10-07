@@ -24,9 +24,14 @@ for (const language of ['nl', 'en'] as const) {
       await page.setViewportSize({ width, height: 900 });
       for (const article of articles) {
         const response = await page.goto(`/help/${article}`);
-        expect(response?.ok()).toBe(true);
+        // GitHub Pages serves the SPA handoff through 404.html on direct routes.
+        // Confirm the restored article below instead of rejecting that handoff.
+        if (process.env.PLAYWRIGHT_PRODUCTION === 'true')
+          expect([200, 404]).toContain(response?.status());
+        else expect(response?.ok()).toBe(true);
         const heading = page.getByRole('heading', { level: 1 });
         await expect(heading).toBeVisible();
+        await expect(page).toHaveURL(new RegExp(`/help/${article}(?:\\?|$)`));
         const name = await heading.innerText();
         expect(name.trim().length).toBeGreaterThan(0);
         if (headings.has(article)) expect(name).toBe(headings.get(article));

@@ -389,8 +389,13 @@ export function createFinancialPlanningService(
       month: string,
       input: Partial<Pick<MonthlyReview, 'checks' | 'status'>>
     ): Promise<void> {
-      const current = await service.getMonthlyReview(month),
-        pid = profile();
+      const pid = profile();
+      const assertProfile = () => {
+        if (currentProfileId() !== pid)
+          throw new Error('Active profile changed');
+      };
+      const current = await service.getMonthlyReview(month);
+      assertProfile();
       if (
         input.status !== undefined &&
         !['open', 'complete'].includes(input.status)
@@ -431,11 +436,13 @@ export function createFinancialPlanningService(
       const id = existing?.id ?? crypto.randomUUID(),
         now = Date.now();
       await db.transactionAsync(async (db) => {
+        assertProfile();
         await db.runAsync(
           `INSERT INTO monthly_reviews(id,month,status,checks_json,profile_id,created_at,updated_at) VALUES(?,?,?,?,?,?,?)
           ON CONFLICT(profile_id,month) DO UPDATE SET status=excluded.status,checks_json=excluded.checks_json,is_deleted=0,updated_at=excluded.updated_at`,
           [id, month, status, JSON.stringify(checks), pid, now, now]
         );
+        assertProfile();
       });
     },
   };

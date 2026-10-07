@@ -9,6 +9,19 @@ import { getStoredLanguage, translations } from './i18n';
 
 const API_STORAGE_KEY = 'finance.apiBaseUrl';
 const PROFILE_KEY = 'fluxby.activeProfileId';
+let apiAuthToken = '';
+
+/** Configure this client session; credentials are never written to storage. */
+export function setApiAuthToken(value: string | null): void {
+  const token = value?.trim() || '';
+  if (value && /[\r\n]/.test(value))
+    throw new Error('API_AUTH_TOKEN must not contain line breaks');
+  if (token && (token.length < 32 || /\s/.test(token)))
+    throw new Error(
+      'API_AUTH_TOKEN must contain at least 32 non-space characters'
+    );
+  apiAuthToken = token;
+}
 
 function getApiErrorMessages() {
   return translations[getStoredLanguage()];
@@ -69,6 +82,7 @@ async function fetchAPI<T>(
       'Content-Type': 'application/json',
       'X-Profile-ID': getActiveProfileIdSync(),
       'X-Language': getStoredLanguage(),
+      ...(apiAuthToken ? { Authorization: `Bearer ${apiAuthToken}` } : {}),
       ...options?.headers,
     },
   });
@@ -109,6 +123,7 @@ async function fetchAPIWithProfile<T>(
       'Content-Type': 'application/json',
       'X-Profile-ID': String(profileId),
       'X-Language': getStoredLanguage(),
+      ...(apiAuthToken ? { Authorization: `Bearer ${apiAuthToken}` } : {}),
       ...options?.headers,
     },
   });

@@ -48,7 +48,7 @@ export default function HelpLayout() {
 
             <Link
               to='/'
-              className='text-sm text-gray-500 transition-colors hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100'
+              className='text-sm text-gray-500 transition-colors hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100'
             >
               ← <span className='hidden sm:inline'>{t.docs.backToHome}</span>
               <span className='sm:hidden'>{t.helpCenter.common.home}</span>
@@ -62,7 +62,7 @@ export default function HelpLayout() {
                 className={`rounded px-2 py-1 text-xs font-medium transition-colors ${
                   language === 'nl'
                     ? 'bg-white text-gray-900 shadow-sm dark:bg-gray-600 dark:text-gray-100'
-                    : 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100'
+                    : 'text-gray-500 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100'
                 }`}
               >
                 NL
@@ -72,7 +72,7 @@ export default function HelpLayout() {
                 className={`rounded px-2 py-1 text-xs font-medium transition-colors ${
                   language === 'en'
                     ? 'bg-white text-gray-900 shadow-sm dark:bg-gray-600 dark:text-gray-100'
-                    : 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100'
+                    : 'text-gray-500 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100'
                 }`}
               >
                 EN

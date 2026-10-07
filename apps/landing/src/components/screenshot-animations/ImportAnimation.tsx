@@ -49,7 +49,7 @@ export default function ImportAnimation({ isVisible }: { isVisible: boolean }) {
             <div className='flex flex-col items-center'>
               <div className='relative'>
                 <div className='flex h-16 w-14 flex-col rounded-lg bg-white shadow-lg'>
-                  <div className='flex h-4 items-center rounded-t-lg bg-emerald-500 px-2'>
+                  <div className='flex h-4 items-center rounded-t-lg bg-emerald-700 px-2'>
                     <span className='text-[8px] font-bold text-white'>CSV</span>
                   </div>
                   <div className='flex-1 p-1.5'>

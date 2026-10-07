@@ -37,14 +37,12 @@ describe('Skipped import rows', () => {
 
       fireEvent.click(next);
       expect(container.querySelectorAll('tbody tr')).toHaveLength(20);
-      expect(
-        within(container.querySelector('tbody')!).getByText('error-21')
-      ).toBeTruthy();
+      const body = container.querySelector('tbody');
+      if (!body) throw new Error('Missing skipped import rows');
+      expect(within(body).getByText('error-21')).toBeTruthy();
       fireEvent.click(next);
       expect(container.querySelectorAll('tbody tr')).toHaveLength(11);
-      expect(
-        within(container.querySelector('tbody')!).getByText('error-51')
-      ).toBeTruthy();
+      expect(within(body).getByText('error-51')).toBeTruthy();
       expect((next as HTMLButtonElement).disabled).toBe(true);
       fireEvent.click(previous);
       expect(screen.getByText('error-21')).toBeTruthy();

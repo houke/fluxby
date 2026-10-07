@@ -88,7 +88,7 @@ describe('WebMCP tool surface', () => {
   });
 
   it('bounds transaction reads and excludes raw import fields', async () => {
-    const { find, service, confirm } = setup();
+    const { find, service } = setup();
     const tool = find('transactions');
     const result = await tool.execute({ limit: 2, offset: 5 }, { signal });
     expect(service.getTransactions).toHaveBeenCalledWith({
@@ -132,7 +132,7 @@ describe('WebMCP tool surface', () => {
   });
 
   it('requires bank IBANs and permits supported manual account types', async () => {
-    const { find, service, confirm } = setup();
+    const { find, service } = setup();
     const tool = find('create_account');
     await expect(
       tool.execute({ name: 'Current', type: 'checking' }, { signal })

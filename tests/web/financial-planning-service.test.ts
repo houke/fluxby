@@ -230,6 +230,37 @@ describe('financial planning services', () => {
     pid = 'other';
     expect((await planning.getMonthlyReview(month)).status).toBe('open');
   });
+  it.each([
+    'SELECT status,checks_json FROM monthly_reviews WHERE profile_id=? AND month=? AND is_deleted=0',
+    'SELECT id FROM monthly_reviews WHERE profile_id=? AND month=?',
+  ])(
+    'does not finish a monthly review after a profile switch during %s',
+    async (pendingQuery) => {
+      const checks = {
+        uncategorized: true,
+        spending: true,
+        budgets: true,
+        subscriptions: true,
+        backup: true,
+      };
+      await planning.updateMonthlyReview('2026-01', { checks });
+      const query = db.queryOneAsync;
+      vi.spyOn(db, 'queryOneAsync').mockImplementation(
+        async <T>(sql: string, params: unknown[] = []): Promise<T | null> => {
+          const row = await query<T>(sql, params);
+          if (sql === pendingQuery) pid = 'other';
+          return row;
+        }
+      );
+
+      await expect(
+        planning.updateMonthlyReview('2026-01', { status: 'complete' })
+      ).rejects.toThrow('Active profile changed');
+      expect(
+        sqlite.prepare('SELECT profile_id,status FROM monthly_reviews').all()
+      ).toEqual([{ profile_id: 'profile', status: 'open' }]);
+    }
+  );
   it('restores all new financial feature data in a complete backup', async () => {
     const goal = await planning.createSavingsGoal({
       name: 'Goal',

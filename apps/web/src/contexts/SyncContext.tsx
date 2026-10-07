@@ -214,6 +214,7 @@ export function SyncProvider({ children }: SyncProviderProps) {
   const activeRef = useRef<string | null>(null);
   activeRef.current = isUnlocked && isReady ? activeProfileId : null;
   const operationRef = useRef<Promise<ForceSyncResult> | null>(null);
+  const rerunSyncRef = useRef(false);
   const requestRef = useRef<() => Promise<ForceSyncResult>>(async () => ({
     success: false,
     changesPushed: 0,
@@ -315,10 +316,21 @@ export function SyncProvider({ children }: SyncProviderProps) {
     try {
       return await operation;
     } finally {
-      if (operationRef.current === operation) operationRef.current = null;
+      if (operationRef.current === operation) {
+        operationRef.current = null;
+        const rerun = rerunSyncRef.current;
+        rerunSyncRef.current = false;
+        if (rerun && autoSyncRef.current && syncRef.current === peer)
+          void requestRef.current();
+      }
     }
   }, [reportError, t.settings.sync.notConnected]);
   requestRef.current = forceSync;
+  const requestAutoSync = useCallback(() => {
+    if (!autoSyncRef.current) return;
+    if (operationRef.current) rerunSyncRef.current = true;
+    else void requestRef.current();
+  }, []);
 
   useEffect(() => {
     if (!db || !isReady || !isUnlocked || !activeProfileId) return;
@@ -455,7 +467,7 @@ export function SyncProvider({ children }: SyncProviderProps) {
               autoSyncRef.current &&
               peer.getPairedDevices().some((device) => device.isConnected)
             )
-              void requestRef.current();
+              requestAutoSync();
           })
           .catch(reportError);
       }, 500);
@@ -479,6 +491,7 @@ export function SyncProvider({ children }: SyncProviderProps) {
       if (syncRef.current === peer) syncRef.current = null;
       if (adapterRef.current === adapter) adapterRef.current = null;
       operationRef.current = null;
+      rerunSyncRef.current = false;
       setIsInitialized(false);
     };
   }, [
@@ -491,6 +504,7 @@ export function SyncProvider({ children }: SyncProviderProps) {
     initVersion,
     queryClient,
     reportError,
+    requestAutoSync,
   ]);
 
   const setDeviceName = useCallback((name: string) => {
@@ -544,12 +558,18 @@ export function SyncProvider({ children }: SyncProviderProps) {
       return updated;
     });
   }, []);
-  const queueChange = useCallback((_change: SyncChange<SyncableRow>) => {
-    if (autoSyncRef.current) void requestRef.current();
-  }, []);
-  const queueChanges = useCallback((_changes: SyncChange<SyncableRow>[]) => {
-    if (autoSyncRef.current) void requestRef.current();
-  }, []);
+  const queueChange = useCallback(
+    (_change: SyncChange<SyncableRow>) => {
+      requestAutoSync();
+    },
+    [requestAutoSync]
+  );
+  const queueChanges = useCallback(
+    (_changes: SyncChange<SyncableRow>[]) => {
+      requestAutoSync();
+    },
+    [requestAutoSync]
+  );
   const formatLastSynced = useCallback(
     (locale: 'en' | 'nl' = 'en') =>
       formatRelativeTime(syncStatus.lastSyncedAt, locale),

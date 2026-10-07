@@ -2766,7 +2766,7 @@ Object.assign(en, {
         'Check that both devices are online. Network security settings or a firewall may block peer-to-peer connections.',
       troubleshooting2Title: 'Sync failed',
       troubleshooting2Text:
-        'Check the internet connection, whether automatic sync is enabled, and try a manual sync. Pair the devices again if needed.',
+        'Check the internet connection, whether automatic sync is enabled, and try a manual sync. After an update, install the same version on both devices, unlock the intended profile on each and approve a new pairing. Stored device entries do not reconnect automatically after a page reload.',
       troubleshooting3Title: 'Conflicting changes',
       troubleshooting3Text:
         'When the same data changes on multiple devices, Fluxby keeps the most recent version (Last-Write-Wins).',

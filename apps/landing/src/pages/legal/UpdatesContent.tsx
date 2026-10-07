@@ -35,7 +35,7 @@ const UpdatesContent = () => {
   const updatesPage = t.legal?.updatesPage;
 
   const releases = [
-                {
+    {
       version: '1.15.0',
       date: updatesPage?.v1150Date,
       title: updatesPage?.v1150Title,

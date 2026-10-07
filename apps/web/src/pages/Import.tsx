@@ -517,8 +517,17 @@ export default function Import() {
           toast.info(aiText.autoCategorizeAfterImportNone);
         }
       })
-      .catch((error) => toast.error(error as Error));
-  }, [activeProfileId, queryClient, t.settings.typesafeAi, toast]);
+      .catch((error) => {
+        console.error('Auto-categorization after import failed:', error);
+        toast.error(t.apiErrors.failedToApplyCategoryRules);
+      });
+  }, [
+    activeProfileId,
+    queryClient,
+    t.settings.typesafeAi,
+    t.apiErrors.failedToApplyCategoryRules,
+    toast,
+  ]);
 
   const { data: history, isLoading: historyLoading } = useQuery<
     ImportHistory[]
@@ -899,7 +908,7 @@ export default function Import() {
     onError: (error: Error, variables) => {
       if (!isCurrentRequest(variables.requestId, variables.profileId)) return;
       console.error('Import error:', error);
-      setModalError(error.message || t.import.importError);
+      setModalError(t.import.importFailed);
       setImportProgress(null);
     },
   });
@@ -908,7 +917,8 @@ export default function Import() {
   const previewMutation = useMutation({
     mutationFn: (file: File) => api.previewCSV(file) as Promise<PreviewResult>,
     onError: (error: Error) => {
-      setUploadError(error.message);
+      console.error('Import preview failed:', error);
+      setUploadError(t.import.previewFailed);
     },
   });
 
@@ -958,7 +968,8 @@ export default function Import() {
       }
     },
     onError: (error: Error) => {
-      setUploadError(error.message);
+      console.error('Import upload failed:', error);
+      setUploadError(t.import.uploadFailed);
     },
   });
 
@@ -972,7 +983,8 @@ export default function Import() {
       });
     },
     onError: (error: Error) => {
-      setUploadError(error.message);
+      console.error('Creating import accounts failed:', error);
+      setUploadError(t.apiErrors.failedToCreateAccount);
     },
   });
 

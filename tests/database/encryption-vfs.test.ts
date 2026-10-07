@@ -169,8 +169,9 @@ describe('EncryptionVFS async contract', () => {
 
   it('snapshots caller bytes before an asynchronous physical write completes', async () => {
     const { vfs, baseVFS } = await memoryVfs();
-    const write = baseVFS.jWrite.getMockImplementation()!;
-    let release: () => void = () => {};
+    const write = baseVFS.jWrite.getMockImplementation();
+    if (!write) throw new Error('Expected physical write implementation');
+    let release: () => void = () => undefined;
     const pending = new Promise<void>((resolve) => {
       release = resolve;
     });
@@ -194,7 +195,9 @@ describe('EncryptionVFS async contract', () => {
     const page = new Uint8Array(4096).fill(65);
     expect(await vfs.jWrite(1, page, 0)).toBe(0);
     baseVFS.jWrite.mockResolvedValueOnce(778);
-    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const error = vi
+      .spyOn(console, 'error')
+      .mockImplementation(() => undefined);
     try {
       expect(await vfs.jWrite(1, new Uint8Array(4096).fill(99), 0)).toBe(778);
       const restored = new Uint8Array(4096);
@@ -255,7 +258,9 @@ describe('EncryptionVFS async contract', () => {
     await vfs.jOpen('external', 2, 0, new DataView(new ArrayBuffer(4)));
     await vfs.jWrite(2, new Uint8Array([66]), 0);
     await vfs.jWrite(2, new Uint8Array([67]), 4096);
-    files.set(1, files.get(2)!.slice());
+    const externalFile = files.get(2);
+    if (!externalFile) throw new Error('Expected external encrypted file');
+    files.set(1, externalFile.slice());
     expect(await vfs.jLock(1, 1)).toBe(0);
     const page = new Uint8Array(4096);
     expect(await vfs.jRead(1, page, 0)).toBe(0);
@@ -280,7 +285,9 @@ describe('EncryptionVFS async contract', () => {
   it('never caches a failed physical stat or grows the size after a failed write', async () => {
     const { vfs, baseVFS } = await memoryVfs();
     baseVFS.jFileSize.mockResolvedValueOnce(1802);
-    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const error = vi
+      .spyOn(console, 'error')
+      .mockImplementation(() => undefined);
     try {
       expect(await vfs.jWrite(1, new Uint8Array([65]), 0)).toBe(778);
       expect(baseVFS.jWrite).not.toHaveBeenCalled();

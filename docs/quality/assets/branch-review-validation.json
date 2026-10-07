@@ -1,0 +1,62 @@
+{
+  "date": "2026-10-07",
+  "branch": "codex/app-review-improvements",
+  "startingHead": "9ec4c63",
+  "validatedBase": "f30c1b7",
+  "node": "v24.21.0",
+  "lint": {
+    "exitCode": 0,
+    "warnings": 0
+  },
+  "typecheck": {
+    "exitCode": 0
+  },
+  "unit": {
+    "exitCode": 0,
+    "files": 148,
+    "tests": 1797,
+    "maxWorkers": 1
+  },
+  "build": {
+    "monorepoExitCode": 0,
+    "pagesExitCode": 0
+  },
+  "npmAudit": {
+    "info": 0,
+    "low": 0,
+    "moderate": 0,
+    "high": 0,
+    "critical": 0,
+    "total": 0
+  },
+  "productionBrowser": {
+    "passed": 10,
+    "failed": 0,
+    "appLayouts": 88,
+    "categoryStates": 24,
+    "publicStates": 40,
+    "languages": ["nl", "en"],
+    "themes": ["light", "dark"],
+    "widths": [1440, 393]
+  },
+  "httpsBrowser": {
+    "passed": 3,
+    "failed": 0,
+    "opfsEngines": ["chromium", "webkit"],
+    "integrity": "ok",
+    "encryptedPhysicalHeader": true,
+    "recordCountsPreserved": true
+  },
+  "broadProductionBrowser": {
+    "passedInitially": 49,
+    "skippedInitially": 28,
+    "initialHarnessFailures": 3,
+    "harnessFailuresResolved": true
+  },
+  "unverified": [
+    "Native Tauri",
+    "Physical two-device WebRTC including large profiles",
+    "Existing skipped E2E cases",
+    "Concurrent uncommitted Settings work"
+  ]
+}

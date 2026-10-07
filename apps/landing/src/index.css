@@ -130,7 +130,7 @@ html {
 
 /* Component styles */
 .btn-primary {
-  @apply bg-fluxby-purple hover:bg-fluxby-dark transform rounded-full px-8 py-4 text-lg font-bold text-white shadow-lg duration-300 hover:scale-105 hover:shadow-xl;
+  @apply bg-fluxby-dark transform rounded-full px-8 py-4 text-lg font-bold text-white shadow-lg duration-300 hover:scale-105 hover:bg-purple-800 hover:shadow-xl;
   transition-property: transform, background-color, box-shadow;
 }
 

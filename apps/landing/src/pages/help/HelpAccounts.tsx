@@ -4,7 +4,7 @@ import HelpAnimation from '../../components/help/HelpAnimation';
 
 export default function HelpAccounts() {
   const { t, language } = useLanguage();
-  const householdHelp=householdBudgetHelp[language];
+  const householdHelp = householdBudgetHelp[language];
 
   return (
     <article className='prose prose-gray dark:prose-invert max-w-none'>

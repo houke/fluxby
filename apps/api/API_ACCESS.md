@@ -18,3 +18,22 @@ Keep the secret on the client/server that owns the integration. Remote HTTP must
 Use an authorization header in cURL, Bruno, or another client. A normal browser navigation to Swagger UI does not supply that header; use an authenticated reverse proxy or a client capable of adding it when token authentication is enabled.
 
 The default permitted browser origins are `http://localhost:5177`, `http://localhost:3000`, and `https://fluxby.local:5177`. Replace this list with comma-separated explicit origins through `CORS_ORIGIN` when needed.
+
+## Upgrading existing integrations
+
+Earlier versions listened on all network interfaces. An integration on another machine now needs the remote-access settings above and must send the bearer token on each request, including health checks. A local integration can continue without a token using `http://127.0.0.1:3001/api`.
+
+Replace an existing `CORS_ORIGIN=*` with the exact origins of your browser clients. The server rejects wildcard configuration at startup. Forwarded client addresses no longer enable token-free access through a remote proxy.
+
+The optional TypeScript HTTP client supports a token for the current page session:
+
+```typescript
+import { api, setApiAuthToken, setApiBaseUrl } from '@/lib/api-http';
+
+setApiBaseUrl('https://your-api.example');
+setApiAuthToken(token); // Obtain the integration's token privately.
+const accounts = await api.getAccounts();
+setApiAuthToken(null); // Clear credentials when the integration session ends.
+```
+
+The token is kept in memory and is never saved in OPFS or browser storage. Configure it again after reloading the page. A nonempty token needs at least 32 characters and must contain no whitespace or line breaks.

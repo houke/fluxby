@@ -173,6 +173,7 @@ export type PairingMessage =
       profileId: string;
       schemaVersion: number;
       protocolVersion: 2;
+      supportsFragmentation?: true;
     }
   | {
       type: 'pairing-accept';
@@ -181,11 +182,20 @@ export type PairingMessage =
       profileId: string;
       schemaVersion: number;
       protocolVersion: 2;
+      supportsFragmentation?: true;
     }
   | { type: 'pairing-reject'; reason: string }
   | { type: 'sync-request'; sinceTimestamp: number; requestId: string }
   | { type: 'sync-response'; changes: SyncChange[]; requestId: string }
   | { type: 'sync-push'; changes: SyncChange[]; requestId: string }
+  | {
+      type: 'sync-fragment';
+      requestId: string;
+      messageType: 'sync-push' | 'sync-response';
+      index: number;
+      count: number;
+      payload: string;
+    }
   | { type: 'sync-ack'; applied: number; requestId: string }
   | { type: 'sync-error'; reason: string; requestId: string };
 
@@ -199,7 +209,23 @@ export interface PeerDevice {
   localProfileId?: string;
   remoteProfileId?: string;
   protocolVersion?: 2;
+  supportsFragmentation?: boolean;
 }
+
+const SYNC_FRAME_CHARS = 32768;
+const MAX_SYNC_BUFFER_CHARS = 32_000_000;
+const MAX_SYNC_FRAMES = Math.ceil(MAX_SYNC_BUFFER_CHARS / SYNC_FRAME_CHARS);
+const LARGE_SYNC_TIMEOUT_MS = 5 * 60 * 1000;
+const MAX_INCOMING_SNAPSHOTS = 4;
+type IncomingSnapshot = {
+  peerId: string;
+  connection: DataConnection;
+  messageType: 'sync-push' | 'sync-response';
+  count: number;
+  chunks: Map<number, string>;
+  chars: number;
+  timer: ReturnType<typeof setTimeout>;
+};
 
 /**
  * PeerJS server configuration for self-hosted servers
@@ -284,6 +310,14 @@ export class PeerSync {
   private pendingPairingCode: string | null = null;
   private isInitialized = false;
   private pairingExpiresAt = 0;
+  private cancelInitialization: (() => void) | null = null;
+  private incomingSnapshots = new Map<string, IncomingSnapshot>();
+  private processingSnapshots = new Map<
+    string,
+    { peerId: string; chars: number }
+  >();
+  private completedSnapshots = new Map<string, string>();
+  private bufferedSnapshotChars = 0;
   private pendingSync = new Map<
     string,
     {
@@ -309,6 +343,7 @@ export class PeerSync {
       return this.peer.id;
     }
 
+    this.cancelInitialization?.();
     this.isInitialized = false;
     if (this.peer) {
       try {
@@ -322,13 +357,28 @@ export class PeerSync {
     }
 
     return new Promise((resolve, reject) => {
+      let settled = false;
+      let retryTimer: ReturnType<typeof setTimeout> | undefined;
+      const finish = (error?: Error, peerId?: string) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timeout);
+        if (retryTimer) clearTimeout(retryTimer);
+        if (this.cancelInitialization === cancel)
+          this.cancelInitialization = null;
+        if (error) reject(error);
+        else if (peerId !== undefined) resolve(peerId);
+        else reject(new Error('Peer initialization failed'));
+      };
+      const cancel = () => finish(new Error('Peer destroyed'));
+      this.cancelInitialization = cancel;
       const timeoutMs = 15000; // 15s timeout
       const timeout = setTimeout(() => {
         if (this.peer) {
           this.peer.destroy();
           this.peer = null;
         }
-        reject(
+        finish(
           new Error(
             'Connection to peer server timed out. Check your internet connection.'
           )
@@ -336,6 +386,7 @@ export class PeerSync {
       }, timeoutMs);
 
       const setupPeer = (id: string, _isRetry = false) => {
+        if (settled) return;
         try {
           if (this.peer && !this.peer.destroyed) {
             this.peer.destroy();
@@ -373,9 +424,8 @@ export class PeerSync {
           peer.on('open', (peerId) => {
             if (this.peer !== peer || (peer as any)._ignoreEvents) return;
             peerDebugLog('PeerJS connection opened with ID:', peerId);
-            clearTimeout(timeout);
             this.isInitialized = true;
-            resolve(peerId);
+            finish(undefined, peerId);
           });
 
           peer.on('error', (err) => {
@@ -396,10 +446,9 @@ export class PeerSync {
                 'PeerJS network error (expected when offline):',
                 err.type || err.message
               );
-              clearTimeout(timeout);
               // Don't reject - allow offline operation
               this.isInitialized = true; // Mark as initialized anyway so app doesn't hang
-              resolve(id); // Return the ID even if connection failed
+              finish(undefined, id); // Return the ID even if connection failed
               return;
             }
 
@@ -437,7 +486,7 @@ export class PeerSync {
                 peerDebugLog(
                   `Peer ID unavailable, retry ${nextRetryCount}/3 in ${waitTime / 1000}s...`
                 );
-                setTimeout(() => {
+                retryTimer = setTimeout(() => {
                   setupPeer(retryId, true);
                 }, waitTime);
               } else {
@@ -446,7 +495,7 @@ export class PeerSync {
                 console.warn(
                   'Peer ID unavailable after 3 retries. Using fallback ID with timestamp.'
                 );
-                setTimeout(() => {
+                retryTimer = setTimeout(() => {
                   setupPeer(
                     `fluxby-${this.options.deviceId}-${Date.now()}`,
                     true
@@ -454,17 +503,16 @@ export class PeerSync {
                 }, 500);
               }
             } else {
-              clearTimeout(timeout);
               this.options.onError?.(err);
               // Don't reject for non-critical errors
               if (
                 err.type !== 'peer-unavailable' &&
                 err.type !== 'server-error'
               ) {
-                reject(err);
+                finish(err);
               } else {
                 this.isInitialized = true;
-                resolve(id);
+                finish(undefined, id);
               }
             }
           });
@@ -503,8 +551,7 @@ export class PeerSync {
           });
         } catch (error) {
           console.error('PeerJS setup catch error:', error);
-          clearTimeout(timeout);
-          reject(error instanceof Error ? error : new Error(String(error)));
+          finish(error instanceof Error ? error : new Error(String(error)));
         }
       };
 
@@ -522,6 +569,8 @@ export class PeerSync {
     let pending = this.encryptionInitializers.get(peerId);
     if (!pending) {
       pending = createEncryptionSession(peerId).then((session) => {
+        if (this.encryptionInitializers.get(peerId) !== pending)
+          throw new Error('Sync disconnected during key exchange');
         this.encryptionSessions.set(peerId, session);
         return session;
       });
@@ -530,19 +579,42 @@ export class PeerSync {
     try {
       return await pending;
     } finally {
-      this.encryptionInitializers.delete(peerId);
+      if (this.encryptionInitializers.get(peerId) === pending)
+        this.encryptionInitializers.delete(peerId);
     }
   }
   private sendPublicKeyOnce(
     conn: DataConnection,
     session: SyncEncryptionSession
   ): void {
+    if (!conn.open || this.connections.get(conn.peer) !== conn)
+      throw new Error('Sync connection closed');
     if (this.sentKeyExchanges.has(conn.peer)) return;
     this.sentKeyExchanges.add(conn.peer);
     conn.send({
       type: 'key-exchange',
       publicKey: session.localKeyPair.publicKeyJwk,
     });
+  }
+
+  private closeConnection(conn: DataConnection): void {
+    if (this.connections.get(conn.peer) !== conn) return;
+    this.connections.delete(conn.peer);
+    this.encryptionSessions.delete(conn.peer);
+    this.sentKeyExchanges.delete(conn.peer);
+    this.encryptionInitializers.delete(conn.peer);
+    for (const [key, snapshot] of this.incomingSnapshots)
+      if (snapshot.peerId === conn.peer) this.discardSnapshot(key);
+    for (const [key, peerId] of this.completedSnapshots)
+      if (peerId === conn.peer) this.completedSnapshots.delete(key);
+    for (const [requestId, pending] of this.pendingSync) {
+      if (pending.peerId === conn.peer)
+        this.completeSync(conn, requestId, 0, 'Sync disconnected');
+    }
+    for (const device of this.pairedDevices.values()) {
+      if (device.peerId === conn.peer) device.isConnected = false;
+    }
+    this.options.onConnectionChange?.(conn.peer, false);
   }
 
   /**
@@ -577,18 +649,7 @@ export class PeerSync {
     });
 
     conn.on('close', () => {
-      this.connections.delete(conn.peer);
-      this.encryptionSessions.delete(conn.peer);
-      this.sentKeyExchanges.delete(conn.peer);
-      this.encryptionInitializers.delete(conn.peer);
-      this.options.onConnectionChange?.(conn.peer, false);
-
-      // Update paired device status
-      for (const device of this.pairedDevices.values()) {
-        if (device.peerId === conn.peer) {
-          device.isConnected = false;
-        }
-      }
+      this.closeConnection(conn);
     });
 
     conn.on('error', (err) => {
@@ -621,6 +682,11 @@ export class PeerSync {
           session,
           keyExchangeMsg.publicKey
         );
+        if (
+          this.connections.get(conn.peer) !== conn ||
+          this.encryptionSessions.get(conn.peer) !== session
+        )
+          throw new Error('Sync disconnected during key exchange');
         this.encryptionSessions.set(conn.peer, updatedSession);
         this.sendPublicKeyOnce(conn, session);
       } catch (error) {
@@ -667,7 +733,20 @@ export class PeerSync {
         session,
         message
       );
-      this.encryptionSessions.set(conn.peer, updatedSession);
+      const currentSession = this.encryptionSessions.get(conn.peer);
+      if (
+        !conn.open ||
+        this.connections.get(conn.peer) !== conn ||
+        currentSession?.localKeyPair !== session.localKeyPair
+      )
+        throw new Error('Sync connection closed');
+      this.encryptionSessions.set(conn.peer, {
+        ...currentSession,
+        messageCounter: Math.max(
+          currentSession.messageCounter,
+          updatedSession.messageCounter
+        ),
+      });
       conn.send(envelope);
     } else {
       // Session not ready - this shouldn't happen in normal flow
@@ -689,6 +768,8 @@ export class PeerSync {
     );
     if (
       !device ||
+      !conn.open ||
+      this.connections.get(conn.peer) !== conn ||
       device.protocolVersion !== 2 ||
       !device.localProfileId ||
       !device.remoteProfileId ||
@@ -705,7 +786,8 @@ export class PeerSync {
   private waitForSync(
     conn: DataConnection,
     requestId: string,
-    kind: 'push' | 'request'
+    kind: 'push' | 'request',
+    timeoutMs = 15000
   ): Promise<number> {
     if (this.pendingSync.has(requestId))
       throw new Error('Duplicate sync request');
@@ -713,7 +795,7 @@ export class PeerSync {
       const timer = setTimeout(() => {
         this.pendingSync.delete(requestId);
         reject(new Error('Sync acknowledgement timed out'));
-      }, 15000);
+      }, timeoutMs);
       this.pendingSync.set(requestId, {
         peerId: conn.peer,
         kind,
@@ -722,6 +804,184 @@ export class PeerSync {
         timer,
       });
     });
+  }
+  private extendSyncTimeout(conn: DataConnection, requestId: string): void {
+    const pending = this.pendingSync.get(requestId);
+    if (!pending || pending.peerId !== conn.peer) return;
+    clearTimeout(pending.timer);
+    pending.timer = setTimeout(() => {
+      this.pendingSync.delete(requestId);
+      pending.reject(new Error('Sync acknowledgement timed out'));
+    }, LARGE_SYNC_TIMEOUT_MS);
+  }
+
+  private fragmentedPayload(
+    conn: DataConnection,
+    changes: SyncChange[]
+  ): string | null {
+    if (!this.authorizedDevice(conn).supportsFragmentation) {
+      if (changes.length > 50000)
+        throw new Error(
+          'Peer does not support large sync snapshots; update both devices and pair again'
+        );
+      return null;
+    }
+    const payload = JSON.stringify(changes);
+    if (payload.length > MAX_SYNC_BUFFER_CHARS)
+      throw new Error('Sync snapshot exceeds the supported transfer size');
+    return payload.length > SYNC_FRAME_CHARS || changes.length > 50000
+      ? payload
+      : null;
+  }
+
+  private async sendSyncPayload(
+    conn: DataConnection,
+    message: Extract<PairingMessage, { type: 'sync-push' | 'sync-response' }>,
+    payload: string | null
+  ): Promise<void> {
+    if (payload === null) {
+      await this.sendEncrypted(conn, message);
+      return;
+    }
+    const count = Math.ceil(payload.length / SYNC_FRAME_CHARS);
+    for (let index = 0; index < count; index++) {
+      if (!this.pendingSync.has(message.requestId)) return;
+      this.authorizedDevice(conn);
+      await this.sendEncrypted(conn, {
+        type: 'sync-fragment',
+        requestId: message.requestId,
+        messageType: message.type,
+        index,
+        count,
+        payload: payload.slice(
+          index * SYNC_FRAME_CHARS,
+          (index + 1) * SYNC_FRAME_CHARS
+        ),
+      });
+    }
+    this.extendSyncTimeout(conn, message.requestId);
+  }
+
+  private discardSnapshot(key: string, completed = false): void {
+    const snapshot = this.incomingSnapshots.get(key);
+    if (!snapshot) return;
+    clearTimeout(snapshot.timer);
+    this.bufferedSnapshotChars -= snapshot.chars;
+    this.incomingSnapshots.delete(key);
+    if (completed) this.markSnapshotCompleted(key, snapshot.peerId);
+  }
+
+  private markSnapshotCompleted(key: string, peerId: string): void {
+    this.completedSnapshots.set(key, peerId);
+    if (this.completedSnapshots.size > 128) {
+      const oldest = this.completedSnapshots.keys().next().value;
+      if (oldest !== undefined) this.completedSnapshots.delete(oldest);
+    }
+  }
+
+  private async handleSyncFragment(
+    conn: DataConnection,
+    message: Extract<PairingMessage, { type: 'sync-fragment' }>
+  ): Promise<void> {
+    const key = JSON.stringify([conn.peer, message.requestId]);
+    try {
+      if (
+        !this.authorizedDevice(conn).supportsFragmentation ||
+        !['sync-push', 'sync-response'].includes(message.messageType) ||
+        !Number.isSafeInteger(message.count) ||
+        message.count < 2 ||
+        message.count > MAX_SYNC_FRAMES ||
+        !Number.isSafeInteger(message.index) ||
+        message.index < 0 ||
+        message.index >= message.count ||
+        typeof message.payload !== 'string' ||
+        !message.payload.length ||
+        message.payload.length > SYNC_FRAME_CHARS ||
+        (message.index < message.count - 1 &&
+          message.payload.length !== SYNC_FRAME_CHARS) ||
+        this.completedSnapshots.has(key) ||
+        this.processingSnapshots.has(key)
+      )
+        throw new Error('Invalid or stale sync frame');
+      const pending = this.pendingSync.get(message.requestId);
+      if (
+        message.messageType === 'sync-response' &&
+        (pending?.kind !== 'request' || pending.peerId !== conn.peer)
+      )
+        throw new Error('Unsolicited sync response');
+      let snapshot = this.incomingSnapshots.get(key);
+      if (!snapshot) {
+        if (
+          this.incomingSnapshots.size + this.processingSnapshots.size >=
+          MAX_INCOMING_SNAPSHOTS
+        )
+          throw new Error('Too many concurrent sync snapshots');
+        snapshot = {
+          peerId: conn.peer,
+          connection: conn,
+          messageType: message.messageType,
+          count: message.count,
+          chunks: new Map(),
+          chars: 0,
+          timer: setTimeout(() => {
+            this.discardSnapshot(key, true);
+            const reason = 'Large sync transfer timed out';
+            this.completeSync(conn, message.requestId, 0, reason);
+            this.options.onError?.(new Error(reason));
+            void this.sendEncrypted(conn, {
+              type: 'sync-error',
+              requestId: message.requestId,
+              reason,
+            }).catch(() => undefined);
+          }, LARGE_SYNC_TIMEOUT_MS),
+        };
+        this.incomingSnapshots.set(key, snapshot);
+      }
+      if (
+        snapshot.count !== message.count ||
+        snapshot.connection !== conn ||
+        snapshot.messageType !== message.messageType ||
+        snapshot.chunks.has(message.index) ||
+        this.bufferedSnapshotChars + message.payload.length >
+          MAX_SYNC_BUFFER_CHARS
+      )
+        throw new Error('Invalid or duplicate sync frame');
+      snapshot.chunks.set(message.index, message.payload);
+      snapshot.chars += message.payload.length;
+      this.bufferedSnapshotChars += message.payload.length;
+      if (message.messageType === 'sync-response')
+        this.extendSyncTimeout(conn, message.requestId);
+      if (snapshot.chunks.size !== snapshot.count) return;
+      const changes: unknown = JSON.parse(
+        Array.from({ length: snapshot.count }, (_, index) =>
+          snapshot.chunks.get(index)
+        ).join('')
+      );
+      if (!Array.isArray(changes)) throw new Error('Invalid sync snapshot');
+      // Reserve the same slot and character budget until the atomic apply settles.
+      clearTimeout(snapshot.timer);
+      this.incomingSnapshots.delete(key);
+      this.processingSnapshots.set(key, {
+        peerId: conn.peer,
+        chars: snapshot.chars,
+      });
+      snapshot.chunks.clear();
+      this.markSnapshotCompleted(key, conn.peer);
+      try {
+        await this.handleMessage(
+          conn,
+          { type: message.messageType, requestId: message.requestId, changes },
+          true
+        );
+      } finally {
+        this.processingSnapshots.delete(key);
+        this.bufferedSnapshotChars -= snapshot.chars;
+      }
+    } catch (error) {
+      this.discardSnapshot(key);
+      this.markSnapshotCompleted(key, conn.peer);
+      throw error;
+    }
   }
   private completeSync(
     conn: DataConnection,
@@ -739,7 +999,8 @@ export class PeerSync {
 
   private async handleMessage(
     conn: DataConnection,
-    message: PairingMessage
+    message: PairingMessage,
+    reassembled = false
   ): Promise<void> {
     if (
       !message ||
@@ -762,6 +1023,7 @@ export class PeerSync {
     if (
       !('requestId' in message) ||
       typeof message.requestId !== 'string' ||
+      !message.requestId ||
       message.requestId.length > 100
     )
       throw new Error('Invalid sync request');
@@ -777,10 +1039,17 @@ export class PeerSync {
       return;
     }
     if (message.type === 'sync-error') {
+      const key = JSON.stringify([conn.peer, message.requestId]);
+      this.discardSnapshot(key);
+      this.markSnapshotCompleted(key, conn.peer);
       this.completeSync(conn, message.requestId, 0, message.reason);
       return;
     }
     try {
+      if (message.type === 'sync-fragment') {
+        await this.handleSyncFragment(conn, message);
+        return;
+      }
       if (message.type === 'sync-request') {
         if (
           !Number.isSafeInteger(message.sinceTimestamp) ||
@@ -793,26 +1062,43 @@ export class PeerSync {
           message.sinceTimestamp
         );
         this.authorizedDevice(conn);
+        const payload = this.fragmentedPayload(conn, changes);
         const acknowledgement = this.waitForSync(
           conn,
           message.requestId,
-          'push'
+          'push',
+          payload === null ? 15000 : LARGE_SYNC_TIMEOUT_MS
         );
         void acknowledgement.catch(() => undefined);
-        await this.sendEncrypted(conn, {
-          type: 'sync-response',
-          changes,
-          requestId: message.requestId,
-        });
+        await this.sendSyncPayload(
+          conn,
+          {
+            type: 'sync-response',
+            changes,
+            requestId: message.requestId,
+          },
+          payload
+        );
         await acknowledgement;
         device.lastSyncAt = Date.now();
       } else if (
         message.type === 'sync-push' ||
         message.type === 'sync-response'
       ) {
+        const snapshotKey = JSON.stringify([conn.peer, message.requestId]);
+        if (
+          !reassembled &&
+          (this.incomingSnapshots.has(snapshotKey) ||
+            this.processingSnapshots.has(snapshotKey) ||
+            this.completedSnapshots.has(snapshotKey))
+        ) {
+          this.discardSnapshot(snapshotKey);
+          this.markSnapshotCompleted(snapshotKey, conn.peer);
+          throw new Error('Invalid or duplicate sync snapshot');
+        }
         if (
           !Array.isArray(message.changes) ||
-          message.changes.length > 50000 ||
+          (!reassembled && message.changes.length > 50000) ||
           !this.options.onSyncReceived
         )
           throw new Error('Invalid sync data');
@@ -912,6 +1198,8 @@ export class PeerSync {
         handled = true;
         try {
           this.validatePairing(message);
+          if (!conn.open || this.connections.get(conn.peer) !== conn)
+            throw new Error('Pairing connection closed');
           if (
             message.pairingCode !== this.pendingPairingCode ||
             Date.now() > this.pairingExpiresAt
@@ -927,8 +1215,8 @@ export class PeerSync {
             localProfileId: this.options.profileId,
             remoteProfileId: message.profileId,
             protocolVersion: 2,
+            supportsFragmentation: message.supportsFragmentation === true,
           };
-          this.pairedDevices.set(device.id, device);
           await this.sendEncrypted(conn, {
             type: 'pairing-accept',
             deviceId: this.options.deviceId,
@@ -936,7 +1224,9 @@ export class PeerSync {
             profileId: this.options.profileId || '',
             schemaVersion: this.options.schemaVersion || 0,
             protocolVersion: 2,
+            supportsFragmentation: true,
           });
+          this.pairedDevices.set(device.id, device);
           this.options.onPaired?.(device);
         } catch (error) {
           this.options.onError?.(
@@ -968,6 +1258,7 @@ export class PeerSync {
       localProfileId: this.options.profileId,
       remoteProfileId: message.profileId,
       protocolVersion: 2,
+      supportsFragmentation: message.supportsFragmentation === true,
     };
     this.pairedDevices.set(device.id, device);
     this.options.onPaired?.(device);
@@ -1082,6 +1373,11 @@ export class PeerSync {
                 session,
                 keyExchangeMsg.publicKey
               );
+              if (
+                this.connections.get(conn.peer) !== conn ||
+                this.encryptionSessions.get(conn.peer) !== session
+              )
+                throw new Error('Sync disconnected during key exchange');
               this.encryptionSessions.set(conn.peer, updatedSession);
               _keyExchangeComplete = true;
               peerDebugLog(
@@ -1098,6 +1394,7 @@ export class PeerSync {
                 profileId: this.options.profileId || '',
                 schemaVersion: this.options.schemaVersion || 0,
                 protocolVersion: 2,
+                supportsFragmentation: true,
               });
             } catch (err) {
               console.error('Failed to complete key exchange:', err);
@@ -1171,13 +1468,7 @@ export class PeerSync {
 
       // Handle connection close before success
       conn.on('close', () => {
-        this.connections.delete(conn.peer);
-        this.encryptionSessions.delete(conn.peer);
-        this.sentKeyExchanges.delete(conn.peer);
-        this.encryptionInitializers.delete(conn.peer);
-        for (const device of this.pairedDevices.values())
-          if (device.peerId === conn.peer) device.isConnected = false;
-        this.options.onConnectionChange?.(conn.peer, false);
+        this.closeConnection(conn);
         if (!isResolved) {
           isResolved = true;
           clearTimeout(timeout);
@@ -1195,11 +1486,21 @@ export class PeerSync {
     const conn = device && this.connections.get(device.peerId);
     if (!conn?.open) throw new Error('Paired device is not connected');
     this.authorizedDevice(conn);
+    const payload = this.fragmentedPayload(conn, changes);
     const requestId = crypto.randomUUID();
-    const acknowledgement = this.waitForSync(conn, requestId, 'push');
+    const acknowledgement = this.waitForSync(
+      conn,
+      requestId,
+      'push',
+      payload === null ? 15000 : LARGE_SYNC_TIMEOUT_MS
+    );
     void acknowledgement.catch(() => undefined);
     try {
-      await this.sendEncrypted(conn, { type: 'sync-push', changes, requestId });
+      await this.sendSyncPayload(
+        conn,
+        { type: 'sync-push', changes, requestId },
+        payload
+      );
     } catch (error) {
       this.completeSync(conn, requestId, 0, String(error));
     }
@@ -1265,6 +1566,7 @@ export class PeerSync {
     if (device) {
       const conn = this.connections.get(device.peerId);
       conn?.close();
+      if (conn) this.closeConnection(conn);
       this.connections.delete(device.peerId);
       this.encryptionSessions.delete(device.peerId);
       this.sentKeyExchanges.delete(device.peerId);
@@ -1277,6 +1579,9 @@ export class PeerSync {
    * Destroy peer connection
    */
   destroy(): void {
+    this.cancelInitialization?.();
+    for (const key of this.incomingSnapshots.keys()) this.discardSnapshot(key);
+    this.completedSnapshots.clear();
     for (const pending of this.pendingSync.values()) {
       clearTimeout(pending.timer);
       pending.reject(new Error('Sync disconnected'));

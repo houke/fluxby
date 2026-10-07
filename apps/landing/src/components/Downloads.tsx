@@ -153,7 +153,7 @@ const Downloads = () => {
               {pwa.canPromptInstall ? (
                 <button
                   onClick={pwa.installPWA}
-                  className='bg-fluxby-purple hover:bg-fluxby-dark flex w-full items-center justify-center gap-2 rounded-xl py-3 font-bold text-white transition-colors'
+                  className='bg-fluxby-dark flex w-full items-center justify-center gap-2 rounded-xl py-3 font-bold text-white transition-colors hover:bg-purple-800'
                 >
                   <Download className='h-5 w-5' />
                   {t.downloads.pwa.installButton}
@@ -191,7 +191,7 @@ const Downloads = () => {
                   <div className='flex h-16 w-16 items-center justify-center rounded-2xl bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-300'>
                     <Icon className='h-8 w-8' />
                   </div>
-                  <span className='rounded-full bg-gray-100 px-3 py-1 text-xs font-bold tracking-wider text-gray-600 uppercase dark:bg-gray-700 dark:text-gray-400'>
+                  <span className='rounded-full bg-gray-100 px-3 py-1 text-xs font-bold tracking-wider text-gray-600 uppercase dark:bg-gray-700 dark:text-gray-300'>
                     {platform.downloads[0].type}
                   </span>
                 </div>
@@ -210,7 +210,7 @@ const Downloads = () => {
                       href={download.link}
                       target='_blank'
                       rel='noopener noreferrer'
-                      className='bg-fluxby-purple hover:bg-fluxby-dark flex w-full items-center justify-center gap-2 rounded-xl py-3 font-bold text-white transition-colors'
+                      className='bg-fluxby-dark flex w-full items-center justify-center gap-2 rounded-xl py-3 font-bold text-white transition-colors hover:bg-purple-800'
                     >
                       <Download className='h-5 w-5' />
                       {download.label}

@@ -60,7 +60,7 @@ function mergeChanges(local, remote) {
           <p className='mb-2 text-sm text-gray-600 dark:text-gray-400'>
             {t.docs.architecture.webDesc}
           </p>
-          <ul className='mb-0 list-none pl-0 text-xs text-gray-500'>
+          <ul className='mb-0 list-none pl-0 text-xs text-gray-500 dark:text-gray-400'>
             {copy.webFeatures.map((feature: string) => (
               <li key={feature}>✓ {feature}</li>
             ))}
@@ -74,7 +74,7 @@ function mergeChanges(local, remote) {
           <p className='mb-2 text-sm text-gray-600 dark:text-gray-400'>
             {t.docs.architecture.desktopDesc}
           </p>
-          <ul className='mb-0 list-none pl-0 text-xs text-gray-500'>
+          <ul className='mb-0 list-none pl-0 text-xs text-gray-500 dark:text-gray-400'>
             {copy.desktopFeatures.map((feature: string) => (
               <li key={feature}>✓ {feature}</li>
             ))}
@@ -88,7 +88,7 @@ function mergeChanges(local, remote) {
           <p className='mb-2 text-sm text-gray-600 dark:text-gray-400'>
             {t.docs.architecture.headlessDesc}
           </p>
-          <ul className='mb-0 list-none pl-0 text-xs text-gray-500'>
+          <ul className='mb-0 list-none pl-0 text-xs text-gray-500 dark:text-gray-400'>
             {copy.headlessFeatures.map((feature: string) => (
               <li key={feature}>✓ {feature}</li>
             ))}

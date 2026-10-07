@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useMigrationCheck } from '@/hooks/useMigrationCheck';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { RefreshCw, AlertCircle, Loader2, CheckCircle } from 'lucide-react';
@@ -33,39 +33,7 @@ export function MigrationPrompt({
     useState<MigrationState>('pending');
   const [error, setError] = useState<string | null>(null);
 
-  // Notify parent of checking state changes
-  useEffect(() => {
-    onCheckingChange?.(isChecking);
-  }, [isChecking, onCheckingChange]);
-
-  useEffect(() => {
-    if (isChecking) return;
-
-    if (pendingCount > 0 || isStale || hasNewMigrations) {
-      // Need to show prompt
-      setShowPrompt(true);
-    } else {
-      // All good, proceed with app loading
-      onComplete?.();
-    }
-  }, [isChecking, pendingCount, isStale, hasNewMigrations, onComplete]);
-
-  // If we detected stale code, automatically start the refresh process
-  useEffect(() => {
-    if (isStale && showPrompt) {
-      // Small delay to show the prompt, then auto-refresh
-      const timer = setTimeout(() => {
-        handleApplyMigrations();
-      }, 1500);
-      return () => clearTimeout(timer);
-    }
-  }, [isStale, showPrompt]);
-
-  if (!showPrompt) {
-    return null;
-  }
-
-  const handleApplyMigrations = async () => {
+  const handleApplyMigrations = useCallback(async () => {
     setMigrationState('running');
     setError(null);
 
@@ -99,7 +67,39 @@ export function MigrationPrompt({
       setError(err instanceof Error ? err.message : t.common.unknownError);
       setMigrationState('error');
     }
-  };
+  }, [t.common.unknownError]);
+
+  // Notify parent of checking state changes
+  useEffect(() => {
+    onCheckingChange?.(isChecking);
+  }, [isChecking, onCheckingChange]);
+
+  useEffect(() => {
+    if (isChecking) return;
+
+    if (pendingCount > 0 || isStale || hasNewMigrations) {
+      // Need to show prompt
+      setShowPrompt(true);
+    } else {
+      // All good, proceed with app loading
+      onComplete?.();
+    }
+  }, [isChecking, pendingCount, isStale, hasNewMigrations, onComplete]);
+
+  // If we detected stale code, automatically start the refresh process
+  useEffect(() => {
+    if (isStale && showPrompt) {
+      // Small delay to show the prompt, then auto-refresh
+      const timer = setTimeout(() => {
+        handleApplyMigrations();
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [isStale, showPrompt, handleApplyMigrations]);
+
+  if (!showPrompt) {
+    return null;
+  }
 
   // Determine icon and colors based on state
   const getStateIcon = () => {

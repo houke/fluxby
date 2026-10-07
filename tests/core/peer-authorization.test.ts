@@ -19,6 +19,9 @@ type Harness = {
   handleMessage(conn: Connection, message: unknown): Promise<void>;
   handlePairingRequest(conn: Connection, message: unknown): Promise<void>;
   handlePairingAccept(conn: Connection, message: unknown): void;
+  closeConnection(conn: Connection): void;
+  ensureEncryptionSession(peerId: string): Promise<SyncEncryptionSession>;
+  sendEncrypted(conn: Connection, message: unknown): Promise<void>;
 };
 const activePeers: PeerSync[] = [];
 afterEach(() => {
@@ -211,6 +214,38 @@ describe('peer data authorization and real acknowledgements', () => {
     await failed;
     expect(a.getPairedDevices()[0].lastSyncAt).toBeNull();
   });
+  it('rejects pending delivery immediately when the connection closes', async () => {
+    const { a, ah, ab } = await pair();
+    vi.useFakeTimers();
+    ab.send = vi.fn();
+    const failed = expect(a.sendChanges('device-b', [])).rejects.toThrow(
+      'Sync disconnected'
+    );
+    ah.closeConnection(ab);
+    await failed;
+    expect(a.getPairedDevices()[0].isConnected).toBe(false);
+    expect(a.getPairedDevices()[0].lastSyncAt).toBeNull();
+    expect(vi.getTimerCount()).toBe(0);
+  });
+  it('does not retain encryption keys generated after destruction', async () => {
+    const { a, ah } = await pair();
+    const initializing = ah.ensureEncryptionSession('new-peer');
+    a.destroy();
+    await expect(initializing).rejects.toThrow('disconnected');
+    expect(ah.encryptionSessions.size).toBe(0);
+  });
+  it('does not send or retain keys when destroyed while a message is being encrypted', async () => {
+    const { a, ah, ab } = await pair();
+    ab.send = vi.fn();
+    const sending = ah.sendEncrypted(ab, {
+      type: 'pairing-reject',
+      reason: 'Rejected',
+    });
+    a.destroy();
+    await expect(sending).rejects.toThrow('connection closed');
+    expect(ab.send).not.toHaveBeenCalled();
+    expect(ah.encryptionSessions.size).toBe(0);
+  });
   it('requires explicit merge approval even with a correct code, and rejects old protocol pairings', async () => {
     let approve: (() => void) | undefined;
     const paired = vi.fn();
@@ -242,6 +277,7 @@ describe('peer data authorization and real acknowledgements', () => {
       protocolVersion: 2,
     };
     const conn = { ...ab, send: vi.fn() };
+    rh.connections.set(conn.peer, conn);
     await rh.handlePairingRequest(conn, request);
     expect(paired).not.toHaveBeenCalled();
     approve?.();
@@ -259,5 +295,46 @@ describe('peer data authorization and real acknowledgements', () => {
       })
     ).toThrow('protocol');
     expect(a.getPairedDevices()).toHaveLength(1);
+  });
+  it('does not approve a pairing request after its connection has closed', async () => {
+    let approve: (() => void) | undefined;
+    const paired = vi.fn();
+    const errors = vi.fn();
+    const { ah, ab } = await pair();
+    const receiver = new PeerSync({
+      deviceId: 'receiver',
+      deviceName: 'Receiver',
+      profileId: 'destination',
+      schemaVersion: 15,
+      onPairingRequest: (_name, accept) => {
+        approve = accept;
+      },
+      onPaired: paired,
+      onError: errors,
+    });
+    activePeers.push(receiver);
+    const rh = receiver as unknown as Harness;
+    const session = ah.encryptionSessions.get(ab.peer);
+    if (!session) throw new Error('Test session missing');
+    rh.encryptionSessions.set(ab.peer, session);
+    const conn = { ...ab, send: vi.fn() };
+    rh.connections.set(conn.peer, conn);
+    await rh.handlePairingRequest(conn, {
+      type: 'pairing-request',
+      pairingCode: receiver.startPairing(),
+      deviceId: 'sender',
+      deviceName: 'Sender',
+      profileId: 'source',
+      schemaVersion: 15,
+      protocolVersion: 2,
+    });
+    conn.open = false;
+    rh.closeConnection(conn);
+    approve?.();
+    expect(errors).toHaveBeenCalledWith(
+      expect.objectContaining({ message: 'Pairing connection closed' })
+    );
+    expect(paired).not.toHaveBeenCalled();
+    expect(receiver.getPairedDevices()).toHaveLength(0);
   });
 });

@@ -3504,7 +3504,7 @@ Object.assign(nl, {
         'Controleer of beide apparaten online zijn. Beveiligingsinstellingen van het netwerk of een firewall kunnen peer-to-peerverbindingen blokkeren.',
       troubleshooting2Title: 'Synchronisatie mislukt',
       troubleshooting2Text:
-        'Controleer de internetverbinding, of automatisch synchroniseren is ingeschakeld en probeer handmatige synchronisatie. Koppel de apparaten zo nodig opnieuw.',
+        'Controleer de internetverbinding, of automatisch synchroniseren is ingeschakeld en probeer handmatige synchronisatie. Installeer na een update dezelfde versie op beide apparaten, ontgrendel op elk apparaat het gewenste profiel en bevestig een nieuwe koppeling. Opgeslagen apparaten verbinden niet automatisch opnieuw na het herladen van de pagina.',
       troubleshooting3Title: 'Tegenstrijdige wijzigingen',
       troubleshooting3Text:
         'Bij gelijktijdige wijzigingen bewaart Fluxby automatisch de meest recente versie (Last-Write-Wins).',
