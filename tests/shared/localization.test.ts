@@ -159,20 +159,21 @@ function normalizeExpressionPath(
 
 function hasLocaleValue(locale: unknown, expressionPath: string): boolean {
   const segments = (expressionPath.match(/[^.[\]]+|\[\]/g) || []).slice(1);
-  let value: any = locale;
-
-  for (const segment of segments) {
-    if (segment === '[]') {
-      if (Array.isArray(value)) value = value[0];
-      else if (value && typeof value === 'object') continue;
-      else return false;
-      continue;
-    }
-    value = value?.[segment];
+  function visit(value: unknown, index: number): boolean {
     if (value === undefined || value === null) return false;
+    if (index === segments.length) return true;
+    if (segments[index] === '[]') {
+      if (!value || typeof value !== 'object') return false;
+      // Dynamic indexes can refer to arrays or finite dictionaries. Check
+      // every entry rather than skipping object indexes or only checking [0].
+      return Object.values(value).every((item) => visit(item, index + 1));
+    }
+    return (
+      typeof value === 'object' &&
+      visit((value as Record<string, unknown>)[segments[index]], index + 1)
+    );
   }
-
-  return true;
+  return visit(locale, 0);
 }
 
 function missingLandingTranslationReferences(): string[] {
@@ -571,6 +572,23 @@ describe('locale coverage', () => {
   });
 
   // Keep some headroom for full-app analysis when CI is under load.
+  it('checks every translated entry in dynamic dictionaries and arrays', () => {
+    expect(
+      hasLocaleValue(
+        { topics: { one: { title: 'One' }, two: { title: 'Two' } } },
+        't.topics[].title'
+      )
+    ).toBe(true);
+    expect(
+      hasLocaleValue(
+        { topics: { one: { title: 'One' }, two: {} } },
+        't.topics[].title'
+      )
+    ).toBe(false);
+    expect(
+      hasLocaleValue({ topics: [{ title: 'One' }, {}] }, 't.topics[].title')
+    ).toBe(false);
+  });
   it('provides both languages for every app translation reference', () => {
     expect(missingWebTranslationReferences()).toEqual([]);
   }, 15000);

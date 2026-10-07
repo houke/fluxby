@@ -1,3 +1,4 @@
+import { settingsNavigationEn } from './settings-navigation';
 import { webMcpEn } from '../webmcp-copy';
 import { householdPlanningEn } from './household-planning';
 import { transactionReviewEn } from './transaction-review-translations';
@@ -1108,6 +1109,7 @@ export const en: TranslationKeys = {
     importingTo: 'Importing to',
   },
   settings: {
+    navigation: settingsNavigationEn,
     title: 'Settings',
     subtitle: 'Manage your accounts and app settings',
     tabs: {
@@ -1198,7 +1200,7 @@ export const en: TranslationKeys = {
       save: 'Save Changes',
       accountsTipTitle: 'Tip: Add your savings account',
       accountsTip:
-        'After importing transactions, you can set up your savings account in Settings → Bank accounts. Transfers between your accounts will be automatically detected and will not count towards your income and expenses analysis.',
+        'After importing transactions, you can set up your savings account in Settings → Profiles & accounts → Bank accounts. Transfers between your accounts will be automatically detected and will not count towards your income and expenses analysis.',
       addAccountsTitle: 'Add Accounts',
       addAccountsDescription:
         'Add bank accounts to your new profile. You can also do this later via Settings.',

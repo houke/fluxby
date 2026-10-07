@@ -526,9 +526,9 @@ export const en: LandingTranslationKeys = {
       storageTitle: 'Storage Adapters',
       backupTitle: 'Backup & Restore',
       backupText:
-        'Settings → Data management exports all financial tables. Restore validates the file and previews its contents before replacing data. A recovery snapshot is saved before replacement.',
-      backupDesktop: 'Use Settings → Data management to export a backup.',
-      backupWeb: 'Settings → Data management starts a JSON backup download.',
+        'Settings → Data & backups exports all financial tables. Restore validates the file and previews its contents before replacing data. A recovery snapshot is saved before replacement.',
+      backupDesktop: 'Use Settings → Data & backups to export a backup.',
+      backupWeb: 'Settings → Data & backups starts a JSON backup download.',
       backupFormat:
         'JSON backups include a schema version, table manifest and checksums. Password encryption is enabled by default; an unencrypted export contains readable financial data.',
       tipTitle: 'Tip',
@@ -1406,6 +1406,9 @@ export const en: LandingTranslationKeys = {
         'Check your subscriptions regularly. Many people pay for services they no longer use. By monitoring your subscriptions, you can easily save money.',
     },
     privacy: {
+      settingsTitle: 'Finding your settings',
+      settingsText:
+        'Open Settings and choose a topic: General, Profiles & accounts, Security, Data & backups, Devices & sync, or AI & automation. All settings takes you back to the overview. Help & about contains the tour and app updates. Accounts belong to the current profile; backups contain all profiles.',
       title: 'Your data & privacy',
       subtitle:
         'Fluxby stores your financial data locally. Sync and AI are optional network features.',
@@ -1426,10 +1429,10 @@ export const en: LandingTranslationKeys = {
         'The web app stores data in OPFS (Origin Private File System); the desktop app uses local app storage. Sync copies data to paired devices. Jev requests send limited data to TypeSafe as described in Smart AI features.',
       backupTitle: 'Back up and restore your data',
       backupText:
-        'Open Settings > App settings > Data management to export a JSON backup, encrypted by default. Restore it from the same section and review the preview before replacing data. Encrypted files require their backup password.',
+        'Open Settings > Data & backups to export a JSON backup, encrypted by default. Restore it from the same section and review the preview before replacing data. Encrypted files require their backup password.',
       deleteDataTitle: 'Deleting your data',
       deleteDataText:
-        'Use Settings > Data Management to delete your Fluxby data. You can also clear the browser data for the browser where you use Fluxby. Export a backup first if you may want to restore the data later.',
+        'Use Settings > Data & backups > Delete data to delete your Fluxby data. You can also clear the browser data for the browser where you use Fluxby. Export a backup first if you may want to restore the data later.',
       warningTitle: 'Important',
       warningText:
         'Sync shares data between paired devices, but is not a separate backup. Keep an exported JSON backup if you want an independent recovery copy.',
@@ -1579,10 +1582,10 @@ export const en: LandingTranslationKeys = {
         'Manage the accounts associated with your imported transactions.',
       overviewTitle: 'Accounts overview',
       overviewText:
-        'Manage accounts in Settings > Active profile > Bank accounts. Account cards and balances also appear on the Dashboard and Transactions pages.',
+        'Manage accounts in Settings > Profiles & accounts > Bank accounts. Account cards and balances also appear on the Dashboard and Transactions pages.',
       addTitle: 'Adding an account',
       addText: 'To add an account manually:',
-      addStep1: 'Go to Settings > Active profile > Bank accounts',
+      addStep1: 'Go to Settings > Profiles & accounts > Bank accounts',
       addStep2: 'Find the Add account form below your account list',
       addStep3:
         'Enter a name and account type. An IBAN is required for checking, savings and credit accounts; cash, loan and investment accounts can omit it.',
@@ -2906,7 +2909,7 @@ Object.assign(en, {
       ],
       setupTitle: 'How do I enable AI?',
       setupSteps: [
-        'Go to Settings → App settings → TypeSafe AI.',
+        'Go to Settings → AI & automation → TypeSafe AI.',
         'Paste the key into the field and save.',
         'Use the buttons to categorise transactions, find rules, recognise payment providers, review duplicates, and check possible transfers. Jev can also suggest import columns and address book matches.',
       ],
@@ -3190,7 +3193,7 @@ Object.assign(en, {
         dataFlowSteps: [
           [
             'Keep your web data safe',
-            'Export an encrypted backup from Settings → App settings → Data management. Do not send it to /api/data/import.',
+            'Export an encrypted backup from Settings → Data & backups. Do not send it to /api/data/import.',
           ],
           ['Start the API server', 'npm run dev:api'],
           [
@@ -3247,7 +3250,7 @@ Object.assign(en, {
         },
         {
           title: 'Backup preview, recovery and health',
-          text: 'In Settings → Data management, export a password-encrypted JSON backup. Keep the file outside this device and remember the password. A started download is reported separately from a verified restore. Before restoring, the app validates the table manifest, checksums and relationships and shows a preview. Replacement saves an encrypted recovery snapshot on this device first. Download that recovery copy if you need to undo the restore; browser storage is not a substitute for an external backup.',
+          text: 'In Settings → Data & backups, export a password-encrypted JSON backup. Keep the file outside this device and remember the password. A started download is reported separately from a verified restore. Before restoring, the app validates the table manifest, checksums and relationships and shows a preview. Replacement saves an encrypted recovery snapshot on this device first. Download that recovery copy if you need to undo the restore; browser storage is not a substitute for an external backup.',
         },
       ],
     },

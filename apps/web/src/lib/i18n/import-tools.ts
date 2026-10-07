@@ -52,7 +52,7 @@ export const importToolsNl = {
   newest: 'Laatste transactiedatum',
   recovery: 'Herstel en import ongedaan maken',
   recoveryHelp:
-    'Voor iedere import worden maximaal drie lokale herstelbestanden bewaard. Download een herstelbestand en herstel het via Instellingen → Back-up. Hiermee herstel je alle profielen. Een batch ongedaan maken verwijdert alleen de transacties uit die import; later gewijzigde transacties blokkeren deze actie.',
+    'Voor iedere import worden maximaal drie lokale herstelbestanden bewaard. Download een herstelbestand en herstel het via Instellingen → Gegevens & back-ups. Hiermee herstel je alle profielen. Een batch ongedaan maken verwijdert alleen de transacties uit die import; later gewijzigde transacties blokkeren deze actie.',
   emptyRecovery:
     'Na je eerste import verschijnen hier herstelbestanden en imports die je ongedaan kunt maken.',
   snapshots: 'Herstelbestanden',
@@ -67,7 +67,7 @@ export const importToolsNl = {
   cancel: 'Annuleren',
   undone: 'Import ongedaan gemaakt',
   changed:
-    'Transacties of rekeningsaldi zijn na deze import gewijzigd. Controleer deze eerst bij Transacties en Instellingen → Rekeningen.',
+    'Transacties of rekeningsaldi zijn na deze import gewijzigd. Controleer deze eerst bij Transacties en Instellingen → Profielen & rekeningen.',
   balanceAnchor:
     'Een latere import bevat ook banksaldi voor deze rekening. Maak eerst de nieuwere import ongedaan om de saldohistorie te behouden.',
   imported: 'Laatst geïmporteerd',
@@ -129,7 +129,7 @@ export const importToolsEn: typeof importToolsNl = {
   newest: 'Latest transaction date',
   recovery: 'Recovery and import undo',
   recoveryHelp:
-    'Up to three local recovery files are kept before imports. Download a recovery file and restore it through Settings → Backup. This restores all profiles. Undoing a batch removes only that import’s transactions; subsequent edits block the action.',
+    'Up to three local recovery files are kept before imports. Download a recovery file and restore it through Settings → Data & backups. This restores all profiles. Undoing a batch removes only that import’s transactions; subsequent edits block the action.',
   emptyRecovery:
     'Recovery files and imports you can undo will appear here after your first import.',
   snapshots: 'Recovery files',
@@ -144,7 +144,7 @@ export const importToolsEn: typeof importToolsNl = {
   cancel: 'Cancel',
   undone: 'Import undone',
   changed:
-    'Transactions or account balances changed after this import. Review them in Transactions and Settings → Accounts first.',
+    'Transactions or account balances changed after this import. Review them in Transactions and Settings → Profiles & accounts first.',
   balanceAnchor:
     'A later import also contains bank balances for this account. Undo the newer import first to preserve the balance history.',
   imported: 'Last imported',

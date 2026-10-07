@@ -61,7 +61,7 @@ export const webMcpNl: LandingWebMcpCopy = {
     stepsTitle: 'Toegang inschakelen',
     steps: [
       'Open Fluxby en ontgrendel je profiel.',
-      'Ga naar Instellingen → App-instellingen → WebMCP voor browserassistenten.',
+      'Ga naar Instellingen → AI & automatisering → WebMCP voor browserassistenten.',
       'Kies Toegang inschakelen. Laat het Fluxby-tabblad open terwijl je de browserassistent gebruikt.',
       'Vraag je assistent om een overzicht, zoekactie of wijziging. Controleer elke bevestiging voor een wijziging.',
       'Kies Toegang uitschakelen zodra je klaar bent.',
@@ -92,7 +92,7 @@ export const webMcpNl: LandingWebMcpCopy = {
       'Alle bewerkingen blijven beperkt tot het actieve profiel. Leesresultaten bevatten geen ruwe importdata of importhashes. Transactieverzoeken zijn gepagineerd. Leeshulpmiddelen gebruiken readOnlyHint en untrustedContentHint; schrijfhulpmiddelen gebruiken consequentialHint. Schrijfacties vragen een bevestiging in de app en verversen daarna de weergaven. Een browserassistent kan ontvangen gegevens elders verwerken; Fluxby heeft daar geen controle over.',
     toolsTitle: 'Hulpmiddelen per weergave',
     toolsIntro:
-      'De stabiele namen hieronder zijn de namen die een browserassistent kan ontdekken. Open eerst Instellingen → App-instellingen en schakel WebMCP in.',
+      'De stabiele namen hieronder zijn de namen die een browserassistent kan ontdekken. Open eerst Instellingen → AI & automatisering en schakel WebMCP in.',
     viewHeader: 'Weergave',
     toolsHeader: 'Hulpmiddelen',
     rows: [
@@ -216,7 +216,7 @@ export const webMcpEn: LandingWebMcpCopy = {
     stepsTitle: 'Enable access',
     steps: [
       'Open Fluxby and unlock your profile.',
-      'Go to Settings → App settings → WebMCP for browser assistants.',
+      'Go to Settings → AI & automation → WebMCP for browser assistants.',
       'Select Enable access. Keep the Fluxby tab open while using your browser assistant.',
       'Ask your assistant for a summary, search, or change. Review each confirmation for a change.',
       'Select Disable access when you finish.',
@@ -247,7 +247,7 @@ export const webMcpEn: LandingWebMcpCopy = {
       'All operations are scoped to the active profile. Read results exclude raw import data and import hashes. Transaction requests are paginated. Read tools use readOnlyHint and untrustedContentHint; write tools use consequentialHint. Writes require an in-app confirmation and then refresh the views. A browser assistant may process received data elsewhere; Fluxby cannot control that.',
     toolsTitle: 'Tools by view',
     toolsIntro:
-      'The stable names below are what a browser assistant can discover. First open Settings → App settings and enable WebMCP.',
+      'The stable names below are what a browser assistant can discover. First open Settings → AI & automation and enable WebMCP.',
     viewHeader: 'View',
     toolsHeader: 'Tools',
     rows: [

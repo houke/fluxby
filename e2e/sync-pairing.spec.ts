@@ -40,9 +40,7 @@ async function goToSyncSettings(page: Page) {
   await setupApp(page);
   await dismissOnboardingTour(page);
   await page.getByRole('link', { name: /settings|instellingen/i }).click();
-  await page
-    .getByRole('tab', { name: /app settings|app-instellingen/i })
-    .click();
+  await page.locator('[data-onboarding="settings-sync-link"]').click();
 }
 
 test.describe('Sync Pairing Feature', () => {

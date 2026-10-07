@@ -62,6 +62,37 @@ async function show() {
   await screen.findByText('Existing user');
 }
 describe('app settings global feedback', () => {
+  it.each(['general', 'security', 'about'] as const)(
+    'shows only controls for the %s section',
+    async (section) => {
+      render(
+        <QueryClientProvider client={client}>
+          <AppSettings section={section} />
+        </QueryClientProvider>
+      );
+      if (section === 'general') {
+        await screen.findByText('Existing user');
+        expect(
+          screen.queryByRole('button', { name: 'Change password', exact: true })
+        ).toBeNull();
+        expect(screen.queryByText(en.settings.versions)).toBeNull();
+      } else if (section === 'security') {
+        expect(
+          screen.getByRole('button', { name: 'Change password', exact: true })
+        ).toBeTruthy();
+        expect(screen.queryByText(en.settings.language)).toBeNull();
+        expect(screen.queryByText(en.settings.versions)).toBeNull();
+      } else {
+        expect(
+          screen.getByText(en.settings.versions, { selector: 'h3' })
+        ).toBeTruthy();
+        expect(screen.queryByText(en.settings.language)).toBeNull();
+        expect(
+          screen.queryByRole('button', { name: 'Change password', exact: true })
+        ).toBeNull();
+      }
+    }
+  );
   it('reports a successful user name update through the global toast', async () => {
     await show();
     fireEvent.click(screen.getByRole('button', { name: 'Edit', exact: true }));

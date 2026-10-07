@@ -3,6 +3,7 @@
 
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useLocation } from 'react-router-dom';
 import { useViewTransitionNavigate } from '@/lib/view-transitions';
 import { onboardingChapters } from './onboarding-data';
 import {
@@ -111,6 +112,7 @@ const saveState = (state: OnboardingState) => {
 // Provider component
 export function OnboardingProvider({ children }: { children: ReactNode }) {
   const navigate = useViewTransitionNavigate();
+  const location = useLocation();
   const queryClient = useQueryClient();
   const { isReady: isDatabaseReady } = useDatabase();
   const { switchProfile, profiles, activeProfileId, setProfileHidden } =
@@ -138,6 +140,21 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
     },
     enabled: isDbTrulyReady,
   });
+
+  // Settings topics have their own URLs. Restore the target when starting,
+  // resuming or moving backwards in the tour, before the spotlight is measured.
+  const stepRoute =
+    onboardingChapters[state.currentChapterIndex]?.steps[state.currentStepIndex]
+      ?.route;
+  useEffect(() => {
+    if (
+      state.isActive &&
+      stepRoute &&
+      `${location.pathname}${location.search}` !== stepRoute
+    ) {
+      navigate(stepRoute, { replace: true });
+    }
+  }, [state.isActive, stepRoute, location.pathname, location.search, navigate]);
 
   // Persist state changes
   useEffect(() => {

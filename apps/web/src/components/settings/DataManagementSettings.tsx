@@ -69,7 +69,11 @@ function downloadBackup(data: unknown, filename: string) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-export function DataManagementSettings() {
+export function DataManagementSettings({
+  section = 'all',
+}: {
+  section?: 'backup' | 'reset' | 'all';
+}) {
   const { t } = useLanguage();
   const queryClient = useQueryClient();
   const confirm = useConfirm();
@@ -291,218 +295,229 @@ export function DataManagementSettings() {
     <div className=''>
       <Card
         className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'
-        data-onboarding='settings-data-management'
+        data-onboarding={
+          section === 'reset' ? 'settings-reset' : 'settings-data-management'
+        }
       >
         <CardHeader className='px-3 py-3 sm:px-6 sm:py-4'>
           <CardTitle className='text-base sm:text-lg'>
-            {t.settings.dataManagement.title}
+            {section === 'reset'
+              ? t.settings.navigation.resetTitle
+              : t.settings.dataManagement.title}
           </CardTitle>
           <CardDescription className='text-xs sm:text-sm'>
-            {t.settings.dataManagement.description}
+            {section === 'reset'
+              ? t.settings.navigation.resetDescription
+              : t.settings.dataManagement.description}
           </CardDescription>
         </CardHeader>
         <CardContent className='px-3 pt-0 pb-3 sm:px-6 sm:pt-0 sm:pb-6'>
           <div className='space-y-2'>
-            <div
-              className='rounded-lg border p-3'
-              data-onboarding='settings-backup-health'
-            >
-              <p className='text-sm font-medium'>
-                {t.settings.dataManagement.backupHealthTitle}
-              </p>
-              <p className='mt-1 text-xs text-muted-foreground'>
-                {backupHealth.lastDownloadStartedAt
-                  ? t.settings.dataManagement.lastBackup.replace(
-                      '{date}',
-                      formatBackupDate(backupHealth.lastDownloadStartedAt)
-                    )
-                  : t.settings.dataManagement.noBackupYet}
-                {backupHealth.lastDownloadStartedAt &&
-                  ` · ${
-                    backupHealth.lastDownloadEncrypted
-                      ? t.settings.dataManagement.backupEncrypted
-                      : t.settings.dataManagement.backupPlain
-                  }`}
-              </p>
-              <p className='mt-1 text-xs text-muted-foreground'>
-                {backupHealth.lastVerifiedRestoreAt
-                  ? t.settings.dataManagement.backupVerification.replace(
-                      '{date}',
-                      formatBackupDate(backupHealth.lastVerifiedRestoreAt)
-                    )
-                  : t.settings.dataManagement.noVerifiedRestore}
-              </p>
-              {recovery && (
-                <Button
-                  variant='outline'
-                  className='mt-2'
-                  disabled={loadingAction !== null}
-                  onClick={() => {
-                    downloadBackup(
-                      recovery.encrypted,
-                      `fluxby-recovery-${recovery.createdAt.slice(0, 10)}.fluxby-encrypted`
-                    );
-                    toast.info(t.settings.dataManagement.recoveryDownload);
-                  }}
+            {section !== 'reset' && (
+              <>
+                <div
+                  className='rounded-lg border p-3'
+                  data-onboarding='settings-backup-health'
                 >
-                  {t.settings.dataManagement.recoveryAvailable}
-                </Button>
-              )}
-            </div>
-
-            <div className='rounded-lg border p-3'>
-              <div className='flex items-center justify-between'>
-                <div className='flex-1'>
                   <p className='text-sm font-medium'>
-                    {t.settings.dataManagement.exportTitle}
+                    {t.settings.dataManagement.backupHealthTitle}
+                  </p>
+                  <p className='mt-1 text-xs text-muted-foreground'>
+                    {backupHealth.lastDownloadStartedAt
+                      ? t.settings.dataManagement.lastBackup.replace(
+                          '{date}',
+                          formatBackupDate(backupHealth.lastDownloadStartedAt)
+                        )
+                      : t.settings.dataManagement.noBackupYet}
+                    {backupHealth.lastDownloadStartedAt &&
+                      ` · ${
+                        backupHealth.lastDownloadEncrypted
+                          ? t.settings.dataManagement.backupEncrypted
+                          : t.settings.dataManagement.backupPlain
+                      }`}
+                  </p>
+                  <p className='mt-1 text-xs text-muted-foreground'>
+                    {backupHealth.lastVerifiedRestoreAt
+                      ? t.settings.dataManagement.backupVerification.replace(
+                          '{date}',
+                          formatBackupDate(backupHealth.lastVerifiedRestoreAt)
+                        )
+                      : t.settings.dataManagement.noVerifiedRestore}
+                  </p>
+                  {recovery && (
+                    <Button
+                      variant='outline'
+                      className='mt-2'
+                      disabled={loadingAction !== null}
+                      onClick={() => {
+                        downloadBackup(
+                          recovery.encrypted,
+                          `fluxby-recovery-${recovery.createdAt.slice(0, 10)}.fluxby-encrypted`
+                        );
+                        toast.info(t.settings.dataManagement.recoveryDownload);
+                      }}
+                    >
+                      {t.settings.dataManagement.recoveryAvailable}
+                    </Button>
+                  )}
+                </div>
+
+                <div className='rounded-lg border p-3'>
+                  <div className='flex items-center justify-between'>
+                    <div className='flex-1'>
+                      <p className='text-sm font-medium'>
+                        {t.settings.dataManagement.exportTitle}
+                      </p>
+                      <p className='text-xs text-muted-foreground'>
+                        {t.settings.dataManagement.exportDescription}
+                      </p>
+                    </div>
+                    <Button
+                      variant='outline'
+                      disabled={loadingAction !== null}
+                      onClick={async () => {
+                        if (encryptExport) {
+                          // Open password dialog for encrypted export
+                          setPasswordDialog({ open: true, mode: 'export' });
+                        } else {
+                          // Plain export with checksum
+                          setLoadingAction('export');
+                          try {
+                            const data = await api.exportAll();
+                            const dataWithChecksum = await addChecksumToBackup(
+                              data as PlainBackup
+                            );
+                            downloadBackup(
+                              dataWithChecksum,
+                              getBackupFilename(new Date(), false)
+                            );
+                            setBackupHealth(recordBackupDownload(false));
+                            toast.success(
+                              t.settings.dataManagement.backupDownloaded
+                            );
+                          } catch {
+                            setDataNotice({
+                              type: 'error',
+                              text: t.settings.dataManagement.exportError,
+                            });
+                          } finally {
+                            setLoadingAction(null);
+                          }
+                        }
+                      }}
+                    >
+                      {loadingAction === 'export' ? (
+                        <RefreshCcw className='mr-2 h-4 w-4 animate-spin' />
+                      ) : encryptExport ? (
+                        <Lock className='mr-2 h-4 w-4' />
+                      ) : (
+                        <LockOpen className='mr-2 h-4 w-4' />
+                      )}
+                      {t.settings.dataManagement.exportButton}
+                    </Button>
+                  </div>
+                  <div className='mt-3 flex items-center gap-2 border-t pt-3'>
+                    <Switch
+                      id='encrypt-export'
+                      checked={encryptExport}
+                      onCheckedChange={setEncryptExport}
+                    />
+                    <Label
+                      htmlFor='encrypt-export'
+                      className='flex cursor-pointer items-center gap-1.5 text-xs text-muted-foreground'
+                    >
+                      <ShieldCheck className='h-3.5 w-3.5' />
+                      {t.settings.dataManagement?.encryptBackup}
+                    </Label>
+                  </div>
+                </div>
+
+                <div className='flex items-center justify-between rounded-lg border p-3'>
+                  <div className='flex-1'>
+                    <p className='text-sm font-medium'>
+                      {t.settings.dataManagement.importTitle}
+                    </p>
+                    <p className='text-xs text-muted-foreground'>
+                      {t.settings.dataManagement?.importDescriptionEncrypted}
+                    </p>
+                  </div>
+                  <input
+                    type='file'
+                    accept='application/json,.fluxby-encrypted'
+                    className='hidden'
+                    id='import-json-input'
+                    aria-label={t.settings.dataManagement.importButton}
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) {
+                        e.target.value = '';
+                        return;
+                      }
+                      await handleFileImport(file);
+                      e.target.value = '';
+                    }}
+                  />
+                  <Button
+                    variant='outline'
+                    disabled={loadingAction !== null}
+                    onClick={() => {
+                      const input = document.getElementById(
+                        'import-json-input'
+                      ) as HTMLInputElement | null;
+                      input?.click();
+                    }}
+                  >
+                    {loadingAction === 'import' ? (
+                      <RefreshCcw className='mr-2 h-4 w-4 animate-spin' />
+                    ) : null}
+                    {t.settings.dataManagement.importButton}
+                  </Button>
+                </div>
+              </>
+            )}
+            {section !== 'backup' && (
+              <div className='flex items-center justify-between rounded-lg border p-3'>
+                <div className='flex-1'>
+                  <p className='text-sm font-medium text-destructive'>
+                    {t.settings.dataManagement.deleteAllTitle}
                   </p>
                   <p className='text-xs text-muted-foreground'>
-                    {t.settings.dataManagement.exportDescription}
+                    {t.settings.dataManagement.deleteAllDescription}
                   </p>
                 </div>
                 <Button
-                  variant='outline'
+                  variant='destructive'
                   disabled={loadingAction !== null}
                   onClick={async () => {
-                    if (encryptExport) {
-                      // Open password dialog for encrypted export
-                      setPasswordDialog({ open: true, mode: 'export' });
-                    } else {
-                      // Plain export with checksum
-                      setLoadingAction('export');
-                      try {
-                        const data = await api.exportAll();
-                        const dataWithChecksum = await addChecksumToBackup(
-                          data as PlainBackup
-                        );
-                        downloadBackup(
-                          dataWithChecksum,
-                          getBackupFilename(new Date(), false)
-                        );
-                        setBackupHealth(recordBackupDownload(false));
-                        toast.success(
-                          t.settings.dataManagement.backupDownloaded
-                        );
-                      } catch {
-                        setDataNotice({
-                          type: 'error',
-                          text: t.settings.dataManagement.exportError,
-                        });
-                      } finally {
-                        setLoadingAction(null);
-                      }
+                    const isConfirmed = await confirm({
+                      title: t.settings.dataManagement.deleteAllTitle,
+                      message: t.settings.dataManagement.deleteAllConfirm,
+                      variant: 'danger',
+                    });
+                    if (!isConfirmed) {
+                      return;
+                    }
+
+                    setLoadingAction('delete');
+                    try {
+                      await resetAppAndRestartOnboarding();
+                    } catch {
+                      setDataNotice({
+                        type: 'error',
+                        text: t.settings.dataManagement.deleteAllError,
+                      });
+                      setLoadingAction(null);
                     }
                   }}
                 >
-                  {loadingAction === 'export' ? (
+                  {loadingAction === 'delete' ? (
                     <RefreshCcw className='mr-2 h-4 w-4 animate-spin' />
-                  ) : encryptExport ? (
-                    <Lock className='mr-2 h-4 w-4' />
-                  ) : (
-                    <LockOpen className='mr-2 h-4 w-4' />
-                  )}
-                  {t.settings.dataManagement.exportButton}
+                  ) : null}
+                  {t.settings.dataManagement.deleteAllButton}
                 </Button>
               </div>
-              <div className='mt-3 flex items-center gap-2 border-t pt-3'>
-                <Switch
-                  id='encrypt-export'
-                  checked={encryptExport}
-                  onCheckedChange={setEncryptExport}
-                />
-                <Label
-                  htmlFor='encrypt-export'
-                  className='flex cursor-pointer items-center gap-1.5 text-xs text-muted-foreground'
-                >
-                  <ShieldCheck className='h-3.5 w-3.5' />
-                  {t.settings.dataManagement?.encryptBackup}
-                </Label>
-              </div>
-            </div>
-
-            <div className='flex items-center justify-between rounded-lg border p-3'>
-              <div className='flex-1'>
-                <p className='text-sm font-medium'>
-                  {t.settings.dataManagement.importTitle}
-                </p>
-                <p className='text-xs text-muted-foreground'>
-                  {t.settings.dataManagement?.importDescriptionEncrypted}
-                </p>
-              </div>
-              <input
-                type='file'
-                accept='application/json,.fluxby-encrypted'
-                className='hidden'
-                id='import-json-input'
-                aria-label={t.settings.dataManagement.importButton}
-                onChange={async (e) => {
-                  const file = e.target.files?.[0];
-                  if (!file) {
-                    e.target.value = '';
-                    return;
-                  }
-                  await handleFileImport(file);
-                  e.target.value = '';
-                }}
-              />
-              <Button
-                variant='outline'
-                disabled={loadingAction !== null}
-                onClick={() => {
-                  const input = document.getElementById(
-                    'import-json-input'
-                  ) as HTMLInputElement | null;
-                  input?.click();
-                }}
-              >
-                {loadingAction === 'import' ? (
-                  <RefreshCcw className='mr-2 h-4 w-4 animate-spin' />
-                ) : null}
-                {t.settings.dataManagement.importButton}
-              </Button>
-            </div>
-            <div className='flex items-center justify-between rounded-lg border p-3'>
-              <div className='flex-1'>
-                <p className='text-sm font-medium text-destructive'>
-                  {t.settings.dataManagement.deleteAllTitle}
-                </p>
-                <p className='text-xs text-muted-foreground'>
-                  {t.settings.dataManagement.deleteAllDescription}
-                </p>
-              </div>
-              <Button
-                variant='destructive'
-                disabled={loadingAction !== null}
-                onClick={async () => {
-                  const isConfirmed = await confirm({
-                    title: t.settings.dataManagement.deleteAllTitle,
-                    message: t.settings.dataManagement.deleteAllConfirm,
-                    variant: 'danger',
-                  });
-                  if (!isConfirmed) {
-                    return;
-                  }
-
-                  setLoadingAction('delete');
-                  try {
-                    await resetAppAndRestartOnboarding();
-                  } catch {
-                    setDataNotice({
-                      type: 'error',
-                      text: t.settings.dataManagement.deleteAllError,
-                    });
-                    setLoadingAction(null);
-                  }
-                }}
-              >
-                {loadingAction === 'delete' ? (
-                  <RefreshCcw className='mr-2 h-4 w-4 animate-spin' />
-                ) : null}
-                {t.settings.dataManagement.deleteAllButton}
-              </Button>
-            </div>
-
-            {isRunningInTauri() && (
+            )}
+            {section !== 'reset' && isRunningInTauri() && (
               <div className='flex items-center justify-between rounded-lg border p-3'>
                 <div className='flex-1'>
                   <p className='text-sm font-medium'>

@@ -766,11 +766,11 @@ export const nl: LandingTranslationKeys = {
       storageTitle: 'Storage Adapters',
       backupTitle: 'Backup & Herstel',
       backupText:
-        'Instellingen → Gegevensbeheer exporteert alle financiële tabellen. Herstellen valideert het bestand en toont de inhoud voordat gegevens worden vervangen. Vooraf wordt een herstelkopie opgeslagen.',
+        'Instellingen → Gegevens & back-ups exporteert alle financiële tabellen. Herstellen valideert het bestand en toont de inhoud voordat gegevens worden vervangen. Vooraf wordt een herstelkopie opgeslagen.',
       backupDesktop:
-        'Gebruik Instellingen → Gegevensbeheer om een back-up te exporteren.',
+        'Gebruik Instellingen → Gegevens & back-ups om een back-up te exporteren.',
       backupWeb:
-        'Instellingen → Gegevensbeheer start een JSON-back-updownload.',
+        'Instellingen → Gegevens & back-ups start een JSON-back-updownload.',
       backupFormat:
         'JSON-back-ups bevatten een schemaversie, tabeloverzicht en controlesommen. Wachtwoordversleuteling staat standaard aan; een onversleutelde export bevat leesbare financiële gegevens.',
       tipTitle: 'Tip',
@@ -1652,6 +1652,9 @@ export const nl: LandingTranslationKeys = {
         'Controleer regelmatig je abonnementen. Veel mensen betalen voor diensten die ze niet meer gebruiken. Door je abonnementen te monitoren kun je eenvoudig geld besparen.',
     },
     privacy: {
+      settingsTitle: 'Je instellingen vinden',
+      settingsText:
+        'Open Instellingen en kies een onderwerp: Algemeen, Profielen & rekeningen, Beveiliging, Gegevens & back-ups, Apparaten & synchronisatie of AI & automatisering. Via Alle instellingen keer je terug naar het overzicht. Hulp & over Fluxby bevat de rondleiding en app-updates. De rekeningen horen bij het actieve profiel; back-ups bevatten alle profielen.',
       title: 'Je data & privacy',
       subtitle:
         'Fluxby bewaart je financiële gegevens lokaal. Synchronisatie en AI zijn optionele netwerkfuncties.',
@@ -1673,10 +1676,10 @@ export const nl: LandingTranslationKeys = {
         'In de webapp staan gegevens in OPFS (Origin Private File System); de desktopapp gebruikt lokale app-opslag. Synchronisatie kopieert gegevens naar gekoppelde apparaten. Jev-aanvragen sturen beperkte gegevens naar TypeSafe, zoals beschreven bij Slimme AI-functies.',
       backupTitle: 'Een back-up maken en herstellen',
       backupText:
-        'Open Instellingen > App-instellingen > Gegevensbeheer om een JSON-back-up te exporteren, standaard versleuteld. Herstel deze vanuit dezelfde sectie en controleer het voorbeeld voordat je gegevens vervangt. Voor versleutelde bestanden heb je het back-upwachtwoord nodig.',
+        'Open Instellingen > Gegevens & back-ups om een JSON-back-up te exporteren, standaard versleuteld. Herstel deze vanuit dezelfde sectie en controleer het voorbeeld voordat je gegevens vervangt. Voor versleutelde bestanden heb je het back-upwachtwoord nodig.',
       deleteDataTitle: 'Je data verwijderen',
       deleteDataText:
-        'Gebruik Instellingen > Gegevensbeheer om je Fluxby-gegevens te verwijderen. Je kunt ook de browsergegevens wissen van de browser waarin je Fluxby gebruikt. Maak eerst een back-up als je de gegevens later wilt terugzetten.',
+        'Gebruik Instellingen > Gegevens & back-ups > Gegevens wissen om je Fluxby-gegevens te verwijderen. Je kunt ook de browsergegevens wissen van de browser waarin je Fluxby gebruikt. Maak eerst een back-up als je de gegevens later wilt terugzetten.',
       warningTitle: 'Belangrijk',
       warningText:
         'Synchronisatie deelt gegevens tussen gekoppelde apparaten, maar is geen aparte back-up. Bewaar een geëxporteerde JSON-back-up als je een onafhankelijke herstelkopie wilt.',
@@ -2875,10 +2878,11 @@ Object.assign(nl, {
       subtitle: 'Beheer rekeningen die bij je geïmporteerde transacties horen.',
       overviewTitle: 'Rekeningoverzicht',
       overviewText:
-        'Beheer rekeningen via Instellingen > Actief profiel > Bankrekeningen. Rekeningkaarten en saldi zijn ook zichtbaar op het Dashboard en de pagina Transacties.',
+        'Beheer rekeningen via Instellingen > Profielen & rekeningen > Bankrekeningen. Rekeningkaarten en saldi zijn ook zichtbaar op het Dashboard en de pagina Transacties.',
       addTitle: 'Een rekening toevoegen',
       addText: 'Zo voeg je handmatig een rekening toe:',
-      addStep1: 'Ga naar Instellingen > Actief profiel > Bankrekeningen',
+      addStep1:
+        'Ga naar Instellingen > Profielen & rekeningen > Bankrekeningen',
       addStep2: 'Zoek het formulier Rekening toevoegen onder je rekeninglijst',
       addStep3:
         'Vul een naam en rekeningtype in. Voor betaal-, spaar- en kredietrekeningen is een IBAN vereist; voor contant geld, leningen en beleggingen niet.',
@@ -3070,7 +3074,7 @@ Object.assign(nl, {
       ],
       setupTitle: 'Hoe schakel ik AI in?',
       setupSteps: [
-        'Ga naar Instellingen → App-instellingen → TypeSafe AI.',
+        'Ga naar Instellingen → AI & automatisering → TypeSafe AI.',
         'Plak de sleutel in het invoerveld en sla op.',
         'Gebruik de knoppen om te categoriseren, regels te vinden, betaalplatforms te herkennen, dubbele transacties te controleren en mogelijke overboekingen te beoordelen. Jev kan ook importkolommen en adresboekmatches voorstellen.',
       ],
@@ -3392,7 +3396,7 @@ Object.assign(nl, {
         dataFlowSteps: [
           [
             'Je webgegevens bewaren',
-            'Exporteer een versleutelde back-up vanuit Instellingen → App-instellingen → Gegevensbeheer. Stuur deze niet naar /api/data/import.',
+            'Exporteer een versleutelde back-up vanuit Instellingen → Gegevens & back-ups. Stuur deze niet naar /api/data/import.',
           ],
           ['De API-server starten', 'npm run dev:api'],
           [
@@ -3586,7 +3590,7 @@ Object.assign(nl, {
         },
         {
           title: 'Back-upvoorbeeld, herstelkopie en status',
-          text: 'Exporteer via Instellingen → Gegevensbeheer een JSON-back-up met wachtwoordversleuteling. Bewaar het bestand buiten dit apparaat en onthoud het wachtwoord. Een gestarte download wordt apart gemeld van een gecontroleerd herstel. Voor herstellen valideert de app het tabeloverzicht, controlesommen en relaties en toont een voorbeeld. Voor vervanging wordt eerst een versleutelde herstelkopie op dit apparaat opgeslagen. Download deze kopie als je het herstel wilt terugdraaien; browseropslag vervangt geen externe back-up.',
+          text: 'Exporteer via Instellingen → Gegevens & back-ups een JSON-back-up met wachtwoordversleuteling. Bewaar het bestand buiten dit apparaat en onthoud het wachtwoord. Een gestarte download wordt apart gemeld van een gecontroleerd herstel. Voor herstellen valideert de app het tabeloverzicht, controlesommen en relaties en toont een voorbeeld. Voor vervanging wordt eerst een versleutelde herstelkopie op dit apparaat opgeslagen. Download deze kopie als je het herstel wilt terugdraaien; browseropslag vervangt geen externe back-up.',
         },
       ],
     },

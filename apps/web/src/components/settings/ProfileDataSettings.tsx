@@ -13,24 +13,15 @@ import { api } from '@/lib/api';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useProfile } from '@/contexts/ProfileContext';
 import { useConfirm } from '@/contexts/ConfirmContext';
+import { useToast } from '@/contexts/ToastContext';
 
 export function ProfileDataSettings() {
   const { t } = useLanguage();
   const { activeProfile } = useProfile();
   const queryClient = useQueryClient();
   const confirm = useConfirm();
-  const [notice, setNotice] = useState<{
-    type: 'success' | 'error';
-    text: string;
-  } | null>(null);
+  const toast = useToast();
   const [isLoading, setIsLoading] = useState(false);
-
-  // Auto-hide notice
-  React.useEffect(() => {
-    if (!notice) return;
-    const timer = setTimeout(() => setNotice(null), 4000);
-    return () => clearTimeout(timer);
-  }, [notice]);
 
   const handleDelete = async (
     action: () => Promise<unknown>,
@@ -41,9 +32,9 @@ export function ProfileDataSettings() {
     try {
       await action();
       queryClient.invalidateQueries();
-      setNotice({ type: 'success', text: successMsg });
+      toast.success(successMsg);
     } catch {
-      setNotice({ type: 'error', text: errorMsg });
+      toast.error(errorMsg);
     } finally {
       setIsLoading(false);
     }
@@ -137,18 +128,6 @@ export function ProfileDataSettings() {
         </CardHeader>
         <CardContent className='px-3 pt-0 pb-3 sm:px-6 sm:pt-0 sm:pb-6'>
           <div className='space-y-4'>
-            {notice && (
-              <div
-                className={`rounded border px-3 py-2 text-sm ${
-                  notice.type === 'success'
-                    ? 'border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-700 dark:bg-emerald-950 dark:text-emerald-300'
-                    : 'border-rose-300 bg-rose-50 text-rose-800 dark:border-rose-700 dark:bg-rose-950 dark:text-rose-300'
-                }`}
-              >
-                {notice.text}
-              </div>
-            )}
-
             {deleteItems.map((item, index) => (
               <div
                 key={item.titleKey}

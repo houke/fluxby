@@ -183,7 +183,7 @@ export function ProfileSwitcher() {
 
         {/* Manage Profiles Link */}
         <DropdownMenuItem
-          onSelect={() => navigate('/settings?tab=manage-profiles')}
+          onSelect={() => navigate('/settings?section=profiles&view=manage')}
           className='cursor-pointer'
         >
           <Settings className='h-4 w-4' />

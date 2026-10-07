@@ -4,6 +4,7 @@ export interface OnboardingStep {
   id: string;
   title: { nl: string; en: string };
   content: { nl: string; en: string };
+  route?: string; // Optional destination for this step within a chapter
   selector?: string; // CSS selector to highlight (e.g., "#net-worth-card")
   showPlaceholder?: boolean; // Show image placeholder
   placement?: 'center' | 'left' | 'right' | 'top' | 'bottom'; // Position of modal relative to spotlight

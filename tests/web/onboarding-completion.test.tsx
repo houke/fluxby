@@ -1,7 +1,13 @@
 /** @vitest-environment jsdom */
-import { act, cleanup, renderHook, screen } from '@testing-library/react';
+import {
+  act,
+  cleanup,
+  renderHook,
+  screen,
+  waitFor,
+} from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, useLocation } from 'react-router-dom';
 import React, { type ReactNode } from 'react';
 
 const mocks = vi.hoisted(() => ({
@@ -94,6 +100,56 @@ describe('first-run tour lifecycle', () => {
   afterEach(() => {
     cleanup();
     vi.unstubAllGlobals();
+  });
+
+  it('resumes a settings topic and restores its destination when moving backwards', async () => {
+    const chapterIndex = onboardingChapters.findIndex(
+      (chapter) => chapter.id === 'settings'
+    );
+    const stepIndex = onboardingChapters[chapterIndex].steps.findIndex(
+      (step) => step.id === 'settings-data'
+    );
+    mocks.storage.set('fluxby_onboarding_complete', true);
+    mocks.storage.set('fluxby_onboarding', {
+      isActive: false,
+      hasCompletedOnboarding: true,
+      hasDismissedOnboarding: true,
+      currentChapterIndex: chapterIndex,
+      currentStepIndex: stepIndex,
+      userName: 'Test',
+      language: 'en',
+    });
+    function Location() {
+      const location = useLocation();
+      return (
+        <output data-testid='tour-location'>
+          {location.pathname}
+          {location.search}
+        </output>
+      );
+    }
+    const hook = renderHook(useOnboarding, {
+      wrapper: ({ children }) => (
+        <MemoryRouter initialEntries={['/settings?section=about']}>
+          <OnboardingProvider>
+            {children}
+            <Location />
+          </OnboardingProvider>
+        </MemoryRouter>
+      ),
+    });
+    await act(async () => hook.result.current.startOnboarding());
+    await waitFor(() =>
+      expect(screen.getByTestId('tour-location').textContent).toBe(
+        '/settings?section=data'
+      )
+    );
+    act(() => hook.result.current.previousStep());
+    await waitFor(() =>
+      expect(screen.getByTestId('tour-location').textContent).toBe(
+        '/settings?section=sync'
+      )
+    );
   });
 
   it('opens a pending first tour after an encryption-triggered reload', () => {

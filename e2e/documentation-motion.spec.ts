@@ -103,16 +103,12 @@ for (const language of ['en', 'nl'] as const) {
     await setupApp(page);
     await dismissOnboardingTour(page);
     await page.getByRole('link', { name: 'Settings', exact: true }).click();
-    await page.getByRole('tab', { name: 'App settings', exact: true }).click();
+    await page.locator('[data-onboarding="settings-general-link"]').click();
     await page.getByRole('button', { name: 'Nederlands' }).click();
     if (language === 'en')
       await page.getByRole('button', { name: 'English' }).click();
-    await page
-      .getByRole('tab', {
-        name: language === 'en' ? 'Active profile' : 'Actief profiel',
-        exact: true,
-      })
-      .click();
+    await page.locator('[data-onboarding="settings-back"]').click();
+    await page.locator('[data-onboarding="settings-profiles-link"]').click();
     await expect(
       page.locator('[data-onboarding="settings-accounts"]')
     ).toContainText(language === 'en' ? 'Bank accounts' : 'Bankrekeningen');

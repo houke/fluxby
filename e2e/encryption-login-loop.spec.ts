@@ -101,7 +101,7 @@ test('onboarding progress survives logout and restart without a login loop', asy
   await page.getByRole('button', { name: /^next$|^volgende$/i }).click();
   await page.getByRole('button', { name: /^skip$|^overslaan$/i }).click();
   await page.locator('[data-onboarding="nav-settings"]').click();
-  await page.locator('[data-onboarding="settings-app-tab"]').click();
+  await page.locator('[data-onboarding="settings-about-link"]').click();
   const onboardingSettings = page.locator(
     '[data-onboarding="onboarding-settings"]'
   );
@@ -181,7 +181,7 @@ test('completed onboarding remains completed after logout and login', async ({
   await finish.click();
 
   await page.locator('[data-onboarding="nav-settings"]').click();
-  await page.locator('[data-onboarding="settings-app-tab"]').click();
+  await page.locator('[data-onboarding="settings-about-link"]').click();
   const completed = page
     .locator('[data-onboarding="onboarding-settings"]')
     .getByText(/^completed$|^voltooid$/i);

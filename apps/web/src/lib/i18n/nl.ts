@@ -1,3 +1,7 @@
+import {
+  settingsNavigationNl,
+  type SettingsNavigationTranslations,
+} from './settings-navigation';
 import { webMcpNl, type WebMcpCopy } from '../webmcp-copy';
 import {
   householdPlanningNl,
@@ -967,6 +971,7 @@ export interface TranslationKeys {
     importingTo: string;
   };
   settings: {
+    navigation: SettingsNavigationTranslations;
     title: string;
     subtitle: string;
     tabs: {
@@ -2945,6 +2950,7 @@ export const nl: TranslationKeys = {
     importingTo: 'Importeren naar',
   },
   settings: {
+    navigation: settingsNavigationNl,
     title: 'Instellingen',
     subtitle: 'Beheer je rekeningen en app-instellingen',
     tabs: {
@@ -3037,7 +3043,7 @@ export const nl: TranslationKeys = {
       save: 'Opslaan',
       accountsTipTitle: 'Tip: spaarrekening toevoegen',
       accountsTip:
-        'Na het importeren van transacties kun je in Instellingen → Bankrekeningen je spaarrekening instellen. Overboekingen tussen je rekeningen worden dan automatisch herkend en tellen niet mee in je inkomsten en uitgaven analyse.',
+        'Na het importeren van transacties kun je in Instellingen → Profielen & rekeningen → Bankrekeningen je spaarrekening instellen. Overboekingen tussen je rekeningen worden dan automatisch herkend en tellen niet mee in je inkomsten en uitgaven analyse.',
       addAccountsTitle: 'Rekeningen toevoegen',
       addAccountsDescription:
         'Voeg bankrekeningen toe aan je nieuwe profiel. Je kunt dit ook later doen via Instellingen.',

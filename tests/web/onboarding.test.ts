@@ -181,12 +181,18 @@ describe('Onboarding Data', () => {
       expect(settingsChapter?.route).toBe('/settings');
     });
 
-    it('should have settings tabs step', () => {
+    it('should have settings overview step', () => {
       const tabsStep = settingsChapter?.steps.find(
-        (s) => s.id === 'settings-tabs'
+        (s) => s.id === 'settings-overview'
       );
       expect(tabsStep).toBeDefined();
-      expect(tabsStep?.selector).toBe('[data-onboarding="settings-tabs"]');
+      expect(tabsStep?.selector).toBe('[data-onboarding="settings-overview"]');
+    });
+    it('gives every settings spotlight a destination for forward and backward navigation', () => {
+      for (const step of settingsChapter?.steps || []) {
+        expect(step.route).toMatch(/^\/settings(?:\?|$)/);
+        expect(step.selector).toBeTruthy();
+      }
     });
   });
 
