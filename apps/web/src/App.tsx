@@ -1,11 +1,5 @@
-import { lazy, useEffect } from 'react';
-import {
-  BrowserRouter,
-  Routes,
-  Route,
-  Navigate,
-  useLocation,
-} from 'react-router-dom';
+import { lazy } from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { User } from 'lucide-react';
 import Layout from './components/layout/Layout';
 import { WebMcpBridge } from './components/WebMcpBridge';
@@ -33,7 +27,6 @@ import {
 import { SpotlightProvider } from './contexts/SpotlightContext';
 import { MigrationGate } from './components/MigrationGate';
 import { debugLog } from './lib/debug';
-import { POST_SETUP_ROUTE_KEY } from './lib/post-setup-route';
 
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const Transactions = lazy(() => import('./pages/Transactions'));
@@ -49,23 +42,8 @@ const Help = lazy(() => import('./pages/Help'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
 // Inner component that can access onboarding context
-function InitialRoute() {
-  const destination =
-    window.sessionStorage.getItem(POST_SETUP_ROUTE_KEY) === '/import'
-      ? '/import'
-      : '/dashboard';
-  return <Navigate to={destination} replace />;
-}
-
 function AppContent() {
   const { skipOnboarding, state } = useOnboarding();
-  const location = useLocation();
-
-  useEffect(() => {
-    if (location.pathname === '/import') {
-      window.sessionStorage.removeItem(POST_SETUP_ROUTE_KEY);
-    }
-  }, [location.pathname]);
 
   const handleError = () => {
     // Close onboarding if it was active
@@ -81,7 +59,7 @@ function AppContent() {
       <Onboarding />
       <Routes>
         <Route path='/' element={<Layout />}>
-          <Route index element={<InitialRoute />} />
+          <Route index element={<Navigate to='/dashboard' replace />} />
           <Route path='dashboard' element={<Dashboard />} />
           <Route path='transactions' element={<Transactions />} />
           <Route path='analytics' element={<Analytics />} />

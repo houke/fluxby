@@ -226,11 +226,6 @@ export interface TranslationKeys {
     resetDatabase: string;
     passwordChangedSuccess: string;
     initialSetup: {
-      startChoice: string;
-      startWithDemo: string;
-      startWithImport: string;
-      startChoiceHelp: string;
-      progressAccount: string;
       languageTitle: string;
       languageDescription: string;
       nameTitle: string;
@@ -2093,12 +2088,6 @@ export const nl: TranslationKeys = {
     resetDatabase: 'Reset database',
     passwordChangedSuccess: 'Je master wachtwoord is succesvol gewijzigd.',
     initialSetup: {
-      startChoice: 'Beginnen met',
-      startWithDemo: 'Demogegevens bekijken',
-      startWithImport: 'Mijn transacties importeren',
-      startChoiceHelp:
-        'Demo maakt een apart voorbeeldprofiel aan. Importeren begint met een leeg persoonlijk profiel.',
-      progressAccount: 'Je profiel aanmaken…',
       languageTitle: 'Kies je taal',
       languageDescription: 'Selecteer de taal waarin je Fluxby wilt gebruiken.',
       nameTitle: 'Hoe heet je?',

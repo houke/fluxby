@@ -263,12 +263,6 @@ export const en: TranslationKeys = {
     passwordChangedSuccess:
       'Your master password has been successfully changed.',
     initialSetup: {
-      startChoice: 'Start with',
-      startWithDemo: 'Explore demo data',
-      startWithImport: 'Import my transactions',
-      startChoiceHelp:
-        'Demo creates a separate sample profile. Import starts with an empty personal profile.',
-      progressAccount: 'Creating your profile…',
       languageTitle: 'Choose your language',
       languageDescription: 'Select the language you want to use Fluxby in.',
       nameTitle: "What's your name?",

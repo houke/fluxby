@@ -26,7 +26,6 @@ import { FluxbyWebGL } from '@fluxby/shared';
 import { cn } from '@/lib/utils';
 import { api } from '@/lib/api';
 import { writeToOPFSWithCache } from '@fluxby/database';
-import { POST_SETUP_ROUTE_KEY } from '@/lib/post-setup-route';
 
 interface SecuritySetupProps {
   /** Callback when setup is complete */
@@ -107,7 +106,6 @@ export function SecuritySetup({ onSetupComplete }: SecuritySetupProps) {
 
   const handleFinish = useCallback(async () => {
     setError(null);
-    window.sessionStorage.removeItem(POST_SETUP_ROUTE_KEY);
 
     if (password.length < 8) {
       setError(t.security.passwordTooShort);
