@@ -52,12 +52,12 @@ export const onboardingGuideNl = {
   'review-inbox': {
     title: 'Suggesties beoordelen',
     content:
-      'Open de Controle-inbox voor ontbrekende categorieën, mogelijke dubbelen, ongebruikelijke bedragen en eigen overboekingen. Controleer elke suggestie: Gecontroleerd sluit haar af, Later stelt haar zeven dagen uit. J/K navigeert, L stelt uit, D markeert en U herstelt wanneer de inbox focus heeft.',
+      'Kies Transacties controleren voor ontbrekende categorieën, mogelijke dubbelen, ongebruikelijke bedragen en eigen overboekingen. Controleer elke suggestie: Gecontroleerd sluit haar af, Later stelt haar zeven dagen uit. J/K navigeert, L stelt uit, D markeert en U herstelt wanneer het controleoverzicht focus heeft.',
   },
   'review-repayments': {
     title: 'Terugbetalingen koppelen',
     content:
-      'Kies in de inbox Handmatig koppelen en verbind een ontvangen betaling met de oorspronkelijke uitgave. Kies terugbetaling of onkostenvergoeding en eventueel een deelbedrag. Budgetten gebruiken de netto uitgave in de oorspronkelijke maand; het banksaldo verandert niet. Verwijder een verkeerde koppeling bij Bestaande koppelingen.',
+      'Kies in het controleoverzicht Handmatig koppelen en verbind een ontvangen betaling met de oorspronkelijke uitgave. Kies terugbetaling of onkostenvergoeding en eventueel een deelbedrag. Budgetten gebruiken de netto uitgave in de oorspronkelijke maand; het banksaldo verandert niet. Verwijder een verkeerde koppeling bij Bestaande koppelingen.',
   },
   'review-transfers': {
     title: 'Eigen overboekingen bevestigen',
@@ -67,7 +67,7 @@ export const onboardingGuideNl = {
   'review-bills': {
     title: 'Een terugkerende last maken',
     content:
-      'Kies in de inbox Vaste last maken en selecteer een uitgave en herhaling. Beheer de last daarna bij Abonnementen. Dit registreert een verwachting en voert geen betaling uit.',
+      'Kies in het controleoverzicht Vaste last maken en selecteer een uitgave en herhaling. Beheer de last daarna bij Abonnementen. Dit registreert een verwachting en voert geen betaling uit.',
   },
   'transactions-export': {
     title: 'De gefilterde lijst exporteren',
@@ -244,12 +244,12 @@ export const onboardingGuideEn: OnboardingGuide = {
   'review-inbox': {
     title: 'Review suggestions',
     content:
-      'Open the Review inbox for missing categories, possible duplicates, unusual amounts and own-account transfers. Check each suggestion: Reviewed resolves it and Later snoozes it for seven days. With the inbox focused, J/K navigates, L snoozes, D marks reviewed and U undoes.',
+      'Choose Review transactions for missing categories, possible duplicates, unusual amounts and own-account transfers. Check each suggestion: Reviewed resolves it and Later snoozes it for seven days. With the review focused, J/K navigates, L snoozes, D marks reviewed and U undoes.',
   },
   'review-repayments': {
     title: 'Link repayments',
     content:
-      'In the inbox, use Link manually to connect an incoming payment to its original expense. Choose refund or reimbursement and, if needed, a partial amount. Budgets use the net expense in its original month; bank balances do not change. Remove an incorrect link under Existing links.',
+      'In the review panel, use Link manually to connect an incoming payment to its original expense. Choose refund or reimbursement and, if needed, a partial amount. Budgets use the net expense in its original month; bank balances do not change. Remove an incorrect link under Existing links.',
   },
   'review-transfers': {
     title: 'Confirm own-account transfers',
@@ -259,7 +259,7 @@ export const onboardingGuideEn: OnboardingGuide = {
   'review-bills': {
     title: 'Create a recurring bill',
     content:
-      'In the inbox, choose Create recurring bill, then select an expense and frequency. Manage the bill under Subscriptions afterwards. This records an expectation and does not make a payment.',
+      'In the review panel, choose Create recurring bill, then select an expense and frequency. Manage the bill under Subscriptions afterwards. This records an expectation and does not make a payment.',
   },
   'transactions-export': {
     title: 'Export the filtered list',

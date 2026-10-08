@@ -99,7 +99,7 @@ export const webMcpNl: LandingWebMcpCopy = {
       ['Dashboard', 'fluxby_dashboard'],
       [
         'Transacties',
-        'fluxby_transactions, fluxby_create_transaction, fluxby_update_transaction, fluxby_saved_views',
+        'fluxby_transactions, fluxby_create_transaction, fluxby_update_transaction',
       ],
       ['Analytics', 'fluxby_analytics'],
       ['Budgetten', 'fluxby_budgets, fluxby_set_budget'],
@@ -150,7 +150,6 @@ export const webMcpNl: LandingWebMcpCopy = {
         'Geen',
         'Recente imports met aantal overgeslagen regels',
       ],
-      ['fluxby_saved_views', 'Geen', 'Opgeslagen transactiefilters'],
       [
         'fluxby_create_account',
         'name, type, iban?, bank?, currentBalance?',
@@ -254,7 +253,7 @@ export const webMcpEn: LandingWebMcpCopy = {
       ['Dashboard', 'fluxby_dashboard'],
       [
         'Transactions',
-        'fluxby_transactions, fluxby_create_transaction, fluxby_update_transaction, fluxby_saved_views',
+        'fluxby_transactions, fluxby_create_transaction, fluxby_update_transaction',
       ],
       ['Analytics', 'fluxby_analytics'],
       ['Budgets', 'fluxby_budgets, fluxby_set_budget'],
@@ -298,7 +297,6 @@ export const webMcpEn: LandingWebMcpCopy = {
       ['fluxby_subscriptions', 'None', 'Recurring patterns and statistics'],
       ['fluxby_contacts', 'limit?, offset?', 'items, limit, offset, total'],
       ['fluxby_imports', 'None', 'Recent imports with skipped-row counts'],
-      ['fluxby_saved_views', 'None', 'Saved transaction filters'],
       [
         'fluxby_create_account',
         'name, type, iban?, bank?, currentBalance?',

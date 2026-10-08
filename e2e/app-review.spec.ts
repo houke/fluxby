@@ -42,33 +42,73 @@ test.describe('App review improvements', () => {
     await expect(page.locator('[class*="z-[9999]"]')).toHaveCount(0);
   });
 
-  test('saved filters restore search and compact density', async ({ page }) => {
+  test('transaction actions share the filter card and compact density persists', async ({
+    page,
+  }, testInfo) => {
     await goToTransactionsPage(page);
     await expect(
       page.getByTestId('transaction-checkbox').first()
     ).toBeVisible();
-    const search = page.locator('[data-onboarding="transaction-search"] input');
+    const filters = page.locator('[data-onboarding="transaction-filters"]');
+    const actions = filters.locator('[data-onboarding="transaction-actions"]');
+    await expect(actions.getByRole('button')).toHaveCount(3);
+    for (const name of [
+      'Compact view',
+      'Review transactions',
+      'Download filtered CSV',
+    ]) {
+      await expect(
+        actions.getByRole('button', { name, exact: true })
+      ).toBeVisible();
+      await expect(
+        actions.getByRole('button', { name, exact: true }).locator('svg')
+      ).toHaveCount(1);
+    }
+    await expect(
+      filters.locator('[data-onboarding="transaction-review"]')
+    ).toHaveCSS('border-top-width', '1px');
+    await filters.screenshot({
+      path: `.nexus/tmp/transaction-actions-${testInfo.project.name}.png`,
+    });
+    await expect(page.locator('[data-onboarding="saved-views"]')).toHaveCount(
+      0
+    );
+    await expect(
+      page.getByRole('button', { name: 'Save current filters', exact: true })
+    ).toHaveCount(0);
+    const search = filters.locator(
+      '[data-onboarding="transaction-search"] input'
+    );
     await search.fill('Jumbo');
-    await page
+    await actions
       .getByRole('button', { name: 'Compact view', exact: true })
       .click();
-    await page
-      .getByRole('textbox', { name: 'View name', exact: true })
-      .fill('Groceries');
-    await page
-      .getByRole('button', { name: 'Save current filters', exact: true })
-      .click();
     await expect(
-      page.getByRole('button', { name: 'Groceries', exact: true })
-    ).toBeVisible();
-    await search.fill('');
-    await page
+      actions.getByRole('button', { name: 'Comfortable view', exact: true })
+    ).toHaveAttribute('aria-pressed', 'true');
+    await expect(search).toHaveValue('Jumbo');
+    await page.reload();
+    await expect(
+      page
+        .getByRole('button', { name: 'Unlock', exact: true })
+        .or(
+          actions.getByRole('button', { name: 'Comfortable view', exact: true })
+        )
+    ).toBeVisible({ timeout: 30000 });
+    await unlockTestApp(page);
+    await expect(
+      actions.getByRole('button', { name: 'Comfortable view', exact: true })
+    ).toHaveAttribute('aria-pressed', 'true');
+    await actions
       .getByRole('button', { name: 'Comfortable view', exact: true })
       .click();
-    await page.getByRole('button', { name: 'Groceries', exact: true }).click();
-    await expect(search).toHaveValue('Jumbo');
     await expect(
-      page.getByRole('button', { name: 'Comfortable view', exact: true })
-    ).toHaveAttribute('aria-pressed', 'true');
+      actions.getByRole('button', { name: 'Compact view', exact: true })
+    ).toHaveAttribute('aria-pressed', 'false');
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth + 1
+      )
+    ).toBe(true);
   });
 });

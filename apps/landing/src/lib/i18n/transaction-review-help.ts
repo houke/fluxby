@@ -1,10 +1,10 @@
 export const transactionReviewHelpNl = {
-  savedViewsTitle: 'Compacte weergave en opgeslagen filters',
-  savedViewsText:
-    'Schakel op Transacties naar Compacte weergave voor meer rijen. Geef de huidige filters een naam en sla de weergave op. Klik op de naam om zoeken, periode, categorieën, transactiesoort, contacten, betaalfilters en weergavedichtheid terug te zetten. Opgeslagen weergaven horen bij het actieve profiel; verwijderen wist geen transacties.',
-  reviewTitle: 'Controle-inbox en terugbetalingen',
+  compactTitle: 'Compacte weergave',
+  compactText:
+    'Kies Compacte weergave in de actierij onder de transactiefilters om meer transacties tegelijk te zien. Met Ruime weergave herstel je de gebruikelijke rijhoogte.',
+  reviewTitle: 'Transacties controleren en terugbetalingen',
   reviewText:
-    'Open Transacties en kies Controle-inbox. Controleer ontbrekende categorieën, mogelijke dubbele betalingen, ongebruikelijke bedragen en eigen overboekingen. Een suggestie verandert niets vanzelf. Kies Gecontroleerd of stel de suggestie zeven dagen uit. In de inbox werken J/K voor navigatie, L voor later, D voor gecontroleerd en U voor herstellen. De laatste beslissing kun je direct herstellen.',
+    'Open Transacties en kies Transacties controleren. Controleer ontbrekende categorieën, mogelijke dubbele betalingen, ongebruikelijke bedragen en eigen overboekingen. Een suggestie verandert niets vanzelf. Kies Gecontroleerd of stel de suggestie zeven dagen uit. In het controleoverzicht werken J/K voor navigatie, L voor later, D voor gecontroleerd en U voor herstellen. De laatste beslissing kun je direct herstellen.',
   linksText:
     'Onder Handmatig koppelen kies je een ontvangen betaling, de oorspronkelijke uitgave en het deelbedrag. Kies of het een terugbetaling of kostenvergoeding is, bijvoorbeeld via Tikkie. Meerdere terugbetalingen en deelbedragen zijn mogelijk; samen mogen ze het ontvangen bedrag of de uitgave niet overschrijden. De oorspronkelijke uitgave telt netto mee in budgetten en statistieken. Je banksaldo verandert niet. Verwijder een verkeerde koppeling onder Bestaande koppelingen.',
   billsText:
@@ -17,12 +17,12 @@ export const transactionReviewHelpNl = {
 };
 export type TransactionReviewHelp = typeof transactionReviewHelpNl;
 export const transactionReviewHelpEn: TransactionReviewHelp = {
-  savedViewsTitle: 'Compact view and saved filters',
-  savedViewsText:
-    'On Transactions, switch to Compact view for more rows. Name your current filters and save the view. Select its name to restore search, dates, categories, transaction type, contacts, payment filters and density. Saved views belong to the active profile; deleting one does not delete transactions.',
-  reviewTitle: 'Review inbox and reimbursements',
+  compactTitle: 'Compact view',
+  compactText:
+    'Choose Compact view in the action row below the transaction filters to see more transactions at once. Comfortable view restores the usual row height.',
+  reviewTitle: 'Review transactions and reimbursements',
   reviewText:
-    'Open Transactions and choose Review inbox. Check missing categories, possible duplicate payments, unusual amounts and own-account transfers. Suggestions never change records automatically. Mark an item Reviewed or snooze it for seven days. While the inbox is focused, use J/K to navigate, L for later, D for reviewed and U to undo. You can immediately undo the last decision.',
+    'Open Transactions and choose Review transactions. Check missing categories, possible duplicate payments, unusual amounts and own-account transfers. Suggestions never change records automatically. Mark an item Reviewed or snooze it for seven days. While the review is focused, use J/K to navigate, L for later, D for reviewed and U to undo. You can immediately undo the last decision.',
   linksText:
     'Under Link manually, select an incoming payment, the original expense and a partial amount. Choose whether it is a refund or expense reimbursement, for example a Tikkie. Multiple partial reimbursements are supported; their total cannot exceed the received payment or expense. Budgets and statistics use the net original expense. Your bank balance does not change. Remove incorrect links under Existing links.',
   billsText:

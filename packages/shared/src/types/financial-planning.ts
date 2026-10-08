@@ -43,9 +43,3 @@ export interface MonthlyReview {
   status: 'open' | 'complete';
   checks: Record<string, boolean>;
 }
-export interface SavedTransactionView {
-  id: string;
-  name: string;
-  filters: Record<string, string>;
-  version: number;
-}

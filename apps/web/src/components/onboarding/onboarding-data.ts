@@ -446,6 +446,16 @@ export const onboardingChapters: OnboardingChapter[] = [
       featureStep('review-bills', 'transaction-review'),
       featureStep('transactions-export', 'transaction-review'),
       {
+        id: 'transaction-compact',
+        title: { nl: 'Compacte weergave', en: 'Compact view' },
+        content: {
+          nl: 'Kies Compacte weergave onder de filters om meer transacties tegelijk te zien. Met Ruime weergave zet je de gebruikelijke rijhoogte terug.',
+          en: 'Choose Compact view below the filters to see more transactions at once. Comfortable view restores the usual row height.',
+        },
+        selector: '[data-onboarding="transaction-compact"]',
+        placement: 'bottom',
+      },
+      {
         id: 'transactions-overview',
         title: {
           nl: 'Al je transacties',
@@ -929,28 +939,6 @@ export const onboardingChapters: OnboardingChapter[] = [
     ],
   },
 
-  // ==========================================================================
-  // Transaction tools
-  // ==========================================================================
-  {
-    id: 'transaction-tools',
-    menuItem: 'transactions',
-    route: '/transactions',
-    icon: 'ArrowLeftRight',
-    title: { nl: 'Transactiehulpmiddelen', en: 'Transaction tools' },
-    steps: [
-      {
-        id: 'saved-views',
-        title: { nl: 'Opgeslagen weergaven', en: 'Saved views' },
-        content: {
-          nl: 'Sla je huidige filters op om dezelfde selectie later opnieuw te bekijken. Kies een compacte weergave om veel transacties te controleren.',
-          en: 'Save your current filters to return to the same selection later. Choose a compact view to review many transactions.',
-        },
-        selector: '[data-onboarding="saved-views"]',
-        placement: 'bottom',
-      },
-    ],
-  },
   // ==========================================================================
   // Financial planning
   // ==========================================================================

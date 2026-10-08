@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { Download, ListChecks, Rows3 } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getDataService } from '@/lib/db-singleton';
 import { api } from '@/lib/api';
@@ -10,7 +11,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Card, CardContent } from '@/components/ui/card';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import {
   Accordion,
   AccordionContent,
@@ -25,7 +31,13 @@ import type { PatternType } from '@fluxby/shared';
 type UndoAction = () => Promise<void>;
 const undoLimit = 20;
 
-export function TransactionReview({ view }: { view: TransactionView }) {
+export function TransactionReview({
+  view,
+  onCompactChange,
+}: {
+  view: TransactionView;
+  onCompactChange: (compact: boolean) => void;
+}) {
   const { t, language } = useLanguage(),
     copy = t.transactionReview;
   const { activeProfileId } = useProfile(),
@@ -165,450 +177,469 @@ export function TransactionReview({ view }: { view: TransactionView }) {
       .map((tx) => ({ value: tx.id, label: caption(tx.id) }));
   const linkedAmount = Number(amount.replace(',', '.'));
   return (
-    <Card data-onboarding='transaction-review'>
-      <CardContent className='space-y-4 p-4 sm:p-6'>
-        <div className='flex flex-wrap gap-2'>
-          <Button
-            variant='outline'
-            size='sm'
-            onClick={() => setOpen(!open)}
-            aria-expanded={open}
-          >
-            {open ? copy.close : copy.open}
-          </Button>
-          <Button
-            variant='outline'
-            size='sm'
-            disabled={busy || !activeProfileId}
-            onClick={() =>
-              void action(async () => {
-                const csv = await getDataService().exportFilteredTransactions(
-                  view,
-                  language
-                );
-                if (profileRef.current !== activeProfileId) return;
-                const url = URL.createObjectURL(
-                  new Blob([csv], { type: 'text/csv;charset=utf-8' })
-                );
-                const anchor = document.createElement('a');
-                anchor.href = url;
-                anchor.download = `fluxby-${view.startDate}-${view.endDate}.csv`;
-                document.body.append(anchor);
-                anchor.click();
-                anchor.remove();
-                setTimeout(() => URL.revokeObjectURL(url), 1000);
-              }, copy.exportDone)
-            }
-          >
-            {copy.export}
-          </Button>
-        </div>
-        <p className='text-xs text-muted-foreground'>{copy.exportHelp}</p>
-        {open && (
-          <div
-            className='space-y-4 outline-none focus-visible:ring-1 focus-visible:ring-ring'
-            tabIndex={0}
-            aria-label={copy.title}
-            onKeyDown={(event) => {
-              const element = event.target as HTMLElement;
-              if (
-                element.closest(
-                  'input, select, textarea, button, [role="combobox"]'
-                ) ||
-                event.ctrlKey ||
-                event.metaKey ||
-                event.altKey ||
-                disabled
-              )
-                return;
-              const key = event.key.toLowerCase();
-              if (!['j', 'k', 'l', 'd', 'u'].includes(key)) return;
-              event.preventDefault();
-              if (key === 'j')
-                setIndex(Math.min(position + 1, Math.max(0, items.length - 1)));
-              if (key === 'k') setIndex(Math.max(0, position - 1));
-              if (key === 'l') decide('later');
-              if (key === 'd') decide('done');
-              if (key === 'u') restore();
-            }}
-          >
-            <div className='space-y-2'>
-              <h3 className='text-lg font-semibold tracking-tight'>
-                {copy.title}
-              </h3>
-              <p className='text-sm text-muted-foreground'>
-                {copy.description} {copy.evidence}
-              </p>
-              <label className='flex cursor-pointer items-center gap-2 text-sm'>
-                <Checkbox
-                  checked={includeLater}
-                  onChange={(event) => {
-                    setIncludeLater(event.target.checked);
-                    setIndex(0);
-                  }}
-                />
-                {copy.includeLater}
-              </label>
-              <p className='text-xs text-muted-foreground'>{copy.keyboard}</p>
-            </div>
-            {loadError ? (
-              <div
-                role='alert'
-                className='flex flex-wrap items-center justify-between gap-3 rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm'
+    <div
+      className='mt-4 space-y-4 border-t pt-4'
+      data-onboarding='transaction-review'
+    >
+      <div
+        className='flex flex-wrap gap-2'
+        data-onboarding='transaction-actions'
+      >
+        <Button
+          variant='outline'
+          size='sm'
+          onClick={() => onCompactChange(!view.compact)}
+          aria-pressed={view.compact}
+          data-onboarding='transaction-compact'
+        >
+          <Rows3 className='mr-2 h-4 w-4' aria-hidden='true' />
+          {view.compact
+            ? t.transactionTools.comfortable
+            : t.transactionTools.compact}
+        </Button>
+        <Button
+          variant='outline'
+          size='sm'
+          onClick={() => setOpen(!open)}
+          aria-expanded={open}
+        >
+          <ListChecks className='mr-2 h-4 w-4' aria-hidden='true' />
+          {open ? copy.close : copy.open}
+        </Button>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant='outline'
+                size='sm'
+                disabled={busy || !activeProfileId}
+                onClick={() =>
+                  void action(async () => {
+                    const csv =
+                      await getDataService().exportFilteredTransactions(
+                        view,
+                        language
+                      );
+                    if (profileRef.current !== activeProfileId) return;
+                    const url = URL.createObjectURL(
+                      new Blob([csv], { type: 'text/csv;charset=utf-8' })
+                    );
+                    const anchor = document.createElement('a');
+                    anchor.href = url;
+                    anchor.download = `fluxby-${view.startDate}-${view.endDate}.csv`;
+                    document.body.append(anchor);
+                    anchor.click();
+                    anchor.remove();
+                    setTimeout(() => URL.revokeObjectURL(url), 1000);
+                  }, copy.exportDone)
+                }
               >
-                {copy.loadError}
-                <Button
-                  variant='outline'
-                  size='sm'
-                  onClick={() =>
-                    void Promise.all(queries.map((query) => query.refetch()))
-                  }
-                >
-                  {copy.reload}
-                </Button>
+                <Download className='mr-2 h-4 w-4' aria-hidden='true' />
+                {copy.export}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>{copy.exportHelp}</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </div>
+      {open && (
+        <div
+          className='space-y-4 outline-none focus-visible:ring-1 focus-visible:ring-ring'
+          tabIndex={0}
+          aria-label={copy.title}
+          onKeyDown={(event) => {
+            const element = event.target as HTMLElement;
+            if (
+              element.closest(
+                'input, select, textarea, button, [role="combobox"]'
+              ) ||
+              event.ctrlKey ||
+              event.metaKey ||
+              event.altKey ||
+              disabled
+            )
+              return;
+            const key = event.key.toLowerCase();
+            if (!['j', 'k', 'l', 'd', 'u'].includes(key)) return;
+            event.preventDefault();
+            if (key === 'j')
+              setIndex(Math.min(position + 1, Math.max(0, items.length - 1)));
+            if (key === 'k') setIndex(Math.max(0, position - 1));
+            if (key === 'l') decide('later');
+            if (key === 'd') decide('done');
+            if (key === 'u') restore();
+          }}
+        >
+          <div className='space-y-2'>
+            <h3 className='text-lg font-semibold tracking-tight'>
+              {copy.title}
+            </h3>
+            <p className='text-sm text-muted-foreground'>
+              {copy.description} {copy.evidence}
+            </p>
+            <label className='flex cursor-pointer items-center gap-2 text-sm'>
+              <Checkbox
+                checked={includeLater}
+                onChange={(event) => {
+                  setIncludeLater(event.target.checked);
+                  setIndex(0);
+                }}
+              />
+              {copy.includeLater}
+            </label>
+            <p className='text-xs text-muted-foreground'>{copy.keyboard}</p>
+          </div>
+          {loadError ? (
+            <div
+              role='alert'
+              className='flex flex-wrap items-center justify-between gap-3 rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm'
+            >
+              {copy.loadError}
+              <Button
+                variant='outline'
+                size='sm'
+                onClick={() =>
+                  void Promise.all(queries.map((query) => query.refetch()))
+                }
+              >
+                {copy.reload}
+              </Button>
+            </div>
+          ) : loading ? (
+            <p aria-busy='true'>{t.common.loading}</p>
+          ) : item ? (
+            <article className='space-y-4 rounded-xl border bg-muted/20 p-4'>
+              <div className='flex flex-wrap justify-between gap-2'>
+                <strong>{copy[item.kind]}</strong>
+                <span className='text-sm text-muted-foreground'>
+                  {position + 1} / {items.length} {copy.count}
+                </span>
               </div>
-            ) : loading ? (
-              <p aria-busy='true'>{t.common.loading}</p>
-            ) : item ? (
-              <article className='space-y-4 rounded-xl border bg-muted/20 p-4'>
-                <div className='flex flex-wrap justify-between gap-2'>
-                  <strong>{copy[item.kind]}</strong>
-                  <span className='text-sm text-muted-foreground'>
-                    {position + 1} / {items.length} {copy.count}
-                  </span>
-                </div>
-                <p className='break-words'>
-                  {item.transaction.date} ·{' '}
-                  {item.transaction.merchantName ||
-                    item.transaction.description}{' '}
-                  · <Currency amount={item.transaction.amount} />
+              <p className='break-words'>
+                {item.transaction.date} ·{' '}
+                {item.transaction.merchantName || item.transaction.description}{' '}
+                · <Currency amount={item.transaction.amount} />
+              </p>
+              <p className='text-sm break-words text-muted-foreground'>
+                {item.transaction.accountName} · {item.transaction.description}
+              </p>
+              {item.related && (
+                <p className='text-sm break-words'>
+                  {copy.related}: {item.related.date} ·{' '}
+                  {item.related.merchantName || item.related.description} ·{' '}
+                  <Currency amount={item.related.amount} />
                 </p>
-                <p className='text-sm break-words text-muted-foreground'>
-                  {item.transaction.accountName} ·{' '}
-                  {item.transaction.description}
-                </p>
-                {item.related && (
-                  <p className='text-sm break-words'>
-                    {copy.related}: {item.related.date} ·{' '}
-                    {item.related.merchantName || item.related.description} ·{' '}
-                    <Currency amount={item.related.amount} />
-                  </p>
-                )}
-                {item.kind === 'uncategorized' && (
-                  <div className='grid items-end gap-3 sm:grid-cols-[minmax(0,1fr)_auto]'>
-                    <ReviewSelect
-                      label={copy.category}
-                      value={category}
-                      onChange={setCategory}
-                      disabled={disabled}
-                      placeholder={copy.noCategory}
-                      options={(categories.data || []).map((entry) => ({
-                        value: entry.id,
-                        label:
-                          entry.name +
-                          (entry.id === item.suggestedCategoryId
-                            ? ` (${copy.suggestion})`
-                            : ''),
-                      }))}
-                    />
-                    <Button
-                      disabled={disabled || !category}
-                      onClick={() =>
-                        void action(async () => {
-                          const tx = item.transaction;
-                          const previous =
-                            await getDataService().saveReviewedCategory(
-                              tx.id,
-                              category
-                            );
-                          rememberUndo(() =>
-                            getDataService().undoReviewedCategory(
-                              tx.id,
-                              tx.categoryId,
-                              previous
-                            )
-                          );
-                        })
-                      }
-                    >
-                      {copy.apply}
-                    </Button>
-                  </div>
-                )}
-                {item.related &&
-                  (item.kind === 'refund' || item.kind === 'transfer') && (
-                    <Button
-                      disabled={disabled}
-                      onClick={() => {
-                        const related = item.related;
-                        if (!related) return;
-                        if (item.kind === 'refund') {
-                          setSource(item.transaction.id);
-                          setTarget(related.id);
-                          setAmount(String(Math.abs(item.transaction.amount)));
-                          setRelationType('refund');
-                          setSections((value) => [
-                            ...new Set([...value, 'manual']),
-                          ]);
-                          return;
-                        }
-                        void action(async () => {
-                          const id =
-                            await getDataService().createTransactionLink({
-                              sourceId: item.transaction.id,
-                              targetId: related.id,
-                              kind: 'transfer',
-                              amount: Math.abs(item.transaction.amount),
-                            });
-                          rememberUndo(() =>
-                            getDataService().deleteTransactionLink(id)
-                          );
-                        });
-                      }}
-                    >
-                      {item.kind === 'refund'
-                        ? copy.linkRefund
-                        : copy.linkTransfer}
-                    </Button>
-                  )}
-                <div className='flex flex-wrap gap-2'>
-                  <Button
-                    size='sm'
-                    variant='outline'
-                    disabled={disabled || position <= 0}
-                    onClick={() => setIndex(position - 1)}
-                  >
-                    {copy.previous}
-                  </Button>
-                  <Button
-                    size='sm'
-                    variant='outline'
-                    disabled={disabled || position >= items.length - 1}
-                    onClick={() => setIndex(position + 1)}
-                  >
-                    {copy.next}
-                  </Button>
-                  <Button
-                    size='sm'
-                    variant='outline'
+              )}
+              {item.kind === 'uncategorized' && (
+                <div className='grid items-end gap-3 sm:grid-cols-[minmax(0,1fr)_auto]'>
+                  <ReviewSelect
+                    label={copy.category}
+                    value={category}
+                    onChange={setCategory}
                     disabled={disabled}
-                    onClick={() => decide('later')}
-                  >
-                    {copy.later}
-                  </Button>
+                    placeholder={copy.noCategory}
+                    options={(categories.data || []).map((entry) => ({
+                      value: entry.id,
+                      label:
+                        entry.name +
+                        (entry.id === item.suggestedCategoryId
+                          ? ` (${copy.suggestion})`
+                          : ''),
+                    }))}
+                  />
                   <Button
-                    size='sm'
-                    disabled={disabled}
-                    onClick={() => decide('done')}
+                    disabled={disabled || !category}
+                    onClick={() =>
+                      void action(async () => {
+                        const tx = item.transaction;
+                        const previous =
+                          await getDataService().saveReviewedCategory(
+                            tx.id,
+                            category
+                          );
+                        rememberUndo(() =>
+                          getDataService().undoReviewedCategory(
+                            tx.id,
+                            tx.categoryId,
+                            previous
+                          )
+                        );
+                      })
+                    }
                   >
-                    {copy.done}
+                    {copy.apply}
                   </Button>
                 </div>
-              </article>
-            ) : (
-              <p className='rounded-lg bg-muted/30 p-4 text-sm'>{copy.empty}</p>
-            )}
-            <Button
-              size='sm'
-              variant='outline'
-              disabled={disabled || !undoStack.length}
-              onClick={restore}
-            >
-              {copy.undo}
-              {undoStack.length > 0 && ` (${undoStack.length})`}
-            </Button>
-            <Accordion
-              type='multiple'
-              value={sections}
-              onValueChange={setSections}
-            >
-              <AccordionItem value='manual'>
-                <AccordionTrigger>{copy.manual}</AccordionTrigger>
-                <AccordionContent>
-                  <p className='mb-4 text-sm text-muted-foreground'>
-                    {copy.manualHelp} {copy.refundPolicy}
-                  </p>
-                  <form
-                    className='grid gap-4 sm:grid-cols-2'
-                    onSubmit={(event) => {
-                      event.preventDefault();
-                      if (
-                        !source ||
-                        !target ||
-                        !Number.isFinite(linkedAmount) ||
-                        linkedAmount <= 0 ||
-                        disabled
-                      )
+              )}
+              {item.related &&
+                (item.kind === 'refund' || item.kind === 'transfer') && (
+                  <Button
+                    disabled={disabled}
+                    onClick={() => {
+                      const related = item.related;
+                      if (!related) return;
+                      if (item.kind === 'refund') {
+                        setSource(item.transaction.id);
+                        setTarget(related.id);
+                        setAmount(String(Math.abs(item.transaction.amount)));
+                        setRelationType('refund');
+                        setSections((value) => [
+                          ...new Set([...value, 'manual']),
+                        ]);
                         return;
+                      }
                       void action(async () => {
                         const id = await getDataService().createTransactionLink(
                           {
-                            sourceId: source,
-                            targetId: target,
-                            kind: 'refund',
-                            relationType,
-                            amount: linkedAmount,
+                            sourceId: item.transaction.id,
+                            targetId: related.id,
+                            kind: 'transfer',
+                            amount: Math.abs(item.transaction.amount),
                           }
                         );
                         rememberUndo(() =>
                           getDataService().deleteTransactionLink(id)
                         );
-                        if (profileRef.current === activeProfileId)
-                          setAmount('');
                       });
                     }}
                   >
-                    <ReviewSelect
-                      label={copy.incoming}
-                      value={source}
-                      onChange={setSource}
+                    {item.kind === 'refund'
+                      ? copy.linkRefund
+                      : copy.linkTransfer}
+                  </Button>
+                )}
+              <div className='flex flex-wrap gap-2'>
+                <Button
+                  size='sm'
+                  variant='outline'
+                  disabled={disabled || position <= 0}
+                  onClick={() => setIndex(position - 1)}
+                >
+                  {copy.previous}
+                </Button>
+                <Button
+                  size='sm'
+                  variant='outline'
+                  disabled={disabled || position >= items.length - 1}
+                  onClick={() => setIndex(position + 1)}
+                >
+                  {copy.next}
+                </Button>
+                <Button
+                  size='sm'
+                  variant='outline'
+                  disabled={disabled}
+                  onClick={() => decide('later')}
+                >
+                  {copy.later}
+                </Button>
+                <Button
+                  size='sm'
+                  disabled={disabled}
+                  onClick={() => decide('done')}
+                >
+                  {copy.done}
+                </Button>
+              </div>
+            </article>
+          ) : (
+            <p className='rounded-lg bg-muted/30 p-4 text-sm'>{copy.empty}</p>
+          )}
+          <Button
+            size='sm'
+            variant='outline'
+            disabled={disabled || !undoStack.length}
+            onClick={restore}
+          >
+            {copy.undo}
+            {undoStack.length > 0 && ` (${undoStack.length})`}
+          </Button>
+          <Accordion
+            type='multiple'
+            value={sections}
+            onValueChange={setSections}
+          >
+            <AccordionItem value='manual'>
+              <AccordionTrigger>{copy.manual}</AccordionTrigger>
+              <AccordionContent>
+                <p className='mb-4 text-sm text-muted-foreground'>
+                  {copy.manualHelp} {copy.refundPolicy}
+                </p>
+                <form
+                  className='grid gap-4 sm:grid-cols-2'
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    if (
+                      !source ||
+                      !target ||
+                      !Number.isFinite(linkedAmount) ||
+                      linkedAmount <= 0 ||
+                      disabled
+                    )
+                      return;
+                    void action(async () => {
+                      const id = await getDataService().createTransactionLink({
+                        sourceId: source,
+                        targetId: target,
+                        kind: 'refund',
+                        relationType,
+                        amount: linkedAmount,
+                      });
+                      rememberUndo(() =>
+                        getDataService().deleteTransactionLink(id)
+                      );
+                      if (profileRef.current === activeProfileId) setAmount('');
+                    });
+                  }}
+                >
+                  <ReviewSelect
+                    label={copy.incoming}
+                    value={source}
+                    onChange={setSource}
+                    disabled={disabled}
+                    placeholder={copy.select}
+                    options={transactionOptions('income')}
+                  />
+                  <ReviewSelect
+                    label={copy.expense}
+                    value={target}
+                    onChange={setTarget}
+                    disabled={disabled}
+                    placeholder={copy.select}
+                    options={transactionOptions('expense')}
+                  />
+                  <ReviewSelect
+                    label={copy.relationType}
+                    value={relationType}
+                    onChange={(value) =>
+                      setRelationType(value as 'refund' | 'reimbursement')
+                    }
+                    disabled={disabled}
+                    options={[
+                      { value: 'refund', label: copy.refund },
+                      { value: 'reimbursement', label: copy.reimbursement },
+                    ]}
+                  />
+                  <div className='space-y-2'>
+                    <Label htmlFor='review-refund-amount'>{copy.amount}</Label>
+                    <Input
+                      id='review-refund-amount'
+                      required
+                      inputMode='decimal'
                       disabled={disabled}
-                      placeholder={copy.select}
-                      options={transactionOptions('income')}
+                      value={amount}
+                      onChange={(event) => setAmount(event.target.value)}
                     />
-                    <ReviewSelect
-                      label={copy.expense}
-                      value={target}
-                      onChange={setTarget}
-                      disabled={disabled}
-                      placeholder={copy.select}
-                      options={transactionOptions('expense')}
-                    />
-                    <ReviewSelect
-                      label={copy.relationType}
-                      value={relationType}
-                      onChange={(value) =>
-                        setRelationType(value as 'refund' | 'reimbursement')
-                      }
-                      disabled={disabled}
-                      options={[
-                        { value: 'refund', label: copy.refund },
-                        { value: 'reimbursement', label: copy.reimbursement },
-                      ]}
-                    />
-                    <div className='space-y-2'>
-                      <Label htmlFor='review-refund-amount'>
-                        {copy.amount}
-                      </Label>
-                      <Input
-                        id='review-refund-amount'
-                        required
-                        inputMode='decimal'
-                        disabled={disabled}
-                        value={amount}
-                        onChange={(event) => setAmount(event.target.value)}
-                      />
-                    </div>
-                    <Button
-                      className='sm:col-span-2 sm:justify-self-start'
-                      disabled={
-                        disabled ||
-                        !source ||
-                        !target ||
-                        !Number.isFinite(linkedAmount) ||
-                        linkedAmount <= 0
-                      }
-                      type='submit'
-                    >
-                      {copy.linkRefund}
-                    </Button>
-                  </form>
-                </AccordionContent>
-              </AccordionItem>
-              <AccordionItem value='links'>
-                <AccordionTrigger>
-                  {copy.links} ({links.data?.length || 0})
-                </AccordionTrigger>
-                <AccordionContent className='space-y-3'>
-                  {links.data?.map((link) => (
-                    <div
-                      key={link.id}
-                      className='space-y-3 rounded-lg border p-4 text-sm'
-                    >
-                      <p className='break-words'>
-                        {link.relationType === 'reimbursement'
-                          ? copy.reimbursement
-                          : copy[link.kind]}
-                        : {caption(link.sourceId)} → {caption(link.targetId)} ·{' '}
-                        <Currency amount={link.amount} />
-                      </p>
-                      <Button
-                        size='sm'
-                        variant='outline'
-                        className='hover:border-red-600 hover:bg-red-600 hover:text-white'
-                        disabled={disabled}
-                        onClick={async () => {
-                          const actionProfile = activeProfileId;
-                          if (
-                            (await confirm({
-                              title: copy.unlink,
-                              message: copy.unlinkConfirm,
-                            })) &&
-                            profileRef.current === actionProfile
-                          )
-                            void action(
-                              () =>
-                                getDataService().deleteTransactionLink(link.id),
-                              copy.removed
-                            );
-                        }}
-                      >
-                        {copy.unlink}
-                      </Button>
-                    </div>
-                  ))}
-                </AccordionContent>
-              </AccordionItem>
-              <AccordionItem value='recurring'>
-                <AccordionTrigger>{copy.recurring}</AccordionTrigger>
-                <AccordionContent>
-                  <form
-                    className='grid items-end gap-4 sm:grid-cols-[minmax(0,1fr)_minmax(140px,auto)_auto]'
-                    onSubmit={(event) => {
-                      event.preventDefault();
-                      if (!bill || disabled) return;
-                      void action(async () => {
-                        await getDataService().markTransactionRecurring(
-                          bill,
-                          frequency
-                        );
-                        if (profileRef.current === activeProfileId) setBill('');
-                      }, copy.recorded);
-                    }}
+                  </div>
+                  <Button
+                    className='sm:col-span-2 sm:justify-self-start'
+                    disabled={
+                      disabled ||
+                      !source ||
+                      !target ||
+                      !Number.isFinite(linkedAmount) ||
+                      linkedAmount <= 0
+                    }
+                    type='submit'
                   >
-                    <ReviewSelect
-                      label={copy.billTransaction}
-                      value={bill}
-                      onChange={setBill}
+                    {copy.linkRefund}
+                  </Button>
+                </form>
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value='links'>
+              <AccordionTrigger>
+                {copy.links} ({links.data?.length || 0})
+              </AccordionTrigger>
+              <AccordionContent className='space-y-3'>
+                {links.data?.map((link) => (
+                  <div
+                    key={link.id}
+                    className='space-y-3 rounded-lg border p-4 text-sm'
+                  >
+                    <p className='break-words'>
+                      {link.relationType === 'reimbursement'
+                        ? copy.reimbursement
+                        : copy[link.kind]}
+                      : {caption(link.sourceId)} → {caption(link.targetId)} ·{' '}
+                      <Currency amount={link.amount} />
+                    </p>
+                    <Button
+                      size='sm'
+                      variant='outline'
+                      className='hover:border-red-600 hover:bg-red-600 hover:text-white'
                       disabled={disabled}
-                      placeholder={copy.select}
-                      options={transactionOptions('expense')}
-                    />
-                    <ReviewSelect
-                      label={copy.frequency}
-                      value={frequency}
-                      onChange={(value) => setFrequency(value as PatternType)}
-                      disabled={disabled}
-                      options={(
-                        [
-                          'weekly',
-                          'biweekly',
-                          'monthly',
-                          'quarterly',
-                          'yearly',
-                        ] as const
-                      ).map((value) => ({ value, label: copy[value] }))}
-                    />
-                    <Button disabled={disabled || !bill} type='submit'>
-                      {copy.markBill}
+                      onClick={async () => {
+                        const actionProfile = activeProfileId;
+                        if (
+                          (await confirm({
+                            title: copy.unlink,
+                            message: copy.unlinkConfirm,
+                          })) &&
+                          profileRef.current === actionProfile
+                        )
+                          void action(
+                            () =>
+                              getDataService().deleteTransactionLink(link.id),
+                            copy.removed
+                          );
+                      }}
+                    >
+                      {copy.unlink}
                     </Button>
-                  </form>
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+                  </div>
+                ))}
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value='recurring'>
+              <AccordionTrigger>{copy.recurring}</AccordionTrigger>
+              <AccordionContent>
+                <form
+                  className='grid items-end gap-4 sm:grid-cols-[minmax(0,1fr)_minmax(140px,auto)_auto]'
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    if (!bill || disabled) return;
+                    void action(async () => {
+                      await getDataService().markTransactionRecurring(
+                        bill,
+                        frequency
+                      );
+                      if (profileRef.current === activeProfileId) setBill('');
+                    }, copy.recorded);
+                  }}
+                >
+                  <ReviewSelect
+                    label={copy.billTransaction}
+                    value={bill}
+                    onChange={setBill}
+                    disabled={disabled}
+                    placeholder={copy.select}
+                    options={transactionOptions('expense')}
+                  />
+                  <ReviewSelect
+                    label={copy.frequency}
+                    value={frequency}
+                    onChange={(value) => setFrequency(value as PatternType)}
+                    disabled={disabled}
+                    options={(
+                      [
+                        'weekly',
+                        'biweekly',
+                        'monthly',
+                        'quarterly',
+                        'yearly',
+                      ] as const
+                    ).map((value) => ({ value, label: copy[value] }))}
+                  />
+                  <Button disabled={disabled || !bill} type='submit'>
+                    {copy.markBill}
+                  </Button>
+                </form>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        </div>
+      )}
+    </div>
   );
 }

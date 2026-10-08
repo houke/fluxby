@@ -28,6 +28,10 @@ vi.mock('@/contexts/LanguageContext', () => ({
   useLanguage: () => ({
     t: {
       transactionReview: transactionReviewEn,
+      transactionTools: {
+        compact: 'Compact view',
+        comfortable: 'Comfortable view',
+      },
       common: { loading: 'Loading' },
     },
     language: 'en',
@@ -124,10 +128,10 @@ afterEach(() => {
 const show = async () => {
   const rendered = render(
     <QueryClientProvider client={client}>
-      <TransactionReview view={view} />
+      <TransactionReview view={view} onCompactChange={vi.fn()} />
     </QueryClientProvider>
   );
-  fireEvent.click(screen.getByRole('button', { name: 'Review inbox' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Review transactions' }));
   await screen.findByText('Uncategorized');
   return rendered;
 };
@@ -237,11 +241,13 @@ describe('transaction review UI', () => {
     mocks.profile = 'other';
     rendered.rerender(
       <QueryClientProvider client={client}>
-        <TransactionReview view={view} />
+        <TransactionReview view={view} onCompactChange={vi.fn()} />
       </QueryClientProvider>
     );
     finish();
-    fireEvent.click(screen.getByRole('button', { name: 'Review inbox' }));
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Review transactions' })
+    );
     await screen.findByText('Uncategorized');
     expect(
       screen.getByRole('button', { name: 'Undo last decision' })
@@ -252,13 +258,15 @@ describe('transaction review UI', () => {
     mocks.transactions.mockRejectedValueOnce(new Error('Read failure'));
     render(
       <QueryClientProvider client={client}>
-        <TransactionReview view={view} />
+        <TransactionReview view={view} onCompactChange={vi.fn()} />
       </QueryClientProvider>
     );
-    fireEvent.click(screen.getByRole('button', { name: 'Review inbox' }));
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Review transactions' })
+    );
     expect(await screen.findByRole('alert')).toHaveProperty(
       'textContent',
-      expect.stringContaining('The review inbox could not be loaded.')
+      expect.stringContaining('The transaction review could not be loaded.')
     );
     fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
     await screen.findByText('Uncategorized');

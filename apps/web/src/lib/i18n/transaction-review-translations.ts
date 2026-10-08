@@ -21,8 +21,8 @@ export const transactionReviewNl = {
   reimbursement: 'Kosten terugbetaald (bijvoorbeeld Tikkie)',
   description:
     'Controleer lokale suggesties. Er verandert niets zonder jouw keuze.',
-  open: 'Controle-inbox',
-  close: 'Inbox sluiten',
+  open: 'Transacties controleren',
+  close: 'Controle sluiten',
   export: 'Gefilterde CSV downloaden',
   exportDone: 'CSV gedownload',
   exportHelp:
@@ -37,7 +37,7 @@ export const transactionReviewNl = {
   apply: 'Categorie toepassen',
   suggestion: 'Voorgestelde categorie',
   keyboard:
-    'Sneltoetsen in de inbox: J volgende, K vorige, L later, D gecontroleerd, U herstellen.',
+    'Sneltoetsen in het controleoverzicht: J volgende, K vorige, L later, D gecontroleerd, U herstellen.',
   previous: 'Vorige',
   next: 'Volgende',
   includeLater: 'Ook uitgestelde suggesties tonen',
@@ -79,7 +79,7 @@ export const transactionReviewNl = {
   cancel: 'Annuleren',
   billTransaction: 'Uitgave voor vaste last',
   count: 'suggesties',
-  loadError: 'De controle-inbox kon niet worden geladen.',
+  loadError: 'Het controleoverzicht kon niet worden geladen.',
   reload: 'Opnieuw proberen',
   reference: 'Transactie',
   noCategory: 'Geen categorie',
@@ -112,8 +112,8 @@ export const transactionReviewEn: TransactionReviewTranslations = {
   reimbursement: 'Expense reimbursement (for example Tikkie)',
   description:
     'Review local suggestions. Nothing changes without your decision.',
-  open: 'Review inbox',
-  close: 'Close inbox',
+  open: 'Review transactions',
+  close: 'Close review',
   export: 'Download filtered CSV',
   exportDone: 'CSV downloaded',
   exportHelp:
@@ -127,7 +127,8 @@ export const transactionReviewEn: TransactionReviewTranslations = {
   category: 'Choose category',
   apply: 'Apply category',
   suggestion: 'Suggested category',
-  keyboard: 'Inbox shortcuts: J next, K previous, L later, D reviewed, U undo.',
+  keyboard:
+    'Review shortcuts: J next, K previous, L later, D reviewed, U undo.',
   previous: 'Previous',
   next: 'Next',
   includeLater: 'Include snoozed suggestions',
@@ -169,7 +170,7 @@ export const transactionReviewEn: TransactionReviewTranslations = {
   cancel: 'Cancel',
   billTransaction: 'Expense for recurring bill',
   count: 'suggestions',
-  loadError: 'The review inbox could not be loaded.',
+  loadError: 'The transaction review could not be loaded.',
   reload: 'Try again',
   reference: 'Transaction',
   noCategory: 'No category',

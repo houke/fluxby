@@ -3,14 +3,12 @@ const nl = {
   holiday: 'Vakantie',
   bicycle: 'Fiets',
   studentLoan: 'Studieschuld',
-  uncategorizedSpending: 'Ongecategoriseerde uitgaven',
 };
 const en: typeof nl = {
   emergencyFund: 'Emergency fund',
   holiday: 'Holiday',
   bicycle: 'Bicycle',
   studentLoan: 'Student loan',
-  uncategorizedSpending: 'Uncategorized spending',
 };
 export const FINANCIAL_PLANNING_DEMO_COPY: Record<'nl' | 'en', typeof nl> = {
   nl,

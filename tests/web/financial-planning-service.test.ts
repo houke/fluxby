@@ -9,7 +9,6 @@ import { migration015 } from '../../packages/database/src/migrations/015_profile
 import { migration016 } from '../../packages/database/src/migrations/016_financial_planning';
 import { migration017 } from '../../packages/database/src/migrations/017_remove_transaction_tools';
 import { createFinancialPlanningService } from '@/lib/data/financial-planning';
-import { createSavedTransactionViewsService } from '@/lib/data/saved-transaction-views';
 import {
   exportFinancialBackup,
   restoreFinancialBackup,
@@ -63,7 +62,6 @@ function adapter() {
 }
 let db: ReturnType<typeof adapter>;
 let planning: ReturnType<typeof createFinancialPlanningService>;
-let savedViews: ReturnType<typeof createSavedTransactionViewsService>;
 const transactionId = '00000000-0000-4000-8000-000000000001';
 beforeEach(async () => {
   sqlite = new SQLite(':memory:');
@@ -88,7 +86,6 @@ beforeEach(async () => {
     INSERT INTO budgets(id,category_id,amount,profile_id,created_at) VALUES('food-budget','food',100,'profile',1767225600000),('household-budget','household',100,'profile',1767225600000);`);
   pid = 'profile';
   planning = createFinancialPlanningService(db, () => pid);
-  savedViews = createSavedTransactionViewsService(db, () => pid);
   vi.stubGlobal('window', {});
 });
 afterEach(() => {
@@ -273,10 +270,18 @@ describe('financial planning services', () => {
       type: 'asset',
       amount: 50,
     });
-    await savedViews.createSavedView({
-      name: 'Expenses',
-      filters: { type: 'expense' },
-    });
+    await db.runAsync(
+      'INSERT INTO saved_transaction_views(id,name,filters_json,version,profile_id,created_at,updated_at) VALUES(?,?,?,?,?,?,?)',
+      [
+        'legacy-view',
+        'Expenses',
+        JSON.stringify({ type: 'expense' }),
+        1,
+        pid,
+        1,
+        1,
+      ]
+    );
     const backup = await exportFinancialBackup(db);
     await planning.deleteSavingsGoal(goal.id);
     await restoreFinancialBackup(db, backup);
@@ -319,28 +324,7 @@ describe('financial planning services', () => {
     );
   });
 });
-describe('saved views and existing financial workflows', () => {
-  it('persists safe saved views and rejects arbitrary JSON/prototype or invalid dates', async () => {
-    const view = await savedViews.createSavedView({
-      name: 'Bills',
-      filters: { search: 'utilities', type: 'expense' },
-    });
-    expect((await savedViews.getSavedViews())[0]).toEqual(view);
-    await expect(
-      savedViews.createSavedView({
-        name: 'Bad',
-        filters: { sql: 'DROP TABLE users' },
-      })
-    ).rejects.toThrow();
-    await expect(
-      savedViews.createSavedView({
-        name: 'Bad',
-        filters: { startDate: '2026-02-31' },
-      })
-    ).rejects.toThrow();
-    await savedViews.deleteSavedView(view.id);
-    expect(await savedViews.getSavedViews()).toEqual([]);
-  });
+describe('existing financial workflows', () => {
   it('rolls unused monthly budget forward while editing uses unscaled base amount', async () => {
     const ds = createDataService(db as never);
     await ds.updateBudget('food-budget', { rolloverEnabled: true });
@@ -420,9 +404,9 @@ describe('saved views and existing financial workflows', () => {
           .map((goal) => goal.currentAmount)
           .sort()
       ).toEqual([1250, 450]);
-      expect((await savedViews.getSavedViews())[0].name).toBe(
-        expected.copy.uncategorizedSpending
-      );
+      expect(
+        await db.queryAsync('SELECT id FROM saved_transaction_views')
+      ).toEqual([]);
     }
   );
 });

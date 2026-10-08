@@ -617,13 +617,6 @@ export const en: TranslationKeys = {
   transactionTools: {
     compact: 'Compact view',
     comfortable: 'Comfortable view',
-    savedViews: 'Saved views',
-    saveView: 'Save current filters',
-    viewName: 'View name',
-    saved: 'Saved',
-    deleted: 'Deleted',
-    confirmDelete: 'Delete this saved view?',
-    invalidFilters: 'This saved view contains invalid filters.',
   },
   planning: {
     title: 'Planning',

@@ -151,7 +151,7 @@ for (const language of ['nl', 'en'] as const) {
 }
 
 for (const language of ['nl', 'en'] as const) {
-  test(`feature help explains saved filters and household entry point (${language})`, async ({
+  test(`feature help explains compact rows and household entry point (${language})`, async ({
     page,
   }) => {
     await page.goto('/help/transactions');
@@ -160,17 +160,14 @@ for (const language of ['nl', 'en'] as const) {
       .click();
     await expect(
       page.getByRole('heading', {
-        name:
-          language === 'nl'
-            ? 'Compacte weergave en opgeslagen filters'
-            : 'Compact view and saved filters',
+        name: language === 'nl' ? 'Compacte weergave' : 'Compact view',
         exact: true,
       })
     ).toBeVisible();
     await expect(page.locator('main')).toContainText(
       language === 'nl'
-        ? 'verwijderen wist geen transacties'
-        : 'deleting one does not delete transactions'
+        ? 'actierij onder de transactiefilters'
+        : 'action row below the transaction filters'
     );
     await page.goto('/help/planning');
     await expect(page.locator('main')).toContainText(

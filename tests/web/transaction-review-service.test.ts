@@ -405,7 +405,7 @@ describe('transaction review', () => {
     ).toBe(true);
     expect(await service.getTransactionLinks()).toHaveLength(0);
   });
-  it('checks every saved view dimension for exports', () => {
+  it('checks every active filter dimension for exports', () => {
     const row = {
       date: '2026-09-01',
       type: 'expense',

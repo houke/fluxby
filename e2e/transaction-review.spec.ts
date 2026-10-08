@@ -120,6 +120,13 @@ for (const language of ['nl', 'en'] as const) {
       page.locator('[data-onboarding="transaction-row"]')
     ).toHaveCount(2);
     const review = page.locator('[data-onboarding="transaction-review"]');
+    const filters = page.locator('[data-onboarding="transaction-filters"]');
+    await expect(
+      filters.locator('[data-onboarding="transaction-actions"] button')
+    ).toHaveCount(3);
+    await filters.screenshot({
+      path: `.nexus/tmp/transaction-actions-${language}.png`,
+    });
     const downloaded = page.waitForEvent('download');
     await review
       .getByRole('button', {
@@ -141,7 +148,9 @@ for (const language of ['nl', 'en'] as const) {
       await unlink(exportPath);
     }
     await review
-      .getByRole('button', { name: nl ? 'Controle-inbox' : 'Review inbox' })
+      .getByRole('button', {
+        name: nl ? 'Transacties controleren' : 'Review transactions',
+      })
       .click();
     await expect(review.getByRole('article')).toBeVisible();
     const undoName = nl

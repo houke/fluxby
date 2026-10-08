@@ -33,7 +33,6 @@ export type WebMcpToolKey =
   | 'subscriptions'
   | 'contacts'
   | 'imports'
-  | 'savedViews'
   | 'createAccount'
   | 'createTransaction'
   | 'updateTransaction'
@@ -135,10 +134,6 @@ export const webMcpNl: WebMcpCopy = {
     imports: {
       title: 'Importgeschiedenis lezen',
       description: 'Lees recente bankbestand-imports.',
-    },
-    savedViews: {
-      title: 'Opgeslagen filters lezen',
-      description: 'Lees opgeslagen transactieweergaven.',
     },
     createAccount: {
       title: 'Rekening toevoegen',
@@ -265,10 +260,6 @@ export const webMcpEn: WebMcpCopy = {
     imports: {
       title: 'Read import history',
       description: 'Read recent bank-file imports.',
-    },
-    savedViews: {
-      title: 'Read saved filters',
-      description: 'Read saved transaction views.',
     },
     createAccount: {
       title: 'Add account',

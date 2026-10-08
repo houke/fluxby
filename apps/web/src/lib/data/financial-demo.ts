@@ -87,31 +87,6 @@ export async function seedFinancialPlanningDemo(
       now,
     ]
   );
-  const view = {
-    search: '',
-    type: 'expense',
-    startDate: `${today.slice(0, 4)}-01-01`,
-    endDate: today,
-    categories: ['0'],
-    ibans: [],
-    accountName: null,
-    addressBookId: null,
-    methods: [],
-    providers: [],
-    compact: true,
-  };
-  await db.runAsync(
-    'INSERT INTO saved_transaction_views(id,name,filters_json,version,profile_id,created_at,updated_at) VALUES(?,?,?,?,?,?,?)',
-    [
-      crypto.randomUUID(),
-      data.copy.uncategorizedSpending,
-      JSON.stringify({ version: '1', view: JSON.stringify(view) }),
-      1,
-      profileId,
-      now,
-      now,
-    ]
-  );
   await db.runAsync(
     'INSERT INTO monthly_reviews(id,month,status,checks_json,profile_id,created_at,updated_at) VALUES(?,?,?,?,?,?,?)',
     [

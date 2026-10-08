@@ -407,7 +407,6 @@ export function buildWebMcpTools(deps: ToolDependencies): WebMcpTool[] {
         skippedRowCount: skippedRows.length,
       }));
     }),
-    tool('savedViews', schema(), async () => service.getSavedViews()),
     write(
       'createAccount',
       schema(

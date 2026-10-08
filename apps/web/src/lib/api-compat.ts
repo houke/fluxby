@@ -1591,17 +1591,6 @@ export const api = {
     return ds.updatePaymentProviderRule(id, updates);
   },
 
-  // ============= Saved transaction views =============
-  getSavedViews: (
-    ...args: Parameters<ReturnType<typeof getDataService>['getSavedViews']>
-  ) => getDataService().getSavedViews(...args),
-  createSavedView: (
-    ...args: Parameters<ReturnType<typeof getDataService>['createSavedView']>
-  ) => getDataService().createSavedView(...args),
-  deleteSavedView: (
-    ...args: Parameters<ReturnType<typeof getDataService>['deleteSavedView']>
-  ) => getDataService().deleteSavedView(...args),
-
   // ============= Data Management =============
   previewImport: async (data: unknown) => {
     const ds = getDataService();

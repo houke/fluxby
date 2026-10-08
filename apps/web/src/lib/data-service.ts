@@ -85,7 +85,6 @@ import {
   type FinancialDatabase,
   validateDateOnly,
 } from './data/financial-planning';
-import { createSavedTransactionViewsService } from './data/saved-transaction-views';
 import { findMatchingRule, matchesCategoryRule } from './transaction-view';
 import {
   FINANCIAL_FEATURE_TABLES,
@@ -400,7 +399,6 @@ export function createDataService(db: FinancialDatabase) {
 
   const service = {
     ...createFinancialPlanningService(db, profileId),
-    ...createSavedTransactionViewsService(db, profileId),
     ...createHouseholdBudgetService(db, profileId),
     ...createImportToolsService(db, profileId),
     ...createTransactionReviewService(db, profileId),

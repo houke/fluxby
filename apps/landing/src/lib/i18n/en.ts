@@ -3245,8 +3245,8 @@ Object.assign(en, {
           text: 'On Subscriptions, record a renewal date and cancellation deadline. The app highlights approaching deadlines while open; it does not send notifications when the app is closed. Check provider terms before cancelling.',
         },
         {
-          title: 'Compact transactions and saved views',
-          text: 'On Transactions, toggle Compact view to show more rows. Name the current filters and save a view. Select its name to restore the search, date range, categories, transaction type, contacts, payment filters and density. Views belong to the active profile.',
+          title: 'Compact transactions',
+          text: 'Choose Compact view below the transaction filters to show more rows. In the same action row, review transactions and download the filtered selection as CSV. Comfortable view restores the usual row height.',
         },
         {
           title: 'Backup preview, recovery and health',

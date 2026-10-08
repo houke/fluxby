@@ -60,7 +60,8 @@ describe('WebMCP tool surface', () => {
     const { tools } = setup();
     const names = tools.map((tool) => tool.name);
     expect(new Set(names).size).toBe(names.length);
-    expect(names).toHaveLength(20);
+    expect(names).toHaveLength(19);
+    expect(names).not.toContain('fluxby_saved_views');
     expect(
       tools.find((tool) => tool.name === 'fluxby_create_transaction')
         ?.annotations.consequentialHint

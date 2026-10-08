@@ -105,7 +105,6 @@ import {
 import { TransactionRowBadges } from '@/components/transactions/TransactionRowBadges';
 import { TransactionCard } from '@/components/transactions/TransactionCard';
 import { TransactionReview } from '@/components/transaction-review/TransactionReview';
-import { SavedTransactionViews } from '@/components/transactions/SavedTransactionViews';
 import type { TransactionView } from '@/lib/transaction-view';
 import { Currency } from '@/components/ui/currency';
 import { api } from '@/lib/api';
@@ -430,28 +429,6 @@ export default function Transactions() {
     methods: selectedPaymentMethods,
     providers: selectedPaymentProcessors,
     compact,
-  };
-  const applyView = (view: TransactionView) => {
-    setSearch(view.search);
-    setDebouncedSearch(view.search);
-    setContextTransactionType(view.type);
-    setTransactionType(view.type);
-    setDebouncedType(view.type);
-    setDateRange(
-      new Date(`${view.startDate}T12:00:00`),
-      new Date(`${view.endDate}T12:00:00`)
-    );
-    setCategories(view.categories);
-    setSelectedCategoryIds(view.categories);
-    setOpposingAccountIbans(view.ibans);
-    setSelectedIbans(view.ibans);
-    setOpposingAccountName(view.accountName);
-    setSelectedAccountName(view.accountName);
-    setAddressBookId(view.addressBookId);
-    setSelectedAddressBookId(view.addressBookId);
-    setSelectedPaymentMethods(view.methods);
-    setSelectedPaymentProcessors(view.providers);
-    changeCompact(view.compact);
   };
 
   const queryClient = useQueryClient();
@@ -2216,17 +2193,12 @@ export default function Transactions() {
                   />
                 </div>
               </div>
+              <TransactionReview
+                view={currentView}
+                onCompactChange={changeCompact}
+              />
             </CardContent>
           </Card>
-        </div>
-
-        <div className='space-y-3 px-3 sm:px-0'>
-          <TransactionReview view={currentView} />
-          <SavedTransactionViews
-            view={currentView}
-            onApply={applyView}
-            onCompactChange={changeCompact}
-          />
         </div>
 
         {/* Transactions List */}

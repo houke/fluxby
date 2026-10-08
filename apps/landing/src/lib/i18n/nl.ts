@@ -3585,8 +3585,8 @@ Object.assign(nl, {
           text: 'Leg bij Abonnementen een verlengdatum en opzegdeadline vast. De app markeert naderende deadlines zolang deze open is; er komen geen meldingen als de app gesloten is. Controleer de voorwaarden van de aanbieder voordat je opzegt.',
         },
         {
-          title: 'Compacte transacties en opgeslagen weergaven',
-          text: 'Schakel bij Transacties de compacte weergave in om meer regels te zien. Geef de huidige filters een naam en sla de weergave op. Klik op de naam om zoekopdracht, periode, categorieën, transactietype, contacten, betaalfilters en dichtheid terug te zetten. Weergaven horen bij het actieve profiel.',
+          title: 'Compacte transacties',
+          text: 'Kies onder de transactiefilters Compacte weergave om meer transacties tegelijk te zien. In dezelfde actierij kun je transacties controleren en de gefilterde selectie als CSV downloaden. Ruime weergave herstelt de gebruikelijke rijhoogte.',
         },
         {
           title: 'Back-upvoorbeeld, herstelkopie en status',

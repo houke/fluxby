@@ -557,13 +557,6 @@ export interface TranslationKeys {
   transactionTools: {
     compact: string;
     comfortable: string;
-    savedViews: string;
-    saveView: string;
-    viewName: string;
-    saved: string;
-    deleted: string;
-    confirmDelete: string;
-    invalidFilters: string;
   };
   planning: {
     title: string;
@@ -2447,13 +2440,6 @@ export const nl: TranslationKeys = {
   transactionTools: {
     compact: 'Compacte weergave',
     comfortable: 'Ruime weergave',
-    savedViews: 'Opgeslagen weergaven',
-    saveView: 'Huidige filters opslaan',
-    viewName: 'Naam van weergave',
-    saved: 'Opgeslagen',
-    deleted: 'Verwijderd',
-    confirmDelete: 'Deze opgeslagen weergave verwijderen?',
-    invalidFilters: 'Deze opgeslagen weergave bevat ongeldige filters.',
   },
   planning: {
     title: 'Planning',
