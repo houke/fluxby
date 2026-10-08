@@ -1,3 +1,4 @@
+import { formatDate } from '@/lib/utils';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Download,
@@ -602,7 +603,7 @@ export function UpdateChecker() {
             <DialogDescription>
               {updateInfo?.date && (
                 <span className='text-xs text-muted-foreground'>
-                  {new Date(updateInfo.date).toLocaleDateString()}
+                  {formatDate(updateInfo.date)}
                 </span>
               )}
             </DialogDescription>

@@ -46,7 +46,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { api } from '@/lib/api';
 import { getTypeSafeApiKey } from '@/lib/typesafe-client';
-import { cn } from '@/lib/utils';
+import { cn, formatDate } from '@/lib/utils';
 import { Currency } from '@/components/ui/currency';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useProfile } from '@/contexts/ProfileContext';
@@ -75,17 +75,6 @@ import {
 function capitalizeFirst(name: string | null | undefined): string | null {
   if (!name) return null;
   return name.charAt(0).toUpperCase() + name.slice(1);
-}
-
-// Helper to format dates
-function formatDate(dateStr: string, language: string): string {
-  const date = parseDateOnly(dateStr);
-  return date.toLocaleDateString(language === 'en' ? 'en-GB' : 'nl-NL', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-    timeZone: 'UTC',
-  });
 }
 
 // Helper to get frequency label
@@ -119,7 +108,7 @@ function _getMonthlyEquivalent(
 }
 
 export default function Subscriptions() {
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
   const { activeProfileId } = useProfile();
   const toast = useToast();
   const confirm = useConfirm();
@@ -801,7 +790,7 @@ export default function Subscriptions() {
                       <div className='flex flex-wrap gap-x-4 gap-y-1 pt-1 text-sm text-muted-foreground'>
                         {suggestion.payments.slice(0, 3).map((payment) => (
                           <span key={payment.id} className='inline-flex gap-1'>
-                            <span>{formatDate(payment.date, language)}</span>
+                            <span>{formatDate(payment.date)}</span>
                             <Currency amount={Math.abs(payment.amount)} />
                           </span>
                         ))}
@@ -1302,7 +1291,6 @@ export function SubscriptionCard({
   }>;
   isLoadingTransactions?: boolean;
 }) {
-  const { language } = useLanguage();
   const toast = useToast();
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -1501,7 +1489,7 @@ export function SubscriptionCard({
                   showAwaiting && 'text-amber-700 dark:text-amber-400'
                 )}
               >
-                {formatDate(pattern.nextExpectedDate, language)}
+                {formatDate(pattern.nextExpectedDate)}
                 {showAwaiting ? (
                   <span className='ml-1 text-xs'>
                     ({t.subscriptions?.awaitingTransaction})
@@ -1554,7 +1542,7 @@ export function SubscriptionCard({
                   <span className='text-muted-foreground'>
                     {t.subscriptions.renewalDate}:{' '}
                   </span>
-                  {formatDate(pattern.renewalDate, language)}
+                  {formatDate(pattern.renewalDate)}
                 </p>
               )}
               {pattern.cancellationDeadline && (
@@ -1562,7 +1550,7 @@ export function SubscriptionCard({
                   <span className='text-muted-foreground'>
                     {t.subscriptions.cancellationDeadline}:{' '}
                   </span>
-                  {formatDate(pattern.cancellationDeadline, language)}
+                  {formatDate(pattern.cancellationDeadline)}
                 </p>
               )}
               {reminders.map((reminder) => (
@@ -1749,7 +1737,7 @@ export function SubscriptionCard({
                   >
                     <div className='flex items-center gap-3'>
                       <span className='text-muted-foreground'>
-                        {formatDate(tx.date, language)}
+                        {formatDate(tx.date)}
                       </span>
                       <span className='max-w-xs truncate text-muted-foreground'>
                         {tx.description}

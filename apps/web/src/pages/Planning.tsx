@@ -2,12 +2,12 @@ import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
 import {
-  formatDate,
   formatDateISO,
   type SavingsGoal,
   type NetWorthItem,
   type MonthlyReview,
 } from '@fluxby/shared';
+import { formatDate } from '@/lib/utils';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/button';
 import {
@@ -112,7 +112,7 @@ export default function Planning() {
     ['goals', 'net-worth', 'review', 'household'].includes(requestedTab)
       ? requestedTab
       : 'goals';
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
   const p = t.planning;
   const { activeProfileId } = useProfile();
   const toast = useToast();
@@ -586,12 +586,7 @@ export default function Planning() {
                         <Currency amount={goal.monthlyContribution} />
                       </span>
                       {goal.deadline && (
-                        <span>
-                          {formatDate(
-                            goal.deadline,
-                            language === 'en' ? 'en-GB' : 'nl-NL'
-                          )}
-                        </span>
+                        <span>{formatDate(goal.deadline)}</span>
                       )}
                     </div>
                     {goal.currentAmount >= goal.targetAmount && (

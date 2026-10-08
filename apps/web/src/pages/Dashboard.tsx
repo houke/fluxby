@@ -64,7 +64,7 @@ const ChartSkeleton = () => (
 );
 
 import { PageHeader } from '@/components/layout/PageHeader';
-import { formatDateShort } from '@/lib/utils';
+import { formatDate } from '@/lib/utils';
 import { Currency } from '@/components/ui/currency';
 import { api } from '@/lib/api';
 import { useFilterParams, useFilters } from '@/contexts/FilterContext';
@@ -1151,7 +1151,7 @@ export default function Dashboard() {
                               t.transactions.unknown}
                           </p>
                           <p className='text-sm text-muted-foreground'>
-                            {formatDateShort(tx.date)}
+                            {formatDate(tx.date)}
                           </p>
                         </div>
                       </div>

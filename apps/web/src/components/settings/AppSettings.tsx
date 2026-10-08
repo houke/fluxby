@@ -1,3 +1,4 @@
+import { formatDate } from '@/lib/utils';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
@@ -1020,7 +1021,7 @@ export function AppSettings({
             <DialogDescription>
               {updateInfo?.date && (
                 <span className='text-xs text-muted-foreground'>
-                  {new Date(updateInfo.date).toLocaleDateString()}
+                  {formatDate(updateInfo.date)}
                 </span>
               )}
             </DialogDescription>

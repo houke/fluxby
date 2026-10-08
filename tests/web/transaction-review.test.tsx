@@ -10,7 +10,10 @@ import {
 } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { TransactionReview } from '@/components/transaction-review/TransactionReview';
-import { transactionReviewEn } from '@/lib/i18n/transaction-review-translations';
+import {
+  transactionReviewEn,
+  transactionReviewNl,
+} from '@/lib/i18n/transaction-review-translations';
 import type { TransactionView } from '@/lib/transaction-view';
 const mocks = vi.hoisted(() => ({
   save: vi.fn(),
@@ -22,19 +25,22 @@ const mocks = vi.hoisted(() => ({
   success: vi.fn(),
   error: vi.fn(),
   profile: 'profile',
+  language: 'en' as 'en' | 'nl',
+  inbox: vi.fn(),
   transactions: vi.fn(),
 }));
 vi.mock('@/contexts/LanguageContext', () => ({
   useLanguage: () => ({
     t: {
-      transactionReview: transactionReviewEn,
+      transactionReview:
+        mocks.language === 'nl' ? transactionReviewNl : transactionReviewEn,
       transactionTools: {
         compact: 'Compact view',
         comfortable: 'Comfortable view',
       },
       common: { loading: 'Loading' },
     },
-    language: 'en',
+    language: mocks.language,
   }),
 }));
 vi.mock('@/contexts/ProfileContext', () => ({
@@ -54,22 +60,7 @@ vi.mock('@/lib/api', () => ({
 }));
 vi.mock('@/lib/db-singleton', () => ({
   getDataService: () => ({
-    getTransactionReviewInbox: async () => [
-      {
-        key: 'uncategorized:expense',
-        kind: 'uncategorized',
-        transaction: {
-          id: 'expense',
-          date: '2026-09-01',
-          type: 'expense',
-          amount: -30,
-          description: 'Groceries',
-          accountName: 'Bank',
-          categoryId: null,
-        },
-        suggestedCategoryId: 'food',
-      },
-    ],
+    getTransactionReviewInbox: mocks.inbox,
     getReviewTransactions: mocks.transactions,
     getTransactionLinks: async () => [],
     saveReviewDecision: mocks.save,
@@ -113,6 +104,24 @@ let client: QueryClient;
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.profile = 'profile';
+  mocks.language = 'en';
+  mocks.inbox.mockResolvedValue([
+    {
+      key: 'uncategorized:expense',
+      kind: 'uncategorized',
+      transaction: {
+        id: 'expense',
+        date: '2026-09-01',
+        type: 'expense',
+        amount: -30,
+        description: 'Groceries',
+        accountName: 'Bank',
+        categoryId: null,
+      },
+      suggestedCategoryId: 'food',
+    },
+  ]);
+
   mocks.save.mockResolvedValue(null);
   mocks.category.mockResolvedValue(null);
   mocks.transactions.mockResolvedValue(reviewRows);
@@ -125,14 +134,18 @@ afterEach(() => {
   cleanup();
   client.clear();
 });
-const show = async () => {
+const show = async (
+  kind = 'uncategorized' as keyof typeof transactionReviewEn
+) => {
+  const copy =
+    mocks.language === 'nl' ? transactionReviewNl : transactionReviewEn;
   const rendered = render(
     <QueryClientProvider client={client}>
       <TransactionReview view={view} onCompactChange={vi.fn()} />
     </QueryClientProvider>
   );
-  fireEvent.click(screen.getByRole('button', { name: 'Review transactions' }));
-  await screen.findByText('Uncategorized');
+  fireEvent.click(screen.getByRole('button', { name: copy.open }));
+  await screen.findByText(copy[kind]);
   return rendered;
 };
 const choose = async (label: string, option: RegExp | string) => {
@@ -142,6 +155,35 @@ const choose = async (label: string, option: RegExp | string) => {
   fireEvent.click(await screen.findByRole('option', { name: option }));
 };
 describe('transaction review UI', () => {
+  it.each(['nl', 'en'] as const)(
+    'formats category spending alerts and related transactions in %s',
+    async (language) => {
+      mocks.language = language;
+      mocks.inbox.mockResolvedValue([
+        {
+          key: 'categorySpike:expense',
+          kind: 'categorySpike',
+          transaction: { ...reviewRows[0], date: '2026-09-10' },
+          related: { ...reviewRows[1], date: '2026-09-09' },
+        },
+      ]);
+      const { container } = await show('categorySpike');
+      const article = container.querySelector('article');
+      expect(article?.textContent).toContain('10-09-2026');
+      expect(article?.textContent).toContain('09-09-2026');
+      expect(article?.textContent).not.toMatch(/2026-09-\d{2}/);
+      const copy =
+        language === 'nl' ? transactionReviewNl : transactionReviewEn;
+      fireEvent.click(screen.getByRole('button', { name: copy.manual }));
+      fireEvent.keyDown(screen.getByRole('combobox', { name: copy.incoming }), {
+        key: 'ArrowDown',
+      });
+      expect(
+        (await screen.findByRole('option', { name: /Tikkie/ })).textContent
+      ).toContain('02-09-2026');
+    }
+  );
+
   it('supports keyboard later and undo', async () => {
     await show();
     fireEvent.keyDown(screen.getByLabelText('Review transactions'), {

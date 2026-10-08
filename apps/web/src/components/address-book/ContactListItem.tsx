@@ -28,7 +28,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { Currency } from '@/components/ui/currency';
-import { cn } from '@/lib/utils';
+import { cn, formatDate } from '@/lib/utils';
 import type { AddressBookEntryWithStats } from '@/hooks/useAddressBook';
 
 interface ContactListItemProps {
@@ -429,7 +429,7 @@ export const ContactListItem = memo(function ContactListItem({
                       {tx.description || t.transactions?.unknown}
                     </p>
                     <p className='text-xs text-muted-foreground'>
-                      {new Date(tx.date).toLocaleDateString()}
+                      {formatDate(tx.date)}
                     </p>
                   </div>
                   <div

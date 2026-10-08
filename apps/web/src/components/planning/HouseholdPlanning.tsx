@@ -10,6 +10,7 @@ import {
   YAxis,
 } from 'recharts';
 import { addDaysToDateOnly, formatDateISO } from '@fluxby/shared';
+import { formatDate } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useProfile } from '@/contexts/ProfileContext';
 import { useToast } from '@/contexts/ToastContext';
@@ -127,12 +128,7 @@ export function HouseholdPlanning() {
     onError: () => toast.error(p.failed),
   });
   const locale = language === 'nl' ? 'nl-NL' : 'en-GB';
-  const dateLabel = (date: string) =>
-    new Date(date + 'T00:00:00').toLocaleDateString(locale, {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-    });
+  const dateLabel = formatDate;
   const saveFlow = (event: FormEvent) => {
     event.preventDefault();
     change.mutate(async () => {

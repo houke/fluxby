@@ -1,3 +1,4 @@
+import { formatDate } from '@/lib/utils';
 import { CashflowAnalysis } from '@/components/transaction-review/CashflowAnalysis';
 import { useQuery } from '@tanstack/react-query';
 import { useState, useRef, useEffect } from 'react';
@@ -1348,10 +1349,11 @@ export default function Analytics() {
                                     ];
                                   }}
                                   labelFormatter={(label) => {
-                                    const date = new Date(
-                                      label as string | number
+                                    return formatDate(
+                                      typeof label === 'number'
+                                        ? new Date(label)
+                                        : String(label)
                                     );
-                                    return date.toLocaleDateString();
                                   }}
                                   contentStyle={{
                                     backgroundColor: 'hsl(var(--card))',
@@ -1555,10 +1557,11 @@ export default function Analytics() {
                                     ];
                                   }}
                                   labelFormatter={(label) => {
-                                    const date = new Date(
-                                      label as string | number
+                                    return formatDate(
+                                      typeof label === 'number'
+                                        ? new Date(label)
+                                        : String(label)
                                     );
-                                    return date.toLocaleDateString();
                                   }}
                                   contentStyle={{
                                     backgroundColor: 'hsl(var(--card))',

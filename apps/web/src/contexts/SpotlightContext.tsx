@@ -1,3 +1,4 @@
+import { formatDate } from '@/lib/utils';
 /* eslint-disable react-refresh/only-export-components */
 import {
   createContext,
@@ -318,7 +319,7 @@ export function SpotlightProvider({ children }: SpotlightProviderProps) {
   ).map((tx) => ({
     id: `tx-${tx.id}`,
     title: tx.opposingAccountName || tx.description,
-    subtitle: `€${Math.abs(tx.amount).toFixed(2)} • ${new Date(tx.date).toLocaleDateString()}`,
+    subtitle: `€${Math.abs(tx.amount).toFixed(2)} • ${formatDate(tx.date)}`,
     icon: ArrowLeftRight,
     group: 'transactions' as const,
     keywords: [

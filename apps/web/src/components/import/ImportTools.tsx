@@ -1,3 +1,4 @@
+import { formatDateTime } from '@/lib/utils';
 import { useId, useState } from 'react';
 import { ChevronDown, Loader2 } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -326,7 +327,6 @@ export function ImportRecoveryPanel() {
   });
   const snapshots = snapshotsQuery.data ?? [];
   const batches = (batchesQuery.data ?? []).filter((batch) => batch.count > 0);
-  const locale = language === 'nl' ? 'nl-NL' : 'en-GB';
   return (
     <section className='space-y-4' data-onboarding='import-recovery'>
       <AccountFreshness />
@@ -377,9 +377,7 @@ export function ImportRecoveryPanel() {
                         <span className='min-w-0 break-words'>
                           {snapshot.filename}
                           <span className='mt-1 block text-xs text-muted-foreground'>
-                            {new Date(snapshot.createdAt).toLocaleString(
-                              locale
-                            )}
+                            {formatDateTime(snapshot.createdAt)}
                           </span>
                         </span>
                         <Button
@@ -428,7 +426,7 @@ export function ImportRecoveryPanel() {
                           {batch.filename}
                           <span className='mt-1 block text-xs text-muted-foreground'>
                             {batch.count} {text.rows} ·{' '}
-                            {new Date(batch.createdAt).toLocaleString(locale)}
+                            {formatDateTime(batch.createdAt)}
                           </span>
                         </span>
                         <Button

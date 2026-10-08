@@ -1,3 +1,4 @@
+import { formatDate } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useProfile } from '@/contexts/ProfileContext';
@@ -28,7 +29,6 @@ export function AccountFreshness() {
     queryFn: () => getDataService().getAccountImportFreshness(),
     enabled: Boolean(activeProfileId),
   });
-  const locale = language === 'nl' ? 'nl-NL' : 'en-GB';
   return (
     <Card
       className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'
@@ -80,16 +80,12 @@ export function AccountFreshness() {
                     {text.imported}:{' '}
                     {account.lastImportedAt === null
                       ? text.never
-                      : new Date(account.lastImportedAt).toLocaleDateString(
-                          locale
-                        )}
+                      : formatDate(new Date(account.lastImportedAt))}
                   </p>
                   <p className='text-muted-foreground'>
                     {text.newest}:{' '}
                     {account.newestTransactionDate
-                      ? new Date(
-                          `${account.newestTransactionDate}T00:00:00Z`
-                        ).toLocaleDateString(locale, { timeZone: 'UTC' })
+                      ? formatDate(account.newestTransactionDate)
                       : '—'}
                   </p>
                 </div>

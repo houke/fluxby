@@ -18,6 +18,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useProfile } from '@/contexts/ProfileContext';
 import { useDataService } from '@/contexts/DatabaseContext';
 import { format } from 'date-fns';
+import { formatDate } from '@/lib/utils';
 import { nl, enUS } from 'date-fns/locale';
 
 export function NoDataModal() {
@@ -115,8 +116,7 @@ export function NoDataModal() {
   // Format current period for display
   const formatCurrentPeriod = () => {
     const { start, end } = filters.dateRange;
-    const locale = language === 'nl' ? nl : enUS;
-    return `${format(start, 'd MMM', { locale })} - ${format(end, 'd MMM yyyy', { locale })}`;
+    return `${formatDate(start)} - ${formatDate(end)}`;
   };
 
   // Check if we should show the modal

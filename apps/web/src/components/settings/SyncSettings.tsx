@@ -45,7 +45,7 @@ import { useSync } from '@/contexts/SyncContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/contexts/ToastContext';
 import { useConfirm } from '@/contexts/ConfirmContext';
-import { cn } from '@/lib/utils';
+import { cn, formatDateTime } from '@/lib/utils';
 import { SyncDebugPanel } from './SyncDebugPanel';
 import { SyncHistoryViewer } from './SyncHistoryViewer';
 import { QRPairingDialog } from './QRPairingDialog';
@@ -528,7 +528,7 @@ export function SyncSettings() {
                         </div>
                         <p className='text-xs text-muted-foreground'>
                           {device.lastSyncAt
-                            ? `${t.settings?.sync?.lastSync}: ${new Date(device.lastSyncAt).toLocaleString()}`
+                            ? `${t.settings?.sync?.lastSync}: ${formatDateTime(device.lastSyncAt)}`
                             : t.settings?.sync?.neverSynced}
                         </p>
                       </div>

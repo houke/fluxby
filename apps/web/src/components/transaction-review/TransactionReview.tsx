@@ -3,6 +3,7 @@ import { Download, ListChecks, Rows3 } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getDataService } from '@/lib/db-singleton';
 import { api } from '@/lib/api';
+import { formatDate } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useProfile } from '@/contexts/ProfileContext';
 import { useToast } from '@/contexts/ToastContext';
@@ -168,7 +169,7 @@ export function TransactionReview({
   const caption = (id: string) => {
     const tx = rows.find((row) => row.id === id);
     return tx
-      ? `${tx.date} · ${tx.merchantName || tx.description} · ${new Intl.NumberFormat(language === 'nl' ? 'nl-NL' : 'en-GB', { style: 'currency', currency: 'EUR' }).format(tx.amount)}`
+      ? `${formatDate(tx.date)} · ${tx.merchantName || tx.description} · ${new Intl.NumberFormat(language === 'nl' ? 'nl-NL' : 'en-GB', { style: 'currency', currency: 'EUR' }).format(tx.amount)}`
       : id;
   };
   const transactionOptions = (type: 'income' | 'expense') =>
@@ -316,7 +317,7 @@ export function TransactionReview({
                 </span>
               </div>
               <p className='break-words'>
-                {item.transaction.date} ·{' '}
+                {formatDate(item.transaction.date)} ·{' '}
                 {item.transaction.merchantName || item.transaction.description}{' '}
                 · <Currency amount={item.transaction.amount} />
               </p>
@@ -325,7 +326,7 @@ export function TransactionReview({
               </p>
               {item.related && (
                 <p className='text-sm break-words'>
-                  {copy.related}: {item.related.date} ·{' '}
+                  {copy.related}: {formatDate(item.related.date)} ·{' '}
                   {item.related.merchantName || item.related.description} ·{' '}
                   <Currency amount={item.related.amount} />
                 </p>

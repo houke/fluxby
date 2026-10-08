@@ -1,5 +1,3 @@
-import { format } from 'date-fns';
-import { nl, enUS } from 'date-fns/locale';
 import { CalendarIcon } from 'lucide-react';
 import { useFilters } from '@/contexts/FilterContext';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -18,14 +16,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { cn } from '@/lib/utils';
+import { cn, formatDate } from '@/lib/utils';
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useDataService } from '@/contexts/DatabaseContext';
 import type { DateRange } from 'react-day-picker';
 
 export function HeaderFilters() {
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
   const { filters, setDateRange } = useFilters();
   const { activeProfileId } = useProfile();
   const dataService = useDataService();
@@ -120,16 +118,7 @@ export function HeaderFilters() {
 
   const formatDateRange = () => {
     const { start, end } = filters.dateRange;
-    const startYear = start.getFullYear();
-    const endYear = end.getFullYear();
-    const locale = language === 'nl' ? nl : enUS;
-
-    const startStr =
-      startYear !== endYear
-        ? format(start, 'd MMM yyyy', { locale })
-        : format(start, 'd MMM', { locale });
-    const endStr = format(end, 'd MMM yyyy', { locale });
-    return `${startStr} - ${endStr}`;
+    return `${formatDate(start)} - ${formatDate(end)}`;
   };
 
   return (

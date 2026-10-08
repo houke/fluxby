@@ -1,3 +1,4 @@
+import { formatDate, formatDateTime } from '@/lib/utils';
 import React, { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import {
@@ -121,7 +122,7 @@ export function DataManagementSettings({
       });
   }, []);
 
-  const formatBackupDate = (value: string) => new Date(value).toLocaleString();
+  const formatBackupDate = (value: string) => formatDateTime(value);
 
   const prepareImport = async (data: unknown, password = '') => {
     const preview = await api.previewImport(data);
@@ -759,13 +760,7 @@ export function DataManagementSettings({
                       : 'hover:bg-muted/50'
                   }`}
                 >
-                  <p className='font-medium'>
-                    {backup.timestamp.toLocaleDateString(undefined, {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric',
-                    })}
-                  </p>
+                  <p className='font-medium'>{formatDate(backup.timestamp)}</p>
                   <p className='text-xs text-muted-foreground'>
                     {backup.timestamp.toLocaleTimeString()}
                   </p>

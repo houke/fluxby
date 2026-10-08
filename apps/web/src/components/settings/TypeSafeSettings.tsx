@@ -1,3 +1,4 @@
+import { formatDate } from '@/lib/utils';
 import { useEffect, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
@@ -664,7 +665,9 @@ export function TypeSafeSettings() {
                       <div className='font-medium text-muted-foreground uppercase'>
                         {txIdx === 0 ? 'A' : 'B'}
                       </div>
-                      <div className='text-muted-foreground'>{tx.date}</div>
+                      <div className='text-muted-foreground'>
+                        {formatDate(tx.date)}
+                      </div>
                       <div className='font-mono font-medium'>
                         <Currency amount={tx.amount} />
                       </div>
@@ -721,7 +724,9 @@ export function TypeSafeSettings() {
                         className='space-y-1 rounded-md bg-muted/40 p-2 text-xs'
                       >
                         <div className='font-medium'>{tx.accountName}</div>
-                        <div className='text-muted-foreground'>{tx.date}</div>
+                        <div className='text-muted-foreground'>
+                          {formatDate(tx.date)}
+                        </div>
                         <div className='font-mono font-medium'>
                           <Currency amount={tx.amount} />
                         </div>

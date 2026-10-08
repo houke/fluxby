@@ -20,7 +20,7 @@ import {
   Eye,
   EyeOff,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, formatDate } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -770,9 +770,7 @@ export function ProfileManager() {
                 </div>
                 <div className='mt-1 text-sm text-muted-foreground'>
                   {t.settings.profileManager.createdOn}{' '}
-                  {new Date(
-                    profile.createdAt || Date.now()
-                  ).toLocaleDateString()}
+                  {formatDate(new Date(profile.createdAt || Date.now()))}
                 </div>
               </CardContent>
               <CardFooter className='flex justify-between border-t bg-muted/20 p-3'>

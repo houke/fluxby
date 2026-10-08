@@ -22,11 +22,18 @@ export function formatCurrency(
   );
 }
 
-export function formatDate(date: Date | string, locale?: string) {
-  return formatDateShared(
-    date,
-    locale ?? (getStoredLanguage() === 'en' ? 'en-GB' : 'nl-NL')
+/** Full dates use DD-MM-YYYY in every app language. */
+export function formatDate(date: Date | string) {
+  return formatDateShared(date, 'nl-NL');
+}
+
+export function formatDateTime(date: Date | string | number, locale?: string) {
+  const d = date instanceof Date ? date : new Date(date);
+  const time = d.toLocaleTimeString(
+    locale ?? (getStoredLanguage() === 'en' ? 'en-GB' : 'nl-NL'),
+    { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }
   );
+  return `${formatDate(d)}, ${time}`;
 }
 
 export function cn(...inputs: ClassValue[]) {
