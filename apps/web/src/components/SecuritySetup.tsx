@@ -25,8 +25,6 @@ import { useProfile } from '@/contexts/ProfileContext';
 import { FluxbyWebGL } from '@fluxby/shared';
 import { cn } from '@/lib/utils';
 import { api } from '@/lib/api';
-import { useViewTransitionNavigate } from '@/lib/view-transitions';
-import { ONBOARDING_STORAGE_KEYS } from './onboarding/onboarding-context';
 import { writeToOPFSWithCache } from '@fluxby/database';
 import { POST_SETUP_ROUTE_KEY } from '@/lib/post-setup-route';
 
@@ -41,8 +39,6 @@ export function SecuritySetup({ onSetupComplete }: SecuritySetupProps) {
   const { language, setLanguage, t } = useLanguage();
   const { setupEncryption } = useEncryption();
 
-  const navigate = useViewTransitionNavigate();
-  const [startMode, setStartMode] = useState<'demo' | 'import'>('demo');
   const [step, setStep] = useState<SetupStep>('language');
   const [userName, setUserName] = useState('');
   const [password, setPassword] = useState('');
@@ -111,9 +107,7 @@ export function SecuritySetup({ onSetupComplete }: SecuritySetupProps) {
 
   const handleFinish = useCallback(async () => {
     setError(null);
-    if (startMode === 'demo') {
-      window.sessionStorage.removeItem(POST_SETUP_ROUTE_KEY);
-    }
+    window.sessionStorage.removeItem(POST_SETUP_ROUTE_KEY);
 
     if (password.length < 8) {
       setError(t.security.passwordTooShort);
@@ -152,33 +146,9 @@ export function SecuritySetup({ onSetupComplete }: SecuritySetupProps) {
       // to unmount before the async operations complete
 
       // Create user with the name first
-      await showProgress(
-        startMode === 'demo'
-          ? texts.progressDemoAccount
-          : texts.progressAccount,
-        10,
-        500
-      );
+      await showProgress(texts.progressDemoAccount, 10, 500);
       if (userName.trim()) {
         await api.updateUser({ name: userName.trim() });
-      }
-
-      if (startMode === 'import') {
-        const ownProfile = await api.createProfile({
-          name: userName.trim(),
-          type: 'personal',
-        });
-        await refreshProfiles();
-        await switchProfile(ownProfile.id);
-        // Acknowledge the first welcome without marking every tour chapter complete.
-        await writeToOPFSWithCache(ONBOARDING_STORAGE_KEYS.acknowledged, true);
-        await writeToOPFSWithCache(ONBOARDING_STORAGE_KEYS.restart, false);
-        window.sessionStorage.setItem(POST_SETUP_ROUTE_KEY, '/import');
-        navigate('/import', { replace: true });
-        await showProgress(texts.progressEncrypting, 80, 100);
-        await setupEncryption(password);
-        onSetupComplete();
-        return;
       }
 
       // Create demo profile
@@ -289,8 +259,6 @@ export function SecuritySetup({ onSetupComplete }: SecuritySetupProps) {
     password,
     confirmPassword,
     userName,
-    startMode,
-    navigate,
     setupEncryption,
     onSetupComplete,
     texts,
@@ -627,40 +595,8 @@ export function SecuritySetup({ onSetupComplete }: SecuritySetupProps) {
                 }}
                 className='space-y-4'
               >
-                <fieldset
-                  className='space-y-2 rounded-xl border p-3'
-                  data-onboarding='setup-start-choice'
-                >
-                  <legend className='px-1 text-sm font-medium'>
-                    {texts.startChoice}
-                  </legend>
-                  <label className='flex items-center gap-2 text-sm'>
-                    <input
-                      type='radio'
-                      name='start-mode'
-                      value='demo'
-                      checked={startMode === 'demo'}
-                      onChange={() => setStartMode('demo')}
-                    />
-                    {texts.startWithDemo}
-                  </label>
-                  <label className='flex items-center gap-2 text-sm'>
-                    <input
-                      type='radio'
-                      name='start-mode'
-                      value='import'
-                      checked={startMode === 'import'}
-                      onChange={() => setStartMode('import')}
-                    />
-                    {texts.startWithImport}
-                  </label>
-                  <p className='text-xs text-muted-foreground'>
-                    {texts.startChoiceHelp}
-                  </p>
-                </fieldset>
-
                 {/* Critical Warning - Cannot Recover Password */}
-                <div className='flex items-start gap-3 rounded-xl border-2 border-red-300 bg-red-50/80 p-4 shadow-md dark:border-red-800 dark:bg-red-900/30'>
+                <div className='flex items-start gap-3 rounded-xl border-2 border-red-300 bg-red-50/80 p-4 dark:border-red-800 dark:bg-red-900/30'>
                   <div className='flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/50'>
                     <AlertCircle className='h-5 w-5 text-red-600 dark:text-red-400' />
                   </div>
