@@ -17,8 +17,10 @@ import {
 } from './household-budget-translations';
 // Dutch translations for the Fluxby web app
 import { DEMO_TRANSLATIONS, type DemoTranslations } from '@fluxby/shared';
+import { onboardingGuideNl, type OnboardingGuide } from './onboarding-guide';
 
 export interface TranslationKeys {
+  onboardingGuide: OnboardingGuide;
   webMcp: WebMcpCopy;
   householdPlanning: HouseholdPlanningTranslations;
   transactionReview: TransactionReviewTranslations;
@@ -1834,6 +1836,7 @@ export interface TranslationKeys {
 }
 
 export const nl: TranslationKeys = {
+  onboardingGuide: onboardingGuideNl,
   webMcp: webMcpNl,
   householdPlanning: householdPlanningNl,
   transactionReview: transactionReviewNl,

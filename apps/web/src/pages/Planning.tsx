@@ -48,6 +48,7 @@ import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { api } from '@/lib/api';
 import { HouseholdPlanning } from '@/components/planning/HouseholdPlanning';
 import { TransitionLink } from '@/components/layout/TransitionLink';
+import { useSearchParams } from 'react-router-dom';
 
 function IconAction({
   label,
@@ -104,6 +105,13 @@ const validAmount = (value: string, allowZero = false) =>
   (allowZero ? Number(value) >= 0 : Number(value) > 0);
 
 export default function Planning() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const requestedTab = searchParams.get('tab');
+  const tab =
+    requestedTab &&
+    ['goals', 'net-worth', 'review', 'household'].includes(requestedTab)
+      ? requestedTab
+      : 'goals';
   const { t, language } = useLanguage();
   const p = t.planning;
   const { activeProfileId } = useProfile();
@@ -483,7 +491,16 @@ export default function Planning() {
         </CardContent>
       </Card>
 
-      <Tabs defaultValue='goals' className='space-y-4'>
+      <Tabs
+        value={tab}
+        onValueChange={(value) => {
+          setSearchParams((params) => {
+            params.set('tab', value);
+            return params;
+          });
+        }}
+        className='space-y-4'
+      >
         <TabsList className='h-auto flex-wrap' aria-label={p.title}>
           <TabsTrigger value='goals'>{p.goals}</TabsTrigger>
           <TabsTrigger value='net-worth'>{p.netWorth}</TabsTrigger>

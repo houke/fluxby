@@ -152,6 +152,89 @@ describe('first-run tour lifecycle', () => {
     );
   });
 
+  it.each([
+    'planning-net-worth',
+    'planning-monthly-review',
+    'household-cashflows',
+  ])(
+    'resumes %s and restores tabs in both navigation directions',
+    async (id) => {
+      const chapterIndex = onboardingChapters.findIndex(
+        (chapter) => chapter.id === 'planning'
+      );
+      const chapter = onboardingChapters[chapterIndex];
+      const stepIndex = chapter.steps.findIndex((step) => step.id === id);
+      mocks.storage.set('fluxby_onboarding_complete', true);
+      mocks.storage.set('fluxby_onboarding', {
+        isActive: false,
+        hasCompletedOnboarding: true,
+        hasDismissedOnboarding: true,
+        currentChapterIndex: chapterIndex,
+        currentStepIndex: stepIndex,
+        userName: 'Test',
+        language: 'en',
+      });
+      function Location() {
+        const location = useLocation();
+        return (
+          <output data-testid='tour-location'>
+            {location.pathname}
+            {location.search}
+          </output>
+        );
+      }
+      const hook = renderHook(useOnboarding, {
+        wrapper: ({ children }) => (
+          <MemoryRouter initialEntries={['/settings?section=about']}>
+            <OnboardingProvider>
+              {children}
+              <Location />
+            </OnboardingProvider>
+          </MemoryRouter>
+        ),
+      });
+      await act(async () => hook.result.current.startOnboarding());
+      await waitFor(() =>
+        expect(screen.getByTestId('tour-location').textContent).toBe(
+          chapter.steps[stepIndex].route
+        )
+      );
+      act(() => hook.result.current.previousStep());
+      await waitFor(() =>
+        expect(screen.getByTestId('tour-location').textContent).toBe(
+          chapter.steps[stepIndex - 1].route
+        )
+      );
+      await act(async () => hook.result.current.nextStep());
+      await waitFor(() =>
+        expect(screen.getByTestId('tour-location').textContent).toBe(
+          chapter.steps[stepIndex].route
+        )
+      );
+    }
+  );
+
+  it.each([
+    ['/planning?tab=household', 'household-planning-tab'],
+    ['/planning?tab=net-worth', 'planning-net-worth'],
+    ['/settings?section=security', 'settings-security'],
+    ['/settings?section=profiles&view=manage', 'settings-profiles'],
+  ])(
+    'starts page help at %s instead of resetting its topic',
+    async (route, id) => {
+      const hook = renderHook(useOnboarding, {
+        wrapper: ({ children }) => (
+          <MemoryRouter initialEntries={[route]}>
+            <OnboardingProvider>{children}</OnboardingProvider>
+          </MemoryRouter>
+        ),
+      });
+      await act(async () => hook.result.current.startOnboarding(false, true));
+      expect(hook.result.current.currentStep?.id).toBe(id);
+      expect(hook.result.current.currentStep?.route).toBe(route);
+    }
+  );
+
   it('opens a pending first tour after an encryption-triggered reload', () => {
     mocks.storage.set('fluxby-onboarding-restart', true);
     const hook = renderHook(useOnboarding, { wrapper });

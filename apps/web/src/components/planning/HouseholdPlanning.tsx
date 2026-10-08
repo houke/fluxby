@@ -189,7 +189,10 @@ export function HouseholdPlanning() {
           {p.failed}
         </p>
       )}
-      <Card className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'>
+      <Card
+        data-onboarding='household-cashflows'
+        className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'
+      >
         <CardHeader className='px-3 sm:px-6'>
           <CardTitle className='text-base sm:text-lg'>{p.cashflows}</CardTitle>
           <CardDescription>{p.reserveHelp}</CardDescription>
@@ -436,7 +439,10 @@ export function HouseholdPlanning() {
           )}
         </CardContent>
       </Card>
-      <Card className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'>
+      <Card
+        data-onboarding='net-worth-snapshots'
+        className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'
+      >
         <CardHeader className='px-3 sm:px-6'>
           <CardTitle className='text-base sm:text-lg'>{p.history}</CardTitle>
           <CardDescription>{p.captureHelp}</CardDescription>
@@ -551,7 +557,10 @@ export function HouseholdPlanning() {
           ))}
         </CardContent>
       </Card>
-      <Card className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'>
+      <Card
+        data-onboarding='household-goal-links'
+        className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'
+      >
         <CardHeader className='px-3 sm:px-6'>
           <CardTitle className='text-base sm:text-lg'>{p.goals}</CardTitle>
           <CardDescription>{p.contributionHelp}</CardDescription>

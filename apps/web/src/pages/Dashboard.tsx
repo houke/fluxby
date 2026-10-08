@@ -306,7 +306,17 @@ export default function Dashboard() {
     () => stats?.monthlyData || [],
     [stats?.monthlyData]
   );
-  const categoryData = stats?.categoryBreakdown || [];
+  const categoryData = useMemo(
+    () =>
+      (stats?.categoryBreakdown || []).map((category) => ({
+        ...category,
+        categoryName:
+          !category.categoryId || category.categoryId === '0'
+            ? t.categories.uncategorized
+            : category.categoryName,
+      })),
+    [stats?.categoryBreakdown, t.categories.uncategorized]
+  );
   const recentTransactions = recentTransactionsData || [];
 
   // Filter leading zero-expense days from daily chart data

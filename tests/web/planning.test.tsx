@@ -117,10 +117,10 @@ afterEach(() => {
   cleanup();
   client.clear();
 });
-const renderPlanning = () =>
+const renderPlanning = (route = '/planning') =>
   render(
     <QueryClientProvider client={client}>
-      <MemoryRouter>
+      <MemoryRouter initialEntries={[route]}>
         <Planning />
       </MemoryRouter>
     </QueryClientProvider>
@@ -134,6 +134,33 @@ const selectTab = (name: string) =>
   });
 
 describe('financial planning UI', () => {
+  it.each([
+    ['net-worth', en.planning.netWorth],
+    ['review', en.planning.monthlyReview],
+  ])(
+    'opens the requested %s tab on a direct tour destination',
+    async (tab, label) => {
+      renderPlanning(`/planning?tab=${tab}`);
+      expect(
+        screen.getByRole('tab', { name: label }).getAttribute('aria-selected')
+      ).toBe('true');
+      await screen.findByRole('tabpanel');
+      expect(screen.queryByText('Emergency fund')).toBeNull();
+      selectTab(en.planning.goals);
+      await screen.findByText('Emergency fund');
+    }
+  );
+
+  it('falls back to goals for an unknown tab', async () => {
+    renderPlanning('/planning?tab=unknown');
+    await screen.findByText('Emergency fund');
+    expect(
+      screen
+        .getByRole('tab', { name: en.planning.goals })
+        .getAttribute('aria-selected')
+    ).toBe('true');
+  });
+
   it('creates a savings goal with a target, deadline, and monthly reserve', async () => {
     renderPlanning();
     await screen.findByText('Emergency fund');

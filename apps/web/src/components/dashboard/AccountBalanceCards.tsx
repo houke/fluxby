@@ -120,6 +120,7 @@ export function AccountBalanceCards({
           return (
             <div
               key={account.id}
+              data-onboarding='transaction-account-card'
               className={`flex flex-1 flex-shrink-0 items-center gap-3 border-r border-border bg-card px-3 py-2 last:border-r-0 sm:flex-initial sm:rounded-lg sm:border sm:px-4 sm:shadow-sm ${
                 isMobile && displayedAccounts.length === 1
                   ? 'min-w-full'

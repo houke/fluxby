@@ -112,6 +112,8 @@ export default function HelpTransactions() {
           {t.helpCenter?.transactions?.proTipText}
         </p>
       </div>
+      <h2>{t.transactionReviewHelp.savedViewsTitle}</h2>
+      <p>{t.transactionReviewHelp.savedViewsText}</p>
       <h2>{t.transactionReviewHelp.reviewTitle}</h2>
       <p>{t.transactionReviewHelp.reviewText}</p>
       <p>{t.transactionReviewHelp.linksText}</p>

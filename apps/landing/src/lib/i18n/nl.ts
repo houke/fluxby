@@ -3565,8 +3565,8 @@ Object.assign(nl, {
         'Reserveer geld en controleer je financiën via Planning. Gebruik de hulpmiddelen bij Transacties om gegevens te onderzoeken en afschriften te vergelijken. Alle gegevens horen bij het actieve profiel.',
       sections: [
         {
-          title: 'Spaardoelen en reserveringspotjes',
-          text: 'Maak in Planning een doel met een streefbedrag en optionele einddatum. Kies een reserveringspotje voor terugkerende uitgaven. Bijdragen zijn reserveringen: ze maken geen banktransacties en verplaatsen geen geld. Bewerk of verwijder een doel via de kaart.',
+          title: 'Spaardoelen en bijdragen',
+          text: 'Open Planning → Spaardoelen. Maak een doel met een streefbedrag, maandbijdrage en optionele einddatum en registreer bijdragen via de kaart. Onder Huishoudplanning kun je inkomsten of overboekingen koppelen en een doel archiveren of herstellen. Bijdragen volgen de voortgang; ze maken geen banktransacties en verplaatsen geen geld.',
         },
         {
           title: 'Vrij te besteden',

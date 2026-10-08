@@ -2,7 +2,7 @@ export const householdPlanningHelp = {
   nl: [
     {
       title: 'Inkomsten en betaaldata plannen',
-      text: 'Open Planning en kies Plan toevoegen. Kies inkomsten of een uitgave, vul het bedrag en de eerste betaaldatum in en kies eenmalig, maandelijks, elke vier weken, elk kwartaal of jaarlijks. Een maandelijkse betaling op de 31e verschuift in een korte maand naar de laatste dag. De volgende maand gebruikt weer de oorspronkelijke dag. Koppel een bestaande terugkerende last als je plan die last vervangt.',
+      text: 'Open Planning → Huishoudplanning en kies Plan toevoegen. Kies inkomsten of een uitgave, vul het bedrag en de eerste betaaldatum in en kies eenmalig, maandelijks, elke vier weken, elk kwartaal of jaarlijks. Een maandelijkse betaling op de 31e verschuift in een korte maand naar de laatste dag. De volgende maand gebruikt weer de oorspronkelijke dag. Koppel een bestaande terugkerende last als je plan die last vervangt.',
     },
     {
       title: 'Reserveringen en de dagelijkse prognose',
@@ -20,7 +20,7 @@ export const householdPlanningHelp = {
   en: [
     {
       title: 'Plan income and payment dates',
-      text: 'Open Planning and choose Add plan. Choose income or an expense, enter the amount and first payment date, then choose once, monthly, every four weeks, quarterly or yearly. A monthly payment on the 31st moves to the last day of a shorter month and returns to its original day the next month. Link an existing recurring bill if your plan replaces that bill.',
+      text: 'Open Planning → Household planning and choose Add plan. Choose income or an expense, enter the amount and first payment date, then choose once, monthly, every four weeks, quarterly or yearly. A monthly payment on the 31st moves to the last day of a shorter month and returns to its original day the next month. Link an existing recurring bill if your plan replaces that bill.',
     },
     {
       title: 'Reserves and the daily forecast',

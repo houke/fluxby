@@ -365,6 +365,7 @@ export default function AddressBook() {
       <PageHeader
         title={t.addressBook?.title || t.settings.addressBook.title}
         subtitle={t.addressBook?.subtitle}
+        dataOnboarding='addressbook-greeting'
         actions={
           <div className='flex flex-wrap gap-2'>
             {hasTypeSafeKey && (
@@ -393,6 +394,7 @@ export default function AddressBook() {
               onClick={() => setShowCleanupRules(!showCleanupRules)}
               className={cn(showCleanupRules && 'bg-muted')}
               data-onboarding='addressbook-settings-toggle'
+              aria-expanded={showCleanupRules}
             >
               <Settings2 className='mr-2 h-4 w-4' />
               {t.addressBook?.cleanupRules}

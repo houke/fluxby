@@ -3225,8 +3225,8 @@ Object.assign(en, {
         'Use Planning to reserve money and review your finances. Use the tools on Transactions to investigate your records and compare statements. All records belong to the active profile.',
       sections: [
         {
-          title: 'Savings goals and sinking funds',
-          text: 'In Planning, create a goal with a target amount and optional deadline. Choose a sinking fund for a recurring expense. Record contributions as reservations; they do not create bank transactions or move cash. Edit or delete a goal from its card.',
+          title: 'Savings goals and contributions',
+          text: 'Open Planning → Savings goals. Create a goal with a target amount, monthly contribution and optional deadline, then record contributions on its card. Under Household planning you can link income or transfers and archive or restore a goal. Contributions track progress; they do not create bank transactions or move cash.',
         },
         {
           title: 'Safe to spend',

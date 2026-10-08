@@ -4,9 +4,11 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { cn } from '@/lib/utils';
+import { findOnboardingTarget } from './onboarding-target';
 
 interface SpotlightOverlayProps {
   targetSelector?: string;
+  fallbackSelector?: string;
   isActive: boolean;
   padding?: number;
   borderRadius?: number;
@@ -23,6 +25,7 @@ interface SpotlightRect {
 
 export function SpotlightOverlay({
   targetSelector,
+  fallbackSelector,
   isActive,
   padding = 8,
   borderRadius = 12,
@@ -45,14 +48,19 @@ export function SpotlightOverlay({
       return;
     }
 
-    const element = document.querySelector(targetSelector);
+    const element = findOnboardingTarget(targetSelector, fallbackSelector);
     if (!element) {
-      // Element not found - keep the last known position during re-renders
-      // This prevents the spotlight from jumping to null and back
+      lastValidRectRef.current = null;
+      setSpotlightRect(null);
       return;
     }
 
     const rect = element.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) {
+      lastValidRectRef.current = null;
+      setSpotlightRect(null);
+      return;
+    }
 
     // Add padding around the element
     const newRect = {
@@ -78,9 +86,10 @@ export function SpotlightOverlay({
 
     // Scroll element into view if needed
     const isInViewport =
-      rect.top >= 0 &&
+      (rect.height > window.innerHeight
+        ? rect.top <= 0 && rect.bottom >= window.innerHeight
+        : rect.top >= 0 && rect.bottom <= window.innerHeight) &&
       rect.left >= 0 &&
-      rect.bottom <= window.innerHeight &&
       rect.right <= window.innerWidth;
 
     if (!isInViewport) {
@@ -90,15 +99,22 @@ export function SpotlightOverlay({
         inline: 'center',
       });
     }
-  }, [targetSelector, padding]);
+  }, [targetSelector, fallbackSelector, padding]);
 
   // Set up visibility and updates
   useEffect(() => {
     if (isActive) {
+      lastValidRectRef.current = null;
+      setSpotlightRect(null);
       setIsVisible(true);
       // Small delay to ensure DOM is ready
       const timer = setTimeout(updateSpotlight, 50);
-      return () => clearTimeout(timer);
+      const observer = new MutationObserver(updateSpotlight);
+      observer.observe(document.body, { childList: true, subtree: true });
+      return () => {
+        clearTimeout(timer);
+        observer.disconnect();
+      };
     } else {
       setIsVisible(false);
       lastValidRectRef.current = null;

@@ -6,8 +6,10 @@ import { householdBudgetEn } from './household-budget-translations';
 // English translations for the Fluxby web app
 import type { TranslationKeys } from './nl';
 import { DEMO_TRANSLATIONS } from '@fluxby/shared';
+import { onboardingGuideEn } from './onboarding-guide';
 
 export const en: TranslationKeys = {
+  onboardingGuide: onboardingGuideEn,
   webMcp: webMcpEn,
   householdPlanning: householdPlanningEn,
   transactionReview: transactionReviewEn,

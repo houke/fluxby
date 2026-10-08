@@ -143,9 +143,9 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
 
   // Settings topics have their own URLs. Restore the target when starting,
   // resuming or moving backwards in the tour, before the spotlight is measured.
+  const activeChapter = onboardingChapters[state.currentChapterIndex];
   const stepRoute =
-    onboardingChapters[state.currentChapterIndex]?.steps[state.currentStepIndex]
-      ?.route;
+    activeChapter?.steps[state.currentStepIndex]?.route ?? activeChapter?.route;
   useEffect(() => {
     if (
       state.isActive &&
@@ -249,7 +249,8 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
         }
         return trimmed === '' ? '/' : trimmed;
       };
-      const requestedPath = normalizePath(window.location.pathname);
+      const requestedPath = normalizePath(location.pathname);
+      const requestedSearch = new URLSearchParams(location.search);
 
       // If demo profile exists, unhide it and switch to it
       try {
@@ -274,6 +275,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
 
       // Find chapter matching current route
       let startChapterIndex = 0;
+      let startStepIndex = 0;
 
       // If starting at current page (mascot click), find the matching chapter
       // Note: We always honor startAtCurrentPage when explicitly requested
@@ -309,17 +311,25 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
           startChapterIndex = contentChapter
             ? contentChapter.index
             : matchingChapters[matchingChapters.length - 1].index;
+          // Preserve the current topic/tab when starting from the mascot.
+          const matches = onboardingChapters[startChapterIndex].steps
+            .map((step, index) => ({
+              step,
+              index,
+              params: new URLSearchParams(step.route?.split('?')[1]),
+            }))
+            .filter(
+              ({ step, params }) =>
+                step.route &&
+                params.size > 0 &&
+                [...params].every(
+                  ([key, value]) => requestedSearch.get(key) === value
+                )
+            )
+            .sort((a, b) => b.params.size - a.params.size);
+          startStepIndex = matches[0]?.index ?? 0;
         }
       }
-
-      // Determine what to do based on current state
-      const shouldResume =
-        !startAtCurrentPage &&
-        !restart &&
-        (state.currentChapterIndex > 0 || state.currentStepIndex > 0);
-      const resumeChapter = shouldResume
-        ? onboardingChapters[state.currentChapterIndex]
-        : null;
 
       if (restart && !startAtCurrentPage) {
         await deleteFromOPFSWithCache(ACKNOWLEDGED_FLAG_KEY);
@@ -335,7 +345,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
             isActive: true,
             hasDismissedOnboarding: false,
             currentChapterIndex: startChapterIndex,
-            currentStepIndex: 0,
+            currentStepIndex: startStepIndex,
           };
         }
 
@@ -381,26 +391,15 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
           currentStepIndex: 0,
         };
       });
-
-      // Navigate after state update (deferred to avoid React warning)
-      if (shouldResume && resumeChapter) {
-        setTimeout(() => navigate(resumeChapter.route), 0);
-      } else if (!startAtCurrentPage) {
-        const targetChapter = restart
-          ? onboardingChapters[0]
-          : onboardingChapters[state.currentChapterIndex];
-        setTimeout(() => navigate(targetChapter?.route || '/dashboard'), 0);
-      }
     },
     [
-      navigate,
-      state.currentChapterIndex,
-      state.currentStepIndex,
       profiles,
       switchProfile,
       setProfileHidden,
       activeProfileId,
       queryClient,
+      location.pathname,
+      location.search,
     ]
   );
 
@@ -489,19 +488,14 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
 
     // Move to next chapter
     if (state.currentChapterIndex < onboardingChapters.length - 1) {
-      const nextChapter = onboardingChapters[state.currentChapterIndex + 1];
-
       // Update state first, then navigate
       setState((prev) => ({
         ...prev,
         currentChapterIndex: prev.currentChapterIndex + 1,
         currentStepIndex: 0,
       }));
-
-      // Navigate after state update (deferred to avoid React warning)
-      setTimeout(() => navigate(nextChapter.route), 0);
     }
-  }, [state.currentChapterIndex, state.currentStepIndex, navigate]);
+  }, [state.currentChapterIndex, state.currentStepIndex]);
 
   // Navigate to previous step
   const previousStep = useCallback(() => {
@@ -524,30 +518,21 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
         currentChapterIndex: prev.currentChapterIndex - 1,
         currentStepIndex: prevChapter.steps.length - 1,
       }));
-
-      // Navigate after state update (deferred to avoid React warning)
-      setTimeout(() => navigate(prevChapter.route), 0);
     }
-  }, [state.currentChapterIndex, state.currentStepIndex, navigate]);
+  }, [state.currentChapterIndex, state.currentStepIndex]);
 
   // Go to specific chapter
-  const goToChapter = useCallback(
-    (chapterIndex: number) => {
-      if (chapterIndex >= 0 && chapterIndex < onboardingChapters.length) {
-        const chapter = onboardingChapters[chapterIndex];
-        navigate(chapter.route);
+  const goToChapter = useCallback((chapterIndex: number) => {
+    if (chapterIndex >= 0 && chapterIndex < onboardingChapters.length) {
+      // Click action is now handled by OnboardingModal useEffect
 
-        // Click action is now handled by OnboardingModal useEffect
-
-        setState((prev) => ({
-          ...prev,
-          currentChapterIndex: chapterIndex,
-          currentStepIndex: 0,
-        }));
-      }
-    },
-    [navigate]
-  );
+      setState((prev) => ({
+        ...prev,
+        currentChapterIndex: chapterIndex,
+        currentStepIndex: 0,
+      }));
+    }
+  }, []);
 
   // Set language
   const setLanguage = useCallback((language: 'nl' | 'en') => {

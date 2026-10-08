@@ -4340,6 +4340,7 @@ export default function Transactions() {
                   }}
                   className='fixed right-6 bottom-6 z-40 flex h-14 w-14 items-center justify-center rounded-md bg-purple-600 text-white shadow-lg transition-all hover:scale-105 hover:bg-purple-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2 active:scale-95'
                   aria-label={t.transactions.addTransaction}
+                  data-onboarding='transaction-add'
                 >
                   <Plus className='h-6 w-6' />
                 </button>

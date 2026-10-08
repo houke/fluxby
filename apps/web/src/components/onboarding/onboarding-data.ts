@@ -2,8 +2,31 @@
 // Contains all chapters and steps for the onboarding flow
 // Note: Language, name, and password setup are handled by SecuritySetup component before onboarding
 
-import type { OnboardingChapter } from './types';
+import type { OnboardingChapter, OnboardingStep } from './types';
 import { importToolsTranslations } from '@/lib/i18n/import-tools';
+import {
+  onboardingGuideNl,
+  onboardingGuideEn,
+  type OnboardingGuide,
+} from '@/lib/i18n/onboarding-guide';
+
+function featureStep(
+  id: keyof OnboardingGuide,
+  selector: string,
+  route?: string
+): OnboardingStep {
+  return {
+    id,
+    title: { nl: onboardingGuideNl[id].title, en: onboardingGuideEn[id].title },
+    content: {
+      nl: onboardingGuideNl[id].content,
+      en: onboardingGuideEn[id].content,
+    },
+    selector: `[data-onboarding="${selector}"]`,
+    route,
+    placement: 'bottom',
+  };
+}
 
 export const onboardingChapters: OnboardingChapter[] = [
   // ==========================================================================
@@ -50,14 +73,15 @@ export const onboardingChapters: OnboardingChapter[] = [
       {
         id: 'nav-sidebar',
         title: {
-          nl: 'Navigatie menu',
-          en: 'Navigation menu',
+          nl: onboardingGuideNl['nav-sidebar'].title,
+          en: onboardingGuideEn['nav-sidebar'].title,
         },
         content: {
-          nl: 'Gebruik het zijmenu om snel tussen verschillende onderdelen van de app te navigeren.',
-          en: 'Use the sidebar menu to quickly navigate between different parts of the app.',
+          nl: onboardingGuideNl['nav-sidebar'].content,
+          en: onboardingGuideEn['nav-sidebar'].content,
         },
         selector: '[data-onboarding="sidebar"]',
+        fallbackSelector: '[data-onboarding="mobile-navigation"]',
         placement: 'right',
       },
       {
@@ -80,8 +104,8 @@ export const onboardingChapters: OnboardingChapter[] = [
           en: 'Search',
         },
         content: {
-          nl: 'Zoek snel naar transacties of instellingen via het zoekicoon. Gebruik ⌘K om te openen.',
-          en: 'Quickly search for transactions or settings via the search icon. Press ⌘K to open.',
+          nl: 'Zoek snel naar transacties of instellingen via het zoekicoon. Gebruik Cmd/Ctrl+K om te openen.',
+          en: 'Quickly search for transactions or settings via the search icon. Press Cmd/Ctrl+K to open.',
         },
         selector: '[data-onboarding="header-search"]',
         placement: 'bottom',
@@ -128,14 +152,15 @@ export const onboardingChapters: OnboardingChapter[] = [
       {
         id: 'nav-fluxby-mascot',
         title: {
-          nl: 'Fluxby mascotte',
-          en: 'Fluxby mascot',
+          nl: onboardingGuideNl['nav-fluxby-mascot'].title,
+          en: onboardingGuideEn['nav-fluxby-mascot'].title,
         },
         content: {
-          nl: 'Fluxby is je financiële maatje! Klik op Fluxby om dit onboarding opnieuw te starten.',
-          en: 'Fluxby is your financial buddy! Click on Fluxby to restart this onboarding.',
+          nl: onboardingGuideNl['nav-fluxby-mascot'].content,
+          en: onboardingGuideEn['nav-fluxby-mascot'].content,
         },
         selector: '[data-onboarding="fluxby-mascot"]',
+        fallbackSelector: '[data-onboarding="mobile-navigation"]',
         placement: 'right',
       },
     ],
@@ -165,6 +190,7 @@ export const onboardingChapters: OnboardingChapter[] = [
           en: 'The dashboard gives you a quick overview of your financial situation. Here you can see your income, expenses, and balance.',
         },
         selector: '[data-onboarding="nav-dashboard"]',
+        fallbackSelector: '[data-onboarding="dashboard-greeting"]',
         placement: 'right',
       },
       {
@@ -187,8 +213,8 @@ export const onboardingChapters: OnboardingChapter[] = [
           en: 'Your accounts',
         },
         content: {
-          nl: 'Hier zie je het saldo van al je bankrekeningen: betaalrekening, spaarrekening en creditcard.\n\nJe rekeningen worden automatisch aangemaakt bij het importeren van transacties, of je kunt ze handmatig toevoegen via Instellingen → Rekeningen.',
-          en: 'Here you can see the balance of all your bank accounts: checking, savings, and credit card.\n\nYour accounts are automatically created when importing transactions, or you can add them manually via Settings → Accounts.',
+          nl: 'Hier zie je het saldo van al je bankrekeningen: betaalrekening, spaarrekening en creditcard.\n\nJe rekeningen worden automatisch aangemaakt bij het importeren van transacties, of je kunt ze handmatig toevoegen via Instellingen → Profielen & rekeningen.',
+          en: 'Here you can see the balance of all your bank accounts: checking, savings, and credit card.\n\nYour accounts are automatically created when importing transactions, or you can add them manually via Settings → Profiles & accounts.',
         },
         selector: '[data-onboarding="dashboard-accounts"]',
         placement: 'bottom',
@@ -414,6 +440,11 @@ export const onboardingChapters: OnboardingChapter[] = [
         selector: '[data-onboarding="transaction-review"]',
         placement: 'bottom',
       },
+      featureStep('review-inbox', 'transaction-review'),
+      featureStep('review-repayments', 'transaction-review'),
+      featureStep('review-transfers', 'transaction-review'),
+      featureStep('review-bills', 'transaction-review'),
+      featureStep('transactions-export', 'transaction-review'),
       {
         id: 'transactions-overview',
         title: {
@@ -425,6 +456,7 @@ export const onboardingChapters: OnboardingChapter[] = [
           en: "Here you find a complete overview of all your transactions. Filter, search, and categorize to your heart's content.",
         },
         selector: '[data-onboarding="nav-transactions"]',
+        fallbackSelector: '[data-onboarding="transaction-greeting"]',
         placement: 'right',
       },
       {
@@ -544,6 +576,8 @@ export const onboardingChapters: OnboardingChapter[] = [
         selector: '[data-onboarding="transaction-payment-processor-filter"]',
         placement: 'bottom',
       },
+      featureStep('transactions-manual', 'transaction-add'),
+      featureStep('transactions-selection', 'transaction-list'),
       {
         id: 'transactions-list',
         title: {
@@ -581,6 +615,7 @@ export const onboardingChapters: OnboardingChapter[] = [
           en: 'The purple badge with a number indicates how often this transaction recurs. Click the row to see the full history.',
         },
         selector: '[data-onboarding="transaction-recurring-badge"]',
+        fallbackSelector: '[data-onboarding="transaction-list"]',
         placement: 'left',
       },
       {
@@ -594,6 +629,7 @@ export const onboardingChapters: OnboardingChapter[] = [
           en: 'Some transactions are processed via payment providers like PayPal or Tikkie. Fluxby recognizes these and shows the actual recipient or sender.',
         },
         selector: '[data-onboarding="transaction-payment-processor"]',
+        fallbackSelector: '[data-onboarding="transaction-list"]',
         placement: 'left',
       },
       {
@@ -607,6 +643,7 @@ export const onboardingChapters: OnboardingChapter[] = [
           en: 'Click on the category badge to categorize a transaction. Fluxby also provides automatic suggestions.',
         },
         selector: '[data-onboarding="transaction-category-badge"]',
+        fallbackSelector: '[data-onboarding="transaction-list"]',
         placement: 'left',
       },
       {
@@ -620,6 +657,7 @@ export const onboardingChapters: OnboardingChapter[] = [
           en: 'Add unknown counterparties to your address book for better recognition.',
         },
         selector: '[data-onboarding="transaction-add-addressbook"]',
+        fallbackSelector: '[data-onboarding="transaction-list"]',
         placement: 'left',
       },
     ],
@@ -659,6 +697,7 @@ export const onboardingChapters: OnboardingChapter[] = [
           en: 'On the analytics page you get detailed insights into your financial patterns over longer periods.',
         },
         selector: '[data-onboarding="nav-analytics"]',
+        fallbackSelector: '[data-onboarding="analytics-greeting"]',
         placement: 'right',
       },
       {
@@ -726,6 +765,7 @@ export const onboardingChapters: OnboardingChapter[] = [
         selector: '[data-onboarding="income-breakdown"]',
         placement: 'left',
       },
+      featureStep('analytics-category-trends', 'category-spending-trend'),
       {
         id: 'analytics-click-category',
         title: {
@@ -765,6 +805,9 @@ export const onboardingChapters: OnboardingChapter[] = [
         selector: '[data-onboarding="budget-monthly-allocation"]',
         placement: 'bottom',
       },
+      featureStep('budget-month-overrides', 'budget-monthly-allocation'),
+      featureStep('budget-allocation-groups', 'budget-monthly-allocation'),
+      featureStep('budget-deficit-carry', 'budget-monthly-allocation'),
       {
         id: 'budgets-overview',
         title: {
@@ -776,6 +819,7 @@ export const onboardingChapters: OnboardingChapter[] = [
           en: 'Set budgets per category to keep your spending under control.',
         },
         selector: '[data-onboarding="nav-budgets"]',
+        fallbackSelector: '[data-onboarding="budget-greeting"]',
         placement: 'right',
       },
       {
@@ -914,22 +958,66 @@ export const onboardingChapters: OnboardingChapter[] = [
     id: 'planning',
     menuItem: 'planning',
     route: '/planning',
-    icon: 'Target',
+    icon: 'Wallet',
     title: { nl: 'Planning', en: 'Planning' },
     steps: [
       {
-        id: 'household-planning-tab',
+        id: 'planning-forecast',
         title: {
-          nl: 'Huishouden vooruitplannen',
-          en: 'Plan household cashflow',
+          nl: onboardingGuideNl['planning-forecast'].title,
+          en: onboardingGuideEn['planning-forecast'].title,
         },
         content: {
-          nl: 'Open dit tabblad voor inkomsten per maand of vier weken, jaarlijkse reserveringen, een dagelijkse prognose en je weekcontrole.',
-          en: 'Open this tab for monthly or four-week income, annual reserves, a daily forecast and your weekly review.',
+          nl: onboardingGuideNl['planning-forecast'].content,
+          en: onboardingGuideEn['planning-forecast'].content,
         },
-        selector: '[data-onboarding="household-planning-tab"]',
+        selector: '[data-onboarding="planning-forecast"]',
+        route: '/planning?tab=goals',
         placement: 'bottom',
       },
+      {
+        id: 'planning-goals',
+        title: {
+          nl: onboardingGuideNl['planning-goals'].title,
+          en: onboardingGuideEn['planning-goals'].title,
+        },
+        content: {
+          nl: onboardingGuideNl['planning-goals'].content,
+          en: onboardingGuideEn['planning-goals'].content,
+        },
+        selector: '[data-onboarding="planning-goals"]',
+        route: '/planning?tab=goals',
+        placement: 'bottom',
+      },
+      featureStep(
+        'planning-net-worth',
+        'planning-net-worth',
+        '/planning?tab=net-worth'
+      ),
+      featureStep(
+        'planning-monthly-review',
+        'planning-review',
+        '/planning?tab=review'
+      ),
+      {
+        id: 'household-planning-tab',
+        title: {
+          nl: onboardingGuideNl['household-planning-tab'].title,
+          en: onboardingGuideEn['household-planning-tab'].title,
+        },
+        content: {
+          nl: onboardingGuideNl['household-planning-tab'].content,
+          en: onboardingGuideEn['household-planning-tab'].content,
+        },
+        selector: '[data-onboarding="household-planning-tab"]',
+        route: '/planning?tab=household',
+        placement: 'bottom',
+      },
+      featureStep(
+        'household-cashflows',
+        'household-cashflows',
+        '/planning?tab=household'
+      ),
       {
         id: 'planning-freshness',
         title: {
@@ -941,43 +1029,37 @@ export const onboardingChapters: OnboardingChapter[] = [
           en: importToolsTranslations.en.freshnessHelp,
         },
         selector: '[data-onboarding="account-freshness"]',
+        route: '/planning?tab=household',
         placement: 'bottom',
       },
-      {
-        id: 'planning-forecast',
-        title: { nl: 'Vrij te besteden', en: 'Safe to spend' },
-        content: {
-          nl: 'Bekijk wat er overblijft na aankomende betalingen, spaarplannen en je minimumsaldo. Pas reserveringen aan je situatie aan.',
-          en: 'See what remains after upcoming payments, savings plans, and your minimum balance. Adjust reserves to fit your plans.',
-        },
-        selector: '[data-onboarding="planning-forecast"]',
-        placement: 'bottom',
-      },
-      {
-        id: 'planning-goals',
-        title: { nl: 'Spaardoelen', en: 'Savings goals' },
-        content: {
-          nl: 'Stel doelen in voor toekomstige uitgaven en leg je bijdragen vast. De voortgang verplaatst geen geld tussen rekeningen.',
-          en: 'Create goals for future expenses and record your contributions. Tracking progress does not move money between accounts.',
-        },
-        selector: '[data-onboarding="planning-goals"]',
-        placement: 'top',
-      },
-      {
-        id: 'planning-tools',
-        title: {
-          nl: 'Vermogen en maandcontrole',
-          en: 'Net worth and monthly review',
-        },
-        content: {
-          nl: 'Gebruik de tabbladen om bezittingen en schulden bij te houden en elke maand je financiën te controleren.',
-          en: 'Use the tabs to track assets and liabilities and review your finances each month.',
-        },
-        selector: '[data-onboarding="planning-greeting"]',
-        placement: 'bottom',
-      },
+      featureStep(
+        'planning-daily-forecast',
+        'daily-forecast',
+        '/planning?tab=household'
+      ),
+      featureStep(
+        'planning-variable-spending',
+        'daily-forecast',
+        '/planning?tab=household'
+      ),
+      featureStep(
+        'planning-snapshots',
+        'net-worth-snapshots',
+        '/planning?tab=household'
+      ),
+      featureStep(
+        'planning-goal-links',
+        'household-goal-links',
+        '/planning?tab=household'
+      ),
+      featureStep(
+        'planning-weekly-review',
+        'weekly-review',
+        '/planning?tab=household'
+      ),
     ],
   },
+
   // ==========================================================================
   // CHAPTER 5: Subscriptions
   // ==========================================================================
@@ -1002,6 +1084,7 @@ export const onboardingChapters: OnboardingChapter[] = [
           en: 'Fluxby automatically detects recurring payments like subscriptions, fixed costs, and bills. Here you can see all your recurring expenses in one place.',
         },
         selector: '[data-onboarding="nav-subscriptions"]',
+        fallbackSelector: '[data-onboarding="subscriptions-greeting"]',
         placement: 'right',
       },
       {
@@ -1108,6 +1191,7 @@ export const onboardingChapters: OnboardingChapter[] = [
         selector: '[data-onboarding="subscriptions-calendar-toggle"]',
         placement: 'bottom',
       },
+      featureStep('subscriptions-renewal', 'subscriptions-confirmed'),
       {
         id: 'subscriptions-frequency',
         title: {
@@ -1147,6 +1231,7 @@ export const onboardingChapters: OnboardingChapter[] = [
           en: 'The address book stores names for IBAN numbers, so you can better recognize your transactions.',
         },
         selector: '[data-onboarding="nav-addressbook"]',
+        fallbackSelector: '[data-onboarding="addressbook-greeting"]',
         placement: 'right',
       },
       {
@@ -1213,6 +1298,7 @@ export const onboardingChapters: OnboardingChapter[] = [
           en: 'Here you find counterparties from your transactions that are not yet in your address book. With a TypeSafe key, Jev can suggest existing contacts. You confirm each link yourself.',
         },
         selector: '[data-onboarding="suggested-contacts-card"]',
+        fallbackSelector: '[data-onboarding="addressbook-greeting"]',
         placement: 'left',
       },
       {
@@ -1252,6 +1338,7 @@ export const onboardingChapters: OnboardingChapter[] = [
           en: 'Each contact shows number of transactions, total income and expenses. Click for more options.',
         },
         selector: '[data-onboarding="addressbook-contact"]',
+        fallbackSelector: '[data-onboarding="contact-list"]',
         placement: 'right',
       },
       {
@@ -1265,6 +1352,7 @@ export const onboardingChapters: OnboardingChapter[] = [
           en: 'This contact has multiple IBAN numbers. Purple badge = merged. You can bundle multiple accounts from the same party.',
         },
         selector: '[data-onboarding="addressbook-merged-contact"]',
+        fallbackSelector: '[data-onboarding="contact-list"]',
         placement: 'right',
       },
       {
@@ -1278,6 +1366,7 @@ export const onboardingChapters: OnboardingChapter[] = [
           en: 'Click on a contact to view all transactions with this contact.',
         },
         selector: '[data-onboarding="addressbook-contact"]',
+        fallbackSelector: '[data-onboarding="contact-list"]',
         placement: 'left',
       },
     ],
@@ -1306,6 +1395,9 @@ export const onboardingChapters: OnboardingChapter[] = [
         selector: '[data-onboarding="category-planning"]',
         placement: 'bottom',
       },
+      featureStep('category-groups', 'category-planning'),
+      featureStep('category-archive', 'category-planning'),
+      featureStep('category-advanced-rules', 'category-planning'),
       {
         id: 'categories-overview',
         title: {
@@ -1317,6 +1409,7 @@ export const onboardingChapters: OnboardingChapter[] = [
           en: 'Categories help you group your transactions and get better insight into your spending.',
         },
         selector: '[data-onboarding="nav-categories"]',
+        fallbackSelector: '[data-onboarding="category-greeting"]',
         placement: 'right',
       },
       {
@@ -1330,6 +1423,7 @@ export const onboardingChapters: OnboardingChapter[] = [
           en: 'Start quickly with predefined categories like Housing, Transport, and Groceries. This button only appears when you have no categories yet.',
         },
         selector: '[data-onboarding="seed-categories"]',
+        fallbackSelector: '[data-onboarding="category-greeting"]',
         placement: 'left',
         showPlaceholder: true,
       },
@@ -1448,6 +1542,7 @@ export const onboardingChapters: OnboardingChapter[] = [
           en: 'Adjust dates, decimals and columns and save the mapping for your next file. Always check the preview.',
         },
         selector: '[data-onboarding="import-tools"]',
+        fallbackSelector: '[data-onboarding="import-dropzone"]',
         placement: 'bottom',
       },
       {
@@ -1460,6 +1555,10 @@ export const onboardingChapters: OnboardingChapter[] = [
         selector: '[data-onboarding="import-recovery"]',
         placement: 'bottom',
       },
+      featureStep('import-formats', 'import-dropzone'),
+      featureStep('import-source-review', 'import-dropzone'),
+      featureStep('import-undo', 'import-recovery'),
+      featureStep('import-checkpoints', 'import-recovery'),
       {
         id: 'import-overview',
         title: {
@@ -1471,6 +1570,7 @@ export const onboardingChapters: OnboardingChapter[] = [
           en: 'Upload CSV files from your bank to load your transactions into Fluxby.',
         },
         selector: '[data-onboarding="nav-import"]',
+        fallbackSelector: '[data-onboarding="import-greeting"]',
         placement: 'right',
       },
       {
@@ -1497,6 +1597,7 @@ export const onboardingChapters: OnboardingChapter[] = [
           en: 'For non-standard files you can manually map columns to the correct fields.',
         },
         selector: '[data-onboarding="import-mapping"]',
+        fallbackSelector: '[data-onboarding="import-dropzone"]',
         placement: 'center',
         showPlaceholder: true,
       },
@@ -1549,6 +1650,7 @@ export const onboardingChapters: OnboardingChapter[] = [
           en: 'Choose a topic to manage your preferences, profiles and data.',
         },
         selector: '[data-onboarding="nav-settings"]',
+        fallbackSelector: '[data-onboarding="settings-greeting"]',
         route: '/settings',
         placement: 'right',
       },
@@ -1607,6 +1709,11 @@ export const onboardingChapters: OnboardingChapter[] = [
         route: '/settings?section=profiles',
         placement: 'right',
       },
+      featureStep(
+        'settings-account-types',
+        'settings-accounts',
+        '/settings?section=profiles'
+      ),
       {
         id: 'settings-profiles',
         title: { nl: 'Profielen beheren', en: 'Manage profiles' },
@@ -1651,6 +1758,11 @@ export const onboardingChapters: OnboardingChapter[] = [
         route: '/settings?section=automation',
         placement: 'right',
       },
+      featureStep(
+        'settings-ai-actions',
+        'settings-typesafe',
+        '/settings?section=automation'
+      ),
       {
         id: 'settings-webmcp',
         title: { nl: 'Browserassistenten', en: 'Browser assistants' },
@@ -1709,6 +1821,16 @@ export const onboardingChapters: OnboardingChapter[] = [
         route: '/settings?section=data',
         placement: 'top',
       },
+      featureStep(
+        'settings-profile-data',
+        'settings-delete-data',
+        '/settings?section=data'
+      ),
+      featureStep(
+        'settings-updates',
+        'settings-about-updates',
+        '/settings?section=about'
+      ),
       {
         id: 'settings-help-about',
         title: { nl: 'Hulp & over Fluxby', en: 'Help & about' },
@@ -1747,6 +1869,7 @@ export const onboardingChapters: OnboardingChapter[] = [
           en: 'Find answers to frequently asked questions and learn more about all Fluxby features.',
         },
         selector: '[data-onboarding="nav-help"]',
+        fallbackSelector: '[data-onboarding="help-greeting"]',
         placement: 'right',
       },
       {

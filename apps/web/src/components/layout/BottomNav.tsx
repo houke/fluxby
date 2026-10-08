@@ -76,7 +76,10 @@ export function BottomNav() {
   return (
     <>
       {/* Bottom Navigation Bar */}
-      <nav className='fixed right-0 bottom-0 left-0 z-30 flex h-16 items-center justify-around border-t bg-card md:hidden'>
+      <nav
+        data-onboarding='mobile-navigation'
+        className='fixed right-0 bottom-0 left-0 z-30 flex h-16 items-center justify-around border-t bg-card md:hidden'
+      >
         {primaryNavItems.map((item) => (
           <TransitionNavLink
             key={item.to}
