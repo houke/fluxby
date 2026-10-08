@@ -557,8 +557,6 @@ export default function Dashboard() {
         }
       />
 
-      <AccountFreshness />
-
       {/* Stats Cards */}
       <div
         className='grid grid-cols-2 gap-px bg-border sm:gap-4 sm:bg-transparent lg:grid-cols-4'
@@ -619,6 +617,8 @@ export default function Dashboard() {
           />
         </div>
       </div>
+
+      <AccountFreshness />
 
       <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-2'>
         <Suspense fallback={<ChartSkeleton />}>
