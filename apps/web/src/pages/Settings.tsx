@@ -196,8 +196,8 @@ export default function Settings() {
                 <summary className='cursor-pointer rounded-2xl p-5 font-semibold text-destructive focus-visible:ring-2 focus-visible:ring-ring'>
                   {copy.deleteData}
                 </summary>
-                <div className='space-y-5 pb-5'>
-                  <p className='px-5 text-sm text-muted-foreground'>
+                <div className='space-y-5 px-5 pb-5'>
+                  <p className='text-sm text-muted-foreground'>
                     {copy.deleteDataDescription}
                   </p>
                   <ProfileDataSettings />

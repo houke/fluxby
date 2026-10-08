@@ -74,6 +74,7 @@ export function DataManagementSettings({
 }: {
   section?: 'backup' | 'reset' | 'all';
 }) {
+  const Container = section === 'reset' ? 'section' : Card;
   const { t } = useLanguage();
   const queryClient = useQueryClient();
   const confirm = useConfirm();
@@ -293,13 +294,19 @@ export function DataManagementSettings({
 
   return (
     <div className=''>
-      <Card
-        className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'
+      <Container
+        className={
+          section === 'reset'
+            ? 'space-y-4 border-t pt-5'
+            : 'rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'
+        }
         data-onboarding={
           section === 'reset' ? 'settings-reset' : 'settings-data-management'
         }
       >
-        <CardHeader className='px-3 py-3 sm:px-6 sm:py-4'>
+        <CardHeader
+          className={section === 'reset' ? 'p-0' : 'px-3 py-3 sm:px-6 sm:py-4'}
+        >
           <CardTitle className='text-base sm:text-lg'>
             {section === 'reset'
               ? t.settings.navigation.resetTitle
@@ -311,7 +318,13 @@ export function DataManagementSettings({
               : t.settings.dataManagement.description}
           </CardDescription>
         </CardHeader>
-        <CardContent className='px-3 pt-0 pb-3 sm:px-6 sm:pt-0 sm:pb-6'>
+        <CardContent
+          className={
+            section === 'reset'
+              ? 'p-0'
+              : 'px-3 pt-0 pb-3 sm:px-6 sm:pt-0 sm:pb-6'
+          }
+        >
           <div className='space-y-2'>
             {section !== 'reset' && (
               <>
@@ -476,8 +489,14 @@ export function DataManagementSettings({
               </>
             )}
             {section !== 'backup' && (
-              <div className='flex items-center justify-between rounded-lg border p-3'>
-                <div className='flex-1'>
+              <div
+                className={
+                  section === 'reset'
+                    ? 'flex flex-wrap items-center justify-between gap-3 py-3'
+                    : 'flex items-center justify-between rounded-lg border p-3'
+                }
+              >
+                <div className='min-w-0 flex-1 basis-48'>
                   <p className='text-sm font-medium text-destructive'>
                     {t.settings.dataManagement.deleteAllTitle}
                   </p>
@@ -539,7 +558,7 @@ export function DataManagementSettings({
             )}
           </div>
         </CardContent>
-      </Card>
+      </Container>
 
       <Dialog
         open={pendingImport !== null}

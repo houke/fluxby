@@ -17,7 +17,8 @@ for (const language of ['en', 'nl'] as const) {
     await page.locator('[data-onboarding="settings-general-link"]').click();
     if (language === 'nl')
       await page.getByRole('button', { name: /Nederlands/ }).click();
-    const copy = (language === 'nl' ? nl : en).settings.navigation;
+    const settings = (language === 'nl' ? nl : en).settings;
+    const copy = settings.navigation;
     await page.locator('[data-onboarding="settings-back"]').click();
     for (const width of [1440, 393, 320]) {
       await page.setViewportSize({ width, height: 1000 });
@@ -103,6 +104,31 @@ for (const language of ['en', 'nl'] as const) {
               page.locator('[data-onboarding="settings-accounts"]')
             ).toBeVisible();
           }
+          if (section === 'security') {
+            await page
+              .getByRole('button', {
+                name: settings.masterPasswordChange,
+                exact: true,
+              })
+              .click();
+            const dialog = page.getByRole('dialog', {
+              name: settings.masterPasswordDialogTitle,
+            });
+            await expect(dialog).toBeVisible();
+            // The app background is transparent; dialogs need an opaque surface.
+            expect(
+              await dialog.evaluate(
+                (element) => getComputedStyle(element).backgroundColor
+              )
+            ).toMatch(/^rgb\(/);
+            if (language === 'en' && width !== 320) {
+              await dialog.screenshot({
+                path: `.nexus/tmp/settings-overview/password-dialog-${theme}-${width}.png`,
+              });
+            }
+            await page.keyboard.press('Escape');
+            await expect(dialog).not.toBeVisible();
+          }
           if (section === 'data') {
             await expect(
               page.locator('[data-onboarding="settings-delete-data"]')
@@ -117,6 +143,39 @@ for (const language of ['en', 'nl'] as const) {
             await expect(
               page.locator('[data-onboarding="settings-reset"]')
             ).toBeVisible();
+            for (const selector of [
+              'settings-profile-data',
+              'settings-reset',
+            ]) {
+              const styles = await page
+                .locator(`[data-onboarding="${selector}"]`)
+                .evaluate((element) => {
+                  const style = getComputedStyle(element);
+                  return {
+                    background: style.backgroundColor,
+                    border: style.borderLeftWidth,
+                    shadow: style.boxShadow,
+                  };
+                });
+              expect(styles).toEqual({
+                background: 'rgba(0, 0, 0, 0)',
+                border: '0px',
+                shadow: 'none',
+              });
+            }
+            expect(
+              await page.evaluate(
+                () => document.documentElement.scrollWidth <= innerWidth + 1
+              ),
+              `${language}/${theme}/${width}/delete data overflow`
+            ).toBe(true);
+            if (language === 'en' && theme === 'light' && width !== 320) {
+              await page
+                .locator('[data-onboarding="settings-delete-data"]')
+                .screenshot({
+                  path: `.nexus/tmp/settings-overview/delete-data-${width}.png`,
+                });
+            }
           }
           if (section === 'about')
             await expect(
