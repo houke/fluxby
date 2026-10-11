@@ -67,7 +67,7 @@ test('WebMCP registration follows consent, confirmation, privacy mode and reload
     await unlock.click();
   }
   await expect(dashboard).toBeVisible({ timeout: 60000 });
-  await dismissOnboardingTour(page);
+  await dismissOnboardingTour(page, { waitForWelcome: true });
   expect(await registeredNames()).toEqual([]);
 
   await page.getByRole('link', { name: 'Settings', exact: true }).click();
