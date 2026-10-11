@@ -11,45 +11,25 @@ import { test as base, Page, BrowserContext, expect } from '@playwright/test';
  * App setup fixture - ensures the app has a profile and demo data
  */
 export async function setupApp(page: Page) {
-  // Navigate to app
   await page.goto('/app/', { waitUntil: 'domcontentloaded' });
 
-  // Wait for app to initialize (may take a moment due to OPFS setup)
-  await page.waitForTimeout(2000);
+  const dashboardLink = page.getByRole('link', { name: /dashboard/i });
+  const languageHeading = page.getByRole('heading', {
+    name: /kies je taal|choose.*language|select.*language/i,
+  });
+  const nameHeading = page.getByText(/What's your name\?|Hoe heet je\?/i);
 
-  // Step 1: Handle language selection (if shown)
+  // Cold CI startup can outlast a fixed sleep. Wait for the actual setup or
+  // dashboard controls before deciding whether onboarding is needed.
+  await languageHeading.or(nameHeading).or(dashboardLink).first().waitFor({
+    state: 'visible',
+    timeout: 60000,
+  });
+
+  if (await dashboardLink.isVisible()) return;
+
   await handleLanguageSelection(page);
-
-  // Check if we are already on a main page or need setup
-  const url = page.url();
-  if (
-    url.includes('dashboard') ||
-    url.includes('transactions') ||
-    url.includes('analytics')
-  ) {
-    return; // Already set up
-  }
-
-  // Check if we're on an onboarding/setup screen
-  const needsSetup = await needsAppSetup(page);
-
-  if (needsSetup) {
-    await completeOnboarding(page);
-  }
-
-  // Wait for navigation to complete
-  await page.waitForTimeout(1000);
-
-  // Check if we reached a main page (dashboard or transactions)
-  const finalUrl = page.url();
-  if (!finalUrl.includes('dashboard') && !finalUrl.includes('transactions')) {
-    // Try clicking on a known nav link
-    const dashboardLink = page.getByRole('link', { name: /dashboard/i });
-    if (await dashboardLink.isVisible({ timeout: 2000 })) {
-      await dashboardLink.click();
-      await page.waitForLoadState('networkidle');
-    }
-  }
+  await completeOnboarding(page);
 }
 
 /**
@@ -79,41 +59,6 @@ async function handleLanguageSelection(page: Page) {
 }
 
 /**
- * Check if app needs initial setup
- */
-async function needsAppSetup(page: Page): Promise<boolean> {
-  // Check for common setup indicators
-  const setupIndicators = [
-    'text=/welkom|welcome|setup|onboarding/i',
-    'text=/profiel aanmaken|create profile/i',
-    "text=/what's your name|hoe heet je/i", // Name entry screen
-    'text=/secure your data|beveilig je gegevens/i', // Password screen
-    'text=/choose your language|kies je taal/i', // Language selection
-    '[data-testid="setup-wizard"]',
-    '[data-testid="onboarding"]',
-  ];
-
-  for (const indicator of setupIndicators) {
-    try {
-      const element = page.locator(indicator);
-      if (await element.isVisible({ timeout: 1000 })) {
-        return true;
-      }
-    } catch {
-      // Element not found, continue checking
-    }
-  }
-
-  // Check URL for setup routes
-  const url = page.url();
-  if (url.includes('setup') || url.includes('onboarding')) {
-    return true;
-  }
-
-  return false;
-}
-
-/**
  * Complete the onboarding/setup flow
  *
  * This function walks through the app's initial setup:
@@ -129,11 +74,9 @@ async function completeOnboarding(page: Page) {
 
   // Fill in the name input using CSS selector (same approach as MCP)
   await page.fill('input[type="text"]', 'Test User');
-  await page.waitForTimeout(500);
 
   // Click Next button
   await page.click('button:has-text("Next")');
-  await page.waitForTimeout(1000);
 
   // Step 2: Password screen - wait for it to appear
   await page
@@ -143,13 +86,9 @@ async function completeOnboarding(page: Page) {
   // Fill both password fields
   await page.fill('input[placeholder="Master password..."]', 'test1234');
   await page.fill('input[placeholder="Confirm password..."]', 'test1234');
-  await page.waitForTimeout(500);
 
   // Click "Let's get started!" button
   await page.click('button:has-text("Let\'s get started!")');
-
-  // Wait for main app to load (loading screen + dashboard)
-  await page.waitForTimeout(5000);
 
   // Wait for dashboard to appear (indicates setup complete)
   // Use a more specific selector to avoid matching multiple elements
