@@ -13,6 +13,8 @@ const isExternalTarget = !!process.env.PLAYWRIGHT_BASE_URL;
  */
 export default defineConfig({
   testDir: './e2e',
+  // Encrypted demo setup and browser assertions share this deadline.
+  timeout: 60000,
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
