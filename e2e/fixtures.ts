@@ -94,6 +94,13 @@ async function completeOnboarding(page: Page) {
   // Use a more specific selector to avoid matching multiple elements
   const dashboardLink = page.getByRole('link', { name: 'Dashboard' });
   await dashboardLink.waitFor({ state: 'visible', timeout: 60000 });
+
+  // Encryption can reload the app before the first tour is mounted. The
+  // sidebar alone does not mean setup is ready for navigation yet.
+  await page
+    .locator('[class*="z-[9999]"]')
+    .getByRole('button', { name: /let's get started|aan de slag/i })
+    .waitFor({ state: 'visible', timeout: 15000 });
 }
 
 /**
@@ -157,97 +164,42 @@ export async function goToTransactionsPage(page: Page) {
  * - Welcome modal with "Let's get started!" button
  * - Tour steps with X (Skip) button in corner
  */
-export async function dismissOnboardingTour(page: Page) {
-  // Wait for any modal to fully appear and stabilize
-  await page.waitForTimeout(1500);
+export async function dismissOnboardingTour(
+  page: Page,
+  { waitForWelcome = false }: { waitForWelcome?: boolean } = {}
+) {
+  const tour = page.locator('[class*="z-[9999]"]');
+  const startButton = tour.getByRole('button', {
+    name: /let's get started|aan de slag/i,
+  });
+  const skipButton = tour.getByRole('button', { name: /^(skip|overslaan)$/i });
+  const closeButton = tour.getByRole('button', { name: /^(close|sluiten)$/i });
 
-  // Try multiple times to dismiss all onboarding modals
-  for (let attempt = 0; attempt < 10; attempt++) {
-    // Check if there's an active onboarding overlay (z-index 9998/9999)
-    const overlayCount = await page
-      .locator('[class*="z-[9998]"], [class*="z-[9999]"]')
-      .count();
-
-    if (overlayCount === 0) {
-      // No onboarding overlay, we're done
-      return;
-    }
-
-    // Small wait for DOM stability
-    await page.waitForTimeout(300);
-
-    // Try clicking Skip button by accessible name
-    try {
-      const skipButton = page.getByRole('button', { name: /skip|overslaan/i });
-      if ((await skipButton.count()) > 0) {
-        await skipButton.first().click({ force: true, timeout: 2000 });
-        await page.waitForTimeout(800);
-        continue;
-      }
-    } catch {
-      // Button may have disappeared, try next option
-    }
-
-    // Try to find "Let's get started!" or "Aan de slag!" button
-    try {
-      const startButton = page.getByRole('button', {
-        name: /let's get started|aan de slag/i,
-      });
-      if ((await startButton.count()) > 0) {
-        await startButton.first().click({ force: true, timeout: 2000 });
-        await page.waitForTimeout(800);
-        continue;
-      }
-    } catch {
-      // Button may have disappeared, try next option
-    }
-
-    // Try to find any Next/Volgende button
-    try {
-      const nextButton = page.getByRole('button', {
-        name: /next|volgende/i,
-      });
-      if ((await nextButton.count()) > 0) {
-        await nextButton.first().click({ force: true, timeout: 2000 });
-        await page.waitForTimeout(800);
-        continue;
-      }
-    } catch {
-      // Button may have disappeared, try next option
-    }
-
-    // Try to find Finish/Voltooien/Done/Klaar button
-    try {
-      const finishButton = page.getByRole('button', {
-        name: /finish|voltooien|done|klaar/i,
-      });
-      if ((await finishButton.count()) > 0) {
-        await finishButton.first().click({ force: true, timeout: 2000 });
-        await page.waitForTimeout(800);
-        continue;
-      }
-    } catch {
-      // Button may have disappeared, try next option
-    }
-
-    // Try clicking any button with X icon (close button)
-    try {
-      const closeIconButton = page.locator('button:has(svg.lucide-x)');
-      if ((await closeIconButton.count()) > 0) {
-        await closeIconButton.first().click({ force: true, timeout: 2000 });
-        await page.waitForTimeout(800);
-        continue;
-      }
-    } catch {
-      // Button may have disappeared
-    }
-
-    // If nothing found, wait a bit longer and try again
-    await page.waitForTimeout(500);
+  // Specs that walk through setup themselves must also wait for the pending
+  // welcome tour, which can mount after the dashboard is already visible.
+  if (waitForWelcome) {
+    await startButton.waitFor({ state: 'visible', timeout: 15000 });
   }
 
-  // Final wait for any animations to complete
-  await page.waitForTimeout(500);
+  const overlays = page.locator('[class*="z-[9998]"], [class*="z-[9999]"]');
+  if ((await overlays.count()) === 0) return;
+
+  await startButton.or(skipButton).or(closeButton).first().waitFor({
+    state: 'visible',
+    timeout: 10000,
+  });
+
+  // The welcome step is mandatory. Advance it once, then dismiss the tour
+  // through its own control rather than forcing clicks through the overlay.
+  if (await startButton.isVisible()) {
+    await startButton.click();
+    await skipButton.waitFor({ state: 'visible', timeout: 10000 });
+  }
+
+  await skipButton.or(closeButton).first().click();
+  // Closing includes a shrink animation and a "see you later" message. Wait
+  // for both layers to unmount before any test clicks the app underneath.
+  await expect(overlays).toHaveCount(0, { timeout: 10000 });
 }
 
 /**

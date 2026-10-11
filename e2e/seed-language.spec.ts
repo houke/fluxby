@@ -29,7 +29,7 @@ for (const language of ['en', 'nl'] as const) {
       await expect(page.getByText(name, { exact: true }).first()).toBeVisible();
     }
 
-    await dismissOnboardingTour(page);
+    await dismissOnboardingTour(page, { waitForWelcome: true });
     await page
       .getByRole('link', { name: /categories|categorieën|categorieen/i })
       .click({ timeout: 10000 });
