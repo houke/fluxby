@@ -2,6 +2,9 @@ import { expect, test } from '@playwright/test';
 import { goToTransactionsPage } from './fixtures';
 
 test.describe('Recurring Transaction Expansion', () => {
+  // Fresh encrypted demo setup shares the test deadline and can take 20s in CI.
+  test.setTimeout(60000);
+
   test('clicking checkbox should toggle selection, clicking row should expand recurring transactions', async ({
     page,
   }) => {
