@@ -14,7 +14,10 @@ const mocks = vi.hoisted(() => ({
   capture: vi.fn(async () => []),
   release: () => undefined,
 }));
-vi.mock('@fluxby/core', () => ({
+vi.mock('@fluxby/core', async (importOriginal) => ({
+  hasPairedDeviceForProfile: (
+    await importOriginal<typeof import('@fluxby/core')>()
+  ).hasPairedDeviceForProfile,
   createPeerSync: () => ({
     initialize: async () => undefined,
     destroy: vi.fn(),
@@ -31,7 +34,8 @@ vi.mock('@fluxby/database', () => ({
   readFromOPFSSync: (key: string) => {
     if (key === 'fluxby.deviceId') return 'device';
     if (key === 'fluxby.deviceName') return 'Device';
-    if (key === 'fluxby.pairedDevices') return [];
+    if (key === 'fluxby.pairedDevices')
+      return [{ id: 'remote', localProfileId: 'profile', isConnected: false }];
     return true;
   },
   writeToOPFSWithCache: vi.fn(async () => undefined),

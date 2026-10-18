@@ -1276,6 +1276,13 @@ export interface TranslationKeys {
       lastSync: string;
       neverSynced: string;
       removeDevice: string;
+      removeDeviceConfirmTitle: string;
+      removeDeviceConfirmDescription: string;
+      deviceRemoved: string;
+      reconnectNow: string;
+      deviceWaiting: string;
+      devicePairAgain: string;
+      deviceUpdateRequired: string;
       pairingRequest: string;
       showQRCode: string;
       pairDevice: string;
@@ -1290,6 +1297,8 @@ export interface TranslationKeys {
       accept: string;
       ready: string;
       initializing: string;
+      standby: string;
+      connectingToServer: string;
       cannotConnectToSelf: string;
       peerUnavailable: string;
       connectionTimeout: string;
@@ -1304,6 +1313,7 @@ export interface TranslationKeys {
       autoSyncOffTooltip: string;
       autoSyncDescription: string;
       connectionSettings: string;
+      connectsOnDemand: string;
       syncSuccess: string;
       syncNoChanges: string;
       syncError: string;
@@ -3295,7 +3305,7 @@ export const nl: TranslationKeys = {
         'Koppelen voegt de actieve profielen op beide apparaten samen. Bij verschillen wordt de laatste wijziging gebruikt. Exporteer voor het verbinden een backup als je een herstelkopie wilt bewaren.',
       title: 'Apparaten synchroniseren',
       description:
-        'Synchroniseer je gegevens tussen apparaten via peer-to-peer verbindingen. Geen server nodig.',
+        'Synchroniseer je gegevens rechtstreeks tussen je apparaten via versleutelde peer-to-peerverbindingen. Een koppelserver helpt de apparaten alleen elkaar te vinden.',
       thisDevice: 'Dit apparaat',
       pairingCode: 'Koppelingscode',
       pairingCodeDescription:
@@ -3316,6 +3326,16 @@ export const nl: TranslationKeys = {
       lastSync: 'Laatste sync',
       neverSynced: 'Nog niet gesynchroniseerd',
       removeDevice: 'Apparaat verwijderen',
+      removeDeviceConfirmTitle: 'Apparaat verwijderen?',
+      removeDeviceConfirmDescription:
+        '{device} synchroniseert dan niet meer met dit apparaat. Is het online, dan verwijdert het de koppeling ook. Je kunt altijd opnieuw koppelen.',
+      deviceRemoved: 'Apparaat verwijderd',
+      reconnectNow: 'Nu opnieuw verbinden',
+      deviceWaiting:
+        'Verbindt automatisch zodra beide apparaten ontgrendeld en online zijn',
+      devicePairAgain: 'Koppel opnieuw om automatisch te verbinden',
+      deviceUpdateRequired:
+        'Werk beide apparaten bij naar dezelfde versie om opnieuw te verbinden',
       pairingRequest: 'Koppelingsverzoek',
       showQRCode: 'Toon QR-code',
       pairDevice: 'Apparaat koppelen',
@@ -3331,6 +3351,8 @@ export const nl: TranslationKeys = {
       accept: 'Accepteren',
       ready: 'Gereed',
       initializing: 'Initialiseren...',
+      standby: 'Niet actief',
+      connectingToServer: 'Verbinden met de koppelserver...',
       syncing: 'Synchroniseren...',
       connected: 'Verbonden',
       notConnected: 'Niet verbonden',
@@ -3342,6 +3364,8 @@ export const nl: TranslationKeys = {
       autoSyncOffTooltip: 'Alleen handmatig synchroniseren',
       autoSyncDescription: 'Wijzigingen automatisch synchroniseren',
       connectionSettings: 'Verbindingsinstellingen',
+      connectsOnDemand:
+        'Fluxby maakt alleen verbinding met de koppelserver als je een apparaat koppelt of als dit profiel gekoppelde apparaten heeft. Gekoppelde apparaten verbinden daarna vanzelf opnieuw.',
       syncSuccess: '{received} ontvangen, {pushed} verzonden',
       syncNoChanges: 'Geen nieuwe wijzigingen om te synchroniseren',
       syncError: 'Synchronisatie mislukt',

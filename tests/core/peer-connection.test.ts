@@ -60,7 +60,7 @@ describe('complete encrypted peer connection lifecycle', () => {
   it('pairs approved profiles and processes bidirectional push/request messages after connect resolves', async () => {
     const receivedA = vi.fn(async () => 1);
     const receivedB = vi.fn(async () => 2);
-    const paired = vi.fn<(device: PeerDevice) => void>();
+    const paired = vi.fn<(device: PeerDevice, secret?: string) => void>();
     const errors = vi.fn();
     const a = new PeerSync({
       deviceId: 'a',
@@ -97,7 +97,9 @@ describe('complete encrypted peer connection lifecycle', () => {
           id: 'a',
           localProfileId: 'profile-b',
           remoteProfileId: 'profile-a',
-        })
+        }),
+        // Both sides support reconnection, so the pairing hands over a secret.
+        expect.stringMatching(/^[A-Za-z0-9_-]{43}$/)
       );
       expect(await a.sendChanges('b', [])).toBe(2);
       expect(await b.sendChanges('a', [])).toBe(1);

@@ -13,6 +13,13 @@ The default PeerJS cloud server has rate limits that may affect high-traffic dep
 
 > **Note**: The PeerJS server only handles WebRTC signaling (connection setup). Actual sync data travels directly peer-to-peer and is never sent through the PeerJS server.
 
+## How Fluxby Uses the Server
+
+- Fluxby connects only while the user pairs a device, or after unlock when the active profile has paired devices. Without sync, the server is never contacted.
+- Each device registers under a stable ID, `fluxby-<device-id>` (a random UUID), so paired devices can dial it again after a restart. If the ID is still held by a previous page, Fluxby retries for about 16 seconds and then uses a session ID (it can still dial out).
+- Reconnecting devices are not trusted because of their ID: after the encrypted key exchange, both prove they hold the secret from pairing (an HMAC bound to the session keys). The server cannot read or impersonate a pairing.
+- Offline peers are retried with backoff (2 seconds up to 5 minutes), and again when the browser comes back online or the app becomes visible.
+
 ## Quick Start with Docker
 
 The easiest way to deploy a PeerJS server:

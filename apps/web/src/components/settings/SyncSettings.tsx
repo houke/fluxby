@@ -13,6 +13,7 @@ import {
   QrCode,
   Link,
   RefreshCw,
+  RotateCw,
   ToggleLeft,
   ToggleRight,
   History,
@@ -41,7 +42,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { useSync } from '@/contexts/SyncContext';
+import { canReconnect, useSync, type SyncDevice } from '@/contexts/SyncContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/contexts/ToastContext';
 import { useConfirm } from '@/contexts/ConfirmContext';
@@ -59,10 +60,12 @@ export function SyncSettings() {
     deviceName,
     setDeviceName,
     isInitialized,
+    isConnecting: isPeerConnecting,
     connectWithPairingCode,
     pairedDevices,
     pendingPairingRequest,
     disconnectDevice,
+    reconnectDevices,
     lastError,
     retryInitialization,
     syncStatus,
@@ -159,6 +162,35 @@ export function SyncSettings() {
     } finally {
       setIsConnecting(false);
     }
+  };
+
+  const handleRemoveDevice = async (device: SyncDevice) => {
+    if (
+      !(await confirm({
+        title: t.settings.sync.removeDeviceConfirmTitle,
+        message: t.settings.sync.removeDeviceConfirmDescription.replace(
+          '{device}',
+          device.name
+        ),
+        confirmLabel: t.settings.sync.removeDevice,
+        variant: 'danger',
+      }))
+    )
+      return;
+    disconnectDevice(device.id);
+    toast.success(t.settings.sync.deviceRemoved);
+  };
+
+  // What a paired device is doing, or what the user needs to do for it
+  const getDeviceStatus = (device: SyncDevice) => {
+    const lastSync = device.lastSyncAt
+      ? `${t.settings?.sync?.lastSync}: ${formatDateTime(device.lastSyncAt)}`
+      : t.settings?.sync?.neverSynced;
+    if (device.isConnected) return lastSync;
+    if (device.reconnectIssue === 'update-required')
+      return t.settings.sync.deviceUpdateRequired;
+    if (!canReconnect(device)) return t.settings.sync.devicePairAgain;
+    return `${t.settings.sync.deviceWaiting} · ${lastSync}`;
   };
 
   // Format device icon
@@ -433,7 +465,9 @@ export function SyncSettings() {
                       ? t.settings?.sync?.ready
                       : lastError
                         ? t.common?.error
-                        : t.settings?.sync?.initializing}
+                        : isPeerConnecting
+                          ? t.settings?.sync?.initializing
+                          : t.settings.sync.standby}
                   </Badge>
                   {lastError && (
                     <Button
@@ -450,9 +484,14 @@ export function SyncSettings() {
             </div>
 
             {/* Connection settings */}
-            <h4 className='mb-1 text-sm font-medium'>
-              {t.settings?.sync?.connectionSettings}
-            </h4>
+            <div>
+              <h4 className='mb-1 text-sm font-medium'>
+                {t.settings?.sync?.connectionSettings}
+              </h4>
+              <p className='text-xs text-muted-foreground'>
+                {t.settings.sync.connectsOnDemand}
+              </p>
+            </div>
 
             {/* Pairing Code & Connect to Device - 2 rows */}
             <div className='space-y-2'>
@@ -467,7 +506,7 @@ export function SyncSettings() {
                 </div>
                 <QRPairingDialog
                   trigger={
-                    <Button disabled={!isInitialized} size='sm'>
+                    <Button size='sm'>
                       <QrCode className='mr-2 h-4 w-4' />
                       {t.settings?.sync?.showQRCode}
                     </Button>
@@ -487,7 +526,6 @@ export function SyncSettings() {
                   variant='outline'
                   size='sm'
                   onClick={() => setIsPairingDialogOpen(true)}
-                  disabled={!isInitialized}
                 >
                   <Link className='mr-2 h-4 w-4' />
                   {t.settings?.sync?.enterCode}
@@ -527,19 +565,44 @@ export function SyncSettings() {
                           )}
                         </div>
                         <p className='text-xs text-muted-foreground'>
-                          {device.lastSyncAt
-                            ? `${t.settings?.sync?.lastSync}: ${formatDateTime(device.lastSyncAt)}`
-                            : t.settings?.sync?.neverSynced}
+                          {getDeviceStatus(device)}
                         </p>
                       </div>
+                      {!device.isConnected && canReconnect(device) && (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant='ghost'
+                                size='icon'
+                                className='rounded-md hover:bg-purple-600 hover:text-white'
+                                aria-label={t.settings.sync.reconnectNow}
+                                disabled={isPeerConnecting}
+                                onClick={reconnectDevices}
+                              >
+                                <RotateCw
+                                  className={cn(
+                                    'h-4 w-4',
+                                    isPeerConnecting && 'animate-spin'
+                                  )}
+                                />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              {t.settings.sync.reconnectNow}
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      )}
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <Button
                               variant='ghost'
                               size='icon'
-                              className='text-destructive hover:bg-destructive/10'
-                              onClick={() => disconnectDevice(device.id)}
+                              className='rounded-md text-destructive hover:bg-red-600 hover:text-white'
+                              aria-label={t.settings?.sync?.removeDevice}
+                              onClick={() => void handleRemoveDevice(device)}
                             >
                               <Trash2 className='h-4 w-4' />
                             </Button>
@@ -649,7 +712,11 @@ export function SyncSettings() {
                   onClick={handleConnect}
                   disabled={!pairingInput.trim() || isConnecting}
                 >
-                  {isConnecting ? t.common?.loading : t.settings?.sync?.connect}
+                  {isConnecting
+                    ? isPeerConnecting
+                      ? t.settings.sync.connectingToServer
+                      : t.common?.loading
+                    : t.settings?.sync?.connect}
                 </Button>
               </DialogFooter>
             </DialogContent>

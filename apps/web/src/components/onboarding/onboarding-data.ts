@@ -1766,8 +1766,8 @@ export const onboardingChapters: OnboardingChapter[] = [
         id: 'settings-sync',
         title: { nl: 'Apparaten koppelen', en: 'Connect devices' },
         content: {
-          nl: 'Koppel apparaten om gegevens direct te synchroniseren. Synchronisatie vervangt geen onafhankelijke back-up.',
-          en: 'Pair devices to sync data directly. Sync does not replace an independent backup.',
+          nl: 'Koppel apparaten één keer om gegevens direct te synchroniseren; daarna verbinden ze vanzelf opnieuw. Synchronisatie vervangt geen onafhankelijke back-up.',
+          en: 'Pair devices once to sync data directly; they then reconnect by themselves. Sync does not replace an independent backup.',
         },
         selector: '[data-onboarding="settings-sync-content"]',
         route: '/settings?section=sync',

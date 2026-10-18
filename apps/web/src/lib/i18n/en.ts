@@ -1457,7 +1457,7 @@ export const en: TranslationKeys = {
         'Pairing merges the active profiles on both devices. The latest change wins when records differ. Export a backup before connecting if you need a recovery copy.',
       title: 'Device sync',
       description:
-        'Sync your data across devices using peer-to-peer connections. No server required.',
+        'Sync your data directly between your devices over encrypted peer-to-peer connections. A pairing server only helps the devices find each other.',
       thisDevice: 'This device',
       pairingCode: 'Pairing code',
       pairingCodeDescription: 'Share this code with another device to connect.',
@@ -1476,6 +1476,16 @@ export const en: TranslationKeys = {
       lastSync: 'Last sync',
       neverSynced: 'Never synced',
       removeDevice: 'Remove device',
+      removeDeviceConfirmTitle: 'Remove this device?',
+      removeDeviceConfirmDescription:
+        '{device} will stop syncing with this device. If it is online, it removes the pairing too. You can pair again at any time.',
+      deviceRemoved: 'Device removed',
+      reconnectNow: 'Reconnect now',
+      deviceWaiting:
+        'Reconnects automatically when both devices are unlocked and online',
+      devicePairAgain: 'Pair again to reconnect automatically',
+      deviceUpdateRequired:
+        'Update both devices to the same version to reconnect',
       pairingRequest: 'Pairing request',
       showQRCode: 'Show QR code',
       pairDevice: 'Pair device',
@@ -1491,6 +1501,8 @@ export const en: TranslationKeys = {
       accept: 'Accept',
       ready: 'Ready',
       initializing: 'Initializing...',
+      standby: 'Inactive',
+      connectingToServer: 'Connecting to the pairing server...',
       syncing: 'Syncing...',
       connected: 'Connected',
       notConnected: 'Not connected',
@@ -1502,6 +1514,8 @@ export const en: TranslationKeys = {
       autoSyncOffTooltip: 'Manual sync only',
       autoSyncDescription: 'Automatically sync changes as you make them',
       connectionSettings: 'Connection settings',
+      connectsOnDemand:
+        'Fluxby only connects to the pairing server when you pair a device or when this profile has paired devices. Paired devices then reconnect by themselves.',
       syncSuccess: '{received} received, {pushed} sent',
       syncNoChanges: 'No new changes to sync',
       syncError: 'Sync failed',
