@@ -1,4 +1,7 @@
-import { cashflowDates } from './household-planning';
+import {
+  cashflowDates,
+  createHouseholdPlanningService,
+} from './household-planning';
 import { effectiveExpenseSQL } from './transaction-accounting';
 import { addMonthsToDateOnly, formatDateISO } from '@fluxby/shared';
 import {
@@ -182,12 +185,11 @@ export function createHouseholdBudgetService(
         );
         return;
       }
-      if (!Number.isFinite(amount) || amount < 0)
-        throw new Error('Invalid budget amount');
+      const cents = moneyCents(amount);
       await db.runAsync(
         `INSERT INTO budget_months(id,budget_id,month,amount,profile_id,created_at,updated_at) VALUES(?,?,?,?,?,?,?)
     ON CONFLICT(profile_id,budget_id,month) DO UPDATE SET amount=excluded.amount,is_deleted=0,updated_at=excluded.updated_at`,
-        [crypto.randomUUID(), budgetId, month, round(amount), p, now, now]
+        [crypto.randomUUID(), budgetId, month, cents / 100, p, now, now]
       );
     },
     async copyPreviousBudgetMonth(month: string) {
@@ -221,8 +223,7 @@ export function createHouseholdBudgetService(
       const p = pid();
       await owned('categories', categoryId, p);
       assertProfile(p);
-      if (!Number.isFinite(amount) || amount <= 0)
-        throw new Error('Invalid suggestion');
+      if (moneyCents(amount) <= 0) throw new Error('Invalid suggestion');
       return db.transactionAsync(async (db) => {
         assertProfile(p);
         const existing = await db.queryOneAsync<{ id: string }>(
@@ -273,12 +274,11 @@ export function createHouseholdBudgetService(
     },
     async saveBudgetIncomePlan(month: string, amount: number) {
       validateMonth(month);
-      if (!Number.isFinite(amount) || amount < 0)
-        throw new Error('Invalid income');
+      const cents = moneyCents(amount);
       const now = Date.now();
       await db.runAsync(
         `INSERT INTO budget_income_plans(id,month,expected_income,profile_id,created_at,updated_at) VALUES(?,?,?,?,?,?) ON CONFLICT(profile_id,month) DO UPDATE SET expected_income=excluded.expected_income,is_deleted=0,updated_at=excluded.updated_at`,
-        [crypto.randomUUID(), month, round(amount), pid(), now, now]
+        [crypto.randomUUID(), month, cents / 100, pid(), now, now]
       );
     },
     async getCategoryPreferences() {
@@ -406,17 +406,18 @@ export function createHouseholdBudgetService(
           'SELECT id,avg_amount,pattern_type FROM recurring_patterns WHERE profile_id=? AND is_deleted=0 AND is_active=1 AND is_dismissed=0 AND avg_amount<0',
           [p]
         ),
-        db.queryOneAsync<{ total: number }>(
-          'SELECT COALESCE(SUM(monthly_contribution),0) total FROM savings_goals g WHERE g.profile_id=? AND g.is_deleted=0 AND NOT EXISTS(SELECT 1 FROM goal_archive_state a WHERE a.goal_id=g.id AND a.profile_id=g.profile_id AND a.archived=1 AND a.is_deleted=0)',
-          [p]
-        ),
+        createHouseholdPlanningService(db, profileId).getSavingsGoals(),
       ]);
+      assertProfile(p);
       let billsCents = 0,
         reserveCents = 0;
       for (const bill of bills)
         if (
           !flows.some(
-            (f) => f.kind === 'expense' && f.recurring_pattern_id === bill.id
+            (f) =>
+              f.kind === 'expense' &&
+              f.recurring_pattern_id === bill.id &&
+              (f.frequency !== 'once' || f.due_date >= today)
           )
         )
           billsCents += Math.round(
@@ -460,7 +461,19 @@ export function createHouseholdBudgetService(
       return {
         bills: billsCents / 100,
         reserves: reserveCents / 100,
-        goals: round(goals?.total ?? 0),
+        goals:
+          goals.reduce(
+            (total, goal) =>
+              total +
+              Math.min(
+                moneyCents(goal.monthlyContribution),
+                Math.max(
+                  0,
+                  moneyCents(goal.targetAmount) - moneyCents(goal.currentAmount)
+                )
+              ),
+            0
+          ) / 100,
       };
     },
     async getMonthlyBudgetSuggestions(months: 3 | 6 | 12 = 3) {
@@ -549,28 +562,41 @@ export function createHouseholdBudgetService(
       );
     },
     async applyAdvancedCategoryRules() {
-      const rules = await this.getAdvancedCategoryRules(),
-        p = pid();
-      const transactions = await db.queryAsync<{
-        id: string;
-        amount: number;
-        type: string;
-        accountId: string;
-        merchantName: string;
-        description: string;
-      }>(
-        `SELECT id,amount,type,account_id accountId,COALESCE(merchant_name,'') merchantName,COALESCE(description,'') description FROM transactions t WHERE profile_id=? AND is_deleted=0 AND (category_id IS NULL OR category_id='') AND NOT EXISTS(SELECT 1 FROM transaction_category_decisions d WHERE d.transaction_id=t.id AND d.profile_id=t.profile_id AND d.source='manual' AND d.is_deleted=0)`,
-        [p]
-      );
+      const p = pid(),
+        now = Date.now();
       let updated = 0;
       await db.transactionAsync(async (db) => {
+        assertProfile(p);
+        const rules = await createHouseholdBudgetService(
+          db,
+          profileId
+        ).getAdvancedCategoryRules();
+        assertProfile(p);
+        const transactions = await db.queryAsync<{
+          id: string;
+          amount: number;
+          type: string;
+          accountId: string;
+          merchantName: string;
+          description: string;
+        }>(
+          `SELECT id,amount,type,account_id accountId,COALESCE(merchant_name,'') merchantName,COALESCE(description,'') description FROM transactions t WHERE profile_id=? AND is_deleted=0 AND (category_id IS NULL OR category_id='') AND NOT EXISTS(SELECT 1 FROM transaction_category_decisions d WHERE d.transaction_id=t.id AND d.profile_id=t.profile_id AND d.source='manual' AND d.is_deleted=0)`,
+          [p]
+        );
+        assertProfile(p);
         for (const tx of transactions) {
           const rule = rules.find((r) => matchesAdvancedRule(r, tx));
           if (rule) {
             await db.runAsync(
               'UPDATE transactions SET category_id=?,updated_at=? WHERE id=? AND profile_id=?',
-              [rule.categoryId, Date.now(), tx.id, p]
+              [rule.categoryId, now, tx.id, p]
             );
+            assertProfile(p);
+            await db.runAsync(
+              `INSERT INTO transaction_category_decisions(id,transaction_id,category_id,source,profile_id,created_at,updated_at) VALUES(?,?,?,'rule',?,?,?) ON CONFLICT(profile_id,transaction_id) DO UPDATE SET category_id=excluded.category_id,source='rule',is_deleted=0,updated_at=excluded.updated_at`,
+              [crypto.randomUUID(), tx.id, rule.categoryId, p, now, now]
+            );
+            assertProfile(p);
             updated++;
           }
         }

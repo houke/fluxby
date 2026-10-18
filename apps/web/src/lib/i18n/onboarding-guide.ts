@@ -36,7 +36,7 @@ export const onboardingGuideNl = {
   'planning-goal-links': {
     title: 'Bijdragen koppelen en archiveren',
     content:
-      'Kies in Huishoudplanning bij een doel een inkomst of overboeking en bepaal het bijdragebedrag. Handmatige bijdragen blijven bestaan. Archiveren bewaart doel en historie en verwijdert de actieve reservering; herstellen maakt het doel weer actief.',
+      'Kies in Huishoudplanning bij een doel een inkomst of overboeking en bepaal het bijdragebedrag. Heb je hetzelfde geld al handmatig vastgelegd, kies dan expliciet die bijdrage met hetzelfde bedrag en controleer de datum om dubbeltelling te voorkomen. Andere handmatige bijdragen blijven bestaan. Archiveren bewaart doel en historie en verwijdert de actieve reservering; herstellen maakt het doel weer actief.',
   },
 
   'transactions-manual': {
@@ -52,17 +52,17 @@ export const onboardingGuideNl = {
   'review-inbox': {
     title: 'Suggesties beoordelen',
     content:
-      'Kies Transacties controleren voor ontbrekende categorieën, mogelijke dubbelen, ongebruikelijke bedragen en eigen overboekingen. Controleer elke suggestie: Gecontroleerd sluit haar af, Later stelt haar zeven dagen uit. J/K navigeert, L stelt uit, D markeert en U herstelt wanneer het controleoverzicht focus heeft.',
+      'Kies Transacties controleren voor ontbrekende categorieën, mogelijke dubbelen, ongebruikelijke bedragen en eigen overboekingen. Bij afwijkingen zie je het historische bedrag, de periode en het aantal vergelijkingen; nieuwe handelaars worden vanaf € 100 getoond na voldoende uitgavenhistorie. Controleer elke suggestie: Gecontroleerd sluit haar af, Later stelt haar zeven dagen uit. J/K navigeert, L stelt uit, D markeert en U herstelt wanneer het controleoverzicht focus heeft.',
   },
   'review-repayments': {
     title: 'Terugbetalingen koppelen',
     content:
-      'Kies in het controleoverzicht Handmatig koppelen en verbind een ontvangen betaling met de oorspronkelijke uitgave. Kies terugbetaling of onkostenvergoeding en eventueel een deelbedrag. Budgetten gebruiken de netto uitgave in de oorspronkelijke maand; het banksaldo verandert niet. Verwijder een verkeerde koppeling bij Bestaande koppelingen.',
+      'Kies in het controleoverzicht Handmatig koppelen en verbind een ontvangen betaling met de oorspronkelijke uitgave. Kies terugbetaling of onkostenvergoeding en eventueel een deelbedrag. Budgetten gebruiken de netto uitgave in de oorspronkelijke maand; het banksaldo verandert niet. Bij Bestaande koppelingen kun je bewust de categorie van de oorspronkelijke uitgave overnemen als alle gekoppelde uitgaven dezelfde categorie hebben. Herstellen zet de vorige categorie terug. Verwijder daar ook een verkeerde koppeling.',
   },
   'review-transfers': {
     title: 'Eigen overboekingen bevestigen',
     content:
-      'Bevestig beide kanten van een overboeking tussen je eigen rekeningen. Zo tellen ze niet als gewone inkomsten of uitgaven. Een verkeerde koppeling verwijderen herstelt de oorspronkelijke transactiesoorten.',
+      'Bevestig beide kanten van een overboeking tussen je eigen rekeningen. Zo tellen ze niet als gewone inkomsten of uitgaven. Suggesties koppelen elke transactie maar eenmaal: een overeenkomende eigen IBAN krijgt voorrang, daarna de dichtstbijzijnde beschikbare datum binnen drie dagen. Controleer beide kanten zelf. Een verkeerde koppeling verwijderen herstelt de oorspronkelijke transactiesoorten.',
   },
   'review-bills': {
     title: 'Een terugkerende last maken',
@@ -228,7 +228,7 @@ export const onboardingGuideEn: OnboardingGuide = {
   'planning-goal-links': {
     title: 'Link contributions and archive goals',
     content:
-      'In Household planning, select income or a transfer for a goal and set its contribution amount. Manual contributions remain. Archiving preserves the goal and history and removes its active reserve; restoring makes the goal active again.',
+      'In Household planning, select income or a transfer for a goal and set its contribution amount. If you already recorded the same money manually, explicitly select that contribution with the same amount and check its date to avoid counting it twice. Other manual contributions remain. Archiving preserves the goal and history and removes its active reserve; restoring makes the goal active again.',
   },
 
   'transactions-manual': {
@@ -244,17 +244,17 @@ export const onboardingGuideEn: OnboardingGuide = {
   'review-inbox': {
     title: 'Review suggestions',
     content:
-      'Choose Review transactions for missing categories, possible duplicates, unusual amounts and own-account transfers. Check each suggestion: Reviewed resolves it and Later snoozes it for seven days. With the review focused, J/K navigates, L snoozes, D marks reviewed and U undoes.',
+      'Choose Review transactions for missing categories, possible duplicates, unusual amounts and own-account transfers. Alerts show the historical amount, period and comparison count; new merchants are shown from €100 after enough expense history. Check each suggestion: Reviewed resolves it and Later snoozes it for seven days. With the review focused, J/K navigates, L snoozes, D marks reviewed and U undoes.',
   },
   'review-repayments': {
     title: 'Link repayments',
     content:
-      'In the review panel, use Link manually to connect an incoming payment to its original expense. Choose refund or reimbursement and, if needed, a partial amount. Budgets use the net expense in its original month; bank balances do not change. Remove an incorrect link under Existing links.',
+      'In the review panel, use Link manually to connect an incoming payment to its original expense. Choose refund or reimbursement and, if needed, a partial amount. Budgets use the net expense in its original month; bank balances do not change. Under Existing links, explicitly copy the original expense category when all linked expenses share that category. Undo restores the previous category. Remove an incorrect link there too.',
   },
   'review-transfers': {
     title: 'Confirm own-account transfers',
     content:
-      'Confirm both sides of a transfer between your own accounts so they do not count as ordinary income or expenses. Removing an incorrect link restores the original transaction types.',
+      'Confirm both sides of a transfer between your own accounts so they do not count as ordinary income or expenses. Each transaction is suggested once: a matching own-account IBAN takes priority, then the closest available date within three days. Check both sides yourself. Removing an incorrect link restores the original transaction types.',
   },
   'review-bills': {
     title: 'Create a recurring bill',

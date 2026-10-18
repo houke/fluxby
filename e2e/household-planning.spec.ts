@@ -34,8 +34,9 @@ for (const language of ['nl', 'en'] as const) {
       await unlock.click();
     }
     await expect(dashboard).toBeVisible({ timeout: 60000 });
-    await dismissOnboardingTour(page);
+    await dismissOnboardingTour(page, { waitForWelcome: true });
     await page.getByRole('link', { name: 'Planning', exact: true }).click();
+    await expect(page).toHaveURL(/\/app\/planning(?:\?.*)?$/);
     const householdTab = page.getByRole('tab', {
       name: nl ? 'Huishoudplanning' : 'Household planning',
       exact: true,

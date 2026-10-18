@@ -11,6 +11,7 @@ import type { TransactionView } from '../transaction-view';
 
 export interface ReviewTransaction extends Transaction {
   accountName: string;
+  accountIban?: string | null;
   categoryName: string | null;
   parentCategoryId?: string | null;
 }
@@ -28,6 +29,17 @@ export interface ReviewItem {
   transaction: ReviewTransaction;
   related?: ReviewTransaction;
   suggestedCategoryId?: string;
+  evidence?:
+    | { kind: 'spike'; median: number; count: number; windowDays: number }
+    | {
+        kind: 'categorySpike';
+        amount: number;
+        average: number;
+        count: number;
+        elapsedDay: number;
+      }
+    | { kind: 'newMerchant'; minimumAmount: number; historyCount: number }
+    | { kind: 'transfer'; distanceDays: number; ownIban: boolean };
 }
 export interface TransactionLink {
   id: string;
@@ -52,6 +64,7 @@ const normalized = (s: string) =>
     .trim();
 const merchant = (t: ReviewTransaction) =>
   normalized(t.merchantName || t.opposingAccountName || t.description || '');
+const normalizedIban = (iban: string) => iban.replace(/\s+/g, '').toUpperCase();
 const day = (s: string) => Date.parse(`${s}T00:00:00Z`) / 86400000;
 const signed = (t: ReviewTransaction) =>
   t.type === 'expense'
@@ -63,12 +76,14 @@ const signed = (t: ReviewTransaction) =>
 /** Suggestions only: never silently recategorize, delete, or treat a Tikkie as income/refund. */
 export function buildReviewCandidates(rows: ReviewTransaction[]): ReviewItem[] {
   const items: ReviewItem[] = [];
+  const transferCandidates: ReviewItem[] = [];
   const sorted = [...rows].sort(
     (a, b) => a.date.localeCompare(b.date) || a.id.localeCompare(b.id)
   );
   const history = new Map<string, ReviewTransaction[]>();
   const recentAmounts = new Map<number, ReviewTransaction[]>();
   const newest = sorted[sorted.length - 1]?.date;
+  let expenseHistoryCount = 0;
   for (let i = 0; i < sorted.length; i++) {
     const tx = sorted[i],
       key = merchant(tx),
@@ -92,19 +107,30 @@ export function buildReviewCandidates(rows: ReviewTransaction[]): ReviewItem[] {
     const baseline = prior.filter(
       (t) => t.type === tx.type && day(tx.date) - day(t.date) <= 180
     );
-    if (tx.type === 'expense' && baseline.length >= 3) {
+    if (key && tx.type === 'expense' && baseline.length >= 3) {
       const amounts = baseline
           .map((t) => Math.abs(t.amount))
           .sort((a, b) => a - b),
         median = amounts[Math.floor(amounts.length / 2)];
       if (Math.abs(tx.amount) > Math.max(median * 2, median + 25))
-        items.push({ key: `spike:${tx.id}`, kind: 'spike', transaction: tx });
+        items.push({
+          key: `spike:${tx.id}`,
+          kind: 'spike',
+          transaction: tx,
+          evidence: {
+            kind: 'spike',
+            median,
+            count: baseline.length,
+            windowDays: 180,
+          },
+        });
     }
     if (
       key &&
       prior.length === 0 &&
-      i >= 10 &&
+      expenseHistoryCount >= 10 &&
       tx.type === 'expense' &&
+      Math.abs(tx.amount) >= 100 &&
       newest &&
       day(newest) - day(tx.date) <= 30
     )
@@ -112,6 +138,11 @@ export function buildReviewCandidates(rows: ReviewTransaction[]): ReviewItem[] {
         key: `newMerchant:${tx.id}`,
         kind: 'newMerchant',
         transaction: tx,
+        evidence: {
+          kind: 'newMerchant',
+          minimumAmount: 100,
+          historyCount: expenseHistoryCount,
+        },
       });
     // Bound comparisons by amount or merchant; avoid a full 45-day cross-product.
     const amountKey = moneyCents(Math.abs(tx.amount));
@@ -137,11 +168,22 @@ export function buildReviewCandidates(rows: ReviewTransaction[]): ReviewItem[] {
         tx.type !== 'transfer' &&
         other.type !== 'transfer'
       )
-        items.push({
+        transferCandidates.push({
           key: `transfer:${[tx.id, other.id].sort().join(':')}`,
           kind: 'transfer',
           transaction: tx,
           related: other,
+          evidence: {
+            kind: 'transfer',
+            distanceDays: distance,
+            ownIban:
+              (!!tx.opposingAccountIban &&
+                normalizedIban(tx.opposingAccountIban) ===
+                  normalizedIban(other.accountIban || '')) ||
+              (!!other.opposingAccountIban &&
+                normalizedIban(other.opposingAccountIban) ===
+                  normalizedIban(tx.accountIban || '')),
+          },
         });
       if (
         distance <= 3 &&
@@ -174,6 +216,30 @@ export function buildReviewCandidates(rows: ReviewTransaction[]): ReviewItem[] {
     }
     history.set(key, [...prior, tx]);
     recentAmounts.set(amountKey, [...amountMatches, tx]);
+    if (tx.type === 'expense') expenseHistoryCount += 1;
+  }
+  // Prefer explicit own-account evidence, then the nearest available date.
+  // Each transaction appears in at most one suggested pair; confirmation remains explicit.
+  const assignedTransfers = new Set<string>();
+  for (const candidate of transferCandidates.sort((a, b) => {
+    const first = a.evidence,
+      second = b.evidence;
+    if (first?.kind !== 'transfer' || second?.kind !== 'transfer') return 0;
+    return (
+      Number(second.ownIban) - Number(first.ownIban) ||
+      first.distanceDays - second.distanceDays ||
+      a.key.localeCompare(b.key)
+    );
+  })) {
+    if (
+      !candidate.related ||
+      assignedTransfers.has(candidate.transaction.id) ||
+      assignedTransfers.has(candidate.related.id)
+    )
+      continue;
+    assignedTransfers.add(candidate.transaction.id);
+    assignedTransfers.add(candidate.related.id);
+    items.push(candidate);
   }
   if (newest) {
     const month = newest.slice(0, 7),
@@ -205,7 +271,10 @@ export function buildReviewCandidates(rows: ReviewTransaction[]): ReviewItem[] {
       const transaction = [...sorted]
         .reverse()
         .find(
-          (tx) => tx.categoryId === categoryId && tx.date.slice(0, 7) === month
+          (tx) =>
+            tx.type === 'expense' &&
+            tx.categoryId === categoryId &&
+            tx.date.slice(0, 7) === month
         );
       if (
         transaction &&
@@ -216,6 +285,13 @@ export function buildReviewCandidates(rows: ReviewTransaction[]): ReviewItem[] {
           key: `categorySpike:${categoryId}:${month}`,
           kind: 'categorySpike',
           transaction,
+          evidence: {
+            kind: 'categorySpike',
+            amount: current,
+            average: mean,
+            count: prior.length,
+            elapsedDay: elapsed,
+          },
         });
     }
   }
@@ -341,7 +417,7 @@ export function createTransactionReviewService(
   const assertProfile = (id: string) => {
     if (currentProfileId() !== id) throw new Error('Active profile changed');
   };
-  const transactionSQL = `SELECT t.id,t.date,t.amount,t.type,COALESCE(t.description,'') description,t.merchant_name merchantName,t.account_id accountId,t.opposing_account_iban opposingAccountIban,t.opposing_account_name opposingAccountName,t.category_id categoryId,t.notes,t.payment_method paymentMethod,t.raw_data rawData,t.import_hash importHash,t.created_at createdAt,t.payment_provider paymentProvider,t.address_book_id addressBookId,a.name accountName,c.name categoryName,c.parent_id parentCategoryId FROM transactions t JOIN accounts a ON a.id=t.account_id AND a.profile_id=t.profile_id LEFT JOIN categories c ON c.id=t.category_id AND c.profile_id=t.profile_id WHERE t.profile_id=? AND t.is_deleted=0 AND a.is_deleted=0`;
+  const transactionSQL = `SELECT t.id,t.date,t.amount,t.type,COALESCE(t.description,'') description,t.merchant_name merchantName,t.account_id accountId,t.opposing_account_iban opposingAccountIban,t.opposing_account_name opposingAccountName,t.category_id categoryId,t.notes,t.payment_method paymentMethod,t.raw_data rawData,t.import_hash importHash,t.created_at createdAt,t.payment_provider paymentProvider,t.address_book_id addressBookId,a.name accountName,a.iban accountIban,c.name categoryName,c.parent_id parentCategoryId FROM transactions t JOIN accounts a ON a.id=t.account_id AND a.profile_id=t.profile_id LEFT JOIN categories c ON c.id=t.category_id AND c.profile_id=t.profile_id WHERE t.profile_id=? AND t.is_deleted=0 AND a.is_deleted=0`;
   const rows = async (id = profile(), connection = db) =>
     connection.queryAsync<ReviewTransaction>(
       `${transactionSQL} ORDER BY t.date DESC,t.id`,

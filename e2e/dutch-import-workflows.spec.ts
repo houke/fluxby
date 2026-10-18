@@ -37,8 +37,9 @@ for (const language of ['nl', 'en'] as const) {
     await expect(
       page.getByRole('link', { name: 'Dashboard', exact: true })
     ).toBeVisible({ timeout: 60000 });
-    await dismissOnboardingTour(page);
+    await dismissOnboardingTour(page, { waitForWelcome: true });
     await page.getByRole('link', { name: /^import/i }).click();
+    await expect(page).toHaveURL(/\/app\/import$/);
     const upload = async (
       name: string,
       date: string,
@@ -72,7 +73,11 @@ for (const language of ['nl', 'en'] as const) {
         exact: true,
       })
     ).toBeVisible();
-    await expect(page.getByRole('dialog')).toContainText('2026-09-30');
+    await expect(
+      page
+        .getByRole('dialog')
+        .getByRole('cell', { name: '30-09-2026', exact: true })
+    ).toBeVisible();
     await expect(page.getByRole('dialog')).toContainText(
       nl ? '12,50' : '12.50'
     );

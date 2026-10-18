@@ -230,6 +230,94 @@ describe('transaction review', () => {
       (await service.getReviewTransactions()).map((t) => t.type).sort()
     ).toEqual(['expense', 'income']);
   });
+  it('suggests the closest available transfer once and does not depend on input order', async () => {
+    tx('early-out', -50, '2026-09-01');
+    tx('near-out', -50, '2026-09-03');
+    tx('incoming', 50, '2026-09-03', 'b');
+    const rows = await service.getReviewTransactions();
+    const pairs = buildReviewCandidates(rows).filter(
+      (item) => item.kind === 'transfer'
+    );
+    expect(pairs).toHaveLength(1);
+    expect(pairs[0].key).toBe('transfer:incoming:near-out');
+    expect(pairs[0].evidence).toEqual({
+      kind: 'transfer',
+      distanceDays: 0,
+      ownIban: false,
+    });
+    expect(
+      buildReviewCandidates([...rows].reverse()).filter(
+        (item) => item.kind === 'transfer'
+      )
+    ).toEqual(pairs);
+    expect(await service.getTransactionLinks()).toHaveLength(0);
+  });
+  it('prefers supplied own-IBAN evidence and keeps all suggested transfers one-to-one', async () => {
+    sqlite
+      .prepare(
+        "INSERT INTO accounts(id,iban,name,profile_id) VALUES('d','NL4','Joint','p')"
+      )
+      .run();
+    tx('own-iban-out', -50, '2026-09-01');
+    tx('closer-out', -50, '2026-09-03', 'b');
+    tx('incoming', 50, '2026-09-03', 'd');
+    sqlite
+      .prepare(
+        "UPDATE transactions SET opposing_account_iban='nl 1' WHERE id='incoming'"
+      )
+      .run();
+    let pairs = buildReviewCandidates(
+      await service.getReviewTransactions()
+    ).filter((item) => item.kind === 'transfer');
+    expect(pairs).toHaveLength(1);
+    expect(pairs[0].key).toBe('transfer:incoming:own-iban-out');
+    expect(pairs[0].evidence).toEqual({
+      kind: 'transfer',
+      distanceDays: 2,
+      ownIban: true,
+    });
+    tx('second-incoming', 50, '2026-09-03');
+    pairs = buildReviewCandidates(await service.getReviewTransactions()).filter(
+      (item) => item.kind === 'transfer'
+    );
+    expect(pairs).toHaveLength(2);
+    expect(
+      new Set(pairs.flatMap((item) => [item.transaction.id, item.related?.id]))
+        .size
+    ).toBe(4);
+  });
+  it('keeps confirmed reimbursements intact when their category is explicitly inherited and undone', async () => {
+    tx('original', -50);
+    tx('reimbursement', 20);
+    await service.saveReviewedCategory('original', 'cat');
+    const linkId = await service.createTransactionLink({
+      sourceId: 'reimbursement',
+      targetId: 'original',
+      kind: 'refund',
+      relationType: 'reimbursement',
+      amount: 20,
+    });
+    const previous = await service.saveReviewedCategory('reimbursement', 'cat');
+    expect(previous).toBeNull();
+    expect(
+      sqlite
+        .prepare(
+          "SELECT category_id,source FROM transaction_category_decisions WHERE transaction_id='reimbursement' AND is_deleted=0"
+        )
+        .get()
+    ).toEqual({ category_id: 'cat', source: 'manual' });
+    await service.undoReviewedCategory('reimbursement', null, previous);
+    expect(
+      sqlite
+        .prepare(
+          "SELECT category_id,amount,type FROM transactions WHERE id='reimbursement'"
+        )
+        .get()
+    ).toEqual({ category_id: null, amount: 20, type: 'income' });
+    expect(await service.getTransactionLinks()).toEqual([
+      expect.objectContaining({ id: linkId, amount: 20 }),
+    ]);
+  });
   it('records deliberate category provenance and rejects categories in another profile', async () => {
     tx('e', -20);
     await service.saveReviewedCategory('e', 'cat');
@@ -399,11 +487,62 @@ describe('transaction review', () => {
     tx('spike', -80, '2026-09-04');
     const rows = await service.getReviewTransactions();
     expect(
-      buildReviewCandidates(rows).some(
+      buildReviewCandidates(rows).find(
         (x) => x.kind === 'spike' && x.transaction.id === 'spike'
-      )
-    ).toBe(true);
+      )?.evidence
+    ).toEqual({ kind: 'spike', median: 10, count: 3, windowDays: 180 });
     expect(await service.getTransactionLinks()).toHaveLength(0);
+  });
+  it('requires substantial new-merchant amounts and expense history, and reports its evidence', async () => {
+    for (let index = 0; index < 10; index++)
+      tx(`expense-${index}`, -10, '2026-09-01');
+    tx('small-new', -5, '2026-09-02');
+    tx('large-new', -100, '2026-09-03');
+    sqlite
+      .prepare(
+        "UPDATE transactions SET merchant_name=id WHERE id IN ('small-new','large-new')"
+      )
+      .run();
+    const alerts = buildReviewCandidates(
+      await service.getReviewTransactions()
+    ).filter((item) => item.kind === 'newMerchant');
+    expect(alerts).toHaveLength(1);
+    expect(alerts[0].transaction.id).toBe('large-new');
+    expect(alerts[0].evidence).toEqual({
+      kind: 'newMerchant',
+      minimumAmount: 100,
+      historyCount: 11,
+    });
+    sqlite
+      .prepare(
+        "UPDATE transactions SET type='income' WHERE id LIKE 'expense-%'"
+      )
+      .run();
+    expect(
+      buildReviewCandidates(await service.getReviewTransactions()).some(
+        (item) => item.kind === 'newMerchant'
+      )
+    ).toBe(false);
+  });
+  it('reports comparable elapsed-day category totals instead of full prior months', async () => {
+    for (const month of ['06', '07', '08']) {
+      tx(`early-${month}`, -20, `2026-${month}-05`);
+      tx(`late-${month}`, -200, `2026-${month}-20`);
+    }
+    tx('current', -100, '2026-09-10');
+    tx('zz-income', 5, '2026-09-10');
+    sqlite.prepare("UPDATE transactions SET category_id='cat'").run();
+    const item = buildReviewCandidates(
+      await service.getReviewTransactions()
+    ).find((candidate) => candidate.kind === 'categorySpike');
+    expect(item?.evidence).toEqual({
+      kind: 'categorySpike',
+      amount: 100,
+      average: 20,
+      count: 3,
+      elapsedDay: 10,
+    });
+    expect(item?.transaction.id).toBe('current');
   });
   it('checks every active filter dimension for exports', () => {
     const row = {

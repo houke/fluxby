@@ -338,10 +338,19 @@ export function createHouseholdPlanningService(
         [profile()]
       );
     },
+    async getGoalManualContributions(goalId: string) {
+      return db.queryAsync<{ id: string; amount: number; createdAt: number }>(
+        `SELECT c.id,c.amount,c.created_at AS createdAt FROM savings_contributions c
+        JOIN savings_goals g ON g.id=c.goal_id AND g.profile_id=c.profile_id AND g.is_deleted=0
+        WHERE c.goal_id=? AND c.profile_id=? AND c.is_deleted=0 ORDER BY c.created_at DESC,c.id`,
+        [goalId, profile()]
+      );
+    },
     async addGoalTransactionContribution(
       goalId: string,
       transactionId: string,
-      amount: number
+      amount: number,
+      replaceManual?: { id: string; createdAt: number }
     ) {
       const pid = profile(),
         cents = moneyCents(amount),
@@ -368,6 +377,22 @@ export function createHouseholdPlanningService(
           !['income', 'transfer'].includes(transaction.type)
         )
           throw new Error('Contribution source not found');
+        if (replaceManual) {
+          const manual = await db.queryOneAsync<{
+            amount: number;
+            created_at: number;
+          }>(
+            'SELECT amount,created_at FROM savings_contributions WHERE id=? AND goal_id=? AND profile_id=? AND is_deleted=0',
+            [replaceManual.id, goalId, pid]
+          );
+          assertProfile(pid);
+          if (
+            !manual ||
+            moneyCents(manual.amount) !== cents ||
+            manual.created_at !== replaceManual.createdAt
+          )
+            throw new Error('Manual contribution does not match');
+        }
         const assigned = await db.queryOneAsync<{ amount: number }>(
           `SELECT COALESCE(SUM(l.amount_cents),0) AS amount FROM goal_transaction_links l
           JOIN savings_goals g ON g.id=l.goal_id AND g.profile_id=l.profile_id AND g.is_deleted=0
@@ -397,6 +422,13 @@ export function createHouseholdPlanningService(
           `INSERT INTO goal_transaction_links(id,goal_id,transaction_id,amount_cents,profile_id,created_at,updated_at) VALUES(?,?,?,?,?,?,?) ON CONFLICT(profile_id,goal_id,transaction_id) DO UPDATE SET amount_cents=excluded.amount_cents,is_deleted=0,updated_at=excluded.updated_at`,
           [crypto.randomUUID(), goalId, transactionId, cents, pid, now, now]
         );
+        if (replaceManual) {
+          assertProfile(pid);
+          await db.runAsync(
+            'UPDATE savings_contributions SET is_deleted=1,updated_at=? WHERE id=? AND goal_id=? AND profile_id=? AND is_deleted=0',
+            [now, replaceManual.id, goalId, pid]
+          );
+        }
         assertProfile(pid);
       });
     },

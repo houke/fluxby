@@ -70,6 +70,30 @@ afterEach(() => {
   vi.useRealTimers();
 });
 describe('household budgets', () => {
+  it('caps goal commitments at remaining funding after manual and linked contributions', async () => {
+    sqlite.exec(`INSERT INTO savings_goals(id,name,target_amount,monthly_contribution,profile_id) VALUES
+      ('complete','Complete',100,50,'p'),('partial','Partial',100,50,'p'),('archived','Archived',100,50,'p'),('foreign-goal','Foreign',100,50,'q');
+      INSERT INTO savings_contributions(id,goal_id,amount,profile_id) VALUES('manual','complete',100,'p'),('partial-manual','partial',60,'p');
+      INSERT INTO goal_transaction_links(id,goal_id,transaction_id,amount_cents,profile_id,created_at,updated_at) VALUES('linked','partial','r',2000,'p',0,0);
+      INSERT INTO goal_archive_state(id,goal_id,archived,profile_id,created_at,updated_at) VALUES('archived-state','archived',1,'p',0,0);`);
+    expect((await service.getBudgetCommitments()).goals).toBe(20);
+  });
+  it('keeps recurring bill guidance after its linked one-off plan has expired', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-04-05T12:00:00Z'));
+    sqlite.exec(`INSERT INTO recurring_patterns(id,merchant_name,pattern_type,avg_amount,last_date,next_expected_date,is_active,is_confirmed,profile_id)
+      VALUES('bill','Bill','monthly',-100,'2026-03-10','2026-04-10',1,1,'p');
+      INSERT INTO planned_cashflows(id,name,kind,amount_cents,due_date,frequency,reserved_cents,recurring_pattern_id,profile_id,created_at,updated_at)
+      VALUES('past-plan','Earlier payment','expense',10000,'2026-03-10','once',0,'bill','p',0,0);`);
+    expect(await service.getBudgetCommitments()).toMatchObject({
+      bills: 100,
+      reserves: 0,
+    });
+    sqlite.exec(
+      "UPDATE planned_cashflows SET due_date='2026-04-10',frequency='monthly' WHERE id='past-plan'"
+    );
+    expect((await service.getBudgetCommitments()).bills).toBe(100);
+  });
   it('rejects a profile switch while suggestion ownership validation is awaiting the database', async () => {
     const db = adapter();
     const query = db.queryOneAsync;
@@ -292,6 +316,79 @@ describe('household budgets', () => {
     expect(
       sqlite.prepare("SELECT category_id FROM transactions WHERE id='e'").get()
     ).toEqual({ category_id: null });
+  });
+  it('records rule provenance together with advanced categorization', async () => {
+    sqlite.exec("UPDATE transactions SET category_id=NULL WHERE id='e'");
+    await service.createAdvancedCategoryRule({
+      pattern: 'Shop',
+      matchMode: 'contains',
+      matchField: 'merchant',
+      direction: 'expense',
+      categoryId: 'food',
+      priority: 1,
+    });
+    expect(await service.applyAdvancedCategoryRules()).toBe(1);
+    expect(
+      sqlite
+        .prepare(
+          "SELECT category_id,source FROM transaction_category_decisions WHERE transaction_id='e'"
+        )
+        .get()
+    ).toEqual({ category_id: 'food', source: 'rule' });
+  });
+  it('rejects profile switches during rule loading and rolls back changes during rule assignment', async () => {
+    sqlite.exec("UPDATE transactions SET category_id=NULL WHERE id='e'");
+    await service.createAdvancedCategoryRule({
+      pattern: 'Shop',
+      matchMode: 'contains',
+      matchField: 'merchant',
+      direction: 'expense',
+      categoryId: 'food',
+      priority: 1,
+    });
+    const db = adapter(),
+      query = db.queryAsync;
+    db.queryAsync = async <T>(sql: string, params: unknown[] = []) => {
+      const rows = await query<T>(sql, params);
+      if (sql.includes('FROM advanced_category_rules')) pid = 'q';
+      return rows;
+    };
+    await expect(
+      createHouseholdBudgetService(db, () => pid).applyAdvancedCategoryRules()
+    ).rejects.toThrow('Active profile changed');
+    pid = 'p';
+    db.queryAsync = query;
+    const run = db.runAsync;
+    db.runAsync = async (sql, params) => {
+      const result = await run(sql, params);
+      if (sql.startsWith('INSERT INTO transaction_category_decisions'))
+        pid = 'q';
+      return result;
+    };
+    await expect(
+      createHouseholdBudgetService(db, () => pid).applyAdvancedCategoryRules()
+    ).rejects.toThrow('Active profile changed');
+    expect(
+      sqlite.prepare("SELECT category_id FROM transactions WHERE id='e'").get()
+    ).toEqual({ category_id: null });
+    expect(
+      sqlite
+        .prepare('SELECT COUNT(*) count FROM transaction_category_decisions')
+        .get()
+    ).toEqual({ count: 0 });
+  });
+  it('rejects unsafe monetary values without storing monthly allocations', async () => {
+    await expect(service.setBudgetMonth('b', '2026-02', 1e100)).rejects.toThrow(
+      'Invalid monetary'
+    );
+    await expect(
+      service.saveBudgetIncomePlan('2026-02', 1e100)
+    ).rejects.toThrow('Invalid monetary');
+    await expect(
+      service.applyMonthlyBudgetSuggestion('other', '2026-02', 0.004)
+    ).rejects.toThrow('Invalid suggestion');
+    expect((await service.getBudgetExtensions()).overrides).toEqual([]);
+    expect(await service.getBudgetIncomePlan('2026-02')).toBe(0);
   });
   it('stores manual accounts without claiming an IBAN and validates loans', async () => {
     const cash = await full.createAccount({ name: 'Cash', type: 'cash' });

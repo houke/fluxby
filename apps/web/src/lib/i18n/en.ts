@@ -234,6 +234,8 @@ export const en: TranslationKeys = {
     newPassword: 'Create password',
     enterPassword: 'Enter password',
     confirmPassword: 'Confirm password',
+    showPassword: 'Show password',
+    hidePassword: 'Hide password',
     createPassword: 'Create password',
     unlock: 'Unlock',
     useBiometric: 'Use biometric',

@@ -261,6 +261,20 @@ const BANK_PRESETS: Record<
 // Shows max 20 skipped items with reasons for transparency
 const MAX_SKIPPED_DISPLAY = 20;
 
+function formatSkippedRowDate(date?: string): string {
+  if (!date) return '-';
+  const parsed = new Date(date);
+  // Failed rows can contain invalid or already formatted source dates.
+  if (
+    !/^\d{4}-\d{2}-\d{2}$/.test(date) ||
+    Number.isNaN(parsed.getTime()) ||
+    parsed.toISOString().slice(0, 10) !== date
+  ) {
+    return date;
+  }
+  return formatDate(date);
+}
+
 function HistoryCard({
   item,
   hasSkippedRows,
@@ -364,7 +378,7 @@ function HistoryCard({
                 {/* Right column: Date, Amount + Badge */}
                 <div className='flex flex-shrink-0 flex-col items-end gap-1'>
                   <span className='text-xs text-muted-foreground'>
-                    {row.date || '-'}
+                    {formatSkippedRowDate(row.date)}
                   </span>
                   <div className='flex items-center gap-2'>
                     <span className='font-medium'>
@@ -1059,7 +1073,7 @@ export default function Import() {
       }
       const amountValue = normalized.__fluxby_amount;
       return {
-        date: normalized.__fluxby_date,
+        date: formatDate(normalized.__fluxby_date),
         amount: amountValue,
         description: row[cleanKey(columnMapping.description)] || '-',
         iban: columnMapping.iban

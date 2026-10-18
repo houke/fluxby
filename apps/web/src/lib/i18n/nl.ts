@@ -200,6 +200,8 @@ export interface TranslationKeys {
     newPassword: string;
     enterPassword: string;
     confirmPassword: string;
+    showPassword: string;
+    hidePassword: string;
     createPassword: string;
     unlock: string;
     useBiometric: string;
@@ -2055,6 +2057,8 @@ export const nl: TranslationKeys = {
     newPassword: 'Wachtwoord aanmaken',
     enterPassword: 'Wachtwoord invoeren',
     confirmPassword: 'Wachtwoord bevestigen',
+    showPassword: 'Wachtwoord tonen',
+    hidePassword: 'Wachtwoord verbergen',
     createPassword: 'Wachtwoord aanmaken',
     unlock: 'Ontgrendelen',
     useBiometric: 'Gebruik biometrisch',

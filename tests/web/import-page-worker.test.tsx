@@ -27,7 +27,7 @@ const harness = vi.hoisted(() => ({
   getTypeSafeApiKey: vi.fn((): string | null => null),
   suggestImportColumnMappings: vi.fn(),
   api: {
-    getImportHistory: vi.fn(async () => []),
+    getImportHistory: vi.fn<() => Promise<unknown[]>>(async () => []),
     importGenericCSV: vi.fn<(...args: unknown[]) => Promise<unknown>>(),
     detectRecurringPatterns: vi.fn(async () => undefined),
   },
@@ -168,6 +168,7 @@ describe('Import page configured worker requests', () => {
     vi.clearAllMocks();
     harness.profileId = 'profile-a';
     harness.language = 'en';
+    harness.api.getImportHistory.mockResolvedValue([]);
     harness.getTypeSafeApiKey.mockReturnValue(null);
     FakeWorker.instances = [];
     vi.stubGlobal('Worker', FakeWorker);
@@ -180,6 +181,56 @@ describe('Import page configured worker requests', () => {
     cleanup();
     vi.unstubAllGlobals();
   });
+
+  it.each(['en', 'nl'] as const)(
+    'renders European preview/history dates and preserves invalid source dates in %s',
+    async (language) => {
+      harness.language = language;
+      harness.api.getImportHistory.mockResolvedValue([
+        {
+          id: 'legacy-import',
+          filename: 'legacy.csv',
+          bank: 'generic',
+          importedAt: '2026-10-03T12:00:00Z',
+          transactionCount: 0,
+          status: 'complete',
+          skippedRows: [
+            {
+              date: '2026-09-30',
+              reason: 'duplicate',
+              description: 'Valid date',
+            },
+            {
+              date: 'not-a-date',
+              reason: 'parse_error',
+              description: 'Raw date',
+            },
+            {
+              date: '2026-02-31',
+              reason: 'parse_error',
+              description: 'Invalid calendar date',
+            },
+            {
+              date: '02-01-2026',
+              reason: 'duplicate',
+              description: 'Formatted source date',
+            },
+          ],
+        },
+      ]);
+      mount();
+      fireEvent.click(await screen.findByText('legacy.csv'));
+      expect(screen.getByText('30-09-2026')).toBeTruthy();
+      expect(screen.getByText('not-a-date')).toBeTruthy();
+      expect(screen.getByText('2026-02-31')).toBeTruthy();
+      expect(screen.getByText('02-01-2026')).toBeTruthy();
+      await completePreview(file('preview.csv', 'CSV'));
+      expect(
+        screen.getByRole('cell', { name: '01-10-2026', exact: true })
+      ).toBeTruthy();
+      expect(screen.queryByRole('cell', { name: '2026-10-01' })).toBeNull();
+    }
+  );
 
   it('sends ABN tab previews and configured preparation to the worker', async () => {
     mount();

@@ -88,6 +88,10 @@ export const householdPlanningNl = {
   selectTransaction: 'Kies een transactie',
   contributionHelp:
     'Koppel uitsluitend bedragen die je voor dit doel apart zet. Het banksaldo verandert niet. Bestaande handmatige bijdragen blijven behouden.',
+  replaceManualContribution: 'Bestaande handmatige bijdrage vervangen',
+  keepManualContributions: 'Geen: handmatige bijdragen behouden',
+  replaceManualHelp:
+    'Heb je ditzelfde geld al handmatig vastgelegd? Kies dan de bijdrage met hetzelfde bedrag en controleer de vastgelegde datum. De koppeling vervangt alleen die gekozen bijdrage, zodat het bedrag eenmaal meetelt.',
   unlink: 'Koppeling verwijderen',
   noDeadline: 'Voeg een einddatum toe voor maandadvies.',
 };
@@ -183,6 +187,10 @@ export const householdPlanningEn: HouseholdPlanningTranslations = {
   selectTransaction: 'Choose a transaction',
   contributionHelp:
     'Only link money you are setting aside for this goal. Bank balances do not change. Existing manual contributions are preserved.',
+  replaceManualContribution: 'Replace an existing manual contribution',
+  keepManualContributions: 'None: keep manual contributions',
+  replaceManualHelp:
+    'Already recorded this same money manually? Choose the contribution with the same amount and check its recorded date. The link replaces only that selected contribution, so the money counts once.',
   unlink: 'Remove link',
   noDeadline: 'Add a deadline for monthly guidance.',
 };

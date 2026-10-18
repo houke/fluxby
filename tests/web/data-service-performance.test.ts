@@ -295,7 +295,7 @@ describe('data service bulk operation performance', () => {
     const spy = vi
       .spyOn(adapter, 'runAsync')
       .mockImplementation(async (sql, params) => {
-        if (sql.startsWith('UPDATE categories'))
+        if (/^UPDATE\s+"?categories"?\s+SET\s+is_deleted/i.test(sql))
           throw new Error('Delete failed');
         return run(sql, params);
       });
@@ -311,7 +311,17 @@ describe('data service bulk operation performance', () => {
     spy.mockRestore();
     writes = [];
     await service.deleteProfile('profile');
-    expect(writes).toHaveLength(8);
+    // Deletion now discovers all owned feature tables. The four seeded records
+    // must change, even when additional empty domain tables are present.
+    expect(writes.reduce((total, write) => total + write.changes, 0)).toBe(4);
+    expect(writes).toContainEqual(
+      expect.objectContaining({
+        sql: expect.stringMatching(
+          /^UPDATE\s+"?transactions"?\s+SET\s+is_deleted/i
+        ),
+        changes: 1,
+      })
+    );
     expect(writes.every((write) => write.inTransaction)).toBe(true);
     expect(
       sqlite.prepare('SELECT id,is_deleted FROM profiles ORDER BY id').all()

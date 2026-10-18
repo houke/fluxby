@@ -12,6 +12,10 @@ import {
   monthlyRollover,
 } from './data/household-budgets';
 import { createImportToolsService } from './data/import-tools';
+import {
+  clearAllProfileData,
+  softDeleteProfileData,
+} from './data/profile-lifecycle';
 import { importToolsTranslations } from './i18n/import-tools';
 import { createTransactionReviewService } from './data/transaction-review';
 import { createHouseholdPlanningService } from './data/household-planning';
@@ -617,43 +621,7 @@ export function createDataService(db: FinancialDatabase) {
       const now = Date.now();
 
       await db.transactionAsync(async (db) => {
-        // Soft-delete all related data to ensure clean state for duplicates/reimport
-        // Transactions
-        await db.runAsync(
-          'UPDATE transactions SET is_deleted = 1, updated_at = ? WHERE profile_id = ?',
-          [now, id]
-        );
-        // Accounts
-        await db.runAsync(
-          'UPDATE accounts SET is_deleted = 1, updated_at = ? WHERE profile_id = ?',
-          [now, id]
-        );
-        // Categories
-        await db.runAsync(
-          'UPDATE categories SET is_deleted = 1, updated_at = ? WHERE profile_id = ?',
-          [now, id]
-        );
-        // Budgets
-        await db.runAsync(
-          'UPDATE budgets SET is_deleted = 1, updated_at = ? WHERE profile_id = ?',
-          [now, id]
-        );
-        // Category rules (for categories in this profile)
-        await db.runAsync(
-          `UPDATE category_rules SET is_deleted = 1, updated_at = ?
-         WHERE category_id IN (SELECT id FROM categories WHERE profile_id = ?)`,
-          [now, id]
-        );
-        // Imports
-        await db.runAsync(
-          'UPDATE imports SET is_deleted = 1, updated_at = ? WHERE profile_id = ?',
-          [now, id]
-        );
-        // Address book
-        await db.runAsync(
-          'UPDATE address_book SET is_deleted = 1, updated_at = ? WHERE profile_id = ?',
-          [now, id]
-        );
+        await softDeleteProfileData(db, id, now);
         // Finally, soft-delete the profile itself
         await db.runAsync(
           'UPDATE profiles SET is_deleted = 1, updated_at = ? WHERE id = ?',
@@ -2703,19 +2671,13 @@ export function createDataService(db: FinancialDatabase) {
     },
 
     async resetAllData() {
-      // Delete all data and recreate demo profile
-      await db.runAsync('DELETE FROM transactions');
-      await db.runAsync('DELETE FROM budgets');
-      await db.runAsync('DELETE FROM category_rules');
-      await db.runAsync('DELETE FROM categories');
-      await db.runAsync('DELETE FROM address_book');
-      await db.runAsync('DELETE FROM accounts');
-      await db.runAsync('DELETE FROM profiles');
-
-      // Create demo profile
-      const demoProfile = await this.createProfile({
-        name: 'Demo',
-        type: 'personal',
+      // Keep reset and replacement atomic, including newer feature tables.
+      const demoProfile = await db.transactionAsync(async (db) => {
+        await clearAllProfileData(db);
+        return createDataService(db).createProfile({
+          name: 'Demo',
+          type: 'personal',
+        });
       });
 
       return {
@@ -8075,7 +8037,7 @@ export function createDataService(db: FinancialDatabase) {
 
       const result = await db.runAsync(
         `UPDATE transactions SET is_deleted = 1, updated_at = ?
-         WHERE account_id IN (SELECT id FROM accounts WHERE profile_id = ?) AND is_deleted = 0`,
+         WHERE COALESCE(profile_id,(SELECT a.profile_id FROM accounts a WHERE a.id=transactions.account_id)) = ? AND is_deleted = 0`,
         [Date.now(), pid]
       );
 
