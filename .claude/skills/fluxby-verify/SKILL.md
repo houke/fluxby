@@ -17,6 +17,9 @@ npm run lint && npm run typecheck && npm run test:run
 
 - `typecheck` rebuilds `packages/*` first; a TS error in `packages/core` shows up
   as a failed `@fluxby/core` build.
+- If a bare `npx vite build` ignores `vite.config.ts` changes, look for a stale,
+  gitignored `apps/*/vite.config.js` (an old `tsc` output): Vite prefers `.js`
+  over `.ts`. The npm build scripts pass `--config vite.config.ts` explicitly.
 - If API tests fail with `NODE_MODULE_VERSION` mismatch, the native SQLite module
   was built for another Node version. Fix locally with `npm rebuild better-sqlite3`
   (does not change package files).
