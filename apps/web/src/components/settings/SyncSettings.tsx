@@ -143,6 +143,10 @@ export function SyncSettings() {
         setConnectionError(t.settings?.sync?.cannotConnectToSelf);
       } else if (errorMessage === 'peer-unavailable') {
         setConnectionError(t.settings?.sync?.peerUnavailable);
+      } else if (errorMessage === 'Invalid or expired pairing code') {
+        setConnectionError(t.settings.sync.invalidPairingCode);
+      } else if (errorMessage === 'Pairing could not be verified') {
+        setConnectionError(t.settings.sync.pairingNotVerified);
       } else if (
         errorMessage.toLowerCase().includes('timeout') ||
         errorMessage.toLowerCase().includes('time-out')

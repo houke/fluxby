@@ -1468,6 +1468,10 @@ export const en: TranslationKeys = {
       cannotConnectToSelf: 'Cannot connect to yourself',
       peerUnavailable:
         'Peer unavailable (ensure code is correct and peer is online)',
+      invalidPairingCode:
+        'This code is invalid, expired or already used. Generate a new code on the other device and try again.',
+      pairingNotVerified:
+        'The other device could not prove it knows the code. Generate a new code and try again. If it keeps failing, the connection may be intercepted.',
       connectionTimeout:
         'Connection timeout - the other device may be behind a firewall. Try a different network.',
       pairedDevices: 'Paired devices',

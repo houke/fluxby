@@ -80,6 +80,13 @@ interface ConnectionState {
 /**
  * EnhancedPeerSync - Robust peer-to-peer sync with heartbeats and auto-reconnection
  */
+/** The pairing request of the earlier, unencrypted protocol. */
+type LegacyPairingRequest = {
+  type: 'pairing-request';
+  pairingCode: string;
+  deviceName: string;
+};
+
 export class EnhancedPeerSync {
   private peer: Peer | null = null;
   private peerJs: PeerJsModule | null = null;
@@ -774,7 +781,11 @@ export class EnhancedPeerSync {
 
     switch (message.type) {
       case 'pairing-request':
-        this.handlePairingRequest(conn, message);
+        // This class still uses the old plaintext code request.
+        this.handlePairingRequest(
+          conn,
+          message as unknown as LegacyPairingRequest
+        );
         break;
 
       case 'pairing-accept':
@@ -825,11 +836,7 @@ export class EnhancedPeerSync {
 
   private handlePairingRequest(
     conn: DataConnection,
-    message: {
-      type: 'pairing-request';
-      pairingCode: string;
-      deviceName: string;
-    }
+    message: LegacyPairingRequest
   ): void {
     this.logger.info(
       'pairing:request',

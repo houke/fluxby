@@ -1,5 +1,9 @@
 /**
- * Trusted reconnection for paired devices.
+ * Trusted pairing and reconnection for paired devices.
+ *
+ * The first pairing proves knowledge of the short pairing code with an HMAC
+ * bound to the ECDH keys of the encrypted connection, so a signalling server
+ * that runs a separate key exchange with each device cannot relay the code.
  *
  * Pairing hands both devices a random 256-bit reconnect secret. After a
  * restart, a device proves it still holds that secret with an HMAC that is
@@ -12,6 +16,19 @@ const SECRET_BYTES = 32;
 const SECRET_PATTERN = /^[A-Za-z0-9_-]{43}$/;
 const DEVICE_ID_PATTERN = /^[A-Za-z0-9](?:[A-Za-z0-9-]{0,98}[A-Za-z0-9])?$/;
 const PROOF_LABEL = 'fluxby-reconnect-v1';
+const PAIRING_LABEL = 'fluxby-pairing-v1';
+/**
+ * The pairing code has about 30 bits, so the key derived from it is slow to
+ * compute: whoever sees a proof needs far longer to guess the code than the
+ * code (2 minutes) or the pairing attempt (20 seconds) stays valid.
+ */
+export const PAIRING_KDF_ITERATIONS = 600_000;
+
+/**
+ * Version of the peer sync protocol. Version 3 replaced the plaintext pairing
+ * code with a proof bound to the session keys; older devices must update.
+ */
+export const PEER_PROTOCOL_VERSION = 3;
 
 /** Backoff between reconnect attempts while a paired device is unreachable. */
 export const RECONNECT_DELAYS_MS = [
@@ -132,5 +149,103 @@ export async function verifyReconnectProof(
     await importSecret(secret),
     fromBase64Url(proof),
     proofData(input)
+  );
+}
+
+export interface PairingSessionKeys {
+  /** Device that entered the code and sent the pairing request. */
+  requesterPublicKey: SyncJsonWebKey;
+  /** Device that showed the code and answers the request. */
+  responderPublicKey: SyncJsonWebKey;
+}
+
+export type PairingProofInput = PairingSessionKeys &
+  (
+    | { role: 'request'; requesterDeviceId: string }
+    | {
+        role: 'accept';
+        requesterDeviceId: string;
+        responderDeviceId: string;
+      }
+  );
+
+/**
+ * Derive the key that proves knowledge of a pairing code for one encrypted
+ * connection. Both session keys salt it, so no guesses can be precomputed.
+ */
+export async function derivePairingKey(
+  pairingCode: string,
+  keys: PairingSessionKeys
+): Promise<CryptoKey> {
+  if (!pairingCode) throw new Error('Invalid pairing code');
+  const encoder = new TextEncoder();
+  const salt = await crypto.subtle.digest(
+    'SHA-256',
+    encoder.encode(
+      [
+        PAIRING_LABEL,
+        keyThumbprint(keys.requesterPublicKey),
+        keyThumbprint(keys.responderPublicKey),
+      ].join('|')
+    )
+  );
+  const material = await crypto.subtle.importKey(
+    'raw',
+    encoder.encode(pairingCode),
+    'PBKDF2',
+    false,
+    ['deriveKey']
+  );
+  return crypto.subtle.deriveKey(
+    {
+      name: 'PBKDF2',
+      hash: 'SHA-256',
+      salt,
+      iterations: PAIRING_KDF_ITERATIONS,
+    },
+    material,
+    { name: 'HMAC', hash: 'SHA-256', length: 256 },
+    false,
+    ['sign', 'verify']
+  );
+}
+
+function pairingProofData(input: PairingProofInput): Uint8Array<ArrayBuffer> {
+  return new TextEncoder().encode(
+    [
+      PAIRING_LABEL,
+      input.role,
+      input.requesterDeviceId,
+      input.role === 'accept' ? input.responderDeviceId : '',
+      keyThumbprint(input.requesterPublicKey),
+      keyThumbprint(input.responderPublicKey),
+    ].join('|')
+  );
+}
+
+export async function computePairingProof(
+  pairingKey: CryptoKey,
+  input: PairingProofInput
+): Promise<string> {
+  const signature = await crypto.subtle.sign(
+    'HMAC',
+    pairingKey,
+    pairingProofData(input)
+  );
+  return toBase64Url(new Uint8Array(signature));
+}
+
+/** Constant-time verification of a pairing proof. */
+export async function verifyPairingProof(
+  pairingKey: CryptoKey,
+  proof: unknown,
+  input: PairingProofInput
+): Promise<boolean> {
+  if (typeof proof !== 'string' || !SECRET_PATTERN.test(proof)) return false;
+  return crypto.subtle.verify(
+    'HMAC',
+    pairingKey,
+    fromBase64Url(proof),
+    pairingProofData(input)
   );
 }

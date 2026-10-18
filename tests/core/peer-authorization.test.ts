@@ -1,5 +1,12 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { PeerSync, type PeerDevice, type SyncChange } from '@fluxby/core';
+import {
+  PeerSync,
+  computePairingProof,
+  derivePairingKey,
+  type PeerDevice,
+  type SyncChange,
+  type SyncJsonWebKey,
+} from '@fluxby/core';
 import {
   completeKeyExchange,
   createEncryptionSession,
@@ -22,7 +29,25 @@ type Harness = {
   closeConnection(conn: Connection): void;
   ensureEncryptionSession(peerId: string): Promise<SyncEncryptionSession>;
   sendEncrypted(conn: Connection, message: unknown): Promise<void>;
+  sessionPublicKeys(
+    conn: Connection
+  ): Promise<{ local: SyncJsonWebKey; remote: SyncJsonWebKey }>;
 };
+/** The proof a requester sends for a code, seen from the responder's session. */
+async function requestProof(
+  responder: Harness,
+  conn: Connection,
+  code: string,
+  requesterDeviceId: string
+): Promise<string> {
+  const { local, remote } = await responder.sessionPublicKeys(conn);
+  const keys = { requesterPublicKey: remote, responderPublicKey: local };
+  return computePairingProof(await derivePairingKey(code, keys), {
+    role: 'request',
+    requesterDeviceId,
+    ...keys,
+  });
+}
 const activePeers: PeerSync[] = [];
 afterEach(() => {
   activePeers.forEach((peer) => peer.destroy());
@@ -93,7 +118,7 @@ async function pair(
     deviceName: 'B',
     profileId: 'profile-b',
     schemaVersion: 15,
-    protocolVersion: 2,
+    protocolVersion: 3,
   });
   bh.handlePairingAccept(ba, {
     type: 'pairing-accept',
@@ -101,7 +126,7 @@ async function pair(
     deviceName: 'A',
     profileId: 'profile-a',
     schemaVersion: 15,
-    protocolVersion: 2,
+    protocolVersion: 3,
   });
   return {
     a,
@@ -269,12 +294,12 @@ describe('peer data authorization and real acknowledgements', () => {
     const code = receiver.startPairing();
     const request = {
       type: 'pairing-request',
-      pairingCode: code,
+      proof: await requestProof(rh, ab, code, 'sender'),
       deviceId: 'sender',
       deviceName: 'Sender',
       profileId: 'source',
       schemaVersion: 15,
-      protocolVersion: 2,
+      protocolVersion: 3,
     };
     const conn = { ...ab, send: vi.fn() };
     rh.connections.set(conn.peer, conn);
@@ -285,7 +310,7 @@ describe('peer data authorization and real acknowledgements', () => {
     expect(receiver.getPairedDevices()[0]).toMatchObject({
       localProfileId: 'destination',
       remoteProfileId: 'source',
-      protocolVersion: 2,
+      protocolVersion: 3,
     });
     expect(() =>
       ah.handlePairingAccept(ab, {
@@ -321,12 +346,12 @@ describe('peer data authorization and real acknowledgements', () => {
     rh.connections.set(conn.peer, conn);
     await rh.handlePairingRequest(conn, {
       type: 'pairing-request',
-      pairingCode: receiver.startPairing(),
+      proof: await requestProof(rh, conn, receiver.startPairing(), 'sender'),
       deviceId: 'sender',
       deviceName: 'Sender',
       profileId: 'source',
       schemaVersion: 15,
-      protocolVersion: 2,
+      protocolVersion: 3,
     });
     conn.open = false;
     rh.closeConnection(conn);

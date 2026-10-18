@@ -24,13 +24,18 @@ import {
   type SyncJsonWebKey,
 } from './sync-encryption.js';
 import {
+  computePairingProof,
   computeReconnectProof,
+  derivePairingKey,
   generateReconnectSecret,
   homePeerId,
   isValidDeviceId,
   isValidReconnectSecret,
+  PEER_PROTOCOL_VERSION,
   reconnectDelay,
+  verifyPairingProof,
   verifyReconnectProof,
+  type PairingSessionKeys,
   type ReconnectProofInput,
 } from './peer-reconnect.js';
 
@@ -182,12 +187,13 @@ export type PairingMessage =
   | { type: 'key-exchange'; publicKey: SyncJsonWebKey }
   | {
       type: 'pairing-request';
-      pairingCode: string;
+      /** Proves the pairing code for this connection's session keys. */
+      proof: string;
       deviceName: string;
       deviceId: string;
       profileId: string;
       schemaVersion: number;
-      protocolVersion: 2;
+      protocolVersion: 3;
       supportsFragmentation?: true;
       /** The requester can store a secret to reconnect after restarts. */
       supportsReconnect?: true;
@@ -198,8 +204,10 @@ export type PairingMessage =
       deviceName: string;
       profileId: string;
       schemaVersion: number;
-      protocolVersion: 2;
+      protocolVersion: 3;
       supportsFragmentation?: true;
+      /** Proves the responder knows the pairing code for these session keys. */
+      proof: string;
       /** Shared secret that authorizes later reconnections of this pairing. */
       reconnectSecret?: string;
     }
@@ -210,7 +218,7 @@ export type PairingMessage =
       deviceName: string;
       profileId: string;
       schemaVersion: number;
-      protocolVersion: 2;
+      protocolVersion: 3;
       supportsFragmentation?: true;
       proof: string;
     }
@@ -220,7 +228,7 @@ export type PairingMessage =
       deviceName: string;
       profileId: string;
       schemaVersion: number;
-      protocolVersion: 2;
+      protocolVersion: 3;
       supportsFragmentation?: true;
       proof: string;
     }
@@ -260,7 +268,7 @@ export interface PeerDevice {
   /** Only fresh, explicitly approved pairings authorize financial data. */
   localProfileId?: string;
   remoteProfileId?: string;
-  protocolVersion?: 2;
+  protocolVersion?: 3;
   supportsFragmentation?: boolean;
 }
 
@@ -958,7 +966,7 @@ export class PeerSync {
       device.peerId !== conn.peer ||
       !conn.open ||
       this.connections.get(conn.peer) !== conn ||
-      device.protocolVersion !== 2 ||
+      device.protocolVersion !== PEER_PROTOCOL_VERSION ||
       !device.localProfileId ||
       !device.remoteProfileId ||
       device.localProfileId !== this.options.profileId ||
@@ -1351,12 +1359,13 @@ export class PeerSync {
     deviceId: string;
     deviceName: string;
   }): void {
-    if (
-      message.protocolVersion !== 2 ||
-      message.schemaVersion !== this.options.schemaVersion
-    )
+    if (message.protocolVersion !== PEER_PROTOCOL_VERSION)
       throw new Error(
-        'Sync protocol or schema version mismatch; update both devices and pair again'
+        'Sync protocol version mismatch; update both devices and pair again'
+      );
+    if (message.schemaVersion !== this.options.schemaVersion)
+      throw new Error(
+        'Sync schema version mismatch; update both devices and pair again'
       );
     if (
       !this.options.profileId ||
@@ -1385,19 +1394,48 @@ export class PeerSync {
       });
       return;
     }
+    // Each code allows one attempt: it is cleared before the slow check, so
+    // a wrong guess (or a relayed attempt) needs a new code on this device.
+    const pairingCode = this.pendingPairingCode;
+    const expiresAt = this.pairingExpiresAt;
+    this.pendingPairingCode = null;
+    let pairingKey: CryptoKey | null = null;
+    let keys: PairingSessionKeys | null = null;
     if (
-      !this.pendingPairingCode ||
-      message.pairingCode !== this.pendingPairingCode ||
-      Date.now() > this.pairingExpiresAt ||
-      !this.options.onPairingRequest
+      pairingCode &&
+      Date.now() <= expiresAt &&
+      this.options.onPairingRequest &&
+      typeof message.deviceId === 'string'
     ) {
+      try {
+        const session = await this.sessionPublicKeys(conn);
+        keys = {
+          requesterPublicKey: session.remote,
+          responderPublicKey: session.local,
+        };
+        pairingKey = await derivePairingKey(pairingCode, keys);
+        if (
+          !(await verifyPairingProof(pairingKey, message.proof, {
+            role: 'request',
+            requesterDeviceId: message.deviceId,
+            ...keys,
+          }))
+        )
+          pairingKey = null;
+      } catch {
+        pairingKey = null;
+      }
+    }
+    if (!pairingKey || !keys || !this.options.onPairingRequest) {
       await this.sendEncrypted(conn, {
         type: 'pairing-reject',
         reason: 'Invalid or expired pairing code',
       });
       return;
     }
-    // A matching code proves possession, but profile merging still needs approval.
+    const verifiedKey = pairingKey;
+    const sessionKeys = keys;
+    // A valid proof shows the code was entered, but merging still needs approval.
     let handled = false;
     this.options.onPairingRequest(
       message.deviceName,
@@ -1408,12 +1446,7 @@ export class PeerSync {
           this.validatePairing(message);
           if (!conn.open || this.connections.get(conn.peer) !== conn)
             throw new Error('Pairing connection closed');
-          if (
-            message.pairingCode !== this.pendingPairingCode ||
-            Date.now() > this.pairingExpiresAt
-          )
-            throw new Error('Pairing code expired');
-          this.pendingPairingCode = null;
+          if (Date.now() > expiresAt) throw new Error('Pairing code expired');
           const device: PeerDevice = {
             id: message.deviceId,
             name: message.deviceName,
@@ -1422,7 +1455,7 @@ export class PeerSync {
             isConnected: true,
             localProfileId: this.options.profileId,
             remoteProfileId: message.profileId,
-            protocolVersion: 2,
+            protocolVersion: PEER_PROTOCOL_VERSION,
             supportsFragmentation: message.supportsFragmentation === true,
           };
           // Only devices that can store the secret (and can be dialled by
@@ -1438,8 +1471,14 @@ export class PeerSync {
             deviceName: this.options.deviceName,
             profileId: this.options.profileId || '',
             schemaVersion: this.options.schemaVersion || 0,
-            protocolVersion: 2,
+            protocolVersion: PEER_PROTOCOL_VERSION,
             supportsFragmentation: true,
+            proof: await computePairingProof(verifiedKey, {
+              role: 'accept',
+              requesterDeviceId: message.deviceId,
+              responderDeviceId: this.options.deviceId,
+              ...sessionKeys,
+            }),
             ...(reconnectSecret ? { reconnectSecret } : {}),
           });
           this.authorizeDevice(conn, device, reconnectSecret);
@@ -1475,7 +1514,7 @@ export class PeerSync {
       isConnected: true,
       localProfileId: this.options.profileId,
       remoteProfileId: message.profileId,
-      protocolVersion: 2,
+      protocolVersion: PEER_PROTOCOL_VERSION,
       supportsFragmentation: message.supportsFragmentation === true,
     };
     const reconnectSecret =
@@ -1557,6 +1596,7 @@ export class PeerSync {
       let connectionAttempted = false;
       // Note: keyExchangeComplete flag tracked for future debugging/assertions
       let _keyExchangeComplete = false;
+      let pairing: { key: CryptoKey; keys: PairingSessionKeys } | null = null;
 
       const conn = this.peer.connect(targetPeerId, {
         reliable: true,
@@ -1659,15 +1699,27 @@ export class PeerSync {
                 conn.peer
               );
 
-              // Now send encrypted pairing request
+              // Prove the code for exactly these session keys; the code
+              // itself never leaves this device.
+              const publicKeys = await this.sessionPublicKeys(conn);
+              const keys: PairingSessionKeys = {
+                requesterPublicKey: publicKeys.local,
+                responderPublicKey: publicKeys.remote,
+              };
+              const key = await derivePairingKey(pairingCode, keys);
+              pairing = { key, keys };
               await this.sendEncrypted(conn, {
                 type: 'pairing-request',
-                pairingCode,
+                proof: await computePairingProof(key, {
+                  role: 'request',
+                  requesterDeviceId: this.options.deviceId,
+                  ...keys,
+                }),
                 deviceName: this.options.deviceName,
                 deviceId: this.options.deviceId,
                 profileId: this.options.profileId || '',
                 schemaVersion: this.options.schemaVersion || 0,
-                protocolVersion: 2,
+                protocolVersion: PEER_PROTOCOL_VERSION,
                 supportsFragmentation: true,
                 ...(isValidDeviceId(this.options.deviceId)
                   ? { supportsReconnect: true as const }
@@ -1709,8 +1761,26 @@ export class PeerSync {
           isResolved = true;
           clearTimeout(timeout);
           try {
+            // Only a device that knows the code for these session keys may
+            // pair; anyone relaying the key exchange cannot produce this.
+            if (
+              !pairing ||
+              typeof message.deviceId !== 'string' ||
+              !(await verifyPairingProof(pairing.key, message.proof, {
+                role: 'accept',
+                requesterDeviceId: this.options.deviceId,
+                responderDeviceId: message.deviceId,
+                ...pairing.keys,
+              }))
+            )
+              throw new Error('Pairing could not be verified');
             this.handlePairingAccept(conn, message);
           } catch (error) {
+            try {
+              conn.close();
+            } catch {
+              // Already closed
+            }
             reject(error instanceof Error ? error : new Error(String(error)));
             return;
           }
@@ -1822,7 +1892,7 @@ export class PeerSync {
     if (
       !isValidDeviceId(device.id) ||
       !isValidReconnectSecret(reconnectSecret) ||
-      device.protocolVersion !== 2 ||
+      device.protocolVersion !== PEER_PROTOCOL_VERSION ||
       !device.remoteProfileId ||
       !this.options.profileId ||
       device.localProfileId !== this.options.profileId ||
@@ -1975,7 +2045,7 @@ export class PeerSync {
         deviceName: this.options.deviceName,
         profileId: this.options.profileId || '',
         schemaVersion: this.options.schemaVersion || 0,
-        protocolVersion: 2,
+        protocolVersion: PEER_PROTOCOL_VERSION,
         supportsFragmentation: true,
         proof,
       });
@@ -2040,6 +2110,22 @@ export class PeerSync {
     return proof as string;
   }
 
+  /** The ECDH public keys of a connection's ready encryption session. */
+  private async sessionPublicKeys(
+    conn: DataConnection
+  ): Promise<{ local: SyncJsonWebKey; remote: SyncJsonWebKey }> {
+    const session = this.encryptionSessions.get(conn.peer);
+    if (!session?.isReady || !session.remotePublicKey)
+      throw new Error('Encryption session not ready');
+    return {
+      local: session.localKeyPair.publicKeyJwk,
+      remote: (await crypto.subtle.exportKey(
+        'jwk',
+        session.remotePublicKey
+      )) as SyncJsonWebKey,
+    };
+  }
+
   private async reconnectProofInput(
     conn: DataConnection,
     role: 'request' | 'accept',
@@ -2049,14 +2135,8 @@ export class PeerSync {
       local: 'initiator' | 'responder';
     }
   ): Promise<ReconnectProofInput> {
-    const session = this.encryptionSessions.get(conn.peer);
-    if (!session?.isReady || !session.remotePublicKey)
-      throw new Error('Encryption session not ready');
-    const localKey = session.localKeyPair.publicKeyJwk;
-    const remoteKey = (await crypto.subtle.exportKey(
-      'jwk',
-      session.remotePublicKey
-    )) as SyncJsonWebKey;
+    const { local: localKey, remote: remoteKey } =
+      await this.sessionPublicKeys(conn);
     return {
       role,
       initiatorDeviceId: ids.initiatorDeviceId,
@@ -2075,7 +2155,7 @@ export class PeerSync {
     >
   ): ReconnectRejectReason | null {
     if (
-      message.protocolVersion !== 2 ||
+      message.protocolVersion !== PEER_PROTOCOL_VERSION ||
       message.schemaVersion !== this.options.schemaVersion
     )
       return 'version-mismatch';
@@ -2191,7 +2271,7 @@ export class PeerSync {
         deviceName: this.options.deviceName,
         profileId: this.options.profileId || '',
         schemaVersion: this.options.schemaVersion || 0,
-        protocolVersion: 2,
+        protocolVersion: PEER_PROTOCOL_VERSION,
         supportsFragmentation: true,
         proof,
       });

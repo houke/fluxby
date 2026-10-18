@@ -115,7 +115,7 @@ async function pair(
       deviceId: id,
       deviceName: id,
       profileId,
-      protocolVersion: 2,
+      protocolVersion: 3,
       schemaVersion: 23,
       supportsFragmentation: options.supported !== false,
     });

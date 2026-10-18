@@ -1299,6 +1299,8 @@ export interface TranslationKeys {
       connectingToServer: string;
       cannotConnectToSelf: string;
       peerUnavailable: string;
+      invalidPairingCode: string;
+      pairingNotVerified: string;
       connectionTimeout: string;
       syncing: string;
       connected: string;
@@ -3316,6 +3318,10 @@ export const nl: TranslationKeys = {
       cannotConnectToSelf: 'Je kunt niet met jezelf verbinden',
       peerUnavailable:
         'Peer onbereikbaar (controleer code en of de ander online is)',
+      invalidPairingCode:
+        'Deze code is ongeldig, verlopen of al gebruikt. Maak een nieuwe code op het andere apparaat en probeer het opnieuw.',
+      pairingNotVerified:
+        'Het andere apparaat kon niet bewijzen dat het de code kent. Maak een nieuwe code en probeer het opnieuw. Mislukt het steeds, dan wordt de verbinding mogelijk onderschept.',
       connectionTimeout:
         'Verbinding time-out - het andere apparaat kan achter een firewall zitten. Probeer een ander netwerk.',
       pairedDevices: 'Gekoppelde apparaten',

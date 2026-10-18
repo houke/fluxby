@@ -53,7 +53,7 @@ const pairedDevice = (
   isConnected: false,
   localProfileId,
   remoteProfileId: 'remote-profile',
-  protocolVersion: 2,
+  protocolVersion: 3,
   ...extra,
 });
 /** A pairing made with reconnect support, its secret sealed at rest. */
