@@ -44,6 +44,8 @@ const DEVICE_ID_KEY = 'fluxby.deviceId';
 const DEVICE_NAME_KEY = 'fluxby.deviceName';
 const PAIRED_DEVICES_KEY = 'fluxby.pairedDevices';
 const AUTO_SYNC_KEY = 'fluxby.autoSyncEnabled';
+/** Slightly shorter than the 2-minute validity of a pairing code. */
+const PAIRING_CODE_DISPLAY_MS = 115_000;
 
 // Default sync status
 const defaultSyncStatus: SyncStatus = {
@@ -434,6 +436,10 @@ export function SyncProvider({ children }: SyncProviderProps) {
       profileId: activeProfileId,
       schemaVersion: LATEST_MIGRATION_VERSION,
       getActiveProfileId: () => activeRef.current,
+      // The QR dialog shows a fresh code as soon as this one is cleared.
+      onPairingCodeUsed: () => {
+        if (active) setPairingCode(null);
+      },
       onPairingRequest: (name, accept, reject) => {
         if (active)
           setPendingPairingRequest({
@@ -717,6 +723,17 @@ export function SyncProvider({ children }: SyncProviderProps) {
     reportError,
     requestAutoSync,
   ]);
+
+  // Codes expire after 2 minutes on the core side; clear the shown code just
+  // before, so an open pairing dialog replaces it with a fresh one.
+  useEffect(() => {
+    if (!pairingCode) return;
+    const expiry = setTimeout(
+      () => setPairingCode((code) => (code === pairingCode ? null : code)),
+      PAIRING_CODE_DISPLAY_MS
+    );
+    return () => clearTimeout(expiry);
+  }, [pairingCode]);
 
   const setDeviceName = useCallback((name: string) => {
     setDeviceNameState(name.trim().slice(0, 100));

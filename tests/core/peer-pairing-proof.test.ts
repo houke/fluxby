@@ -101,6 +101,7 @@ afterEach(() => {
 function device(deviceId: string, profileId: string) {
   const paired = vi.fn<(d: PeerDevice, secret?: string) => void>();
   const pairingRequests = vi.fn();
+  const codeUsed = vi.fn();
   const errors = vi.fn();
   const sync = new PeerSync({
     deviceId,
@@ -115,10 +116,11 @@ function device(deviceId: string, profileId: string) {
       accept();
     },
     onPaired: paired,
+    onPairingCodeUsed: codeUsed,
     onError: errors,
   });
   live.push(sync);
-  return { sync, paired, pairingRequests, errors };
+  return { sync, paired, pairingRequests, codeUsed, errors };
 }
 
 /**
@@ -313,16 +315,21 @@ describe('pairing through a relaying signalling server', () => {
     await expect(requester.sync.connectWithCode(target, wrong)).rejects.toThrow(
       'Invalid or expired pairing code'
     );
+    // The showing device learns its code is gone, to display a new one.
+    expect(responder.codeUsed).toHaveBeenCalledTimes(1);
     const second = device('device-c', 'profile-c');
     await second.sync.initialize();
     await expect(second.sync.connectWithCode(target, code)).rejects.toThrow(
       'Invalid or expired pairing code'
     );
     expect(responder.paired).not.toHaveBeenCalled();
+    // Without a pending code nothing more is used up.
+    expect(responder.codeUsed).toHaveBeenCalledTimes(1);
 
     // A new code works again.
     await expect(
       second.sync.connectWithCode(target, responder.sync.startPairing())
     ).resolves.toMatchObject({ id: 'device-b' });
+    expect(responder.codeUsed).toHaveBeenCalledTimes(1);
   });
 });

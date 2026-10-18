@@ -3495,7 +3495,7 @@ Object.assign(nl, {
         'Open de sectie Apparaten synchroniseren om je apparaat te bekijken en andere apparaten te koppelen.',
       step2Title: 'Stap 2: Maak een koppelcode',
       step2Text:
-        'Toon de QR-code en scan die met je andere apparaat, of voer de code daar handmatig in.',
+        'Toon de QR-code en scan die met je andere apparaat, of voer de code daar handmatig in. Een code werkt één keer en 2 minuten lang; na een mislukte poging of als hij verloopt, verschijnt vanzelf een nieuwe code.',
       step3Title: 'Stap 3: Verbind je apparaten',
       step3Text:
         'Open dezelfde instellingen op het tweede apparaat en scan of voer de koppelcode in.',

@@ -3319,7 +3319,7 @@ export const nl: TranslationKeys = {
       peerUnavailable:
         'Peer onbereikbaar (controleer code en of de ander online is)',
       invalidPairingCode:
-        'Deze code is ongeldig, verlopen of al gebruikt. Maak een nieuwe code op het andere apparaat en probeer het opnieuw.',
+        'Deze code is ongeldig, verlopen of al gebruikt. Voer de nieuwe code in die het andere apparaat nu toont en probeer het opnieuw.',
       pairingNotVerified:
         'Het andere apparaat kon niet bewijzen dat het de code kent. Maak een nieuwe code en probeer het opnieuw. Mislukt het steeds, dan wordt de verbinding mogelijk onderschept.',
       connectionTimeout:
@@ -3345,7 +3345,8 @@ export const nl: TranslationKeys = {
       orEnterManually: 'Of voer handmatig in',
       newCode: 'Nieuwe code',
       qrCodeExpiry: 'Code verloopt in',
-      qrCodeValid: 'Deze code blijft geldig totdat je een nieuwe genereert.',
+      qrCodeValid:
+        'Deze code werkt één keer en verloopt na 2 minuten. Na een mislukte poging verschijnt hier een nieuwe code.',
       pairingPlaceholder: 'fluxby-abc123...:ABCDEF',
       pairingHint:
         'Voer de volledige koppelingscode in inclusief de dubbele punt. De code is hoofdlettergevoelig.',

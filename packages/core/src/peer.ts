@@ -335,6 +335,11 @@ export interface PeerOptions {
     reject: () => void
   ) => void;
   /**
+   * Callback when a failed or rejected attempt used up the shown pairing
+   * code (each code allows one attempt), so a new one can be shown.
+   */
+  onPairingCodeUsed?: () => void;
+  /**
    * Callback when pairing is complete. The reconnect secret (when both devices
    * support reconnection) must be stored securely to restore the pairing.
    */
@@ -1427,6 +1432,7 @@ export class PeerSync {
       }
     }
     if (!pairingKey || !keys || !this.options.onPairingRequest) {
+      if (pairingCode) this.options.onPairingCodeUsed?.();
       await this.sendEncrypted(conn, {
         type: 'pairing-reject',
         reason: 'Invalid or expired pairing code',
@@ -1494,6 +1500,7 @@ export class PeerSync {
       async () => {
         if (handled) return;
         handled = true;
+        this.options.onPairingCodeUsed?.();
         await this.sendEncrypted(conn, {
           type: 'pairing-reject',
           reason: 'User rejected profile merge',

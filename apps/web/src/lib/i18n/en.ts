@@ -1469,7 +1469,7 @@ export const en: TranslationKeys = {
       peerUnavailable:
         'Peer unavailable (ensure code is correct and peer is online)',
       invalidPairingCode:
-        'This code is invalid, expired or already used. Generate a new code on the other device and try again.',
+        'This code is invalid, expired or already used. Enter the new code shown on the other device and try again.',
       pairingNotVerified:
         'The other device could not prove it knows the code. Generate a new code and try again. If it keeps failing, the connection may be intercepted.',
       connectionTimeout:
@@ -1495,7 +1495,8 @@ export const en: TranslationKeys = {
       orEnterManually: 'Or enter manually',
       newCode: 'New code',
       qrCodeExpiry: 'Code expires in',
-      qrCodeValid: 'This code remains valid until you generate a new one.',
+      qrCodeValid:
+        'This code works once and expires after 2 minutes. After a failed attempt a new code appears here.',
       pairingPlaceholder: 'fluxby-abc123...:ABCDEF',
       pairingHint:
         'Enter the full pairing code including the colon. The code is case-sensitive.',

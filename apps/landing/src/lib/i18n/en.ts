@@ -2756,7 +2756,7 @@ Object.assign(en, {
         'Open the Sync Devices section to see your device and pair additional devices.',
       step2Title: 'Step 2: Generate a pairing code',
       step2Text:
-        'Show the QR code and scan it with your other device, or enter the code manually.',
+        'Show the QR code and scan it with your other device, or enter the code manually. A code works once and for 2 minutes; after a failed attempt or when it expires, a new code appears automatically.',
       step3Title: 'Step 3: Connect your devices',
       step3Text:
         'Open the same settings on the second device and scan or enter the pairing code.',

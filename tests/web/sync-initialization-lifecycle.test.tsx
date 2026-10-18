@@ -281,6 +281,37 @@ describe('Sync signalling on demand', () => {
     expect(result.current.isConnecting).toBe(false);
   });
 
+  it('replaces a pairing code that was used up or is about to expire', async () => {
+    const { result } = await renderUnlocked();
+    const peer = mocks.peers[0];
+    let generated!: Promise<string | null>;
+    act(() => {
+      generated = result.current.generateNewPairingCode();
+    });
+    await act(async () => undefined);
+    await act(async () => peer.open());
+    await generated;
+    expect(result.current.pairingCode).toBe('fluxby-peer-0:ABC234');
+
+    // A failed attempt used the code: the dialog generates a new one.
+    act(() => peer.options.onPairingCodeUsed?.());
+    expect(result.current.pairingCode).toBeNull();
+
+    vi.useFakeTimers();
+    try {
+      await act(async () => {
+        await result.current.generateNewPairingCode();
+      });
+      expect(result.current.pairingCode).toBe('fluxby-peer-0:ABC234');
+      act(() => {
+        vi.advanceTimersByTime(115_000);
+      });
+      expect(result.current.pairingCode).toBeNull();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('shares one signalling connection between concurrent pairing actions', async () => {
     const { result } = await renderUnlocked();
     const peer = mocks.peers[0];
