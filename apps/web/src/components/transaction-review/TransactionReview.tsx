@@ -176,6 +176,34 @@ export function TransactionReview({
     rows
       .filter((tx) => tx.type === type)
       .map((tx) => ({ value: tx.id, label: caption(tx.id) }));
+  const money = (value: number) =>
+    new Intl.NumberFormat(language === 'nl' ? 'nl-NL' : 'en-GB', {
+      style: 'currency',
+      currency: 'EUR',
+    }).format(value);
+  const evidence = item?.evidence;
+  const explanation =
+    evidence?.kind === 'spike'
+      ? copy.spikeEvidence
+          .replace('{count}', String(evidence.count))
+          .replace('{days}', String(evidence.windowDays))
+          .replace('{median}', money(evidence.median))
+      : evidence?.kind === 'categorySpike'
+        ? copy.categorySpikeEvidence
+            .replace('{day}', String(evidence.elapsedDay))
+            .replace('{amount}', money(evidence.amount))
+            .replace('{average}', money(evidence.average))
+            .replace('{count}', String(evidence.count))
+        : evidence?.kind === 'newMerchant'
+          ? copy.newMerchantEvidence
+              .replace('{count}', String(evidence.historyCount))
+              .replace('{minimum}', money(evidence.minimumAmount))
+          : evidence?.kind === 'transfer'
+            ? copy.transferEvidence.replace(
+                '{days}',
+                String(evidence.distanceDays)
+              ) + (evidence.ownIban ? ` ${copy.transferIbanEvidence}` : '')
+            : null;
   const linkedAmount = Number(amount.replace(',', '.'));
   return (
     <div
@@ -324,6 +352,11 @@ export function TransactionReview({
               <p className='text-sm break-words text-muted-foreground'>
                 {item.transaction.accountName} · {item.transaction.description}
               </p>
+              {explanation && (
+                <p className='text-sm break-words text-muted-foreground'>
+                  {explanation}
+                </p>
+              )}
               {item.related && (
                 <p className='text-sm break-words'>
                   {copy.related}: {formatDate(item.related.date)} ·{' '}
@@ -553,43 +586,113 @@ export function TransactionReview({
                 {copy.links} ({links.data?.length || 0})
               </AccordionTrigger>
               <AccordionContent className='space-y-3'>
-                {links.data?.map((link) => (
-                  <div
-                    key={link.id}
-                    className='space-y-3 rounded-lg border p-4 text-sm'
-                  >
-                    <p className='break-words'>
-                      {link.relationType === 'reimbursement'
-                        ? copy.reimbursement
-                        : copy[link.kind]}
-                      : {caption(link.sourceId)} → {caption(link.targetId)} ·{' '}
-                      <Currency amount={link.amount} />
-                    </p>
-                    <Button
-                      size='sm'
-                      variant='outline'
-                      className='hover:border-red-600 hover:bg-red-600 hover:text-white'
-                      disabled={disabled}
-                      onClick={async () => {
-                        const actionProfile = activeProfileId;
-                        if (
-                          (await confirm({
-                            title: copy.unlink,
-                            message: copy.unlinkConfirm,
-                          })) &&
-                          profileRef.current === actionProfile
-                        )
-                          void action(
-                            () =>
-                              getDataService().deleteTransactionLink(link.id),
-                            copy.removed
-                          );
-                      }}
+                <p className='text-sm text-muted-foreground'>
+                  {copy.inheritCategoryHelp}
+                </p>
+                {links.data?.map((link) => {
+                  const sourceTransaction = rows.find(
+                    (tx) => tx.id === link.sourceId
+                  );
+                  const refundCategories = new Set(
+                    links.data
+                      ?.filter(
+                        (entry) =>
+                          entry.kind === 'refund' &&
+                          entry.sourceId === link.sourceId
+                      )
+                      .map(
+                        (entry) =>
+                          rows.find((tx) => tx.id === entry.targetId)
+                            ?.categoryId
+                      )
+                  );
+                  const originalCategory =
+                    link.kind === 'refund' && refundCategories.size === 1
+                      ? [...refundCategories][0]
+                      : null;
+                  const canInherit =
+                    sourceTransaction &&
+                    sourceTransaction.type === 'income' &&
+                    originalCategory &&
+                    sourceTransaction.categoryId !== originalCategory &&
+                    categories.data?.some(
+                      (entry) => entry.id === originalCategory
+                    );
+                  return (
+                    <div
+                      key={link.id}
+                      className='space-y-3 rounded-lg border p-4 text-sm'
                     >
-                      {copy.unlink}
-                    </Button>
-                  </div>
-                ))}
+                      <p className='break-words'>
+                        {link.relationType === 'reimbursement'
+                          ? copy.reimbursement
+                          : copy[link.kind]}
+                        : {caption(link.sourceId)} → {caption(link.targetId)} ·{' '}
+                        <Currency amount={link.amount} />
+                      </p>
+                      {canInherit && sourceTransaction && originalCategory && (
+                        <div className='space-y-2'>
+                          <p className='break-words text-muted-foreground'>
+                            {copy.originalCategory.replace(
+                              '{category}',
+                              categories.data?.find(
+                                (entry) => entry.id === originalCategory
+                              )?.name || ''
+                            )}
+                          </p>
+                          <Button
+                            size='sm'
+                            variant='outline'
+                            className='h-auto max-w-full text-left whitespace-normal'
+                            disabled={disabled}
+                            data-onboarding='transaction-refund-category'
+                            onClick={() =>
+                              void action(async () => {
+                                const previous =
+                                  await getDataService().saveReviewedCategory(
+                                    sourceTransaction.id,
+                                    originalCategory
+                                  );
+                                rememberUndo(() =>
+                                  getDataService().undoReviewedCategory(
+                                    sourceTransaction.id,
+                                    sourceTransaction.categoryId,
+                                    previous
+                                  )
+                                );
+                              })
+                            }
+                          >
+                            {copy.inheritCategory}
+                          </Button>
+                        </div>
+                      )}
+                      <Button
+                        size='sm'
+                        variant='outline'
+                        className='hover:border-red-600 hover:bg-red-600 hover:text-white'
+                        disabled={disabled}
+                        onClick={async () => {
+                          const actionProfile = activeProfileId;
+                          if (
+                            (await confirm({
+                              title: copy.unlink,
+                              message: copy.unlinkConfirm,
+                            })) &&
+                            profileRef.current === actionProfile
+                          )
+                            void action(
+                              () =>
+                                getDataService().deleteTransactionLink(link.id),
+                              copy.removed
+                            );
+                        }}
+                      >
+                        {copy.unlink}
+                      </Button>
+                    </div>
+                  );
+                })}
               </AccordionContent>
             </AccordionItem>
             <AccordionItem value='recurring'>

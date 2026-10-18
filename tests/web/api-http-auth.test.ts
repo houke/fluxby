@@ -16,7 +16,7 @@ vi.mock('@fluxby/database', () => ({
 }));
 vi.mock('@/lib/i18n', () => ({
   getStoredLanguage: () => 'en',
-  translations: { en: { common: { requestFailed: 'Request failed' } } },
+  getTranslations: () => ({ common: { requestFailed: 'Request failed' } }),
 }));
 
 describe('optional HTTP client session authentication', () => {

@@ -87,6 +87,114 @@ const expense = {
   recurringPatternId: null,
 };
 describe('household cashflow planning', () => {
+  it('replaces only an explicitly selected matching manual contribution without double-counting its money', async () => {
+    const goal = await base.createSavingsGoal({
+      name: 'Holiday',
+      targetAmount: 1000,
+    });
+    await base.addSavingsContribution(goal.id, 150);
+    await base.addSavingsContribution(goal.id, 25);
+    const manual = (await service.getGoalManualContributions(goal.id)).filter(
+      (item) => item.amount === 150
+    )[0];
+    await service.addGoalTransactionContribution(goal.id, 'income', 150, {
+      id: manual.id,
+      createdAt: manual.createdAt,
+    });
+    expect((await service.getSavingsGoals())[0].currentAmount).toBe(175);
+    expect(await service.getGoalManualContributions(goal.id)).toEqual([
+      expect.objectContaining({ amount: 25 }),
+    ]);
+    expect(
+      sqlite
+        .prepare('SELECT is_deleted FROM savings_contributions WHERE id=?')
+        .get(manual.id)
+    ).toEqual({ is_deleted: 1 });
+    expect(
+      sqlite
+        .prepare("SELECT current_balance FROM accounts WHERE id='account'")
+        .get()
+    ).toEqual({ current_balance: 1000 });
+  });
+  it('keeps manual contributions when the user links without choosing a replacement', async () => {
+    const goal = await base.createSavingsGoal({
+      name: 'Holiday',
+      targetAmount: 1000,
+    });
+    await base.addSavingsContribution(goal.id, 150);
+    await service.addGoalTransactionContribution(goal.id, 'income', 150);
+    expect((await service.getSavingsGoals())[0].currentAmount).toBe(300);
+    expect(await service.getGoalManualContributions(goal.id)).toHaveLength(1);
+  });
+  it('rejects stale, mismatched and unrelated manual replacements before changing either contribution', async () => {
+    const goal = await base.createSavingsGoal({
+      name: 'Holiday',
+      targetAmount: 1000,
+    });
+    const other = await base.createSavingsGoal({
+      name: 'Buffer',
+      targetAmount: 1000,
+    });
+    await base.addSavingsContribution(goal.id, 150);
+    await base.addSavingsContribution(other.id, 150);
+    const manual = (await service.getGoalManualContributions(goal.id))[0];
+    const unrelated = (await service.getGoalManualContributions(other.id))[0];
+    await expect(
+      service.addGoalTransactionContribution(goal.id, 'income', 149, manual)
+    ).rejects.toThrow('does not match');
+    await expect(
+      service.addGoalTransactionContribution(goal.id, 'income', 150, {
+        ...manual,
+        createdAt: manual.createdAt + 1,
+      })
+    ).rejects.toThrow('does not match');
+    await expect(
+      service.addGoalTransactionContribution(goal.id, 'income', 150, unrelated)
+    ).rejects.toThrow('does not match');
+    expect(await service.getGoalTransactionLinks()).toEqual([]);
+    expect(await service.getGoalManualContributions(goal.id)).toHaveLength(1);
+    await service.addGoalTransactionContribution(goal.id, 'income', 150);
+    expect(
+      (await service.getGoalPlanning()).find((item) => item.id === goal.id)
+        ?.currentAmount
+    ).toBe(300);
+    await service.addGoalTransactionContribution(
+      goal.id,
+      'income',
+      150,
+      manual
+    );
+    expect(
+      (await service.getGoalPlanning()).find((item) => item.id === goal.id)
+        ?.currentAmount
+    ).toBe(150);
+    await expect(
+      service.addGoalTransactionContribution(goal.id, 'income', 150, manual)
+    ).rejects.toThrow('does not match');
+  });
+  it('rolls back both sides of a manual replacement if the profile changes during its write', async () => {
+    const goal = await base.createSavingsGoal({
+      name: 'Holiday',
+      targetAmount: 1000,
+    });
+    await base.addSavingsContribution(goal.id, 150);
+    const manual = (await service.getGoalManualContributions(goal.id))[0];
+    const db = adapter(),
+      run = db.runAsync;
+    db.runAsync = async (sql, params) => {
+      const result = await run(sql, params);
+      if (sql.startsWith('UPDATE savings_contributions')) pid = 'other';
+      return result;
+    };
+    const guarded = createHouseholdPlanningService(db, () => pid);
+    await expect(
+      guarded.addGoalTransactionContribution(goal.id, 'income', 150, manual)
+    ).rejects.toThrow('Active profile changed');
+    pid = 'profile';
+    expect(await service.getGoalManualContributions(goal.id)).toHaveLength(1);
+    expect(await service.getGoalTransactionLinks()).toEqual([]);
+    expect((await service.getSavingsGoals())[0].currentAmount).toBe(150);
+  });
   it('rejects a profile switch during goal-link validation without creating a contribution', async () => {
     const goal = await base.createSavingsGoal({
       name: 'Holiday',

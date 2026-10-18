@@ -20,7 +20,7 @@ import {
   type MonthlyReview,
 } from '@fluxby/shared';
 import { readFromOPFSSync, isSettingsCacheInitialized } from '@fluxby/database';
-import { getStoredLanguage, translations } from './i18n';
+import { getStoredLanguage, getTranslations } from './i18n';
 import { importToolsTranslations } from './i18n/import-tools';
 import type { RestoreBackupOptions } from './data/backup';
 
@@ -1365,8 +1365,7 @@ export const api = {
       [
         id,
         iban,
-        providerName ||
-          translations[getStoredLanguage()].common.unknownProvider,
+        providerName || getTranslations().common.unknownProvider,
         now,
         now,
       ]

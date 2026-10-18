@@ -10,7 +10,7 @@ export const householdPlanningHelp = {
     },
     {
       title: 'Vermogen en spaardoelen volgen',
-      text: 'Controleer alle saldi, bezittingen en schulden en bewaar een momentopname van vandaag. Een nieuwe opname op dezelfde dag vervangt de vorige. Een verandering over 30 dagen verschijnt alleen met volledige opnames van beide exacte datums. Bij een spaardoel met einddatum zie je het benodigde maandbedrag. Je kunt een inkomst of overboeking aan een doel koppelen en het bedrag aanpassen; dit verandert geen banksaldo. Handmatige bijdragen blijven bestaan. Archiveren bewaart het doel en de bijdragen, maar haalt het doel uit de actieve reserveringen.',
+      text: 'Controleer alle saldi, bezittingen en schulden en bewaar een momentopname van vandaag. Een nieuwe opname op dezelfde dag vervangt de vorige. Een verandering over 30 dagen verschijnt alleen met volledige opnames van beide exacte datums. Bij een spaardoel met einddatum zie je het benodigde maandbedrag. Je kunt een inkomst of overboeking aan een doel koppelen en het bedrag aanpassen; dit verandert geen banksaldo. Heb je hetzelfde geld al handmatig vastgelegd? Kies dan expliciet de bestaande bijdrage met hetzelfde bedrag en controleer de vastgelegde datum. De koppeling vervangt alleen die bijdrage om dubbeltelling te voorkomen. Andere handmatige bijdragen blijven bestaan. Archiveren bewaart het doel en de bijdragen, maar haalt het doel uit de actieve reserveringen.',
     },
     {
       title: 'Een wekelijkse controle afronden',
@@ -28,7 +28,7 @@ export const householdPlanningHelp = {
     },
     {
       title: 'Track net worth and savings goals',
-      text: 'Check all balances, assets and debts, then save today’s snapshot. Another snapshot on the same day replaces it. A 30-day change appears only with complete snapshots on both exact dates. Goals with a deadline show the required monthly amount. You can link income or a transfer to a goal and adjust the contribution; this never changes a bank balance. Manual contributions remain. Archiving preserves the goal and contributions while removing it from active reserves.',
+      text: 'Check all balances, assets and debts, then save today’s snapshot. Another snapshot on the same day replaces it. A 30-day change appears only with complete snapshots on both exact dates. Goals with a deadline show the required monthly amount. You can link income or a transfer to a goal and adjust the contribution; this never changes a bank balance. Already recorded the same money manually? Explicitly choose the existing contribution with the same amount and check its recorded date. The link replaces only that contribution to avoid counting it twice. Other manual contributions remain. Archiving preserves the goal and contributions while removing it from active reserves.',
     },
     {
       title: 'Complete a weekly review',

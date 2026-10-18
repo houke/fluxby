@@ -7,20 +7,15 @@
  */
 
 import { useEffect, useState, useCallback } from 'react';
-import {
-  Eye,
-  EyeOff,
-  AlertCircle,
-  ChevronRight,
-  ChevronLeft,
-  Loader2,
-} from 'lucide-react';
+import { AlertCircle, ChevronRight, ChevronLeft, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { PasswordVisibilityToggle } from '@/components/ui/password-visibility-toggle';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { useEncryption } from '@/contexts/EncryptionContext';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { preloadTranslations } from '@/lib/i18n';
 import { useProfile } from '@/contexts/ProfileContext';
 import { FluxbyWebGL } from '@fluxby/shared';
 import { cn } from '@/lib/utils';
@@ -91,8 +86,8 @@ export function SecuritySetup({ onSetupComplete }: SecuritySetupProps) {
     return () => window.clearInterval(intervalId);
   }, [step, setupStartedAt]);
 
-  const handleLanguageSelect = (lang: 'nl' | 'en') => {
-    setLanguage(lang);
+  const handleLanguageSelect = async (lang: 'nl' | 'en') => {
+    await setLanguage(lang);
     setStep('name');
   };
 
@@ -523,6 +518,8 @@ export function SecuritySetup({ onSetupComplete }: SecuritySetupProps) {
                     language === 'nl' && 'bg-purple-600 hover:bg-purple-700'
                   )}
                   onClick={() => handleLanguageSelect('nl')}
+                  onPointerEnter={() => preloadTranslations('nl')}
+                  onFocus={() => preloadTranslations('nl')}
                 >
                   🇳🇱 {t.common.languageNames.dutch}
                 </Button>
@@ -534,6 +531,8 @@ export function SecuritySetup({ onSetupComplete }: SecuritySetupProps) {
                     language === 'en' && 'bg-purple-600 hover:bg-purple-700'
                   )}
                   onClick={() => handleLanguageSelect('en')}
+                  onPointerEnter={() => preloadTranslations('en')}
+                  onFocus={() => preloadTranslations('en')}
                 >
                   🇬🇧 {t.common.languageNames.english}
                 </Button>
@@ -554,6 +553,7 @@ export function SecuritySetup({ onSetupComplete }: SecuritySetupProps) {
                   value={userName}
                   onChange={(e) => setUserName(e.target.value)}
                   placeholder={texts.namePlaceholder}
+                  aria-label={texts.nameTitle}
                   className='h-12 border border-input bg-white/50 text-center text-base focus:ring-purple-500 dark:bg-gray-800/50'
                   autoFocus
                 />
@@ -626,22 +626,17 @@ export function SecuritySetup({ onSetupComplete }: SecuritySetupProps) {
                       setError(null);
                     }}
                     placeholder={texts.passwordPlaceholder}
+                    aria-label={t.security.newPassword}
                     className='h-12 border border-input bg-white/50 pr-10 text-center text-base focus:ring-purple-500 dark:bg-gray-800/50'
                     autoFocus
                     autoComplete='new-password'
                     minLength={8}
                   />
-                  <button
-                    type='button'
-                    onClick={() => setShowPassword(!showPassword)}
-                    className='absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground'
-                  >
-                    {showPassword ? (
-                      <EyeOff className='h-5 w-5' />
-                    ) : (
-                      <Eye className='h-5 w-5' />
-                    )}
-                  </button>
+                  <PasswordVisibilityToggle
+                    visible={showPassword}
+                    onToggle={() => setShowPassword(!showPassword)}
+                    disabled={isLoading}
+                  />
                 </div>
 
                 <Input
@@ -652,6 +647,7 @@ export function SecuritySetup({ onSetupComplete }: SecuritySetupProps) {
                     setError(null);
                   }}
                   placeholder={texts.confirmPlaceholder}
+                  aria-label={t.security.confirmPassword}
                   className='h-12 border border-input bg-white/50 text-center text-base focus:ring-purple-500 dark:bg-gray-800/50'
                   autoComplete='new-password'
                   minLength={8}

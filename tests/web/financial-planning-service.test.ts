@@ -95,6 +95,89 @@ afterEach(() => {
 });
 
 describe('financial planning services', () => {
+  it.each([
+    'create goal',
+    'update goal',
+    'delete goal',
+    'contribution',
+    'preferences',
+    'create net worth',
+    'update net worth',
+    'delete net worth',
+  ])(
+    'rolls back %s when the active profile changes during the write',
+    async (action) => {
+      const goal = await planning.createSavingsGoal({
+        name: 'Holiday',
+        targetAmount: 1000,
+      });
+      const item = await planning.createNetWorthItem({
+        name: 'Bicycle',
+        amount: 100,
+        type: 'asset',
+      });
+      const tables = [
+        'savings_goals',
+        'savings_contributions',
+        'planning_preferences',
+        'net_worth_items',
+      ];
+      const before = tables.map((table) =>
+        sqlite.prepare(`SELECT * FROM ${table} ORDER BY id`).all()
+      );
+      const run = db.runAsync;
+      db.runAsync = async (sql, params) => {
+        const result = await run(sql, params);
+        pid = 'other';
+        return result;
+      };
+      const actions: Record<string, () => Promise<unknown>> = {
+        'create goal': () =>
+          planning.createSavingsGoal({ name: 'Buffer', targetAmount: 500 }),
+        'update goal': () =>
+          planning.updateSavingsGoal(goal.id, { targetAmount: 1500 }),
+        'delete goal': () => planning.deleteSavingsGoal(goal.id),
+        contribution: () => planning.addSavingsContribution(goal.id, 50),
+        preferences: () =>
+          planning.updatePlanningPreferences({ minimumBalance: 50 }),
+        'create net worth': () =>
+          planning.createNetWorthItem({
+            name: 'Car',
+            amount: 500,
+            type: 'asset',
+          }),
+        'update net worth': () =>
+          planning.updateNetWorthItem(item.id, { amount: 200 }),
+        'delete net worth': () => planning.deleteNetWorthItem(item.id),
+      };
+      await expect(actions[action]()).rejects.toThrow('Active profile changed');
+      expect(
+        tables.map((table) =>
+          sqlite.prepare(`SELECT * FROM ${table} ORDER BY id`).all()
+        )
+      ).toEqual(before);
+    }
+  );
+  it('rejects a contribution after the profile switches during goal validation', async () => {
+    const goal = await planning.createSavingsGoal({
+      name: 'Holiday',
+      targetAmount: 1000,
+    });
+    const query = db.queryOneAsync;
+    db.queryOneAsync = async <T>(sql: string, params: unknown[] = []) => {
+      const result = await query<T>(sql, params);
+      if (sql.startsWith('SELECT id FROM savings_goals')) pid = 'other';
+      return result;
+    };
+    await expect(planning.addSavingsContribution(goal.id, 50)).rejects.toThrow(
+      'Active profile changed'
+    );
+    expect(
+      sqlite
+        .prepare('SELECT COUNT(*) AS count FROM savings_contributions')
+        .get()
+    ).toEqual({ count: 0 });
+  });
   it('tracks goal contributions without changing bank balances and keeps profile ownership', async () => {
     const goal = await planning.createSavingsGoal({
       name: 'Holiday',

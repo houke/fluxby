@@ -1,36 +1,19 @@
 import { expect, type Page } from '@playwright/test';
 import { test } from './browser-test';
-import { unlockTestApp } from './fixtures';
+import { setupApp, dismissOnboardingTour, unlockTestApp } from './fixtures';
 import { en } from '../apps/web/src/lib/i18n/en';
 
 const historyCount = 61;
 const merchant = 'Performance history merchant';
 const historyDescription = /^Performance history record \d{3}$/;
 
-async function createEmptyEncryptedApp(page: Page) {
-  await page.goto('/app/');
-  await page.getByRole('button', { name: /English/ }).click();
-  await page.getByPlaceholder('Your name...').fill('History review');
-  await page.getByRole('button', { name: 'Next', exact: true }).click();
-  await page.getByRole('radio', { name: 'Import my transactions' }).check();
-  await page
-    .getByPlaceholder('Master password...', { exact: true })
-    .fill('test1234');
-  await page
-    .getByPlaceholder('Confirm password...', { exact: true })
-    .fill('test1234');
-  await page
-    .getByRole('button', { name: "Let's get started!", exact: true })
-    .click();
-  await expect
-    .poll(
-      async () => {
-        await unlockTestApp(page);
-        return page.locator('[data-onboarding="import-dropzone"]').isVisible();
-      },
-      { timeout: 30000 }
-    )
-    .toBe(true);
+async function createEncryptedApp(page: Page) {
+  await setupApp(page);
+  await dismissOnboardingTour(page);
+  await page.getByRole('link', { name: 'Import', exact: true }).first().click();
+  await expect(
+    page.locator('[data-onboarding="import-dropzone"]')
+  ).toBeVisible();
 }
 
 async function switchProfile(page: Page, from: string, to: string) {
@@ -107,7 +90,7 @@ test.describe('Large-history performance regressions', () => {
     await page.setViewportSize({ width: 1440, height: 1000 });
     const errors: string[] = [];
     page.on('pageerror', (error) => errors.push(error.message));
-    await createEmptyEncryptedApp(page);
+    await createEncryptedApp(page);
 
     // This dev-server fixture seeds only this test's disposable browser database.
     // Exercise real SQLite, profile caches and rendered controls without a bulk import.
@@ -116,10 +99,11 @@ test.describe('Large-history performance regressions', () => {
         const { getDataService, getGlobalDatabase } =
           await import('/app/src/lib/db-singleton.ts');
         const service = getDataService();
-        const primary = (await service.getProfiles()).find(
-          (profile: { type: string }) => profile.type === 'personal'
-        );
-        if (!primary) throw new Error('Missing disposable personal profile');
+        const primary = await service.createProfile({
+          name: 'History primary',
+          type: 'personal',
+          language: 'en',
+        });
         const comparison = await service.createProfile({
           name: 'History comparison',
           type: 'business',
@@ -201,6 +185,7 @@ test.describe('Large-history performance regressions', () => {
       { merchant, count: historyCount }
     );
 
+    // Refresh the profile list after creating the disposable fixtures outside React.
     // Reload also proves the password unlock and encrypted database persist.
     await page.reload();
     await expect(
@@ -210,6 +195,7 @@ test.describe('Large-history performance regressions', () => {
     await expect(
       page.locator('[data-onboarding="import-dropzone"]')
     ).toBeVisible();
+    await switchProfile(page, 'Demo', fixture.primaryName);
     let encryptedOpfs: boolean | null = null;
     if (new URL(page.url()).hostname === 'fluxby.local') {
       encryptedOpfs = await page.evaluate(async () => {

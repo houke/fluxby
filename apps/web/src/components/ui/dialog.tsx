@@ -8,7 +8,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { getStoredLanguage, translations } from '@/lib/i18n';
+import { getTranslations } from '@/lib/i18n';
 
 const Dialog = DialogPrimitive.Root;
 
@@ -37,7 +37,7 @@ const DialogContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
 >(({ className, children, ...props }, ref) => {
-  const closeLabel = translations[getStoredLanguage()].common.close;
+  const closeLabel = getTranslations().common.close;
   const closeRef = React.useRef<HTMLButtonElement>(null);
   const [closeTooltipOpen, setCloseTooltipOpen] = React.useState(false);
 

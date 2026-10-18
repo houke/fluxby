@@ -5,6 +5,7 @@ import tailwindcss from '@tailwindcss/vite';
 import path from 'path';
 import { getLocalHttpsOptions } from '../../scripts/dev-cert.mjs';
 import { offlinePrecache } from '../../scripts/offline-precache.mjs';
+import { sentryCsp } from '../../scripts/sentry-csp.mjs';
 
 // For GitHub Pages: VITE_BASE_URL is set during CI
 // For local development: use '/app/'
@@ -29,6 +30,7 @@ export default defineConfig({
   plugins: [
     tailwindcss(),
     react(),
+    sentryCsp(),
     ...(!isTauri
       ? [
           offlinePrecache({

@@ -93,9 +93,11 @@ test('planning goals, contributions, reserves, net worth, and review persist', a
   await expect(
     page.getByLabel('Other reserved savings', { exact: true })
   ).toHaveValue('100');
+  await page.getByRole('tab', { name: 'Savings goals', exact: true }).click();
   await expect(
     page.getByRole('heading', { name: 'QA holiday reserve', exact: true })
   ).toBeVisible();
+  await expect(goal).toContainText('€50.00');
   await page.getByRole('tab', { name: 'Monthly review', exact: true }).click();
   await page.getByLabel('Review month', { exact: true }).fill('2026-08');
   await expect(
@@ -129,13 +131,14 @@ test('subscription contract dates save without flipping an expense into income',
   await expect(
     confirmed.getByLabel('Renewal date', { exact: true })
   ).not.toBeVisible();
-  await expect(confirmed).toContainText('Renewal date: 1 Jan 2027');
-  await expect(confirmed).toContainText('Cancellation deadline: 1 Dec 2026');
+  await expect(confirmed).toContainText('Renewal date: 01-01-2027');
+  await expect(confirmed).toContainText('Cancellation deadline: 01-12-2026');
   await page.reload();
   await unlockAfterNavigation(page);
   await expect(
     page.locator('[data-onboarding="subscriptions-confirmed"]')
-  ).toContainText('Renewal date: 1 Jan 2027');
+  ).toContainText('Renewal date: 01-01-2027');
+  await expect(confirmed).toContainText('Cancellation deadline: 01-12-2026');
 });
 
 test('budget rollover persists and annual editing uses the stored monthly amount', async ({

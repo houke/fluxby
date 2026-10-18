@@ -28,6 +28,7 @@ const mocks = vi.hoisted(() => ({
   language: 'en' as 'en' | 'nl',
   inbox: vi.fn(),
   transactions: vi.fn(),
+  links: vi.fn(),
 }));
 vi.mock('@/contexts/LanguageContext', () => ({
   useLanguage: () => ({
@@ -62,7 +63,7 @@ vi.mock('@/lib/db-singleton', () => ({
   getDataService: () => ({
     getTransactionReviewInbox: mocks.inbox,
     getReviewTransactions: mocks.transactions,
-    getTransactionLinks: async () => [],
+    getTransactionLinks: mocks.links,
     saveReviewDecision: mocks.save,
     undoReviewDecision: mocks.undo,
     saveReviewedCategory: mocks.category,
@@ -125,6 +126,7 @@ beforeEach(() => {
   mocks.save.mockResolvedValue(null);
   mocks.category.mockResolvedValue(null);
   mocks.transactions.mockResolvedValue(reviewRows);
+  mocks.links.mockResolvedValue([]);
   HTMLElement.prototype.scrollIntoView = vi.fn();
   HTMLElement.prototype.hasPointerCapture = vi.fn(() => false);
   client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -155,6 +157,111 @@ const choose = async (label: string, option: RegExp | string) => {
   fireEvent.click(await screen.findByRole('option', { name: option }));
 };
 describe('transaction review UI', () => {
+  it.each(['nl', 'en'] as const)(
+    'explicitly inherits a linked expense category and restores earlier provenance in %s',
+    async (language) => {
+      mocks.language = language;
+      const copy =
+        language === 'nl' ? transactionReviewNl : transactionReviewEn;
+      mocks.transactions.mockResolvedValue([
+        { ...reviewRows[0], categoryId: 'food' },
+        { ...reviewRows[1], categoryId: 'previous' },
+      ]);
+      mocks.links.mockResolvedValue([
+        {
+          id: 'refund-link',
+          sourceId: 'income',
+          targetId: 'expense',
+          kind: 'refund',
+          relationType: 'reimbursement',
+          amount: 10,
+        },
+      ]);
+      const previous = { categoryId: 'previous', source: 'manual' };
+      mocks.category.mockResolvedValue(previous);
+      await show();
+      fireEvent.click(
+        screen.getByRole('button', { name: `${copy.links} (1)` })
+      );
+      const inherit = await screen.findByRole('button', {
+        name: copy.inheritCategory,
+      });
+      expect(mocks.category).not.toHaveBeenCalled();
+      fireEvent.click(inherit);
+      await waitFor(() =>
+        expect(mocks.category).toHaveBeenCalledWith('income', 'food')
+      );
+      const undo = await screen.findByRole('button', {
+        name: `${copy.undo} (1)`,
+      });
+      await waitFor(() => expect(undo).toHaveProperty('disabled', false));
+      fireEvent.click(undo);
+      await waitFor(() =>
+        expect(mocks.restoreCategory).toHaveBeenCalledWith(
+          'income',
+          'previous',
+          previous
+        )
+      );
+      expect(mocks.link).not.toHaveBeenCalled();
+    }
+  );
+  it('does not offer whole-transaction category inheritance for mixed linked expense categories', async () => {
+    mocks.transactions.mockResolvedValue([
+      { ...reviewRows[0], categoryId: 'food' },
+      { ...reviewRows[0], id: 'other-expense', categoryId: 'other' },
+      { ...reviewRows[1], categoryId: null },
+    ]);
+    mocks.links.mockResolvedValue([
+      { id: 'one', sourceId: 'income', targetId: 'expense', kind: 'refund' },
+      {
+        id: 'two',
+        sourceId: 'income',
+        targetId: 'other-expense',
+        kind: 'refund',
+      },
+    ]);
+    await show();
+    fireEvent.click(screen.getByRole('button', { name: 'Existing links (2)' }));
+    expect(
+      screen.queryByRole('button', {
+        name: transactionReviewEn.inheritCategory,
+      })
+    ).toBeNull();
+  });
+  it.each(['nl', 'en'] as const)(
+    'shows the actual anomaly baseline in %s',
+    async (language) => {
+      mocks.language = language;
+      mocks.inbox.mockResolvedValue([
+        {
+          key: 'spike:expense',
+          kind: 'spike',
+          transaction: reviewRows[0],
+          evidence: { kind: 'spike', median: 10, count: 3, windowDays: 180 },
+        },
+      ]);
+      await show('spike');
+      const copy =
+        language === 'nl' ? transactionReviewNl : transactionReviewEn;
+      const expected = copy.spikeEvidence
+        .replace('{count}', '3')
+        .replace('{days}', '180')
+        .replace(
+          '{median}',
+          new Intl.NumberFormat(language === 'nl' ? 'nl-NL' : 'en-GB', {
+            style: 'currency',
+            currency: 'EUR',
+          }).format(10)
+        );
+      expect(
+        screen.getByText(
+          (_content, element) =>
+            element?.tagName === 'P' && element.textContent === expected
+        )
+      ).toBeTruthy();
+    }
+  );
   it.each(['nl', 'en'] as const)(
     'formats category spending alerts and related transactions in %s',
     async (language) => {

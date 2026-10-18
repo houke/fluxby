@@ -12,6 +12,10 @@ import {
   monthlyRollover,
 } from './data/household-budgets';
 import { createImportToolsService } from './data/import-tools';
+import {
+  clearAllProfileData,
+  softDeleteProfileData,
+} from './data/profile-lifecycle';
 import { importToolsTranslations } from './i18n/import-tools';
 import { createTransactionReviewService } from './data/transaction-review';
 import { createHouseholdPlanningService } from './data/household-planning';
@@ -72,7 +76,7 @@ import {
 } from '@fluxby/shared';
 import { processINGRow } from './importers/ing-importer';
 import { processASNRow } from './importers/asn-importer';
-import { getStoredLanguage, translations } from './i18n';
+import { getStoredLanguage, getTranslations, loadTranslations } from './i18n';
 import {
   exportFinancialBackup,
   restoreFinancialBackup,
@@ -391,7 +395,7 @@ export function createDataService(db: FinancialDatabase) {
     await db.runAsync(
       `INSERT INTO users (id, name, created_at, updated_at)
        VALUES (?, ?, ?, ?)`,
-      [userId, translations[getStoredLanguage()].common.user, now, now]
+      [userId, getTranslations().common.user, now, now]
     );
 
     return userId;
@@ -617,43 +621,7 @@ export function createDataService(db: FinancialDatabase) {
       const now = Date.now();
 
       await db.transactionAsync(async (db) => {
-        // Soft-delete all related data to ensure clean state for duplicates/reimport
-        // Transactions
-        await db.runAsync(
-          'UPDATE transactions SET is_deleted = 1, updated_at = ? WHERE profile_id = ?',
-          [now, id]
-        );
-        // Accounts
-        await db.runAsync(
-          'UPDATE accounts SET is_deleted = 1, updated_at = ? WHERE profile_id = ?',
-          [now, id]
-        );
-        // Categories
-        await db.runAsync(
-          'UPDATE categories SET is_deleted = 1, updated_at = ? WHERE profile_id = ?',
-          [now, id]
-        );
-        // Budgets
-        await db.runAsync(
-          'UPDATE budgets SET is_deleted = 1, updated_at = ? WHERE profile_id = ?',
-          [now, id]
-        );
-        // Category rules (for categories in this profile)
-        await db.runAsync(
-          `UPDATE category_rules SET is_deleted = 1, updated_at = ?
-         WHERE category_id IN (SELECT id FROM categories WHERE profile_id = ?)`,
-          [now, id]
-        );
-        // Imports
-        await db.runAsync(
-          'UPDATE imports SET is_deleted = 1, updated_at = ? WHERE profile_id = ?',
-          [now, id]
-        );
-        // Address book
-        await db.runAsync(
-          'UPDATE address_book SET is_deleted = 1, updated_at = ? WHERE profile_id = ?',
-          [now, id]
-        );
+        await softDeleteProfileData(db, id, now);
         // Finally, soft-delete the profile itself
         await db.runAsync(
           'UPDATE profiles SET is_deleted = 1, updated_at = ? WHERE id = ?',
@@ -2703,19 +2671,13 @@ export function createDataService(db: FinancialDatabase) {
     },
 
     async resetAllData() {
-      // Delete all data and recreate demo profile
-      await db.runAsync('DELETE FROM transactions');
-      await db.runAsync('DELETE FROM budgets');
-      await db.runAsync('DELETE FROM category_rules');
-      await db.runAsync('DELETE FROM categories');
-      await db.runAsync('DELETE FROM address_book');
-      await db.runAsync('DELETE FROM accounts');
-      await db.runAsync('DELETE FROM profiles');
-
-      // Create demo profile
-      const demoProfile = await this.createProfile({
-        name: 'Demo',
-        type: 'personal',
+      // Keep reset and replacement atomic, including newer feature tables.
+      const demoProfile = await db.transactionAsync(async (db) => {
+        await clearAllProfileData(db);
+        return createDataService(db).createProfile({
+          name: 'Demo',
+          type: 'personal',
+        });
       });
 
       return {
@@ -3750,7 +3712,8 @@ export function createDataService(db: FinancialDatabase) {
     // ============= Category Methods =============
     async getSeedCategories(language: 'nl' | 'en' = 'nl') {
       // Return a basic set of seed categories for local use
-      const copy = translations[language].categories.seedDefaults;
+      // The seed language can differ from the UI language (e.g. first setup).
+      const copy = (await loadTranslations(language)).categories.seedDefaults;
       const categories = [
         {
           name: copy.housing.name,
@@ -5102,7 +5065,7 @@ export function createDataService(db: FinancialDatabase) {
 
       let imported = 0;
       const errors: string[] = [];
-      const locale = translations[getStoredLanguage()];
+      const locale = getTranslations();
       const formatRowError = (row: number, error: string) =>
         locale.import.rowError
           .replace('{row}', String(row))
@@ -5709,8 +5672,7 @@ export function createDataService(db: FinancialDatabase) {
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           importId,
-          options.filename ||
-            translations[getStoredLanguage()].import.csvImport,
+          options.filename || getTranslations().import.csvImport,
           options.bank || 'generic',
           imported,
           'completed',
@@ -6366,7 +6328,7 @@ export function createDataService(db: FinancialDatabase) {
         options.forEach((pattern, optionIndex) => {
           const optionId = `subscription_${optionIndex}`;
           criteria[optionId] =
-            `${(pattern.merchant_name || translations[getStoredLanguage()].transactions.unknown).slice(0, 120)}; ${pattern.pattern_type}; usual amount ${Math.abs(pattern.avg_amount).toFixed(2)}; last payment ${pattern.last_date}`;
+            `${(pattern.merchant_name || getTranslations().transactions.unknown).slice(0, 120)}; ${pattern.pattern_type}; usual amount ${Math.abs(pattern.avg_amount).toFixed(2)}; last payment ${pattern.last_date}`;
           optionMap.set(optionId, pattern);
         });
         optionPatterns.set(questionId, optionMap);
@@ -8075,7 +8037,7 @@ export function createDataService(db: FinancialDatabase) {
 
       const result = await db.runAsync(
         `UPDATE transactions SET is_deleted = 1, updated_at = ?
-         WHERE account_id IN (SELECT id FROM accounts WHERE profile_id = ?) AND is_deleted = 0`,
+         WHERE COALESCE(profile_id,(SELECT a.profile_id FROM accounts a WHERE a.id=transactions.account_id)) = ? AND is_deleted = 0`,
         [Date.now(), pid]
       );
 

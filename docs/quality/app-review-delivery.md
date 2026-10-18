@@ -17,7 +17,7 @@ This branch implements the 2026-09-29 application review in three areas. The cha
 
 ## New financial workflows
 
-- Saved transaction views and compact transaction density.
+- Compact transaction density and consolidated filter actions. Saved transaction views were retired in `44466ec`; legacy stored rows remain compatible with backup and sync.
 - Savings goals and contributions, budget rollover, a safe-to-spend forecast, subscription renewal reminders, a persistent monthly review, and net-worth assets and liabilities.
 
 ## Validation boundaries

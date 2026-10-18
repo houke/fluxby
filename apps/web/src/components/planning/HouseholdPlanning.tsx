@@ -73,7 +73,8 @@ export function HouseholdPlanning() {
     [form, setForm] = useState<CashflowInput>(emptyFlow);
   const [goalId, setGoalId] = useState<string | null>(null),
     [transactionId, setTransactionId] = useState(''),
-    [contribution, setContribution] = useState('');
+    [contribution, setContribution] = useState(''),
+    [manualContributionId, setManualContributionId] = useState('');
   const flows = useQuery({
     queryKey: [...key, 'flows'],
     queryFn: () => getDataService().getPlannedCashflows(),
@@ -113,6 +114,11 @@ export function HouseholdPlanning() {
     queryKey: [...key, 'links'],
     queryFn: () => getDataService().getGoalTransactionLinks(),
     enabled,
+  });
+  const manualContributions = useQuery({
+    queryKey: [...key, 'manual-contributions', goalId],
+    queryFn: () => getDataService().getGoalManualContributions(goalId ?? ''),
+    enabled: enabled && goalId !== null,
   });
   const variableDaily = forecast.data?.variableDaily;
   useEffect(() => {
@@ -169,7 +175,8 @@ export function HouseholdPlanning() {
     goals.isError ||
     bills.isError ||
     links.isError ||
-    sources.isError;
+    sources.isError ||
+    manualContributions.isError;
   return (
     <section
       className='space-y-6'
@@ -602,6 +609,7 @@ export function HouseholdPlanning() {
                         setGoalId(goal.id);
                         setTransactionId('');
                         setContribution('');
+                        setManualContributionId('');
                       }}
                     >
                       {p.link}
@@ -809,10 +817,16 @@ export function HouseholdPlanning() {
               e.preventDefault();
               if (goalId)
                 change.mutate(async () => {
+                  const manual = manualContributions.data?.find(
+                    (item) => item.id === manualContributionId
+                  );
                   await getDataService().addGoalTransactionContribution(
                     goalId,
                     transactionId,
-                    Number(contribution)
+                    Number(contribution),
+                    manual
+                      ? { id: manual.id, createdAt: manual.createdAt }
+                      : undefined
                   );
                   setGoalId(null);
                 });
@@ -827,6 +841,7 @@ export function HouseholdPlanning() {
                 value={transactionId}
                 onChange={(value) => {
                   setTransactionId(value);
+                  setManualContributionId('');
                   setContribution(
                     String(
                       Math.abs(
@@ -853,10 +868,48 @@ export function HouseholdPlanning() {
                 min='0.01'
                 step='0.01'
                 value={contribution}
-                onChange={(e) => setContribution(e.target.value)}
+                onChange={(e) => {
+                  setContribution(e.target.value);
+                  setManualContributionId('');
+                }}
               />
             </label>
-            <Button disabled={change.isPending || !transactionId} type='submit'>
+            <label className='block space-y-2 text-sm font-medium'>
+              {p.replaceManualContribution}
+              <FormSelect
+                label={p.replaceManualContribution}
+                value={manualContributionId}
+                disabled={
+                  manualContributions.isPending || manualContributions.isError
+                }
+                onChange={setManualContributionId}
+                options={[
+                  { value: '', label: p.keepManualContributions },
+                  ...(manualContributions.data ?? [])
+                    .filter(
+                      (item) =>
+                        Math.round(item.amount * 100) ===
+                        Math.round(Number(contribution) * 100)
+                    )
+                    .map((item) => ({
+                      value: item.id,
+                      label: `${dateLabel(formatDateISO(new Date(item.createdAt)))} · ${item.amount.toLocaleString(locale, { style: 'currency', currency: 'EUR' })}`,
+                    })),
+                ]}
+              />
+            </label>
+            <p className='text-sm text-muted-foreground'>
+              {p.replaceManualHelp}
+            </p>
+            <Button
+              disabled={
+                change.isPending ||
+                !transactionId ||
+                sources.isError ||
+                manualContributions.isError
+              }
+              type='submit'
+            >
               {p.save}
             </Button>
           </form>

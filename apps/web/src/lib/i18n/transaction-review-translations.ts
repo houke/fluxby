@@ -84,9 +84,23 @@ export const transactionReviewNl = {
   reference: 'Transactie',
   noCategory: 'Geen categorie',
   categoryUndo: 'Vorige categorie herstellen',
+  inheritCategory: 'Categorie van oorspronkelijke uitgave gebruiken',
+  originalCategory: 'Oorspronkelijke categorie: {category}',
+  inheritCategoryHelp:
+    'Neem de categorie bewust over. Dit kan als alle gekoppelde uitgaven dezelfde categorie hebben. Herstellen zet je eerdere categorie en categoriekeuze terug.',
   markBill: 'Vaste last opslaan',
   evidence:
     'Suggesties zijn gebaseerd op bedrag, datum en omschrijving. Controleer altijd beide transacties.',
+  spikeEvidence:
+    'Vergelijking met {count} eerdere betalingen aan dezelfde handelaar in {days} dagen: mediaan {median}. Het bedrag is hoger dan twee keer de mediaan en minimaal € 25 hoger.',
+  categorySpikeEvidence:
+    'Uitgaven tot en met dag {day}: {amount}, tegenover gemiddeld {average} in {count} eerdere maanden met betalingen. Meer dan 50% en minimaal € 50 boven dit gemiddelde. Ontbrekende afschriften kunnen dit beïnvloeden.',
+  newMerchantEvidence:
+    'Nog niet eerder gevonden in {count} eerdere uitgaven. Alleen nieuwe handelaars met een betaling vanaf {minimum} worden getoond. De herkenning gebruikt de aangeleverde naam of omschrijving.',
+  transferEvidence:
+    'Gelijke tegengestelde bedragen op verschillende rekeningen, {days} dagen uit elkaar. Iedere transactie wordt maar eenmaal voorgesteld; de dichtstbijzijnde beschikbare datum krijgt voorrang.',
+  transferIbanEvidence:
+    'De tegenrekening komt overeen met een eigen IBAN en krijgt voorrang bij het voorstellen van koppelingen.',
 };
 export type TransactionReviewTranslations = typeof transactionReviewNl;
 export const transactionReviewEn: TransactionReviewTranslations = {
@@ -175,7 +189,21 @@ export const transactionReviewEn: TransactionReviewTranslations = {
   reference: 'Transaction',
   noCategory: 'No category',
   categoryUndo: 'Restore previous category',
+  inheritCategory: 'Use original expense category',
+  originalCategory: 'Original category: {category}',
+  inheritCategoryHelp:
+    'Explicitly copy the category when all linked expenses have the same category. Undo restores your previous category and category decision.',
   markBill: 'Save recurring bill',
   evidence:
     'Suggestions use amount, date and description. Always check both transactions.',
+  spikeEvidence:
+    'Compared with {count} earlier payments to the same merchant in {days} days: median {median}. The amount exceeds twice the median and is at least €25 higher.',
+  categorySpikeEvidence:
+    'Spending through day {day}: {amount}, versus an average of {average} in {count} earlier months with payments. More than 50% and at least €50 above this average. Missing statements may affect this.',
+  newMerchantEvidence:
+    'Not previously found in {count} earlier expenses. Only new merchants with a payment of at least {minimum} are shown. Recognition uses the supplied name or description.',
+  transferEvidence:
+    'Equal opposite amounts on different accounts, {days} days apart. Each transaction is suggested once; the closest available date takes priority.',
+  transferIbanEvidence:
+    'The counterparty account matches an own-account IBAN and takes priority when suggesting pairs.',
 };
