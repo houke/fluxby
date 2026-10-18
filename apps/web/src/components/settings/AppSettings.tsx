@@ -39,6 +39,7 @@ import {
 } from '@/components/ui/tooltip';
 import { Progress } from '@/components/ui/progress';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { preloadTranslations } from '@/lib/i18n';
 import { api } from '@/lib/api';
 import { useEncryption } from '@/contexts/EncryptionContext';
 import { version } from '../../../package.json';
@@ -941,6 +942,8 @@ export function AppSettings({
                           variant={language === lang ? 'default' : 'outline'}
                           size='sm'
                           onClick={() => setLanguage(lang)}
+                          onPointerEnter={() => preloadTranslations(lang)}
+                          onFocus={() => preloadTranslations(lang)}
                           className='px-3'
                         >
                           {languages[lang].flag} {languages[lang].name}

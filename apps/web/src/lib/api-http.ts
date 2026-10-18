@@ -5,7 +5,7 @@ import {
   deleteFromOPFSWithCache,
   isSettingsCacheInitialized,
 } from '@fluxby/database';
-import { getStoredLanguage, translations } from './i18n';
+import { getStoredLanguage, getTranslations } from './i18n';
 
 const API_STORAGE_KEY = 'finance.apiBaseUrl';
 const PROFILE_KEY = 'fluxby.activeProfileId';
@@ -24,7 +24,7 @@ export function setApiAuthToken(value: string | null): void {
 }
 
 function getApiErrorMessages() {
-  return translations[getStoredLanguage()];
+  return getTranslations();
 }
 
 export function getApiBaseUrl(): string {

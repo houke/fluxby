@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { getStoredLanguage, translations } from '@/lib/i18n';
+import { getTranslations } from '@/lib/i18n';
 
 const Sheet = DialogPrimitive.Root;
 
@@ -46,7 +46,7 @@ const SheetContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
   SheetContentProps
 >(({ side = 'bottom', className, children, ...props }, ref) => {
-  const closeLabel = translations[getStoredLanguage()].common.close;
+  const closeLabel = getTranslations().common.close;
 
   return (
     <SheetPortal>
