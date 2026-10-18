@@ -76,7 +76,7 @@ import {
 } from '@fluxby/shared';
 import { processINGRow } from './importers/ing-importer';
 import { processASNRow } from './importers/asn-importer';
-import { getStoredLanguage, translations } from './i18n';
+import { getStoredLanguage, getTranslations, loadTranslations } from './i18n';
 import {
   exportFinancialBackup,
   restoreFinancialBackup,
@@ -395,7 +395,7 @@ export function createDataService(db: FinancialDatabase) {
     await db.runAsync(
       `INSERT INTO users (id, name, created_at, updated_at)
        VALUES (?, ?, ?, ?)`,
-      [userId, translations[getStoredLanguage()].common.user, now, now]
+      [userId, getTranslations().common.user, now, now]
     );
 
     return userId;
@@ -3712,7 +3712,8 @@ export function createDataService(db: FinancialDatabase) {
     // ============= Category Methods =============
     async getSeedCategories(language: 'nl' | 'en' = 'nl') {
       // Return a basic set of seed categories for local use
-      const copy = translations[language].categories.seedDefaults;
+      // The seed language can differ from the UI language (e.g. first setup).
+      const copy = (await loadTranslations(language)).categories.seedDefaults;
       const categories = [
         {
           name: copy.housing.name,
@@ -5064,7 +5065,7 @@ export function createDataService(db: FinancialDatabase) {
 
       let imported = 0;
       const errors: string[] = [];
-      const locale = translations[getStoredLanguage()];
+      const locale = getTranslations();
       const formatRowError = (row: number, error: string) =>
         locale.import.rowError
           .replace('{row}', String(row))
@@ -5671,8 +5672,7 @@ export function createDataService(db: FinancialDatabase) {
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           importId,
-          options.filename ||
-            translations[getStoredLanguage()].import.csvImport,
+          options.filename || getTranslations().import.csvImport,
           options.bank || 'generic',
           imported,
           'completed',
@@ -6328,7 +6328,7 @@ export function createDataService(db: FinancialDatabase) {
         options.forEach((pattern, optionIndex) => {
           const optionId = `subscription_${optionIndex}`;
           criteria[optionId] =
-            `${(pattern.merchant_name || translations[getStoredLanguage()].transactions.unknown).slice(0, 120)}; ${pattern.pattern_type}; usual amount ${Math.abs(pattern.avg_amount).toFixed(2)}; last payment ${pattern.last_date}`;
+            `${(pattern.merchant_name || getTranslations().transactions.unknown).slice(0, 120)}; ${pattern.pattern_type}; usual amount ${Math.abs(pattern.avg_amount).toFixed(2)}; last payment ${pattern.last_date}`;
           optionMap.set(optionId, pattern);
         });
         optionPatterns.set(questionId, optionMap);

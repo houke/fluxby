@@ -95,6 +95,9 @@ afterEach(() => {
 });
 
 async function showProvider(strict = false) {
+  // resetModules() discards the translations preloaded by tests/setup.ts.
+  const { loadTranslations } = await import('@/lib/i18n/loader');
+  await loadTranslations('en');
   const { DatabaseProvider, useDatabase } =
     await import('@/contexts/DatabaseContext');
   function State() {

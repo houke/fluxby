@@ -35,8 +35,8 @@ import { FluxbyWebGL } from '@fluxby/shared';
 import { onboardingChapters } from './onboarding-data';
 import { SpotlightOverlay } from './SpotlightOverlay';
 import { useProfile } from '@/contexts/ProfileContext';
+import { useTranslationsFor } from '@/contexts/LanguageContext';
 import { useReducedMotion } from '@/hooks/useMediaQuery';
-import { translations } from '@/lib/i18n';
 // Types are in ./types.ts
 
 // Icon mapping for chapters
@@ -101,7 +101,7 @@ export function OnboardingModal({
   onChapterSelect,
   isCreatingDemo = false,
 }: OnboardingModalProps) {
-  const t = translations[language].onboarding;
+  const t = useTranslationsFor(language).onboarding;
   const location = useLocation();
   const { profiles } = useProfile();
   const prefersReducedMotion = useReducedMotion();

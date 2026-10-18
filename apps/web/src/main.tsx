@@ -9,6 +9,13 @@ import {
 } from './lib/error-tracking';
 import App from './App';
 import { debugLog, debugWarn } from './lib/debug';
+import {
+  getLanguageHint,
+  getStoredLanguage,
+  loadTranslations,
+  preloadTranslations,
+  setLanguageHint,
+} from './lib/i18n';
 import { registerAppServiceWorker } from './lib/service-worker';
 import '@fontsource-variable/inter/wght.css';
 import './index.css';
@@ -16,6 +23,11 @@ import './index.css';
 // Initialize error tracking before anything else
 initErrorTracking();
 setupGlobalErrorHandlers();
+
+// Fetch the likely UI language now, in parallel with service worker
+// registration and the OPFS settings read, so first paint does not wait for a
+// second round trip. The stored language is confirmed in initializeApp().
+preloadTranslations(getLanguageHint());
 
 // GitHub Pages SPA fallback: a custom 404.html stores the original URL in sessionStorage
 // and redirects to /app/. Restore that original URL before React Router mounts.
@@ -179,6 +191,17 @@ async function initializeApp() {
     // OPFS might not be available (e.g., in some browsers or Tauri)
     debugWarn('Failed to initialize OPFS settings cache:', error);
     // Don't show error - this is expected in Tauri
+  }
+
+  const language = getStoredLanguage();
+  try {
+    await loadTranslations(language);
+    setLanguageHint(language);
+    debugLog('[Init] Translations loaded:', language);
+  } catch (error) {
+    console.error('[Init] Failed to load translations:', error);
+    showErrorOnScreen('Failed to load translations', error);
+    return;
   }
 
   if (rootElement) {

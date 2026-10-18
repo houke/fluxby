@@ -15,6 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { useEncryption } from '@/contexts/EncryptionContext';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { preloadTranslations } from '@/lib/i18n';
 import { useProfile } from '@/contexts/ProfileContext';
 import { FluxbyWebGL } from '@fluxby/shared';
 import { cn } from '@/lib/utils';
@@ -85,8 +86,8 @@ export function SecuritySetup({ onSetupComplete }: SecuritySetupProps) {
     return () => window.clearInterval(intervalId);
   }, [step, setupStartedAt]);
 
-  const handleLanguageSelect = (lang: 'nl' | 'en') => {
-    setLanguage(lang);
+  const handleLanguageSelect = async (lang: 'nl' | 'en') => {
+    await setLanguage(lang);
     setStep('name');
   };
 
@@ -517,6 +518,8 @@ export function SecuritySetup({ onSetupComplete }: SecuritySetupProps) {
                     language === 'nl' && 'bg-purple-600 hover:bg-purple-700'
                   )}
                   onClick={() => handleLanguageSelect('nl')}
+                  onPointerEnter={() => preloadTranslations('nl')}
+                  onFocus={() => preloadTranslations('nl')}
                 >
                   🇳🇱 {t.common.languageNames.dutch}
                 </Button>
@@ -528,6 +531,8 @@ export function SecuritySetup({ onSetupComplete }: SecuritySetupProps) {
                     language === 'en' && 'bg-purple-600 hover:bg-purple-700'
                   )}
                   onClick={() => handleLanguageSelect('en')}
+                  onPointerEnter={() => preloadTranslations('en')}
+                  onFocus={() => preloadTranslations('en')}
                 >
                   🇬🇧 {t.common.languageNames.english}
                 </Button>

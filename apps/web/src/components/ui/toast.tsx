@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { X, CheckCircle, AlertTriangle, AlertCircle, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { getStoredLanguage, translations } from '@/lib/i18n';
+import { getTranslations } from '@/lib/i18n';
 
 /**
  * Toast types for the legacy Toast component.
@@ -65,7 +65,7 @@ export function Toast({
   autoDismiss,
   duration = 4000,
 }: ToastProps) {
-  const copy = translations[getStoredLanguage()].common;
+  const copy = getTranslations().common;
   useEffect(() => {
     // Warning and error toasts NEVER auto-dismiss - they require user interaction
     // Success and info auto-dismiss after duration

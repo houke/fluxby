@@ -19,8 +19,8 @@ node scripts/analyze-bundle.mjs web        # or: landing; optional 2nd arg = row
 It builds in memory (no `dist/` writes) and prints the entry chunk's raw/gzip
 size plus its largest contributors (pre-minification, for ranking only).
 
-Baseline after the October 2026 audit: **web entry ≈ 392 KB gzip**, landing
-entry ≈ 190 KB gzip. Record the before/after numbers in the commit message.
+Baseline after the October 2026 audit: **web entry ≈ 336 KB gzip** plus one
+~25 KB language chunk; landing entry ≈ 190 KB gzip. Record the before/after numbers in the commit message.
 
 To see why a module is in the entry, find its static importers:
 
@@ -30,22 +30,20 @@ grep -rn "from '<module>'" apps/web/src packages/*/src
 
 ## Already deferred — keep it that way
 
-| Module                        | How it is deferred                                                          |
-| ----------------------------- | --------------------------------------------------------------------------- |
-| `react-day-picker` (calendar) | `lazy()` in `HeaderFilters.tsx`, preloaded on trigger hover/focus           |
-| `peerjs` + WebRTC shims       | `loadPeerJs()` in `packages/core/src/peerjs-loader.ts`; type-only imports   |
-| `@sentry/react`               | Dynamic import in `error-tracking.ts`, only when `VITE_SENTRY_DSN` is set   |
-| `recharts`, `wa-sqlite`       | `manualChunks` in `apps/web/vite.config.ts`, loaded by pages that need them |
-| Caveat font                   | Imported by `AboutContent.tsx` only                                         |
+| Module                        | How it is deferred                                                                                                                              |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `react-day-picker` (calendar) | `lazy()` in `HeaderFilters.tsx`, preloaded on trigger hover/focus                                                                               |
+| `peerjs` + WebRTC shims       | `loadPeerJs()` in `packages/core/src/peerjs-loader.ts`; type-only imports                                                                       |
+| `@sentry/react`               | Dynamic import in `error-tracking.ts`, only when `VITE_SENTRY_DSN` is set                                                                       |
+| `recharts`, `wa-sqlite`       | `manualChunks` in `apps/web/vite.config.ts`, loaded by pages that need them                                                                     |
+| Caveat font                   | Imported by `AboutContent.tsx` only                                                                                                             |
+| `src/lib/i18n/nl.ts`, `en.ts` | `loadTranslations()` in `src/lib/i18n/loader.ts`; `main.tsx` loads the stored language before render; use `getTranslations()` / `useLanguage()` |
 
 A static `import { X } from 'peerjs'` (or from these modules) anywhere in the
 startup graph silently undoes this. Use `import type` for types.
 
 ## Known remaining weight (candidates)
 
-- `src/lib/i18n/nl.ts` + `en.ts` (~185 KB) — both languages ship; many
-  non-React modules read `translations[getStoredLanguage()]` synchronously, so
-  per-language loading needs those call sites changed first.
 - `onboarding-data.ts` (~71 KB) — read synchronously by `OnboardingContext`.
 - `packages/shared` `seed-data` (~44 KB) — only needed when seeding demo data.
 - Landing: both translation files (~310 KB raw) are in its entry. Splitting by

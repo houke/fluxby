@@ -25,9 +25,11 @@ export function Onboarding() {
   } = useOnboarding();
 
   // Sync app language with onboarding language selection
-  const handleLanguageSelect = (lang: 'nl' | 'en') => {
+  const handleLanguageSelect = async (lang: 'nl' | 'en') => {
+    // Load the app language first so the onboarding never asks for a
+    // language whose translations have not arrived yet.
+    await setAppLanguage(lang);
     setLanguage(lang);
-    setAppLanguage(lang);
   };
 
   // Use onboarding language if set, otherwise use app language
