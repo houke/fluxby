@@ -3,33 +3,49 @@ import React from 'react';
 import { act, renderHook } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { SyncProvider, useSync } from '@/contexts/SyncContext';
+import type { PeerDevice, PeerOptions } from '@fluxby/core';
+import { SyncProvider, canReconnect, useSync } from '@/contexts/SyncContext';
 import { en } from '@/lib/i18n/en';
+import { sealReconnectSecret } from '@/lib/sync-secrets';
+
+const SECRET = 'A'.repeat(43);
 
 const mocks = vi.hoisted(() => ({
   activeProfileId: 'profile-one',
   db: {},
+  encryptionKey: new Uint8Array(32).fill(7),
   createPeerSync: vi.fn(),
+  writes: [] as Array<[string, unknown]>,
   resolvers: [] as Array<() => void>,
   storedPairedDevices: [] as Array<Record<string, unknown>>,
   peers: [] as Array<MockPeer>,
 }));
 
 type MockPeer = {
+  options: PeerOptions;
   initialize: ReturnType<typeof vi.fn<() => Promise<string>>>;
   destroy: ReturnType<typeof vi.fn<() => void>>;
-  getPairedDevices: () => [];
+  getPairedDevices: () => PeerDevice[];
   getPeerId: () => string | null;
   startPairing: () => string;
   connectWithCode: ReturnType<
     typeof vi.fn<(peerId: string, code: string) => Promise<void>>
   >;
   disconnect: ReturnType<typeof vi.fn<(deviceId: string) => void>>;
+  restorePairedDevice: ReturnType<
+    typeof vi.fn<(device: PeerDevice, secret: string) => boolean>
+  >;
+  canReconnect: (deviceId: string) => boolean;
+  isSignallingOpen: () => boolean;
+  reconnectPairedDevices: ReturnType<typeof vi.fn>;
   /** Settle the latest signalling connection attempt. */
   open: () => void;
 };
 
-const pairedDevice = (localProfileId: string) => ({
+const pairedDevice = (
+  localProfileId: string,
+  extra: Record<string, unknown> = {}
+) => ({
   id: `device-${localProfileId}`,
   name: 'Other device',
   peerId: 'fluxby-other',
@@ -38,7 +54,17 @@ const pairedDevice = (localProfileId: string) => ({
   localProfileId,
   remoteProfileId: 'remote-profile',
   protocolVersion: 2,
+  ...extra,
 });
+/** A pairing made with reconnect support, its secret sealed at rest. */
+const reconnectableDevice = async (localProfileId: string) =>
+  pairedDevice(localProfileId, {
+    sealedReconnectSecret: await sealReconnectSecret(
+      mocks.encryptionKey,
+      `device-${localProfileId}`,
+      SECRET
+    ),
+  });
 
 vi.mock('@fluxby/core', async (importOriginal) => ({
   createPeerSync: mocks.createPeerSync,
@@ -55,7 +81,9 @@ vi.mock('@fluxby/database', () => ({
     if (key === 'fluxby.pairedDevices') return mocks.storedPairedDevices;
     return true;
   },
-  writeToOPFSWithCache: vi.fn(async () => undefined),
+  writeToOPFSWithCache: vi.fn(async (key: string, value: unknown) => {
+    mocks.writes.push([key, value]);
+  }),
   LATEST_MIGRATION_VERSION: 17,
 }));
 vi.mock('@/contexts/DatabaseContext', () => ({
@@ -65,7 +93,10 @@ vi.mock('@/contexts/ProfileContext', () => ({
   useProfile: () => ({ activeProfileId: mocks.activeProfileId }),
 }));
 vi.mock('@/contexts/EncryptionContext', () => ({
-  useEncryption: () => ({ isUnlocked: true }),
+  useEncryption: () => ({
+    isUnlocked: true,
+    encryptionKey: mocks.encryptionKey,
+  }),
 }));
 vi.mock('@/contexts/LanguageContext', () => ({
   useLanguage: () => ({ t: en, language: 'en' }),
@@ -79,53 +110,66 @@ vi.mock('@/lib/data-sync', () => ({
     initialize(): Promise<void> {
       return new Promise((resolve) => mocks.resolvers.push(() => resolve()));
     }
+    captureLocalChanges = async () => [];
+    getChanges = async () => [];
   },
   subscribeLocalDataChanges: () => vi.fn(),
 }));
 
-describe('Sync snapshot initialization lifecycle', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    mocks.activeProfileId = 'profile-one';
-    mocks.resolvers = [];
-    mocks.peers = [];
-    mocks.storedPairedDevices = [];
-    mocks.createPeerSync.mockImplementation(() => {
-      let peerId: string | null = null;
-      let pending: { resolve: () => void; reject: (e: Error) => void }[] = [];
-      const peer: MockPeer = {
-        initialize: vi.fn(
-          () =>
-            new Promise<string>((resolve, reject) => {
-              pending.push({
-                resolve: () => {
-                  peerId = `fluxby-peer-${mocks.peers.indexOf(peer)}`;
-                  resolve(peerId);
-                },
-                reject,
-              });
-            })
-        ),
-        destroy: vi.fn(() => {
-          peerId = null;
-          for (const item of pending) item.reject(new Error('Peer destroyed'));
-          pending = [];
-        }),
-        getPairedDevices: (): [] => [],
-        getPeerId: () => peerId,
-        startPairing: () => 'ABC234',
-        connectWithCode: vi.fn(async () => undefined),
-        disconnect: vi.fn(),
-        open: () => {
-          for (const item of pending) item.resolve();
-          pending = [];
-        },
-      };
-      mocks.peers.push(peer);
-      return peer;
-    });
+beforeEach(() => {
+  vi.clearAllMocks();
+  mocks.activeProfileId = 'profile-one';
+  mocks.resolvers = [];
+  mocks.peers = [];
+  mocks.writes = [];
+  mocks.storedPairedDevices = [];
+  mocks.createPeerSync.mockImplementation((options: PeerOptions) => {
+    let peerId: string | null = null;
+    let pending: { resolve: () => void; reject: (e: Error) => void }[] = [];
+    const restored = new Map<string, PeerDevice>();
+    const peer: MockPeer = {
+      options,
+      initialize: vi.fn(
+        () =>
+          new Promise<string>((resolve, reject) => {
+            pending.push({
+              resolve: () => {
+                peerId = `fluxby-peer-${mocks.peers.indexOf(peer)}`;
+                resolve(peerId);
+              },
+              reject,
+            });
+          })
+      ),
+      destroy: vi.fn(() => {
+        peerId = null;
+        restored.clear();
+        for (const item of pending) item.reject(new Error('Peer destroyed'));
+        pending = [];
+      }),
+      getPairedDevices: () => [...restored.values()],
+      getPeerId: () => peerId,
+      startPairing: () => 'ABC234',
+      connectWithCode: vi.fn(async () => undefined),
+      disconnect: vi.fn(),
+      restorePairedDevice: vi.fn((device: PeerDevice) => {
+        restored.set(device.id, { ...device, isConnected: false });
+        return true;
+      }),
+      canReconnect: (deviceId) => restored.has(deviceId),
+      isSignallingOpen: () => peerId !== null,
+      reconnectPairedDevices: vi.fn(() => true),
+      open: () => {
+        for (const item of pending) item.resolve();
+        pending = [];
+      },
+    };
+    mocks.peers.push(peer);
+    return peer;
   });
+});
 
+describe('Sync snapshot initialization lifecycle', () => {
   const createWrapper = () => {
     const client = new QueryClient();
     return ({ children }: { children: React.ReactNode }) => (
@@ -149,8 +193,8 @@ describe('Sync snapshot initialization lifecycle', () => {
 
   it('only initializes signalling for the current profile after overlapping snapshot loads', async () => {
     mocks.storedPairedDevices = [
-      pairedDevice('profile-one'),
-      pairedDevice('profile-two'),
+      await reconnectableDevice('profile-one'),
+      await reconnectableDevice('profile-two'),
     ];
     const { result, rerender } = renderHook(useSync, {
       wrapper: createWrapper(),
@@ -165,23 +209,17 @@ describe('Sync snapshot initialization lifecycle', () => {
       mocks.resolvers[1]();
     });
 
+    await vi.waitFor(() =>
+      expect(currentPeer.initialize).toHaveBeenCalledTimes(1)
+    );
     expect(oldPeer.destroy).toHaveBeenCalledTimes(1);
     expect(oldPeer.initialize).not.toHaveBeenCalled();
-    expect(currentPeer.initialize).toHaveBeenCalledTimes(1);
     await act(async () => currentPeer.open());
     expect(result.current.isInitialized).toBe(true);
   });
 });
 
 describe('Sync signalling on demand', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    mocks.activeProfileId = 'profile-one';
-    mocks.resolvers = [];
-    mocks.peers = [];
-    mocks.storedPairedDevices = [];
-  });
-
   const createWrapper = () => {
     const client = new QueryClient();
     return ({ children }: { children: React.ReactNode }) => (
@@ -205,18 +243,18 @@ describe('Sync signalling on demand', () => {
   });
 
   it('ignores devices paired with another profile', async () => {
-    mocks.storedPairedDevices = [pairedDevice('profile-two')];
+    mocks.storedPairedDevices = [await reconnectableDevice('profile-two')];
     await renderUnlocked();
 
     expect(mocks.peers[0].initialize).not.toHaveBeenCalled();
   });
 
   it('connects after unlock when the active profile has a paired device', async () => {
-    mocks.storedPairedDevices = [pairedDevice('profile-one')];
+    mocks.storedPairedDevices = [await reconnectableDevice('profile-one')];
     const { result } = await renderUnlocked();
     const peer = mocks.peers[0];
 
-    expect(peer.initialize).toHaveBeenCalledTimes(1);
+    await vi.waitFor(() => expect(peer.initialize).toHaveBeenCalledTimes(1));
     expect(result.current.isConnecting).toBe(true);
     await act(async () => peer.open());
     expect(result.current.isInitialized).toBe(true);
@@ -310,9 +348,10 @@ describe('Sync signalling on demand', () => {
   });
 
   it('closes the signalling connection when the last paired device is removed', async () => {
-    mocks.storedPairedDevices = [pairedDevice('profile-one')];
+    mocks.storedPairedDevices = [await reconnectableDevice('profile-one')];
     const { result } = await renderUnlocked();
     const peer = mocks.peers[0];
+    await vi.waitFor(() => expect(peer.initialize).toHaveBeenCalled());
     await act(async () => peer.open());
     expect(result.current.isInitialized).toBe(true);
 
@@ -322,5 +361,163 @@ describe('Sync signalling on demand', () => {
     expect(peer.destroy).toHaveBeenCalledTimes(1);
     expect(result.current.isInitialized).toBe(false);
     expect(result.current.pairedDevices).toEqual([]);
+  });
+});
+
+describe('Paired devices reconnecting', () => {
+  const createWrapper = () => {
+    const client = new QueryClient();
+    return ({ children }: { children: React.ReactNode }) => (
+      <QueryClientProvider client={client}>
+        <SyncProvider>{children}</SyncProvider>
+      </QueryClientProvider>
+    );
+  };
+  const renderUnlocked = async () => {
+    const rendered = renderHook(useSync, { wrapper: createWrapper() });
+    await act(async () => mocks.resolvers[0]());
+    return rendered;
+  };
+  const lastStoredDevices = () =>
+    mocks.writes.filter(([key]) => key === 'fluxby.pairedDevices').at(-1)?.[1];
+
+  it('restores the pairing with its opened secret before connecting', async () => {
+    mocks.storedPairedDevices = [await reconnectableDevice('profile-one')];
+    await renderUnlocked();
+    const peer = mocks.peers[0];
+
+    await vi.waitFor(() => expect(peer.initialize).toHaveBeenCalled());
+    expect(peer.restorePairedDevice).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'device-profile-one' }),
+      SECRET
+    );
+    expect(peer.restorePairedDevice.mock.invocationCallOrder[0]).toBeLessThan(
+      peer.initialize.mock.invocationCallOrder[0]
+    );
+  });
+
+  it('does not connect for pairings made without reconnect support', async () => {
+    mocks.storedPairedDevices = [pairedDevice('profile-one')];
+    const { result } = await renderUnlocked();
+
+    expect(mocks.peers[0].initialize).not.toHaveBeenCalled();
+    expect(canReconnect(result.current.pairedDevices[0])).toBe(false);
+  });
+
+  it('asks to pair again when a stored secret cannot be opened', async () => {
+    mocks.storedPairedDevices = [
+      pairedDevice('profile-one', {
+        sealedReconnectSecret: await sealReconnectSecret(
+          new Uint8Array(32).fill(1),
+          'device-profile-one',
+          SECRET
+        ),
+      }),
+    ];
+    const { result } = await renderUnlocked();
+
+    await vi.waitFor(() =>
+      expect(result.current.pairedDevices[0].reconnectIssue).toBe('pair-again')
+    );
+    expect(mocks.peers[0].restorePairedDevice).not.toHaveBeenCalled();
+    expect(mocks.peers[0].initialize).not.toHaveBeenCalled();
+  });
+
+  it('stores the secret of a new pairing only in sealed form', async () => {
+    const { result } = await renderUnlocked();
+    const peer = mocks.peers[0];
+
+    await act(async () => {
+      peer.options.onPaired?.(
+        pairedDevice('profile-one', { isConnected: true }) as PeerDevice,
+        SECRET
+      );
+    });
+    await vi.waitFor(() =>
+      expect(result.current.pairedDevices[0].sealedReconnectSecret).toMatch(
+        /^v1:/
+      )
+    );
+    expect(JSON.stringify(result.current.pairedDevices)).not.toContain(SECRET);
+    expect(JSON.stringify(lastStoredDevices())).not.toContain(SECRET);
+    expect(canReconnect(result.current.pairedDevices[0])).toBe(true);
+  });
+
+  it('shows a reconnected device as connected and clears earlier issues', async () => {
+    mocks.storedPairedDevices = [await reconnectableDevice('profile-one')];
+    const { result } = await renderUnlocked();
+    const peer = mocks.peers[0];
+    await vi.waitFor(() => expect(peer.initialize).toHaveBeenCalled());
+    await act(async () => peer.open());
+
+    act(() =>
+      peer.options.onReconnectIssue?.(
+        pairedDevice('profile-one') as PeerDevice,
+        'update-required'
+      )
+    );
+    expect(result.current.pairedDevices[0].reconnectIssue).toBe(
+      'update-required'
+    );
+    expect(JSON.stringify(lastStoredDevices())).not.toContain(
+      'update-required'
+    );
+
+    act(() =>
+      peer.options.onReconnected?.(
+        pairedDevice('profile-one', {
+          isConnected: true,
+          peerId: 'fluxby-device-profile-one',
+        }) as PeerDevice
+      )
+    );
+    expect(result.current.pairedDevices[0]).toMatchObject({
+      isConnected: true,
+      peerId: 'fluxby-device-profile-one',
+      reconnectIssue: undefined,
+    });
+    expect(result.current.pairedDevices[0].sealedReconnectSecret).toBeTruthy();
+  });
+
+  it('drops a pairing that the other device removed', async () => {
+    mocks.storedPairedDevices = [await reconnectableDevice('profile-one')];
+    const { result } = await renderUnlocked();
+
+    act(() =>
+      mocks.peers[0].options.onUnpaired?.(
+        pairedDevice('profile-one') as PeerDevice
+      )
+    );
+    expect(result.current.pairedDevices).toEqual([]);
+    expect(lastStoredDevices()).toEqual([]);
+  });
+
+  it('retries waiting devices when the browser comes back online', async () => {
+    mocks.storedPairedDevices = [await reconnectableDevice('profile-one')];
+    const { result } = await renderUnlocked();
+    const peer = mocks.peers[0];
+    await vi.waitFor(() => expect(peer.initialize).toHaveBeenCalled());
+    await act(async () => peer.open());
+
+    act(() => {
+      window.dispatchEvent(new Event('online'));
+    });
+    expect(peer.reconnectPairedDevices).toHaveBeenCalledWith({
+      retryBlocked: false,
+    });
+
+    act(() => result.current.reconnectDevices());
+    expect(peer.reconnectPairedDevices).toHaveBeenLastCalledWith({
+      retryBlocked: true,
+    });
+  });
+
+  it('postpones reconnects for devices paired with another local profile', async () => {
+    mocks.storedPairedDevices = [await reconnectableDevice('profile-two')];
+    await renderUnlocked();
+    const isKnown = mocks.peers[0].options.isKnownDevice;
+
+    expect(isKnown?.('device-profile-two')).toBe(true);
+    expect(isKnown?.('device-unknown')).toBe(false);
   });
 });

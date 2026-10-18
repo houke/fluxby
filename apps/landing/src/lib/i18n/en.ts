@@ -2762,20 +2762,20 @@ Object.assign(en, {
         'Open the same settings on the second device and scan or enter the pairing code.',
       step4Title: 'Step 4: Sync your devices',
       step4Text:
-        'When automatic sync is enabled, changes sync while both devices are online. You can also start a manual sync.',
+        'When automatic sync is enabled, changes sync while both devices are unlocked and online. You only pair once: after a restart or reload, paired devices reconnect by themselves and catch up on missed changes. You can also start a manual sync.',
       troubleshootingTitle: 'Troubleshooting',
       troubleshooting1Title: 'Devices cannot find each other',
       troubleshooting1Text:
         'Check that both devices are online. Network security settings or a firewall may block peer-to-peer connections.',
       troubleshooting2Title: 'Sync failed',
       troubleshooting2Text:
-        'Check the internet connection, whether automatic sync is enabled, and try a manual sync. After an update, install the same version on both devices, unlock the intended profile on each and approve a new pairing. Stored device entries do not reconnect automatically after a page reload.',
+        'Check the internet connection, whether automatic sync is enabled, and that the paired profile is unlocked on both devices. Choose Reconnect now next to the device or try a manual sync. If it says to update both devices, install the same version on each; they then reconnect by themselves. If it says Pair again (for example after it was removed on the other device, or for a pairing from an older version), remove the device and pair again.',
       troubleshooting3Title: 'Conflicting changes',
       troubleshooting3Text:
         'When the same data changes on multiple devices, Fluxby keeps the most recent version (Last-Write-Wins).',
       securityTitle: 'Privacy and security',
       securityText:
-        'Your financial data stays on your devices. Sync uses encrypted peer-to-peer connections; Fluxby does not store it in the cloud. Fluxby only contacts the signaling server while you pair a device or when the unlocked profile has paired devices, so without sync your IP address is not shared with it.',
+        'Your financial data stays on your devices. Sync uses encrypted peer-to-peer connections; Fluxby does not store it in the cloud. Fluxby only contacts the signaling server while you pair a device or when the unlocked profile has paired devices, so without sync your IP address is not shared with it. Pairing gives both devices a secret key, stored encrypted with your password. They use it to prove they belong together on every new connection, so another device cannot pose as your paired device. While sync is in use, your device registers with the server under a fixed, random device ID so paired devices can find it again.',
     },
   },
   docs: {

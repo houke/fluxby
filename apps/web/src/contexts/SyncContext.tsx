@@ -18,6 +18,7 @@ import {
   hasPairedDeviceForProfile,
   type PeerSync,
   type PeerDevice,
+  type ReconnectIssue,
   type SyncChange,
   type SyncableRow,
   type SyncStatus,
@@ -32,6 +33,7 @@ import {
 } from '@fluxby/database';
 import { useQueryClient } from '@tanstack/react-query';
 import { ProfileDataSync, subscribeLocalDataChanges } from '@/lib/data-sync';
+import { openReconnectSecret, sealReconnectSecret } from '@/lib/sync-secrets';
 import { useDatabase } from './DatabaseContext';
 import { useProfile } from './ProfileContext';
 import { useEncryption } from './EncryptionContext';
@@ -52,6 +54,21 @@ const defaultSyncStatus: SyncStatus = {
   connectedPeers: 0,
   isSyncing: false,
 };
+
+/** A paired device as stored and shown; it never holds the plain secret. */
+export interface SyncDevice extends PeerDevice {
+  /** Reconnect secret sealed with the database key (see sync-secrets). */
+  sealedReconnectSecret?: string;
+  /** Set this session when the device cannot reconnect by itself. */
+  reconnectIssue?: ReconnectIssue;
+}
+
+/** Whether a stored pairing reconnects by itself after a restart. */
+export function canReconnect(device: SyncDevice): boolean {
+  return (
+    !!device.sealedReconnectSecret && device.reconnectIssue !== 'pair-again'
+  );
+}
 
 interface SyncContextType {
   /** This device's unique ID */
@@ -74,7 +91,9 @@ interface SyncContextType {
   /** Connect to another device using their pairing code */
   connectWithPairingCode: (code: string) => Promise<boolean>;
   /** List of paired devices */
-  pairedDevices: PeerDevice[];
+  pairedDevices: SyncDevice[];
+  /** Retry reconnecting paired devices now (also those that needed the user) */
+  reconnectDevices: () => void;
   /** Pending pairing request (if any) */
   pendingPairingRequest: {
     deviceName: string;
@@ -163,11 +182,11 @@ function getBrowserName(): string {
 }
 
 // Get stored paired devices from OPFS cache
-function getStoredPairedDevices(): PeerDevice[] {
+function getStoredPairedDevices(): SyncDevice[] {
   if (typeof window === 'undefined') return [];
 
   if (isSettingsCacheInitialized()) {
-    const stored = readFromOPFSSync<PeerDevice[]>(PAIRED_DEVICES_KEY);
+    const stored = readFromOPFSSync<SyncDevice[]>(PAIRED_DEVICES_KEY);
     if (stored && Array.isArray(stored))
       return stored.map((device) => ({ ...device, isConnected: false }));
   }
@@ -175,12 +194,31 @@ function getStoredPairedDevices(): PeerDevice[] {
   return [];
 }
 
-// Save paired devices to OPFS
-function savePairedDevices(devices: PeerDevice[]): void {
+// Save paired devices to OPFS (only sealed secrets, no session state)
+function savePairedDevices(devices: SyncDevice[]): void {
   if (typeof window === 'undefined') return;
-  writeToOPFSWithCache(PAIRED_DEVICES_KEY, devices).catch((err) =>
+  const stored = devices.map(
+    ({ reconnectIssue: _issue, ...device }) =>
+      ({ ...device, reconnectSecret: undefined }) as SyncDevice
+  );
+  writeToOPFSWithCache(PAIRED_DEVICES_KEY, stored).catch((err) =>
     console.warn('Failed to save paired devices to OPFS:', err)
   );
+}
+
+/** Copy the public pairing fields; never the secret a peer object may hold. */
+function toSyncDevice(device: PeerDevice): SyncDevice {
+  return {
+    id: device.id,
+    name: device.name,
+    peerId: device.peerId,
+    lastSyncAt: device.lastSyncAt,
+    isConnected: device.isConnected,
+    localProfileId: device.localProfileId,
+    remoteProfileId: device.remoteProfileId,
+    protocolVersion: device.protocolVersion,
+    supportsFragmentation: device.supportsFragmentation,
+  };
 }
 
 // Get auto-sync setting from OPFS
@@ -197,7 +235,9 @@ export function SyncProvider({ children }: SyncProviderProps) {
   const { t } = useLanguage();
   const { db, isReady } = useDatabase();
   const { activeProfileId } = useProfile();
-  const { isUnlocked } = useEncryption();
+  const { isUnlocked, encryptionKey } = useEncryption();
+  const encryptionKeyRef = useRef(encryptionKey);
+  encryptionKeyRef.current = encryptionKey;
   const queryClient = useQueryClient();
   const [deviceId] = useState(getOrCreateDeviceId);
   const [deviceName, setDeviceNameState] = useState(() =>
@@ -206,7 +246,7 @@ export function SyncProvider({ children }: SyncProviderProps) {
   const [isInitialized, setIsInitialized] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const [pairingCode, setPairingCode] = useState<string | null>(null);
-  const [pairedDevices, setPairedDevices] = useState<PeerDevice[]>(
+  const [pairedDevices, setPairedDevices] = useState<SyncDevice[]>(
     getStoredPairedDevices
   );
   const pairedDevicesRef = useRef(pairedDevices);
@@ -223,6 +263,8 @@ export function SyncProvider({ children }: SyncProviderProps) {
   const connectRef = useRef<(() => Promise<string>) | null>(null);
   // Closes the signalling connection while keeping the current peer reusable.
   const releaseRef = useRef<(() => void) | null>(null);
+  // Retries reconnecting paired devices of the current peer.
+  const reconnectRef = useRef<((retryBlocked: boolean) => void) | null>(null);
   const adapterRef = useRef<ProfileDataSync | null>(null);
   const activeRef = useRef<string | null>(null);
   activeRef.current = isUnlocked && isReady ? activeProfileId : null;
@@ -304,9 +346,11 @@ export function SyncProvider({ children }: SyncProviderProps) {
         }));
         const updated = peer.getPairedDevices();
         setPairedDevices((previous) => {
-          const merged = previous.map(
-            (device) => updated.find((item) => item.id === device.id) || device
-          );
+          const merged = previous.map((device) => {
+            const current = updated.find((item) => item.id === device.id);
+            // Keep stored fields such as the sealed reconnect secret.
+            return current ? { ...device, ...toSyncDevice(current) } : device;
+          });
           savePairedDevices(merged);
           return merged;
         });
@@ -349,7 +393,28 @@ export function SyncProvider({ children }: SyncProviderProps) {
     if (!db || !isReady || !isUnlocked || !activeProfileId) return;
     let active = true;
     let timer: ReturnType<typeof setTimeout> | undefined;
+    let syncTimer: ReturnType<typeof setTimeout> | undefined;
     let pendingReset = false;
+    const updateDevice = (
+      id: string,
+      update: (device: SyncDevice) => SyncDevice | null
+    ) =>
+      setPairedDevices((previous) => {
+        const updated = previous.flatMap((device) => {
+          if (device.id !== id) return [device];
+          const next = update(device);
+          return next ? [next] : [];
+        });
+        savePairedDevices(updated);
+        return updated;
+      });
+    const countConnected = () =>
+      setSyncStatus((status) => ({
+        ...status,
+        connectedPeers: peer
+          .getPairedDevices()
+          .filter((item) => item.isConnected).length,
+      }));
     const adapter = new ProfileDataSync(
       db,
       activeProfileId,
@@ -383,28 +448,64 @@ export function SyncProvider({ children }: SyncProviderProps) {
             },
           });
       },
-      onPaired: (device) => {
+      onPaired: (device, reconnectSecret) => {
         if (!active) return;
         setPairedDevices((previous) => {
           const updated = [
             ...previous.filter((item) => item.id !== device.id),
-            device,
+            toSyncDevice(device),
           ];
           savePairedDevices(updated);
           return updated;
         });
+        // Store the secret sealed, so this pairing reconnects after restarts.
+        if (reconnectSecret)
+          void sealReconnectSecret(
+            encryptionKeyRef.current,
+            device.id,
+            reconnectSecret
+          )
+            .then((sealedReconnectSecret) => {
+              if (active)
+                updateDevice(device.id, (stored) => ({
+                  ...stored,
+                  sealedReconnectSecret,
+                }));
+            })
+            .catch(reportError);
         setPendingPairingRequest(null);
-        setSyncStatus((status) => ({
-          ...status,
-          connectedPeers: peer
-            .getPairedDevices()
-            .filter((item) => item.isConnected).length,
-        }));
+        countConnected();
         // Both users approved merging these two active profiles.
-        timer = setTimeout(() => {
+        if (syncTimer) clearTimeout(syncTimer);
+        syncTimer = setTimeout(() => {
           void requestRef.current();
         }, 100);
       },
+      onReconnected: (device) => {
+        if (!active) return;
+        updateDevice(device.id, (stored) => ({
+          ...stored,
+          ...toSyncDevice(device),
+          isConnected: true,
+          reconnectIssue: undefined,
+        }));
+        countConnected();
+        // Catch up on changes made while the devices were apart.
+        if (syncTimer) clearTimeout(syncTimer);
+        syncTimer = setTimeout(requestAutoSync, 100);
+      },
+      onUnpaired: (device) => {
+        if (active) updateDevice(device.id, () => null);
+      },
+      onReconnectIssue: (device, reconnectIssue) => {
+        if (active)
+          updateDevice(device.id, (stored) => ({ ...stored, reconnectIssue }));
+      },
+      isKnownDevice: (id) =>
+        pairedDevicesRef.current.some(
+          (device) =>
+            device.id === id && device.localProfileId !== activeProfileId
+        ),
       onSyncReceived: async (changes, device) => {
         if (
           !active ||
@@ -486,13 +587,39 @@ export function SyncProvider({ children }: SyncProviderProps) {
       }, 500);
     });
     const adapterReady = adapter.initialize();
+    // Pairings of this profile that can reconnect without a new pairing code.
+    const restorable = pairedDevicesRef.current.filter(
+      (device) =>
+        device.localProfileId === activeProfileId &&
+        device.sealedReconnectSecret
+    );
+    let restoredCount = 0;
+    const restored = Promise.all(
+      restorable.map(async (device) => {
+        const secret = await openReconnectSecret(
+          encryptionKeyRef.current,
+          device.id,
+          device.sealedReconnectSecret ?? ''
+        );
+        if (!active) return;
+        if (secret && peer.restorePairedDevice(device, secret))
+          restoredCount += 1;
+        else
+          updateDevice(device.id, (stored) => ({
+            ...stored,
+            reconnectIssue: 'pair-again',
+          }));
+      })
+    );
     // The signalling server learns this device's IP address, so it is only
     // contacted once sync is actually used (see connect callers below).
     let connection: Promise<string> | null = null;
+    let isConnectingNow = false;
     const connect = (): Promise<string> => {
       if (connection) return connection;
+      isConnectingNow = true;
       setIsConnecting(true);
-      const attempt = adapterReady
+      const attempt = Promise.all([adapterReady, restored])
         .then(() => {
           if (!active || connection !== attempt)
             throw new Error('Peer destroyed');
@@ -511,8 +638,9 @@ export function SyncProvider({ children }: SyncProviderProps) {
           if (connection === attempt) connection = null;
         })
         .finally(() => {
-          if (active && (connection === attempt || !connection))
-            setIsConnecting(false);
+          if (connection !== attempt && connection) return;
+          isConnectingNow = false;
+          if (active) setIsConnecting(false);
         });
       return attempt;
     };
@@ -529,15 +657,32 @@ export function SyncProvider({ children }: SyncProviderProps) {
         state: 'offline',
       }));
     };
+    // Retry now (e.g. back online): dial waiting pairings, or reopen a
+    // signalling connection that was lost while offline.
+    const reconnect = (retryBlocked: boolean) => {
+      const reconnectable = peer
+        .getPairedDevices()
+        .some((device) => peer.canReconnect(device.id));
+      if (!active || !reconnectable || isConnectingNow) return;
+      if (connection && peer.reconnectPairedDevices({ retryBlocked })) return;
+      connection = null;
+      void connect().catch((error) => {
+        if (active) reportError(error);
+      });
+    };
+    const onOnline = () => reconnect(false);
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') reconnect(false);
+    };
     connectRef.current = connect;
     releaseRef.current = release;
-    const connectOnUnlock = hasPairedDeviceForProfile(
-      pairedDevicesRef.current,
-      activeProfileId
-    );
-    void adapterReady
+    reconnectRef.current = reconnect;
+    window.addEventListener('online', onOnline);
+    document.addEventListener('visibilitychange', onVisible);
+    void Promise.all([adapterReady, restored])
       .then(() => {
-        if (active && connectOnUnlock) return connect();
+        // Paired devices reconnect by themselves; others connect on demand.
+        if (active && restoredCount) return connect();
       })
       .catch((error) => {
         if (active) reportError(error);
@@ -545,7 +690,11 @@ export function SyncProvider({ children }: SyncProviderProps) {
     return () => {
       active = false;
       unsubscribe();
+      window.removeEventListener('online', onOnline);
+      document.removeEventListener('visibilitychange', onVisible);
       if (timer) clearTimeout(timer);
+      if (syncTimer) clearTimeout(syncTimer);
+      if (reconnectRef.current === reconnect) reconnectRef.current = null;
       peer.destroy();
       if (syncRef.current === peer) syncRef.current = null;
       if (connectRef.current === connect) connectRef.current = null;
@@ -638,6 +787,10 @@ export function SyncProvider({ children }: SyncProviderProps) {
     if (!hasPairedDeviceForProfile(updated, activeRef.current))
       releaseRef.current?.();
   }, []);
+  const reconnectDevices = useCallback(() => {
+    setLastError(null);
+    reconnectRef.current?.(true);
+  }, []);
   const queueChange = useCallback(
     (_change: SyncChange<SyncableRow>) => {
       requestAutoSync();
@@ -675,6 +828,7 @@ export function SyncProvider({ children }: SyncProviderProps) {
       generateNewPairingCode,
       connectWithPairingCode,
       pairedDevices,
+      reconnectDevices,
       pendingPairingRequest,
       sendSyncChanges,
       requestSync,
@@ -699,6 +853,7 @@ export function SyncProvider({ children }: SyncProviderProps) {
       generateNewPairingCode,
       connectWithPairingCode,
       pairedDevices,
+      reconnectDevices,
       pendingPairingRequest,
       sendSyncChanges,
       requestSync,

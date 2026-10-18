@@ -3501,20 +3501,20 @@ Object.assign(nl, {
         'Open dezelfde instellingen op het tweede apparaat en scan of voer de koppelcode in.',
       step4Title: 'Stap 4: Synchroniseer je apparaten',
       step4Text:
-        'Als automatisch synchroniseren is ingeschakeld, worden wijzigingen gedeeld zolang beide apparaten online zijn. Je kunt ook handmatig synchroniseren.',
+        'Als automatisch synchroniseren is ingeschakeld, worden wijzigingen gedeeld zolang beide apparaten ontgrendeld en online zijn. Je koppelt maar één keer: na een herstart of herladen verbinden gekoppelde apparaten vanzelf opnieuw en halen ze gemiste wijzigingen in. Je kunt ook handmatig synchroniseren.',
       troubleshootingTitle: 'Problemen oplossen',
       troubleshooting1Title: 'Apparaten vinden elkaar niet',
       troubleshooting1Text:
         'Controleer of beide apparaten online zijn. Beveiligingsinstellingen van het netwerk of een firewall kunnen peer-to-peerverbindingen blokkeren.',
       troubleshooting2Title: 'Synchronisatie mislukt',
       troubleshooting2Text:
-        'Controleer de internetverbinding, of automatisch synchroniseren is ingeschakeld en probeer handmatige synchronisatie. Installeer na een update dezelfde versie op beide apparaten, ontgrendel op elk apparaat het gewenste profiel en bevestig een nieuwe koppeling. Opgeslagen apparaten verbinden niet automatisch opnieuw na het herladen van de pagina.',
+        'Controleer de internetverbinding, of automatisch synchroniseren is ingeschakeld en of op beide apparaten het gekoppelde profiel is ontgrendeld. Kies bij het apparaat Nu opnieuw verbinden of probeer handmatige synchronisatie. Staat er dat je beide apparaten moet bijwerken, installeer dan dezelfde versie; daarna verbinden ze vanzelf. Staat er Koppel opnieuw (bijvoorbeeld na verwijderen op het andere apparaat of een koppeling uit een oudere versie), verwijder het apparaat dan en koppel opnieuw.',
       troubleshooting3Title: 'Tegenstrijdige wijzigingen',
       troubleshooting3Text:
         'Bij gelijktijdige wijzigingen bewaart Fluxby automatisch de meest recente versie (Last-Write-Wins).',
       securityTitle: 'Privacy en beveiliging',
       securityText:
-        'Je financiële gegevens blijven op je eigen apparaten. Synchronisatie verloopt via versleutelde peer-to-peerverbindingen; Fluxby bewaart ze niet in de cloud. Fluxby maakt alleen verbinding met de signaleringsserver terwijl je een apparaat koppelt of als het ontgrendelde profiel gekoppelde apparaten heeft. Zonder synchronisatie wordt je IP-adres dus niet met die server gedeeld.',
+        'Je financiële gegevens blijven op je eigen apparaten. Synchronisatie verloopt via versleutelde peer-to-peerverbindingen; Fluxby bewaart ze niet in de cloud. Fluxby maakt alleen verbinding met de signaleringsserver terwijl je een apparaat koppelt of als het ontgrendelde profiel gekoppelde apparaten heeft. Zonder synchronisatie wordt je IP-adres dus niet met die server gedeeld. Bij het koppelen krijgen beide apparaten een geheime sleutel, versleuteld opgeslagen met je wachtwoord. Daarmee bewijzen ze bij elke nieuwe verbinding dat ze bij elkaar horen, zodat een ander apparaat zich niet als je gekoppelde apparaat kan voordoen. Zolang synchronisatie actief is, meldt je apparaat zich bij de server met een vaste, willekeurige apparaat-ID zodat gekoppelde apparaten het terugvinden.',
     },
   },
 });
