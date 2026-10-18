@@ -6,6 +6,7 @@ import {
   useEffect,
   ReactNode,
   useCallback,
+  useMemo,
 } from 'react';
 import {
   Language,
@@ -40,10 +41,18 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     setStoredLanguage(lang);
   }, []);
 
-  const t = translations[language];
+  useEffect(() => {
+    // Screen readers and search engines read the page language from <html>.
+    document.documentElement.lang = language;
+  }, [language]);
+
+  const value = useMemo(
+    () => ({ language, setLanguage, t: translations[language], languages }),
+    [language, setLanguage]
+  );
 
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t, languages }}>
+    <LanguageContext.Provider value={value}>
       {children}
     </LanguageContext.Provider>
   );

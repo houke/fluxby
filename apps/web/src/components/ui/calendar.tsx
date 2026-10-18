@@ -1,7 +1,8 @@
 import * as React from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { DayPicker, getDefaultClassNames } from 'react-day-picker';
-import { nl } from 'date-fns/locale';
+import { enGB, nl } from 'date-fns/locale';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
 import 'react-day-picker/style.css';
 
@@ -14,6 +15,7 @@ function Calendar({
   numberOfMonths, // allow caller to override if desired
   ...props
 }: CalendarProps & { numberOfMonths?: number }) {
+  const { language } = useLanguage();
   const defaultClassNames = getDefaultClassNames();
   const [computedMonths, setComputedMonths] = React.useState<number>(
     numberOfMonths || 1
@@ -40,7 +42,8 @@ function Calendar({
 
   return (
     <DayPicker
-      locale={nl}
+      // en-GB keeps the app's dd-mm-yyyy order and Monday-first weeks.
+      locale={language === 'nl' ? nl : enGB}
       showOutsideDays={showOutsideDays}
       className={cn('p-3', className)}
       classNames={{

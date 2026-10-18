@@ -40,6 +40,36 @@ export function getApiAccessConfig(
   return { host, token, allowedOrigins };
 }
 
+/**
+ * Browsers always send the name they resolved in the Host header. Without a
+ * token, accept only loopback names so a DNS-rebinding page cannot read data.
+ */
+export function isTrustedLoopbackHost(
+  hostHeader: string | undefined,
+  allowedOrigins: string[] = []
+): boolean {
+  if (!hostHeader) return true;
+  let hostname: string;
+  try {
+    hostname = new URL(`http://${hostHeader}`).hostname.toLowerCase();
+  } catch {
+    return false;
+  }
+  if (
+    LOOPBACK_HOSTS.has(hostname) ||
+    hostname === '[::1]' ||
+    hostname.endsWith('.localhost')
+  )
+    return true;
+  return allowedOrigins.some((origin) => {
+    try {
+      return new URL(origin).hostname.toLowerCase() === hostname;
+    } catch {
+      return false;
+    }
+  });
+}
+
 function isLoopback(address: string | undefined): boolean {
   return (
     !!address &&
@@ -66,6 +96,10 @@ export function createApiAccessMiddleware(
         res
           .status(403)
           .json({ success: false, error: 'Remote API access is disabled' });
+        return;
+      }
+      if (!isTrustedLoopbackHost(req.headers.host, config.allowedOrigins)) {
+        res.status(403).json({ success: false, error: 'Host is not allowed' });
         return;
       }
       next();

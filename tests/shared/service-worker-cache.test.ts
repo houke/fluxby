@@ -11,6 +11,7 @@ describe('service worker cache lifetime', () => {
       let online = true;
       let storageDelay: Promise<void> | undefined;
       let failWrites = false;
+      const networkRequests: string[] = [];
       const claim = vi.fn<() => Promise<void> | undefined>();
       const failAsset =
         app === 'web' ? '/app/assets/failed.js' : '/assets/failed.js';
@@ -71,6 +72,7 @@ describe('service worker cache lifetime', () => {
           location: { origin },
           fetch: async (request: { url: string }) => {
             if (!online) throw new Error('Offline');
+            networkRequests.push(request.url);
             return new Response(request.url);
           },
           self: {
@@ -185,6 +187,21 @@ describe('service worker cache lifetime', () => {
       stores.get(foreign.cacheName)?.set(missingUrl, new Response('Foreign'));
       online = false;
       await expect(worker.fetch(missingUrl)).rejects.toThrow('Offline');
+
+      // Content-hashed assets never change, so cached copies skip the network.
+      online = true;
+      failWrites = false;
+      const hashedUrl = `${origin}${base}assets/index-AbC12_-9.js`;
+      stores.get(worker.cacheName)?.set(hashedUrl, new Response('Cached'));
+      networkRequests.length = 0;
+      expect(await (await worker.fetch(hashedUrl))?.text()).toBe('Cached');
+      expect(networkRequests).toEqual([]);
+      // Unhashed files stay network-first so updates appear immediately.
+      const unhashedUrl = `${origin}${base}index.html`;
+      stores.get(worker.cacheName)?.set(unhashedUrl, new Response('Stale'));
+      expect(await (await worker.fetch(unhashedUrl))?.text()).toBe(unhashedUrl);
+      expect(networkRequests).toEqual([unhashedUrl]);
+      await worker.finishFetch();
     }
   );
 });

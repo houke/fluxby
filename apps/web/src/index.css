@@ -43,7 +43,7 @@
   --radius-sm: calc(var(--radius) - 4px);
 
   /* Font Family */
-  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-sans: 'Inter Variable', 'Inter', system-ui, sans-serif;
 
   /* Animations */
   --animate-accordion-down: accordion-down 0.2s ease-out;

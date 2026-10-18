@@ -1,7 +1,8 @@
 /**
  * Fluxby Landing Page Service Worker
  * Provides offline support for landing page, docs, and help center
- * Uses Network-First strategy to always serve fresh content when online
+ * Uses Network-First strategy to always serve fresh content when online, except
+ * for content-hashed build assets, which are immutable and served Cache-First
  */
 
 /* global self, caches, URL, fetch, location */
@@ -141,7 +142,19 @@ function isCacheable(url) {
   return false;
 }
 
-// Fetch event - Network-First with fallback to cache
+// Vite emits content-hashed file names under assets/, so a cached copy can
+// never be stale. Serving those from cache avoids a network round trip each.
+const HASHED_ASSET_PATTERN =
+  /\/assets\/[^/]+-[A-Za-z0-9_-]{8}\.(?:js|css|wasm|woff2?|ttf|svg|png|jpe?g|webp)$/;
+
+function isImmutableAsset(url) {
+  return (
+    url.pathname.startsWith(`${BASE_PATH}assets/`) &&
+    HASHED_ASSET_PATTERN.test(url.pathname)
+  );
+}
+
+// Fetch event - Cache-First for hashed assets, otherwise Network-First
 self.addEventListener('fetch', (event) => {
   const request = event.request;
   const url = new URL(request.url);
@@ -164,6 +177,13 @@ self.addEventListener('fetch', (event) => {
   // Network-First strategy: try network, fall back to cache
   event.respondWith(
     (async () => {
+      if (isImmutableAsset(url)) {
+        const cachedAsset = await matchCachedResponse(request);
+        if (cachedAsset) {
+          return cachedAsset;
+        }
+      }
+
       try {
         // Always try network first
         const networkResponse = await fetch(request);

@@ -7,7 +7,12 @@
  */
 /* eslint-disable @typescript-eslint/no-explicit-any, no-console */
 
-import { Peer, DataConnection } from 'peerjs';
+import type { Peer, DataConnection } from 'peerjs';
+import {
+  getLoadedPeerJs,
+  loadPeerJs,
+  type PeerJsModule,
+} from './peerjs-loader.js';
 import type { SyncChange, SyncableRow } from './sync.js';
 import {
   createEncryptionSession,
@@ -358,6 +363,7 @@ export class PeerSync {
 
     return new Promise((resolve, reject) => {
       let settled = false;
+      let peerJs: PeerJsModule | null = getLoadedPeerJs();
       let retryTimer: ReturnType<typeof setTimeout> | undefined;
       const finish = (error?: Error, peerId?: string) => {
         if (settled) return;
@@ -418,7 +424,8 @@ export class PeerSync {
             }
           }
 
-          const peer = new Peer(id, peerOptions);
+          if (!peerJs) throw new Error('PeerJS is not loaded');
+          const peer = new peerJs.Peer(id, peerOptions);
           this.peer = peer;
 
           peer.on('open', (peerId) => {
@@ -557,7 +564,19 @@ export class PeerSync {
 
       // Use session ID to create unique peer ID per browser session
       // This prevents "ID taken" errors after page refresh while old connection times out
-      setupPeer(`fluxby-${this.options.deviceId}-${this.sessionId}`);
+      const peerId = `fluxby-${this.options.deviceId}-${this.sessionId}`;
+      if (peerJs) {
+        setupPeer(peerId);
+        return;
+      }
+      loadPeerJs().then(
+        (module) => {
+          peerJs = module;
+          setupPeer(peerId);
+        },
+        (error: unknown) =>
+          finish(error instanceof Error ? error : new Error(String(error)))
+      );
     });
   }
 

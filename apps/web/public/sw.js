@@ -5,7 +5,8 @@
  * This service worker adds the necessary headers to enable cross-origin isolation,
  * which is required for SharedArrayBuffer (used by SQLite WASM for better performance).
  *
- * Uses Network-First strategy to always serve fresh content when online.
+ * Uses Network-First strategy to always serve fresh content when online, except
+ * for content-hashed build assets, which are immutable and served Cache-First.
  */
 
 /* global self, caches, URL, Headers, Response, fetch, location */
@@ -102,7 +103,19 @@ async function matchCachedResponse(request) {
   }
 }
 
-// Fetch event - Network-First with COI headers
+// Vite emits content-hashed file names under assets/, so a cached copy can
+// never be stale. Serving those from cache avoids a network round trip each.
+const HASHED_ASSET_PATTERN =
+  /\/assets\/[^/]+-[A-Za-z0-9_-]{8}\.(?:js|css|wasm|woff2?|ttf|svg|png|jpe?g|webp)$/;
+
+function isImmutableAsset(url) {
+  return (
+    url.pathname.startsWith(`${BASE_PATH}/assets/`) &&
+    HASHED_ASSET_PATTERN.test(url.pathname)
+  );
+}
+
+// Fetch event - Cache-First for hashed assets, otherwise Network-First, with COI headers
 self.addEventListener('fetch', (event) => {
   const request = event.request;
   const url = new URL(request.url);
@@ -119,6 +132,13 @@ self.addEventListener('fetch', (event) => {
 
   event.respondWith(
     (async () => {
+      if (request.method === 'GET' && isImmutableAsset(url)) {
+        const cachedAsset = await matchCachedResponse(request);
+        if (cachedAsset) {
+          return addCOIHeaders(cachedAsset);
+        }
+      }
+
       // Network-First: Always try to get fresh content when online
       try {
         const networkResponse = await fetch(request);

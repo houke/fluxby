@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   createApiAccessMiddleware,
   getApiAccessConfig,
+  isTrustedLoopbackHost,
 } from '../../apps/api/src/middleware/api-access';
 
 const token = 'a'.repeat(32);
@@ -80,5 +81,35 @@ describe('developer API access boundary', () => {
     );
     expect(status).toHaveBeenCalledWith(403);
     expect(next).not.toHaveBeenCalled();
+  });
+  it('rejects DNS-rebinding hosts when no token is configured', async () => {
+    expect(
+      (
+        await request(app())
+          .get('/api/health')
+          .set('Host', 'attacker.example:3001')
+      ).status
+    ).toBe(403);
+    for (const host of [
+      'localhost:3001',
+      '127.0.0.1:3001',
+      '[::1]:3001',
+      'api.localhost',
+      'fluxby.local:5177',
+    ])
+      expect(isTrustedLoopbackHost(host, ['https://fluxby.local:5177'])).toBe(
+        true
+      );
+    expect(isTrustedLoopbackHost('127.0.0.1.attacker.example')).toBe(false);
+    expect(isTrustedLoopbackHost('fluxby.local')).toBe(false);
+    // An authenticated server is reachable through any configured host name.
+    expect(
+      (
+        await request(app({ API_AUTH_TOKEN: token }))
+          .get('/api/health')
+          .set('Host', 'nas.example:3001')
+          .set('Authorization', `Bearer ${token}`)
+      ).status
+    ).toBe(200);
   });
 });

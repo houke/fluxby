@@ -10,6 +10,7 @@ import {
 import App from './App';
 import { debugLog, debugWarn } from './lib/debug';
 import { registerAppServiceWorker } from './lib/service-worker';
+import '@fontsource-variable/inter/wght.css';
 import './index.css';
 
 // Initialize error tracking before anything else

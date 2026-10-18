@@ -35,6 +35,14 @@ export default defineConfig({
   plugins: [
     tailwindcss(),
     react(),
+    {
+      // Production allows only the hashed theme script. The dev server also
+      // injects React Refresh's inline preamble, which the hash cannot cover.
+      name: 'fluxby-dev-inline-script-csp',
+      apply: 'serve',
+      transformIndexHtml: (html: string) =>
+        html.replace(/'sha256-[^']+'/, "'unsafe-inline'"),
+    },
     offlinePrecache({
       serviceWorkerPath: resolve(__dirname, 'public/sw.js'),
       base,

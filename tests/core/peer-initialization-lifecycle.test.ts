@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { PeerSync } from '@fluxby/core';
+import { loadPeerJs, PeerSync } from '@fluxby/core';
 
 const mocks = vi.hoisted(() => ({
   peers: [] as Array<{
@@ -26,7 +26,9 @@ vi.mock('peerjs', async () => {
 
 describe('peer signalling initialization cancellation', () => {
   let peer: PeerSync;
-  beforeEach(() => {
+  beforeEach(async () => {
+    // PeerJS loads lazily; these cases cover the already-loaded signalling path.
+    await loadPeerJs();
     vi.useFakeTimers();
     mocks.peers = [];
     peer = new PeerSync({ deviceId: 'device', deviceName: 'Device' });
