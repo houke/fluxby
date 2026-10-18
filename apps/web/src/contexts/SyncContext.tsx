@@ -15,6 +15,7 @@ import {
 } from 'react';
 import {
   createPeerSync,
+  hasPairedDeviceForProfile,
   type PeerSync,
   type PeerDevice,
   type SyncChange,
@@ -59,12 +60,17 @@ interface SyncContextType {
   deviceName: string;
   /** Update device name */
   setDeviceName: (name: string) => void;
-  /** Whether peer sync is initialized */
+  /** Whether the signalling connection is open */
   isInitialized: boolean;
+  /**
+   * Whether the signalling connection is being opened. It opens only when the
+   * active profile has a paired device or the user starts pairing.
+   */
+  isConnecting: boolean;
   /** Current pairing code (for others to connect) */
   pairingCode: string | null;
-  /** Generate a new pairing code */
-  generateNewPairingCode: () => void;
+  /** Connect on demand and generate a new pairing code; null on failure */
+  generateNewPairingCode: () => Promise<string | null>;
   /** Connect to another device using their pairing code */
   connectWithPairingCode: (code: string) => Promise<boolean>;
   /** List of paired devices */
@@ -198,10 +204,13 @@ export function SyncProvider({ children }: SyncProviderProps) {
     getDeviceName(t.common.unknownDevice)
   );
   const [isInitialized, setIsInitialized] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
   const [pairingCode, setPairingCode] = useState<string | null>(null);
   const [pairedDevices, setPairedDevices] = useState<PeerDevice[]>(
     getStoredPairedDevices
   );
+  const pairedDevicesRef = useRef(pairedDevices);
+  pairedDevicesRef.current = pairedDevices;
   const [pendingPairingRequest, setPendingPairingRequest] =
     useState<SyncContextType['pendingPairingRequest']>(null);
   const [lastError, setLastError] = useState<Error | null>(null);
@@ -210,6 +219,10 @@ export function SyncProvider({ children }: SyncProviderProps) {
     useState(getAutoSyncEnabled);
   const [initVersion, setInitVersion] = useState(0);
   const syncRef = useRef<PeerSync | null>(null);
+  // Opens (or joins) the signalling connection of the current peer.
+  const connectRef = useRef<(() => Promise<string>) | null>(null);
+  // Closes the signalling connection while keeping the current peer reusable.
+  const releaseRef = useRef<(() => void) | null>(null);
   const adapterRef = useRef<ProfileDataSync | null>(null);
   const activeRef = useRef<string | null>(null);
   activeRef.current = isUnlocked && isReady ? activeProfileId : null;
@@ -472,13 +485,59 @@ export function SyncProvider({ children }: SyncProviderProps) {
           .catch(reportError);
       }, 500);
     });
-    void adapter
-      .initialize()
+    const adapterReady = adapter.initialize();
+    // The signalling server learns this device's IP address, so it is only
+    // contacted once sync is actually used (see connect callers below).
+    let connection: Promise<string> | null = null;
+    const connect = (): Promise<string> => {
+      if (connection) return connection;
+      setIsConnecting(true);
+      const attempt = adapterReady
+        .then(() => {
+          if (!active || connection !== attempt)
+            throw new Error('Peer destroyed');
+          return peer.initialize();
+        })
+        .then((peerId) => {
+          if (!active || connection !== attempt)
+            throw new Error('Peer destroyed');
+          setIsInitialized(true);
+          return peerId;
+        });
+      connection = attempt;
+      attempt
+        .catch(() => {
+          // A failed attempt can be retried by the next pairing action.
+          if (connection === attempt) connection = null;
+        })
+        .finally(() => {
+          if (active && (connection === attempt || !connection))
+            setIsConnecting(false);
+        });
+      return attempt;
+    };
+    const release = () => {
+      if (!connection) return;
+      connection = null;
+      peer.destroy();
+      setIsInitialized(false);
+      setIsConnecting(false);
+      setPairingCode(null);
+      setSyncStatus((status) => ({
+        ...status,
+        connectedPeers: 0,
+        state: 'offline',
+      }));
+    };
+    connectRef.current = connect;
+    releaseRef.current = release;
+    const connectOnUnlock = hasPairedDeviceForProfile(
+      pairedDevicesRef.current,
+      activeProfileId
+    );
+    void adapterReady
       .then(() => {
-        if (active) return peer.initialize();
-      })
-      .then(() => {
-        if (active) setIsInitialized(true);
+        if (active && connectOnUnlock) return connect();
       })
       .catch((error) => {
         if (active) reportError(error);
@@ -489,10 +548,13 @@ export function SyncProvider({ children }: SyncProviderProps) {
       if (timer) clearTimeout(timer);
       peer.destroy();
       if (syncRef.current === peer) syncRef.current = null;
+      if (connectRef.current === connect) connectRef.current = null;
+      if (releaseRef.current === release) releaseRef.current = null;
       if (adapterRef.current === adapter) adapterRef.current = null;
       operationRef.current = null;
       rerunSyncRef.current = false;
       setIsInitialized(false);
+      setIsConnecting(false);
     };
   }, [
     db,
@@ -511,26 +573,40 @@ export function SyncProvider({ children }: SyncProviderProps) {
     setDeviceNameState(name.trim().slice(0, 100));
     void writeToOPFSWithCache(DEVICE_NAME_KEY, name.trim().slice(0, 100));
   }, []);
-  const generateNewPairingCode = useCallback(() => {
+  const generateNewPairingCode = useCallback(async (): Promise<
+    string | null
+  > => {
     const peer = syncRef.current;
-    if (!peer?.getPeerId()) return;
+    const connect = connectRef.current;
+    if (!peer || !connect) return null;
+    setLastError(null);
     try {
-      setPairingCode(`${peer.getPeerId()}:${peer.startPairing()}`);
+      const peerId = await connect();
+      // A profile switch or lock while connecting replaces the peer.
+      if (syncRef.current !== peer) return null;
+      const code = `${peer.getPeerId() ?? peerId}:${peer.startPairing()}`;
+      setPairingCode(code);
+      return code;
     } catch (error) {
-      reportError(error);
+      if (syncRef.current === peer) reportError(error);
+      return null;
     }
   }, [reportError]);
   const connectWithPairingCode = useCallback(
     async (code: string): Promise<boolean> => {
       const peer = syncRef.current;
-      if (!peer) return false;
+      const connect = connectRef.current;
+      if (!peer || !connect) return false;
       const [peerId, pairing, extra] = code.trim().split(':');
       if (!peerId || !pairing || extra) throw new Error('Invalid pairing code');
+      setLastError(null);
       try {
+        await connect();
+        if (syncRef.current !== peer) return false;
         await peer.connectWithCode(peerId, pairing);
         return true;
       } catch (error) {
-        reportError(error);
+        if (syncRef.current === peer) reportError(error);
         throw error;
       }
     },
@@ -552,11 +628,15 @@ export function SyncProvider({ children }: SyncProviderProps) {
   );
   const disconnectDevice = useCallback((id: string) => {
     syncRef.current?.disconnect(id);
-    setPairedDevices((previous) => {
-      const updated = previous.filter((device) => device.id !== id);
-      savePairedDevices(updated);
-      return updated;
-    });
+    const updated = pairedDevicesRef.current.filter(
+      (device) => device.id !== id
+    );
+    pairedDevicesRef.current = updated;
+    setPairedDevices(updated);
+    savePairedDevices(updated);
+    // Without paired devices left, stop announcing this device to the server.
+    if (!hasPairedDeviceForProfile(updated, activeRef.current))
+      releaseRef.current?.();
   }, []);
   const queueChange = useCallback(
     (_change: SyncChange<SyncableRow>) => {
@@ -590,6 +670,7 @@ export function SyncProvider({ children }: SyncProviderProps) {
       deviceName,
       setDeviceName,
       isInitialized,
+      isConnecting,
       pairingCode,
       generateNewPairingCode,
       connectWithPairingCode,
@@ -613,6 +694,7 @@ export function SyncProvider({ children }: SyncProviderProps) {
       deviceName,
       setDeviceName,
       isInitialized,
+      isConnecting,
       pairingCode,
       generateNewPairingCode,
       connectWithPairingCode,

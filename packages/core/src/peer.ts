@@ -217,6 +217,19 @@ export interface PeerDevice {
   supportsFragmentation?: boolean;
 }
 
+/**
+ * Whether a profile has a paired device, which is when the PeerJS signalling
+ * server should be contacted without the user starting a pairing flow.
+ */
+export function hasPairedDeviceForProfile(
+  devices: readonly PeerDevice[],
+  profileId: string | null | undefined
+): boolean {
+  return (
+    !!profileId && devices.some((device) => device.localProfileId === profileId)
+  );
+}
+
 const SYNC_FRAME_CHARS = 32768;
 const MAX_SYNC_BUFFER_CHARS = 32_000_000;
 const MAX_SYNC_FRAMES = Math.ceil(MAX_SYNC_BUFFER_CHARS / SYNC_FRAME_CHARS);

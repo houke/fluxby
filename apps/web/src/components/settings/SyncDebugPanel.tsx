@@ -45,6 +45,7 @@ export function SyncDebugPanel({ onClose }: SyncDebugPanelProps) {
     deviceId,
     deviceName,
     isInitialized,
+    isConnecting,
     pairingCode,
     generateNewPairingCode,
     pairedDevices,
@@ -209,8 +210,8 @@ export function SyncDebugPanel({ onClose }: SyncDebugPanelProps) {
             <Button
               variant='outline'
               size='sm'
-              onClick={generateNewPairingCode}
-              disabled={!isInitialized}
+              onClick={() => void generateNewPairingCode()}
+              disabled={isConnecting}
             >
               {copy.generateCode}
             </Button>

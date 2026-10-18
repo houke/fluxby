@@ -2,7 +2,7 @@
  * QR Code Pairing Component
  * Shows QR code for easy device pairing
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import {
   Dialog,
@@ -25,18 +25,32 @@ interface QRPairingDialogProps {
 
 export function QRPairingDialog({ trigger }: QRPairingDialogProps) {
   const { t } = useLanguage();
-  const { pairingCode, generateNewPairingCode, isInitialized, deviceName } =
-    useSync();
+  const { pairingCode, generateNewPairingCode, deviceName } = useSync();
 
   const [isOpen, setIsOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [failed, setFailed] = useState(false);
+  const generatingRef = useRef(false);
+
+  // Generating a code opens the signalling connection on demand.
+  const generate = useCallback(async () => {
+    if (generatingRef.current) return;
+    generatingRef.current = true;
+    setIsGenerating(true);
+    setFailed(false);
+    try {
+      setFailed(!(await generateNewPairingCode()));
+    } finally {
+      generatingRef.current = false;
+      setIsGenerating(false);
+    }
+  }, [generateNewPairingCode]);
 
   // Generate pairing code when dialog opens
   useEffect(() => {
-    if (isOpen && !pairingCode && isInitialized) {
-      generateNewPairingCode();
-    }
-  }, [isOpen, pairingCode, isInitialized, generateNewPairingCode]);
+    if (isOpen && !pairingCode) void generate();
+  }, [isOpen, pairingCode, generate]);
 
   const handleCopy = async () => {
     if (pairingCode) {
@@ -47,14 +61,14 @@ export function QRPairingDialog({ trigger }: QRPairingDialogProps) {
   };
 
   const handleRefresh = () => {
-    generateNewPairingCode();
+    void generate();
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         {trigger || (
-          <Button variant='outline' disabled={!isInitialized}>
+          <Button variant='outline'>
             <QrCode className='mr-2 h-4 w-4' />
             {t.settings?.sync?.showQRCode}
           </Button>
@@ -74,7 +88,7 @@ export function QRPairingDialog({ trigger }: QRPairingDialogProps) {
         <div className='flex flex-col items-center space-y-4 py-4'>
           {/* QR Code */}
           <div className='rounded-xl bg-white p-4 shadow-inner'>
-            {pairingCode ? (
+            {pairingCode && !isGenerating ? (
               <QRCodeSVG
                 value={pairingCode}
                 size={200}
@@ -84,8 +98,21 @@ export function QRPairingDialog({ trigger }: QRPairingDialogProps) {
                 fgColor='#000000'
               />
             ) : (
-              <div className='flex h-[200px] w-[200px] items-center justify-center bg-gray-100'>
-                <RefreshCw className='h-8 w-8 animate-spin text-muted-foreground' />
+              <div
+                className='flex h-[200px] w-[200px] flex-col items-center justify-center gap-3 bg-gray-100 p-4 text-center'
+                role='status'
+              >
+                <RefreshCw
+                  className={cn(
+                    'h-8 w-8 text-muted-foreground',
+                    isGenerating && 'animate-spin'
+                  )}
+                />
+                <p className='text-xs text-gray-600'>
+                  {failed && !isGenerating
+                    ? t.settings.sync.connectionFailed
+                    : t.settings.sync.connectingToServer}
+                </p>
               </div>
             )}
           </div>
@@ -109,13 +136,13 @@ export function QRPairingDialog({ trigger }: QRPairingDialogProps) {
                   'select-all'
                 )}
               >
-                {pairingCode || '------'}
+                {(!isGenerating && pairingCode) || '------'}
               </code>
               <Button
                 variant='ghost'
                 size='icon'
                 onClick={handleCopy}
-                disabled={!pairingCode}
+                disabled={!pairingCode || isGenerating}
               >
                 {copied ? (
                   <Check className='h-4 w-4 text-green-500' />
@@ -132,7 +159,7 @@ export function QRPairingDialog({ trigger }: QRPairingDialogProps) {
               variant='outline'
               size='sm'
               onClick={handleRefresh}
-              disabled={!isInitialized}
+              disabled={isGenerating}
             >
               <RefreshCw className='mr-2 h-3 w-3' />
               {t.settings?.sync?.newCode}

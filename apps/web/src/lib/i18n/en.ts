@@ -1489,6 +1489,8 @@ export const en: TranslationKeys = {
       accept: 'Accept',
       ready: 'Ready',
       initializing: 'Initializing...',
+      standby: 'Inactive',
+      connectingToServer: 'Connecting to the pairing server...',
       syncing: 'Syncing...',
       connected: 'Connected',
       notConnected: 'Not connected',
@@ -1500,6 +1502,8 @@ export const en: TranslationKeys = {
       autoSyncOffTooltip: 'Manual sync only',
       autoSyncDescription: 'Automatically sync changes as you make them',
       connectionSettings: 'Connection settings',
+      connectsOnDemand:
+        'Fluxby only connects to the pairing server when you pair a device or when this profile has paired devices.',
       syncSuccess: '{received} received, {pushed} sent',
       syncNoChanges: 'No new changes to sync',
       syncError: 'Sync failed',

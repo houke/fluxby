@@ -1288,6 +1288,8 @@ export interface TranslationKeys {
       accept: string;
       ready: string;
       initializing: string;
+      standby: string;
+      connectingToServer: string;
       cannotConnectToSelf: string;
       peerUnavailable: string;
       connectionTimeout: string;
@@ -1302,6 +1304,7 @@ export interface TranslationKeys {
       autoSyncOffTooltip: string;
       autoSyncDescription: string;
       connectionSettings: string;
+      connectsOnDemand: string;
       syncSuccess: string;
       syncNoChanges: string;
       syncError: string;
@@ -3327,6 +3330,8 @@ export const nl: TranslationKeys = {
       accept: 'Accepteren',
       ready: 'Gereed',
       initializing: 'Initialiseren...',
+      standby: 'Niet actief',
+      connectingToServer: 'Verbinden met de koppelserver...',
       syncing: 'Synchroniseren...',
       connected: 'Verbonden',
       notConnected: 'Niet verbonden',
@@ -3338,6 +3343,8 @@ export const nl: TranslationKeys = {
       autoSyncOffTooltip: 'Alleen handmatig synchroniseren',
       autoSyncDescription: 'Wijzigingen automatisch synchroniseren',
       connectionSettings: 'Verbindingsinstellingen',
+      connectsOnDemand:
+        'Fluxby maakt alleen verbinding met de koppelserver als je een apparaat koppelt of als dit profiel gekoppelde apparaten heeft.',
       syncSuccess: '{received} ontvangen, {pushed} verzonden',
       syncNoChanges: 'Geen nieuwe wijzigingen om te synchroniseren',
       syncError: 'Synchronisatie mislukt',

@@ -2775,7 +2775,7 @@ Object.assign(en, {
         'When the same data changes on multiple devices, Fluxby keeps the most recent version (Last-Write-Wins).',
       securityTitle: 'Privacy and security',
       securityText:
-        'Your financial data stays on your devices. Sync uses encrypted peer-to-peer connections; Fluxby does not store it in the cloud.',
+        'Your financial data stays on your devices. Sync uses encrypted peer-to-peer connections; Fluxby does not store it in the cloud. Fluxby only contacts the signaling server while you pair a device or when the unlocked profile has paired devices, so without sync your IP address is not shared with it.',
     },
   },
   docs: {

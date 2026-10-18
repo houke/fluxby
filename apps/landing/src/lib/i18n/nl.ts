@@ -3514,7 +3514,7 @@ Object.assign(nl, {
         'Bij gelijktijdige wijzigingen bewaart Fluxby automatisch de meest recente versie (Last-Write-Wins).',
       securityTitle: 'Privacy en beveiliging',
       securityText:
-        'Je financiële gegevens blijven op je eigen apparaten. Synchronisatie verloopt via versleutelde peer-to-peerverbindingen; Fluxby bewaart ze niet in de cloud.',
+        'Je financiële gegevens blijven op je eigen apparaten. Synchronisatie verloopt via versleutelde peer-to-peerverbindingen; Fluxby bewaart ze niet in de cloud. Fluxby maakt alleen verbinding met de signaleringsserver terwijl je een apparaat koppelt of als het ontgrendelde profiel gekoppelde apparaten heeft. Zonder synchronisatie wordt je IP-adres dus niet met die server gedeeld.',
     },
   },
 });
