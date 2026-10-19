@@ -19,7 +19,9 @@ describe('HTML Content-Security-Policy', () => {
     const policy = contentSecurityPolicy(html);
     const scriptSrc = policy.match(/script-src ([^;]+)/)?.[1] ?? '';
     expect(scriptSrc).not.toContain("'unsafe-inline'");
-    const inlineScripts = [...html.matchAll(/<script>([\s\S]*?)<\/script\s*>/gi)];
+    const inlineScripts = [
+      ...html.matchAll(/<script>([\s\S]*?)<\/script\s*>/gi),
+    ];
     expect(inlineScripts.length).toBeGreaterThan(0);
     for (const [, body] of inlineScripts) {
       const hash = createHash('sha256').update(body).digest('base64');
