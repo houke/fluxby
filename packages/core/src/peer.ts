@@ -376,11 +376,14 @@ export interface PeerOptions {
  */
 export function generatePairingCode(): string {
   const chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'; // Avoid ambiguous chars (0,O,1,I,L removed)
+  // Reject values above the largest multiple of chars.length so the modulo
+  // below does not favour the first characters of the alphabet.
+  const limit = Math.floor(0x100000000 / chars.length) * chars.length;
+  const buffer = new Uint32Array(1);
   let code = '';
-  for (let i = 0; i < 6; i++) {
-    const randomIndex =
-      crypto.getRandomValues(new Uint32Array(1))[0] % chars.length;
-    code += chars[randomIndex];
+  while (code.length < 6) {
+    crypto.getRandomValues(buffer);
+    if (buffer[0] < limit) code += chars[buffer[0] % chars.length];
   }
   return code;
 }

@@ -366,7 +366,7 @@ async function validate(db: BackupDatabase, input: unknown) {
           invalid();
       }
       for (const match of sql.matchAll(
-        /([a-z][a-z0-9_]*)\s+IN\s*\((('[^']*'\s*,?\s*)+)\)/gi
+        /([a-z][a-z0-9_]*)\s+IN\s*\(\s*('[^']*'(?:\s*,\s*'[^']*')*)\s*\)/gi
       )) {
         const cell = normalized[match[1]];
         const allowed = Array.from(
