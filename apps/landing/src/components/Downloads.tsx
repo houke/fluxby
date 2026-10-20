@@ -22,6 +22,7 @@ const Downloads = () => {
   // Version from build-time injection (falls back for dev)
   const version =
     typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '1.0.0';
+  const appHref = `${import.meta.env.BASE_URL}app/`;
 
   // Direct link to the latest release on GitHub
   const getDownloadLink = (filename: string) => {
@@ -152,22 +153,28 @@ const Downloads = () => {
               {pwa.canPromptInstall ? (
                 <button
                   onClick={pwa.installPWA}
-                  className='bg-fluxby-purple hover:bg-fluxby-dark flex w-full items-center justify-center gap-2 rounded-xl py-3 font-bold text-white transition-colors'
+                  className='bg-fluxby-dark flex w-full items-center justify-center gap-2 rounded-xl py-3 font-bold text-white transition-colors hover:bg-purple-800'
                 >
                   <Download className='h-5 w-5' />
                   {t.downloads.pwa.installButton}
                 </button>
               ) : pwa.isInstalled ? (
                 <a
-                  href='/app/'
+                  href={appHref}
                   className='flex w-full items-center justify-center gap-2 rounded-xl bg-green-600 py-3 font-bold text-white transition-colors hover:bg-green-700'
                 >
                   <Check className='h-5 w-5' />
                   {t.downloads.pwa.openButton}
                 </a>
               ) : (
-                <div className='rounded-xl bg-gray-100 p-4 text-center text-sm text-gray-600 dark:bg-gray-700 dark:text-gray-300'>
-                  {getPWAInstructions()}
+                <div className='flex flex-col items-center gap-3 rounded-xl bg-gray-100 p-4 text-center text-sm text-gray-600 dark:bg-gray-700 dark:text-gray-300'>
+                  <span>{getPWAInstructions()}</span>
+                  <a
+                    href={appHref}
+                    className='inline-flex items-center justify-center rounded-lg bg-purple-600 px-4 py-2 font-semibold text-white transition-colors hover:bg-purple-700'
+                  >
+                    {t.downloads.pwa.openButton}
+                  </a>
                 </div>
               )}
             </div>
@@ -184,7 +191,7 @@ const Downloads = () => {
                   <div className='flex h-16 w-16 items-center justify-center rounded-2xl bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-300'>
                     <Icon className='h-8 w-8' />
                   </div>
-                  <span className='rounded-full bg-gray-100 px-3 py-1 text-xs font-bold tracking-wider text-gray-600 uppercase dark:bg-gray-700 dark:text-gray-400'>
+                  <span className='rounded-full bg-gray-100 px-3 py-1 text-xs font-bold tracking-wider text-gray-600 uppercase dark:bg-gray-700 dark:text-gray-300'>
                     {platform.downloads[0].type}
                   </span>
                 </div>
@@ -203,7 +210,7 @@ const Downloads = () => {
                       href={download.link}
                       target='_blank'
                       rel='noopener noreferrer'
-                      className='bg-fluxby-purple hover:bg-fluxby-dark flex w-full items-center justify-center gap-2 rounded-xl py-3 font-bold text-white transition-colors'
+                      className='bg-fluxby-dark flex w-full items-center justify-center gap-2 rounded-xl py-3 font-bold text-white transition-colors hover:bg-purple-800'
                     >
                       <Download className='h-5 w-5' />
                       {download.label}

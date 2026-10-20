@@ -10,7 +10,8 @@
  */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { Peer, DataConnection } from 'peerjs';
+import type { Peer, DataConnection } from 'peerjs';
+import { loadPeerJs, type PeerJsModule } from './peerjs-loader.js';
 import { getSyncLogger } from './sync-logger.js';
 import type { SyncChange, SyncableRow } from './sync.js';
 import {
@@ -79,8 +80,16 @@ interface ConnectionState {
 /**
  * EnhancedPeerSync - Robust peer-to-peer sync with heartbeats and auto-reconnection
  */
+/** The pairing request of the earlier, unencrypted protocol. */
+type LegacyPairingRequest = {
+  type: 'pairing-request';
+  pairingCode: string;
+  deviceName: string;
+};
+
 export class EnhancedPeerSync {
   private peer: Peer | null = null;
+  private peerJs: PeerJsModule | null = null;
   private connections: Map<string, ConnectionState> = new Map();
   private pairedDevices: Map<string, PeerDevice> = new Map();
   private options: EnhancedPeerOptions;
@@ -109,6 +118,7 @@ export class EnhancedPeerSync {
 
     this.isInitialized = false;
     this.cleanup();
+    this.peerJs = await loadPeerJs();
 
     return new Promise((resolve, reject) => {
       const timeoutMs = this.config.connectionTimeout;
@@ -142,7 +152,8 @@ export class EnhancedPeerSync {
 
       this.logger.debug('peer:open', `Attempting to connect with ID: ${id}`);
 
-      const peer = new Peer(id, {
+      if (!this.peerJs) throw new Error('PeerJS is not loaded');
+      const peer = new this.peerJs.Peer(id, {
         debug: 1,
         config: {
           iceServers: [
@@ -770,7 +781,11 @@ export class EnhancedPeerSync {
 
     switch (message.type) {
       case 'pairing-request':
-        this.handlePairingRequest(conn, message);
+        // This class still uses the old plaintext code request.
+        this.handlePairingRequest(
+          conn,
+          message as unknown as LegacyPairingRequest
+        );
         break;
 
       case 'pairing-accept':
@@ -821,11 +836,7 @@ export class EnhancedPeerSync {
 
   private handlePairingRequest(
     conn: DataConnection,
-    message: {
-      type: 'pairing-request';
-      pairingCode: string;
-      deviceName: string;
-    }
+    message: LegacyPairingRequest
   ): void {
     this.logger.info(
       'pairing:request',

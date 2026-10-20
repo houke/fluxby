@@ -27,15 +27,7 @@ function mergeChanges(local, remote) {
   return local;  // Local wins
 }`;
 
-  const securityExample = `// Password-Protected UI Lock
-1. User sets PIN/Password during onboarding
-2. Password hash stored via PBKDF2 (100k iterations)
-3. App locks on idle/close/refresh
-
-// Data Storage:
-// - Password hash: localStorage (for verification)
-// - Database: OPFS (plain SQLite, not encrypted)
-// - All data stays local (never sent to servers)`;
+  const securityExample = t.docs.architecture.securityExample;
 
   return (
     <article className='prose prose-gray dark:prose-invert max-w-none'>
@@ -68,7 +60,7 @@ function mergeChanges(local, remote) {
           <p className='mb-2 text-sm text-gray-600 dark:text-gray-400'>
             {t.docs.architecture.webDesc}
           </p>
-          <ul className='mb-0 list-none pl-0 text-xs text-gray-500'>
+          <ul className='mb-0 list-none pl-0 text-xs text-gray-500 dark:text-gray-400'>
             {copy.webFeatures.map((feature: string) => (
               <li key={feature}>✓ {feature}</li>
             ))}
@@ -82,7 +74,7 @@ function mergeChanges(local, remote) {
           <p className='mb-2 text-sm text-gray-600 dark:text-gray-400'>
             {t.docs.architecture.desktopDesc}
           </p>
-          <ul className='mb-0 list-none pl-0 text-xs text-gray-500'>
+          <ul className='mb-0 list-none pl-0 text-xs text-gray-500 dark:text-gray-400'>
             {copy.desktopFeatures.map((feature: string) => (
               <li key={feature}>✓ {feature}</li>
             ))}
@@ -96,7 +88,7 @@ function mergeChanges(local, remote) {
           <p className='mb-2 text-sm text-gray-600 dark:text-gray-400'>
             {t.docs.architecture.headlessDesc}
           </p>
-          <ul className='mb-0 list-none pl-0 text-xs text-gray-500'>
+          <ul className='mb-0 list-none pl-0 text-xs text-gray-500 dark:text-gray-400'>
             {copy.headlessFeatures.map((feature: string) => (
               <li key={feature}>✓ {feature}</li>
             ))}

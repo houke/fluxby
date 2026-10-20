@@ -185,7 +185,7 @@ The dashboard shows:
 - **SQLite WASM** - Database runs in browser/Tauri
 - **OPFS Storage** - Persistent storage in browser sandbox
 - **Password Protection** - App locks on idle, password required to unlock
-- **Peer-to-Peer Sync** - Device pairing via WebRTC
+- **Peer-to-Peer Sync** - Device pairing via WebRTC; paired devices reconnect automatically
 
 ## 🔒 Security Model
 

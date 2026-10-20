@@ -1,8 +1,9 @@
-import { type Database } from '@fluxby/database';
+import { type AsyncDatabaseConnection } from '@fluxby/database';
 import { type TransactionCreate } from '@fluxby/shared';
 
 interface ASNImportOptions {
   accountId: string;
+  accountIban?: string;
   profileId: string;
   mapping: {
     date: string; // "Datum"
@@ -123,7 +124,7 @@ export function parseASNDate(value: string | null | undefined): string | null {
  * "Valutadatum";"Code";"Type";"Volgnummer";"Betalingskenmerk";"Omschrijving";"Afschriftnummer"
  */
 export async function processASNRow(
-  db: Database,
+  db: Pick<AsyncDatabaseConnection, 'queryOneAsync'>,
   row: Record<string, string>,
   options: ASNImportOptions,
   helpers: {
@@ -207,16 +208,21 @@ export async function processASNRow(
   }
 
   // Get own IBAN for hash generation
-  const account = await db.queryOneAsync<{ iban: string }>(
-    'SELECT iban FROM accounts WHERE id = ? AND profile_id = ?',
-    [accountId, profileId]
-  );
+  const accountIban =
+    options.accountIban ??
+    (
+      await db.queryOneAsync<{ iban: string }>(
+        'SELECT iban FROM accounts WHERE id = ? AND profile_id = ?',
+        [accountId, profileId]
+      )
+    )?.iban ??
+    '';
 
   const hash = helpers.generateHash(
     date,
     amount,
     omschrijving || description, // Use original description for hash consistency
-    account?.iban || ''
+    accountIban
   );
 
   return {

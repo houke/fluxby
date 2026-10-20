@@ -1,3 +1,4 @@
+import { formatDate } from '@/lib/utils';
 /* eslint-disable react-refresh/only-export-components */
 import {
   createContext,
@@ -7,7 +8,8 @@ import {
   useEffect,
   type ReactNode,
 } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
+import { useViewTransitionNavigate } from '@/lib/view-transitions';
 import { useQuery } from '@tanstack/react-query';
 import {
   LayoutDashboard,
@@ -25,12 +27,15 @@ import {
   Moon,
   Plus,
   CalendarClock,
+  Target,
   type LucideIcon,
 } from 'lucide-react';
 import { useLanguage } from './LanguageContext';
 import { usePrivacy } from './PrivacyContext';
 import { useDatabase } from './DatabaseContext';
 import { useFilters } from './FilterContext';
+import { useProfile } from './ProfileContext';
+import { api } from '@/lib/api';
 import { SpotlightDialog } from '@/components/spotlight/SpotlightDialog';
 
 // ============= Types =============
@@ -72,11 +77,12 @@ interface SpotlightProviderProps {
 
 export function SpotlightProvider({ children }: SpotlightProviderProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const navigate = useNavigate();
+  const navigate = useViewTransitionNavigate();
   const location = useLocation();
   const { t } = useLanguage();
   const { isPrivacyMode, togglePrivacyMode } = usePrivacy();
   const { dataService, isReady } = useDatabase();
+  const { activeProfileId } = useProfile();
   const { setOpposingAccountName, setAddressBookId, setDateRange } =
     useFilters();
 
@@ -177,6 +183,13 @@ export function SpotlightProvider({ children }: SpotlightProviderProps) {
       onSelect: () => navigate('/subscriptions'),
     },
     {
+      id: 'page-planning',
+      title: t.nav.planning,
+      icon: Target,
+      group: 'pages',
+      onSelect: () => navigate('/planning'),
+    },
+    {
       id: 'page-addressbook',
       title: t.nav.addressBook,
       icon: BookUser,
@@ -270,14 +283,12 @@ export function SpotlightProvider({ children }: SpotlightProviderProps) {
   // ============= Dynamic Data =============
   // Fetch recent transactions (last 100)
   const { data: transactionsData } = useQuery({
-    queryKey: ['spotlight-transactions'],
+    queryKey: ['spotlight-transactions', activeProfileId],
     queryFn: async () => {
       if (!dataService) return [];
-      // Get all transactions and limit to 100 most recent
-      const transactions = await dataService.getTransactions();
-      return transactions.slice(0, 100);
+      return dataService.getTransactions({ limit: '100' });
     },
-    enabled: isReady && !!dataService,
+    enabled: isOpen && isReady && !!dataService && !!activeProfileId,
     staleTime: 30000, // 30 seconds
   });
 
@@ -291,54 +302,57 @@ export function SpotlightProvider({ children }: SpotlightProviderProps) {
 
   // Fetch address book contacts
   const { data: contactsData } = useQuery({
-    queryKey: ['spotlight-contacts'],
+    queryKey: ['addressbook', activeProfileId],
     queryFn: async (): Promise<AddressBookContact[]> => {
       if (!dataService) return [];
-      const result = await dataService.getAddressBook();
+      const result = await api.getAddressBook();
       return result as unknown as AddressBookContact[];
     },
-    enabled: isReady && !!dataService,
-    staleTime: 30000,
+    enabled: isOpen && isReady && !!dataService && !!activeProfileId,
+    staleTime: 10 * 60 * 1000,
+    gcTime: 15 * 60 * 1000,
   });
 
   // Transform transactions to commands
-  const recentTransactions: SpotlightCommand[] = (transactionsData || []).map(
-    (tx) => ({
-      id: `tx-${tx.id}`,
-      title: tx.opposingAccountName || tx.description,
-      subtitle: `€${Math.abs(tx.amount).toFixed(2)} • ${new Date(tx.date).toLocaleDateString()}`,
-      icon: ArrowLeftRight,
-      group: 'transactions' as const,
-      keywords: [
-        tx.description,
-        tx.opposingAccountName || '',
-        tx.opposingAccountIban || '',
-      ].filter(Boolean),
+  const recentTransactions: SpotlightCommand[] = (
+    isOpen ? transactionsData || [] : []
+  ).map((tx) => ({
+    id: `tx-${tx.id}`,
+    title: tx.opposingAccountName || tx.description,
+    subtitle: `€${Math.abs(tx.amount).toFixed(2)} • ${formatDate(tx.date)}`,
+    icon: ArrowLeftRight,
+    group: 'transactions' as const,
+    keywords: [
+      tx.description,
+      tx.opposingAccountName || '',
+      tx.opposingAccountIban || '',
+    ].filter(Boolean),
+    onSelect: () => {
+      // Navigate to transactions with filter for this transaction
+      setOpposingAccountName(tx.opposingAccountName || tx.description);
+      setDateRange(new Date(tx.date), new Date(tx.date));
+      // Pass the search query to the transactions page
+      const searchQuery = tx.opposingAccountName || tx.description;
+      navigate(`/transactions?search=${encodeURIComponent(searchQuery)}`);
+    },
+  }));
+
+  // Transform contacts to commands
+  const contacts: SpotlightCommand[] = (isOpen ? contactsData || [] : []).map(
+    (contact) => ({
+      id: `contact-${contact.id}`,
+      title: contact.name,
+      subtitle: contact.iban || undefined,
+      icon: BookUser,
+      group: 'contacts' as const,
+      keywords: [contact.name, contact.iban].filter(Boolean),
       onSelect: () => {
-        // Navigate to transactions with filter for this transaction
-        setOpposingAccountName(tx.opposingAccountName || tx.description);
-        setDateRange(new Date(tx.date), new Date(tx.date));
-        // Pass the search query to the transactions page
-        const searchQuery = tx.opposingAccountName || tx.description;
-        navigate(`/transactions?search=${encodeURIComponent(searchQuery)}`);
+        // Navigate to transactions filtered by this contact
+        setAddressBookId(contact.id);
+        navigate('/transactions');
       },
     })
   );
-
-  // Transform contacts to commands
-  const contacts: SpotlightCommand[] = (contactsData || []).map((contact) => ({
-    id: `contact-${contact.id}`,
-    title: contact.name,
-    subtitle: contact.iban || undefined,
-    icon: BookUser,
-    group: 'contacts' as const,
-    keywords: [contact.name, contact.iban].filter(Boolean),
-    onSelect: () => {
-      // Navigate to transactions filtered by this contact
-      setAddressBookId(contact.id);
-      navigate('/transactions');
-    },
-  }));
 
   const value: SpotlightContextType = {
     isOpen,

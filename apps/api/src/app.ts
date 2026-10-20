@@ -1,5 +1,9 @@
 import express from 'express';
 import cors from 'cors';
+import {
+  createApiAccessMiddleware,
+  getApiAccessConfig,
+} from './middleware/api-access.js';
 import { existsSync, mkdirSync } from 'fs';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
@@ -38,37 +42,31 @@ initializeDatabase();
 
 // Create Express app
 const app = express();
-app.set('trust proxy', 1); // Trust first proxy
-const _PORT = process.env.PORT || 3001; // Prefixed with _ as it's only used in index.ts
+app.set('trust proxy', false);
+app.disable('x-powered-by');
 
 // Middleware
-const corsOriginEnv = process.env.CORS_ORIGIN;
-const corsOptions = (() => {
-  if (!corsOriginEnv) {
-    return {
-      origin: ['http://localhost:5177', 'http://localhost:3000'],
-      credentials: true,
-    };
-  }
-
-  const trimmed = corsOriginEnv.trim();
-  if (trimmed === '*') {
-    return { origin: true, credentials: false };
-  }
-
-  const origins = trimmed
-    .split(',')
-    .map((s) => s.trim())
-    .filter(Boolean);
-  return { origin: origins, credentials: true };
-})();
+const accessConfig = getApiAccessConfig();
+const corsOptions = { origin: accessConfig.allowedOrigins, credentials: false };
 
 app.use(cors(corsOptions));
+app.use((_req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('Referrer-Policy', 'no-referrer');
+  res.setHeader('X-Frame-Options', 'DENY');
+  next();
+});
+// Financial responses must not be kept in shared or browser caches.
+app.use('/api', (_req, res, next) => {
+  res.setHeader('Cache-Control', 'no-store');
+  next();
+});
 app.use(express.json());
 
 // Rate limiting - global limiter for all API routes
 // See middleware/rate-limit.ts for configuration via environment variables
 app.use('/api', globalRateLimiter);
+app.use('/api', createApiAccessMiddleware(accessConfig));
 
 // Performance logging for API requests
 app.use((req, res, next) => {
@@ -130,7 +128,7 @@ app.get('/api/health', (req, res) => {
 // Error handling middleware
 app.use(
   (
-    err: Error,
+    err: Error & { status?: number; statusCode?: number; expose?: boolean },
     _req: express.Request,
     res: express.Response,
     _next: express.NextFunction
@@ -140,9 +138,16 @@ app.use(
       console.error('Error:', err);
     }
 
-    res.status(500).json({
+    // Body parser errors (malformed JSON, oversized bodies) are client errors.
+    const status = err.status ?? err.statusCode ?? 500;
+    const isClientError = status >= 400 && status < 500;
+    res.status(isClientError ? status : 500).json({
       success: false,
-      error: err.message || 'Internal server error',
+      error:
+        (isClientError && err.expose !== false) ||
+        process.env.NODE_ENV !== 'production'
+          ? err.message || 'Internal server error'
+          : 'Internal server error',
     });
   }
 );

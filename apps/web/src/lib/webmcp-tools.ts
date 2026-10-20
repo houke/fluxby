@@ -51,6 +51,7 @@ const VIEW_PATHS = [
   'transactions',
   'analytics',
   'budgets',
+  'planning',
   'subscriptions',
   'addressbook',
   'categories',
@@ -356,6 +357,21 @@ export function buildWebMcpTools(deps: ToolDependencies): WebMcpTool[] {
         return service.getBudgets(month);
       }
     ),
+    tool('planning', schema(), async () => {
+      const [safeToSpend, netWorth, savingsGoals, plannedCashflows] =
+        await Promise.all([
+          service.getSafeToSpend(),
+          service.getNetWorth(),
+          service.getSavingsGoals(),
+          service.getPlannedCashflows(),
+        ]);
+      return {
+        safeToSpend,
+        netWorth,
+        savingsGoals: savingsGoals.slice(0, 100),
+        plannedCashflows: plannedCashflows.slice(0, 100),
+      };
+    }),
     tool('subscriptions', schema(), async () => {
       const [patterns, stats] = await Promise.all([
         service.getRecurringPatterns(),
@@ -398,20 +414,38 @@ export function buildWebMcpTools(deps: ToolDependencies): WebMcpTool[] {
           name: stringSchema,
           type: {
             type: 'string',
-            enum: ['checking', 'savings', 'credit'],
+            enum: [
+              'checking',
+              'savings',
+              'credit',
+              'cash',
+              'loan',
+              'investment',
+            ],
           },
           iban: stringSchema,
           bank: stringSchema,
           currentBalance: numberSchema,
         },
-        ['name', 'type', 'iban']
+        ['name', 'type']
       ),
       async (input, signal) => {
         const name = requiredString(input.name, copy);
         const type = requiredString(input.type, copy);
-        if (!['checking', 'savings', 'credit'].includes(type))
+        if (
+          ![
+            'checking',
+            'savings',
+            'credit',
+            'cash',
+            'loan',
+            'investment',
+          ].includes(type)
+        )
           throw new Error(copy.invalidInput);
-        const iban = requiredString(input.iban, copy, 34);
+        const iban = ['cash', 'loan', 'investment'].includes(type)
+          ? optionalString(input.iban, copy, 34)
+          : requiredString(input.iban, copy, 34);
         const bank = optionalString(input.bank, copy);
         const currentBalance =
           input.currentBalance === undefined
@@ -575,6 +609,36 @@ export function buildWebMcpTools(deps: ToolDependencies): WebMcpTool[] {
         guard(signal);
         const budget = await service.createBudget({ categoryId, amount });
         return { id: budget.id, created: true };
+      }
+    ),
+    write(
+      'createGoal',
+      schema(
+        {
+          name: stringSchema,
+          targetAmount: numberSchema,
+          monthlyContribution: numberSchema,
+          deadline: dateSchema,
+        },
+        ['name', 'targetAmount']
+      ),
+      async (input, signal) => {
+        const name = requiredString(input.name, copy);
+        const targetAmount = finite(input.targetAmount, copy, true);
+        const monthlyContribution =
+          input.monthlyContribution === undefined
+            ? 0
+            : finite(input.monthlyContribution, copy);
+        if (monthlyContribution < 0) throw new Error(copy.invalidInput);
+        const deadline = optionalDate(input.deadline, copy);
+        guard(signal);
+        const goal = await service.createSavingsGoal({
+          name,
+          targetAmount,
+          monthlyContribution,
+          deadline,
+        });
+        return { id: goal.id };
       }
     ),
     write(

@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { randomInt, randomUUID } from 'node:crypto';
-import { query, queryOne, run, runMany } from '../db/index.js';
+import { seedHouseholdDemo } from '../db/household-demo.js';
+import { db, query, queryOne, run, runMany } from '../db/index.js';
 import {
   buildRecurringPatternFromTemplate,
   DEMO_TRANSLATIONS,
@@ -532,6 +533,7 @@ function createDemoIncomeSources(copy: DemoTranslations) {
  *         description: Profile not found
  */
 router.post('/:id/seed-demo', (req, res) => {
+  let transactionStarted = false;
   try {
     const language = req.body?.language ?? req.get('X-Language') ?? 'nl';
     if (language !== 'nl' && language !== 'en') {
@@ -569,6 +571,11 @@ router.post('/:id/seed-demo', (req, res) => {
         .status(404)
         .json({ success: false, error: 'Profile not found' });
     }
+
+    // Keep the original profile intact if any account, transaction or household
+    // seed fails. The household helper shares this owned transaction.
+    db.exec('BEGIN');
+    transactionStarted = true;
 
     // 1. Clear existing data for this profile
     run('DELETE FROM budgets WHERE profile_id = ?', [profileId]);
@@ -1417,6 +1424,10 @@ router.post('/:id/seed-demo', (req, res) => {
       );
     }
 
+    seedHouseholdDemo(db, profileId, language);
+    db.exec('COMMIT');
+    transactionStarted = false;
+
     res.json({
       success: true,
       data: {
@@ -1429,6 +1440,7 @@ router.post('/:id/seed-demo', (req, res) => {
       },
     });
   } catch (error) {
+    if (transactionStarted && db.inTransaction) db.exec('ROLLBACK');
     console.error('Error seeding demo data:', error);
     res.status(500).json({ success: false, error: 'Failed to seed demo data' });
   }

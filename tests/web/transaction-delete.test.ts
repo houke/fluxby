@@ -1,3 +1,4 @@
+import type { AsyncDatabaseConnection } from '@fluxby/database';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('@fluxby/database', () => ({
@@ -39,7 +40,12 @@ describe('web data-service single transaction delete', () => {
     const db = {
       queryOneAsync,
       runAsync,
-      transactionAsync: vi.fn(async (fn: () => Promise<void>) => fn()),
+      transactionAsync: vi.fn(async function (
+        this: unknown,
+        fn: (connection: AsyncDatabaseConnection) => Promise<void>
+      ) {
+        return fn(this as AsyncDatabaseConnection);
+      }),
     };
 
     const ds = createDataService(db as never);
@@ -67,9 +73,9 @@ describe('web data-service single transaction delete', () => {
     );
     expect(queryOneAsync).toHaveBeenNthCalledWith(
       3,
-      `SELECT balance_after FROM transactions 
-         WHERE account_id = ? AND is_deleted = 0 AND balance_after IS NOT NULL 
-         ORDER BY date DESC, id DESC LIMIT 1`,
+      expect.stringMatching(
+        /SELECT balance_after FROM transactions\s+WHERE account_id = \? AND is_deleted = 0 AND balance_after IS NOT NULL\s+ORDER BY date DESC, id DESC LIMIT 1/
+      ),
       [VALID_ACCOUNT_ID]
     );
     expect(runAsync).toHaveBeenNthCalledWith(
@@ -93,7 +99,12 @@ describe('web data-service single transaction delete', () => {
     const db = {
       queryOneAsync,
       runAsync,
-      transactionAsync: vi.fn(async (fn: () => Promise<void>) => fn()),
+      transactionAsync: vi.fn(async function (
+        this: unknown,
+        fn: (connection: AsyncDatabaseConnection) => Promise<void>
+      ) {
+        return fn(this as AsyncDatabaseConnection);
+      }),
     };
 
     const ds = createDataService(db as never);
@@ -155,7 +166,12 @@ describe('web data-service single transaction delete', () => {
     const db = {
       queryOneAsync,
       runAsync,
-      transactionAsync: vi.fn(async (fn: () => Promise<void>) => fn()),
+      transactionAsync: vi.fn(async function (
+        this: unknown,
+        fn: (connection: AsyncDatabaseConnection) => Promise<void>
+      ) {
+        return fn(this as AsyncDatabaseConnection);
+      }),
     };
 
     const ds = createDataService(db as never);
@@ -192,7 +208,12 @@ describe('web data-service single transaction delete', () => {
     const db = {
       queryOneAsync,
       runAsync,
-      transactionAsync: vi.fn(async (fn: () => Promise<void>) => fn()),
+      transactionAsync: vi.fn(async function (
+        this: unknown,
+        fn: (connection: AsyncDatabaseConnection) => Promise<void>
+      ) {
+        return fn(this as AsyncDatabaseConnection);
+      }),
     };
 
     const ds = createDataService(db as never);
@@ -230,7 +251,12 @@ describe('web data-service single transaction delete', () => {
     const db = {
       queryOneAsync,
       runAsync,
-      transactionAsync: vi.fn(async (fn: () => Promise<void>) => fn()),
+      transactionAsync: vi.fn(async function (
+        this: unknown,
+        fn: (connection: AsyncDatabaseConnection) => Promise<void>
+      ) {
+        return fn(this as AsyncDatabaseConnection);
+      }),
     };
 
     const ds = createDataService(db as never);
@@ -261,7 +287,12 @@ describe('web data-service single transaction delete', () => {
 
     // This simulates the real transactionAsync which wraps db operations
     // When the inner function throws, the transaction should propagate the error
-    const transactionAsync = vi.fn(async (fn: () => Promise<void>) => fn());
+    const transactionAsync = vi.fn(async function (
+      this: unknown,
+      fn: (connection: AsyncDatabaseConnection) => Promise<void>
+    ) {
+      return fn(this as AsyncDatabaseConnection);
+    });
 
     const db = {
       queryOneAsync,
@@ -388,7 +419,12 @@ describe('web data-service deleteTransactionsByIds', () => {
       queryOneAsync,
       queryAsync,
       runAsync,
-      transactionAsync: vi.fn(async (fn: () => Promise<void>) => fn()),
+      transactionAsync: vi.fn(async function (
+        this: unknown,
+        fn: (connection: AsyncDatabaseConnection) => Promise<void>
+      ) {
+        return fn(this as AsyncDatabaseConnection);
+      }),
     };
 
     const ds = createDataService(db as never);
@@ -497,7 +533,12 @@ describe('web data-service restoreTransactions', () => {
       queryOneAsync,
       queryAsync,
       runAsync,
-      transactionAsync: vi.fn(async (fn: () => Promise<void>) => fn()),
+      transactionAsync: vi.fn(async function (
+        this: unknown,
+        fn: (connection: AsyncDatabaseConnection) => Promise<void>
+      ) {
+        return fn(this as AsyncDatabaseConnection);
+      }),
     };
 
     const ds = createDataService(db as never);

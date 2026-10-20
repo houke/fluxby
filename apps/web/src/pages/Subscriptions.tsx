@@ -46,19 +46,28 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { api } from '@/lib/api';
 import { getTypeSafeApiKey } from '@/lib/typesafe-client';
-import { cn } from '@/lib/utils';
+import { cn, formatDate } from '@/lib/utils';
 import { Currency } from '@/components/ui/currency';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useProfile } from '@/contexts/ProfileContext';
+import { useProfileDetailSelection } from '@/hooks/useProfileDetailSelection';
+import { PaginatedHistoryList } from '@/components/ui/PaginatedHistoryList';
 import { useToast } from '@/contexts/ToastContext';
 import { useConfirm } from '@/contexts/ConfirmContext';
-import { Link } from 'react-router-dom';
-import type {
-  RecurringPattern,
-  RecurringStats,
-  RecurringCalendarEntry,
-  RecurringPatternSourceSuggestion,
-  PatternType,
+import { TransitionLink } from '@/components/layout/TransitionLink';
+import {
+  getCalendarMonthRange,
+  isStaleSubscription,
+  getSubscriptionReminders,
+} from '@/lib/subscription-calendar';
+import {
+  formatDateISO,
+  parseDateOnly,
+  type RecurringPattern,
+  type RecurringStats,
+  type RecurringCalendarEntry,
+  type RecurringPatternSourceSuggestion,
+  type PatternType,
 } from '@fluxby/shared';
 
 // Helper to capitalize merchant name (first letter of first word only)
@@ -66,16 +75,6 @@ import type {
 function capitalizeFirst(name: string | null | undefined): string | null {
   if (!name) return null;
   return name.charAt(0).toUpperCase() + name.slice(1);
-}
-
-// Helper to format dates
-function formatDate(dateStr: string): string {
-  const date = new Date(dateStr);
-  return date.toLocaleDateString('nl-NL', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  });
 }
 
 // Helper to get frequency label
@@ -130,12 +129,8 @@ export default function Subscriptions() {
 
   // Get current month dates for calendar
   const now = new Date();
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
-    .toISOString()
-    .split('T')[0];
-  const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0)
-    .toISOString()
-    .split('T')[0];
+  const { startDate: startOfMonth, endDate: endOfMonth } =
+    getCalendarMonthRange(now);
 
   // Queries
   const { data: patterns, isLoading: loadingPatterns } = useQuery<
@@ -283,6 +278,9 @@ export default function Subscriptions() {
         queryKey: ['recurring-patterns', activeProfileId],
       });
       queryClient.invalidateQueries({
+        queryKey: ['planning', activeProfileId],
+      });
+      queryClient.invalidateQueries({
         queryKey: ['recurring-stats', activeProfileId],
       });
       toast.success(t.subscriptions?.confirmed);
@@ -334,11 +332,16 @@ export default function Subscriptions() {
         merchantName?: string;
         patternType?: PatternType;
         avgAmount?: number;
+        renewalDate?: string | null;
+        cancellationDeadline?: string | null;
       };
     }) => api.updateRecurringPattern(id, updates),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ['recurring-patterns', activeProfileId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['planning', activeProfileId],
       });
       toast.success(t.subscriptions?.updated);
     },
@@ -348,19 +351,18 @@ export default function Subscriptions() {
   });
 
   // State for expanded patterns and their transactions
-  const [expandedPatternId, setExpandedPatternId] = useState<string | null>(
-    null
-  );
+  const [expandedPatternId, setExpandedPatternId] =
+    useProfileDetailSelection(activeProfileId);
 
   // Query for transactions when a pattern is expanded
   const { data: patternTransactions, isLoading: loadingPatternTransactions } =
     useQuery({
-      queryKey: ['pattern-transactions', expandedPatternId],
+      queryKey: ['pattern-transactions', activeProfileId, expandedPatternId],
       queryFn: () =>
         expandedPatternId
           ? api.getTransactionsForPattern(expandedPatternId)
           : null,
-      enabled: !!expandedPatternId,
+      enabled: !!activeProfileId && !!expandedPatternId,
     });
 
   // Handlers
@@ -397,16 +399,21 @@ export default function Subscriptions() {
         merchantName?: string;
         patternType?: PatternType;
         avgAmount?: number;
+        renewalDate?: string | null;
+        cancellationDeadline?: string | null;
       }
     ) => {
-      updateMutation.mutate({ id, updates });
+      return updateMutation.mutateAsync({ id, updates });
     },
     [updateMutation]
   );
 
-  const handleToggleExpand = useCallback((id: string) => {
-    setExpandedPatternId((prev) => (prev === id ? null : id));
-  }, []);
+  const handleToggleExpand = useCallback(
+    (id: string) => {
+      setExpandedPatternId((prev) => (prev === id ? null : id));
+    },
+    [setExpandedPatternId]
+  );
 
   const handleDismiss = async (id: string) => {
     const confirmed = await confirm({
@@ -530,9 +537,7 @@ export default function Subscriptions() {
       isIncrease?: boolean;
     }> = [];
 
-    const today = new Date().toISOString().split('T')[0];
-    const twoMonthsAgo = new Date();
-    twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
+    const today = formatDateISO(new Date());
 
     // Helper to check if an alert type is dismissed for a pattern
     const isAlertDismissed = (
@@ -608,11 +613,10 @@ export default function Subscriptions() {
         });
       }
 
-      // Stale subscription alert (no transactions in 2+ months)
+      // Allow each subscription's expected interval before flagging inactivity.
       // Only show if not dismissed
       if (
-        pattern.lastDate &&
-        new Date(pattern.lastDate) < twoMonthsAgo &&
+        isStaleSubscription(pattern, today) &&
         !isAlertDismissed(pattern.id, 'stale')
       ) {
         alertList.push({
@@ -828,7 +832,7 @@ export default function Subscriptions() {
 
       {/* Stats Cards */}
       <div
-        className='-mx-3 grid grid-cols-2 gap-px bg-border sm:mx-0 sm:gap-4 sm:bg-transparent lg:grid-cols-4'
+        className='grid grid-cols-2 gap-px bg-border sm:gap-4 sm:bg-transparent lg:grid-cols-4'
         data-onboarding='subscriptions-stats'
       >
         <Card className='group relative h-full overflow-hidden rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'>
@@ -916,10 +920,7 @@ export default function Subscriptions() {
       {alerts.length > 0 && (
         <Card data-onboarding='subscriptions-alerts'>
           <CardHeader>
-            <CardTitle className='flex items-center gap-2'>
-              <AlertTriangle className='h-5 w-5 text-orange-500' />
-              {t.subscriptions?.alerts}
-            </CardTitle>
+            <CardTitle>{t.subscriptions?.alerts}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className='space-y-2'>
@@ -946,7 +947,7 @@ export default function Subscriptions() {
                           t.transactions.unknown}
                         {alert.type === 'price_change' && alert.newAmount && (
                           <span
-                            className={`ml-2 text-sm ${alert.isIncrease ? 'text-orange-600' : 'text-emerald-600'}`}
+                            className={`ml-2 text-sm ${alert.isIncrease ? 'text-orange-800 dark:text-orange-300' : 'text-emerald-800 dark:text-emerald-300'}`}
                           >
                             <Currency
                               amount={Math.abs(alert.pattern.avgAmount)}
@@ -1095,12 +1096,12 @@ export default function Subscriptions() {
                       : t.subscriptions?.detectPatterns}
                   </button>
                 ) : (
-                  <Link
+                  <TransitionLink
                     to='/import'
                     className='text-sm text-purple-600 hover:text-purple-700 hover:underline dark:text-purple-400 dark:hover:text-purple-300'
                   >
                     {t.dashboard?.goToImport}
-                  </Link>
+                  </TransitionLink>
                 )
               }
             />
@@ -1112,10 +1113,7 @@ export default function Subscriptions() {
           {pendingPatterns.length > 0 ? (
             <Card data-onboarding='subscriptions-pending'>
               <CardHeader>
-                <CardTitle className='flex items-center gap-2'>
-                  <Sparkles className='h-5 w-5 text-purple-500' />
-                  {t.subscriptions?.suggestedSubscriptions}
-                </CardTitle>
+                <CardTitle>{t.subscriptions?.suggestedSubscriptions}</CardTitle>
                 <CardDescription>
                   {t.subscriptions?.suggestedDescription}
                 </CardDescription>
@@ -1200,12 +1198,12 @@ export default function Subscriptions() {
                     <div className='flex items-center gap-3'>
                       <div className='flex h-10 w-10 flex-col items-center justify-center rounded-lg bg-muted text-xs'>
                         <span className='font-medium'>
-                          {new Date(entry.date).getDate()}
+                          {parseDateOnly(entry.date).getUTCDate()}
                         </span>
                         <span className='text-muted-foreground'>
                           {
                             t.common?.monthsShort?.[
-                              new Date(entry.date).getMonth()
+                              parseDateOnly(entry.date).getUTCMonth()
                             ]
                           }
                         </span>
@@ -1240,35 +1238,26 @@ export default function Subscriptions() {
   );
 }
 
-// Helper to check if a subscription is stale (no transactions in 2+ months)
-function isStaleSubscription(pattern: RecurringPattern): boolean {
-  if (!pattern.lastDate) return false;
-  const lastDate = new Date(pattern.lastDate);
-  const twoMonthsAgo = new Date();
-  twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
-  return lastDate < twoMonthsAgo;
-}
-
 // Helper to check if next payment is in the past
 function isNextPaymentOverdue(pattern: RecurringPattern): boolean {
   if (!pattern.nextExpectedDate) return false;
-  const today = new Date().toISOString().split('T')[0];
+  const today = formatDateISO(new Date());
   return pattern.nextExpectedDate < today;
 }
 
 // Helper to check if last transaction is in current month
 function hasTransactionThisMonth(pattern: RecurringPattern): boolean {
   if (!pattern.lastDate) return false;
-  const lastDate = new Date(pattern.lastDate);
+  const lastDate = parseDateOnly(pattern.lastDate);
   const now = new Date();
   return (
-    lastDate.getFullYear() === now.getFullYear() &&
-    lastDate.getMonth() === now.getMonth()
+    lastDate.getUTCFullYear() === now.getFullYear() &&
+    lastDate.getUTCMonth() === now.getMonth()
   );
 }
 
 // Subscription card component
-function SubscriptionCard({
+export function SubscriptionCard({
   pattern,
   t,
   onConfirm,
@@ -1289,7 +1278,9 @@ function SubscriptionCard({
     merchantName?: string;
     patternType?: PatternType;
     avgAmount?: number;
-  }) => void;
+    renewalDate?: string | null;
+    cancellationDeadline?: string | null;
+  }) => void | Promise<void>;
   isExpanded?: boolean;
   onToggleExpand?: () => void;
   transactions?: Array<{
@@ -1300,7 +1291,9 @@ function SubscriptionCard({
   }>;
   isLoadingTransactions?: boolean;
 }) {
+  const toast = useToast();
   const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [editName, setEditName] = useState(pattern.merchantName || '');
   const [editFrequency, setEditFrequency] = useState<PatternType>(
     pattern.patternType
@@ -1308,27 +1301,56 @@ function SubscriptionCard({
   const [editAmount, setEditAmount] = useState(
     Math.abs(pattern.avgAmount).toString()
   );
+  const [editRenewalDate, setEditRenewalDate] = useState(
+    pattern.renewalDate ?? ''
+  );
+  const [editCancellationDeadline, setEditCancellationDeadline] = useState(
+    pattern.cancellationDeadline ?? ''
+  );
 
-  const handleSaveEdit = () => {
+  const handleSaveEdit = async () => {
     if (onEdit) {
       const parsedAmount = parseFloat(editAmount);
-      onEdit({
-        merchantName: editName.trim() || undefined,
-        patternType: editFrequency,
-        avgAmount: !isNaN(parsedAmount) ? parsedAmount : undefined,
-      });
+      if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
+        toast.error(t.planning.invalidAmount);
+        return;
+      }
+      setIsSaving(true);
+      try {
+        await onEdit({
+          merchantName: editName.trim() || undefined,
+          patternType: editFrequency,
+          avgAmount:
+            parsedAmount *
+            (pattern.avgAmount < 0 ||
+            (pattern.avgAmount === 0 && pattern.lastAmount < 0)
+              ? -1
+              : 1),
+          renewalDate: editRenewalDate || null,
+          cancellationDeadline: editCancellationDeadline || null,
+        });
+        setIsEditing(false);
+      } catch {
+        // The parent mutation reports failures; keep the form available to retry.
+      } finally {
+        setIsSaving(false);
+      }
     }
-    setIsEditing(false);
   };
 
   const handleCancelEdit = () => {
     setEditName(pattern.merchantName || '');
     setEditFrequency(pattern.patternType);
     setEditAmount(Math.abs(pattern.avgAmount).toString());
+    setEditRenewalDate(pattern.renewalDate ?? '');
+    setEditCancellationDeadline(pattern.cancellationDeadline ?? '');
     setIsEditing(false);
   };
 
   const stale = isStaleSubscription(pattern);
+  const reminders = pattern.isConfirmed
+    ? getSubscriptionReminders(pattern)
+    : [];
   const overdue = isNextPaymentOverdue(pattern);
   const hasThisMonthTransaction = hasTransactionThisMonth(pattern);
   // Show 'awaiting' instead of 'overdue' if we don't have a transaction this month yet
@@ -1336,19 +1358,20 @@ function SubscriptionCard({
 
   return (
     <div className='rounded-lg border'>
-      <div className='flex items-center justify-between p-4'>
-        <div className='flex-1'>
-          <div className='flex items-center gap-2'>
+      <div className='flex flex-wrap items-center justify-between gap-3 p-3 sm:p-4'>
+        <div className='min-w-0 flex-1 basis-full sm:basis-auto'>
+          <div className='flex flex-wrap items-center gap-2'>
             {isEditing ? (
               <Input
                 value={editName}
                 onChange={(e) => setEditName(e.target.value)}
                 className='h-8 w-48'
                 placeholder={t.subscriptions?.merchantName}
+                aria-label={t.subscriptions.merchantName}
                 autoFocus
               />
             ) : (
-              <p className='font-medium'>
+              <p className='min-w-0 font-medium break-words'>
                 {capitalizeFirst(pattern.merchantName) ||
                   t.transactions.unknown}
               </p>
@@ -1392,7 +1415,10 @@ function SubscriptionCard({
                 value={editFrequency}
                 onValueChange={(v) => setEditFrequency(v as PatternType)}
               >
-                <SelectTrigger className='h-7 w-32'>
+                <SelectTrigger
+                  className='h-7 w-32'
+                  aria-label={t.subscriptions.frequency}
+                >
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -1423,6 +1449,8 @@ function SubscriptionCard({
                 <Input
                   type='number'
                   step='0.01'
+                  min='0.01'
+                  aria-label={t.subscriptions.avgAmount}
                   value={editAmount}
                   onChange={(e) => setEditAmount(e.target.value)}
                   className='h-7 w-20'
@@ -1458,7 +1486,7 @@ function SubscriptionCard({
                 className={cn(
                   'font-medium',
                   overdue && !showAwaiting && 'text-red-600',
-                  showAwaiting && 'text-amber-600'
+                  showAwaiting && 'text-amber-700 dark:text-amber-400'
                 )}
               >
                 {formatDate(pattern.nextExpectedDate)}
@@ -1476,10 +1504,68 @@ function SubscriptionCard({
               </span>
             </p>
           )}
+          {isEditing ? (
+            <div
+              className='mt-3 flex flex-wrap gap-3'
+              data-onboarding='subscription-renewal'
+            >
+              <label className='space-y-1 text-sm'>
+                <span className='block text-muted-foreground'>
+                  {t.subscriptions.renewalDate}
+                </span>
+                <Input
+                  type='date'
+                  value={editRenewalDate}
+                  onChange={(event) => setEditRenewalDate(event.target.value)}
+                />
+              </label>
+              <label className='space-y-1 text-sm'>
+                <span className='block text-muted-foreground'>
+                  {t.subscriptions.cancellationDeadline}
+                </span>
+                <Input
+                  type='date'
+                  value={editCancellationDeadline}
+                  onChange={(event) =>
+                    setEditCancellationDeadline(event.target.value)
+                  }
+                />
+              </label>
+            </div>
+          ) : (
+            <div
+              className='mt-2 space-y-1 text-sm'
+              data-onboarding='subscription-renewal'
+            >
+              {pattern.renewalDate && (
+                <p>
+                  <span className='text-muted-foreground'>
+                    {t.subscriptions.renewalDate}:{' '}
+                  </span>
+                  {formatDate(pattern.renewalDate)}
+                </p>
+              )}
+              {pattern.cancellationDeadline && (
+                <p>
+                  <span className='text-muted-foreground'>
+                    {t.subscriptions.cancellationDeadline}:{' '}
+                  </span>
+                  {formatDate(pattern.cancellationDeadline)}
+                </p>
+              )}
+              {reminders.map((reminder) => (
+                <p key={reminder} className='font-medium'>
+                  {reminder === 'renewal'
+                    ? t.subscriptions.renewalReminder
+                    : t.subscriptions.cancellationReminder}
+                </p>
+              ))}
+            </div>
+          )}
         </div>
 
         <div
-          className='flex items-center gap-2'
+          className='flex max-w-full flex-wrap items-center gap-2'
           data-onboarding='subscription-actions'
         >
           <p className='mr-4 text-lg font-semibold'>
@@ -1496,6 +1582,7 @@ function SubscriptionCard({
                       variant='ghost'
                       className='h-8 w-8 rounded-md hover:bg-green-600 hover:text-white'
                       onClick={handleSaveEdit}
+                      disabled={isSaving}
                     >
                       <Check className='h-4 w-4' />
                     </Button>
@@ -1565,7 +1652,10 @@ function SubscriptionCard({
                         size='icon'
                         variant='ghost'
                         className='h-8 w-8 rounded-md hover:bg-purple-600 hover:text-white'
-                        onClick={() => setIsEditing(true)}
+                        onClick={() => {
+                          handleCancelEdit();
+                          setIsEditing(true);
+                        }}
                       >
                         <Pencil className='h-4 w-4' />
                       </Button>
@@ -1635,8 +1725,12 @@ function SubscriptionCard({
               <h4 className='mb-2 text-sm font-medium'>
                 {t.subscriptions?.transactionHistory}
               </h4>
-              <div className='max-h-64 overflow-y-auto'>
-                {transactions.map((tx) => (
+              <PaginatedHistoryList
+                items={transactions}
+                className='max-h-64 overflow-y-auto'
+                previousLabel={t.common.previous}
+                nextLabel={t.common.next}
+                renderItem={(tx) => (
                   <div
                     key={tx.id}
                     className='flex items-center justify-between border-b border-dashed py-2 text-sm last:border-0'
@@ -1653,8 +1747,8 @@ function SubscriptionCard({
                       <Currency amount={tx.amount} />
                     </span>
                   </div>
-                ))}
-              </div>
+                )}
+              />
             </div>
           ) : (
             <p className='text-center text-sm text-muted-foreground'>

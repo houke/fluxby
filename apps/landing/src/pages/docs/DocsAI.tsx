@@ -117,6 +117,7 @@ const clientExample = (copy: ClientExampleCopy) => {
   detectDateFormat,
   detectIsPaymentProvider,
   getTypeSafeApiKey,
+  AUTO_CATEGORY_CONFIDENCE_THRESHOLD,
 } from '@/lib/typesafe-client';
 
 ${copy.keyComment}
@@ -131,7 +132,7 @@ const suggestion = await suggestCategory({
   apiKey: key,
 });
 
-if (suggestion && suggestion.confidence > 0.7) {
+if (suggestion && suggestion.confidence > AUTO_CATEGORY_CONFIDENCE_THRESHOLD) {
   // ${copy.writeComment}
   await db.runAsync(
     'UPDATE transactions SET category_id = ? WHERE id = ?',

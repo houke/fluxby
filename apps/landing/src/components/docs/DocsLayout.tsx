@@ -1,8 +1,9 @@
+import PageLoading from '../PageLoading';
 import { Link, Outlet } from 'react-router-dom';
 import DocsSidebar from './DocsSidebar';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useTheme } from '../../contexts/ThemeContext';
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 
 export default function DocsLayout() {
   const { language, setLanguage, t } = useLanguage();
@@ -42,7 +43,7 @@ export default function DocsLayout() {
 
             <Link
               to='/'
-              className='text-sm text-gray-500 transition-colors hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100'
+              className='text-sm text-gray-500 transition-colors hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100'
             >
               ← <span className='hidden sm:inline'>{t.docs.backToHome}</span>
               <span className='sm:hidden'>{t.docs.common.home}</span>
@@ -56,7 +57,7 @@ export default function DocsLayout() {
                 className={`rounded px-2 py-1 text-xs font-medium transition-colors ${
                   language === 'nl'
                     ? 'bg-white text-gray-900 shadow-sm dark:bg-gray-600 dark:text-gray-100'
-                    : 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100'
+                    : 'text-gray-500 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100'
                 }`}
               >
                 NL
@@ -66,7 +67,7 @@ export default function DocsLayout() {
                 className={`rounded px-2 py-1 text-xs font-medium transition-colors ${
                   language === 'en'
                     ? 'bg-white text-gray-900 shadow-sm dark:bg-gray-600 dark:text-gray-100'
-                    : 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100'
+                    : 'text-gray-500 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100'
                 }`}
               >
                 EN
@@ -119,7 +120,9 @@ export default function DocsLayout() {
         {/* Main content */}
         <main className='min-w-0 flex-1 overflow-x-hidden px-4 py-8 lg:px-8 lg:py-12'>
           <div className='mx-auto max-w-4xl min-w-0'>
-            <Outlet />
+            <Suspense fallback={<PageLoading />}>
+              <Outlet />
+            </Suspense>
           </div>
         </main>
 

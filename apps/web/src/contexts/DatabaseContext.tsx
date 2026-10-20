@@ -99,9 +99,7 @@ export function DatabaseProvider({ children }: DatabaseProviderProps) {
   const [isReady, setIsReady] = useState(!!existingDb);
   const [initStatus, setInitStatus] = useState<DatabaseInitStatus>('starting');
   const [showResetButton, setShowResetButton] = useState(false);
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const mountedRef = useRef(true);
-  const reopenInProgressRef = useRef(false);
+  const reopenPromiseRef = useRef<Promise<Database> | null>(null);
   // Track whether the current DB singleton was opened with an encryption key.
   // null = not yet opened; false = opened without key; true = opened with key.
   const dbOpenedWithKeyRef = useRef<boolean | null>(null);
@@ -132,11 +130,49 @@ export function DatabaseProvider({ children }: DatabaseProviderProps) {
   };
 
   useEffect(() => {
-    mountedRef.current = true;
+    // Each effect owns its completions. A shared mounted flag becomes true
+    // again after an encryption change or StrictMode replay and would let an
+    // obsolete initialization install its database or error into the new state.
+    let active = true;
+    let timeout: ReturnType<typeof setTimeout> | undefined = undefined;
+    const cleanup = () => {
+      active = false;
+      clearTimeout(timeout);
+    };
+    const watchReopen = (promise: Promise<Database>) => {
+      setInitStatus('settingUpEncryption');
+      setIsLoading(true);
+      setIsReady(false);
+      void promise.then(
+        (encryptedDatabase) => {
+          if (!active) return;
+          setDb(encryptedDatabase);
+          setGlobalDatabase(encryptedDatabase);
+          setError(null);
+          setShowResetButton(false);
+          setIsReady(true);
+          setIsLoading(false);
+          devLog('Database reopened with encryption');
+        },
+        (reopenError) => {
+          if (!active) return;
+          moduleInitError =
+            reopenError instanceof Error
+              ? reopenError
+              : new Error(String(reopenError));
+          devLog('Encrypted database reopen failed:', reopenError);
+          setError(moduleInitError);
+          setIsLoading(false);
+          setShowResetButton(true);
+        }
+      );
+    };
 
-    // Clear any previous timeout
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
+    // A dependency change during close/reopen must join that same transition.
+    // The factory still exposes the old singleton until its queued close ends.
+    if (reopenPromiseRef.current) {
+      watchReopen(reopenPromiseRef.current);
+      return cleanup;
     }
 
     // If database already exists, use it immediately
@@ -163,78 +199,38 @@ export function DatabaseProvider({ children }: DatabaseProviderProps) {
         dbOpenedWithKeyRef.current === false &&
         willUseOPFS;
       if (needsReopen) {
-        if (reopenInProgressRef.current) {
-          devLog('Encrypted database reopen already in progress');
-          setInitStatus('settingUpEncryption');
-          setIsLoading(true);
-          setIsReady(false);
-          return () => {
-            mountedRef.current = false;
-          };
-        }
-
-        reopenInProgressRef.current = true;
         devLog(
           'DB was opened without encryption but key is now set — reopening with encryption'
         );
-        dbOpenedWithKeyRef.current = null;
-        setInitStatus('settingUpEncryption');
-        setIsLoading(true);
-        setIsReady(false);
-
-        (async () => {
-          try {
-            // Closing the singleton releases the active VFS handle. An
-            // explicit WAL checkpoint can block while onboarding is still
-            // finishing, so let SQLite finalize it as part of close.
-            await closeAndResetForReinit();
-            const encryptedDatabase = await createDatabase({
-              dbPath: 'fluxby.db',
-              autoMigrate: true,
-              encryptionKey,
-            });
-
-            if (!mountedRef.current) return;
-
-            dbOpenedWithKeyRef.current = true;
-            setDb(encryptedDatabase);
-            setGlobalDatabase(encryptedDatabase);
-            setError(null);
-            setShowResetButton(false);
-            setIsReady(true);
-            setIsLoading(false);
-            devLog('Database reopened with encryption');
-          } catch (reopenError) {
-            moduleInitError =
-              reopenError instanceof Error
-                ? reopenError
-                : new Error(String(reopenError));
-
-            if (mountedRef.current) {
-              devLog('Encrypted database reopen failed:', reopenError);
-              setError(moduleInitError);
-              setIsLoading(false);
-              setShowResetButton(true);
-            }
-          } finally {
-            if (!mountedRef.current) {
-              reopenInProgressRef.current = false;
-            } else if (dbOpenedWithKeyRef.current === true) {
-              reopenInProgressRef.current = false;
-            }
-          }
+        const reopening = (async () => {
+          // Closing the singleton releases the active VFS handle. An
+          // explicit WAL checkpoint can block while onboarding is still
+          // finishing, so let SQLite finalize it as part of close.
+          await closeAndResetForReinit();
+          const encryptedDatabase = await createDatabase({
+            dbPath: 'fluxby.db',
+            autoMigrate: true,
+            encryptionKey,
+          });
+          dbOpenedWithKeyRef.current = true;
+          return encryptedDatabase;
         })();
-
-        return () => {
-          mountedRef.current = false;
+        reopenPromiseRef.current = reopening;
+        const releaseReopen = () => {
+          if (reopenPromiseRef.current === reopening)
+            reopenPromiseRef.current = null;
         };
+        void reopening.then(releaseReopen, releaseReopen);
+        watchReopen(reopening);
+
+        return cleanup;
       } else {
         devLog('Using existing database instance');
         setDb(existingDatabase);
         setGlobalDatabase(existingDatabase);
         setIsReady(true);
         setIsLoading(false);
-        return;
+        return cleanup;
       }
     }
 
@@ -244,7 +240,7 @@ export function DatabaseProvider({ children }: DatabaseProviderProps) {
       setError(moduleInitError);
       setIsLoading(false);
       setShowResetButton(true);
-      return;
+      return cleanup;
     }
 
     // Wait until the saved encryption state has finished hydrating. This prevents
@@ -254,7 +250,7 @@ export function DatabaseProvider({ children }: DatabaseProviderProps) {
       setInitStatus('preparingSecuritySettings');
       setIsLoading(true);
       setIsReady(false);
-      return;
+      return cleanup;
     }
 
     // If password protection is enabled but not unlocked, wait
@@ -263,7 +259,7 @@ export function DatabaseProvider({ children }: DatabaseProviderProps) {
       setInitStatus('waitingForUnlock');
       setIsLoading(false);
       setIsReady(false);
-      return;
+      return cleanup;
     }
 
     // If encryption is enabled but key isn't ready yet, wait
@@ -272,7 +268,7 @@ export function DatabaseProvider({ children }: DatabaseProviderProps) {
       devLog('Waiting for encryption key derivation...');
       setInitStatus('derivingEncryptionKey');
       setIsLoading(true);
-      return;
+      return cleanup;
     }
 
     // If init already started by another mount, just wait for the factory's promise
@@ -290,8 +286,8 @@ export function DatabaseProvider({ children }: DatabaseProviderProps) {
     setIsLoading(true);
 
     // Show reset button after 15 seconds
-    timeoutRef.current = setTimeout(() => {
-      if (mountedRef.current) {
+    timeout = setTimeout(() => {
+      if (active) {
         devLog('Showing reset button (timeout)');
         setShowResetButton(true);
       }
@@ -304,9 +300,9 @@ export function DatabaseProvider({ children }: DatabaseProviderProps) {
       encryptionKey: encryptionKey ?? undefined,
     })
       .then((database) => {
-        if (mountedRef.current) {
+        if (active) {
           devLog('Database initialization complete');
-          if (timeoutRef.current) clearTimeout(timeoutRef.current);
+          clearTimeout(timeout);
           dbOpenedWithKeyRef.current = encryptionKey !== null;
           setDb(database);
           setGlobalDatabase(database);
@@ -315,23 +311,16 @@ export function DatabaseProvider({ children }: DatabaseProviderProps) {
         }
       })
       .catch((err) => {
+        if (!active) return;
         moduleInitError = err instanceof Error ? err : new Error(String(err));
-
-        if (mountedRef.current) {
-          devLog('Database initialization failed:', err);
-          if (timeoutRef.current) clearTimeout(timeoutRef.current);
-          setError(moduleInitError);
-          setIsLoading(false);
-          setShowResetButton(true);
-        }
+        devLog('Database initialization failed:', err);
+        clearTimeout(timeout);
+        setError(moduleInitError);
+        setIsLoading(false);
+        setShowResetButton(true);
       });
 
-    return () => {
-      mountedRef.current = false;
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
+    return cleanup;
   }, [isEncryptionEnabled, isUnlocked, encryptionKey, isHydrated]);
 
   // Check if we're in Tauri

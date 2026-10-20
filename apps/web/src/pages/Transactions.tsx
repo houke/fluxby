@@ -9,9 +9,11 @@ import {
   lazy,
   Suspense,
 } from 'react';
+import { createPortal } from 'react-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
+import { useViewTransitionNavigate } from '@/lib/view-transitions';
 import { format } from 'date-fns';
 import { nl, enUS } from 'date-fns/locale';
 import {
@@ -102,6 +104,8 @@ import {
 } from '@/components/transactions/OptimizedFilters';
 import { TransactionRowBadges } from '@/components/transactions/TransactionRowBadges';
 import { TransactionCard } from '@/components/transactions/TransactionCard';
+import { TransactionReview } from '@/components/transaction-review/TransactionReview';
+import type { TransactionView } from '@/lib/transaction-view';
 import { Currency } from '@/components/ui/currency';
 import { api } from '@/lib/api';
 import {
@@ -111,7 +115,6 @@ import {
   formatCurrency,
 } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/useMediaQuery';
-import { useSuggestions, CategorySuggestion } from '@/hooks/useSuggestions';
 import { useAddressBook } from '@/hooks/useAddressBook';
 import { useSharedIbans } from '@/hooks/useSharedIbans';
 
@@ -129,14 +132,16 @@ type TransactionTypeFilter = 'all' | 'income' | 'expense' | 'transfer';
 import { useFilterParams, useFilters } from '@/contexts/FilterContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useProfile } from '@/contexts/ProfileContext';
+import { FormSelect } from '@/components/ui/form-select';
 
 export default function Transactions() {
   const { t, language } = useLanguage();
   const { activeProfileId } = useProfile();
-  const navigate = useNavigate();
+  const navigate = useViewTransitionNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   useDocumentTitle(t.nav.transactions);
   const isMobile = useIsMobile();
+  const [compact, setCompact] = useState(false);
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const {
@@ -395,6 +400,37 @@ export default function Transactions() {
     selectedPaymentMethods.length > 0 ||
     selectedPaymentProcessors.length > 0;
 
+  useEffect(() => {
+    try {
+      setCompact(
+        localStorage.getItem(`fluxby-compact-${activeProfileId}`) === 'true'
+      );
+    } catch {
+      setCompact(false);
+    }
+  }, [activeProfileId]);
+  const changeCompact = (value: boolean) => {
+    setCompact(value);
+    try {
+      localStorage.setItem(`fluxby-compact-${activeProfileId}`, String(value));
+    } catch {
+      /* Optional preference storage. */
+    }
+  };
+  const currentView: TransactionView = {
+    search,
+    type: transactionType,
+    startDate,
+    endDate,
+    categories: selectedCategoryIds,
+    ibans: selectedIbans,
+    accountName: selectedAccountName,
+    addressBookId: selectedAddressBookId,
+    methods: selectedPaymentMethods,
+    providers: selectedPaymentProcessors,
+    compact,
+  };
+
   const queryClient = useQueryClient();
 
   const toast = useToast();
@@ -494,49 +530,6 @@ export default function Transactions() {
       }) as Promise<Transaction[]>,
     enabled: !!activeProfileId,
     staleTime: 30 * 1000, // 30 seconds - prevent constant refetching on focus
-  });
-
-  // Use centralized suggestions hook
-  const suggestions = useSuggestions(transactions);
-
-  // Also fetch matching transactions across ALL data (no date range) so we can
-  // show a specialized empty state when the current period has no matches but
-  // the full dataset does.
-  const { data: transactionsAllData } = useQuery<Transaction[]>({
-    queryKey: [
-      'transactions-all',
-      activeProfileId,
-      {
-        search: debouncedSearch,
-        type: typeParam,
-        categoryIds: categoryIdsParam,
-        opposingAccountIbans: ibansParam,
-        opposingAccountName: nameParam,
-        addressBookId: addressBookIdParam,
-        paymentMethods: paymentMethodsParam,
-        paymentProviders: paymentProvidersParam,
-      },
-    ],
-    queryFn: () =>
-      api.getTransactions({
-        search: debouncedSearch,
-        type: typeParam || '',
-        ...(categoryIdsParam
-          ? { categoryIds: categoryIdsParam.join(',') }
-          : {}),
-        opposingAccountIbans: ibansParam?.join(',') || '',
-        opposingAccountName: nameParam || '',
-        addressBookId: addressBookIdParam?.toString() || '',
-        paymentMethods: paymentMethodsParam?.join(',') || '',
-        paymentProviders: paymentProvidersParam?.join(',') || '',
-      }) as Promise<Transaction[]>,
-    // Only run when filters are active and the current period returned zero
-    // transactions to avoid extra work during normal browsing.
-    enabled:
-      !!activeProfileId &&
-      hasActiveFilters &&
-      (transactions?.length ?? 0) === 0,
-    staleTime: 30 * 1000,
   });
 
   // React 19: Use deferred value with initial empty array for smoother first render
@@ -708,7 +701,7 @@ export default function Transactions() {
         paymentMethods: paymentMethodsParam?.join(',') || '',
         paymentProviders: paymentProvidersParam?.join(',') || '',
       }) as Promise<{ before: number; after: number; total: number }>,
-    enabled: !!activeProfileId && !!startDate && !!endDate,
+    enabled: !!activeProfileId && hasActiveFilters && !!startDate && !!endDate,
   });
 
   // Determine suggested period based on available data (for empty state)
@@ -886,7 +879,6 @@ export default function Transactions() {
     }
   };
 
-  // Fetch suggestions for uncategorized transactions
   useEffect(() => {
     // Reset visible count when date range changes
     setVisibleCount(50);
@@ -1796,7 +1788,7 @@ export default function Transactions() {
       value: 'pin',
       label: t.transactions.paymentMethods.pin,
       icon: <CreditCard className='h-3.5 w-3.5' />,
-      color: 'text-blue-600 bg-blue-100',
+      color: 'text-blue-700 bg-blue-100',
     },
     {
       value: 'ideal',
@@ -1814,13 +1806,13 @@ export default function Transactions() {
       value: 'incasso',
       label: t.transactions.paymentMethods.incasso,
       icon: <RefreshCcw className='h-3.5 w-3.5' />,
-      color: 'text-orange-500 bg-orange-50',
+      color: 'text-orange-700 bg-orange-50',
     },
     {
       value: 'geldautomaat',
       label: t.transactions.paymentMethods.atm,
       icon: <CreditCard className='h-3.5 w-3.5' />,
-      color: 'text-green-600 bg-green-100',
+      color: 'text-green-700 bg-green-100',
     },
   ];
 
@@ -1830,7 +1822,7 @@ export default function Transactions() {
       pin: {
         iconType: 'creditCard' as const,
         label: t.transactions.paymentMethods.pin,
-        color: 'text-blue-600 bg-blue-100',
+        color: 'text-blue-700 bg-blue-100',
       },
       ideal: {
         iconType: 'smartphone' as const,
@@ -1845,12 +1837,12 @@ export default function Transactions() {
       incasso: {
         iconType: 'refresh' as const,
         label: t.transactions.paymentMethods.incasso,
-        color: 'text-orange-500 bg-orange-50',
+        color: 'text-orange-700 bg-orange-50',
       },
       geldautomaat: {
         iconType: 'creditCard' as const,
         label: t.transactions.paymentMethods.atm,
-        color: 'text-green-600 bg-green-100',
+        color: 'text-green-700 bg-green-100',
       },
       other: {
         iconType: null,
@@ -1898,34 +1890,6 @@ export default function Transactions() {
     },
     [paymentMethodData]
   );
-
-  const _handleAcceptSuggestion = (
-    tx: Transaction,
-    suggestion: CategorySuggestion
-  ) => {
-    updateMutation.mutate({
-      id: tx.id,
-      data: { categoryId: suggestion.categoryId },
-    });
-  };
-
-  const _handleAcceptAndCreateRule = (
-    tx: Transaction,
-    suggestion: CategorySuggestion
-  ) => {
-    updateMutation.mutate({
-      id: tx.id,
-      data: { categoryId: suggestion.categoryId },
-    });
-
-    if (tx.merchantName && suggestion.categoryId) {
-      const pattern = tx.merchantName.split(' ')[0].toLowerCase();
-      createRuleMutation.mutate({
-        pattern,
-        categoryId: suggestion.categoryId,
-      });
-    }
-  };
 
   // Get totals via optimized database query (doesn't require loading all transactions)
   // This ensures accurate totals even with pagination limits
@@ -2055,7 +2019,7 @@ export default function Transactions() {
 
         {/* Stats Cards */}
         <div
-          className='-mx-3 grid grid-cols-2 gap-px bg-border sm:mx-0 sm:gap-4 sm:bg-transparent lg:grid-cols-4'
+          className='grid grid-cols-2 gap-px bg-border sm:gap-4 sm:bg-transparent lg:grid-cols-4'
           data-onboarding='transaction-summary'
         >
           <div className='h-full'>
@@ -2130,7 +2094,7 @@ export default function Transactions() {
                     value={search}
                     onChange={setSearch}
                     placeholder={t.transactions.searchPlaceholder}
-                    debounceMs={300}
+                    debounceMs={0}
                   />
                 </div>
                 <div
@@ -2229,6 +2193,10 @@ export default function Transactions() {
                   />
                 </div>
               </div>
+              <TransactionReview
+                view={currentView}
+                onCompactChange={changeCompact}
+              />
             </CardContent>
           </Card>
         </div>
@@ -2354,15 +2322,14 @@ export default function Transactions() {
                       const isExpanded =
                         expandedMerchant === `${merchantKey}-${tx.id}`;
                       const history = recurring ? getRecurringHistory(tx) : [];
-                      const _suggestion = suggestions[tx.id];
                       const addressBookEntry = findAddressBookEntry(tx);
                       const _sharedData = getSharedIbanData(
                         tx.opposingAccountIban
                       );
-                      const historyTotal = history.reduce(
-                        (sum, h) => sum + h.amount,
-                        0
-                      );
+                      const historyTotal =
+                        isExpanded && !isMobile
+                          ? history.reduce((sum, h) => sum + h.amount, 0)
+                          : 0;
 
                       // Mobile card view
                       if (isMobile) {
@@ -2374,6 +2341,11 @@ export default function Transactions() {
                             categoryColor={getCategoryColor(tx.categoryId)}
                             addressBookEntry={addressBookEntry}
                             isRecurring={recurring}
+                            compact={compact}
+                            selected={transactionSelection.isSelected(tx.id)}
+                            onSelect={() =>
+                              transactionSelection.toggleSelection(tx.id)
+                            }
                             onClick={() => {
                               if (recurring) {
                                 setExpandedMerchant(
@@ -2394,7 +2366,8 @@ export default function Transactions() {
                         >
                           <div
                             className={cn(
-                              'group flex items-center justify-between p-0 transition-colors hover:bg-muted/50 sm:rounded-lg sm:p-4',
+                              'group flex items-center justify-between p-0 transition-colors hover:bg-muted/50 sm:rounded-lg',
+                              compact ? 'sm:px-4 sm:py-1' : 'sm:p-4',
                               recurring && 'cursor-pointer',
                               transactionSelection.isSelected(tx.id) &&
                                 'bg-purple-50 dark:bg-purple-900/20'
@@ -2432,34 +2405,32 @@ export default function Transactions() {
                                   // doesn't fire (e.g., clicking hidden input directly in tests)
                                   e.stopPropagation();
                                 }}
-                                onClickCapture={(e) => {
-                                  // Use capture phase to intercept BEFORE checkbox processes
-                                  if (e.shiftKey) {
-                                    // For shift-clicks, prevent checkbox from processing
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    const visibleIds =
-                                      deferredTransactions
-                                        ?.slice(0, visibleCount)
-                                        .map((t) => t.id) || [];
-                                    selectRange(
-                                      lastSelectedId || tx.id,
-                                      tx.id,
-                                      visibleIds
-                                    );
-                                  }
-                                  // For normal clicks, let event continue to checkbox
-                                  // onChange will fire, then onClick above will stop propagation
-                                }}
                               >
                                 <Checkbox
                                   data-testid='transaction-checkbox'
                                   checked={transactionSelection.isSelected(
                                     tx.id
                                   )}
-                                  onChange={() =>
-                                    transactionSelection.toggleSelection(tx.id)
-                                  }
+                                  onChange={(event) => {
+                                    if (
+                                      event.nativeEvent instanceof MouseEvent &&
+                                      event.nativeEvent.shiftKey
+                                    ) {
+                                      const visibleIds =
+                                        deferredTransactions
+                                          ?.slice(0, visibleCount)
+                                          .map((item) => item.id) || [];
+                                      selectRange(
+                                        lastSelectedId || tx.id,
+                                        tx.id,
+                                        visibleIds
+                                      );
+                                    } else {
+                                      transactionSelection.toggleSelection(
+                                        tx.id
+                                      );
+                                    }
+                                  }}
                                   aria-label={t.bulkDelete.selectTransaction
                                     .replace(
                                       '{description}',
@@ -2792,8 +2763,8 @@ export default function Transactions() {
                                       ? 'text-blue-800 dark:text-blue-300'
                                       : 'text-blue-500 dark:text-blue-400'
                                     : tx.amount > 0
-                                      ? 'text-emerald-600'
-                                      : 'text-rose-600'
+                                      ? 'text-emerald-700 dark:text-emerald-400'
+                                      : 'text-rose-700 dark:text-rose-400'
                                 )}
                               >
                                 {tx.type === 'transfer' ? (
@@ -3013,7 +2984,7 @@ export default function Transactions() {
                 // If the filters returned no transactions in the current date range
                 // but *do* return transactions across the full dataset, show a
                 // specialized empty-state with a CTA to view all data.
-                (transactionsAllData?.length || 0) > 0 ? (
+                (outsideRangeCount?.total || 0) > 0 ? (
                   <EmptyState
                     icon={Search}
                     title={t.transactions.noTransactionsInRangeTitle}
@@ -3177,8 +3148,8 @@ export default function Transactions() {
                         className={cn(
                           'font-medium',
                           createContactTransaction.amount > 0
-                            ? 'text-emerald-600'
-                            : 'text-rose-600'
+                            ? 'text-emerald-700 dark:text-emerald-400'
+                            : 'text-rose-700 dark:text-rose-400'
                         )}
                       >
                         <Currency amount={createContactTransaction.amount} />
@@ -3360,6 +3331,9 @@ export default function Transactions() {
                                         size='sm'
                                         variant='outline'
                                         className='h-8 w-8 rounded-md p-0 hover:border-purple-600 hover:bg-purple-600 hover:text-white'
+                                        aria-label={
+                                          t.addressBook.assignToExisting
+                                        }
                                         disabled={
                                           addIbanToContactMutation.isPending
                                         }
@@ -3928,8 +3902,8 @@ export default function Transactions() {
                             <td
                               className={`py-2 text-right ${
                                 rt.amount > 0
-                                  ? 'text-emerald-600'
-                                  : 'text-rose-600'
+                                  ? 'text-emerald-700 dark:text-emerald-400'
+                                  : 'text-rose-700 dark:text-rose-400'
                               }`}
                             >
                               <Currency amount={rt.amount} />
@@ -4115,8 +4089,8 @@ export default function Transactions() {
                               pendingTransferTransaction.type === 'transfer'
                                 ? 'text-blue-600'
                                 : pendingTransferTransaction.amount > 0
-                                  ? 'text-emerald-600'
-                                  : 'text-rose-600'
+                                  ? 'text-emerald-700 dark:text-emerald-400'
+                                  : 'text-rose-700 dark:text-rose-400'
                             }`}
                           >
                             <Currency
@@ -4199,8 +4173,8 @@ export default function Transactions() {
                               rt.type === 'transfer'
                                 ? 'text-blue-600'
                                 : rt.amount > 0
-                                  ? 'text-emerald-600'
-                                  : 'text-rose-600'
+                                  ? 'text-emerald-700 dark:text-emerald-400'
+                                  : 'text-rose-700 dark:text-rose-400'
                             }`}
                           >
                             <Currency amount={rt.amount} />
@@ -4293,22 +4267,24 @@ export default function Transactions() {
         />
 
         {/* Selection Toolbar (sticky bottom, centered in content area) */}
-        {transactionSelection.isSelecting && (
-          <div className='fixed right-0 bottom-4 left-0 z-50 flex justify-center px-4 sm:left-[280px]'>
-            <div className='w-full max-w-3xl'>
-              <TransactionSelectionToolbar
-                selectionCount={transactionSelection.selectionCount}
-                onDeleteSelected={() => setBulkDeleteDialogOpen(true)}
-                onDeleteByDateRange={() => setDateRangeDeleteDialogOpen(true)}
-                onCancelSelection={() => {
-                  transactionSelection.clearSelection();
-                  transactionSelection.exitSelectionMode();
-                }}
-                isDeleting={bulkDelete.isDeleting}
-              />
-            </div>
-          </div>
-        )}
+        {transactionSelection.isSelecting &&
+          createPortal(
+            <div className='fixed right-0 bottom-[calc(5rem+env(safe-area-inset-bottom))] left-0 z-40 flex justify-center px-4 md:bottom-4 md:left-64'>
+              <div className='w-full max-w-3xl'>
+                <TransactionSelectionToolbar
+                  selectionCount={transactionSelection.selectionCount}
+                  onDeleteSelected={() => setBulkDeleteDialogOpen(true)}
+                  onDeleteByDateRange={() => setDateRangeDeleteDialogOpen(true)}
+                  onCancelSelection={() => {
+                    transactionSelection.clearSelection();
+                    transactionSelection.exitSelectionMode();
+                  }}
+                  isDeleting={bulkDelete.isDeleting}
+                />
+              </div>
+            </div>,
+            document.body
+          )}
 
         {/* Undo Toast */}
         {bulkDelete.canUndo && (
@@ -4334,8 +4310,9 @@ export default function Transactions() {
                     }
                     setAddTransactionModalOpen(true);
                   }}
-                  className='fixed right-6 bottom-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-purple-600 text-white shadow-lg transition-all hover:scale-105 hover:bg-purple-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2 active:scale-95'
+                  className='fixed right-6 bottom-6 z-40 flex h-14 w-14 items-center justify-center rounded-md bg-purple-600 text-white shadow-lg transition-all hover:scale-105 hover:bg-purple-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2 active:scale-95'
                   aria-label={t.transactions.addTransaction}
+                  data-onboarding='transaction-add'
                 >
                   <Plus className='h-6 w-6' />
                 </button>
@@ -4366,35 +4343,23 @@ export default function Transactions() {
               <div className='space-y-4 py-2 pr-1'>
                 {/* Type selector */}
                 <div className='space-y-2'>
-                  <label className='text-sm font-medium'>
+                  <label
+                    htmlFor='add-transaction-type'
+                    className='text-sm font-medium'
+                  >
                     {t.transactions.type}
                   </label>
-                  <div className='flex gap-2'>
-                    {(['income', 'expense', 'transfer'] as const).map(
-                      (type) => (
-                        <button
-                          key={type}
-                          onClick={() => setAddTxType(type)}
-                          className={cn(
-                            'flex-1 rounded-md border px-3 py-2 text-sm font-medium transition-colors',
-                            addTxType === type
-                              ? type === 'income'
-                                ? 'border-emerald-500 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400'
-                                : type === 'expense'
-                                  ? 'border-rose-500 bg-rose-50 text-rose-700 dark:bg-rose-950/30 dark:text-rose-400'
-                                  : 'border-blue-500 bg-blue-50 text-blue-700 dark:bg-blue-950/30 dark:text-blue-400'
-                              : 'border-border text-muted-foreground hover:bg-muted'
-                          )}
-                        >
-                          {type === 'income'
-                            ? t.transactions.income
-                            : type === 'expense'
-                              ? t.transactions.expense
-                              : t.transactions.transfer}
-                        </button>
-                      )
+                  <FormSelect
+                    id='add-transaction-type'
+                    label={t.transactions.type}
+                    value={addTxType}
+                    onChange={(value) =>
+                      setAddTxType(value as 'income' | 'expense' | 'transfer')
+                    }
+                    options={(['income', 'expense', 'transfer'] as const).map(
+                      (type) => ({ value: type, label: t.transactions[type] })
                     )}
-                  </div>
+                  />
                 </div>
 
                 {/* Transfer direction toggle — only for transfer type */}
@@ -4435,7 +4400,10 @@ export default function Transactions() {
                 {/* Amount + Date — two columns */}
                 <div className='grid grid-cols-2 gap-3'>
                   <div className='space-y-1'>
-                    <label className='flex items-center gap-1 text-sm font-medium'>
+                    <label
+                      htmlFor='add-transaction-amount'
+                      className='flex items-center gap-1 text-sm font-medium'
+                    >
                       {t.transactions.amount}
                       <span className='text-destructive'>*</span>
                     </label>
@@ -4444,6 +4412,7 @@ export default function Transactions() {
                         €
                       </span>
                       <Input
+                        id='add-transaction-amount'
                         type='text'
                         inputMode='decimal'
                         value={addTxAmount}
@@ -4474,11 +4443,15 @@ export default function Transactions() {
                     )}
                   </div>
                   <div className='space-y-1'>
-                    <label className='flex items-center gap-1 text-sm font-medium'>
+                    <label
+                      htmlFor='add-transaction-date'
+                      className='flex items-center gap-1 text-sm font-medium'
+                    >
                       {t.transactions.date}
                       <span className='text-destructive'>*</span>
                     </label>
                     <Input
+                      id='add-transaction-date'
                       type='date'
                       value={addTxDate}
                       onChange={(e) => {
@@ -4505,10 +4478,14 @@ export default function Transactions() {
 
                 {/* Description */}
                 <div className='space-y-2'>
-                  <label className='text-sm font-medium'>
+                  <label
+                    htmlFor='add-transaction-description'
+                    className='text-sm font-medium'
+                  >
                     {t.transactions.description}
                   </label>
                   <Input
+                    id='add-transaction-description'
                     value={addTxDescription}
                     onChange={(e) => setAddTxDescription(e.target.value)}
                     placeholder={t.transactions.descriptionPlaceholder}
@@ -4517,7 +4494,10 @@ export default function Transactions() {
 
                 {/* Counterparty / Address book */}
                 <div className='space-y-2'>
-                  <label className='text-sm font-medium'>
+                  <label
+                    htmlFor='add-transaction-counterparty'
+                    className='text-sm font-medium'
+                  >
                     {t.transactions.manualCounterparty}
                   </label>
                   {addTxAddressBookId ? (
@@ -4527,16 +4507,25 @@ export default function Transactions() {
                         {addressBook?.find((e) => e.id === addTxAddressBookId)
                           ?.name || ''}
                       </span>
-                      <button
-                        className='text-muted-foreground hover:text-foreground'
-                        onClick={() => setAddTxAddressBookId(null)}
-                      >
-                        <X className='h-4 w-4' />
-                      </button>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              aria-label={t.common.remove}
+                              className='rounded-md text-muted-foreground hover:text-foreground'
+                              onClick={() => setAddTxAddressBookId(null)}
+                            >
+                              <X className='h-4 w-4' />
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent>{t.common.remove}</TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     </div>
                   ) : (
                     <div className='relative'>
                       <Input
+                        id='add-transaction-counterparty'
                         value={addTxCounterparty}
                         onChange={(e) => setAddTxCounterparty(e.target.value)}
                         placeholder={
@@ -4554,7 +4543,10 @@ export default function Transactions() {
                               <PopoverTrigger asChild>
                                 <button
                                   type='button'
-                                  className='absolute top-1/2 right-2 -translate-y-1/2 rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground'
+                                  aria-label={
+                                    t.transactions.orSelectFromAddressBook
+                                  }
+                                  className='absolute top-1/2 right-2 -translate-y-1/2 rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground'
                                   onClick={() => {
                                     setAddTxAddressBookSearch('');
                                     setAddTxAddressBookOpen(true);
@@ -4627,89 +4619,99 @@ export default function Transactions() {
 
                 {/* Category */}
                 <div className='space-y-2'>
-                  <label className='text-sm font-medium'>
+                  <label
+                    htmlFor='add-transaction-category'
+                    className='text-sm font-medium'
+                  >
                     {t.transactions.categories}
                   </label>
-                  <select
+                  <FormSelect
+                    id='add-transaction-category'
+                    label={t.transactions.categories}
                     value={addTxCategoryId || ''}
-                    onChange={(e) => setAddTxCategoryId(e.target.value || null)}
-                    className='w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:ring-2 focus:ring-ring focus:outline-none'
-                  >
-                    <option value=''>{t.transactions.noCategory}</option>
-                    {groupedCategories.map((cat) => (
-                      <option key={cat.id} value={cat.id}>
-                        {cat.isChild
+                    onChange={(value) => setAddTxCategoryId(value || null)}
+                    options={[
+                      { value: '', label: t.transactions.noCategory },
+                      ...groupedCategories.map((cat) => ({
+                        value: cat.id,
+                        label: cat.isChild
                           ? `  ${cat.icon || ''} ${cat.name}`.trim()
-                          : `${cat.icon || ''} ${cat.name}`.trim()}
-                      </option>
-                    ))}
-                  </select>
+                          : `${cat.icon || ''} ${cat.name}`.trim(),
+                      })),
+                    ]}
+                  />
                 </div>
 
                 {/* Account + Payment method — two columns */}
                 <div className='grid grid-cols-2 gap-3'>
                   <div className='space-y-2'>
-                    <label className='text-sm font-medium'>
+                    <label
+                      htmlFor='add-transaction-account'
+                      className='text-sm font-medium'
+                    >
                       {t.transactions.account}
                     </label>
-                    <select
+                    <FormSelect
+                      id='add-transaction-account'
+                      label={t.transactions.account}
                       value={addTxAccountId || ''}
-                      onChange={(e) =>
-                        setAddTxAccountId(e.target.value || null)
-                      }
-                      className='w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:ring-2 focus:ring-ring focus:outline-none'
-                    >
-                      <option value=''>{t.transactions.noAccount}</option>
-                      {accounts?.map((acc) => (
-                        <option key={acc.id} value={acc.id}>
-                          {acc.name}
-                        </option>
-                      ))}
-                    </select>
+                      onChange={(value) => setAddTxAccountId(value || null)}
+                      options={[
+                        { value: '', label: t.transactions.noAccount },
+                        ...(accounts || []).map((account) => ({
+                          value: account.id,
+                          label: account.name,
+                        })),
+                      ]}
+                    />
                   </div>
                   <div className='space-y-2'>
-                    <label className='text-sm font-medium'>
+                    <label
+                      htmlFor='add-transaction-method'
+                      className='text-sm font-medium'
+                    >
                       {t.transactions.paymentMethodFilter}
                     </label>
-                    <select
+                    <FormSelect
+                      id='add-transaction-method'
+                      label={t.transactions.paymentMethodFilter}
                       value={addTxPaymentMethod || ''}
-                      onChange={(e) =>
-                        setAddTxPaymentMethod(e.target.value || null)
-                      }
-                      className='w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:ring-2 focus:ring-ring focus:outline-none'
-                    >
-                      <option value=''>{t.transactions.noPaymentMethod}</option>
-                      {paymentMethods.map((m) => (
-                        <option key={m.value} value={m.value}>
-                          {m.label}
-                        </option>
-                      ))}
-                    </select>
+                      onChange={(value) => setAddTxPaymentMethod(value || null)}
+                      options={[
+                        { value: '', label: t.transactions.noPaymentMethod },
+                        ...paymentMethods.map((method) => ({
+                          value: method.value,
+                          label: method.label,
+                        })),
+                      ]}
+                    />
                   </div>
                 </div>
 
                 {/* Payment processor */}
                 {paymentProviderRules.length > 0 && (
                   <div className='space-y-2'>
-                    <label className='text-sm font-medium'>
+                    <label
+                      htmlFor='add-transaction-provider'
+                      className='text-sm font-medium'
+                    >
                       {t.transactions.paymentProcessorFilter}
                     </label>
-                    <select
+                    <FormSelect
+                      id='add-transaction-provider'
+                      label={t.transactions.paymentProcessorFilter}
                       value={addTxPaymentProcessor || ''}
-                      onChange={(e) =>
-                        setAddTxPaymentProcessor(e.target.value || null)
+                      onChange={(value) =>
+                        setAddTxPaymentProcessor(value || null)
                       }
-                      className='w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:ring-2 focus:ring-ring focus:outline-none'
-                    >
-                      <option value=''>
-                        {t.transactions.noPaymentProcessor}
-                      </option>
-                      {paymentProviderRules.map((r) => (
-                        <option key={r.id} value={r.name}>
-                          {r.name}
-                        </option>
-                      ))}
-                    </select>
+                      options={[
+                        { value: '', label: t.transactions.noPaymentProcessor },
+                        ...paymentProviderRules.map((rule) => ({
+                          value: rule.name,
+                          label: rule.name,
+                        })),
+                      ]}
+                    />
                   </div>
                 )}
               </div>

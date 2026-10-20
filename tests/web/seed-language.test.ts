@@ -1,3 +1,4 @@
+import type { AsyncDatabaseConnection } from '@fluxby/database';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createDataService } from '../../apps/web/src/lib/data-service';
 import * as i18n from '../../apps/web/src/lib/i18n';
@@ -16,7 +17,12 @@ function captureSeededRows() {
             createdAt: 0,
           }
         : null,
-    transactionAsync: async (callback: () => Promise<void>) => callback(),
+    transactionAsync: async function (
+      this: unknown,
+      callback: (connection: AsyncDatabaseConnection) => Promise<void>
+    ) {
+      return callback(this as AsyncDatabaseConnection);
+    },
     runAsync: async (sql: string, params: unknown[] = []) => {
       const insert = sql.match(
         /INSERT(?: OR IGNORE)? INTO (\w+) \(([^)]+)\)\s*VALUES/i

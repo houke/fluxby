@@ -7,20 +7,30 @@ import {
   ChevronRight,
   ChevronLeft,
   Wallet,
+  Coins,
+  TrendingUp,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Currency } from '@/components/ui/currency';
+import { getAccountIconStyle } from '@/lib/account-color';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 export interface Account {
   id: number;
   iban: string;
   name: string;
-  type: 'checking' | 'savings' | 'credit';
+  type: 'checking' | 'savings' | 'credit' | 'cash' | 'loan' | 'investment';
   bank: string;
   currentBalance: number;
   balance?: number;
+  color?: string | null;
 }
 
 export interface TransactionTotals {
@@ -40,6 +50,7 @@ export interface TransactionHeaderProps {
   onAccountScrollIndexChange: (index: number) => void;
   totals: TransactionTotals;
   t: {
+    common: { previous: string; next: string };
     dashboard: {
       income: string;
       expenses: string;
@@ -83,7 +94,7 @@ export const TransactionHeader = memo(function TransactionHeader({
   t,
 }: TransactionHeaderProps) {
   return (
-    <>
+    <TooltipProvider>
       {/* Title and Account Cards */}
       <div className='flex flex-wrap items-start justify-between gap-4'>
         <div>
@@ -98,19 +109,25 @@ export const TransactionHeader = memo(function TransactionHeader({
             data-onboarding='transaction-accounts'
           >
             {accounts.length > 3 && (
-              <Button
-                variant='ghost'
-                size='icon'
-                onClick={() =>
-                  onAccountScrollIndexChange(
-                    Math.max(0, accountScrollIndex - 1)
-                  )
-                }
-                disabled={accountScrollIndex === 0}
-                className='h-8 w-8'
-              >
-                <ChevronLeft className='h-4 w-4' />
-              </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant='ghost'
+                    size='icon'
+                    onClick={() =>
+                      onAccountScrollIndexChange(
+                        Math.max(0, accountScrollIndex - 1)
+                      )
+                    }
+                    disabled={accountScrollIndex === 0}
+                    className='h-8 w-8'
+                    aria-label={t.common.previous}
+                  >
+                    <ChevronLeft className='h-4 w-4' />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>{t.common.previous}</TooltipContent>
+              </Tooltip>
             )}
 
             <div
@@ -122,6 +139,17 @@ export const TransactionHeader = memo(function TransactionHeader({
                 .map((account) => {
                   const balance = account.currentBalance || 0;
                   const colors = getAccountColors(account.type, balance);
+                  const customStyle = getAccountIconStyle(account.color);
+                  const Icon =
+                    account.type === 'savings'
+                      ? PiggyBank
+                      : account.type === 'credit' || account.type === 'loan'
+                        ? CreditCard
+                        : account.type === 'cash'
+                          ? Coins
+                          : account.type === 'investment'
+                            ? TrendingUp
+                            : Wallet;
 
                   return (
                     <div
@@ -129,16 +157,16 @@ export const TransactionHeader = memo(function TransactionHeader({
                       className='flex min-w-[12rem] flex-shrink-0 items-center gap-3 rounded-lg border bg-card px-4 py-2 shadow-sm'
                       data-onboarding='transaction-account-card'
                     >
-                      <div className={`rounded-full p-2 ${colors.bg}`}>
-                        {account.type === 'checking' && (
-                          <Wallet className={`h-4 w-4 ${colors.text}`} />
+                      <div
+                        className={cn(
+                          'rounded-full p-2',
+                          !customStyle && colors.bg
                         )}
-                        {account.type === 'savings' && (
-                          <PiggyBank className={`h-4 w-4 ${colors.text}`} />
-                        )}
-                        {account.type === 'credit' && (
-                          <CreditCard className={`h-4 w-4 ${colors.text}`} />
-                        )}
+                        style={customStyle}
+                      >
+                        <Icon
+                          className={cn('h-4 w-4', !customStyle && colors.text)}
+                        />
                       </div>
                       <div className='min-w-0'>
                         <p className='truncate text-xs text-muted-foreground'>
@@ -154,19 +182,25 @@ export const TransactionHeader = memo(function TransactionHeader({
             </div>
 
             {accounts.length > 3 && (
-              <Button
-                variant='ghost'
-                size='icon'
-                onClick={() =>
-                  onAccountScrollIndexChange(
-                    Math.min(accounts.length - 3, accountScrollIndex + 1)
-                  )
-                }
-                disabled={accountScrollIndex >= accounts.length - 3}
-                className='h-8 w-8'
-              >
-                <ChevronRight className='h-4 w-4' />
-              </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant='ghost'
+                    size='icon'
+                    onClick={() =>
+                      onAccountScrollIndexChange(
+                        Math.min(accounts.length - 3, accountScrollIndex + 1)
+                      )
+                    }
+                    disabled={accountScrollIndex >= accounts.length - 3}
+                    className='h-8 w-8'
+                    aria-label={t.common.next}
+                  >
+                    <ChevronRight className='h-4 w-4' />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>{t.common.next}</TooltipContent>
+              </Tooltip>
             )}
           </div>
         )}
@@ -274,7 +308,7 @@ export const TransactionHeader = memo(function TransactionHeader({
           </CardContent>
         </Card>
       </div>
-    </>
+    </TooltipProvider>
   );
 });
 

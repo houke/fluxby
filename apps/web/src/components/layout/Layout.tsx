@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { NavLink, Outlet, useLocation } from 'react-router-dom';
+import React, { Suspense, useState, useEffect, useRef } from 'react';
+import { Outlet, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
   LayoutDashboard,
@@ -7,6 +7,7 @@ import {
   BarChart3,
   Wallet,
   CalendarClock,
+  Target,
   Tags,
   Upload,
   Settings,
@@ -34,6 +35,7 @@ import {
 import { HeaderFilters } from './HeaderFilters';
 import { ProfileSwitcher } from './ProfileSwitcher';
 import { BottomNav } from './BottomNav';
+import { TransitionNavLink } from './TransitionLink';
 import { useDataService } from '@/contexts/DatabaseContext';
 import { FluxbyWebGL } from '@fluxby/shared';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -60,8 +62,8 @@ export default function Layout() {
   const dataService = useDataService();
 
   useEffect(() => {
-    mainScrollRef.current?.scrollTo({ top: 0 });
-    window.scrollTo({ top: 0 });
+    mainScrollRef.current?.scrollTo({ top: 0, left: 0 });
+    window.scrollTo({ top: 0, left: 0 });
   }, [location.pathname, location.search]);
 
   // Theme state
@@ -132,6 +134,13 @@ export default function Layout() {
       label: t.nav.subscriptions,
       onboarding: 'nav-subscriptions',
       menuKey: 'subscriptions',
+    },
+    {
+      to: '/planning',
+      icon: Target,
+      label: t.nav.planning,
+      onboarding: 'nav-planning',
+      menuKey: 'planning',
     },
     {
       to: '/addressbook',
@@ -279,7 +288,7 @@ export default function Layout() {
               <nav className='space-y-1'>
                 {navItems.map((item) => {
                   return (
-                    <NavLink
+                    <TransitionNavLink
                       key={item.to}
                       to={item.to}
                       data-onboarding={item.onboarding}
@@ -294,7 +303,7 @@ export default function Layout() {
                     >
                       <item.icon className='h-5 w-5' />
                       {item.label}
-                    </NavLink>
+                    </TransitionNavLink>
                   );
                 })}
               </nav>
@@ -306,7 +315,7 @@ export default function Layout() {
             <div className='space-y-1 p-3'>
               {bottomNavItems.map((item) => {
                 return (
-                  <NavLink
+                  <TransitionNavLink
                     key={item.to}
                     to={item.to}
                     data-onboarding={item.onboarding}
@@ -321,7 +330,7 @@ export default function Layout() {
                   >
                     <item.icon className='h-5 w-5' />
                     {item.label}
-                  </NavLink>
+                  </TransitionNavLink>
                 );
               })}
               <button
@@ -335,16 +344,16 @@ export default function Layout() {
           </aside>
 
           {/* Main Content */}
-          <div className='flex flex-1 flex-col overflow-hidden'>
+          <div className='flex min-w-0 flex-1 flex-col overflow-hidden'>
             {/* Top Bar */}
             <header className='flex h-14 items-center justify-between border-b bg-card px-3 md:h-16 md:px-6'>
               <div
-                className='flex flex-1 items-center gap-2 md:gap-4'
+                className='flex min-w-0 flex-1 items-center gap-2 md:gap-4'
                 data-onboarding='header-date-filter'
               >
                 <HeaderFilters />
               </div>
-              <div className='flex items-center gap-2'>
+              <div className='flex shrink-0 items-center gap-2'>
                 {/* Search / Spotlight button */}
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -448,9 +457,20 @@ export default function Layout() {
             <main
               ref={mainScrollRef}
               data-scroll-container='main'
-              className='flex-1 overflow-auto pb-20 md:p-6 md:pb-6'
+              className='app-page-view-transition min-w-0 flex-1 overflow-auto pb-20 md:p-6 md:pb-6'
             >
-              <Outlet />
+              <Suspense
+                fallback={
+                  <div
+                    role='status'
+                    className='flex min-h-40 items-center justify-center text-muted-foreground'
+                  >
+                    {t.common.loading}
+                  </div>
+                }
+              >
+                <Outlet />
+              </Suspense>
             </main>
           </div>
 

@@ -3,7 +3,7 @@ import { AlertTriangle, Home, RefreshCw } from 'lucide-react';
 import { resetAppAndRestartOnboarding } from '@/lib/database-reset';
 import { readFromOPFSSync } from '@fluxby/database';
 import { captureError } from '@/lib/error-tracking';
-import { getStoredLanguage, translations } from '@/lib/i18n';
+import { getTranslations } from '@/lib/i18n';
 
 interface Props {
   children: ReactNode;
@@ -67,7 +67,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
   public render() {
     if (this.state.hasError) {
-      const copy = translations[getStoredLanguage()].errorBoundary;
+      const copy = getTranslations().errorBoundary;
 
       return (
         <div className='flex min-h-screen items-center justify-center bg-background'>

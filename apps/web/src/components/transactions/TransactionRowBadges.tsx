@@ -227,10 +227,9 @@ export const TransactionRowBadges = memo(function TransactionRowBadges({
         <PopoverTrigger asChild onClick={(e) => e.stopPropagation()}>
           <button
             data-onboarding='transaction-category-badge'
-            className='cursor-pointer rounded px-2 py-0.5 text-xs font-medium transition-all hover:ring-2 hover:ring-primary/50 hover:ring-offset-1'
+            className='cursor-pointer rounded px-2 py-0.5 text-xs font-medium text-gray-900 transition-all hover:ring-2 hover:ring-primary/50 hover:ring-offset-1 dark:text-gray-100'
             style={{
               backgroundColor: `${categoryColor}5C`,
-              color: '#374151',
             }}
           >
             {categoryName}
@@ -315,7 +314,9 @@ export const TransactionRowBadges = memo(function TransactionRowBadges({
           <button
             className={cn(
               'flex cursor-pointer items-center gap-1 rounded px-1.5 py-0.5 text-xs font-medium transition-all hover:ring-2 hover:ring-primary/50 hover:ring-offset-1',
-              tx.paymentMethod ? paymentInfo.color : 'bg-gray-100 text-gray-500'
+              tx.paymentMethod
+                ? paymentInfo.color
+                : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300'
             )}
           >
             {paymentInfo.icon || <CreditCard className='h-3.5 w-3.5' />}
@@ -397,7 +398,7 @@ export const TransactionRowBadges = memo(function TransactionRowBadges({
                 )}
                 onClick={() => handlePaymentProcessorSelect(null)}
               >
-                <span className='flex h-6 w-6 flex-shrink-0 items-center justify-center rounded bg-gray-100 text-gray-500'>
+                <span className='flex h-6 w-6 flex-shrink-0 items-center justify-center rounded bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300'>
                   <X className='h-3.5 w-3.5' />
                 </span>
                 <span className='truncate'>{t.remove}</span>

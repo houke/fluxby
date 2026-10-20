@@ -1,3 +1,4 @@
+import { AccountColors } from './AccountColors';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
@@ -65,7 +66,8 @@ interface Account {
   id: string;
   iban: string;
   name: string;
-  type: 'checking' | 'savings' | 'credit';
+  type: 'checking' | 'savings' | 'credit' | 'cash' | 'loan' | 'investment';
+  color?: string | null;
   bank: string;
   currentBalance: number;
   balance: number;
@@ -77,10 +79,12 @@ interface SortableAccountItemProps {
   account: Account;
   editingId: string | null;
   editName: string;
-  editType: 'checking' | 'savings' | 'credit';
+  editType: 'checking' | 'savings' | 'credit' | 'cash' | 'loan' | 'investment';
   editBalance: string;
   setEditName: (value: string) => void;
-  setEditType: (value: 'checking' | 'savings' | 'credit') => void;
+  setEditType: (
+    value: 'checking' | 'savings' | 'credit' | 'cash' | 'loan' | 'investment'
+  ) => void;
   setEditBalance: (value: string) => void;
   setEditingId: (value: string | null) => void;
   handleUpdate: () => void;
@@ -99,6 +103,8 @@ interface SortableAccountItemProps {
         title: string;
         namePlaceholder: string;
         currentBalance: string;
+        accountType: string;
+        reorderAccount: string;
         deleteConfirm: string;
         deleteAccountTitle: string;
       };
@@ -145,6 +151,7 @@ const SortableAccountItem = React.memo(function SortableAccountItem({
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
+    borderLeft: account.color ? `3px solid ${account.color}` : undefined,
   };
 
   return (
@@ -167,7 +174,10 @@ const SortableAccountItem = React.memo(function SortableAccountItem({
             value={editType}
             onValueChange={(v) => setEditType(v as typeof editType)}
           >
-            <SelectTrigger className='w-full sm:w-40'>
+            <SelectTrigger
+              aria-label={t.settings.accounts.accountType}
+              className='w-full sm:w-40'
+            >
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -227,13 +237,29 @@ const SortableAccountItem = React.memo(function SortableAccountItem({
       ) : (
         <>
           <div className='flex w-full items-center gap-3 sm:w-auto'>
-            <button
-              className='cursor-grab rounded p-1 hover:bg-muted active:cursor-grabbing'
-              {...attributes}
-              {...listeners}
-            >
-              <GripVertical className='h-4 w-4 text-muted-foreground' />
-            </button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    aria-label={t.settings.accounts.reorderAccount.replace(
+                      '{name}',
+                      account.name
+                    )}
+                    className='cursor-grab rounded-md p-1 hover:bg-muted active:cursor-grabbing'
+                    {...attributes}
+                    {...listeners}
+                  >
+                    <GripVertical className='h-4 w-4 text-muted-foreground' />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {t.settings.accounts.reorderAccount.replace(
+                    '{name}',
+                    account.name
+                  )}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
             <div
               className={`rounded-lg p-2 ${
                 account.type === 'checking'
@@ -335,14 +361,14 @@ export function AccountSettings() {
   const queryClient = useQueryClient();
   const [newIban, setNewIban] = useState('');
   const [newName, setNewName] = useState('');
-  const [newType, setNewType] = useState<'checking' | 'savings' | 'credit'>(
-    'checking'
-  );
+  const [newType, setNewType] = useState<
+    'checking' | 'savings' | 'credit' | 'cash' | 'loan' | 'investment'
+  >('checking');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
-  const [editType, setEditType] = useState<'checking' | 'savings' | 'credit'>(
-    'checking'
-  );
+  const [editType, setEditType] = useState<
+    'checking' | 'savings' | 'credit' | 'cash' | 'loan' | 'investment'
+  >('checking');
   const [editBalance, setEditBalance] = useState('');
   const [accountOrder, setAccountOrder] = useState<string[]>([]);
   const [orderNotice, setOrderNotice] = useState<{
@@ -385,6 +411,13 @@ export function AccountSettings() {
         value: 'credit',
         label: t.settings.accounts.types.credit,
         icon: CreditCard,
+      },
+      { value: 'cash', label: t.householdBudget.cash, icon: Wallet },
+      { value: 'loan', label: t.householdBudget.loan, icon: CreditCard },
+      {
+        value: 'investment',
+        label: t.householdBudget.investment,
+        icon: PiggyBank,
       },
     ],
     [t]
@@ -525,7 +558,11 @@ export function AccountSettings() {
   });
 
   const handleCreate = () => {
-    if (!newIban.trim() || !newName.trim()) return;
+    if (
+      (!newIban.trim() && !['cash', 'loan', 'investment'].includes(newType)) ||
+      !newName.trim()
+    )
+      return;
     createMutation.mutate({
       iban: newIban.trim(),
       name: newName.trim(),
@@ -624,6 +661,10 @@ export function AccountSettings() {
                 </div>
               )}
 
+              <AccountColors key={activeProfileId} />
+              <p className='text-sm text-muted-foreground'>
+                {t.householdBudget.noIban} {t.householdBudget.forecastNote}
+              </p>
               {/* New Account Form (always visible) */}
               <div className='border-t pt-4'>
                 <p className='mb-3 text-sm font-medium'>
@@ -650,7 +691,10 @@ export function AccountSettings() {
                     value={newType}
                     onValueChange={(v) => setNewType(v as typeof newType)}
                   >
-                    <SelectTrigger className='w-full sm:w-40'>
+                    <SelectTrigger
+                      aria-label={t.settings.accounts.accountType}
+                      className='w-full sm:w-40'
+                    >
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -665,7 +709,8 @@ export function AccountSettings() {
                     onClick={handleCreate}
                     disabled={
                       createMutation.isPending ||
-                      !newIban.trim() ||
+                      (!newIban.trim() &&
+                        !['cash', 'loan', 'investment'].includes(newType)) ||
                       !newName.trim()
                     }
                     className='w-full sm:w-auto'

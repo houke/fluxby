@@ -4,35 +4,14 @@ export const migration004: Migration = {
   version: 4,
   name: 'v7_rules_profile_id',
   up: async (db: MigrationContext) => {
-    try {
-      await db.execAsync(
-        'ALTER TABLE name_cleanup_rules ADD COLUMN profile_id TEXT REFERENCES profiles(id) ON DELETE CASCADE;'
+    for (const table of ['name_cleanup_rules', 'payment_provider_rules']) {
+      const columns = await db.queryAsync<{ name: string }>(
+        `PRAGMA table_info(${table})`
       );
-    } catch (err) {
-      if (
-        err instanceof Error &&
-        (err.message.includes('duplicate column') ||
-          err.message.includes('already exists'))
-      ) {
-        // Already exists
-      } else {
-        throw err;
-      }
-    }
-
-    try {
-      await db.execAsync(
-        'ALTER TABLE payment_provider_rules ADD COLUMN profile_id TEXT REFERENCES profiles(id) ON DELETE CASCADE;'
-      );
-    } catch (err) {
-      if (
-        err instanceof Error &&
-        (err.message.includes('duplicate column') ||
-          err.message.includes('already exists'))
-      ) {
-        // Already exists
-      } else {
-        throw err;
+      if (!columns.some(({ name }) => name === 'profile_id')) {
+        await db.execAsync(
+          `ALTER TABLE ${table} ADD COLUMN profile_id TEXT REFERENCES profiles(id) ON DELETE CASCADE;`
+        );
       }
     }
   },

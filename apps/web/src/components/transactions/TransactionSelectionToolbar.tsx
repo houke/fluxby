@@ -9,6 +9,11 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 export interface TransactionSelectionToolbarProps {
   selectionCount: number;
@@ -50,7 +55,7 @@ export const TransactionSelectionToolbar = memo(
     return (
       <div
         className={cn(
-          'flex items-center justify-between gap-4 rounded-lg border bg-card px-4 py-3 shadow-sm transition-all duration-200 motion-reduce:transition-none',
+          'flex items-center justify-between gap-4 rounded-lg border bg-card px-4 py-3 shadow-sm transition-all duration-200 motion-reduce:transition-none motion-reduce:duration-0',
           isVisible ? 'translate-y-0 opacity-100' : '-translate-y-2 opacity-0'
         )}
         role='toolbar'
@@ -77,50 +82,72 @@ export const TransactionSelectionToolbar = memo(
         {/* Right side: Actions */}
         <div className='flex items-center gap-2'>
           {/* Cancel button */}
-          <Button
-            variant='ghost'
-            size='sm'
-            onClick={onCancelSelection}
-            disabled={isDeleting}
-            className='gap-1.5'
-            data-testid='cancel-selection'
-            aria-label={t.bulkDelete.cancelSelection}
-          >
-            <X className='h-4 w-4' aria-hidden='true' />
-            <span className='hidden sm:inline'>
-              {t.bulkDelete.cancelSelection}
-            </span>
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant='ghost'
+                size='sm'
+                onClick={onCancelSelection}
+                disabled={isDeleting}
+                className='gap-1.5 rounded-md'
+                data-testid='cancel-selection'
+                aria-label={t.bulkDelete.cancelSelection}
+              >
+                <X className='h-4 w-4' aria-hidden='true' />
+                <span className='hidden sm:inline'>
+                  {t.bulkDelete.cancelSelection}
+                </span>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>{t.bulkDelete.cancelSelection}</TooltipContent>
+          </Tooltip>
 
           {/* Delete button(s) */}
           {hasDateRangeOption ? (
             <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant='destructive'
-                  size='sm'
-                  disabled={isDeleting}
-                  data-testid='bulk-delete-button'
-                  className='gap-1.5'
-                >
-                  {isDeleting ? (
-                    <Loader2
-                      className='h-4 w-4 animate-spin'
-                      aria-hidden='true'
-                    />
-                  ) : (
-                    <Trash2 className='h-4 w-4' aria-hidden='true' />
-                  )}
-                  <span className='hidden sm:inline'>
-                    {isDeleting
-                      ? t.bulkDelete.deleting
-                      : t.bulkDelete.deleteSelected}
-                  </span>
-                  {!isDeleting && (
-                    <ChevronDown className='h-3.5 w-3.5' aria-hidden='true' />
-                  )}
-                </Button>
-              </DropdownMenuTrigger>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant='destructive'
+                      size='sm'
+                      disabled={isDeleting}
+                      data-testid='bulk-delete-button'
+                      aria-label={
+                        isDeleting
+                          ? t.bulkDelete.deleting
+                          : t.bulkDelete.deleteSelected
+                      }
+                      className='gap-1.5 rounded-md'
+                    >
+                      {isDeleting ? (
+                        <Loader2
+                          className='h-4 w-4 animate-spin'
+                          aria-hidden='true'
+                        />
+                      ) : (
+                        <Trash2 className='h-4 w-4' aria-hidden='true' />
+                      )}
+                      <span className='hidden sm:inline'>
+                        {isDeleting
+                          ? t.bulkDelete.deleting
+                          : t.bulkDelete.deleteSelected}
+                      </span>
+                      {!isDeleting && (
+                        <ChevronDown
+                          className='h-3.5 w-3.5'
+                          aria-hidden='true'
+                        />
+                      )}
+                    </Button>
+                  </DropdownMenuTrigger>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {isDeleting
+                    ? t.bulkDelete.deleting
+                    : t.bulkDelete.deleteSelected}
+                </TooltipContent>
+              </Tooltip>
               <DropdownMenuContent align='end'>
                 <DropdownMenuItem
                   onClick={onDeleteSelected}
@@ -141,25 +168,42 @@ export const TransactionSelectionToolbar = memo(
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <Button
-              variant='destructive'
-              size='sm'
-              onClick={onDeleteSelected}
-              disabled={isDeleting || selectionCount === 0}
-              data-testid='bulk-delete-button'
-              className='gap-1.5'
-            >
-              {isDeleting ? (
-                <Loader2 className='h-4 w-4 animate-spin' aria-hidden='true' />
-              ) : (
-                <Trash2 className='h-4 w-4' aria-hidden='true' />
-              )}
-              <span className='hidden sm:inline'>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant='destructive'
+                  size='sm'
+                  onClick={onDeleteSelected}
+                  disabled={isDeleting || selectionCount === 0}
+                  data-testid='bulk-delete-button'
+                  aria-label={
+                    isDeleting
+                      ? t.bulkDelete.deleting
+                      : t.bulkDelete.deleteSelected
+                  }
+                  className='gap-1.5 rounded-md'
+                >
+                  {isDeleting ? (
+                    <Loader2
+                      className='h-4 w-4 animate-spin'
+                      aria-hidden='true'
+                    />
+                  ) : (
+                    <Trash2 className='h-4 w-4' aria-hidden='true' />
+                  )}
+                  <span className='hidden sm:inline'>
+                    {isDeleting
+                      ? t.bulkDelete.deleting
+                      : t.bulkDelete.deleteSelected}
+                  </span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
                 {isDeleting
                   ? t.bulkDelete.deleting
                   : t.bulkDelete.deleteSelected}
-              </span>
-            </Button>
+              </TooltipContent>
+            </Tooltip>
           )}
         </div>
       </div>

@@ -29,6 +29,7 @@ export type WebMcpToolKey =
   | 'analytics'
   | 'categories'
   | 'budgets'
+  | 'planning'
   | 'subscriptions'
   | 'contacts'
   | 'imports'
@@ -37,6 +38,7 @@ export type WebMcpToolKey =
   | 'updateTransaction'
   | 'createCategory'
   | 'setBudget'
+  | 'createGoal'
   | 'createContact';
 
 export const webMcpNl: WebMcpCopy = {
@@ -70,6 +72,9 @@ export const webMcpNl: WebMcpCopy = {
     notes: 'Notities',
     parentId: 'Bovenliggende categorie-ID',
     budgetId: 'Budget-ID',
+    targetAmount: 'Doelbedrag',
+    monthlyContribution: 'Maandelijkse inleg',
+    deadline: 'Einddatum',
   },
   saved: 'Wijziging door browserassistent opgeslagen',
   cancelled: 'Wijziging geannuleerd',
@@ -112,6 +117,11 @@ export const webMcpNl: WebMcpCopy = {
       title: 'Budgetten lezen',
       description: 'Lees budgetten en bestedingen voor een maand.',
     },
+    planning: {
+      title: 'Planning lezen',
+      description:
+        'Lees spaardoelen, kasstromen, vrij te besteden bedrag en vermogen.',
+    },
     subscriptions: {
       title: 'Abonnementen lezen',
       description:
@@ -146,6 +156,10 @@ export const webMcpNl: WebMcpCopy = {
     setBudget: {
       title: 'Budget instellen',
       description: 'Maak na bevestiging een budget aan of wijzig het bedrag.',
+    },
+    createGoal: {
+      title: 'Spaardoel toevoegen',
+      description: 'Voeg na bevestiging een spaardoel toe.',
     },
     createContact: {
       title: 'Contact toevoegen of samenvoegen en transacties koppelen',
@@ -185,6 +199,9 @@ export const webMcpEn: WebMcpCopy = {
     notes: 'Notes',
     parentId: 'Parent category ID',
     budgetId: 'Budget ID',
+    targetAmount: 'Target amount',
+    monthlyContribution: 'Monthly contribution',
+    deadline: 'Deadline',
   },
   saved: 'Browser assistant change saved',
   cancelled: 'Change cancelled',
@@ -226,6 +243,11 @@ export const webMcpEn: WebMcpCopy = {
       title: 'Read budgets',
       description: 'Read budgets and spending for a month.',
     },
+    planning: {
+      title: 'Read planning',
+      description:
+        'Read savings goals, cashflows, safe-to-spend, and net worth.',
+    },
     subscriptions: {
       title: 'Read subscriptions',
       description:
@@ -259,6 +281,10 @@ export const webMcpEn: WebMcpCopy = {
     setBudget: {
       title: 'Set budget',
       description: 'Create a budget or change its amount after confirmation.',
+    },
+    createGoal: {
+      title: 'Add savings goal',
+      description: 'Add a savings goal after confirmation.',
     },
     createContact: {
       title: 'Add or merge contact and link transactions',

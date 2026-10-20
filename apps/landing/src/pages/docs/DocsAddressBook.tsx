@@ -6,7 +6,7 @@ export default function DocsAddressBook() {
 
   const listContactsCode = `// List all address book contacts
 fetch('http://localhost:3001/api/addressbook', {
-  headers: { 'X-Profile-ID': 'your-profile-id' }
+  headers: { 'X-Profile-ID': '1' }
 })
 .then(response => response.json())
 .then(contacts => console.log(contacts));`;
@@ -31,7 +31,7 @@ fetch('http://localhost:3001/api/addressbook', {
 fetch('http://localhost:3001/api/addressbook', {
   method: 'POST',
   headers: {
-    'X-Profile-ID': 'your-profile-id',
+    'X-Profile-ID': '1',
     'Content-Type': 'application/json'
   },
   body: JSON.stringify({
@@ -48,7 +48,7 @@ fetch('http://localhost:3001/api/addressbook', {
 fetch('http://localhost:3001/api/addressbook/cleanup-rules', {
   method: 'POST',
   headers: {
-    'X-Profile-ID': 'your-profile-id',
+    'X-Profile-ID': '1',
     'Content-Type': 'application/json'
   },
   body: JSON.stringify({
@@ -63,7 +63,7 @@ fetch('http://localhost:3001/api/addressbook/cleanup-rules', {
 fetch('http://localhost:3001/api/addressbook/merge', {
   method: 'POST',
   headers: {
-    'X-Profile-ID': 'your-profile-id',
+    'X-Profile-ID': '1',
     'Content-Type': 'application/json'
   },
   body: JSON.stringify({
@@ -80,7 +80,7 @@ fetch('http://localhost:3001/api/addressbook/merge', {
 fetch('http://localhost:3001/api/addressbook/shared-ibans', {
   method: 'POST',
   headers: {
-    'X-Profile-ID': 'your-profile-id',
+    'X-Profile-ID': '1',
     'Content-Type': 'application/json'
   },
   body: JSON.stringify({

@@ -51,6 +51,7 @@ describe('Onboarding Data', () => {
         '/categories',
         '/analytics',
         '/subscriptions',
+        '/planning',
         '/addressbook',
         '/settings',
         '/help',
@@ -121,6 +122,83 @@ describe('Onboarding Data', () => {
     });
   });
 
+  describe('Feature coverage and translations', () => {
+    it('explains each new workflow with nonempty NL and EN copy', () => {
+      const steps = onboardingChapters.flatMap((chapter) => chapter.steps);
+      for (const id of [
+        'review-inbox',
+        'review-repayments',
+        'review-transfers',
+        'review-bills',
+        'transactions-export',
+        'transactions-manual',
+        'transactions-selection',
+        'budget-month-overrides',
+        'budget-allocation-groups',
+        'budget-deficit-carry',
+        'planning-net-worth',
+        'planning-monthly-review',
+        'household-cashflows',
+        'planning-daily-forecast',
+        'planning-variable-spending',
+        'planning-snapshots',
+        'planning-weekly-review',
+        'category-groups',
+        'category-archive',
+        'category-advanced-rules',
+        'subscriptions-renewal',
+        'import-formats',
+        'import-source-review',
+        'import-undo',
+        'import-checkpoints',
+        'settings-account-types',
+        'settings-profile-data',
+        'settings-updates',
+        'planning-goal-links',
+        'settings-ai-actions',
+      ]) {
+        const step = steps.find((item) => item.id === id);
+        expect(step, id).toBeDefined();
+        if (!step) throw new Error(`Missing tour step: ${id}`);
+        for (const language of ['nl', 'en'] as const) {
+          expect(
+            step.title[language].trim().length,
+            `${id}/${language}`
+          ).toBeGreaterThan(3);
+          expect(
+            step.content[language].trim().length,
+            `${id}/${language}`
+          ).toBeGreaterThan(80);
+          expect(step.content[language]).not.toContain('undefined');
+        }
+      }
+    });
+
+    it('gives every Planning feature its own visible tab destination', () => {
+      const chapter = onboardingChapters.find((item) => item.id === 'planning');
+      if (!chapter) throw new Error('Missing Planning chapter');
+      const steps = chapter.steps;
+      const destinations: Record<string, string> = {
+        'planning-forecast': 'goals',
+        'planning-goals': 'goals',
+        'planning-net-worth': 'net-worth',
+        'planning-monthly-review': 'review',
+        'household-planning-tab': 'household',
+        'household-cashflows': 'household',
+        'planning-freshness': 'household',
+        'planning-daily-forecast': 'household',
+        'planning-variable-spending': 'household',
+        'planning-snapshots': 'household',
+        'planning-weekly-review': 'household',
+        'planning-goal-links': 'household',
+      };
+      for (const [id, tab] of Object.entries(destinations))
+        expect(steps.find((step) => step.id === id)?.route).toBe(
+          `/planning?tab=${tab}`
+        );
+    });
+  });
+
   describe('Welcome Chapter', () => {
     const welcomeChapter = onboardingChapters[0];
 
@@ -180,12 +258,18 @@ describe('Onboarding Data', () => {
       expect(settingsChapter?.route).toBe('/settings');
     });
 
-    it('should have settings tabs step', () => {
+    it('should have settings overview step', () => {
       const tabsStep = settingsChapter?.steps.find(
-        (s) => s.id === 'settings-tabs'
+        (s) => s.id === 'settings-overview'
       );
       expect(tabsStep).toBeDefined();
-      expect(tabsStep?.selector).toBe('[data-onboarding="settings-tabs"]');
+      expect(tabsStep?.selector).toBe('[data-onboarding="settings-overview"]');
+    });
+    it('gives every settings spotlight a destination for forward and backward navigation', () => {
+      for (const step of settingsChapter?.steps || []) {
+        expect(step.route).toMatch(/^\/settings(?:\?|$)/);
+        expect(step.selector).toBeTruthy();
+      }
     });
   });
 

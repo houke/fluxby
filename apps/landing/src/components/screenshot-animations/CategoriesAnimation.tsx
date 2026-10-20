@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useState, type CSSProperties } from 'react';
 import { useLanguage } from '../../contexts/LanguageContext';
 
 // Category data structure with keys for translation
@@ -49,10 +49,7 @@ export default function CategoriesAnimation({
   isVisible: boolean;
 }) {
   const { t } = useLanguage();
-  const [scrollY, setScrollY] = useState(0);
   const [shuffledData] = useState(() => shuffleArray(categoryGroupData));
-  const animationRef = useRef<number | null>(null);
-  const lastTimeRef = useRef<number>(0);
 
   // Get translations
   const anim = t.animations?.categories;
@@ -66,40 +63,6 @@ export default function CategoriesAnimation({
       icon: cat.subcategoryIcons[idx],
     })),
   }));
-
-  useEffect(() => {
-    if (isVisible) {
-      const animate = (currentTime: number) => {
-        if (!lastTimeRef.current) lastTimeRef.current = currentTime;
-        const delta = currentTime - lastTimeRef.current;
-        lastTimeRef.current = currentTime;
-
-        // Scroll at 25px per second
-        setScrollY((prev) => {
-          const newY = prev + (delta / 1000) * 25;
-          const cardHeight = 160; // Approximate height per category card including margin
-          const totalHeight = categoryGroups.length * cardHeight;
-          return newY % totalHeight;
-        });
-
-        animationRef.current = requestAnimationFrame(animate);
-      };
-
-      animationRef.current = requestAnimationFrame(animate);
-    } else {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-        animationRef.current = null;
-      }
-      lastTimeRef.current = 0;
-    }
-
-    return () => {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
-    };
-  }, [isVisible, categoryGroups.length]);
 
   // Triple for seamless loop
   const tripledCategories = [
@@ -115,8 +78,14 @@ export default function CategoriesAnimation({
 
       {/* Scrolling categories */}
       <div
-        className='absolute right-0 left-0 px-4'
-        style={{ transform: `translateY(-${scrollY}px)` }}
+        className='demo-scroll-vertical absolute right-0 left-0 px-4'
+        style={
+          {
+            '--demo-scroll-offset': `-${categoryGroups.length * 160}px`,
+            '--demo-scroll-duration': `${(categoryGroups.length * 160) / 25}s`,
+            animationPlayState: isVisible ? 'running' : 'paused',
+          } as CSSProperties
+        }
       >
         {tripledCategories.map((category, idx) => (
           <div

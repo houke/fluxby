@@ -1,9 +1,24 @@
 import request from 'supertest';
-import { describe, expect, it } from 'vitest';
+import { createServer } from 'node:http';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import app from '../../apps/api/src/app';
 import { queryOne, run } from '../../apps/api/src/db/index.js';
 
 describe('Recurring calendar timezone stability', () => {
+  const server = createServer(app);
+  beforeAll(async () => {
+    await new Promise<void>((resolve, reject) => {
+      server.once('error', reject);
+      server.listen(0, '127.0.0.1', resolve);
+    });
+  });
+  afterAll(async () => {
+    if (!server.listening) return;
+    await new Promise<void>((resolve, reject) => {
+      server.close((error) => (error ? reject(error) : resolve()));
+    });
+  });
+
   it('projects monthly entries from date-only strings without timezone drift', async () => {
     try {
       run(
@@ -13,7 +28,7 @@ describe('Recurring calendar timezone stability', () => {
       // Column already exists in newer schemas.
     }
 
-    const createResponse = await request(app)
+    const createResponse = await request(server)
       .post('/api/profiles')
       .send({ name: 'Recurring Calendar TZ', type: 'personal' });
 
@@ -41,7 +56,7 @@ describe('Recurring calendar timezone stability', () => {
       ]
     );
 
-    const response = await request(app)
+    const response = await request(server)
       .get('/api/recurring/calendar')
       .set('X-Profile-Id', String(profileId))
       .query({ startDate: '2025-03-31', endDate: '2025-03-31' });

@@ -1,11 +1,8 @@
-import { format } from 'date-fns';
-import { nl, enUS } from 'date-fns/locale';
 import { CalendarIcon } from 'lucide-react';
 import { useFilters } from '@/contexts/FilterContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useProfile } from '@/contexts/ProfileContext';
 import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
 import {
   Popover,
   PopoverContent,
@@ -18,14 +15,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { cn } from '@/lib/utils';
-import { useEffect, useState } from 'react';
+import { cn, formatDate } from '@/lib/utils';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useDataService } from '@/contexts/DatabaseContext';
 import type { DateRange } from 'react-day-picker';
 
+// The day picker is only needed once the popover opens; keep it out of the
+// startup bundle that every page loads.
+const loadCalendar = () => import('@/components/ui/calendar');
+const Calendar = lazy(() =>
+  loadCalendar().then((module) => ({ default: module.Calendar }))
+);
+
 export function HeaderFilters() {
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
   const { filters, setDateRange } = useFilters();
   const { activeProfileId } = useProfile();
   const dataService = useDataService();
@@ -120,32 +124,26 @@ export function HeaderFilters() {
 
   const formatDateRange = () => {
     const { start, end } = filters.dateRange;
-    const startYear = start.getFullYear();
-    const endYear = end.getFullYear();
-    const locale = language === 'nl' ? nl : enUS;
-
-    const startStr =
-      startYear !== endYear
-        ? format(start, 'd MMM yyyy', { locale })
-        : format(start, 'd MMM', { locale });
-    const endStr = format(end, 'd MMM yyyy', { locale });
-    return `${startStr} - ${endStr}`;
+    return `${formatDate(start)} - ${formatDate(end)}`;
   };
 
   return (
-    <div className='flex items-center gap-2'>
+    <div className='flex max-w-full min-w-0 items-center gap-2'>
       {/* Date Range Picker */}
       <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
         <PopoverTrigger asChild>
           <Button
             variant='outline'
+            // Warm the lazy calendar chunk before the popover opens.
+            onPointerEnter={() => void loadCalendar()}
+            onFocus={() => void loadCalendar()}
             className={cn(
-              'min-w-[200px] justify-start text-left font-normal',
+              'w-full min-w-0 justify-start px-2 text-left text-xs font-normal sm:min-w-[200px] sm:px-4 sm:text-sm',
               !filters.dateRange && 'text-muted-foreground'
             )}
           >
-            <CalendarIcon className='mr-2 h-4 w-4' />
-            {formatDateRange()}
+            <CalendarIcon className='h-4 w-4 shrink-0 sm:mr-2' />
+            <span className='truncate'>{formatDateRange()}</span>
           </Button>
         </PopoverTrigger>
         <PopoverContent className='w-auto p-0' align='start'>
@@ -221,29 +219,37 @@ export function HeaderFilters() {
               )}
             </div>
             {/* Calendar */}
-            <Calendar
-              mode='range'
-              selected={{
-                from: filters.dateRange.start,
-                to: filters.dateRange.end,
-              }}
-              onSelect={(range: DateRange | undefined) => {
-                if (range?.from && range?.to) {
-                  setDateRange(range.from, range.to);
-                } else if (range?.from) {
-                  // Keep the popover open while selecting range
-                  setDateRange(range.from, range.from);
+            <Suspense
+              fallback={<div className='h-[300px] w-[280px] sm:w-[560px]' />}
+            >
+              <Calendar
+                mode='range'
+                selected={{
+                  from: filters.dateRange.start,
+                  to: filters.dateRange.end,
+                }}
+                onSelect={(range: DateRange | undefined) => {
+                  if (range?.from && range?.to) {
+                    setDateRange(range.from, range.to);
+                  } else if (range?.from) {
+                    // Keep the popover open while selecting range
+                    setDateRange(range.from, range.from);
+                  }
+                }}
+                numberOfMonths={2}
+                defaultMonth={filters.dateRange.start}
+                startMonth={
+                  minMaxDates?.minDate
+                    ? new Date(minMaxDates.minDate)
+                    : undefined
                 }
-              }}
-              numberOfMonths={2}
-              defaultMonth={filters.dateRange.start}
-              startMonth={
-                minMaxDates?.minDate ? new Date(minMaxDates.minDate) : undefined
-              }
-              endMonth={
-                minMaxDates?.maxDate ? new Date(minMaxDates.maxDate) : undefined
-              }
-            />
+                endMonth={
+                  minMaxDates?.maxDate
+                    ? new Date(minMaxDates.maxDate)
+                    : undefined
+                }
+              />
+            </Suspense>
           </div>
         </PopoverContent>
       </Popover>

@@ -38,6 +38,7 @@ describe('Dashboard auto-scroll behavior', () => {
     vi.spyOn(lang, 'useLanguage').mockReturnValue({
       t: {
         nav: { dashboard: 'Dashboard' },
+        categories: { uncategorized: 'Uncategorized' },
         dashboard: {
           monthlyIncome: 'Monthly Income',
           expensesByCategory: 'Expenses by Category',

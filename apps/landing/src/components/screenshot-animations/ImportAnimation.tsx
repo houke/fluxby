@@ -1,5 +1,6 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { useDemoAnimationFrame } from '../../hooks/useAnimationActivity';
 
 export default function ImportAnimation({ isVisible }: { isVisible: boolean }) {
   const { t } = useLanguage();
@@ -9,60 +10,26 @@ export default function ImportAnimation({ isVisible }: { isVisible: boolean }) {
   );
   const [dropProgress, setDropProgress] = useState(0); // 0-100 for drop animation
   const [processProgress, setProcessProgress] = useState(0); // 0-100 for processing
-  const animationRef = useRef<number | null>(null);
-  const lastTimeRef = useRef<number>(0);
+  useDemoAnimationFrame(isVisible && phase !== 'complete', (delta) => {
+    if (phase === 'drop') {
+      const progress = Math.min(100, dropProgress + (delta / 1000) * 100);
+      setDropProgress(progress);
+      if (progress === 100) setPhase('processing');
+    } else if (phase === 'processing') {
+      const progress = Math.min(100, processProgress + (delta / 1000) * 25);
+      setProcessProgress(progress);
+      if (progress === 100) setPhase('complete');
+    }
+  });
 
   useEffect(() => {
-    if (isVisible) {
-      const animate = (currentTime: number) => {
-        if (!lastTimeRef.current) lastTimeRef.current = currentTime;
-        const delta = currentTime - lastTimeRef.current;
-        lastTimeRef.current = currentTime;
-
-        if (phase === 'drop') {
-          setDropProgress((prev) => {
-            const newProgress = prev + (delta / 1000) * 100; // 1 second drop
-            if (newProgress >= 100) {
-              setPhase('processing');
-              return 100;
-            }
-            return newProgress;
-          });
-        } else if (phase === 'processing') {
-          setProcessProgress((prev) => {
-            const newProgress = prev + (delta / 1000) * 25; // 4 seconds to process
-            if (newProgress >= 100) {
-              setPhase('complete');
-              return 100;
-            }
-            return newProgress;
-          });
-        } else if (phase === 'complete') {
-          // Wait a moment then reset
-          setTimeout(() => {
-            setPhase('drop');
-            setDropProgress(0);
-            setProcessProgress(0);
-          }, 1500);
-        }
-
-        animationRef.current = requestAnimationFrame(animate);
-      };
-
-      animationRef.current = requestAnimationFrame(animate);
-    } else {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-        animationRef.current = null;
-      }
-      lastTimeRef.current = 0;
-    }
-
-    return () => {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
-    };
+    if (!isVisible || phase !== 'complete') return;
+    const timer = setTimeout(() => {
+      setPhase('drop');
+      setDropProgress(0);
+      setProcessProgress(0);
+    }, 1500);
+    return () => clearTimeout(timer);
   }, [isVisible, phase]);
 
   return (
@@ -72,9 +39,9 @@ export default function ImportAnimation({ isVisible }: { isVisible: boolean }) {
         {/* Dropping file animation */}
         {phase === 'drop' && (
           <div
-            className='absolute transition-all duration-100'
+            className='absolute top-0 transition-[transform,opacity] duration-100'
             style={{
-              top: `${-20 + dropProgress * 0.6}%`,
+              transform: `translateY(${-32 + dropProgress * 0.96}px)`,
               opacity: dropProgress < 90 ? 1 : 1 - (dropProgress - 90) / 10,
             }}
           >
@@ -82,7 +49,7 @@ export default function ImportAnimation({ isVisible }: { isVisible: boolean }) {
             <div className='flex flex-col items-center'>
               <div className='relative'>
                 <div className='flex h-16 w-14 flex-col rounded-lg bg-white shadow-lg'>
-                  <div className='flex h-4 items-center rounded-t-lg bg-emerald-500 px-2'>
+                  <div className='flex h-4 items-center rounded-t-lg bg-emerald-700 px-2'>
                     <span className='text-[8px] font-bold text-white'>CSV</span>
                   </div>
                   <div className='flex-1 p-1.5'>
@@ -151,8 +118,8 @@ export default function ImportAnimation({ isVisible }: { isVisible: boolean }) {
             </div>
             <div className='h-2 overflow-hidden rounded-full bg-gray-200 dark:bg-white/20'>
               <div
-                className='h-full rounded-full bg-purple-500 transition-all duration-100 dark:bg-purple-400'
-                style={{ width: `${processProgress}%` }}
+                className='h-full w-full origin-left rounded-full bg-purple-500 transition-transform duration-100 dark:bg-purple-400'
+                style={{ transform: `scaleX(${processProgress / 100})` }}
               />
             </div>
           </div>

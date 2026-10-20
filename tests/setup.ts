@@ -5,6 +5,8 @@
  * Use it to set up global mocks, test utilities, or environment configuration.
  */
 
+import { beforeAll } from 'vitest';
+
 // Extend expect with custom matchers if needed
 // import { expect } from 'vitest';
 
@@ -47,4 +49,19 @@ Object.defineProperty(global, 'matchMedia', {
     removeEventListener: () => {},
     dispatchEvent: () => true,
   }),
+});
+
+// The web app loads only the active language before its first render
+// (apps/web/src/main.tsx). Tests render components without that bootstrap, so
+// make both languages available synchronously. This runs in beforeAll, after
+// the test file's vi.mock calls, so the translation modules see the same mocks
+// they would have seen as static imports.
+beforeAll(async () => {
+  try {
+    const { loadTranslations } =
+      await import('../apps/web/src/lib/i18n/loader');
+    await Promise.all([loadTranslations('nl'), loadTranslations('en')]);
+  } catch {
+    // Files that mock the modules translations import do not use them.
+  }
 });

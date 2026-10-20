@@ -122,8 +122,9 @@ export async function createDatabase(
       dbLog('[DB Factory] Waiting for existing init promise');
 
       // Add timeout to prevent infinite wait if the promise is stuck
+      let timeoutId: ReturnType<typeof setTimeout> | undefined;
       const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => {
+        timeoutId = setTimeout(() => {
           reject(
             new Error(
               `Database initialization timed out after ${INIT_TIMEOUT_MS / 1000}s while waiting for existing promise`
@@ -150,6 +151,8 @@ export async function createDatabase(
           resetDatabase(true);
         }
         throw error;
+      } finally {
+        clearTimeout(timeoutId);
       }
     }
   }
@@ -159,8 +162,9 @@ export async function createDatabase(
 
   // Wrap internal init with timeout
   const internalPromise = createDatabaseInternal(config);
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
   const timeoutPromise = new Promise<never>((_, reject) => {
-    setTimeout(() => {
+    timeoutId = setTimeout(() => {
       reject(
         new Error(
           `Database initialization timed out after ${INIT_TIMEOUT_MS / 1000}s`
@@ -181,6 +185,8 @@ export async function createDatabase(
     console.error('[DB Factory] Initialization failed:', error);
     resetDatabase(true);
     throw error;
+  } finally {
+    clearTimeout(timeoutId);
   }
 }
 

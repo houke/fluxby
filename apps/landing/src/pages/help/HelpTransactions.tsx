@@ -38,6 +38,9 @@ export default function HelpTransactions() {
 
       <HelpAnimation type='transactions' />
 
+      <h2>{t.helpCenter.transactions.manualEntryTitle}</h2>
+      <p>{t.helpCenter.transactions.manualEntryText}</p>
+
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
         {t.helpCenter?.transactions?.filteringTitle}
       </h2>
@@ -109,6 +112,13 @@ export default function HelpTransactions() {
           {t.helpCenter?.transactions?.proTipText}
         </p>
       </div>
+      <h2>{t.transactionReviewHelp.compactTitle}</h2>
+      <p>{t.transactionReviewHelp.compactText}</p>
+      <h2>{t.transactionReviewHelp.reviewTitle}</h2>
+      <p>{t.transactionReviewHelp.reviewText}</p>
+      <p>{t.transactionReviewHelp.linksText}</p>
+      <p>{t.transactionReviewHelp.billsText}</p>
+      <p>{t.transactionReviewHelp.exportText}</p>
     </article>
   );
 }

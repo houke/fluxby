@@ -8,7 +8,7 @@ import {
 } from 'react';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { getStoredLanguage, translations } from '@/lib/i18n';
+import { getTranslations } from '@/lib/i18n';
 
 import type {
   ToastVariant,
@@ -44,7 +44,7 @@ function ToastItem({
   toast: ToastMessage;
   onDismiss: (id: string) => void;
 }) {
-  const copy = translations[getStoredLanguage()].common;
+  const copy = getTranslations().common;
   const { bg, border, icon: Icon } = variantStyles[toast.variant];
   const textColor = variantTextColors[toast.variant];
   const iconColor = variantIconColors[toast.variant];
@@ -79,7 +79,7 @@ interface ToastProviderProps {
 }
 
 export function ToastProvider({ children }: ToastProviderProps) {
-  const copy = translations[getStoredLanguage()].common;
+  const copy = getTranslations().common;
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
   const dismiss = useCallback((id: string) => {

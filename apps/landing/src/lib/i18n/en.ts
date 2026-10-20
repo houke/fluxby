@@ -1,9 +1,11 @@
 import { webMcpEn } from './webmcp';
+import { transactionReviewHelpEn } from './transaction-review-help';
 // English translations for the Fluxby landing page
 import type { LandingTranslationKeys } from './nl';
 
 export const en: LandingTranslationKeys = {
   webMcp: webMcpEn,
+  transactionReviewHelp: transactionReviewHelpEn,
   metadata: {
     default: {
       title: 'Fluxby - Makes money management fun',
@@ -73,7 +75,7 @@ export const en: LandingTranslationKeys = {
       {
         title: 'Smart transaction tracking',
         description:
-          'Automatically categorize your expenses and income with AI-powered recognition. Fluxby learns your spending habits and suggests better ways to save.',
+          'Categorize expenses and income with your own rules. Optional TypeSafe AI helps classify unmatched transactions when you add your API key.',
       },
       {
         title: 'Beautiful analytics',
@@ -88,12 +90,12 @@ export const en: LandingTranslationKeys = {
       {
         title: '100% local & private',
         description:
-          'Your financial data never leaves your device. No cloud, no servers, no tracking - everything stays on your computer where it belongs.',
+          'Your financial database stays on your device. Optional sync shares records with paired devices; optional TypeSafe AI sends limited data for the features you enable.',
       },
       {
         title: 'Device sync',
         description:
-          'Sync your data across devices on the same network. Peer-to-peer sync means your data travels directly between your devices - no cloud required.',
+          'Sync your data between paired devices while both are online. Peer-to-peer sync shares records without a central financial database.',
       },
       {
         title: 'Bank CSV import',
@@ -326,9 +328,10 @@ export const en: LandingTranslationKeys = {
       installedBadge: 'Installed',
       openButton: 'Open Fluxby',
       browserInstructions: {
-        ios: 'Tap the Share icon and then "Add to Home Screen"',
-        android: 'Tap the menu (⋮) and then "Add to Home Screen"',
-        desktop: 'Click the install icon in the address bar',
+        ios: 'In Fluxby, tap the Share icon and then "Add to Home Screen"',
+        android: 'In Fluxby, tap the menu (⋮) and then "Add to Home Screen"',
+        desktop:
+          'Open Fluxby in your browser, then click the install icon in the address bar',
       },
     },
     note: "You don't need to install anything to use Fluxby — it runs fully in your browser. These downloads are provided for users who prefer a dedicated application on their system.",
@@ -472,19 +475,19 @@ export const en: LandingTranslationKeys = {
       subtitle: 'Learn how to authenticate your API requests with Fluxby.',
       localNote: 'Local development',
       localNoteText:
-        'Fluxby runs entirely on your local machine. No API keys or OAuth flows are needed - just add your Profile ID to requests.',
+        'The developer API binds to 127.0.0.1 by default. Remote access requires HOST=0.0.0.0, API_ALLOW_REMOTE=1, an API_AUTH_TOKEN of at least 32 characters, and an explicit CORS_ORIGIN. Send the token as Authorization: Bearer <token>.',
       profileIdTitle: 'Using the Profile ID',
       profileIdText:
-        'All API requests must include the X-Profile-ID header. This identifies which profile data you want to access.',
+        'X-Profile-ID selects the API dataset. It is not authentication and does not grant access to the separate web database.',
       getProfileIdTitle: 'Getting your Profile ID',
-      option1Title: 'Option 1: From the App',
+      option1Title: 'Use a profile from the API database',
       option1Text:
-        'Open Fluxby in your browser, go to Settings → Profile, and copy your Profile ID.',
-      option2Title: 'Option 2: API Call',
+        'The API uses a separate database. Get its profile ID from GET /api/profiles; browser profile UUIDs do not select API profiles.',
+      option2Title: 'List API profiles',
       option2Text: 'List all profiles via the profiles endpoint:',
-      errorHandlingTitle: 'Missing Profile ID',
+      errorHandlingTitle: 'Default profile selection',
       errorHandlingText:
-        'If you do not include the X-Profile-ID header, you will receive a 401 error:',
+        'For profile-scoped routes, omitting X-Profile-ID selects the oldest profile for the API user (falling back to ID 1). Send an explicit numeric profile ID to select another dataset. A 401 response indicates a missing or invalid bearer token when token authentication is enabled.',
       errorResponse: 'Error Response',
     },
 
@@ -495,25 +498,27 @@ export const en: LandingTranslationKeys = {
         'Fluxby uses a local-first architecture where your data is stored and encrypted locally. No cloud, no servers that can read your data.',
       zeroKnowledgeTitle: 'Zero-Knowledge Design',
       zeroKnowledgeText:
-        'Only you can access your data. The master key exists only in memory and is never stored.',
+        'The unlocked master key is held in memory. A copy encrypted with a key derived from your password is stored locally so you can unlock the database again.',
       platformsTitle: 'Supported Platforms',
       webDesc:
         'Runs in the browser with SQLite WASM. Data is stored in OPFS (Origin Private File System).',
       desktopDesc: 'Native app for Windows, macOS and Linux using Tauri 2.0.',
       headlessDesc:
         'Local API server for scripts, automations and external tools.',
+      securityExample:
+        'Stored database: encrypted pages in OPFS\nPassword verification: salted PBKDF2 hash in OPFS\nMaster key: password-wrapped in OPFS; unlocked in memory\nBackups: separately password-encrypted JSON by default\nDeveloper API: separate plain SQLite database',
       securityTitle: 'Privacy Lock & Security',
       securityText:
-        'Your data is protected by a PIN/password lock. The password is verified via PBKDF2 (100k iterations). All data stays local in your browser - it is never sent to external servers.',
+        'The web database uses page encryption with a random master key. PBKDF2-SHA256 (100,000 iterations) derives the password key that protects it. Password verification data and the wrapped master key are stored in OPFS.',
       privacyNote:
-        'Note: The password protects access to your data through the UI. The database itself is stored unencrypted in OPFS. For shoulder-surfing protection and casual access prevention.',
+        'Encryption protects stored database pages. An unlocked session can read your data. Optional AI sends the limited context you authorize to TypeSafe; paired sync sends data to the device you approve. The developer API uses a separate plain SQLite database.',
       autoLockTitle: 'Auto-Lock',
       autoLockWeb: 'Master key is wiped on refresh or tab close',
       autoLockDesktop: 'Master key is wiped when the app closes',
       autoLockIdle: 'Automatically locks after 15 minutes of inactivity',
       syncTitle: 'Sync',
       syncText:
-        'Fluxby uses peer-to-peer sync via WebRTC. Data moves directly between devices without a central server.',
+        'Fluxby pairs an explicitly approved profile between devices over WebRTC. Financial records move between paired devices; signaling and connection relay services may help establish the connection. Passwords and local device credentials are excluded.',
       syncSchemaTitle: 'Sync Schema',
       conflictTitle: 'Conflict Resolution (LWW)',
       conflictText:
@@ -521,21 +526,22 @@ export const en: LandingTranslationKeys = {
       storageTitle: 'Storage Adapters',
       backupTitle: 'Backup & Restore',
       backupText:
-        'You can create backups at any time. Backups contain your complete database and can be restored on any device.',
-      backupDesktop: 'File → Save backup... exports to your Documents folder',
-      backupWeb: 'Settings → Backup downloads a .fluxby file',
-      backupFormat: '.fluxby files contain metadata + database dump',
+        'Settings → Data & backups exports all financial tables. Restore validates the file and previews its contents before replacing data. A recovery snapshot is saved before replacement.',
+      backupDesktop: 'Use Settings → Data & backups to export a backup.',
+      backupWeb: 'Settings → Data & backups starts a JSON backup download.',
+      backupFormat:
+        'JSON backups include a schema version, table manifest and checksums. Password encryption is enabled by default; an unencrypted export contains readable financial data.',
       tipTitle: 'Tip',
       tipText:
-        'Create backups regularly! If you lose your PIN/password you can only restore from a backup.',
+        'Keep backups outside this device and remember their password. A started download does not prove the file was saved; a successful restore verifies that the backup can be read.',
 
       apiVsWebTitle: 'API Server vs Web App: separate databases',
       apiVsWebIntro:
         'It’s important to understand that the API server and the web app use completely separate databases. This is an intentional design choice for maximum privacy.',
       importantTitle: 'Important',
       apiSeparateDbText:
-        'The API server cannot connect to your encrypted web app database. Your master password is never shared with the API server. If you want to use your data via the API, first export JSON from the web app and import it into the API server.',
-      dataFlowTitle: 'Data migration workflow',
+        'The API server cannot access the encrypted web database or your master password. Web backups and API exports use different schemas and are not directly interchangeable. Import a bank CSV into the API or build a validated conversion of records and IDs.',
+      dataFlowTitle: 'Using the developer API',
       dataFlowText:
         'To use your data with the API server for automations or custom integrations:',
       whySeparateTitle: 'Why separate databases?',
@@ -1118,7 +1124,7 @@ export const en: LandingTranslationKeys = {
         'Export all data as a JSON file for backup or migration purposes.',
       importTitle: 'Import data',
       importText:
-        'Import a complete dataset from a JSON backup. Note: this replaces all existing data.',
+        'Import the data object from an API JSON export at the top level of the request body. This replaces the API financial tables across profiles; X-Profile-ID does not limit this operation. Web app backups use a different schema and cannot be imported directly.',
       resetTitle: 'Reset data',
       resetText:
         'Reset all data and restore demo state. This deletes ALL data across all profiles and creates a new demo profile with default categories. This cannot be undone.',
@@ -1400,6 +1406,9 @@ export const en: LandingTranslationKeys = {
         'Check your subscriptions regularly. Many people pay for services they no longer use. By monitoring your subscriptions, you can easily save money.',
     },
     privacy: {
+      settingsTitle: 'Finding your settings',
+      settingsText:
+        'Open Settings and choose a topic: General, Profiles & accounts, Security, Data & backups, Devices & sync, or AI & automation. All settings takes you back to the overview. Help & about contains the tour and app updates. Accounts belong to the current profile; backups contain all profiles.',
       title: 'Your data & privacy',
       subtitle:
         'Fluxby stores your financial data locally. Sync and AI are optional network features.',
@@ -1420,10 +1429,10 @@ export const en: LandingTranslationKeys = {
         'The web app stores data in OPFS (Origin Private File System); the desktop app uses local app storage. Sync copies data to paired devices. Jev requests send limited data to TypeSafe as described in Smart AI features.',
       backupTitle: 'Back up and restore your data',
       backupText:
-        'Open Settings > Data Management and export a JSON backup. You can encrypt the backup with a password. Use Import to restore a backup; an encrypted file requires its backup password.',
+        'Open Settings > Data & backups to export a JSON backup, encrypted by default. Restore it from the same section and review the preview before replacing data. Encrypted files require their backup password.',
       deleteDataTitle: 'Deleting your data',
       deleteDataText:
-        'Use Settings > Data Management to delete your Fluxby data. You can also clear the browser data for the browser where you use Fluxby. Export a backup first if you may want to restore the data later.',
+        'Use Settings > Data & backups > Delete data to delete your Fluxby data. You can also clear the browser data for the browser where you use Fluxby. Export a backup first if you may want to restore the data later.',
       warningTitle: 'Important',
       warningText:
         'Sync shares data between paired devices, but is not a separate backup. Keep an exported JSON backup if you want an independent recovery copy.',
@@ -1573,13 +1582,14 @@ export const en: LandingTranslationKeys = {
         'Manage the accounts associated with your imported transactions.',
       overviewTitle: 'Accounts overview',
       overviewText:
-        'Manage accounts in Settings > Accounts. Account cards and balances also appear on the Dashboard and Transactions pages.',
+        'Manage accounts in Settings > Profiles & accounts > Bank accounts. Account cards and balances also appear on the Dashboard and Transactions pages.',
       addTitle: 'Adding an account',
       addText: 'To add an account manually:',
-      addStep1: 'Go to Settings > Accounts',
-      addStep2: 'Click "Add Account"',
-      addStep3: 'Enter a name and account type; the IBAN is optional',
-      addStep4: 'Click Save to add the account',
+      addStep1: 'Go to Settings > Profiles & accounts > Bank accounts',
+      addStep2: 'Find the Add account form below your account list',
+      addStep3:
+        'Enter a name and account type. An IBAN is required for checking, savings and credit accounts; cash, loan and investment accounts can omit it.',
+      addStep4: 'Click Add to create the account',
       filterTitle: 'Filtering by account',
       filterText:
         'On the Transactions page, use the account filter to show transactions from one account or all accounts.',
@@ -1626,7 +1636,8 @@ export const en: LandingTranslationKeys = {
       manage1: 'Click on a contact to view details',
       manage2: 'Use the search bar to find contacts',
       manage3: 'Create name cleanup rules for better categorization',
-      manage4: 'View transaction history per contact',
+      manage4:
+        'Expand a contact to view its transaction history. Use Previous and Next to browse older transactions.',
     },
     // Help pages - Analytics
     analytics: {
@@ -1689,6 +1700,7 @@ export const en: LandingTranslationKeys = {
         balance: 'Balance',
         income: 'Income',
         expenses: 'Expenses',
+        categories: ['Groceries', 'Transport', 'Housing', 'Other'],
       },
       transactions: {
         search: 'Search...',
@@ -1748,35 +1760,35 @@ export const en: LandingTranslationKeys = {
     termsTitle: 'Terms of Use',
     privacy: {
       lastUpdated: 'Last Updated:',
-      lastUpdatedDate: 'January 4, 2026',
+      lastUpdatedDate: 'October 7, 2026',
       introTitle: '1. Introduction',
       introText:
         'This Privacy Policy describes how Fluxby ("we," "us," or "the App") handles your data.',
       introPhilosophy:
-        'We believe that your financial data belongs to you alone. The core philosophy of this App is absolute privacy. We do not operate servers, we do not require user accounts, and we do not track your behavior.',
+        'Your financial database is stored locally. No online Fluxby account is required and we do not use advertising trackers. Optional sync uses connection services, and the web app uses a Fluxby gateway for optional TypeSafe requests.',
       localFirstTitle: '2. The "Local-First" Architecture',
-      localFirstSubtitle: 'All data remains on your device.',
+      localFirstSubtitle: 'Your financial database is stored on your device.',
       localFirstText:
         'This App works as a standalone utility. When you enter expenses, categorize transactions, or import bank statements, that information is stored locally within the internal storage of your device.',
       noCloudTitle: 'No Cloud Sync:',
       noCloudText: 'We do not sync your data to any cloud servers.',
       noAccountsTitle: 'No Accounts:',
       noAccountsText: 'You do not create a username or password with us.',
-      noAITitle: 'No Third-Party AI:',
+      noAITitle: 'Optional TypeSafe AI:',
       noAIText:
-        'We do not send your financial descriptions or address book entries to external AI models (like OpenAI or Google Gemini) for processing. All logic is executed locally on your device.',
+        'AI is optional and requires your own TypeSafe API key. Enabled features send limited context, such as merchant names, descriptions, amounts or candidate contact names, to TypeSafe. The web app uses a Fluxby gateway; desktop requests connect directly. See Smart AI features for the data sent by each feature.',
       dataAccessTitle: '3. Data We Access',
       dataAccessText:
         'To provide functionality, the App may request permission to access specific data on your device.',
       transactionDataTitle: 'A. Financial Transaction Data',
       transactionDataText:
-        'When you manually input data or import files (such as CSVs or bank statements), the App processes this information to create charts and categories. This processing happens instantly on your device. We do not (and cannot) see this data.',
+        'CSV parsing, charts and rule-based categorisation run on your device. If you configure TypeSafe AI, enabled AI features send limited transaction context through the transport described above.',
       localStorageTitle: 'B. Local Storage',
       localStorageText:
-        'The App stores all data in a local database on your device. This includes transactions, categories, budgets, and settings. The database never leaves your device and is only accessible to the App.',
+        'The App stores transactions, categories, budgets and settings locally. Optional sync shares financial records with paired devices. Optional AI sends limited request data to TypeSafe. Exported backups contain the records you choose to export.',
       addressBookTitle: 'B. Address Book / Contacts',
       addressBookText:
-        'The App features an address book function to associate transactions with specific people or entities. If you grant access to your contacts, the App only reads this data to display names within the App. Your contact list is never uploaded or shared.',
+        'The address book stores contacts you add or confirm from transaction suggestions. Fluxby does not read your operating system contact list. Paired sync includes address book records; optional Jev matching sends candidate contact names for the selected review.',
       fileStorageTitle: 'C. File Storage',
       fileStorageText:
         'The App requires access to your file storage to import bank statements and save backups of your ledger.',
@@ -1793,7 +1805,7 @@ export const en: LandingTranslationKeys = {
         'You are responsible for the security of your physical device.',
       backupsTitle: 'Backups:',
       backupsText:
-        "If you delete the App or lose your phone, your financial data is lost unless you have utilized your device's built-in system backup features (e.g., iCloud Backup or Android Backup) or manually exported your data.",
+        'Deleting browser storage, uninstalling the App or losing a device can remove your data. Export a password-encrypted backup and keep it outside the device. Sync and operating system backups are not a verified recovery copy; test restoring an exported backup.',
       thirdPartyTitle: '6. Third-Party Services',
       thirdPartyText:
         'The App does not integrate with third-party analytics or advertising networks.',
@@ -1909,7 +1921,7 @@ export const en: LandingTranslationKeys = {
       privacy: {
         title: '100% local & private',
         description:
-          'Your financial data never leaves your device. No cloud, no servers, no tracking - everything stays on your computer.',
+          'Your financial database is stored on your device. Optional sync shares records with paired devices; optional TypeSafe AI processes limited request data.',
         highlights: [
           'No cloud storage',
           'No accounts needed',
@@ -2046,7 +2058,7 @@ export const en: LandingTranslationKeys = {
       feature8: 'Future updates',
       whyFreeTitle: 'Why free?',
       whyFreeText:
-        "Fluxby is built with the belief that everyone should have access to good financial tools. Because all data stays local and we don't run servers, we have no ongoing costs. This makes it possible to offer Fluxby for free forever.",
+        'Fluxby is free to use and stores your financial database locally. Core features work without paid services. Optional TypeSafe AI uses your own API key and provider credits; check TypeSafe for current pricing.',
       promiseTitle: 'Our promise',
       promiseText:
         'There will be no premium version. There will be no subscription. There will be no "pro" features behind a paywall. Everything we build remains free for everyone.',
@@ -2069,14 +2081,14 @@ export const en: LandingTranslationKeys = {
       v1150F2Title: 'Force hover on third row in selection mode test',
       v1150F2Desc: 'An annoying issue has been squashed.',
       v1150F3Title: 'Npm audit vulnerabilities',
-      v1150F3Desc: 'This shouldn\'t have happened, but it\'s fixed now!',
+      v1150F3Desc: "This shouldn't have happened, but it's fixed now!",
       v1150F4Title: 'Prevent migration update reload loop',
       v1150F4Desc: 'Bugs eliminated, app improved.',
       v1142Date: 'September 28, 2026',
       v1142Title: 'Release 1.14.2',
       v1142Description: '1 bug fix.',
       v1142F1Title: 'Preserve status across logout and login',
-      v1142F1Desc: 'This shouldn\'t have happened, but it\'s fixed now!',
+      v1142F1Desc: "This shouldn't have happened, but it's fixed now!",
       v1141Date: 'September 28, 2026',
       v1141Title: 'Release 1.14.1',
       v1141Description: '3 bug fixes.',
@@ -2350,7 +2362,7 @@ export const en: LandingTranslationKeys = {
         'Link transactions to contacts and see how much you spend at specific stores or with specific people. Automatic suggestions make it easy.',
       f7Title: '100% Privacy',
       f7Desc:
-        'All your data stays local on your device. No cloud, no accounts, no tracking. Your financial data is yours alone.',
+        'Your financial database stays local. No online Fluxby account is required. Optional sync and TypeSafe AI share only the data needed for those features.',
       f8Title: 'AI-powered recognition',
       f8Desc:
         'Local AI helps recognize and categorize transactions without sharing your data with external services.',
@@ -2648,6 +2660,9 @@ Object.assign(en, {
   helpCenter: {
     ...(en.helpCenter ?? {}),
     transactions: {
+      manualEntryTitle: 'Add a transaction manually',
+      manualEntryText:
+        'On Transactions, click Add transaction. Choose income, expense or transfer, then enter a positive amount and date. An account, category and counterparty are optional. For transfers, choose whether money leaves or enters the account. Click Add to save.',
       ...en.helpCenter?.transactions,
       manualMethod: 'Manual',
       manualMethodDesc:
@@ -2731,7 +2746,7 @@ Object.assign(en, {
       subtitle: 'Keep your data in sync across devices without the cloud.',
       howItWorksTitle: 'How it works',
       howItWorksText:
-        'Fluxby syncs data directly between devices over an encrypted peer-to-peer connection. Your data does not pass through a central server.',
+        'Fluxby syncs approved profiles over an encrypted peer-to-peer connection. Signaling and relay services may help connect devices, but Fluxby does not keep a central financial database.',
       directConnection: 'Direct connection',
       laptop: 'Laptop',
       phone: 'Phone',
@@ -2741,26 +2756,26 @@ Object.assign(en, {
         'Open the Sync Devices section to see your device and pair additional devices.',
       step2Title: 'Step 2: Generate a pairing code',
       step2Text:
-        'Show the QR code and scan it with your other device, or enter the code manually.',
+        'Show the QR code and scan it with your other device, or enter the code manually. A code works once and for 2 minutes; after a failed attempt or when it expires, a new code appears automatically.',
       step3Title: 'Step 3: Connect your devices',
       step3Text:
         'Open the same settings on the second device and scan or enter the pairing code.',
       step4Title: 'Step 4: Sync your devices',
       step4Text:
-        'When automatic sync is enabled, changes sync while both devices are online. You can also start a manual sync.',
+        'When automatic sync is enabled, changes sync while both devices are unlocked and online. You only pair once: after a restart or reload, paired devices reconnect by themselves and catch up on missed changes. You can also start a manual sync.',
       troubleshootingTitle: 'Troubleshooting',
       troubleshooting1Title: 'Devices cannot find each other',
       troubleshooting1Text:
         'Check that both devices are online. Network security settings or a firewall may block peer-to-peer connections.',
       troubleshooting2Title: 'Sync failed',
       troubleshooting2Text:
-        'Check the internet connection, whether automatic sync is enabled, and try a manual sync. Pair the devices again if needed.',
+        'Check the internet connection, whether automatic sync is enabled, and that the paired profile is unlocked on both devices. Choose Reconnect now next to the device or try a manual sync. If it says to update both devices, install the same version on each; they then reconnect by themselves. If it says Pair again (for example after it was removed on the other device, or for a pairing from an older version), remove the device and pair again.',
       troubleshooting3Title: 'Conflicting changes',
       troubleshooting3Text:
         'When the same data changes on multiple devices, Fluxby keeps the most recent version (Last-Write-Wins).',
       securityTitle: 'Privacy and security',
       securityText:
-        'Your financial data stays on your devices. Sync uses encrypted peer-to-peer connections; Fluxby does not store it in the cloud.',
+        'Your financial data stays on your devices. Sync uses encrypted peer-to-peer connections; Fluxby does not store it in the cloud. Fluxby only contacts the signaling server while you pair a device or when the unlocked profile has paired devices, so without sync your IP address is not shared with it. The pairing code itself is never sent: each device proves it knows the code with a value tied to the encryption keys of that connection, so the signaling server cannot sit in between, and a code works for one attempt only. Pairing gives both devices a secret key, stored encrypted with your password. They use it to prove they belong together on every new connection, so another device cannot pose as your paired device. While sync is in use, your device registers with the server under a fixed, random device ID so paired devices can find it again.',
     },
   },
   docs: {
@@ -2865,7 +2880,7 @@ Object.assign(en, {
           emoji: '📅',
           title: 'CSV import: detect date format',
           description:
-            'Does 01/02/2024 mean 1 February or 2 January? AI detects your bank’s date format from a few examples and prevents silent date errors.',
+            'Does 01/02/2024 mean 1 February or 2 January? AI can suggest the date format from sample rows. Review the mapping and preview; an AI suggestion can be wrong.',
         },
         {
           emoji: '💳',
@@ -2894,7 +2909,7 @@ Object.assign(en, {
       ],
       setupTitle: 'How do I enable AI?',
       setupSteps: [
-        'Go to Settings → App settings → TypeSafe AI.',
+        'Go to Settings → AI & automation → TypeSafe AI.',
         'Paste the key into the field and save.',
         'Use the buttons to categorise transactions, find rules, recognise payment providers, review duplicates, and check possible transfers. Jev can also suggest import columns and address book matches.',
       ],
@@ -3014,7 +3029,7 @@ Object.assign(en, {
       },
       whatTitle: 'What is TypeSafe AI?',
       whatText:
-        'TypeSafe builds System One models: small, fast AI primitives that return structured answers instead of generated text. Jev is TypeSafe’s flagship model. Given a state (JSON or string) and one or more typed questions, it returns probabilities for Choice, Score, or Noul (yes/no) answers in about 100 ms.',
+        'TypeSafe builds System One models: small, fast AI primitives that return structured answers instead of generated text. Jev is TypeSafe’s flagship model. Given a state (JSON or string) and one or more typed questions, it returns probabilities for Choice, Score, or Noul (yes/no) answers.',
       controlText:
         'Code owns the control flow. Jev handles only tasks that require semantic understanding of unstructured text, such as “which category fits this merchant name?” or “is this IBAN a payment intermediary?”.',
       architectureTitle: 'Architecture',
@@ -3031,7 +3046,7 @@ Object.assign(en, {
       ],
       optInTitle: 'Opt-in — features degrade gracefully',
       optInText:
-        'Every TypeSafe integration checks for an API key before calling the service. If the key is absent or the call fails, the existing deterministic logic runs unchanged. Users who do not configure a key see no change in behaviour.',
+        'Every TypeSafe integration checks for an API key before calling the service. Without a key, deterministic logic handles the feature. Some inference helpers fall back on failure; explicit categorisation actions report request errors so you can retry.',
       implementationTitle: 'Client implementation',
       implementationText:
         'Fluxby remains local-first and does not use a shared TypeSafe key. The desktop app calls TypeSafe directly. The GitHub Pages web app sends the same request through the optional Fluxby Cloudflare Worker so the browser can pass CORS preflight safely. apps/web/src/lib/typesafe-client.ts selects the transport and exposes domain helpers.',
@@ -3043,7 +3058,7 @@ Object.assign(en, {
       request: 'Request',
       response: 'Response',
       confidenceText:
-        'Fluxby batches independent transaction questions in one request and applies a suggestion only when confidence > 0.7. At or below that threshold, the transaction remains uncategorised for manual review. Repeated merchants can also become exact-text rules when they clear the same threshold.',
+        'Fluxby batches independent transaction questions in one request and applies a suggestion only when confidence > 0.6. At or below that threshold, the transaction remains uncategorised for manual review. Repeated merchants can also become exact-text rules when they clear the same threshold.',
       directionExampleTitle: 'Example: CSV direction column inference',
       directionText:
         'For bank exports with non-standard direction column values, such as the German “Belastung” and “Gutschrift”, Fluxby asks Jev to classify each unique value in one parallel batch before processing rows.',
@@ -3053,7 +3068,7 @@ Object.assign(en, {
         [
           'Category suggestion',
           'Choice confidence',
-          '> 0.7',
+          '> 0.6',
           'Auto-assign category',
         ],
         [
@@ -3159,7 +3174,11 @@ Object.assign(en, {
             'Browser OPFS (sandbox)',
             'data/ folder in project',
           ],
-          ['Security', 'Password locks the UI', 'Local only (plain SQLite)'],
+          [
+            'Security',
+            'Encrypted database pages and password lock',
+            'Separate plain SQLite; loopback by default; token required for remote access',
+          ],
           [
             'Access',
             'Only through your browser with your password',
@@ -3173,13 +3192,13 @@ Object.assign(en, {
         ],
         dataFlowSteps: [
           [
-            'Export from the web app',
-            'Go to Settings → Backup → Download JSON export',
+            'Keep your web data safe',
+            'Export an encrypted backup from Settings → Data & backups. Do not send it to /api/data/import.',
           ],
-          ['Start the API server', 'npm run dev (or just npm run dev:api)'],
+          ['Start the API server', 'npm run dev:api'],
           [
-            'Import through the API',
-            'POST to /api/data/import with your exported JSON',
+            'Import bank transactions',
+            'Import a bank CSV through /api/import/csv. /api/data/import expects the separate API export format and replaces API data.',
           ],
           [
             'Build your integration',
@@ -3193,6 +3212,47 @@ Object.assign(en, {
           'Serverless:',
         ],
       },
+    },
+  },
+});
+
+Object.assign(en, {
+  helpCenter: {
+    ...en.helpCenter,
+    planning: {
+      title: 'Financial planning and transaction tools',
+      intro:
+        'Use Planning to reserve money and review your finances. Use the tools on Transactions to investigate your records and compare statements. All records belong to the active profile.',
+      sections: [
+        {
+          title: 'Savings goals and contributions',
+          text: 'Open Planning → Savings goals. Create a goal with a target amount, monthly contribution and optional deadline, then record contributions on its card. Under Household planning you can link income or transfers and archive or restore a goal. Contributions track progress; they do not create bank transactions or move cash.',
+        },
+        {
+          title: 'Safe to spend',
+          text: 'Set a minimum balance and additional reserves in Planning. The forecast subtracts upcoming recurring expenses, goal reservations, and your minimum balance from recorded account balances. Import recent transactions and review subscription dates before using the result. It is a planning estimate, not a bank balance.',
+        },
+        {
+          title: 'Budget rollover',
+          text: 'Enable rollover on a monthly budget to carry unused allowance into later months. The original monthly amount stays editable; selected-period totals and carry-over are displayed separately.',
+        },
+        {
+          title: 'Net worth and monthly review',
+          text: 'Add investment and other asset values or outstanding liabilities in Planning. Net worth combines those values with cash account balances. Update valuations regularly. The monthly review stores your checklist progress separately for each month and profile.',
+        },
+        {
+          title: 'Subscription reminders',
+          text: 'On Subscriptions, record a renewal date and cancellation deadline. The app highlights approaching deadlines while open; it does not send notifications when the app is closed. Check provider terms before cancelling.',
+        },
+        {
+          title: 'Compact transactions',
+          text: 'Choose Compact view below the transaction filters to show more rows. In the same action row, review transactions and download the filtered selection as CSV. Comfortable view restores the usual row height.',
+        },
+        {
+          title: 'Backup preview, recovery and health',
+          text: 'In Settings → Data & backups, export a password-encrypted JSON backup. Keep the file outside this device and remember the password. A started download is reported separately from a verified restore. Before restoring, the app validates the table manifest, checksums and relationships and shows a preview. Replacement saves an encrypted recovery snapshot on this device first. Download that recovery copy if you need to undo the restore; browser storage is not a substitute for an external backup.',
+        },
+      ],
     },
   },
 });

@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useRef, useState, lazy, Suspense } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useViewTransitionNavigate } from '@/lib/view-transitions';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { format } from 'date-fns';
 import { nl, enUS } from 'date-fns/locale';
@@ -21,6 +21,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { StatsCard } from '@/components/dashboard/StatsCard';
+import { AccountFreshness } from '@/components/import/AccountFreshness';
 import type { RecurringStats, Account, Transaction } from '@fluxby/shared';
 
 // Lazy load chart components
@@ -63,7 +64,7 @@ const ChartSkeleton = () => (
 );
 
 import { PageHeader } from '@/components/layout/PageHeader';
-import { formatDateShort } from '@/lib/utils';
+import { formatDate } from '@/lib/utils';
 import { Currency } from '@/components/ui/currency';
 import { api } from '@/lib/api';
 import { useFilterParams, useFilters } from '@/contexts/FilterContext';
@@ -130,7 +131,7 @@ export default function Dashboard() {
   );
   const legendContainerRef = useRef<HTMLDivElement>(null);
   const [accountScrollIndex, setAccountScrollIndex] = useState(0);
-  const navigate = useNavigate();
+  const navigate = useViewTransitionNavigate();
   const { startDate, endDate } = useFilterParams();
   const { setDateRange } = useFilters();
 
@@ -305,7 +306,17 @@ export default function Dashboard() {
     () => stats?.monthlyData || [],
     [stats?.monthlyData]
   );
-  const categoryData = stats?.categoryBreakdown || [];
+  const categoryData = useMemo(
+    () =>
+      (stats?.categoryBreakdown || []).map((category) => ({
+        ...category,
+        categoryName:
+          !category.categoryId || category.categoryId === '0'
+            ? t.categories.uncategorized
+            : category.categoryName,
+      })),
+    [stats?.categoryBreakdown, t.categories.uncategorized]
+  );
   const recentTransactions = recentTransactionsData || [];
 
   // Filter leading zero-expense days from daily chart data
@@ -616,6 +627,8 @@ export default function Dashboard() {
           />
         </div>
       </div>
+
+      <AccountFreshness />
 
       <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-2'>
         <Suspense fallback={<ChartSkeleton />}>
@@ -1138,7 +1151,7 @@ export default function Dashboard() {
                               t.transactions.unknown}
                           </p>
                           <p className='text-sm text-muted-foreground'>
-                            {formatDateShort(tx.date)}
+                            {formatDate(tx.date)}
                           </p>
                         </div>
                       </div>

@@ -23,6 +23,10 @@ import {
 } from '@fluxby/shared';
 
 describe('formatCurrency', () => {
+  it('honors explicit English formatting and the supplied currency', () => {
+    expect(formatCurrency(1234.56, 'EUR', 'en-GB')).toBe('€1,234.56');
+    expect(formatCurrency(1234.56, 'USD', 'en-US')).toBe('$1,234.56');
+  });
   it('formats positive numbers correctly', () => {
     const result = formatCurrency(1234.56);
     // Uses non-breaking space and nl-NL format
@@ -80,6 +84,9 @@ describe('parseEuropeanNumber', () => {
 });
 
 describe('formatDate', () => {
+  it('uses an explicit locale without shifting date-only values', () => {
+    expect(formatDate('2026-09-30', 'en-GB')).toBe('30/09/2026');
+  });
   it('formats Date object correctly', () => {
     const date = new Date(2024, 11, 25); // December 25, 2024
     expect(formatDate(date)).toBe('25-12-2024');

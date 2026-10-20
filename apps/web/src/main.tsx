@@ -9,11 +9,25 @@ import {
 } from './lib/error-tracking';
 import App from './App';
 import { debugLog, debugWarn } from './lib/debug';
+import {
+  getLanguageHint,
+  getStoredLanguage,
+  loadTranslations,
+  preloadTranslations,
+  setLanguageHint,
+} from './lib/i18n';
+import { registerAppServiceWorker } from './lib/service-worker';
+import '@fontsource-variable/inter/wght.css';
 import './index.css';
 
 // Initialize error tracking before anything else
 initErrorTracking();
 setupGlobalErrorHandlers();
+
+// Fetch the likely UI language now, in parallel with service worker
+// registration and the OPFS settings read, so first paint does not wait for a
+// second round trip. The stored language is confirmed in initializeApp().
+preloadTranslations(getLanguageHint());
 
 // GitHub Pages SPA fallback: a custom 404.html stores the original URL in sessionStorage
 // and redirects to /app/. Restore that original URL before React Router mounts.
@@ -116,45 +130,29 @@ async function ensureServiceWorkerReady(): Promise<void> {
     return;
   }
 
-  // Clean up any stale SW registrations at scopes other than our base path.
-  // These accumulate when the app has been served at different paths (e.g. root
-  // vs /app/) and cause harmless but noisy 404 update errors in the console.
-  const allRegistrations = await navigator.serviceWorker.getRegistrations();
-  for (const reg of allRegistrations) {
-    if (!reg.scope.endsWith(basePath)) {
-      debugLog('[SW] Unregistering stale SW at scope:', reg.scope);
-      await reg.unregister();
-    }
-  }
-
   const swPath = `${basePath}sw.js`;
 
   try {
-    // Check if we already have an active SW controlling this page
-    if (navigator.serviceWorker.controller) {
+    const appWasControlling =
+      navigator.serviceWorker.controller?.scriptURL ===
+      new URL(swPath, window.location.href).href;
+    if (appWasControlling) {
       debugLog('[SW] Already controlling page');
       return;
     }
 
     debugLog('[SW] First visit - registering and waiting for activation...');
 
-    // Register the service worker
-    const registration = await navigator.serviceWorker.register(swPath, {
-      scope: basePath,
-    });
-    debugLog('[SW] Registered:', registration.scope);
-
-    // Wait for the SW to be ready (installed and activated)
-    // This ensures COOP/COEP headers will be applied on next navigation
-    await navigator.serviceWorker.ready;
+    // A valid parent landing worker must remain registered. Its ready promise
+    // can resolve before the app's scoped worker has cached all route chunks.
+    await registerAppServiceWorker(navigator.serviceWorker, basePath);
     debugLog('[SW] Ready');
 
     // For first-time visitors, the SW won't control the page until reload.
     // Check if we need to reload to get the SW-provided headers.
     // Only do this on browsers that need it (check for cross-origin isolation)
     const needsCOI =
-      typeof SharedArrayBuffer === 'undefined' &&
-      !navigator.serviceWorker.controller;
+      typeof SharedArrayBuffer === 'undefined' && !appWasControlling;
 
     if (needsCOI) {
       debugLog(
@@ -193,6 +191,17 @@ async function initializeApp() {
     // OPFS might not be available (e.g., in some browsers or Tauri)
     debugWarn('Failed to initialize OPFS settings cache:', error);
     // Don't show error - this is expected in Tauri
+  }
+
+  const language = getStoredLanguage();
+  try {
+    await loadTranslations(language);
+    setLanguageHint(language);
+    debugLog('[Init] Translations loaded:', language);
+  } catch (error) {
+    console.error('[Init] Failed to load translations:', error);
+    showErrorOnScreen('Failed to load translations', error);
+    return;
   }
 
   if (rootElement) {

@@ -1,3 +1,4 @@
+import { formatDate } from '@/lib/utils';
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Currency } from '@/components/ui/currency';
@@ -33,7 +34,6 @@ export function DailyExpensesTimeline({
   dailyData,
   dailyScrollRef,
   t,
-  language,
   navigate,
   suggestedPeriod,
   isViewingSuggestedPeriod,
@@ -154,17 +154,7 @@ export function DailyExpensesTimeline({
                         <Currency key='amount' amount={value as number} />,
                         t.dashboard.expenses,
                       ]}
-                      labelFormatter={(label) => {
-                        const date = new Date(label as string);
-                        return date.toLocaleDateString(
-                          language === 'nl' ? 'nl-NL' : 'en-US',
-                          {
-                            weekday: 'short',
-                            day: 'numeric',
-                            month: 'short',
-                          }
-                        );
-                      }}
+                      labelFormatter={(label) => formatDate(String(label))}
                       contentStyle={{
                         backgroundColor: 'hsl(var(--card))',
                         border: '1px solid hsl(var(--border))',

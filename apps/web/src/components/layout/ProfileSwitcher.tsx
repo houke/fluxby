@@ -19,7 +19,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useNavigate } from 'react-router-dom';
+import { useViewTransitionNavigate } from '@/lib/view-transitions';
 
 const PROFILE_TYPE_ICONS: Record<string, LucideIcon> = {
   personal: User,
@@ -40,7 +40,7 @@ const PROFILE_TYPE_COLORS: Record<string, string> = {
 export function ProfileSwitcher() {
   const { t } = useLanguage();
   const { activeProfile, profiles, isSwitching, switchProfile } = useProfile();
-  const navigate = useNavigate();
+  const navigate = useViewTransitionNavigate();
 
   if (!activeProfile) {
     return null;
@@ -62,6 +62,7 @@ export function ProfileSwitcher() {
       <DropdownMenuTrigger asChild>
         <Button
           variant='ghost'
+          aria-label={`${t.profileSwitcher.currentProfile}: ${activeProfile.name}`}
           className={cn(
             'group flex h-auto items-center gap-2 px-3 py-2 hover:bg-muted/50 focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-0',
             isSwitching && 'pointer-events-none opacity-50'
@@ -182,7 +183,7 @@ export function ProfileSwitcher() {
 
         {/* Manage Profiles Link */}
         <DropdownMenuItem
-          onSelect={() => navigate('/settings?tab=manage-profiles')}
+          onSelect={() => navigate('/settings?section=profiles&view=manage')}
           className='cursor-pointer'
         >
           <Settings className='h-4 w-4' />

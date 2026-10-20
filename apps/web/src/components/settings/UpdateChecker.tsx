@@ -1,3 +1,4 @@
+import { formatDate } from '@/lib/utils';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Download,
@@ -497,6 +498,7 @@ export function UpdateChecker() {
                         <div className='mt-2 space-y-1'>
                           <Progress
                             value={progressPercentage}
+                            aria-label={t.updater.downloading}
                             className='h-2'
                           />
                           <div className='flex justify-between text-xs text-muted-foreground'>
@@ -601,7 +603,7 @@ export function UpdateChecker() {
             <DialogDescription>
               {updateInfo?.date && (
                 <span className='text-xs text-muted-foreground'>
-                  {new Date(updateInfo.date).toLocaleDateString()}
+                  {formatDate(updateInfo.date)}
                 </span>
               )}
             </DialogDescription>

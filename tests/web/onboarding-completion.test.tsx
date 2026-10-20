@@ -1,7 +1,13 @@
 /** @vitest-environment jsdom */
-import { act, cleanup, renderHook, screen } from '@testing-library/react';
+import {
+  act,
+  cleanup,
+  renderHook,
+  screen,
+  waitFor,
+} from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, useLocation } from 'react-router-dom';
 import React, { type ReactNode } from 'react';
 
 const mocks = vi.hoisted(() => ({
@@ -95,6 +101,139 @@ describe('first-run tour lifecycle', () => {
     cleanup();
     vi.unstubAllGlobals();
   });
+
+  it('resumes a settings topic and restores its destination when moving backwards', async () => {
+    const chapterIndex = onboardingChapters.findIndex(
+      (chapter) => chapter.id === 'settings'
+    );
+    const stepIndex = onboardingChapters[chapterIndex].steps.findIndex(
+      (step) => step.id === 'settings-data'
+    );
+    mocks.storage.set('fluxby_onboarding_complete', true);
+    mocks.storage.set('fluxby_onboarding', {
+      isActive: false,
+      hasCompletedOnboarding: true,
+      hasDismissedOnboarding: true,
+      currentChapterIndex: chapterIndex,
+      currentStepIndex: stepIndex,
+      userName: 'Test',
+      language: 'en',
+    });
+    function Location() {
+      const location = useLocation();
+      return (
+        <output data-testid='tour-location'>
+          {location.pathname}
+          {location.search}
+        </output>
+      );
+    }
+    const hook = renderHook(useOnboarding, {
+      wrapper: ({ children }) => (
+        <MemoryRouter initialEntries={['/settings?section=about']}>
+          <OnboardingProvider>
+            {children}
+            <Location />
+          </OnboardingProvider>
+        </MemoryRouter>
+      ),
+    });
+    await act(async () => hook.result.current.startOnboarding());
+    await waitFor(() =>
+      expect(screen.getByTestId('tour-location').textContent).toBe(
+        '/settings?section=data'
+      )
+    );
+    act(() => hook.result.current.previousStep());
+    await waitFor(() =>
+      expect(screen.getByTestId('tour-location').textContent).toBe(
+        '/settings?section=sync'
+      )
+    );
+  });
+
+  it.each([
+    'planning-net-worth',
+    'planning-monthly-review',
+    'household-cashflows',
+  ])(
+    'resumes %s and restores tabs in both navigation directions',
+    async (id) => {
+      const chapterIndex = onboardingChapters.findIndex(
+        (chapter) => chapter.id === 'planning'
+      );
+      const chapter = onboardingChapters[chapterIndex];
+      const stepIndex = chapter.steps.findIndex((step) => step.id === id);
+      mocks.storage.set('fluxby_onboarding_complete', true);
+      mocks.storage.set('fluxby_onboarding', {
+        isActive: false,
+        hasCompletedOnboarding: true,
+        hasDismissedOnboarding: true,
+        currentChapterIndex: chapterIndex,
+        currentStepIndex: stepIndex,
+        userName: 'Test',
+        language: 'en',
+      });
+      function Location() {
+        const location = useLocation();
+        return (
+          <output data-testid='tour-location'>
+            {location.pathname}
+            {location.search}
+          </output>
+        );
+      }
+      const hook = renderHook(useOnboarding, {
+        wrapper: ({ children }) => (
+          <MemoryRouter initialEntries={['/settings?section=about']}>
+            <OnboardingProvider>
+              {children}
+              <Location />
+            </OnboardingProvider>
+          </MemoryRouter>
+        ),
+      });
+      await act(async () => hook.result.current.startOnboarding());
+      await waitFor(() =>
+        expect(screen.getByTestId('tour-location').textContent).toBe(
+          chapter.steps[stepIndex].route
+        )
+      );
+      act(() => hook.result.current.previousStep());
+      await waitFor(() =>
+        expect(screen.getByTestId('tour-location').textContent).toBe(
+          chapter.steps[stepIndex - 1].route
+        )
+      );
+      await act(async () => hook.result.current.nextStep());
+      await waitFor(() =>
+        expect(screen.getByTestId('tour-location').textContent).toBe(
+          chapter.steps[stepIndex].route
+        )
+      );
+    }
+  );
+
+  it.each([
+    ['/planning?tab=household', 'household-planning-tab'],
+    ['/planning?tab=net-worth', 'planning-net-worth'],
+    ['/settings?section=security', 'settings-security'],
+    ['/settings?section=profiles&view=manage', 'settings-profiles'],
+  ])(
+    'starts page help at %s instead of resetting its topic',
+    async (route, id) => {
+      const hook = renderHook(useOnboarding, {
+        wrapper: ({ children }) => (
+          <MemoryRouter initialEntries={[route]}>
+            <OnboardingProvider>{children}</OnboardingProvider>
+          </MemoryRouter>
+        ),
+      });
+      await act(async () => hook.result.current.startOnboarding(false, true));
+      expect(hook.result.current.currentStep?.id).toBe(id);
+      expect(hook.result.current.currentStep?.route).toBe(route);
+    }
+  );
 
   it('opens a pending first tour after an encryption-triggered reload', () => {
     mocks.storage.set('fluxby-onboarding-restart', true);

@@ -302,8 +302,13 @@ export function isEncryptedEnvelope(data: unknown): data is EncryptedEnvelope {
  * Convert Uint8Array to Base64 string
  */
 function uint8ArrayToBase64(bytes: Uint8Array): string {
-  const binary = String.fromCharCode(...bytes);
-  return btoa(binary);
+  const chunks: string[] = [];
+  // Full profile snapshots can exceed the engine's function argument limit.
+  for (let offset = 0; offset < bytes.length; offset += 0x8000)
+    chunks.push(
+      String.fromCharCode(...bytes.subarray(offset, offset + 0x8000))
+    );
+  return btoa(chunks.join(''));
 }
 
 /**

@@ -13,6 +13,13 @@ export default function HelpPrivacy() {
       </p>
 
       <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
+        {t.helpCenter.privacy.settingsTitle}
+      </h2>
+      <p className='text-gray-600 dark:text-gray-400'>
+        {t.helpCenter.privacy.settingsText}
+      </p>
+
+      <h2 className='mt-12 text-2xl font-bold text-gray-900 dark:text-gray-100'>
         {t.helpCenter?.privacy?.localFirstTitle}
       </h2>
       <p className='text-gray-600 dark:text-gray-400'>

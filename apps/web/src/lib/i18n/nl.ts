@@ -1,9 +1,30 @@
+import {
+  settingsNavigationNl,
+  type SettingsNavigationTranslations,
+} from './settings-navigation';
 import { webMcpNl, type WebMcpCopy } from '../webmcp-copy';
+import {
+  householdPlanningNl,
+  type HouseholdPlanningTranslations,
+} from './household-planning';
+import {
+  transactionReviewNl,
+  type TransactionReviewTranslations,
+} from './transaction-review-translations';
+import {
+  householdBudgetNl,
+  type HouseholdBudgetTranslations,
+} from './household-budget-translations';
 // Dutch translations for the Fluxby web app
 import { DEMO_TRANSLATIONS, type DemoTranslations } from '@fluxby/shared';
+import { onboardingGuideNl, type OnboardingGuide } from './onboarding-guide';
 
 export interface TranslationKeys {
+  onboardingGuide: OnboardingGuide;
   webMcp: WebMcpCopy;
+  householdPlanning: HouseholdPlanningTranslations;
+  transactionReview: TransactionReviewTranslations;
+  householdBudget: HouseholdBudgetTranslations;
   demoData: DemoTranslations;
   common: {
     save: string;
@@ -179,6 +200,8 @@ export interface TranslationKeys {
     newPassword: string;
     enterPassword: string;
     confirmPassword: string;
+    showPassword: string;
+    hidePassword: string;
     createPassword: string;
     unlock: string;
     useBiometric: string;
@@ -268,6 +291,7 @@ export interface TranslationKeys {
     installAnywayConfirm: string;
   };
   nav: {
+    planning: string;
     dashboard: string;
     transactions: string;
     analytics: string;
@@ -532,7 +556,85 @@ export interface TranslationKeys {
     spendingByCategory: string;
     legendLabel: string;
   };
+  transactionTools: {
+    compact: string;
+    comfortable: string;
+  };
+  planning: {
+    title: string;
+    subtitle: string;
+    safeToSpend: string;
+    safeToSpendDescription: string;
+    availableBalance: string;
+    upcomingObligations: string;
+    goalReservations: string;
+    minimumBalance: string;
+    reservedSavings: string;
+    preferencesSaved: string;
+    savePreferences: string;
+    goals: string;
+    goalsDescription: string;
+    addGoal: string;
+    editGoal: string;
+    name: string;
+    targetAmount: string;
+    currentAmount: string;
+    deadline: string;
+    monthlyContribution: string;
+    contribute: string;
+    contributionAmount: string;
+    goalCreated: string;
+    goalUpdated: string;
+    goalDeleted: string;
+    contributionSaved: string;
+    deleteGoalConfirm: string;
+    noGoals: string;
+    goalComplete: string;
+    netWorth: string;
+    netWorthDescription: string;
+    cash: string;
+    assets: string;
+    liabilities: string;
+    total: string;
+    addItem: string;
+    editItem: string;
+    itemType: string;
+    asset: string;
+    liability: string;
+    amount: string;
+    itemCreated: string;
+    itemUpdated: string;
+    itemDeleted: string;
+    deleteItemConfirm: string;
+    noItems: string;
+    monthlyReview: string;
+    monthlyReviewDescription: string;
+    reviewMonth: string;
+    reviewUncategorized: string;
+    reviewSpending: string;
+    reviewBudgets: string;
+    reviewSubscriptions: string;
+    reviewBackup: string;
+    openArea: string;
+    finishReview: string;
+    reopenReview: string;
+    reviewComplete: string;
+    reviewSaved: string;
+    reviewProgress: string;
+    invalidAmount: string;
+    saveFailed: string;
+    loadFailed: string;
+    retry: string;
+    helpTitle: string;
+    helpGoals: string;
+    helpForecast: string;
+    helpReview: string;
+    helpNetWorth: string;
+  };
   budgets: {
+    selectCategory: string;
+    rolloverUnused: string;
+    carriedForward: string;
     title: string;
     subtitle: string;
     newBudget: string;
@@ -567,8 +669,17 @@ export interface TranslationKeys {
     monthCountUnit: string;
     searchPlaceholder: string;
     createSelected: string;
+    created: string;
+    updated: string;
+    deleted: string;
+    createdMultiple: string;
+    invalidAmount: string;
   };
   subscriptions: {
+    renewalDate: string;
+    cancellationDeadline: string;
+    renewalReminder: string;
+    cancellationReminder: string;
     title: string;
     subtitle: string;
     noSubscriptions: string;
@@ -852,6 +963,7 @@ export interface TranslationKeys {
     importingTo: string;
   };
   settings: {
+    navigation: SettingsNavigationTranslations;
     title: string;
     subtitle: string;
     tabs: {
@@ -875,6 +987,8 @@ export interface TranslationKeys {
     appNameDescription: string;
     appNamePlaceholder: string;
     appNameUnset: string;
+    appNameSaved: string;
+    appNameSaveError: string;
     masterPasswordTitle: string;
     masterPasswordDescription: string;
     masterPasswordDialogTitle: string;
@@ -969,6 +1083,8 @@ export interface TranslationKeys {
       ibanPlaceholder: string;
       namePlaceholder: string;
       add: string;
+      accountType: string;
+      reorderAccount: string;
       orderSaved: string;
       orderSaveError: string;
     };
@@ -1007,6 +1123,27 @@ export interface TranslationKeys {
       failedToApplyRules: string;
     };
     dataManagement: {
+      backupHealthHelp: string;
+      restoreHelp: string;
+      backupHealthTitle: string;
+      noBackupYet: string;
+      lastBackup: string;
+      backupEncrypted: string;
+      backupPlain: string;
+      backupVerification: string;
+      noVerifiedRestore: string;
+      previewTitle: string;
+      previewDescription: string;
+      previewLegacy: string;
+      recoveryDescription: string;
+      recoveryAvailable: string;
+      recoveryPassword: string;
+      recoveryPasswordDescription: string;
+      previewRestore: string;
+      importInvalid: string;
+      backupChecksumInvalid: string;
+      recoveryDownload: string;
+      backupDownloaded: string;
       title: string;
       description: string;
       exportTitle: string;
@@ -1122,6 +1259,8 @@ export interface TranslationKeys {
       deleteSubscriptionsError: string;
     };
     sync: {
+      mergeConfirmTitle: string;
+      mergeConfirmDescription: string;
       title: string;
       description: string;
       thisDevice: string;
@@ -1137,6 +1276,13 @@ export interface TranslationKeys {
       lastSync: string;
       neverSynced: string;
       removeDevice: string;
+      removeDeviceConfirmTitle: string;
+      removeDeviceConfirmDescription: string;
+      deviceRemoved: string;
+      reconnectNow: string;
+      deviceWaiting: string;
+      devicePairAgain: string;
+      deviceUpdateRequired: string;
       pairingRequest: string;
       showQRCode: string;
       pairDevice: string;
@@ -1151,17 +1297,25 @@ export interface TranslationKeys {
       accept: string;
       ready: string;
       initializing: string;
+      standby: string;
+      connectingToServer: string;
       cannotConnectToSelf: string;
       peerUnavailable: string;
+      invalidPairingCode: string;
+      pairingNotVerified: string;
       connectionTimeout: string;
       syncing: string;
       connected: string;
       notConnected: string;
       syncNow: string;
       syncNowTooltip: string;
+      connectToSync: string;
       autoSync: string;
+      autoSyncOnTooltip: string;
+      autoSyncOffTooltip: string;
       autoSyncDescription: string;
       connectionSettings: string;
+      connectsOnDemand: string;
       syncSuccess: string;
       syncNoChanges: string;
       syncError: string;
@@ -1689,7 +1843,11 @@ export interface TranslationKeys {
 }
 
 export const nl: TranslationKeys = {
+  onboardingGuide: onboardingGuideNl,
   webMcp: webMcpNl,
+  householdPlanning: householdPlanningNl,
+  transactionReview: transactionReviewNl,
+  householdBudget: householdBudgetNl,
   demoData: DEMO_TRANSLATIONS.nl,
   common: {
     save: 'Opslaan',
@@ -1911,6 +2069,8 @@ export const nl: TranslationKeys = {
     newPassword: 'Wachtwoord aanmaken',
     enterPassword: 'Wachtwoord invoeren',
     confirmPassword: 'Wachtwoord bevestigen',
+    showPassword: 'Wachtwoord tonen',
+    hidePassword: 'Wachtwoord verbergen',
     createPassword: 'Wachtwoord aanmaken',
     unlock: 'Ontgrendelen',
     useBiometric: 'Gebruik biometrisch',
@@ -2007,6 +2167,7 @@ export const nl: TranslationKeys = {
       'Weet je het zeker? De update wordt doorgezet zonder database back-up.',
   },
   nav: {
+    planning: 'Planning',
     dashboard: 'Dashboard',
     transactions: 'Transacties',
     analytics: 'Analyse',
@@ -2101,7 +2262,7 @@ export const nl: TranslationKeys = {
   transactions: {
     title: 'Transacties',
     subtitle: 'Beheer je inkomsten en uitgaven',
-    allTransactions: 'Alle Transacties',
+    allTransactions: 'Alle transacties',
     transactionsFound: 'transacties gevonden',
     searchPlaceholder: 'Zoek op omschrijving, IBAN of categorie...',
     income: 'Inkomsten',
@@ -2292,7 +2453,98 @@ export const nl: TranslationKeys = {
     spendingByCategory: 'Uitgaven per categorie',
     legendLabel: 'Categoriefilter',
   },
+  transactionTools: {
+    compact: 'Compacte weergave',
+    comfortable: 'Ruime weergave',
+  },
+  planning: {
+    title: 'Planning',
+    subtitle:
+      'Plan je spaargeld, aankomende rekeningen en maandelijkse financiën.',
+    safeToSpend: 'Vrij te besteden',
+    safeToSpendDescription:
+      'Een schatting voor 30 dagen op basis van je rekeningsaldi en bevestigde terugkerende betalingen.',
+    availableBalance: 'Rekeningsaldi',
+    upcomingObligations: 'Aankomende betalingen',
+    goalReservations: 'Maandelijkse spaarplannen',
+    minimumBalance: 'Minimumsaldo',
+    reservedSavings: 'Overig gereserveerd spaargeld',
+    preferencesSaved: 'Planningvoorkeuren opgeslagen',
+    savePreferences: 'Reserveringen opslaan',
+    goals: 'Spaardoelen',
+    goalsDescription:
+      'Stel doelen en maandelijkse bijdragen in voor spaargeld en toekomstige uitgaven. Bijdragen houden je voortgang bij; ze verplaatsen geen geld tussen rekeningen.',
+    addGoal: 'Spaardoel toevoegen',
+    editGoal: 'Spaardoel bewerken',
+    name: 'Naam',
+    targetAmount: 'Doelbedrag',
+    currentAmount: 'Al gespaard',
+    deadline: 'Streefdatum (optioneel)',
+    monthlyContribution: 'Maandelijkse bijdrage',
+    contribute: 'Bijdrage vastleggen',
+    contributionAmount: 'Bijdragebedrag',
+    goalCreated: 'Spaardoel aangemaakt',
+    goalUpdated: 'Spaardoel bijgewerkt',
+    goalDeleted: 'Spaardoel verwijderd',
+    contributionSaved: 'Spaarbijdrage vastgelegd',
+    deleteGoalConfirm:
+      'Dit spaardoel en de bijbehorende bijdragen verwijderen?',
+    noGoals:
+      'Maak een doel voor een noodfonds, vakantie of jaarlijkse rekening.',
+    goalComplete: 'Doel bereikt',
+    netWorth: 'Nettovermogen',
+    netWorthDescription:
+      'Rekeningsaldi worden automatisch meegenomen. Voeg andere bezittingen en schulden toe met hun huidige waarde. Tel hetzelfde geld niet dubbel.',
+    cash: 'Geld op rekeningen',
+    assets: 'Overige bezittingen',
+    liabilities: 'Schulden',
+    total: 'Totaal nettovermogen',
+    addItem: 'Bezitting of schuld toevoegen',
+    editItem: 'Bezitting of schuld bewerken',
+    itemType: 'Type',
+    asset: 'Bezitting',
+    liability: 'Schuld',
+    amount: 'Huidige waarde',
+    itemCreated: 'Vermogenspost aangemaakt',
+    itemUpdated: 'Vermogenspost bijgewerkt',
+    itemDeleted: 'Vermogenspost verwijderd',
+    deleteItemConfirm: 'Deze bezitting of schuld verwijderen?',
+    noItems:
+      'Voeg beleggingen, vastgoed, leningen of andere handmatig bijgehouden saldi toe.',
+    monthlyReview: 'Maandoverzicht',
+    monthlyReviewDescription:
+      'Controleer elk onderdeel, houd je voortgang bij en rond de maand af wanneer alle stappen zijn aangevinkt.',
+    reviewMonth: 'Te controleren maand',
+    reviewUncategorized: 'Categoriseer transacties die aandacht nodig hebben',
+    reviewSpending: 'Controleer ongebruikelijke uitgaven en terugbetalingen',
+    reviewBudgets: 'Controleer budgetbedragen en doorgeschoven bedragen',
+    reviewSubscriptions: 'Controleer abonnementen en aankomende verlengingen',
+    reviewBackup: 'Download een actuele versleutelde backup',
+    openArea: 'Pagina openen',
+    finishReview: 'Maandcontrole afronden',
+    reopenReview: 'Maandcontrole heropenen',
+    reviewComplete: 'Maandcontrole afgerond',
+    reviewSaved: 'Voortgang van maandcontrole opgeslagen',
+    reviewProgress: '{done} van {total} stappen afgerond',
+    invalidAmount:
+      'Vul een geldige naam en een positief bedrag in. Gereserveerde bedragen mogen nul zijn.',
+    saveFailed: 'Je wijziging kon niet worden opgeslagen. Probeer het opnieuw.',
+    loadFailed: 'Planning kon niet worden geladen. Probeer het opnieuw.',
+    retry: 'Opnieuw proberen',
+    helpTitle: 'Financiële planning gebruiken',
+    helpGoals:
+      'Maak doelen voor geplande uitgaven en leg bijdragen vast terwijl je spaart. Stel een streefdatum en maandelijkse bijdrage in om die reservering mee te nemen in vrij te besteden.',
+    helpForecast:
+      'Vrij te besteden trekt bevestigde betalingen binnen 30 dagen, maandelijkse bijdragen aan spaardoelen, overig gereserveerd spaargeld en je minimumsaldo af. Het is een schatting; ontbrekende rekeningen of verouderde saldi beïnvloeden de uitkomst.',
+    helpReview:
+      'Gebruik de maandelijkse checklist om transacties, budgetten, abonnementen en backups te controleren. Voortgang wordt per maand en profiel opgeslagen.',
+    helpNetWorth:
+      'Nettovermogen combineert rekeningsaldi met handmatig ingevoerde bezittingen en schulden. Werk waarden bij wanneer ze veranderen en voer bestaande banksaldi niet dubbel in.',
+  },
   budgets: {
+    selectCategory: 'Categorie selecteren',
+    rolloverUnused: 'Ongebruikt budget doorschuiven',
+    carriedForward: 'Doorgeschoven',
     title: 'Budgetten',
     subtitle: 'Stel doelen en volg je uitgaven',
     newBudget: 'Nieuw Budget',
@@ -2308,7 +2560,7 @@ export const nl: TranslationKeys = {
     noBudgets: 'Nog geen budgetten ingesteld',
     createFirst: 'Maak je eerste budget aan om je uitgaven te volgen',
     deleteBudget: 'Budget Verwijderen',
-    monthlyOverview: 'Maandelijks Overzicht',
+    monthlyOverview: 'Maandelijks overzicht',
     budgetsSet: 'budgetten ingesteld',
     addNewBudget: 'Nieuw budget toevoegen',
     totalBudget: 'Totaal budget',
@@ -2328,8 +2580,17 @@ export const nl: TranslationKeys = {
     monthCountUnit: 'mnd',
     searchPlaceholder: 'Zoek budgetten...',
     createSelected: 'Aanmaken',
+    created: 'Budget aangemaakt',
+    updated: 'Budget bijgewerkt',
+    deleted: 'Budget verwijderd',
+    createdMultiple: '{count} budgetten aangemaakt',
+    invalidAmount: 'Vul een bedrag groter dan nul in.',
   },
   subscriptions: {
+    renewalDate: 'Verlengingsdatum',
+    cancellationDeadline: 'Uiterste opzegdatum',
+    renewalReminder: 'Verlenging binnen 30 dagen',
+    cancellationReminder: 'Opzegdatum nadert of is verstreken',
     title: 'Abonnementen',
     subtitle: 'Beheer je terugkerende betalingen',
     noSubscriptions: 'Nog geen abonnementen gedetecteerd',
@@ -2395,7 +2656,7 @@ export const nl: TranslationKeys = {
     alerts: 'Meldingen',
     noAlerts: 'Geen meldingen',
     stale: 'Inactief',
-    staleTooltip: 'Geen transacties meer dan 2 maanden',
+    staleTooltip: 'Geen betalingen gedurende meer dan twee verwachte perioden',
     staleDescription:
       'Dit abonnement lijkt niet meer actief. Wil je het verwijderen?',
     removeStale: 'Verwijderen',
@@ -2683,6 +2944,7 @@ export const nl: TranslationKeys = {
     importingTo: 'Importeren naar',
   },
   settings: {
+    navigation: settingsNavigationNl,
     title: 'Instellingen',
     subtitle: 'Beheer je rekeningen en app-instellingen',
     tabs: {
@@ -2690,14 +2952,15 @@ export const nl: TranslationKeys = {
       manageProfiles: 'Profielen beheren',
       appSettings: 'App-instellingen',
     },
-    appSettings: 'App Instellingen',
-    appSettingsDescription: 'Beheer taal, valuta en thema',
-    versions: 'Versies & Updates',
+    appSettings: 'App-instellingen',
+    appSettingsDescription: 'Beheer taal, uiterlijk en appvoorkeuren',
+    versions: 'Versies en updates',
     versionsDescription: 'App versies en software updates',
     language: 'Taal',
     languageDescription: 'Kies de taal van de interface',
     currency: 'Valuta',
-    currencyDescription: 'Kies de valuta voor je transacties',
+    currencyDescription:
+      'Bedragen worden in euro (EUR) bijgehouden. De getalnotatie volgt de taal van de interface.',
     theme: 'Thema',
     themeDescription: 'Kies tussen licht of donker thema',
     themeLight: 'Licht',
@@ -2706,6 +2969,9 @@ export const nl: TranslationKeys = {
     appNameDescription: 'Wordt gebruikt in de begroeting',
     appNamePlaceholder: 'Je naam...',
     appNameUnset: 'Niet ingesteld',
+    appNameSaved: 'Naam opgeslagen',
+    appNameSaveError:
+      'Je naam kon niet worden opgeslagen. Probeer het opnieuw.',
     masterPasswordTitle: 'Master wachtwoord',
     masterPasswordDescription: 'Versleutelt al je financiële gegevens lokaal',
     masterPasswordDialogTitle: 'Master wachtwoord wijzigen',
@@ -2771,7 +3037,7 @@ export const nl: TranslationKeys = {
       save: 'Opslaan',
       accountsTipTitle: 'Tip: spaarrekening toevoegen',
       accountsTip:
-        'Na het importeren van transacties kun je in Instellingen → Rekeningen je spaarrekening instellen. Overboekingen tussen je rekeningen worden dan automatisch herkend en tellen niet mee in je inkomsten en uitgaven analyse.',
+        'Na het importeren van transacties kun je in Instellingen → Profielen & rekeningen → Bankrekeningen je spaarrekening instellen. Overboekingen tussen je rekeningen worden dan automatisch herkend en tellen niet mee in je inkomsten en uitgaven analyse.',
       addAccountsTitle: 'Rekeningen toevoegen',
       addAccountsDescription:
         'Voeg bankrekeningen toe aan je nieuwe profiel. Je kunt dit ook later doen via Instellingen.',
@@ -2797,7 +3063,7 @@ export const nl: TranslationKeys = {
       successReset: 'API server gereset naar lokaal (zelfde host).',
     },
     accounts: {
-      title: 'Rekeningen',
+      title: 'Bankrekeningen',
       description:
         'Beheer je bankrekeningen. De volgorde wordt gebruikt op het dashboard.',
       types: {
@@ -2813,6 +3079,8 @@ export const nl: TranslationKeys = {
       ibanPlaceholder: 'IBAN (bijv. NL00BANK0123456789)',
       namePlaceholder: 'Naam',
       add: 'Toevoegen',
+      accountType: 'Type rekening',
+      reorderAccount: 'Volgorde wijzigen: {name}',
       orderSaved: 'Volgorde rekeningen opgeslagen',
       orderSaveError: 'Kon de volgorde van rekeningen niet opslaan',
     },
@@ -2855,6 +3123,35 @@ export const nl: TranslationKeys = {
       failedToApplyRules: 'Kon betaalproviderregels niet toepassen',
     },
     dataManagement: {
+      backupHealthHelp:
+        'Exports zijn standaard versleuteld en bevatten je financiële profielen en planninggegevens. Backupstatus houdt bij wanneer een download begint; controleer of je browser het bestand heeft opgeslagen.',
+      restoreHelp:
+        'Importeren controleert het formaat en de integriteit voordat gegevens worden vervangen. Controleer de inhoud en kies een herstelwachtwoord. Fluxby slaat eerst een versleutelde herstelkopie op dit apparaat op. Bewaar dat wachtwoord zodat je de herstelkopie zo nodig kunt downloaden en herstellen.',
+      backupHealthTitle: 'Backupstatus',
+      noBackupYet: 'Nog geen backup gedownload',
+      lastBackup: 'Laatste backupdownload gestart: {date}',
+      backupEncrypted: 'Versleuteld',
+      backupPlain: 'Onversleuteld',
+      backupVerification: 'Laatste herstel gecontroleerd: {date}',
+      noVerifiedRestore: 'Nog geen herstel gecontroleerd',
+      previewTitle: 'Backup controleren',
+      previewDescription:
+        'Deze backup bevat {profiles} profielen, {accounts} rekeningen en {transactions} transacties ({rows} records). Geëxporteerd op {date}.',
+      previewLegacy:
+        'Deze oudere backup bevat niet alle functies. Ontbrekende tabellen zijn leeg na herstel.',
+      recoveryDescription:
+        'Voor het vervangen wordt een versleutelde herstelkopie opgeslagen op dit apparaat.',
+      recoveryAvailable: 'Herstelkopie downloaden',
+      recoveryPassword: 'Wachtwoord voor herstelkopie',
+      recoveryPasswordDescription:
+        'Kies een wachtwoord om de herstelkopie van je huidige gegevens te beschermen.',
+      previewRestore: 'Herstelkopie opslaan en herstellen',
+      importInvalid:
+        'Deze backup is ongeldig of niet compatibel. Je gegevens zijn niet gewijzigd.',
+      backupChecksumInvalid:
+        'De integriteitscontrole van de backup is mislukt. Je gegevens zijn niet gewijzigd.',
+      recoveryDownload: 'Download van herstelkopie gestart.',
+      backupDownloaded: 'Backupdownload gestart.',
       title: 'Gegevensbeheer',
       description: 'Exporteer of verwijder je gegevens',
       exportTitle: 'Exporteer Gegevens',
@@ -3005,9 +3302,12 @@ export const nl: TranslationKeys = {
         'Er is een fout opgetreden bij het verwijderen van abonnementen',
     },
     sync: {
+      mergeConfirmTitle: 'Profielen op apparaten samenvoegen?',
+      mergeConfirmDescription:
+        'Koppelen voegt de actieve profielen op beide apparaten samen. Bij verschillen wordt de laatste wijziging gebruikt. Exporteer voor het verbinden een backup als je een herstelkopie wilt bewaren.',
       title: 'Apparaten synchroniseren',
       description:
-        'Synchroniseer je gegevens tussen apparaten via peer-to-peer verbindingen. Geen server nodig.',
+        'Synchroniseer je gegevens rechtstreeks tussen je apparaten via versleutelde peer-to-peerverbindingen. Een koppelserver helpt de apparaten alleen elkaar te vinden.',
       thisDevice: 'Dit apparaat',
       pairingCode: 'Koppelingscode',
       pairingCodeDescription:
@@ -3022,12 +3322,26 @@ export const nl: TranslationKeys = {
       cannotConnectToSelf: 'Je kunt niet met jezelf verbinden',
       peerUnavailable:
         'Peer onbereikbaar (controleer code en of de ander online is)',
+      invalidPairingCode:
+        'Deze code is ongeldig, verlopen of al gebruikt. Voer de nieuwe code in die het andere apparaat nu toont en probeer het opnieuw.',
+      pairingNotVerified:
+        'Het andere apparaat kon niet bewijzen dat het de code kent. Maak een nieuwe code en probeer het opnieuw. Mislukt het steeds, dan wordt de verbinding mogelijk onderschept.',
       connectionTimeout:
         'Verbinding time-out - het andere apparaat kan achter een firewall zitten. Probeer een ander netwerk.',
       pairedDevices: 'Gekoppelde apparaten',
       lastSync: 'Laatste sync',
       neverSynced: 'Nog niet gesynchroniseerd',
       removeDevice: 'Apparaat verwijderen',
+      removeDeviceConfirmTitle: 'Apparaat verwijderen?',
+      removeDeviceConfirmDescription:
+        '{device} synchroniseert dan niet meer met dit apparaat. Is het online, dan verwijdert het de koppeling ook. Je kunt altijd opnieuw koppelen.',
+      deviceRemoved: 'Apparaat verwijderd',
+      reconnectNow: 'Nu opnieuw verbinden',
+      deviceWaiting:
+        'Verbindt automatisch zodra beide apparaten ontgrendeld en online zijn',
+      devicePairAgain: 'Koppel opnieuw om automatisch te verbinden',
+      deviceUpdateRequired:
+        'Werk beide apparaten bij naar dezelfde versie om opnieuw te verbinden',
       pairingRequest: 'Koppelingsverzoek',
       showQRCode: 'Toon QR-code',
       pairDevice: 'Apparaat koppelen',
@@ -3035,7 +3349,8 @@ export const nl: TranslationKeys = {
       orEnterManually: 'Of voer handmatig in',
       newCode: 'Nieuwe code',
       qrCodeExpiry: 'Code verloopt in',
-      qrCodeValid: 'Deze code blijft geldig totdat je een nieuwe genereert.',
+      qrCodeValid:
+        'Deze code werkt één keer en verloopt na 2 minuten. Na een mislukte poging verschijnt hier een nieuwe code.',
       pairingPlaceholder: 'fluxby-abc123...:ABCDEF',
       pairingHint:
         'Voer de volledige koppelingscode in inclusief de dubbele punt. De code is hoofdlettergevoelig.',
@@ -3043,14 +3358,21 @@ export const nl: TranslationKeys = {
       accept: 'Accepteren',
       ready: 'Gereed',
       initializing: 'Initialiseren...',
+      standby: 'Niet actief',
+      connectingToServer: 'Verbinden met de koppelserver...',
       syncing: 'Synchroniseren...',
       connected: 'Verbonden',
       notConnected: 'Niet verbonden',
       syncNow: 'Nu synchroniseren',
       syncNowTooltip: 'Forceer synchronisatie met alle verbonden apparaten',
+      connectToSync: 'Verbind een apparaat om te synchroniseren',
       autoSync: 'Automatisch synchroniseren',
+      autoSyncOnTooltip: 'Wijzigingen worden automatisch gesynchroniseerd',
+      autoSyncOffTooltip: 'Alleen handmatig synchroniseren',
       autoSyncDescription: 'Wijzigingen automatisch synchroniseren',
       connectionSettings: 'Verbindingsinstellingen',
+      connectsOnDemand:
+        'Fluxby maakt alleen verbinding met de koppelserver als je een apparaat koppelt of als dit profiel gekoppelde apparaten heeft. Gekoppelde apparaten verbinden daarna vanzelf opnieuw.',
       syncSuccess: '{received} ontvangen, {pushed} verzonden',
       syncNoChanges: 'Geen nieuwe wijzigingen om te synchroniseren',
       syncError: 'Synchronisatie mislukt',
@@ -3181,10 +3503,10 @@ export const nl: TranslationKeys = {
     features: 'Functies',
     featuresDescription:
       'Een overzicht van alle beschikbare functies in de app',
-    quickStart: 'Snel Starten',
+    quickStart: 'Snel starten',
     quickStartDescription: 'In 3 stappen aan de slag',
-    faq: 'Veelgestelde Vragen',
-    needHelp: 'Hulp Nodig?',
+    faq: 'Veelgestelde vragen',
+    needHelp: 'Hulp nodig?',
     needHelpDescription:
       'Heb je een vraag die niet in de FAQ staat? Bekijk onze documentatie of neem contact met ons op.',
     externalLinks: 'Meer informatie',
@@ -3194,12 +3516,12 @@ export const nl: TranslationKeys = {
     developerDocsLink: 'Developer documentatie',
     featureList: [
       {
-        title: 'Transacties Importeren',
+        title: 'Transacties importeren',
         description:
           'Upload je bank CSV-export om transacties te importeren. De app herkent automatisch rekeningen en categoriseert transacties.',
       },
       {
-        title: 'Transacties Bekijken',
+        title: 'Transacties bekijken',
         description:
           'Bekijk, filter en zoek door al je transacties. Pas categorieën aan en voeg notities toe.',
       },
@@ -3219,7 +3541,7 @@ export const nl: TranslationKeys = {
           'Beheer categorieën en stel regels in voor automatische categorisatie van transacties.',
       },
       {
-        title: 'Rekeningen',
+        title: 'Bankrekeningen',
         description:
           'Beheer je bankrekeningen en bekijk actuele saldi per rekening.',
       },
@@ -3265,7 +3587,7 @@ export const nl: TranslationKeys = {
       {
         question: 'Worden mijn gegevens online opgeslagen?',
         answer:
-          'Nee, al je gegevens worden lokaal opgeslagen op je computer. Er wordt niets naar externe servers verstuurd.',
+          'Je financiële database staat lokaal. Optionele synchronisatie deelt gegevens met gekoppelde apparaten. Als je een TypeSafe-sleutel toevoegt, versturen ingeschakelde AI-functies beperkte aanvraaggegevens naar TypeSafe; de web-app gebruikt een Fluxby-gateway.',
       },
       {
         question: 'Hoe kan ik een categorie wijzigen van een transactie?',
@@ -3280,12 +3602,12 @@ export const nl: TranslationKeys = {
       {
         question: 'Hoe stel ik een budget in?',
         answer:
-          'Ga naar "Budgetten" en klik op "Nieuw Budget". Kies een categorie, stel het bedrag in en selecteer of het budget maandelijks of jaarlijks is.',
+          'Ga naar Budgetten en klik op Budget toevoegen. Kies een categorie en vul een maandlimiet in. Klik daarna op Opslaan. Je kunt ongebruikt budget ook laten doorrollen naar volgende maanden.',
       },
       {
         question: 'Kan ik transacties handmatig toevoegen?',
         answer:
-          'Op dit moment worden transacties alleen via CSV-import toegevoegd. Handmatige invoer wordt in een toekomstige versie toegevoegd.',
+          'Ja. Klik op Transactie toevoegen op de pagina Transacties. Kies het type, vul een positief bedrag en een datum in en kies eventueel een rekening, categorie en tegenpartij. Klik op Toevoegen; de app bepaalt het juiste teken voor het gekozen type.',
       },
     ],
   },
@@ -3474,7 +3796,7 @@ export const nl: TranslationKeys = {
     avatarFormatNotAllowed: 'Avatar-formaat niet toegestaan',
     // Address book errors
     failedToFetchAddressBook: 'Kon adresboek niet ophalen',
-    failedToFetchTopAccounts: 'Kon top accounts niet ophalen',
+    failedToFetchTopAccounts: 'Kon tegenrekeningen niet ophalen',
     failedToCreateAddressBookEntry: 'Kon contact niet aanmaken',
     failedToUpdateAddressBookEntry: 'Kon contact niet bijwerken',
     failedToDeleteAddressBookEntry: 'Kon contact niet verwijderen',

@@ -16,6 +16,7 @@ const TABLET_REGEX = /iPad|Tablet/i;
 const DEFAULT_TIER: MotionTier = 'full';
 
 const CONNECTION_TYPES_PENALTY = new Set(['slow-2g', '2g']);
+const GPU_CAPABILITY_CACHE = new WeakMap<Window, number>();
 
 export function isTouchDevice(): boolean {
   if (typeof window === 'undefined') return false;
@@ -40,6 +41,10 @@ export function isTouchDevice(): boolean {
  */
 function getGPUCapabilityScore(): number {
   if (typeof window === 'undefined') return 0;
+  const cachedScore = GPU_CAPABILITY_CACHE.get(window);
+  if (cachedScore !== undefined) return cachedScore;
+  let glContext: WebGLRenderingContext | undefined;
+  let score = 0;
 
   try {
     const canvas = document.createElement('canvas');
@@ -53,8 +58,8 @@ function getGPUCapabilityScore(): number {
 
     if (!gl) return 0;
 
-    const glContext = gl as WebGLRenderingContext;
-    let score = 1; // Basic WebGL support
+    glContext = gl as WebGLRenderingContext;
+    score = 1; // Basic WebGL support
 
     // Check for recognized high-performance GPU renderer
     const debugInfo = glContext.getExtension('WEBGL_debug_renderer_info');
@@ -82,7 +87,17 @@ function getGPUCapabilityScore(): number {
 
     return score;
   } catch {
+    score = 0;
     return 0;
+  } finally {
+    GPU_CAPABILITY_CACHE.set(window, score);
+    // The probe is never rendered. Release it immediately instead of retaining
+    // additional GPU contexts as mascots mount or the window is resized.
+    try {
+      glContext?.getExtension('WEBGL_lose_context')?.loseContext();
+    } catch {
+      // Context release is optional on older or restricted browsers.
+    }
   }
 }
 

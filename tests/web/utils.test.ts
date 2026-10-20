@@ -1,6 +1,7 @@
-import { describe, it, expect } from 'vitest';
+import { afterEach, describe, it, expect, vi } from 'vitest';
 import {
   formatDate,
+  formatDateTime,
   formatDateShort,
   formatPercentage,
   getMonthName,
@@ -9,6 +10,10 @@ import {
   nameSimilarity,
   findSimilarNameGroups,
 } from '../../apps/web/src/lib/utils';
+import { getStoredLanguage } from '@/lib/i18n';
+
+vi.mock('@/lib/i18n', () => ({ getStoredLanguage: vi.fn(() => 'nl') }));
+afterEach(() => vi.mocked(getStoredLanguage).mockReturnValue('nl'));
 
 describe('formatDate', () => {
   it('formats Date object to DD-MM-YYYY', () => {
@@ -23,6 +28,39 @@ describe('formatDate', () => {
   it('handles beginning of year', () => {
     expect(formatDate('2024-01-01')).toBe('01-01-2024');
   });
+
+  it.each(['nl', 'en'] as const)('uses DD-MM-YYYY in %s', (language) => {
+    vi.mocked(getStoredLanguage).mockReturnValue(language);
+    expect(formatDate('2026-09-10')).toBe('10-09-2026');
+  });
+
+  it.each(['America/Los_Angeles', 'Pacific/Auckland'])(
+    'preserves date-only values in %s',
+    (timezone) => {
+      const previous = process.env.TZ;
+      try {
+        process.env.TZ = timezone;
+        expect(formatDate('2026-09-10')).toBe('10-09-2026');
+        expect(formatDate('2024-02-29')).toBe('29-02-2024');
+      } finally {
+        if (previous === undefined) delete process.env.TZ;
+        else process.env.TZ = previous;
+      }
+    }
+  );
+});
+
+describe('formatDateTime', () => {
+  it.each(['nl', 'en'] as const)(
+    'keeps the full date and local time in %s',
+    (language) => {
+      vi.mocked(getStoredLanguage).mockReturnValue(language);
+      const date = new Date(2026, 8, 10, 14, 5, 9);
+      expect(formatDateTime(date)).toBe('10-09-2026, 14:05:09');
+      expect(formatDateTime(date.getTime())).toBe('10-09-2026, 14:05:09');
+      expect(formatDateTime(date.toISOString())).toBe('10-09-2026, 14:05:09');
+    }
+  );
 });
 
 describe('formatDateShort', () => {

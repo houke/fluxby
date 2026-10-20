@@ -22,7 +22,6 @@ import {
   RefreshCw,
   Trash2,
   Download,
-  Activity,
   Clock,
   AlertCircle,
 } from 'lucide-react';
@@ -46,6 +45,7 @@ export function SyncDebugPanel({ onClose }: SyncDebugPanelProps) {
     deviceId,
     deviceName,
     isInitialized,
+    isConnecting,
     pairingCode,
     generateNewPairingCode,
     pairedDevices,
@@ -145,8 +145,7 @@ export function SyncDebugPanel({ onClose }: SyncDebugPanelProps) {
       <CardHeader className='pb-2'>
         <div className='flex items-center justify-between'>
           <div>
-            <CardTitle className='flex items-center gap-2 text-orange-600'>
-              <Activity className='h-5 w-5' />
+            <CardTitle className='text-orange-700 dark:text-orange-400'>
               {copy.title}
             </CardTitle>
             <CardDescription>
@@ -211,8 +210,8 @@ export function SyncDebugPanel({ onClose }: SyncDebugPanelProps) {
             <Button
               variant='outline'
               size='sm'
-              onClick={generateNewPairingCode}
-              disabled={!isInitialized}
+              onClick={() => void generateNewPairingCode()}
+              disabled={isConnecting}
             >
               {copy.generateCode}
             </Button>

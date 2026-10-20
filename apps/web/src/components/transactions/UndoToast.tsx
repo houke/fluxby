@@ -1,5 +1,12 @@
 import { X, RotateCcw, Loader2 } from 'lucide-react';
+import { createPortal } from 'react-dom';
 import { Button } from '@/components/ui/button';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -48,15 +55,15 @@ export function UndoToast({
   // Don't render if expired
   if (timeRemainingMs <= 0) return null;
 
-  return (
+  return createPortal(
     <div
       data-testid='undo-toast'
       role='status'
       aria-live='polite'
       aria-atomic='true'
       className={cn(
-        'fixed bottom-4 left-1/2 z-50 -translate-x-1/2',
-        'flex items-center gap-3 rounded-lg px-4 py-3 shadow-lg',
+        'fixed right-3 bottom-[calc(5rem+env(safe-area-inset-bottom))] left-3 z-40 max-w-3xl md:right-auto md:bottom-4 md:left-1/2 md:-translate-x-1/2',
+        'flex flex-wrap items-center gap-3 rounded-lg px-4 py-3 shadow-lg sm:flex-nowrap',
         'border backdrop-blur-sm transition-all duration-300 ease-out motion-reduce:transition-none',
         // Base styles
         urgency === 'normal' && [
@@ -65,23 +72,23 @@ export function UndoToast({
         ],
         // Warning styles (≤60s)
         urgency === 'warning' && [
-          'border-orange-500 bg-orange-600/95 text-white',
+          'border-orange-500 bg-orange-700/95 text-white',
         ],
         // Critical styles (≤30s) with pulse
         urgency === 'critical' && [
-          'animate-pulse border-red-500 bg-red-600/95 text-white motion-reduce:animate-none',
+          'animate-pulse border-red-500 bg-red-700/95 text-white motion-reduce:animate-none',
         ]
       )}
     >
       {/* Message */}
-      <span className='text-sm font-medium'>
+      <span className='w-full min-w-0 text-sm font-medium break-words sm:w-auto sm:flex-1'>
         {t.bulkDelete.undoToast.replace('{count}', String(deletedCount))}
       </span>
 
       {/* Countdown timer */}
       <span
         className={cn(
-          'min-w-[48px] rounded-md px-2 py-1 text-center font-mono text-xs',
+          'min-w-[48px] shrink-0 rounded-md px-2 py-1 text-center font-mono text-xs',
           urgency === 'normal' && 'bg-white/10 dark:bg-black/10',
           urgency === 'warning' && 'bg-white/20',
           urgency === 'critical' && 'bg-white/20 font-bold'
@@ -97,7 +104,7 @@ export function UndoToast({
         onClick={onUndo}
         disabled={isUndoing}
         className={cn(
-          'h-8 gap-1.5',
+          'h-8 shrink-0 gap-1.5 text-inherit hover:text-inherit',
           urgency === 'normal' && 'hover:bg-white/10',
           urgency === 'warning' && 'hover:bg-white/20',
           urgency === 'critical' && 'hover:bg-white/20'
@@ -112,21 +119,29 @@ export function UndoToast({
       </Button>
 
       {/* Dismiss button */}
-      <Button
-        size='sm'
-        variant='ghost'
-        onClick={onDismiss}
-        disabled={isUndoing}
-        className={cn(
-          'h-8 w-8 p-0',
-          urgency === 'normal' && 'hover:bg-white/10',
-          urgency === 'warning' && 'hover:bg-white/20',
-          urgency === 'critical' && 'hover:bg-white/20'
-        )}
-        aria-label={t.common?.close}
-      >
-        <X className='h-4 w-4' aria-hidden='true' />
-      </Button>
-    </div>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              size='icon'
+              variant='ghost'
+              onClick={onDismiss}
+              disabled={isUndoing}
+              className={cn(
+                'ml-auto h-8 w-8 shrink-0 rounded-md p-0 text-inherit hover:text-inherit',
+                urgency === 'normal' && 'hover:bg-white/10',
+                urgency === 'warning' && 'hover:bg-white/20',
+                urgency === 'critical' && 'hover:bg-white/20'
+              )}
+              aria-label={t.common.close}
+            >
+              <X className='h-4 w-4' aria-hidden='true' />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>{t.common.close}</TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    </div>,
+    document.body
   );
 }

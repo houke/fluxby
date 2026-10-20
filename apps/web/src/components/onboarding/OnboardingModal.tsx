@@ -2,7 +2,8 @@
 // The main modal that displays during onboarding with chapter tabs, step content, and navigation
 
 import { useCallback, useEffect, useState, useMemo, useRef } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
+import { findOnboardingTarget } from './onboarding-target';
 import {
   LayoutDashboard,
   ArrowLeftRight,
@@ -34,8 +35,8 @@ import { FluxbyWebGL } from '@fluxby/shared';
 import { onboardingChapters } from './onboarding-data';
 import { SpotlightOverlay } from './SpotlightOverlay';
 import { useProfile } from '@/contexts/ProfileContext';
+import { useTranslationsFor } from '@/contexts/LanguageContext';
 import { useReducedMotion } from '@/hooks/useMediaQuery';
-import { translations } from '@/lib/i18n';
 // Types are in ./types.ts
 
 // Icon mapping for chapters
@@ -100,15 +101,16 @@ export function OnboardingModal({
   onChapterSelect,
   isCreatingDemo = false,
 }: OnboardingModalProps) {
-  const t = translations[language].onboarding;
-  const navigate = useNavigate();
+  const t = useTranslationsFor(language).onboarding;
   const location = useLocation();
   const { profiles } = useProfile();
   const prefersReducedMotion = useReducedMotion();
-  const [isNavigating, setIsNavigating] = useState(false);
   const [spotlightRect, setSpotlightRect] = useState<SpotlightRect | null>(
     null
   );
+  const modalRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [measuredModalHeight, setMeasuredModalHeight] = useState(320);
   const [modalState, setModalState] = useState<'normal' | 'closing' | 'closed'>(
     'normal'
   );
@@ -124,6 +126,22 @@ export function OnboardingModal({
 
   const currentChapter = onboardingChapters[currentChapterIndex];
   const currentStep = currentChapter?.steps[currentStepIndex];
+  // The provider owns navigation, including destinations within a chapter.
+  const targetRoute = currentStep?.route ?? currentChapter?.route;
+  const isNavigating = `${location.pathname}${location.search}` !== targetRoute;
+
+  useEffect(() => {
+    const element = modalRef.current;
+    if (!isActive || !element) return;
+    if (contentRef.current) contentRef.current.scrollTop = 0;
+    const measure = () =>
+      setMeasuredModalHeight(element.getBoundingClientRect().height);
+    measure();
+    if (typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(measure);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [isActive, currentStep?.id]);
 
   // Check if only Demo profile exists (for dynamic next steps content)
   const hasOnlyDemoProfile = useMemo(() => {
@@ -159,17 +177,10 @@ export function OnboardingModal({
     if (currentStep.action === 'click') {
       // Longer delay to ensure DOM is ready, especially after route changes
       const timer = setTimeout(() => {
-        const element = document.querySelector(selector) as HTMLElement;
-        if (element) {
-          // Use dispatchEvent to ensure the click is properly handled by Radix UI
+        const element = findOnboardingTarget(selector);
+        if (element && element.getAttribute('aria-expanded') !== 'true') {
+          // Open disclosure controls without toggling them closed on a revisit.
           element.click();
-          // Also dispatch a mousedown/mouseup sequence for Radix components
-          element.dispatchEvent(
-            new MouseEvent('mousedown', { bubbles: true, cancelable: true })
-          );
-          element.dispatchEvent(
-            new MouseEvent('mouseup', { bubbles: true, cancelable: true })
-          );
         }
       }, 300);
       return () => clearTimeout(timer);
@@ -194,7 +205,10 @@ export function OnboardingModal({
     const selector = currentStep.selector;
 
     const updateRect = () => {
-      const element = document.querySelector(selector);
+      const element = findOnboardingTarget(
+        selector,
+        currentStep.fallbackSelector
+      );
       if (element) {
         const rect = element.getBoundingClientRect();
         setSpotlightRect({
@@ -210,6 +224,8 @@ export function OnboardingModal({
 
     // Initial update after small delay for DOM
     const timer = setTimeout(updateRect, 100);
+    const observer = new MutationObserver(updateRect);
+    observer.observe(document.body, { childList: true, subtree: true });
 
     // Update on scroll/resize
     window.addEventListener('resize', updateRect);
@@ -217,10 +233,17 @@ export function OnboardingModal({
 
     return () => {
       clearTimeout(timer);
+      observer.disconnect();
       window.removeEventListener('resize', updateRect);
       window.removeEventListener('scroll', updateRect, true);
     };
-  }, [isActive, currentStep?.selector]);
+  }, [
+    isActive,
+    currentStep?.selector,
+    currentStep?.fallbackSelector,
+    location.pathname,
+    location.search,
+  ]);
 
   // Track mascot position for closing animation
   useEffect(() => {
@@ -250,31 +273,6 @@ export function OnboardingModal({
     };
   }, []);
 
-  // Handle navigation between chapters (route changes).
-  // Only fire when the chapter index or active state changes — not on every
-  // render — so that a route change caused by navigate() does not re-trigger this.
-  useEffect(() => {
-    if (!isActive || !currentChapter) return;
-    const targetRoute = currentChapter.route;
-    if (location.pathname !== targetRoute) {
-      setIsNavigating(true);
-      navigate(targetRoute);
-    }
-    // Intentional: only re-run when the chapter index or active flag changes,
-    // not when location.pathname changes (that is handled by the effect below).
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentChapterIndex, isActive]);
-
-  // Arrival detection: clear isNavigating once the correct route has loaded.
-  // This replaces the old fixed-timeout approach which was cancelled by the
-  // useEffect cleanup whenever navigate() caused a re-render.
-  useEffect(() => {
-    if (!isNavigating || !currentChapter) return;
-    if (location.pathname === currentChapter.route) {
-      setIsNavigating(false);
-    }
-  }, [location.pathname, isNavigating, currentChapter]);
-
   // Calculate modal position based on spotlight
   const modalPosition = useMemo(() => {
     // Closing animation - shrink towards the fluxby mascot
@@ -296,12 +294,16 @@ export function OnboardingModal({
       };
     }
 
+    const centeredPosition = {
+      style: {
+        top: currentChapterIndex === 0 ? '50%' : 'calc((100dvh - 120px) / 2)',
+      },
+      className: 'fixed left-1/2 -translate-x-1/2 -translate-y-1/2',
+    };
+
     // Center modal for chapter intro (first time visiting a new chapter)
     if (isChapterIntro) {
-      return {
-        style: {},
-        className: 'fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2',
-      };
+      return centeredPosition;
     }
 
     // Center modal if no selector or center placement
@@ -310,14 +312,11 @@ export function OnboardingModal({
       currentStep.placement === 'center' ||
       !spotlightRect
     ) {
-      return {
-        style: {},
-        className: 'fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2',
-      };
+      return centeredPosition;
     }
 
-    const modalWidth = 380;
-    const modalHeight = 320;
+    const modalWidth = Math.min(380, window.innerWidth - 24);
+    const modalHeight = measuredModalHeight;
     const padding = 16;
     const viewportPadding = 12;
     // Reserve space for the floating bottom navigation card
@@ -386,11 +385,22 @@ export function OnboardingModal({
     }
     // Fallback to center
     else {
-      return {
-        style: {},
-        className: 'fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2',
-      };
+      return centeredPosition;
     }
+
+    // A tall or not-yet-scrolled target can sit beyond the viewport. Keep the
+    // measured explanation above the navigation while the spotlight settles.
+    top = Math.max(
+      viewportPadding,
+      Math.min(
+        top,
+        viewport.height - modalHeight - viewportPadding - bottomNavHeight
+      )
+    );
+    left = Math.max(
+      viewportPadding,
+      Math.min(left, viewport.width - modalWidth - viewportPadding)
+    );
 
     return {
       style: { top: `${top}px`, left: `${left}px` },
@@ -404,6 +414,8 @@ export function OnboardingModal({
     modalState,
     mascotRect,
     closeAnimationDuration,
+    measuredModalHeight,
+    currentChapterIndex,
   ]);
 
   // Handle close with animation (only if skip is allowed)
@@ -500,6 +512,7 @@ export function OnboardingModal({
       {/* Spotlight Overlay */}
       <SpotlightOverlay
         targetSelector={currentStep.selector}
+        fallbackSelector={currentStep.fallbackSelector}
         isActive={modalState === 'normal'}
         padding={12}
         borderRadius={12}
@@ -508,8 +521,10 @@ export function OnboardingModal({
 
       {/* Modal */}
       <div
+        data-testid='onboarding-step'
+        ref={modalRef}
         className={cn(
-          'z-[9999] flex max-h-[70vh] w-full max-w-sm flex-col overflow-hidden rounded-xl bg-card shadow-2xl',
+          'z-[9999] flex max-h-[min(70vh,calc(100dvh-156px))] w-[calc(100vw-24px)] max-w-[380px] flex-col overflow-hidden rounded-xl bg-card shadow-2xl',
           'transition-[top,left,transform,opacity] duration-200 ease-out',
           modalPosition.className
         )}
@@ -549,7 +564,10 @@ export function OnboardingModal({
         </div>
 
         {/* Content Area */}
-        <div className='flex flex-1 flex-col items-center justify-center px-5 py-4'>
+        <div
+          ref={contentRef}
+          className='flex flex-1 flex-col items-center overflow-y-auto px-5 py-4'
+        >
           {/* Loading State */}
           {isNavigating ? (
             <div className='flex flex-col items-center gap-3'>
@@ -592,12 +610,15 @@ export function OnboardingModal({
 
       {/* Fixed Bottom Navigation Bar - Floating Card (hidden during welcome chapter) */}
       {modalState === 'normal' && !isWelcomeChapter && (
-        <div className='fixed bottom-4 left-1/2 z-[10000] -translate-x-1/2'>
+        <div
+          data-testid='onboarding-navigation'
+          className='fixed bottom-4 left-1/2 z-[10000] w-[calc(100vw-24px)] max-w-2xl -translate-x-1/2'
+        >
           <div className='rounded-xl border bg-card/95 shadow-xl backdrop-blur-sm'>
             {/* Chapter Navigation Tabs */}
             {currentChapterIndex > 0 && (
               <TooltipProvider delayDuration={200}>
-                <div className='flex items-center justify-center gap-1 border-b px-4 py-2'>
+                <div className='flex items-center justify-start gap-1 overflow-x-auto border-b px-3 py-2 md:justify-center md:px-4'>
                   {onboardingChapters.slice(1, -1).map((chapter, idx) => {
                     const actualIdx = idx + 1;
                     const Icon = CHAPTER_ICONS[chapter.icon] || Sparkles;
@@ -609,8 +630,9 @@ export function OnboardingModal({
                         <TooltipTrigger asChild>
                           <button
                             onClick={() => onChapterSelect(actualIdx)}
+                            aria-label={getText(chapter.title)}
                             className={cn(
-                              'flex items-center gap-1.5 rounded-full px-2 py-1 text-xs font-medium transition-all',
+                              'flex shrink-0 items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium transition-all',
                               isCurrentChapter
                                 ? 'bg-purple-600 text-white shadow'
                                 : isCompleted
@@ -644,25 +666,28 @@ export function OnboardingModal({
             )}
 
             {/* Navigation Buttons with Step Counter */}
-            <div className='flex items-center justify-between gap-6 px-4 py-3'>
+            <div className='flex items-center justify-between gap-2 px-3 py-3 sm:gap-6 sm:px-4'>
               {/* Previous Button */}
               <Button
                 variant='ghost'
                 size='sm'
                 onClick={onPrevious}
                 disabled={isFirstGlobalStep || isNavigating}
-                className={cn('gap-1', isFirstGlobalStep && 'invisible')}
+                className={cn(
+                  'shrink-0 gap-1',
+                  isFirstGlobalStep && 'invisible'
+                )}
               >
                 <ChevronLeft className='h-3.5 w-3.5' />
                 {t.previous}
               </Button>
 
               {/* Step Counter with Chapter Title */}
-              <div className='flex flex-col items-center'>
-                <span className='text-sm font-medium text-purple-600'>
+              <div className='flex min-w-0 flex-col items-center'>
+                <span className='text-xs font-medium whitespace-nowrap text-purple-600 sm:text-sm'>
                   {t.step} {currentStepIndex + 1} {t.of} {totalStepsInChapter}
                 </span>
-                <span className='text-xs text-muted-foreground'>
+                <span className='max-w-full truncate text-xs text-muted-foreground'>
                   {getText(currentChapter.title)}
                 </span>
               </div>
@@ -672,7 +697,7 @@ export function OnboardingModal({
                 size='sm'
                 onClick={handleNext}
                 disabled={isNavigating || isCreatingDemo}
-                className='gap-1 bg-purple-600 hover:bg-purple-700'
+                className='shrink-0 gap-1 bg-purple-600 hover:bg-purple-700'
               >
                 {isCreatingDemo ? (
                   <>

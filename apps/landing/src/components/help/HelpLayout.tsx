@@ -1,8 +1,9 @@
+import PageLoading from '../PageLoading';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import HelpSidebar from './HelpSidebar';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useTheme } from '../../contexts/ThemeContext';
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 
 export default function HelpLayout() {
   const { language, setLanguage, t } = useLanguage();
@@ -20,7 +21,7 @@ export default function HelpLayout() {
         isOpen={isMobileMenuOpen}
         onClose={() => setIsMobileMenuOpen(false)}
       />
-      <div className='flex flex-1 flex-col bg-gray-50 dark:bg-gray-900'>
+      <div className='flex min-w-0 flex-1 flex-col bg-gray-50 dark:bg-gray-900'>
         {/* Top bar */}
         <header className='sticky top-0 z-10 flex items-center justify-between border-b border-gray-200 bg-white px-4 py-4 lg:px-8 dark:border-gray-700 dark:bg-gray-800'>
           <div className='flex items-center gap-4'>
@@ -47,7 +48,7 @@ export default function HelpLayout() {
 
             <Link
               to='/'
-              className='text-sm text-gray-500 transition-colors hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100'
+              className='text-sm text-gray-500 transition-colors hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100'
             >
               ← <span className='hidden sm:inline'>{t.docs.backToHome}</span>
               <span className='sm:hidden'>{t.helpCenter.common.home}</span>
@@ -61,7 +62,7 @@ export default function HelpLayout() {
                 className={`rounded px-2 py-1 text-xs font-medium transition-colors ${
                   language === 'nl'
                     ? 'bg-white text-gray-900 shadow-sm dark:bg-gray-600 dark:text-gray-100'
-                    : 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100'
+                    : 'text-gray-500 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100'
                 }`}
               >
                 NL
@@ -71,7 +72,7 @@ export default function HelpLayout() {
                 className={`rounded px-2 py-1 text-xs font-medium transition-colors ${
                   language === 'en'
                     ? 'bg-white text-gray-900 shadow-sm dark:bg-gray-600 dark:text-gray-100'
-                    : 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100'
+                    : 'text-gray-500 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100'
                 }`}
               >
                 EN
@@ -123,8 +124,10 @@ export default function HelpLayout() {
 
         {/* Main content */}
         <main className='min-w-0 flex-1 overflow-x-auto px-4 py-8 lg:px-8 lg:py-12'>
-          <div className='mx-auto max-w-4xl'>
-            <Outlet />
+          <div className='mx-auto max-w-4xl min-w-0 [overflow-wrap:anywhere]'>
+            <Suspense fallback={<PageLoading />}>
+              <Outlet />
+            </Suspense>
           </div>
         </main>
 

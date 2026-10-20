@@ -160,7 +160,7 @@ export default function DashboardAnimation({
         className='absolute top-3 right-3 rounded-lg px-3 py-1.5 transition-all duration-300'
         style={{ backgroundColor: activeCat.color }}
       >
-        <span className='text-sm font-semibold text-white'>
+        <span className='text-sm font-semibold text-gray-900'>
           €{activeCat.amount.toFixed(2)}
         </span>
       </div>

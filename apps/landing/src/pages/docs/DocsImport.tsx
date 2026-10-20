@@ -11,7 +11,7 @@ formData.append('bank', 'ing');
 
 fetch('http://localhost:3001/api/import/csv', {
   method: 'POST',
-  headers: { 'X-Profile-ID': 'your-profile-id' },
+  headers: { 'X-Profile-ID': '1' },
   body: formData
 })
 .then(response => response.json())
@@ -35,7 +35,7 @@ formData.append('bank', 'ing');
 
 fetch('http://localhost:3001/api/import/preview', {
   method: 'POST',
-  headers: { 'X-Profile-ID': 'your-profile-id' },
+  headers: { 'X-Profile-ID': '1' },
   body: formData
 })
 .then(response => response.json())
@@ -69,7 +69,7 @@ fetch('http://localhost:3001/api/import/preview', {
 
   const historyCode = `// Get import history
 fetch('http://localhost:3001/api/import/history', {
-  headers: { 'X-Profile-ID': 'your-profile-id' }
+  headers: { 'X-Profile-ID': '1' }
 })
 .then(response => response.json())
 .then(history => console.log(history));`;

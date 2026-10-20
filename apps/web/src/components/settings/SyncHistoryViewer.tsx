@@ -37,7 +37,7 @@ import {
 import { useDataService } from '@/contexts/DatabaseContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/contexts/ToastContext';
-import { cn } from '@/lib/utils';
+import { cn, formatDateTime } from '@/lib/utils';
 
 interface SyncHistoryEntry {
   id: string;
@@ -185,20 +185,14 @@ export function SyncHistoryViewer({ onClose }: SyncHistoryViewerProps) {
     if (diffHours < 24) return `${diffHours} hours ago`;
     if (diffDays < 7) return `${diffDays} ${t.common?.days} ago`;
 
-    return date.toLocaleDateString(undefined, {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
+    return formatDateTime(date);
   };
 
   return (
     <Card className='border-border bg-card'>
       <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-4'>
         <div>
-          <CardTitle className='flex items-center gap-2 text-lg'>
-            <History className='h-5 w-5' />
+          <CardTitle className='text-lg'>
             {t.settings?.sync?.syncHistory}
           </CardTitle>
           <CardDescription>
@@ -335,15 +329,11 @@ export function SyncHistoryViewer({ onClose }: SyncHistoryViewerProps) {
                         <div className='text-muted-foreground'>
                           <div className='flex justify-between'>
                             <span>{t.settings?.sync?.localTime}:</span>
-                            <span>
-                              {new Date(entry.localUpdatedAt).toLocaleString()}
-                            </span>
+                            <span>{formatDateTime(entry.localUpdatedAt)}</span>
                           </div>
                           <div className='flex justify-between'>
                             <span>{t.settings?.sync?.remoteTime}:</span>
-                            <span>
-                              {new Date(entry.remoteUpdatedAt).toLocaleString()}
-                            </span>
+                            <span>{formatDateTime(entry.remoteUpdatedAt)}</span>
                           </div>
                         </div>
                       )}

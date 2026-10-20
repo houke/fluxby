@@ -32,20 +32,27 @@ fetch('http://localhost:3001/api/profiles', {
 .then(response => response.json())
 .then(result => console.log(result));`;
 
-  const responseExample = `[
+  const responseExample = `{
+  "success": true,
+  "data": [
   {
-    "id": "profile_abc123",
+    "id": "1",
+    "userId": "1",
+    "avatarUrl": null,
     "name": "Personal",
     "type": "personal",
     "createdAt": "2024-01-15T10:30:00Z"
   },
   {
-    "id": "profile_def456",
+    "id": "2",
+    "userId": "1",
+    "avatarUrl": null,
     "name": "Freelance Business",
     "type": "business",
     "createdAt": "2024-02-20T14:45:00Z"
   }
-]`;
+  ]
+}`;
 
   return (
     <article className='prose prose-gray dark:prose-invert max-w-none'>

@@ -14,6 +14,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { PaginatedHistoryList } from '@/components/ui/PaginatedHistoryList';
 import { Input } from '@/components/ui/input';
 import {
   Tooltip,
@@ -27,7 +28,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { Currency } from '@/components/ui/currency';
-import { cn } from '@/lib/utils';
+import { cn, formatDate } from '@/lib/utils';
 import type { AddressBookEntryWithStats } from '@/hooks/useAddressBook';
 
 interface ContactListItemProps {
@@ -48,6 +49,8 @@ interface ContactListItemProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   contactTransactions: any[] | undefined;
   isLoadingTransactions: boolean;
+  transactionPage?: number;
+  onTransactionPageChange?: (page: number) => void;
   onSplitContact: (contact: AddressBookEntryWithStats) => void;
   onSelectContactTransactions: (contact: AddressBookEntryWithStats) => void;
   hasSharedIban: boolean;
@@ -62,6 +65,25 @@ interface ContactListItemProps {
   modalContentElement: HTMLDivElement | null;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   translations: any;
+}
+
+function ContactAction({
+  label,
+  children,
+  ...props
+}: React.ComponentProps<typeof Button> & { label: string }) {
+  return (
+    <TooltipProvider delayDuration={100}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button {...props} aria-label={label}>
+            {children}
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>{label}</TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
 }
 
 /**
@@ -85,6 +107,8 @@ export const ContactListItem = memo(function ContactListItem({
   onToggleExpand,
   contactTransactions,
   isLoadingTransactions,
+  transactionPage,
+  onTransactionPageChange,
   onSplitContact,
   onSelectContactTransactions,
   hasSharedIban,
@@ -124,12 +148,14 @@ export const ContactListItem = memo(function ContactListItem({
         {isEditing ? (
           <div className='flex flex-1 items-center gap-3'>
             <Input
+              aria-label={t.settings.addressBook.namePlaceholder}
               value={editContactName}
               onChange={(e) => setEditContactName(e.target.value)}
               placeholder={t.settings.addressBook.namePlaceholder}
               className='flex-1'
             />
             <Input
+              aria-label={t.settings.addressBook.descriptionPlaceholder}
               value={editContactDescription}
               onChange={(e) => setEditContactDescription(e.target.value)}
               placeholder={t.settings.addressBook.descriptionPlaceholder}
@@ -147,9 +173,10 @@ export const ContactListItem = memo(function ContactListItem({
                   <TooltipTrigger asChild>
                     <PopoverTrigger asChild>
                       <Button
+                        aria-label={t.addressBook?.assignToExisting}
                         size='sm'
                         variant='ghost'
-                        className='h-8 w-8 rounded-full p-0 hover:border-purple-600 hover:bg-purple-600 hover:text-white'
+                        className='h-8 w-8 rounded-md p-0 hover:border-purple-600 hover:bg-purple-600 hover:text-white'
                         disabled={isMergePending}
                       >
                         <UserPlus className='h-4 w-4' />
@@ -169,6 +196,7 @@ export const ContactListItem = memo(function ContactListItem({
               >
                 <div className='space-y-2'>
                   <Input
+                    aria-label={t.addressBook?.searchContacts}
                     placeholder={t.addressBook?.searchContacts}
                     value={assignSearchTerm}
                     onChange={(e) => setAssignSearchTerm(e.target.value)}
@@ -224,22 +252,24 @@ export const ContactListItem = memo(function ContactListItem({
                 </div>
               </PopoverContent>
             </Popover>
-            <Button
+            <ContactAction
+              label={t.common.save}
               size='sm'
               variant='ghost'
-              className='h-8 w-8 rounded-full hover:bg-purple-600 hover:text-white'
+              className='h-8 w-8 rounded-md hover:bg-purple-600 hover:text-white'
               onClick={onUpdateContact}
             >
               <Check className='h-4 w-4' />
-            </Button>
-            <Button
+            </ContactAction>
+            <ContactAction
+              label={t.common.cancel}
               size='sm'
               variant='ghost'
-              className='h-8 w-8 rounded-full hover:bg-purple-600 hover:text-white'
+              className='h-8 w-8 rounded-md hover:bg-purple-600 hover:text-white'
               onClick={onCancelEdit}
             >
               <X className='h-4 w-4' />
-            </Button>
+            </ContactAction>
           </div>
         ) : (
           <>
@@ -258,7 +288,8 @@ export const ContactListItem = memo(function ContactListItem({
                 <div className='flex items-center gap-2'>
                   <p className='font-medium'>{contact.name}</p>
                   {isMergedWithMultipleIbans && (
-                    <Button
+                    <ContactAction
+                      label={t.addressBook?.splitIntoSeparate}
                       size='icon'
                       variant='ghost'
                       className='h-6 w-6 rounded-md text-purple-600 hover:bg-purple-600 hover:text-white'
@@ -268,7 +299,7 @@ export const ContactListItem = memo(function ContactListItem({
                       }}
                     >
                       <Scissors className='h-3 w-3' />
-                    </Button>
+                    </ContactAction>
                   )}
                   <ExternalLink className='h-4 w-4 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100' />
                 </div>
@@ -280,7 +311,7 @@ export const ContactListItem = memo(function ContactListItem({
                 <p className='text-sm text-muted-foreground'>
                   {contact.iban}
                   {isMergedWithMultipleIbans && (
-                    <span className='ml-1 font-medium text-purple-500'>
+                    <span className='ml-1 font-medium text-purple-700 dark:text-purple-300'>
                       {t.addressBook?.moreIbans?.replace(
                         '{count}',
                         String((contact.ibans?.length || 0) - 1)
@@ -324,23 +355,31 @@ export const ContactListItem = memo(function ContactListItem({
                 </div>
               </div>
               <div className='flex gap-1'>
-                <Button
+                <ContactAction
+                  label={t.common.edit}
                   size='icon'
                   variant='ghost'
                   className='h-8 w-8 rounded-md transition-colors hover:bg-purple-600 hover:text-white'
                   onClick={() => onEditContact(contact)}
                 >
                   <Edit2 className='h-4 w-4' />
-                </Button>
-                <Button
+                </ContactAction>
+                <ContactAction
+                  label={t.common.delete}
                   size='icon'
                   variant='ghost'
                   className='h-8 w-8 rounded-md text-destructive transition-colors hover:bg-red-600 hover:text-white dark:hover:bg-red-700'
                   onClick={() => onDeleteContact(contact.id)}
                 >
                   <Trash2 className='h-4 w-4' />
-                </Button>
-                <Button
+                </ContactAction>
+                <ContactAction
+                  label={
+                    isExpanded
+                      ? t.common.collapse
+                      : t.addressBook?.showTransactions
+                  }
+                  aria-expanded={isExpanded}
                   size='icon'
                   variant='ghost'
                   className='h-8 w-8 rounded-md text-muted-foreground transition-colors hover:bg-purple-600 hover:text-white'
@@ -354,7 +393,7 @@ export const ContactListItem = memo(function ContactListItem({
                   ) : (
                     <ChevronDown className='h-4 w-4' />
                   )}
-                </Button>
+                </ContactAction>
               </div>
             </div>
           </>
@@ -366,9 +405,21 @@ export const ContactListItem = memo(function ContactListItem({
             <div className='flex items-center justify-center py-4'>
               <Loader2 className='h-5 w-5 animate-spin text-muted-foreground' />
             </div>
-          ) : contactTransactions && contactTransactions.length > 0 ? (
-            <div className='max-h-[500px] space-y-1 overflow-y-auto'>
-              {contactTransactions.map((tx) => (
+          ) : contactTransactions &&
+            (contactTransactions.length > 0 || (transactionPage ?? 0) > 0) ? (
+            <PaginatedHistoryList
+              items={contactTransactions}
+              className='max-h-[500px] space-y-1 overflow-y-auto'
+              previousLabel={t.common.previous}
+              nextLabel={t.common.next}
+              page={transactionPage}
+              totalItems={
+                transactionPage === undefined
+                  ? undefined
+                  : contact.transactionCount || contactTransactions.length
+              }
+              onPageChange={onTransactionPageChange}
+              renderItem={(tx) => (
                 <div
                   key={tx.id}
                   className='flex flex-col gap-1 rounded-lg bg-card/50 p-3 text-sm sm:flex-row sm:items-center sm:justify-between'
@@ -378,7 +429,7 @@ export const ContactListItem = memo(function ContactListItem({
                       {tx.description || t.transactions?.unknown}
                     </p>
                     <p className='text-xs text-muted-foreground'>
-                      {new Date(tx.date).toLocaleDateString()}
+                      {formatDate(tx.date)}
                     </p>
                   </div>
                   <div
@@ -391,8 +442,8 @@ export const ContactListItem = memo(function ContactListItem({
                     <Currency amount={tx.amount} />
                   </div>
                 </div>
-              ))}
-            </div>
+              )}
+            />
           ) : (
             <div className='py-4 text-center text-sm text-muted-foreground'>
               {t.addressBook?.noTransactions}

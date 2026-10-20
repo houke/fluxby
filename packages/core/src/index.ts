@@ -33,6 +33,8 @@ export * from './sync-service.js';
 export * from './sync-engine.js';
 
 // Peer-to-peer device pairing
+export * from './peerjs-loader.js';
+export * from './peer-reconnect.js';
 export * from './peer.js';
 
 // Enhanced peer sync with heartbeats

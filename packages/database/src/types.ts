@@ -112,6 +112,27 @@ export interface DatabaseConnection {
   close(): void;
 }
 
+/** Async connection; transaction callbacks must use their supplied connection. */
+export interface AsyncDatabaseConnection {
+  execAsync(sql: string): Promise<void>;
+  queryAsync<T = Record<string, unknown>>(
+    sql: string,
+    params?: unknown[]
+  ): Promise<T[]>;
+  queryOneAsync<T = Record<string, unknown>>(
+    sql: string,
+    params?: unknown[]
+  ): Promise<T | null>;
+  runAsync(
+    sql: string,
+    params?: unknown[]
+  ): Promise<{ changes: number; lastInsertRowId: number }>;
+  /** Use this scoped connection for every operation inside the callback. */
+  transactionAsync<T>(
+    fn: (connection: AsyncDatabaseConnection) => Promise<T>
+  ): Promise<T>;
+}
+
 /**
  * Sync-related types
  */

@@ -26,13 +26,16 @@ export default function CodeBlock({
       {title && (
         <div className='flex items-center justify-between border-b border-gray-700 bg-gray-800/50 px-4 py-2'>
           <span className='truncate text-sm text-gray-400'>{title}</span>
-          <span className='shrink-0 rounded bg-gray-700 px-2 py-0.5 text-xs text-gray-400'>
+          <span className='shrink-0 rounded bg-gray-700 px-2 py-0.5 text-xs text-gray-300'>
             {language}
           </span>
         </div>
       )}
       <div className='relative max-w-full overflow-x-auto'>
-        <pre className='w-max min-w-full p-4 text-sm'>
+        <pre
+          tabIndex={0}
+          className='max-w-full overflow-x-auto p-4 text-sm focus-visible:outline-2 focus-visible:outline-purple-400'
+        >
           <code className='block whitespace-pre text-gray-300'>{code}</code>
         </pre>
         <button

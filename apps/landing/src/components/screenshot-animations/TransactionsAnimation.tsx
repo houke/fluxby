@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import type { CSSProperties } from 'react';
 import { useLanguage } from '../../contexts/LanguageContext';
 
 // Transaction data structure (static parts with category keys)
@@ -101,9 +101,6 @@ export default function TransactionsAnimation({
   isVisible: boolean;
 }) {
   const { t } = useLanguage();
-  const [scrollY, setScrollY] = useState(0);
-  const animationRef = useRef<number | null>(null);
-  const lastTimeRef = useRef<number>(0);
 
   // Get translated category names
   const anim = t.animations.transactions;
@@ -113,41 +110,6 @@ export default function TransactionsAnimation({
     date: `${tx.day} ${dateLabel}`,
     category: anim.categories[tx.categoryKey as keyof typeof anim.categories],
   }));
-
-  useEffect(() => {
-    if (isVisible) {
-      const animate = (currentTime: number) => {
-        if (!lastTimeRef.current) lastTimeRef.current = currentTime;
-        const delta = currentTime - lastTimeRef.current;
-        lastTimeRef.current = currentTime;
-
-        // Scroll at 30px per second
-        setScrollY((prev) => {
-          const newY = prev + (delta / 1000) * 30;
-          const rowHeight = 56; // 56px per row
-          const totalHeight = transactions.length * rowHeight;
-          return newY % totalHeight;
-        });
-
-        animationRef.current = requestAnimationFrame(animate);
-      };
-
-      animationRef.current = requestAnimationFrame(animate);
-    } else {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-        animationRef.current = null;
-      }
-      lastTimeRef.current = 0;
-    }
-
-    return () => {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isVisible]);
 
   // Double the transactions for seamless loop
   const doubledTransactions = [...transactions, ...transactions];
@@ -159,8 +121,14 @@ export default function TransactionsAnimation({
 
       {/* Scrolling transactions */}
       <div
-        className='absolute right-0 left-0'
-        style={{ transform: `translateY(-${scrollY}px)` }}
+        className='demo-scroll-vertical absolute right-0 left-0'
+        style={
+          {
+            '--demo-scroll-offset': `-${transactions.length * 56}px`,
+            '--demo-scroll-duration': `${(transactions.length * 56) / 30}s`,
+            animationPlayState: isVisible ? 'running' : 'paused',
+          } as CSSProperties
+        }
       >
         {doubledTransactions.map((tx, idx) => (
           <div

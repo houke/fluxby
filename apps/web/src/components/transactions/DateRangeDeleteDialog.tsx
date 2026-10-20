@@ -1,6 +1,5 @@
 import { memo, useState, useEffect, useCallback } from 'react';
 import { format } from 'date-fns';
-import { nl, enUS } from 'date-fns/locale';
 import { Calendar as CalendarIcon, Trash2, Loader2 } from 'lucide-react';
 import {
   Dialog,
@@ -24,7 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { cn } from '@/lib/utils';
+import { cn, formatDate } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 import type { Account } from '@fluxby/shared';
@@ -59,8 +58,7 @@ export const DateRangeDeleteDialog = memo(function DateRangeDeleteDialog({
   onPreviewCount,
   isLoading = false,
 }: DateRangeDeleteDialogProps) {
-  const { t, language } = useLanguage();
-  const locale = language === 'nl' ? nl : enUS;
+  const { t } = useLanguage();
 
   // Form state
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
@@ -163,7 +161,7 @@ export const DateRangeDeleteDialog = memo(function DateRangeDeleteDialog({
                 >
                   <CalendarIcon className='mr-2 h-4 w-4' />
                   {startDate
-                    ? format(startDate, 'PPP', { locale })
+                    ? formatDate(startDate)
                     : t.bulkDelete.dateRange.start}
                 </Button>
               </PopoverTrigger>
@@ -205,9 +203,7 @@ export const DateRangeDeleteDialog = memo(function DateRangeDeleteDialog({
                   )}
                 >
                   <CalendarIcon className='mr-2 h-4 w-4' />
-                  {endDate
-                    ? format(endDate, 'PPP', { locale })
-                    : t.bulkDelete.dateRange.end}
+                  {endDate ? formatDate(endDate) : t.bulkDelete.dateRange.end}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className='w-auto p-0' align='start'>

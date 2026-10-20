@@ -6,9 +6,10 @@
  */
 
 import { useState, useEffect } from 'react';
-import { Eye, EyeOff, AlertCircle } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { PasswordVisibilityToggle } from '@/components/ui/password-visibility-toggle';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Dialog,
@@ -203,29 +204,33 @@ export function LockScreen({
                         ? t.security?.newPassword
                         : t.security?.enterPassword
                     }
+                    aria-label={
+                      isSetupMode
+                        ? t.security.newPassword
+                        : t.security.enterPassword
+                    }
+                    autoComplete={
+                      isSetupMode ? 'new-password' : 'current-password'
+                    }
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     disabled={isLoading}
                     className='h-12 border border-input bg-white/50 pr-10 text-base focus:ring-purple-500 dark:bg-gray-800/50'
                     autoFocus
                   />
-                  <button
-                    type='button'
-                    onClick={() => setShowPassword(!showPassword)}
-                    className='absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground'
-                  >
-                    {showPassword ? (
-                      <EyeOff className='h-5 w-5' />
-                    ) : (
-                      <Eye className='h-5 w-5' />
-                    )}
-                  </button>
+                  <PasswordVisibilityToggle
+                    visible={showPassword}
+                    onToggle={() => setShowPassword(!showPassword)}
+                    disabled={isLoading}
+                  />
                 </div>
 
                 {isSetupMode && (
                   <Input
                     type={showPassword ? 'text' : 'password'}
                     placeholder={t.security?.confirmPassword}
+                    aria-label={t.security.confirmPassword}
+                    autoComplete='new-password'
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     disabled={isLoading}

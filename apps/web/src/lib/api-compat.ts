@@ -14,9 +14,15 @@ import {
   type Profile,
   type ProfileCreate,
   type PatternType,
+  type SavingsGoalInput,
+  type PlanningPreferences,
+  type NetWorthItemInput,
+  type MonthlyReview,
 } from '@fluxby/shared';
 import { readFromOPFSSync, isSettingsCacheInitialized } from '@fluxby/database';
-import { getStoredLanguage, translations } from './i18n';
+import { getStoredLanguage, getTranslations } from './i18n';
+import { importToolsTranslations } from './i18n/import-tools';
+import type { RestoreBackupOptions } from './data/backup';
 
 // Note: getApiBaseUrl/setApiBaseUrl are only needed for HTTP API mode (api-http.ts)
 // The local-first OPFS mode doesn't need these functions
@@ -354,15 +360,48 @@ export const api = {
     });
   },
 
-  updateBudget: async (id: string, data: { amount?: number }) => {
+  updateBudget: async (
+    id: string,
+    data: { amount?: number; rolloverEnabled?: boolean }
+  ) => {
     const ds = getDataService();
     await ds.updateBudget(id, data);
+  },
+
+  createBudgets: async (budgets: { categoryId: string; amount: number }[]) => {
+    const ds = getDataService();
+    return ds.createBudgets(budgets);
   },
 
   deleteBudget: async (id: string) => {
     const ds = getDataService();
     await ds.deleteBudget(id);
   },
+
+  // ============= Financial planning =============
+  getSavingsGoals: () => getDataService().getSavingsGoals(),
+  createSavingsGoal: (input: SavingsGoalInput) =>
+    getDataService().createSavingsGoal(input),
+  updateSavingsGoal: (id: string, input: Partial<SavingsGoalInput>) =>
+    getDataService().updateSavingsGoal(id, input),
+  deleteSavingsGoal: (id: string) => getDataService().deleteSavingsGoal(id),
+  addSavingsContribution: (goalId: string, amount: number) =>
+    getDataService().addSavingsContribution(goalId, amount),
+  getPlanningPreferences: () => getDataService().getPlanningPreferences(),
+  updatePlanningPreferences: (input: Partial<PlanningPreferences>) =>
+    getDataService().updatePlanningPreferences(input),
+  getSafeToSpend: () => getDataService().getSafeToSpend(),
+  getNetWorth: () => getDataService().getNetWorth(),
+  createNetWorthItem: (input: NetWorthItemInput) =>
+    getDataService().createNetWorthItem(input),
+  updateNetWorthItem: (id: string, input: Partial<NetWorthItemInput>) =>
+    getDataService().updateNetWorthItem(id, input),
+  deleteNetWorthItem: (id: string) => getDataService().deleteNetWorthItem(id),
+  getMonthlyReview: (month: string) => getDataService().getMonthlyReview(month),
+  updateMonthlyReview: (
+    month: string,
+    input: Partial<Pick<MonthlyReview, 'checks' | 'status'>>
+  ) => getDataService().updateMonthlyReview(month, input),
 
   getBudgetSuggestions: async () => {
     const ds = getDataService();
@@ -494,7 +533,13 @@ export const api = {
 
   updateRecurringPattern: async (
     id: string,
-    updates: { merchantName?: string; patternType?: PatternType }
+    updates: {
+      merchantName?: string;
+      patternType?: PatternType;
+      avgAmount?: number;
+      renewalDate?: string | null;
+      cancellationDeadline?: string | null;
+    }
   ) => {
     const ds = getDataService();
     await ds.updateRecurringPattern(id, updates);
@@ -731,9 +776,13 @@ export const api = {
     await ds.deleteAddressBookEntry(id);
   },
 
-  getTransactionsForContact: async (contactId: string, limit = 50) => {
+  getTransactionsForContact: async (
+    contactId: string,
+    limit = 50,
+    offset = 0
+  ) => {
     const ds = getDataService();
-    return ds.getTransactionsForContact(contactId, limit);
+    return ds.getTransactionsForContact(contactId, limit, offset);
   },
 
   mergeContacts: async (ids: string[], targetName?: string) => {
@@ -848,11 +897,25 @@ export const api = {
     bank?: string,
     onProgress?: (current: number, total: number) => void
   ) => {
+    const importProfileId = getActiveProfileIdSync();
+    if (!importProfileId)
+      throw new Error(
+        importToolsTranslations[getStoredLanguage()].profileChanged
+      );
+    const assertImportProfile = () => {
+      if (!importProfileId || getActiveProfileIdSync() !== importProfileId)
+        throw new Error(
+          importToolsTranslations[getStoredLanguage()].profileChanged
+        );
+    };
+    assertImportProfile();
     const csvContent = await file.text();
+    assertImportProfile();
     const ds = getDataService();
 
     // Parse the CSV first
     const parseResult = await ds.previewCsvImport(csvContent);
+    assertImportProfile();
     if (!parseResult.rows || parseResult.rows.length === 0) {
       return {
         importId: Date.now(),
@@ -865,12 +928,20 @@ export const api = {
       };
     }
 
+    // Recovery must succeed before accounts or transactions are changed.
+    const recoveryId = await ds.createImportRecoverySnapshot(
+      file.name,
+      importProfileId
+    );
+    assertImportProfile();
+
     // Get or create account
     let targetAccountId = accountId || null;
     if (!targetAccountId) {
       // Look for existing account by IBAN from first row
       if (mapping.iban && parseResult.rows[0][mapping.iban]) {
         const accounts = await ds.getAccounts();
+        assertImportProfile();
         const iban = parseResult.rows[0][mapping.iban];
         const existing = accounts.find(
           (a: { iban: string }) =>
@@ -885,28 +956,35 @@ export const api = {
             name: iban,
             type: 'checking',
             bank: bank || 'unknown',
+            profileId: importProfileId,
           });
+          assertImportProfile();
           targetAccountId = String(newAccount.id);
         }
       } else {
         // Use first available account or create default
         const accounts = await ds.getAccounts();
+        assertImportProfile();
         if (accounts.length > 0) {
           targetAccountId = String(accounts[0].id);
         } else {
           const newAccount = await ds.createAccount({
             iban: 'UNKNOWN',
-            name: 'Import Account',
+            name: importToolsTranslations[getStoredLanguage()].defaultAccount,
             type: 'checking',
             bank: bank || 'unknown',
+            profileId: importProfileId,
           });
+          assertImportProfile();
           targetAccountId = String(newAccount.id);
         }
       }
     }
 
     // Import using data service
+    assertImportProfile();
     const result = await ds.importCsv(csvContent, {
+      expectedProfileId: importProfileId,
       accountId: targetAccountId,
       mapping: {
         date: mapping.date,
@@ -923,9 +1001,18 @@ export const api = {
       bank: bank || 'generic',
       onProgress: onProgress,
     });
+    if (result.importId)
+      await ds.recordImportBatch(
+        file.name,
+        result.importId,
+        result.importedTransactionIds ?? [],
+        recoveryId,
+        importProfileId
+      );
+    assertImportProfile();
 
     return {
-      importId: Date.now(),
+      importId: result.importId ?? Date.now(),
       filename: file.name,
       totalInFile: parseResult.totalRows,
       imported: result.imported,
@@ -1278,8 +1365,7 @@ export const api = {
       [
         id,
         iban,
-        providerName ||
-          translations[getStoredLanguage()].common.unknownProvider,
+        providerName || getTranslations().common.unknownProvider,
         now,
         now,
       ]
@@ -1430,49 +1516,24 @@ export const api = {
 
   getProposedBudgets: async () => {
     const ds = getDataService();
-
-    // Get date range for last 6 months
-    const endDate = new Date();
-    const startDate = new Date();
-    startDate.setMonth(startDate.getMonth() - 6);
-
-    const startDateStr = startDate.toISOString().split('T')[0];
-    const endDateStr = endDate.toISOString().split('T')[0];
-
-    // Get existing budgets to exclude categories that already have budgets
-    const existingBudgets = await ds.getBudgets();
-    const usedCategoryIds = new Set(
-      existingBudgets.filter((b) => b.categoryId).map((b) => b.categoryId)
-    );
-
-    // Calculate proposed budgets based on average spending per category
-    const stats = await ds.getCategoryStats(
-      startDateStr,
-      endDateStr,
-      'expense'
-    );
-
-    // Get monthly breakdown to count actual months with data per category
-    const monthlyData = await ds.getMonthlyStats(startDateStr, endDateStr);
-    const monthsWithData =
-      monthlyData.filter((m) => m.expenses > 0).length || 1;
-
-    return stats
-      .filter(
-        (cat) =>
-          cat.categoryId &&
-          cat.amount > 0 &&
-          !usedCategoryIds.has(cat.categoryId)
-      )
-      .map((cat) => ({
-        categoryId: cat.categoryId,
-        categoryName: cat.categoryName,
-        categoryIcon: cat.icon || '📦',
-        categoryColor: cat.color || '#9CA3AF',
-        avgMonthlySpent: cat.amount / monthsWithData,
-        basedOnMonths: monthsWithData,
-        // Propose a budget slightly above average (round up to nearest 10)
-        proposedAmount: Math.ceil(cat.amount / monthsWithData / 10) * 10,
+    const [suggestions, budgets, categories] = await Promise.all([
+      ds.getMonthlyBudgetSuggestions(6),
+      ds.getBudgets(),
+      ds.getCategories(),
+    ]);
+    const existing = new Set(budgets.map((b) => b.categoryId));
+    return suggestions
+      .filter((s) => s.suggestedAmount > 0 && !existing.has(s.categoryId))
+      .map((s) => ({
+        categoryId: s.categoryId,
+        categoryName: s.categoryName,
+        categoryIcon:
+          categories.find((c) => c.id === s.categoryId)?.icon || '📦',
+        categoryColor:
+          categories.find((c) => c.id === s.categoryId)?.color || '#9CA3AF',
+        avgMonthlySpent: s.averageMonthly,
+        basedOnMonths: s.baselineMonths,
+        proposedAmount: s.suggestedAmount,
       }));
   },
 
@@ -1530,8 +1591,13 @@ export const api = {
   },
 
   // ============= Data Management =============
-  importAll: async (data: unknown) => {
+  previewImport: async (data: unknown) => {
     const ds = getDataService();
-    return ds.importAll(data);
+    return ds.previewImport(data);
+  },
+
+  importAll: async (data: unknown, options?: RestoreBackupOptions) => {
+    const ds = getDataService();
+    return ds.importAll(data, options);
   },
 };

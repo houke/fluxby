@@ -1,3 +1,4 @@
+import type { AsyncDatabaseConnection } from '@fluxby/database';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const { readFromOPFSSyncMock, suggestCategoriesMock } = vi.hoisted(() => ({
@@ -63,7 +64,12 @@ function createLegacyTauriFixture(
     }),
     queryOneAsync: vi.fn().mockResolvedValue({ category_id: category.id }),
     runAsync: vi.fn().mockResolvedValue({ changes: 1 }),
-    transactionAsync: vi.fn(async (fn: () => Promise<void>) => fn()),
+    transactionAsync: vi.fn(async function (
+      this: unknown,
+      fn: (connection: AsyncDatabaseConnection) => Promise<void>
+    ) {
+      return fn(this as AsyncDatabaseConnection);
+    }),
   };
   const dataService = createDataService(db as never);
 

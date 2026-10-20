@@ -1,6 +1,8 @@
+import { formatDate } from '@/lib/utils';
+import { CashflowAnalysis } from '@/components/transaction-review/CashflowAnalysis';
 import { useQuery } from '@tanstack/react-query';
 import { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useViewTransitionNavigate } from '@/lib/view-transitions';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import {
   ExternalLink,
@@ -84,7 +86,7 @@ export default function Analytics() {
   const { activeProfileId } = useProfile();
   const dataService = useDataService();
   useDocumentTitle(t.analytics.title);
-  const navigate = useNavigate();
+  const navigate = useViewTransitionNavigate();
   const {
     filters,
     setCategories,
@@ -291,6 +293,14 @@ export default function Analytics() {
         dataOnboarding='analytics-greeting'
         actions={
           <span className='text-muted-foreground'>{formatYearRange()}</span>
+        }
+      />
+
+      <CashflowAnalysis
+        month={
+          String(filters.dateRange.end.getFullYear()) +
+          '-' +
+          String(filters.dateRange.end.getMonth() + 1).padStart(2, '0')
         }
       />
 
@@ -796,10 +806,12 @@ export default function Analytics() {
                             {expenseCategories.map((entry, index) => {
                               const isActive = activeExpenseIndex === index;
                               return (
-                                <div
+                                <button
+                                  type='button'
+                                  aria-pressed={pinnedExpenseIndex === index}
                                   key={index}
                                   data-expense-index={index}
-                                  className={`flex cursor-pointer items-center gap-2 rounded px-1 py-0.5 ${
+                                  className={`flex w-full cursor-pointer items-center gap-2 rounded px-1 py-0.5 text-left focus-visible:outline-2 focus-visible:outline-primary ${
                                     isActive ? 'bg-muted' : 'hover:bg-muted/50'
                                   }`}
                                   onClick={(event) => {
@@ -833,7 +845,7 @@ export default function Analytics() {
                                   >
                                     {entry.categoryName}
                                   </span>
-                                </div>
+                                </button>
                               );
                             })}
                           </div>
@@ -985,10 +997,12 @@ export default function Analytics() {
                             {incomeCategories.map((entry, index) => {
                               const isActive = activeIncomeIndex === index;
                               return (
-                                <div
+                                <button
+                                  type='button'
+                                  aria-pressed={pinnedIncomeIndex === index}
                                   key={index}
                                   data-income-index={index}
-                                  className={`flex cursor-pointer items-center gap-2 rounded px-1 py-0.5 ${
+                                  className={`flex w-full cursor-pointer items-center gap-2 rounded px-1 py-0.5 text-left focus-visible:outline-2 focus-visible:outline-primary ${
                                     isActive ? 'bg-muted' : 'hover:bg-muted/50'
                                   }`}
                                   onClick={(event) => {
@@ -1022,7 +1036,7 @@ export default function Analytics() {
                                   >
                                     {entry.categoryName}
                                   </span>
-                                </div>
+                                </button>
                               );
                             })}
                           </div>
@@ -1335,10 +1349,11 @@ export default function Analytics() {
                                     ];
                                   }}
                                   labelFormatter={(label) => {
-                                    const date = new Date(
-                                      label as string | number
+                                    return formatDate(
+                                      typeof label === 'number'
+                                        ? new Date(label)
+                                        : String(label)
                                     );
-                                    return date.toLocaleDateString();
                                   }}
                                   contentStyle={{
                                     backgroundColor: 'hsl(var(--card))',
@@ -1542,10 +1557,11 @@ export default function Analytics() {
                                     ];
                                   }}
                                   labelFormatter={(label) => {
-                                    const date = new Date(
-                                      label as string | number
+                                    return formatDate(
+                                      typeof label === 'number'
+                                        ? new Date(label)
+                                        : String(label)
                                     );
-                                    return date.toLocaleDateString();
                                   }}
                                   contentStyle={{
                                     backgroundColor: 'hsl(var(--card))',

@@ -9,6 +9,42 @@ import {
 } from '../../packages/database/src/session.js';
 import { generateMasterKey } from '../../packages/database/src/encryption.js';
 
+class TrackedEventTarget extends EventTarget {
+  hidden = false;
+  private listeners = new Map<
+    string,
+    Set<EventListenerOrEventListenerObject>
+  >();
+
+  override addEventListener(
+    type: string,
+    callback: EventListenerOrEventListenerObject | null,
+    options?: AddEventListenerOptions | boolean
+  ): void {
+    super.addEventListener(type, callback, options);
+    if (!callback) return;
+    const listeners = this.listeners.get(type) ?? new Set();
+    listeners.add(callback);
+    this.listeners.set(type, listeners);
+  }
+
+  override removeEventListener(
+    type: string,
+    callback: EventListenerOrEventListenerObject | null,
+    options?: EventListenerOptions | boolean
+  ): void {
+    super.removeEventListener(type, callback, options);
+    if (callback) this.listeners.get(type)?.delete(callback);
+  }
+
+  listenerCount(): number {
+    return [...this.listeners.values()].reduce(
+      (count, listeners) => count + listeners.size,
+      0
+    );
+  }
+}
+
 describe('SessionManager', () => {
   let session: SessionManager;
   let masterKey: Uint8Array;
@@ -137,6 +173,137 @@ describe('SessionManager', () => {
 
     it('should return 0 when locked', () => {
       expect(session.getTimeUntilLock()).toBe(0);
+    });
+  });
+
+  describe('browser idle tracking lifecycle', () => {
+    let activityTarget: TrackedEventTarget;
+    let visibilityTarget: TrackedEventTarget;
+
+    beforeEach(() => {
+      vi.useFakeTimers();
+      activityTarget = new TrackedEventTarget();
+      visibilityTarget = new TrackedEventTarget();
+      vi.stubGlobal('window', activityTarget);
+      vi.stubGlobal('document', visibilityTarget);
+    });
+
+    afterEach(() => {
+      session.destroy();
+      vi.unstubAllGlobals();
+      vi.useRealTimers();
+    });
+
+    it('releases every listener and timer across repeated lock/unlock cycles', () => {
+      const listener = vi.fn();
+      session.subscribe(listener);
+
+      for (let cycle = 0; cycle < 30; cycle++) {
+        session.unlock(masterKey);
+        expect(activityTarget.listenerCount()).toBe(5);
+        expect(visibilityTarget.listenerCount()).toBe(1);
+        expect(vi.getTimerCount()).toBe(1);
+
+        listener.mockClear();
+        visibilityTarget.dispatchEvent(new Event('visibilitychange'));
+        expect(listener).toHaveBeenCalledExactlyOnceWith(
+          expect.objectContaining({ type: 'activity' })
+        );
+
+        session.lock();
+        expect(activityTarget.listenerCount()).toBe(0);
+        expect(visibilityTarget.listenerCount()).toBe(0);
+        expect(vi.getTimerCount()).toBe(0);
+      }
+    });
+
+    it('keeps one activity handler and timer when an unlocked session is unlocked again', () => {
+      const listener = vi.fn();
+      session.subscribe(listener);
+      session.unlock(masterKey);
+      session.unlock(masterKey);
+
+      expect(activityTarget.listenerCount()).toBe(5);
+      expect(visibilityTarget.listenerCount()).toBe(1);
+      expect(vi.getTimerCount()).toBe(1);
+
+      listener.mockClear();
+      activityTarget.dispatchEvent(new Event('mousemove'));
+      expect(listener).toHaveBeenCalledExactlyOnceWith(
+        expect.objectContaining({ type: 'activity' })
+      );
+
+      vi.advanceTimersByTime(999);
+      expect(session.isUnlocked()).toBe(true);
+      vi.advanceTimersByTime(1);
+      expect(session.isUnlocked()).toBe(false);
+      expect(listener.mock.calls.map(([event]) => event.type)).toEqual([
+        'activity',
+        'timeout',
+        'lock',
+      ]);
+      expect(activityTarget.listenerCount()).toBe(0);
+      expect(visibilityTarget.listenerCount()).toBe(0);
+      expect(vi.getTimerCount()).toBe(0);
+    });
+
+    it('resets the timeout only when the page becomes visible', () => {
+      const listener = vi.fn();
+      session.subscribe(listener);
+      session.unlock(masterKey);
+      listener.mockClear();
+
+      vi.advanceTimersByTime(500);
+      visibilityTarget.hidden = true;
+      visibilityTarget.dispatchEvent(new Event('visibilitychange'));
+      expect(listener).not.toHaveBeenCalled();
+      expect(session.getTimeUntilLock()).toBe(500);
+
+      vi.advanceTimersByTime(400);
+      visibilityTarget.hidden = false;
+      visibilityTarget.dispatchEvent(new Event('visibilitychange'));
+      expect(listener).toHaveBeenCalledExactlyOnceWith(
+        expect.objectContaining({ type: 'activity' })
+      );
+      expect(session.getTimeUntilLock()).toBe(1000);
+      vi.advanceTimersByTime(999);
+      expect(session.isUnlocked()).toBe(true);
+      vi.advanceTimersByTime(1);
+      expect(session.isUnlocked()).toBe(false);
+    });
+
+    it('leaves no listeners, timer, key, or subscriptions after destroy', () => {
+      const listener = vi.fn();
+      session.subscribe(listener);
+      session.unlock(masterKey);
+      session.destroy();
+
+      expect(activityTarget.listenerCount()).toBe(0);
+      expect(visibilityTarget.listenerCount()).toBe(0);
+      expect(vi.getTimerCount()).toBe(0);
+      expect(session.getMasterKey()).toBeNull();
+
+      listener.mockClear();
+      activityTarget.dispatchEvent(new Event('keydown'));
+      visibilityTarget.dispatchEvent(new Event('visibilitychange'));
+      vi.advanceTimersByTime(2000);
+      expect(listener).not.toHaveBeenCalled();
+
+      session.unlock(masterKey);
+      expect(listener).not.toHaveBeenCalled();
+    });
+
+    it('does not start tracking when an unlock subscriber locks the session', () => {
+      session.subscribe((event) => {
+        if (event.type === 'unlock') session.lock();
+      });
+
+      session.unlock(masterKey);
+
+      expect(session.isUnlocked()).toBe(false);
+      expect(activityTarget.listenerCount()).toBe(0);
+      expect(visibilityTarget.listenerCount()).toBe(0);
+      expect(vi.getTimerCount()).toBe(0);
     });
   });
 });

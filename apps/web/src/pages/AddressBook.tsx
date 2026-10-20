@@ -8,12 +8,17 @@ import {
   useDeferredValue,
 } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
+import { useViewTransitionNavigate } from '@/lib/view-transitions';
 import { useToast } from '@/contexts/ToastContext';
 import { Check, Loader2, Plus, Settings2, Sparkles, X } from 'lucide-react';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useProfile } from '@/contexts/ProfileContext';
+import {
+  useProfileDetailSelection,
+  useProfileDetailPage,
+} from '@/hooks/useProfileDetailSelection';
+import { HISTORY_ROWS_PER_PAGE } from '@/components/ui/PaginatedHistoryList';
 import { useFilters } from '@/contexts/FilterContext';
 import { cn, findSimilarNameGroups } from '@/lib/utils';
 import {
@@ -60,7 +65,7 @@ type ContactMatchSuggestion = Awaited<
 export default function AddressBook() {
   const { t } = useLanguage();
   const { activeProfileId } = useProfile();
-  const navigate = useNavigate();
+  const navigate = useViewTransitionNavigate();
   const confirm = useConfirm();
   const {
     setOpposingAccountIbans,
@@ -154,8 +159,11 @@ export default function AddressBook() {
   const [splitNameWarning, setSplitNameWarning] = useState<string | null>(null);
 
   // Expanded contact state for showing transactions
-  const [expandedContactId, setExpandedContactId] = useState<string | null>(
-    null
+  const [expandedContactId, setExpandedContactId] =
+    useProfileDetailSelection(activeProfileId);
+  const [transactionPage, setTransactionPage] = useProfileDetailPage(
+    activeProfileId,
+    expandedContactId
   );
 
   // State for assign-to-existing contact popover
@@ -215,17 +223,29 @@ export default function AddressBook() {
 
   const { data: contactTransactions, isLoading: loadingContactTransactions } =
     useQuery({
-      queryKey: ['contact-transactions', expandedContactId],
+      queryKey: [
+        'contact-transactions',
+        activeProfileId,
+        expandedContactId,
+        transactionPage,
+      ],
       queryFn: () =>
         expandedContactId
-          ? api.getTransactionsForContact(expandedContactId)
+          ? api.getTransactionsForContact(
+              expandedContactId,
+              HISTORY_ROWS_PER_PAGE,
+              transactionPage * HISTORY_ROWS_PER_PAGE
+            )
           : null,
-      enabled: !!expandedContactId,
+      enabled: !!activeProfileId && !!expandedContactId,
     });
 
-  const handleToggleExpand = useCallback((id: string) => {
-    setExpandedContactId((prev) => (prev === id ? null : id));
-  }, []);
+  const handleToggleExpand = useCallback(
+    (id: string) => {
+      setExpandedContactId((prev) => (prev === id ? null : id));
+    },
+    [setExpandedContactId]
+  );
 
   const handleUpdateContact = useCallback(async () => {
     if (!editingContactId) return;
@@ -345,8 +365,9 @@ export default function AddressBook() {
       <PageHeader
         title={t.addressBook?.title || t.settings.addressBook.title}
         subtitle={t.addressBook?.subtitle}
+        dataOnboarding='addressbook-greeting'
         actions={
-          <div className='flex gap-2'>
+          <div className='flex flex-wrap gap-2'>
             {hasTypeSafeKey && (
               <Button
                 variant='secondary'
@@ -373,6 +394,7 @@ export default function AddressBook() {
               onClick={() => setShowCleanupRules(!showCleanupRules)}
               className={cn(showCleanupRules && 'bg-muted')}
               data-onboarding='addressbook-settings-toggle'
+              aria-expanded={showCleanupRules}
             >
               <Settings2 className='mr-2 h-4 w-4' />
               {t.addressBook?.cleanupRules}
@@ -591,6 +613,8 @@ export default function AddressBook() {
         onToggleExpand={handleToggleExpand}
         contactTransactions={contactTransactions || []}
         isLoadingTransactions={loadingContactTransactions}
+        transactionPage={transactionPage}
+        onTransactionPageChange={setTransactionPage}
         onSplitContact={(contact) => {
           setSplitContact(contact);
           const init: Record<string, string> = {};

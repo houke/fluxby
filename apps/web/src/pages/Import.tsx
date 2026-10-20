@@ -1,4 +1,16 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
+import {
+  ImportOptionsPanel,
+  ImportRecoveryPanel,
+} from '@/components/import/ImportTools';
+import { SkippedRowsTable } from '@/components/import/SkippedRowsTable';
+import {
+  DEFAULT_IMPORT_OPTIONS,
+  normalizeImportRow,
+  isImportMappingComplete,
+  type ImportOptions,
+} from '@/lib/importers/import-options';
+import { importToolsTranslations } from '@/lib/i18n/import-tools';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useDropzone } from 'react-dropzone';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
@@ -25,6 +37,12 @@ import {
   CardDescription,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import {
   Dialog,
   DialogContent,
@@ -129,7 +147,7 @@ interface SkippedRow {
 }
 
 interface GenericImportResult {
-  importId: number;
+  importId: number | string;
   filename: string;
   totalInFile: number;
   imported: number;
@@ -154,13 +172,15 @@ const MAPPING_FIELDS = [
 const DUTCH_BANKS = [
   { id: 'ing', name: 'ING', enabled: true, icon: '🦁' },
   { id: 'asn', name: 'ASN Bank', enabled: true, icon: '🌱' },
-  { id: 'rabobank', name: 'Rabobank', enabled: false, icon: null },
+  { id: 'rabobank', name: 'Rabobank', enabled: true, icon: null },
+  { id: 'abn', name: 'ABN AMRO', enabled: true, icon: null },
   { id: 'knab', name: 'Knab', enabled: false, icon: null },
   { id: 'generic', name: 'Anders / Handmatig', enabled: true, icon: null },
 ] as const;
 
 // Helper to get display name for bank code
-const getBankDisplayName = (bankCode: string): string => {
+const getBankDisplayName = (bankCode: string, genericLabel: string): string => {
+  if (bankCode.toLowerCase() === 'generic') return genericLabel;
   const bank = DUTCH_BANKS.find(
     (b) => b.id.toLowerCase() === bankCode.toLowerCase()
   );
@@ -208,10 +228,16 @@ const BANK_PRESETS: Record<
     mapping: {
       date: ['Datum', 'Boekdatum'],
       amount: ['Bedrag', 'Amount'],
-      description: ['Omschrijving', 'Description'],
+      description: [
+        'Naam tegenpartij',
+        'Omschrijving-1',
+        'Omschrijving',
+        'Description',
+      ],
+      notes: ['Omschrijving-1', 'Omschrijving'],
       iban: ['IBAN/BBAN', 'Rekening'],
-      counterparty: ['Tegenrekening', 'Naam tegenpartij'],
-      balance: ['Saldo na trn', 'Saldo'],
+      counterparty: ['Tegenrekening IBAN/BBAN', 'Tegenrekening'],
+      balance: ['Saldo na trn', 'Saldo na trn.', 'Saldo'],
     },
   },
   abn: {
@@ -222,7 +248,7 @@ const BANK_PRESETS: Record<
       description: ['Omschrijving'],
       iban: ['Rekeningnummer'],
       counterparty: ['Tegenrekeningnummer'],
-      balance: ['Mutatiesoort'],
+      balance: ['Eindsaldo'],
     },
   },
   generic: {
@@ -234,6 +260,20 @@ const BANK_PRESETS: Record<
 // History card component with expandable skipped rows
 // Shows max 20 skipped items with reasons for transparency
 const MAX_SKIPPED_DISPLAY = 20;
+
+function formatSkippedRowDate(date?: string): string {
+  if (!date) return '-';
+  const parsed = new Date(date);
+  // Failed rows can contain invalid or already formatted source dates.
+  if (
+    !/^\d{4}-\d{2}-\d{2}$/.test(date) ||
+    Number.isNaN(parsed.getTime()) ||
+    parsed.toISOString().slice(0, 10) !== date
+  ) {
+    return date;
+  }
+  return formatDate(date);
+}
 
 function HistoryCard({
   item,
@@ -249,6 +289,8 @@ function HistoryCard({
   t: any;
   getErrorLabel: (error: string) => string;
 }) {
+  const { language } = useLanguage();
+  const importText = importToolsTranslations[language];
   const [isExpanded, setIsExpanded] = useState(false);
 
   // Get reason badge color based on reason type
@@ -273,7 +315,8 @@ function HistoryCard({
             <p className='text-sm text-muted-foreground'>
               {formatDate(item.importedAt)} • {item.transactionCount}{' '}
               {t.import.transactions}
-              {item.bank && ` • ${getBankDisplayName(item.bank)}`}
+              {item.bank &&
+                ` • ${getBankDisplayName(item.bank, importText.genericBank)}`}
               {totalSkipped > 0 && (
                 <span className='ml-2 text-amber-600 dark:text-amber-400'>
                   • {totalSkipped} {t.import?.skipped}
@@ -286,11 +329,17 @@ function HistoryCard({
           <span
             className={`rounded px-2 py-1 text-sm ${
               item.status === 'completed'
-                ? 'bg-success/10 text-success'
-                : 'bg-destructive/10 text-destructive'
+                ? 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200'
+                : item.status === 'undone'
+                  ? 'bg-muted text-slate-600 dark:text-slate-300'
+                  : 'bg-destructive/10 text-destructive'
             }`}
           >
-            {item.status === 'completed' ? t.import.completed : t.import.failed}
+            {item.status === 'completed'
+              ? t.import.completed
+              : item.status === 'undone'
+                ? importText.undone
+                : t.import.failed}
           </span>
           {hasSkippedRows && (
             <span className='flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-purple-600 hover:text-white'>
@@ -329,7 +378,7 @@ function HistoryCard({
                 {/* Right column: Date, Amount + Badge */}
                 <div className='flex flex-shrink-0 flex-col items-end gap-1'>
                   <span className='text-xs text-muted-foreground'>
-                    {row.date || '-'}
+                    {formatSkippedRowDate(row.date)}
                   </span>
                   <div className='flex items-center gap-2'>
                     <span className='font-medium'>
@@ -363,9 +412,25 @@ function HistoryCard({
 }
 
 export default function Import() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const importText = importToolsTranslations[language];
+  const [importOptions, setImportOptions] = useState<ImportOptions>(
+    DEFAULT_IMPORT_OPTIONS
+  );
   const toast = useToast();
   const { activeProfileId, activeProfile } = useProfile();
+  const activeProfileRef = useRef(activeProfileId);
+  activeProfileRef.current = activeProfileId;
+  const importRequestRef = useRef(0);
+  const invalidateImportRequest = useCallback(() => {
+    importRequestRef.current++;
+  }, []);
+  const isCurrentRequest = useCallback(
+    (requestId: number, profileId: typeof activeProfileId) =>
+      importRequestRef.current === requestId &&
+      activeProfileRef.current === profileId,
+    []
+  );
 
   useDocumentTitle(t.import.title);
   const queryClient = useQueryClient();
@@ -375,10 +440,9 @@ export default function Import() {
   // Web Worker for CSV parsing (prevents UI blocking on large files)
   const {
     parseCSV: workerParseCSV,
+    prepareCSV: workerPrepareCSV,
     progress: parseProgress,
-    stage: parseStage,
     isProcessing: isWorkerProcessing,
-    error: workerError,
     reset: resetWorker,
   } = useImportWorker({
     unknownError: t.common.unknownError,
@@ -410,6 +474,35 @@ export default function Import() {
   const [modalError, setModalError] = useState<string | null>(null);
   const [mappingNotice, setMappingNotice] = useState<string | null>(null);
 
+  useEffect(() => {
+    invalidateImportRequest();
+    setPendingFile(null);
+    setShowMappingDialog(false);
+    setCsvParseResult(null);
+    setColumnMapping({ date: '', amount: '', description: '' });
+    setSelectedBank('');
+    setImportOptions(DEFAULT_IMPORT_OPTIONS);
+    setUploadError(null);
+    setModalError(null);
+    setMappingNotice(null);
+    setImportProgress(null);
+    setImportResults(null);
+    setShowResultsDialog(false);
+    setIsReadingFile(false);
+    resetWorker();
+    return invalidateImportRequest;
+  }, [activeProfileId, resetWorker, invalidateImportRequest]);
+
+  const changeImportOptions = useCallback(
+    (options: ImportOptions) => {
+      importRequestRef.current++;
+      resetWorker();
+      setIsReadingFile(false);
+      setImportOptions(options);
+    },
+    [resetWorker]
+  );
+
   const autoCategorizeAfterImport = useCallback(() => {
     if (!getTypeSafeApiKey()) return;
 
@@ -438,8 +531,17 @@ export default function Import() {
           toast.info(aiText.autoCategorizeAfterImportNone);
         }
       })
-      .catch((error) => toast.error(error as Error));
-  }, [activeProfileId, queryClient, t.settings.typesafeAi, toast]);
+      .catch((error) => {
+        console.error('Auto-categorization after import failed:', error);
+        toast.error(t.apiErrors.failedToApplyCategoryRules);
+      });
+  }, [
+    activeProfileId,
+    queryClient,
+    t.settings.typesafeAi,
+    t.apiErrors.failedToApplyCategoryRules,
+    toast,
+  ]);
 
   const { data: history, isLoading: historyLoading } = useQuery<
     ImportHistory[]
@@ -586,7 +688,12 @@ export default function Import() {
   // This replaces the old parseGenericMutation to prevent UI blocking on large files
   const handleParseCSV = useCallback(
     async (file: File) => {
+      const parsingProfile = activeProfileId;
+      const requestId = ++importRequestRef.current;
       setIsReadingFile(true);
+      setPendingFile(null);
+      setCsvParseResult(null);
+      setShowMappingDialog(false);
       try {
         resetWorker();
         // Let React paint the processing state before reading a potentially
@@ -595,14 +702,25 @@ export default function Import() {
         await new Promise<void>((resolve) =>
           requestAnimationFrame(() => resolve())
         );
+        if (!isCurrentRequest(requestId, parsingProfile)) return;
         const csvContent = await file.text();
-        const data = await workerParseCSV(csvContent);
+        if (!isCurrentRequest(requestId, parsingProfile)) return;
+        const options = /\.(tab|tsv|txt)$/i.test(file.name)
+          ? {
+              ...DEFAULT_IMPORT_OPTIONS,
+              delimiter: '\t' as const,
+              decimal: '.' as const,
+            }
+          : DEFAULT_IMPORT_OPTIONS;
+        const data = await workerParseCSV(csvContent, options);
+        if (!isCurrentRequest(requestId, parsingProfile)) return;
 
         setCsvParseResult({
           headers: data.headers,
           sampleRows: data.sampleRows,
           totalRows: data.totalRows,
         });
+        setImportOptions(options);
         setPendingFile(file);
         setModalError(null);
         setMappingNotice(null);
@@ -653,6 +771,7 @@ export default function Import() {
               sampleRows: data.sampleRows,
               fields: needsSuggestion,
             });
+            if (!isCurrentRequest(requestId, parsingProfile)) return;
             for (const field of needsSuggestion) {
               const suggestion = suggestions[field];
               if (suggestion) autoMapping[field] = suggestion.header;
@@ -663,21 +782,36 @@ export default function Import() {
                 : t.import.jevMappingUnavailable
             );
           } catch {
+            if (!isCurrentRequest(requestId, parsingProfile)) return;
             setMappingNotice(t.import.jevMappingUnavailable);
           }
         }
 
+        if (!isCurrentRequest(requestId, parsingProfile)) return;
         setColumnMapping(autoMapping);
         setShowMappingDialog(true);
       } catch (error) {
+        if (!isCurrentRequest(requestId, parsingProfile)) return;
         setUploadError(
-          error instanceof Error ? error.message : t.import.parseFileError
+          error instanceof Error && error.message === 'currency'
+            ? importText.unsupportedCurrency
+            : t.import.parseFileError
         );
       } finally {
-        setIsReadingFile(false);
+        if (isCurrentRequest(requestId, parsingProfile))
+          setIsReadingFile(false);
       }
     },
-    [workerParseCSV, resetWorker, detectBank, applyBankPreset, t.import]
+    [
+      workerParseCSV,
+      resetWorker,
+      detectBank,
+      applyBankPreset,
+      t.import,
+      importText.unsupportedCurrency,
+      activeProfileId,
+      isCurrentRequest,
+    ]
   );
 
   // Generic CSV import mutation
@@ -686,26 +820,68 @@ export default function Import() {
       file,
       mapping,
       bank,
+      profileId,
+      options,
+      requestId,
     }: {
       file: File;
       mapping: ColumnMapping;
       bank: string;
+      profileId: typeof activeProfileId;
+      options: ImportOptions;
+      requestId: number;
     }) =>
-      api.importGenericCSV(file, mapping, undefined, bank, (current, total) => {
-        // When we reach total/total, switch to finishing phase
-        if (current === total) {
-          setImportProgress({ phase: 'finishing' });
-        } else {
-          setImportProgress({ phase: 'progress', current, total });
+      (async () => {
+        let prepared;
+        try {
+          const content = await file.text();
+          if (!isCurrentRequest(requestId, profileId))
+            throw new Error(importText.profileChanged);
+          prepared = await workerPrepareCSV(content, mapping, options);
+        } catch (error) {
+          throw new Error(
+            error instanceof Error && error.message === 'currency'
+              ? importText.unsupportedCurrency
+              : importText.invalid
+          );
         }
-      }) as Promise<GenericImportResult>,
-    onSuccess: (data) => {
+        if (!isCurrentRequest(requestId, profileId))
+          throw new Error(importText.profileChanged);
+        return api.importGenericCSV(
+          new File([prepared.csv], file.name, { type: 'text/csv' }),
+          prepared.mapping,
+          undefined,
+          bank,
+          (current, total) => {
+            if (!isCurrentRequest(requestId, profileId)) return;
+            // When we reach total/total, switch to finishing phase
+            if (current === total) {
+              setImportProgress({ phase: 'finishing' });
+            } else {
+              setImportProgress({ phase: 'progress', current, total });
+            }
+          }
+        ) as Promise<GenericImportResult>;
+      })(),
+    onSuccess: (data, variables) => {
+      if (!isCurrentRequest(variables.requestId, variables.profileId)) return;
+      void queryClient.invalidateQueries({ queryKey: ['import-freshness'] });
+      void queryClient.invalidateQueries({ queryKey: ['import-recovery'] });
+      void queryClient.invalidateQueries({ queryKey: ['import-batches'] });
       setImportResults(data);
       setShowMappingDialog(false);
       setShowResultsDialog(true);
       setPendingFile(null);
       setCsvParseResult(null);
       setImportProgress(null);
+      toast.success(
+        t.import.importResultsDescription
+          .replace('{imported}', String(data.imported))
+          .replace(
+            '{skipped}',
+            String(data.duplicatesSkipped + data.parseErrors)
+          )
+      );
       queryClient.invalidateQueries({
         queryKey: ['import-history', activeProfileId],
       });
@@ -743,9 +919,10 @@ export default function Import() {
         autoCategorizeAfterImport();
       }
     },
-    onError: (error: Error) => {
+    onError: (error: Error, variables) => {
+      if (!isCurrentRequest(variables.requestId, variables.profileId)) return;
       console.error('Import error:', error);
-      setModalError(error.message || t.import.importError);
+      setModalError(t.import.importFailed);
       setImportProgress(null);
     },
   });
@@ -754,7 +931,8 @@ export default function Import() {
   const previewMutation = useMutation({
     mutationFn: (file: File) => api.previewCSV(file) as Promise<PreviewResult>,
     onError: (error: Error) => {
-      setUploadError(error.message);
+      console.error('Import preview failed:', error);
+      setUploadError(t.import.previewFailed);
     },
   });
 
@@ -804,7 +982,8 @@ export default function Import() {
       }
     },
     onError: (error: Error) => {
-      setUploadError(error.message);
+      console.error('Import upload failed:', error);
+      setUploadError(t.import.uploadFailed);
     },
   });
 
@@ -818,7 +997,8 @@ export default function Import() {
       });
     },
     onError: (error: Error) => {
-      setUploadError(error.message);
+      console.error('Creating import accounts failed:', error);
+      setUploadError(t.apiErrors.failedToCreateAccount);
     },
   });
 
@@ -836,17 +1016,16 @@ export default function Import() {
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
-    accept: { 'text/csv': ['.csv'] },
+    accept: {
+      'text/csv': ['.csv'],
+      'text/tab-separated-values': ['.tab', '.tsv'],
+      'text/plain': ['.txt'],
+    },
     maxFiles: 1,
   });
 
   const handleStartGenericImport = () => {
-    if (
-      pendingFile &&
-      columnMapping.date &&
-      columnMapping.amount &&
-      columnMapping.description
-    ) {
+    if (pendingFile && isImportMappingComplete(columnMapping, importOptions)) {
       // Remove stars from mapping before sending
       const cleanMapping = Object.fromEntries(
         Object.entries(columnMapping).map(([key, value]) => [
@@ -861,15 +1040,16 @@ export default function Import() {
         file: pendingFile,
         mapping: cleanMapping,
         bank: selectedBank,
+        profileId: activeProfileId,
+        options: { ...importOptions },
+        requestId: ++importRequestRef.current,
       });
     }
   };
 
   const isMappingComplete = useMemo(() => {
-    return (
-      columnMapping.date && columnMapping.amount && columnMapping.description
-    );
-  }, [columnMapping]);
+    return isImportMappingComplete(columnMapping, importOptions);
+  }, [columnMapping, importOptions]);
 
   // Preview data with mapped columns
   const previewData = useMemo(() => {
@@ -878,25 +1058,23 @@ export default function Import() {
     const cleanKey = (key: string) => (key ? key.replace('✨ ', '') : '');
 
     return csvParseResult.sampleRows.slice(0, 10).map((row) => {
-      const amountValue = row[cleanKey(columnMapping.amount)] || '-';
-      const directionValue = columnMapping.direction
-        ? row[cleanKey(columnMapping.direction)]
-        : null;
-
-      // Format amount with direction indicator
-      let displayAmount = amountValue;
-      if (directionValue) {
-        const isExpense =
-          directionValue.toLowerCase() === 'af' ||
-          directionValue.toLowerCase() === 'debit';
-        if (isExpense && !amountValue.startsWith('-')) {
-          displayAmount = `-${amountValue}`;
-        }
+      let normalized;
+      try {
+        normalized = normalizeImportRow(row, columnMapping, importOptions);
+      } catch {
+        return {
+          date: '—',
+          amount: '—',
+          description: importText.invalid,
+          iban: undefined,
+          counterparty: undefined,
+          balance: undefined,
+        };
       }
-
+      const amountValue = normalized.__fluxby_amount;
       return {
-        date: row[cleanKey(columnMapping.date)] || '-',
-        amount: displayAmount,
+        date: formatDate(normalized.__fluxby_date),
+        amount: amountValue,
         description: row[cleanKey(columnMapping.description)] || '-',
         iban: columnMapping.iban
           ? row[cleanKey(columnMapping.iban)]
@@ -905,11 +1083,17 @@ export default function Import() {
           ? row[cleanKey(columnMapping.counterparty)]
           : undefined,
         balance: columnMapping.balance
-          ? row[cleanKey(columnMapping.balance)]
+          ? normalized.__fluxby_balance
           : undefined,
       };
     });
-  }, [csvParseResult, columnMapping, isMappingComplete]);
+  }, [
+    csvParseResult,
+    columnMapping,
+    isMappingComplete,
+    importOptions,
+    importText.invalid,
+  ]);
 
   const isProcessing =
     previewMutation.isPending ||
@@ -974,6 +1158,11 @@ export default function Import() {
         onOpenChange={(open) => {
           // Prevent closing during import
           if (!open && importGenericMutation.isPending) return;
+          if (!open) {
+            importRequestRef.current++;
+            resetWorker();
+            setIsReadingFile(false);
+          }
           setShowMappingDialog(open);
         }}
       >
@@ -1009,7 +1198,8 @@ export default function Import() {
                   <button
                     key={bank.id}
                     type='button'
-                    disabled={!bank.enabled}
+                    disabled={!bank.enabled || importGenericMutation.isPending}
+                    aria-pressed={selectedBank === bank.id}
                     onClick={() => {
                       setSelectedBank(bank.id);
                       if (csvParseResult && bank.id !== 'generic') {
@@ -1033,7 +1223,11 @@ export default function Import() {
                     ) : (
                       <Landmark className='h-5 w-5' />
                     )}
-                    <span>{bank.name}</span>
+                    <span>
+                      {bank.id === 'generic'
+                        ? importText.genericBank
+                        : bank.name}
+                    </span>
                     {!bank.enabled && (
                       <span className='text-xs opacity-60'>
                         {t.common.comingSoon}
@@ -1057,9 +1251,15 @@ export default function Import() {
                 {MAPPING_FIELDS.filter((f) => f.required).map((field) => (
                   <div key={field.key} className='space-y-2'>
                     <label className='text-sm font-medium'>
-                      {getFieldLabel(field.key)} *
+                      {getFieldLabel(field.key)}
+                      {field.key !== 'amount' ||
+                      (!importOptions.debitColumn &&
+                        !importOptions.creditColumn)
+                        ? ' *'
+                        : ''}
                     </label>
                     <Select
+                      disabled={importGenericMutation.isPending}
                       value={
                         columnMapping[field.key as keyof ColumnMapping] || ''
                       }
@@ -1070,7 +1270,7 @@ export default function Import() {
                         }))
                       }
                     >
-                      <SelectTrigger>
+                      <SelectTrigger aria-label={getFieldLabel(field.key)}>
                         <SelectValue placeholder={t.import.selectField} />
                       </SelectTrigger>
                       <SelectContent>
@@ -1093,6 +1293,7 @@ export default function Import() {
                       {getFieldLabel(field.key)}
                     </label>
                     <Select
+                      disabled={importGenericMutation.isPending}
                       value={
                         columnMapping[field.key as keyof ColumnMapping] || ''
                       }
@@ -1103,7 +1304,7 @@ export default function Import() {
                         }))
                       }
                     >
-                      <SelectTrigger>
+                      <SelectTrigger aria-label={getFieldLabel(field.key)}>
                         <SelectValue placeholder={t.import.selectField} />
                       </SelectTrigger>
                       <SelectContent>
@@ -1122,22 +1323,79 @@ export default function Import() {
               </div>
             </>
 
+            <ImportOptionsPanel
+              options={importOptions}
+              onChange={changeImportOptions}
+              headers={csvParseResult?.headers ?? []}
+              mapping={columnMapping}
+              bank={selectedBank}
+              disabled={importGenericMutation.isPending}
+              onApply={(mapping, options, bank) => {
+                setColumnMapping(mapping);
+                changeImportOptions(options);
+                setSelectedBank(bank);
+              }}
+              onReparse={async () => {
+                if (!pendingFile) return;
+                const profileId = activeProfileId;
+                const requestId = ++importRequestRef.current;
+                resetWorker();
+                setIsReadingFile(true);
+                try {
+                  const content = await pendingFile.text();
+                  if (!isCurrentRequest(requestId, profileId)) return;
+                  const parsed = await workerParseCSV(content, importOptions);
+                  if (!isCurrentRequest(requestId, profileId)) return;
+                  setCsvParseResult(parsed);
+                  setModalError(null);
+                } catch (error) {
+                  if (!isCurrentRequest(requestId, profileId)) return;
+                  setModalError(
+                    error instanceof Error && error.message === 'currency'
+                      ? importText.unsupportedCurrency
+                      : importText.invalid
+                  );
+                } finally {
+                  if (isCurrentRequest(requestId, profileId))
+                    setIsReadingFile(false);
+                }
+              }}
+            />
+
             {/* Preview - Show for all banks when mapping is complete and not importing */}
             {selectedBank && isMappingComplete && importProgress === null && (
               <div className='space-y-3'>
                 <div className='flex items-center justify-between'>
                   <h3 className='font-medium'>{t.import.preview}</h3>
-                  <Button
-                    variant='ghost'
-                    size='sm'
-                    onClick={() => setShowPreview(!showPreview)}
-                  >
-                    {showPreview ? (
-                      <ChevronUp className='h-4 w-4' />
-                    ) : (
-                      <ChevronDown className='h-4 w-4' />
-                    )}
-                  </Button>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant='ghost'
+                          size='icon'
+                          className='rounded-md'
+                          aria-label={
+                            showPreview
+                              ? importText.hidePreview
+                              : importText.showPreview
+                          }
+                          aria-expanded={showPreview}
+                          onClick={() => setShowPreview(!showPreview)}
+                        >
+                          {showPreview ? (
+                            <ChevronUp className='h-4 w-4' />
+                          ) : (
+                            <ChevronDown className='h-4 w-4' />
+                          )}
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        {showPreview
+                          ? importText.hidePreview
+                          : importText.showPreview}
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 </div>
                 {showPreview && (
                   <div className='rounded-lg border'>
@@ -1183,7 +1441,15 @@ export default function Import() {
                                 }`}
                               >
                                 <span className='privacy-blur'>
-                                  {row.amount}
+                                  {row.amount === '—' ? (
+                                    '—'
+                                  ) : (
+                                    <Currency
+                                      amount={Number(
+                                        row.amount.replace(',', '.')
+                                      )}
+                                    />
+                                  )}
                                 </span>
                               </td>
                               <td className='max-w-xs truncate px-4 py-2'>
@@ -1202,7 +1468,15 @@ export default function Import() {
                               {columnMapping.balance && (
                                 <td className='px-4 py-2 text-right font-mono'>
                                   <span className='privacy-blur'>
-                                    {row.balance}
+                                    {row.balance ? (
+                                      <Currency
+                                        amount={Number(
+                                          row.balance.replace(',', '.')
+                                        )}
+                                      />
+                                    ) : (
+                                      '—'
+                                    )}
                                   </span>
                                 </td>
                               )}
@@ -1289,7 +1563,11 @@ export default function Import() {
             <div className='flex w-full items-center justify-end gap-2 sm:w-auto'>
               <Button
                 variant='outline'
+                disabled={importGenericMutation.isPending}
                 onClick={() => {
+                  importRequestRef.current++;
+                  resetWorker();
+                  setIsReadingFile(false);
                   setShowMappingDialog(false);
                   setPendingFile(null);
                   setCsvParseResult(null);
@@ -1304,7 +1582,9 @@ export default function Import() {
                 disabled={
                   !selectedBank ||
                   !isMappingComplete ||
-                  importGenericMutation.isPending
+                  importGenericMutation.isPending ||
+                  isReadingFile ||
+                  isWorkerProcessing
                 }
                 className='flex-1 sm:flex-none'
               >
@@ -1324,6 +1604,8 @@ export default function Import() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ImportRecoveryPanel />
 
       {/* Import Results Dialog */}
       <Dialog open={showResultsDialog} onOpenChange={setShowResultsDialog}>
@@ -1371,7 +1653,7 @@ export default function Import() {
                   <div className='text-muted-foreground'>
                     {t.import.imported}
                   </div>
-                  <div className='font-medium text-success'>
+                  <div className='font-medium text-emerald-800 dark:text-emerald-200'>
                     {importResults.imported}
                   </div>
                 </div>
@@ -1403,56 +1685,10 @@ export default function Import() {
                     </button>
 
                     {showSkippedRows && (
-                      <div className='rounded-lg border'>
-                        <div className='border-b p-3 text-sm text-muted-foreground'>
-                          {t.import.skippedRowsDescription}
-                        </div>
-                        <div className='overflow-x-auto'>
-                          <table className='min-w-full text-sm'>
-                            <thead className='bg-muted/50'>
-                              <tr>
-                                <th className='px-4 py-2 text-left font-medium'>
-                                  {t.import.row}
-                                </th>
-                                <th className='px-4 py-2 text-left font-medium'>
-                                  {t.import.dateColumn}
-                                </th>
-                                <th className='px-4 py-2 text-left font-medium'>
-                                  {t.import.amountColumn}
-                                </th>
-                                <th className='px-4 py-2 text-left font-medium'>
-                                  {t.import.reason}
-                                </th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {importResults.skippedRows.map((row, idx) => (
-                                <tr
-                                  key={idx}
-                                  className='border-t border-muted/50'
-                                >
-                                  <td className='px-4 py-2'>{row.rowIndex}</td>
-                                  <td className='px-4 py-2'>
-                                    {row.date || '-'}
-                                  </td>
-                                  <td className='px-4 py-2'>
-                                    {row.amount ? (
-                                      <Currency amount={row.amount} />
-                                    ) : (
-                                      '-'
-                                    )}
-                                  </td>
-                                  <td className='px-4 py-2'>
-                                    <span className='rounded bg-destructive/10 px-2 py-0.5 text-xs text-destructive'>
-                                      {getErrorLabel(row.error)}
-                                    </span>
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
+                      <SkippedRowsTable
+                        rows={importResults.skippedRows}
+                        getErrorLabel={getErrorLabel}
+                      />
                     )}
                   </div>
                 )}
@@ -1490,7 +1726,7 @@ export default function Import() {
                   : 'border-border hover:border-primary/50'
               } ${isProcessing ? 'pointer-events-none opacity-50' : ''} `}
             >
-              <input {...getInputProps()} />
+              <input {...getInputProps({ 'aria-label': t.import.title })} />
               <div className='flex flex-col items-center gap-4'>
                 {isReadingFile || isWorkerProcessing ? (
                   <>
@@ -1499,9 +1735,13 @@ export default function Import() {
                       <p className='mb-2 text-lg font-medium'>
                         {t.import.processingFile}
                       </p>
-                      <Progress value={parseProgress} className='h-2' />
+                      <Progress
+                        value={parseProgress}
+                        className='h-2'
+                        aria-label={t.import.processingFile}
+                      />
                       <p className='mt-2 text-sm text-muted-foreground'>
-                        {parseStage || t.import.processingDescription}
+                        {t.import.processingDescription}
                       </p>
                     </div>
                   </>
@@ -1525,7 +1765,7 @@ export default function Import() {
                     <div>
                       <p className='text-lg font-medium'>{t.import.dragDrop}</p>
                       <p className='mt-1 text-sm text-muted-foreground'>
-                        {t.import.onlyCSV}
+                        {importText.supportedFiles}
                       </p>
                     </div>
                     <Button variant='outline'>{t.import.selectFile}</Button>
@@ -1535,7 +1775,7 @@ export default function Import() {
             </div>
 
             {/* Upload Error */}
-            {(uploadError || workerError) && (
+            {uploadError && (
               <div className='mt-6 rounded-lg border border-destructive/20 bg-destructive/10 p-4'>
                 <div className='flex items-start gap-3'>
                   <AlertCircle className='mt-0.5 h-5 w-5 text-destructive' />
@@ -1543,7 +1783,7 @@ export default function Import() {
                     <p className='font-medium text-destructive'>
                       {t.import.importError}
                     </p>
-                    <p className='mt-1 text-sm'>{uploadError || workerError}</p>
+                    <p className='mt-1 text-sm'>{uploadError}</p>
                   </div>
                 </div>
               </div>

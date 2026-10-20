@@ -6,14 +6,14 @@ export default function DocsSubscriptions() {
 
   const listPatternsCode = `// List all detected recurring patterns (subscriptions)
 fetch('http://localhost:3001/api/recurring', {
-  headers: { 'X-Profile-ID': 'your-profile-id' }
+  headers: { 'X-Profile-ID': '1' }
 })
 .then(response => response.json())
 .then(patterns => console.log(patterns));`;
 
   const getStatsCode = `// Get subscription statistics
 fetch('http://localhost:3001/api/recurring/stats', {
-  headers: { 'X-Profile-ID': 'your-profile-id' }
+  headers: { 'X-Profile-ID': '1' }
 })
 .then(response => response.json())
 .then(stats => console.log(stats));`;
@@ -21,14 +21,14 @@ fetch('http://localhost:3001/api/recurring/stats', {
   const detectPatternsCode = `// Run pattern detection on transactions
 fetch('http://localhost:3001/api/recurring/detect', {
   method: 'POST',
-  headers: { 'X-Profile-ID': 'your-profile-id' }
+  headers: { 'X-Profile-ID': '1' }
 })
 .then(response => response.json())
 .then(result => console.log(result));`;
 
   const calendarCode = `// Get expected payments in a date range
 fetch('http://localhost:3001/api/recurring/calendar?startDate=2024-03-01&endDate=2024-03-31', {
-  headers: { 'X-Profile-ID': 'your-profile-id' }
+  headers: { 'X-Profile-ID': '1' }
 })
 .then(response => response.json())
 .then(entries => console.log(entries));`;
@@ -36,14 +36,14 @@ fetch('http://localhost:3001/api/recurring/calendar?startDate=2024-03-01&endDate
   const confirmPatternCode = `// Confirm a pattern as a real subscription
 fetch('http://localhost:3001/api/recurring/{id}/confirm', {
   method: 'POST',
-  headers: { 'X-Profile-ID': 'your-profile-id' }
+  headers: { 'X-Profile-ID': '1' }
 })
 .then(response => response.json());`;
 
   const dismissPatternCode = `// Dismiss a pattern as a false positive
 fetch('http://localhost:3001/api/recurring/{id}/dismiss', {
   method: 'POST',
-  headers: { 'X-Profile-ID': 'your-profile-id' }
+  headers: { 'X-Profile-ID': '1' }
 })
 .then(response => response.json());`;
 

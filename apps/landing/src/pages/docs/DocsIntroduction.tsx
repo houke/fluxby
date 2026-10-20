@@ -9,7 +9,7 @@ export default function DocsIntroduction() {
   const exampleCode = `// Example: Get your dashboard stats
 fetch('${baseUrl}/analytics/dashboard', {
   headers: {
-    'X-Profile-ID': 'your-profile-id'
+    'X-Profile-ID': '1'
   }
 })
 .then(response => response.json())

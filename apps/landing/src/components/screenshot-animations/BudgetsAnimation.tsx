@@ -1,4 +1,5 @@
-import { useEffect, useState, useRef } from 'react';
+import { useState } from 'react';
+import { useDemoAnimationFrame } from '../../hooks/useAnimationActivity';
 import { useLanguage } from '../../contexts/LanguageContext';
 
 export default function BudgetsAnimation({
@@ -10,49 +11,12 @@ export default function BudgetsAnimation({
   const anim = t.animations.budgets;
   const [progress, setProgress] = useState(0);
   const [isExceeded, setIsExceeded] = useState(false);
-  const animationRef = useRef<number | null>(null);
-  const lastTimeRef = useRef<number>(0);
 
-  useEffect(() => {
-    if (isVisible) {
-      const animate = (currentTime: number) => {
-        if (!lastTimeRef.current) lastTimeRef.current = currentTime;
-        const delta = currentTime - lastTimeRef.current;
-        lastTimeRef.current = currentTime;
-
-        setProgress((prev) => {
-          // Fill at ~20% per second (full cycle in ~6 seconds)
-          let newProgress = prev + (delta / 1000) * 20;
-
-          if (newProgress >= 120) {
-            // Reset after exceeding and showing red for a bit
-            newProgress = 0;
-            setIsExceeded(false);
-          } else if (newProgress >= 100) {
-            setIsExceeded(true);
-          }
-
-          return newProgress;
-        });
-
-        animationRef.current = requestAnimationFrame(animate);
-      };
-
-      animationRef.current = requestAnimationFrame(animate);
-    } else {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-        animationRef.current = null;
-      }
-      lastTimeRef.current = 0;
-    }
-
-    return () => {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
-    };
-  }, [isVisible]);
+  useDemoAnimationFrame(isVisible, (delta) => {
+    const nextProgress = (progress + (delta / 1000) * 20) % 120;
+    setProgress(nextProgress);
+    setIsExceeded(nextProgress >= 100);
+  });
 
   const displayProgress = Math.min(progress, 100);
   const budgetAmount = 500;
@@ -83,9 +47,9 @@ export default function BudgetsAnimation({
         {/* Progress bar */}
         <div className='mb-3 h-3 overflow-hidden rounded-full bg-gray-200 dark:bg-white/20'>
           <div
-            className='h-full rounded-full transition-all duration-100'
+            className='h-full w-full origin-left rounded-full transition-[transform,background-color] duration-100'
             style={{
-              width: `${displayProgress}%`,
+              transform: `scaleX(${displayProgress / 100})`,
               backgroundColor: isExceeded ? '#EF4444' : '#34D399',
             }}
           />

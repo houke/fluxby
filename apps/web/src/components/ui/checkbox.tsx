@@ -29,7 +29,7 @@ const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
           type='checkbox'
           ref={combinedRef}
           checked={checked}
-          className='peer sr-only'
+          className='peer absolute inset-0 z-10 h-4 w-4 cursor-pointer opacity-0 disabled:cursor-not-allowed'
           {...props}
         />
         <div

@@ -18,18 +18,42 @@ export async function setupApp(page: Page) {
     name: /kies je taal|choose.*language|select.*language/i,
   });
   const nameHeading = page.getByText(/What's your name\?|Hoe heet je\?/i);
+  const unlockButton = page.getByRole('button', {
+    name: 'Unlock',
+    exact: true,
+  });
 
   // Cold CI startup can outlast a fixed sleep. Wait for the actual setup or
   // dashboard controls before deciding whether onboarding is needed.
-  await languageHeading.or(nameHeading).or(dashboardLink).first().waitFor({
-    state: 'visible',
-    timeout: 60000,
-  });
+  await languageHeading
+    .or(nameHeading)
+    .or(dashboardLink)
+    .or(unlockButton)
+    .first()
+    .waitFor({
+      state: 'visible',
+      timeout: 60000,
+    });
 
   if (await dashboardLink.isVisible()) return;
 
   await handleLanguageSelection(page);
+  await unlockTestApp(page);
+  if (await dashboardLink.isVisible()) return;
   await completeOnboarding(page);
+}
+
+/** Unlock only disposable profiles created by these fixtures. */
+export async function unlockTestApp(page: Page) {
+  const unlockButton = page.getByRole('button', {
+    name: 'Unlock',
+    exact: true,
+  });
+  if (await unlockButton.isVisible()) {
+    await page.getByPlaceholder('Enter password').fill('test1234');
+    await unlockButton.click();
+    await expect(unlockButton).not.toBeVisible({ timeout: 30000 });
+  }
 }
 
 /**
@@ -93,7 +117,12 @@ async function completeOnboarding(page: Page) {
   // Wait for dashboard to appear (indicates setup complete)
   // Use a more specific selector to avoid matching multiple elements
   const dashboardLink = page.getByRole('link', { name: 'Dashboard' });
-  await dashboardLink.waitFor({ state: 'visible', timeout: 60000 });
+  await dashboardLink
+    .or(page.getByRole('button', { name: 'Unlock', exact: true }))
+    .first()
+    .waitFor({ state: 'visible', timeout: 60000 });
+  await unlockTestApp(page);
+  await dashboardLink.waitFor({ state: 'visible', timeout: 30000 });
 
   // Encryption can reload the app before the first tour is mounted. The
   // sidebar alone does not mean setup is ready for navigation yet.

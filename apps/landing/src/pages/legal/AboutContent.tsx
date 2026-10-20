@@ -1,3 +1,4 @@
+import '@fontsource/caveat/latin-400.css';
 import {
   Code2,
   Cpu,

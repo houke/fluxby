@@ -5,3 +5,4 @@ export * from './budget.js';
 export * from './profile.js';
 export * from './api-responses.js';
 export * from './recurring.js';
+export * from './financial-planning.js';

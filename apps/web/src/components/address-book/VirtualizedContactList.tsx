@@ -28,6 +28,8 @@ export interface VirtualizedContactListProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   contactTransactions: any[] | undefined;
   isLoadingTransactions: boolean;
+  transactionPage?: number;
+  onTransactionPageChange?: (page: number) => void;
   onSplitContact: (contact: AddressBookEntryWithStats) => void;
   onSelectContactTransactions: (contact: AddressBookEntryWithStats) => void;
   hasSharedIban: (contact: AddressBookEntryWithStats) => boolean;
@@ -99,6 +101,8 @@ export const VirtualizedContactList = memo(
         onToggleExpand,
         contactTransactions,
         isLoadingTransactions,
+        transactionPage,
+        onTransactionPageChange,
         onSplitContact,
         onSelectContactTransactions,
         hasSharedIban,
@@ -228,6 +232,8 @@ export const VirtualizedContactList = memo(
                         ? contactTransactions
                         : undefined
                     }
+                    transactionPage={transactionPage}
+                    onTransactionPageChange={onTransactionPageChange}
                     isLoadingTransactions={
                       expandedContactId === contact.id
                         ? isLoadingTransactions

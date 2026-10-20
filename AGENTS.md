@@ -82,7 +82,7 @@ npm run build:packages
 
 ### Before Starting Complex Tasks
 
-**IMPORTANT**: For complex multi-step tasks, always create a todo list first using the `manage_todo_list` tool:
+**IMPORTANT**: For complex multi-step tasks, create and maintain a todo list using the task-tracking tool available in the current environment (use `manage_todo_list` when available). If no task-tracking tool is available, keep a concise checklist in the task notes and update it as work progresses:
 
 - Break down the task into smaller, actionable items
 - Mark each todo as in-progress before starting work
@@ -114,19 +114,21 @@ Only commit when all checks pass. Fix any issues before proceeding.
 
 2. **Database Migration**: If the feature requires new tables or columns:
    - Create a new migration file in `packages/database/src/migrations/`
-   - Follow the naming convention: `00X_feature_name.ts`
+   - Follow the zero-padded sequential naming convention: `NNN_feature_name.ts` (for example, `017_feature_name.ts`)
    - Update `packages/database/src/migrations/index.ts` to include the new migration
    - Update `LATEST_MIGRATION_VERSION`
 
 3. **Demo Data**: If the feature stores data, add demo data seeding:
-   - Add constants to `packages/shared/src/seed-data.ts` (shared between API and web)
+   - Add shared demo content to the appropriate module under `packages/shared/src/` (including `seed-data.ts` or `demo-translations.ts` as applicable)
    - Update `apps/web/src/lib/data-service.ts` in `createDemoData()` function
    - Update `apps/api/src/routes/profiles.ts` in the seed-demo endpoint
+   - Create user-visible demo content in the selected language at the time it is seeded; do not silently relocalize existing records later
    - Ensure demo data is cleared and re-seeded properly
 
-4. **Translations**: Add all user-facing strings to both language files:
+4. **Translations**: Every user-facing string added or changed in the app must be in the appropriate translation files and available in both Dutch and English:
    - `apps/web/src/lib/i18n/nl.ts` (Dutch - primary, includes types)
    - `apps/web/src/lib/i18n/en.ts` (English)
+   - For landing-page strings, use the corresponding files under `apps/landing/src/lib/i18n/`
 
 5. **Help Documentation**: Update relevant help articles if the feature affects end users
 
@@ -178,26 +180,22 @@ The API server (`apps/api`) is **optional** and intended only for developers who
 When inserting, updating, or deleting multiple rows, **always** wrap the operations in a transaction:
 
 ```typescript
-// ❌ Wrong - each INSERT triggers an OPFS sync
+// ❌ Wrong - each INSERT commits separately
 for (const item of items) {
   await db.runAsync('INSERT INTO table VALUES (?)', [item]);
 }
 
-// ✅ Correct - all INSERTs happen in one transaction, single OPFS sync
-await db.transactionAsync(async () => {
+// ✅ Correct - all INSERTs share one transaction and commit
+await db.transactionAsync(async (transaction) => {
   for (const item of items) {
-    await db.runAsync('INSERT INTO table VALUES (?)', [item]);
+    await transaction.runAsync('INSERT INTO table VALUES (?)', [item]);
   }
 });
 ```
 
-**Why**: Each individual `db.runAsync()` outside a transaction causes:
+**Why**: Each write outside an explicit transaction commits independently, repeating journal and OPFS durability work. Bulk operations share a commit to reduce this overhead; SQLite may still perform multiple physical writes and syncs within a transaction.
 
-1. A Main Thread → Worker hop
-2. A disk sync to OPFS
-3. High latency per operation (~10-50ms)
-
-With transactions, all operations share a single commit/sync, dramatically improving performance.
+**Transaction ownership**: Always use the connection supplied to the callback for its reads, writes, helpers, and nested transactions. Pass that connection into helpers instead of closing over the original `db`. The original connection waits until commit or rollback finishes; using it inside the callback would wait behind that same transaction. Nested transactions on the supplied connection use savepoints.
 
 #### When to Use Transactions
 
@@ -213,11 +211,11 @@ With transactions, all operations share a single commit/sync, dramatically impro
 - Consider pagination for large result sets
 - Cache frequently accessed static data (categories, rules)
 
-#### OPFS Worker Communication
+#### Async Database Operations
 
-- The database runs in a Web Worker to avoid blocking the UI
-- All database operations are async and go through the worker
-- Minimize worker communication by batching operations
+- The current SQLite WASM connection runs asynchronously on the main thread; the CSV import parser uses a Web Worker
+- Await database operations and batch bulk writes into scoped transactions
+- Keep result sets and main-thread transformations bounded to preserve UI responsiveness
 - Use `queryClient.invalidateQueries()` efficiently after mutations
 
 ## Code Style
@@ -326,7 +324,7 @@ These rules are **ABSOLUTE** and must **NEVER** be violated by any agent:
 
 ```javascript
 import request from 'supertest';
-import app from '../src/app';
+import app from '../../apps/api/src/app';
 
 describe('GET /api/example', () => {
   it('should return 200 and expected data', async () => {
@@ -371,7 +369,7 @@ See `tests/README.md` for the test coverage overview table.
 
 #### Test File Naming
 
-- Use `.test.ts` suffix for test files
+- Use `.test.ts` for TypeScript files and `.test.tsx` for TypeScript React files
 - Match the source file structure:
   - `packages/shared/src/utils.ts` → `tests/shared/utils.test.ts`
   - `apps/api/src/routes/categories.ts` → `tests/api/categories.test.ts`
@@ -445,6 +443,8 @@ API documentation is available via Swagger UI at `/api/docs`.
 router.get('/example', (req, res) => { ... });
 ```
 
+When adding or changing user-facing OpenAPI descriptions, keep the text available in Dutch and English and update the relevant mappings in `apps/landing/src/lib/openapi-i18n.ts`.
+
 ## Bruno API Collection
 
 A [Bruno](https://www.usebruno.com/) collection is available in the `apps/api/bruno/` folder for testing API endpoints.
@@ -506,12 +506,13 @@ The Help Center is available at `/help` and contains documentation for end users
 - [ ] Help Center updated if API change affects end users
 - [ ] Code examples tested and working
 - [ ] NL and EN translations added
+- [ ] OpenAPI descriptions available in Dutch and English, with relevant mappings updated in `apps/landing/src/lib/openapi-i18n.ts`
 - [ ] Sidebar navigation updated (if new page)
 - [ ] Route added in App.tsx (if new page)
 
 ## Database Schema
 
-Key tables: `accounts`, `transactions`, `categories`, `budgets`, `category_rules`, `imports`
+Core tables include `accounts`, `transactions`, `categories`, `budgets`, `category_rules`, and `imports`; this list is not exhaustive. Check the current migrations for the full schema.
 
 ## UI/UX Guidelines
 
@@ -520,6 +521,7 @@ Key tables: `accounts`, `transactions`, `categories`, `budgets`, `category_rules
 **IMPORTANT**: All user-facing strings MUST be in the language files, never hardcoded.
 
 - Language files are located at `apps/web/src/lib/i18n/` and `apps/landing/src/lib/i18n/`
+- Add every new or changed user-facing string to the relevant language files in both English and Dutch; verify both rendered languages, including fallback paths
 - Dutch translations: `nl.ts` (primary)
 - English translations: `en.ts`
 - Type definitions are in `nl.ts` - update the `TranslationKeys` interface when adding new strings
@@ -533,12 +535,12 @@ Example:
 // ❌ Wrong - hardcoded string
 alert('Contact added');
 
-// ✅ Correct - using translation
-alert(t.addressBook?.contactAdded || 'Contact added');
+// ✅ Correct - using a key present in both Dutch and English files
+alert(t.addressBook.contactAdded);
 
 // ✅ Correct - with interpolation
 alert(
-  (t.addressBook?.namesUpdated || '{count} names updated').replace(
+  t.transactions.updatedCount.replace(
     '{count}',
     String(count)
   )
@@ -567,7 +569,7 @@ alert(
 
 **IMPORTANT**: Do not create local state for notifications. Always use the Global Toast Context.
 
-Import and use the toast hook:
+Import and use the toast hook. Pass localized message values from the relevant translation keys:
 
 ```typescript
 import { useToast } from '@/contexts/ToastContext';
@@ -575,13 +577,12 @@ import { useToast } from '@/contexts/ToastContext';
 // In your component:
 const toast = useToast();
 
-// Show toasts with appropriate variants:
-toast.success('Operation completed'); // Green - auto-dismisses
-toast.info('Information message'); // Purple - auto-dismisses
-toast.warning('Warning message'); // Orange - requires manual dismiss
-toast.error('Error occurred'); // Red - requires manual dismiss
+// Show a toast with localized text:
+toast.success(t.addressBook.contactAdded); // Green - auto-dismisses
 toast.error(error); // Also accepts Error objects
 ```
+
+Use the same translation-key pattern for `info`, `warning`, and string-based `error` messages.
 
 Always show a toast notification for:
 
@@ -607,13 +608,15 @@ Format: Use conventional commit format with `git commit -m "<type>(<scope>): <de
 
 Types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `chore`, `ci`, `build`
 
-Example output at the end of changes:
+Example commit message:
 
 ```bash
 git commit -m "feat(web): add transaction filtering by date range" -m "- Add DateRangePicker component
 - Update useTransactionState hook with date filter
 - Add translations for filter labels (NL/EN)
-- Update Swagger docs for date query params"
+- Update Swagger docs for date query params
+---
+Developed by GPT-6-astra (reasoning: high)"
 ```
 
 The commit message should:
@@ -622,4 +625,4 @@ The commit message should:
 - Be comprehensive (include all changes in the body)
 - List specific files/components changed when helpful
 - Mention translations, tests, and docs updates if applicable
-- End the commit message body with "---" followed by "Developed by [model name]" on a new line (replacing [model name] with the actual model name used)
+- End the commit message body with `---` on its own line, followed by `Developed by <full runtime model ID> (reasoning: <runtime effort>)` on the next line. Include a `sol`, `luna`, or `astra` suffix when the runtime reports one. If the runtime exposes only a family name, mark the variant `unavailable`; if it does not expose reasoning effort, mark that `unavailable`. Do not guess. For example: `Developed by GPT-6-astra (reasoning: high)` or `Developed by GPT-6 (variant: unavailable; reasoning: unavailable)`.

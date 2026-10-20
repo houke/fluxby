@@ -1,3 +1,4 @@
+import { formatDate } from '@/lib/utils';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
@@ -38,9 +39,9 @@ import {
 } from '@/components/ui/tooltip';
 import { Progress } from '@/components/ui/progress';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { preloadTranslations } from '@/lib/i18n';
 import { api } from '@/lib/api';
 import { useEncryption } from '@/contexts/EncryptionContext';
-import { Toast, type ToastType } from '@/components/ui/toast';
 import { version } from '../../../package.json';
 import {
   getStoredDbVersion,
@@ -81,10 +82,20 @@ type UpdateStatus =
   | 'up-to-date'
   | 'error';
 
-export function AppSettings() {
+type AppSettingsSection = 'general' | 'security' | 'about' | 'all';
+
+export function AppSettings({
+  section = 'all',
+}: {
+  section?: AppSettingsSection;
+}) {
+  const showGeneral = section === 'general' || section === 'all';
+  const showSecurity = section === 'security' || section === 'all';
+  const showAbout = section === 'about' || section === 'all';
   const { t, language, setLanguage, languages } = useLanguage();
   const { changePassword } = useEncryption();
   const queryClient = useQueryClient();
+  const toast = useToast();
 
   // User data
   const { data: user } = useQuery<{ id: string; name: string }>({
@@ -97,7 +108,9 @@ export function AppSettings() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['user'] });
       setIsEditingName(false);
+      toast.success(t.settings.appNameSaved);
     },
+    onError: () => toast.error(t.settings.appNameSaveError),
   });
 
   // User name state
@@ -111,10 +124,6 @@ export function AppSettings() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
-  const [localToast, setLocalToast] = useState<{
-    message: string;
-    type: ToastType;
-  } | null>(null);
 
   useEffect(() => {
     if (user?.name) {
@@ -165,24 +174,17 @@ export function AppSettings() {
       const success = await changePassword(currentPassword, newPassword);
 
       if (success) {
-        setLocalToast({
-          message: t.security?.passwordChangedSuccess,
-          type: 'success',
-        });
+        toast.success(t.security.passwordChangedSuccess);
         setIsPasswordDialogOpen(false);
         resetPasswordForm();
       } else {
         const message = t.security?.wrongPassword;
         setPasswordError(message);
-        setLocalToast({ message, type: 'error' });
+        toast.error(message);
       }
-    } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : String(err);
-      setPasswordError(errorMessage);
-      setLocalToast({
-        message: errorMessage || t.security?.unlockError,
-        type: 'error',
-      });
+    } catch {
+      setPasswordError(t.security.unlockError);
+      toast.error(t.security.unlockError);
     } finally {
       setIsChangingPassword(false);
     }
@@ -215,7 +217,6 @@ export function AppSettings() {
   };
 
   // Update checker state
-  const updateToast = useToast();
   const [updateStatus, setUpdateStatus] = useState<UpdateStatus>('idle');
   const [updateInfo, setUpdateInfo] = useState<UpdateInfo | null>(null);
   const [downloadProgress, setDownloadProgress] =
@@ -226,7 +227,7 @@ export function AppSettings() {
 
   // For web: detect service worker updates
   useEffect(() => {
-    if (isTauri || !('serviceWorker' in navigator)) return;
+    if (!showAbout || isTauri || !('serviceWorker' in navigator)) return;
 
     // Get the existing registration
     navigator.serviceWorker.getRegistration().then((registration) => {
@@ -281,7 +282,7 @@ export function AppSettings() {
         handleControllerChange
       );
     };
-  }, [t]);
+  }, [showAbout, t]);
 
   const updateStatusRef = useRef(updateStatus);
   useEffect(() => {
@@ -312,14 +313,14 @@ export function AppSettings() {
           } else {
             setUpdateStatus('up-to-date');
             if (showToast) {
-              updateToast.success(t.updater?.upToDate);
+              toast.success(t.updater?.upToDate);
             }
           }
         } catch (err) {
           console.error('Update check failed:', err);
           setUpdateError(err instanceof Error ? err.message : String(err));
           setUpdateStatus('error');
-          updateToast.error(t.updater?.checkFailed);
+          toast.error(t.updater?.checkFailed);
         }
       } else if ('serviceWorker' in navigator) {
         // Web: Check for service worker updates
@@ -358,14 +359,14 @@ export function AppSettings() {
                 if (updateStatusRef.current === 'checking') {
                   setUpdateStatus('up-to-date');
                   if (showToast) {
-                    updateToast.success(t.updater?.upToDate);
+                    toast.success(t.updater?.upToDate);
                   }
                 }
               }, 3000);
             } else {
               setUpdateStatus('up-to-date');
               if (showToast) {
-                updateToast.success(t.updater?.upToDate);
+                toast.success(t.updater?.upToDate);
               }
             }
           } else {
@@ -380,7 +381,7 @@ export function AppSettings() {
         setUpdateStatus('up-to-date');
       }
     },
-    [t, updateToast]
+    [t, toast]
   );
 
   const downloadAndInstall = useCallback(async () => {
@@ -424,7 +425,7 @@ export function AppSettings() {
         });
 
         // Prompt to relaunch
-        updateToast.success(t.updater?.installComplete);
+        toast.success(t.updater?.installComplete);
 
         // Small delay to show the success message
         setTimeout(async () => {
@@ -434,7 +435,7 @@ export function AppSettings() {
         console.error('Update download/install failed:', err);
         setUpdateError(err instanceof Error ? err.message : String(err));
         setUpdateStatus('error');
-        updateToast.error(t.updater?.installFailed);
+        toast.error(t.updater?.installFailed);
       }
     } else if (webUpdateAvailable && swRegistration?.waiting) {
       // Web: Tell SW to skip waiting and activate
@@ -442,16 +443,17 @@ export function AppSettings() {
       swRegistration.waiting.postMessage('skipWaiting');
       // Page will reload via controllerchange listener
     }
-  }, [updateInfo, t, updateToast, webUpdateAvailable]);
+  }, [updateInfo, t, toast, webUpdateAvailable]);
 
-  // Auto-check for updates on mount (silent - no toast for "up to date")
+  // Check updates only while their settings section is open.
   useEffect(() => {
+    if (!showAbout) return;
     // Check after a short delay to not block initial render
     const timer = setTimeout(() => {
       checkForUpdates(false);
     }, 2000);
     return () => clearTimeout(timer);
-  }, [checkForUpdates]);
+  }, [checkForUpdates, showAbout]);
 
   const progressPercentage =
     downloadProgress && downloadProgress.total > 0
@@ -477,473 +479,531 @@ export function AppSettings() {
       <div className=''>
         <Card
           className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'
-          data-onboarding='settings-app-preferences'
+          data-onboarding={
+            section === 'security'
+              ? 'settings-security'
+              : section === 'about'
+                ? 'settings-about-updates'
+                : 'settings-app-preferences'
+          }
         >
           <CardHeader className='px-3 py-3 sm:px-6 sm:py-4'>
             <div>
               <CardTitle className='text-base sm:text-lg'>
-                {t.settings.appSettings}
+                {section === 'general'
+                  ? t.settings.navigation.preferencesTitle
+                  : section === 'security'
+                    ? t.settings.navigation.sections.security.title
+                    : section === 'about'
+                      ? t.settings.versions
+                      : t.settings.appSettings}
               </CardTitle>
               <CardDescription className='text-xs sm:text-sm'>
-                {t.settings.appSettingsDescription}
+                {section === 'all'
+                  ? t.settings.appSettingsDescription
+                  : t.settings.navigation.sections[section].description}
               </CardDescription>
             </div>
           </CardHeader>
           <CardContent className='px-3 pt-0 pb-3 sm:px-6 sm:pt-0 sm:pb-6'>
             <div className='space-y-2'>
-              {/* Versions & Updates */}
-              <div className='rounded-lg border p-4'>
-                <div className='mb-3 flex items-center justify-between'>
-                  <div>
-                    <p className='text-sm font-medium'>
-                      {t.settings?.versions}
-                    </p>
-                    <p className='text-xs text-muted-foreground'>
-                      {t.settings?.versionsDescription}
-                    </p>
-                  </div>
-                  <div className='flex items-center gap-2'>
-                    <TooltipProvider delayDuration={200}>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <div className='cursor-default rounded-md bg-muted px-2 py-1 text-xs text-muted-foreground'>
-                            v{version}
-                          </div>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          {t.settings?.appVersion}
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                    <TooltipProvider delayDuration={200}>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <button
-                            onClick={
-                              hasVersionMismatch
-                                ? handleMigrationTrigger
-                                : undefined
-                            }
-                            className={`flex items-center gap-1 rounded-md px-2 py-1 text-xs ${
-                              hasVersionMismatch
-                                ? 'cursor-pointer bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50'
-                                : 'cursor-default bg-muted text-muted-foreground'
-                            }`}
-                          >
-                            <Database className='h-3 w-3' />
-                            <span>{dbVersion ?? '?'}</span>
-                            <span className='text-muted-foreground/50'>/</span>
-                            <Code className='h-3 w-3' />
-                            <span>{codeVersion}</span>
-                            {hasVersionMismatch && (
-                              <AlertTriangle className='ml-0.5 h-3 w-3' />
-                            )}
-                          </button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          {hasVersionMismatch
-                            ? t.settings?.versionMismatch
-                            : t.settings?.schemaVersion}
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </div>
-                </div>
-
-                {/* Update Status */}
-                <div className='flex items-center justify-between'>
-                  <div className='flex items-center gap-3'>
-                    {updateStatus === 'checking' && (
-                      <>
-                        <Loader2 className='h-4 w-4 animate-spin text-purple-600' />
-                        <span className='text-sm'>{t.updater?.checking}</span>
-                      </>
-                    )}
-                    {updateStatus === 'idle' && (
-                      <>
-                        <RefreshCw className='h-4 w-4 text-muted-foreground' />
-                        <span className='text-sm text-muted-foreground'>
-                          {t.updater?.clickToCheck}
-                        </span>
-                      </>
-                    )}
-                    {updateStatus === 'up-to-date' && (
-                      <>
-                        <CheckCircle className='h-4 w-4 text-green-600' />
-                        <span className='text-sm text-green-700 dark:text-green-400'>
-                          {t.updater?.upToDate}
-                        </span>
-                      </>
-                    )}
-                    {updateStatus === 'available' && updateInfo && (
-                      <>
-                        <Download className='h-4 w-4 text-purple-600' />
-                        <div>
-                          <span className='text-sm font-medium'>
-                            {isWeb
-                              ? t.updater?.webUpdateAvailable
-                              : t.updater?.newVersionAvailable?.replace(
-                                  '{version}',
-                                  updateInfo.version
-                                )}
-                          </span>
-                          {!isWeb && updateInfo.body && (
-                            <button
-                              onClick={() => setShowReleaseNotes(true)}
-                              className='ml-2 text-xs text-purple-600 hover:underline'
-                            >
-                              {t.updater?.viewReleaseNotes}
-                            </button>
-                          )}
-                        </div>
-                      </>
-                    )}
-                    {updateStatus === 'downloading' && (
-                      <>
-                        <Loader2 className='h-4 w-4 animate-spin text-purple-600' />
-                        <div className='flex-1'>
-                          <span className='text-sm'>
-                            {t.updater?.downloading}
-                          </span>
-                          {downloadProgress && downloadProgress.total > 0 && (
-                            <div className='mt-2 space-y-1'>
-                              <Progress
-                                value={progressPercentage}
-                                className='h-2'
-                              />
-                              <div className='flex justify-between text-xs text-muted-foreground'>
-                                <span>{progressPercentage}%</span>
-                                <span>
-                                  {formatBytes(downloadProgress.downloaded)} /{' '}
-                                  {formatBytes(downloadProgress.total)}
-                                </span>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </>
-                    )}
-                    {updateStatus === 'ready' && (
-                      <>
-                        <CheckCircle className='h-4 w-4 text-green-600' />
-                        <span className='text-sm text-green-700 dark:text-green-400'>
-                          {t.updater?.readyToRestart}
-                        </span>
-                      </>
-                    )}
-                    {updateStatus === 'error' && (
-                      <>
-                        <AlertCircle className='h-4 w-4 text-red-600' />
-                        <span className='text-sm text-red-700 dark:text-red-400'>
-                          {updateError || t.updater?.errorOccurred}
-                        </span>
-                      </>
-                    )}
-                  </div>
-
-                  {/* Action buttons */}
-                  <div className='flex gap-2'>
-                    {(updateStatus === 'idle' ||
-                      updateStatus === 'up-to-date' ||
-                      updateStatus === 'error') && (
-                      <Button
-                        variant='outline'
-                        size='sm'
-                        onClick={() => checkForUpdates(true)}
-                      >
-                        <RefreshCw className='mr-2 h-4 w-4' />
-                        {t.updater?.checkNow}
-                      </Button>
-                    )}
-                    {updateStatus === 'available' && (
-                      <Button
-                        size='sm'
-                        onClick={downloadAndInstall}
-                        className='bg-purple-600 hover:bg-purple-700'
-                      >
-                        {isWeb ? (
-                          <RefreshCw className='mr-2 h-4 w-4' />
-                        ) : (
-                          <Download className='mr-2 h-4 w-4' />
-                        )}
-                        {installButtonLabel}
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* User Name */}
-              <div className='flex items-center justify-between rounded-lg border p-3'>
-                <div className='flex-1'>
-                  <p className='text-sm font-medium'>
-                    {t.settings?.appNameLabel}
-                  </p>
-                  <p className='text-xs text-muted-foreground'>
-                    {t.settings?.appNameDescription}
-                  </p>
-                </div>
-                <div className='flex items-center gap-2'>
-                  {isEditingName ? (
-                    <>
-                      <Input
-                        value={editedName}
-                        onChange={(e) => setEditedName(e.target.value)}
-                        className='h-8 w-32'
-                        placeholder={t.settings?.appNamePlaceholder}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') handleSaveName();
-                          if (e.key === 'Escape') {
-                            setIsEditingName(false);
-                            setEditedName(user?.name || '');
-                          }
-                        }}
-                        autoFocus
-                      />
-                      <Button
-                        size='sm'
-                        onClick={handleSaveName}
-                        disabled={updateUserMutation.isPending}
-                        className='h-8 rounded-md hover:bg-purple-600 hover:text-white'
-                      >
-                        <Check className='h-4 w-4' />
-                      </Button>
-                    </>
-                  ) : (
-                    <>
-                      <span className='text-sm text-muted-foreground'>
-                        {user?.name || t.settings?.appNameUnset}
-                      </span>
-                      <TooltipProvider delayDuration={200}>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant='ghost'
-                              size='icon'
-                              onClick={() => setIsEditingName(true)}
-                              className='h-8 w-8 rounded-md hover:bg-purple-600 hover:text-white'
-                            >
-                              <Pencil className='h-4 w-4' />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>{t.common?.edit}</TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </>
-                  )}
-                </div>
-              </div>
-
-              {/* Master Password */}
-              <div className='flex items-center justify-between rounded-lg border p-3'>
-                <div className='flex-1'>
-                  <p className='text-sm font-medium'>
-                    {t.settings?.masterPasswordTitle}
-                  </p>
-                  <p className='text-xs text-muted-foreground'>
-                    {t.settings?.masterPasswordDescription}
-                  </p>
-                </div>
-                <Dialog
-                  open={isPasswordDialogOpen}
-                  onOpenChange={(open) => {
-                    setIsPasswordDialogOpen(open);
-                    if (!open) resetPasswordForm();
-                  }}
-                >
-                  <DialogTrigger asChild>
-                    <Button variant='outline' size='sm'>
-                      {t.settings?.masterPasswordChange ||
-                        t.security?.changePassword}
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className='sm:max-w-md'>
-                    <DialogHeader>
-                      <DialogTitle>
-                        {t.settings?.masterPasswordDialogTitle}
-                      </DialogTitle>
-                      <DialogDescription>
-                        {t.settings?.masterPasswordDialogDescription}
-                      </DialogDescription>
-                    </DialogHeader>
-
-                    <div className='space-y-4'>
-                      <div className='rounded-lg bg-amber-50 p-3 dark:bg-amber-950/30'>
-                        <p className='flex items-start gap-2 text-sm text-amber-800 dark:text-amber-200'>
-                          <AlertTriangle className='mt-0.5 h-4 w-4 flex-shrink-0' />
-                          {t.settings?.masterPasswordWarning}
+              {showAbout && (
+                <>
+                  {/* Versions & Updates */}
+                  <div className='rounded-lg border p-4'>
+                    <div className='mb-3 flex items-center justify-between'>
+                      <div>
+                        <p className='text-sm font-medium'>
+                          {t.settings?.versions}
                         </p>
-                      </div>
-                      <div className='space-y-2'>
-                        <label
-                          htmlFor='current-password'
-                          className='text-sm font-medium'
-                        >
-                          {t.settings?.masterPasswordCurrent ||
-                            t.security?.currentPassword}
-                        </label>
-                        <Input
-                          id='current-password'
-                          type='password'
-                          value={currentPassword}
-                          onChange={(e) => {
-                            setCurrentPassword(e.target.value);
-                            setPasswordError(null);
-                          }}
-                          placeholder='••••••••'
-                        />
-                      </div>
-
-                      <div className='space-y-2'>
-                        <label
-                          htmlFor='new-password'
-                          className='text-sm font-medium'
-                        >
-                          {t.settings?.masterPasswordNew}
-                        </label>
-                        <Input
-                          id='new-password'
-                          type='password'
-                          value={newPassword}
-                          onChange={(e) => {
-                            setNewPassword(e.target.value);
-                            setPasswordError(null);
-                          }}
-                          placeholder='••••••••'
-                          minLength={8}
-                        />
                         <p className='text-xs text-muted-foreground'>
-                          {t.settings?.masterPasswordMinLength}
+                          {t.settings?.versionsDescription}
                         </p>
                       </div>
-
-                      <div className='space-y-2'>
-                        <label
-                          htmlFor='confirm-password'
-                          className='text-sm font-medium'
-                        >
-                          {t.settings?.masterPasswordConfirm}
-                        </label>
-                        <Input
-                          id='confirm-password'
-                          type='password'
-                          value={confirmPassword}
-                          onChange={(e) => {
-                            setConfirmPassword(e.target.value);
-                            setPasswordError(null);
-                          }}
-                          placeholder='••••••••'
-                          minLength={8}
-                        />
+                      <div className='flex items-center gap-2'>
+                        <TooltipProvider delayDuration={200}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div className='cursor-default rounded-md bg-muted px-2 py-1 text-xs text-foreground'>
+                                v{version}
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              {t.settings?.appVersion}
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                        <details className='text-xs'>
+                          <summary className='cursor-pointer'>
+                            {t.settings.navigation.technicalDetails}
+                          </summary>
+                          <TooltipProvider delayDuration={200}>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button
+                                  onClick={
+                                    hasVersionMismatch
+                                      ? handleMigrationTrigger
+                                      : undefined
+                                  }
+                                  className={`flex items-center gap-1 rounded-md px-2 py-1 text-xs ${
+                                    hasVersionMismatch
+                                      ? 'cursor-pointer bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50'
+                                      : 'cursor-default bg-muted text-foreground'
+                                  }`}
+                                >
+                                  <Database className='h-3 w-3' />
+                                  <span>{dbVersion ?? '?'}</span>
+                                  <span aria-hidden='true'>/</span>
+                                  <Code className='h-3 w-3' />
+                                  <span>{codeVersion}</span>
+                                  {hasVersionMismatch && (
+                                    <AlertTriangle className='ml-0.5 h-3 w-3' />
+                                  )}
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                {hasVersionMismatch
+                                  ? t.settings?.versionMismatch
+                                  : t.settings?.schemaVersion}
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </details>
                       </div>
-
-                      {passwordError && (
-                        <p className='flex items-center gap-2 text-sm text-red-500'>
-                          <AlertTriangle className='h-4 w-4' />
-                          {passwordError}
-                        </p>
-                      )}
                     </div>
 
-                    <DialogFooter>
-                      <Button
-                        variant='outline'
-                        onClick={() => {
-                          setIsPasswordDialogOpen(false);
-                          resetPasswordForm();
-                        }}
-                      >
-                        {t.common?.cancel}
-                      </Button>
-                      <Button
-                        onClick={handleChangePassword}
-                        disabled={
-                          isChangingPassword ||
-                          !currentPassword ||
-                          !newPassword ||
-                          !confirmPassword
-                        }
-                        className='bg-purple-600 hover:bg-purple-700'
-                      >
-                        {isChangingPassword
-                          ? t.settings?.masterPasswordChanging
-                          : t.settings?.masterPasswordChange ||
-                            t.security?.changePassword}
-                      </Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
-              </div>
+                    {/* Update Status */}
+                    <div className='flex items-center justify-between'>
+                      <div className='flex items-center gap-3'>
+                        {updateStatus === 'checking' && (
+                          <>
+                            <Loader2 className='h-4 w-4 animate-spin text-purple-600' />
+                            <span className='text-sm'>
+                              {t.updater?.checking}
+                            </span>
+                          </>
+                        )}
+                        {updateStatus === 'idle' && (
+                          <>
+                            <RefreshCw className='h-4 w-4 text-muted-foreground' />
+                            <span className='text-sm text-muted-foreground'>
+                              {t.updater?.clickToCheck}
+                            </span>
+                          </>
+                        )}
+                        {updateStatus === 'up-to-date' && (
+                          <>
+                            <CheckCircle className='h-4 w-4 text-green-600' />
+                            <span className='text-sm text-green-700 dark:text-green-400'>
+                              {t.updater?.upToDate}
+                            </span>
+                          </>
+                        )}
+                        {updateStatus === 'available' && updateInfo && (
+                          <>
+                            <Download className='h-4 w-4 text-purple-600' />
+                            <div>
+                              <span className='text-sm font-medium'>
+                                {isWeb
+                                  ? t.updater?.webUpdateAvailable
+                                  : t.updater?.newVersionAvailable?.replace(
+                                      '{version}',
+                                      updateInfo.version
+                                    )}
+                              </span>
+                              {!isWeb && updateInfo.body && (
+                                <button
+                                  onClick={() => setShowReleaseNotes(true)}
+                                  className='ml-2 text-xs text-purple-600 hover:underline'
+                                >
+                                  {t.updater?.viewReleaseNotes}
+                                </button>
+                              )}
+                            </div>
+                          </>
+                        )}
+                        {updateStatus === 'downloading' && (
+                          <>
+                            <Loader2 className='h-4 w-4 animate-spin text-purple-600' />
+                            <div className='min-w-0 flex-1 basis-48'>
+                              <span className='text-sm'>
+                                {t.updater?.downloading}
+                              </span>
+                              {downloadProgress &&
+                                downloadProgress.total > 0 && (
+                                  <div className='mt-2 space-y-1'>
+                                    <Progress
+                                      value={progressPercentage}
+                                      aria-label={t.updater.downloading}
+                                      className='h-2'
+                                    />
+                                    <div className='flex justify-between text-xs text-muted-foreground'>
+                                      <span>{progressPercentage}%</span>
+                                      <span>
+                                        {formatBytes(
+                                          downloadProgress.downloaded
+                                        )}{' '}
+                                        / {formatBytes(downloadProgress.total)}
+                                      </span>
+                                    </div>
+                                  </div>
+                                )}
+                            </div>
+                          </>
+                        )}
+                        {updateStatus === 'ready' && (
+                          <>
+                            <CheckCircle className='h-4 w-4 text-green-600' />
+                            <span className='text-sm text-green-700 dark:text-green-400'>
+                              {t.updater?.readyToRestart}
+                            </span>
+                          </>
+                        )}
+                        {updateStatus === 'error' && (
+                          <>
+                            <AlertCircle className='h-4 w-4 text-red-600' />
+                            <span className='text-sm text-red-700 dark:text-red-400'>
+                              {updateError || t.updater?.errorOccurred}
+                            </span>
+                          </>
+                        )}
+                      </div>
 
-              {/* Language */}
-              <div className='flex items-center justify-between rounded-lg border p-3'>
-                <div className='flex-1'>
-                  <p className='text-sm font-medium'>{t.settings.language}</p>
-                  <p className='text-xs text-muted-foreground'>
-                    {t.settings.languageDescription}
-                  </p>
-                </div>
-                <div className='flex gap-1'>
-                  {(
-                    Object.keys(languages) as Array<keyof typeof languages>
-                  ).map((lang) => (
-                    <Button
-                      key={lang}
-                      variant={language === lang ? 'default' : 'outline'}
-                      size='sm'
-                      onClick={() => setLanguage(lang)}
-                      className='px-3'
+                      {/* Action buttons */}
+                      <div className='flex gap-2'>
+                        {(updateStatus === 'idle' ||
+                          updateStatus === 'up-to-date' ||
+                          updateStatus === 'error') && (
+                          <Button
+                            variant='outline'
+                            size='sm'
+                            onClick={() => checkForUpdates(true)}
+                          >
+                            <RefreshCw className='mr-2 h-4 w-4' />
+                            {t.updater?.checkNow}
+                          </Button>
+                        )}
+                        {updateStatus === 'available' && (
+                          <Button
+                            size='sm'
+                            onClick={downloadAndInstall}
+                            className='bg-purple-600 hover:bg-purple-700'
+                          >
+                            {isWeb ? (
+                              <RefreshCw className='mr-2 h-4 w-4' />
+                            ) : (
+                              <Download className='mr-2 h-4 w-4' />
+                            )}
+                            {installButtonLabel}
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
+              {showGeneral && (
+                <>
+                  {/* User Name */}
+                  <div className='flex flex-wrap items-center justify-between gap-3 border-b py-4 last:border-b-0'>
+                    <div className='min-w-0 flex-1 basis-48'>
+                      <p className='text-sm font-medium'>
+                        {t.settings?.appNameLabel}
+                      </p>
+                      <p className='text-xs text-muted-foreground'>
+                        {t.settings?.appNameDescription}
+                      </p>
+                    </div>
+                    <div className='flex items-center gap-2'>
+                      {isEditingName ? (
+                        <>
+                          <Input
+                            aria-label={t.settings.appNameLabel}
+                            value={editedName}
+                            onChange={(e) => setEditedName(e.target.value)}
+                            className='h-8 w-32'
+                            placeholder={t.settings?.appNamePlaceholder}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') handleSaveName();
+                              if (e.key === 'Escape') {
+                                setIsEditingName(false);
+                                setEditedName(user?.name || '');
+                              }
+                            }}
+                            autoFocus
+                          />
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  size='icon'
+                                  aria-label={t.common.save}
+                                  onClick={handleSaveName}
+                                  disabled={updateUserMutation.isPending}
+                                  className='h-8 w-8 rounded-md hover:bg-purple-600 hover:text-white'
+                                >
+                                  <Check className='h-4 w-4' />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>{t.common.save}</TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </>
+                      ) : (
+                        <>
+                          <span className='text-sm text-muted-foreground'>
+                            {user?.name || t.settings?.appNameUnset}
+                          </span>
+                          <TooltipProvider delayDuration={200}>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant='ghost'
+                                  size='icon'
+                                  aria-label={t.common.edit}
+                                  onClick={() => setIsEditingName(true)}
+                                  className='h-8 w-8 rounded-md hover:bg-purple-600 hover:text-white'
+                                >
+                                  <Pencil className='h-4 w-4' />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>{t.common?.edit}</TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
+              {showSecurity && (
+                <>
+                  {/* Master Password */}
+                  <div className='flex flex-wrap items-center justify-between gap-3 border-b py-4 last:border-b-0'>
+                    <div className='min-w-0 flex-1 basis-48'>
+                      <p className='text-sm font-medium'>
+                        {t.settings?.masterPasswordTitle}
+                      </p>
+                      <p className='text-xs text-muted-foreground'>
+                        {t.settings?.masterPasswordDescription}
+                      </p>
+                    </div>
+                    <Dialog
+                      open={isPasswordDialogOpen}
+                      onOpenChange={(open) => {
+                        setIsPasswordDialogOpen(open);
+                        if (!open) resetPasswordForm();
+                      }}
                     >
-                      {languages[lang].flag} {languages[lang].name}
-                    </Button>
-                  ))}
-                </div>
-              </div>
+                      <DialogTrigger asChild>
+                        <Button variant='outline' size='sm'>
+                          {t.settings?.masterPasswordChange ||
+                            t.security?.changePassword}
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className='sm:max-w-md'>
+                        <DialogHeader>
+                          <DialogTitle>
+                            {t.settings?.masterPasswordDialogTitle}
+                          </DialogTitle>
+                          <DialogDescription>
+                            {t.settings?.masterPasswordDialogDescription}
+                          </DialogDescription>
+                        </DialogHeader>
 
-              {/* Currency */}
-              <div className='flex items-center justify-between rounded-lg border p-3'>
-                <div className='flex-1'>
-                  <p className='text-sm font-medium'>{t.settings.currency}</p>
-                  <p className='text-xs text-muted-foreground'>
-                    {t.settings.currencyDescription}
-                  </p>
-                </div>
-                <span className='text-sm text-muted-foreground'>€</span>
-              </div>
+                        <div className='space-y-4'>
+                          <div className='rounded-lg bg-amber-50 p-3 dark:bg-amber-950/30'>
+                            <p className='flex items-start gap-2 text-sm text-amber-800 dark:text-amber-200'>
+                              <AlertTriangle className='mt-0.5 h-4 w-4 flex-shrink-0' />
+                              {t.settings?.masterPasswordWarning}
+                            </p>
+                          </div>
+                          <div className='space-y-2'>
+                            <label
+                              htmlFor='current-password'
+                              className='text-sm font-medium'
+                            >
+                              {t.settings?.masterPasswordCurrent ||
+                                t.security?.currentPassword}
+                            </label>
+                            <Input
+                              id='current-password'
+                              type='password'
+                              value={currentPassword}
+                              onChange={(e) => {
+                                setCurrentPassword(e.target.value);
+                                setPasswordError(null);
+                              }}
+                              placeholder='••••••••'
+                            />
+                          </div>
 
-              {/* Theme */}
-              <div className='flex items-center justify-between rounded-lg border p-3'>
-                <div className='flex-1'>
-                  <p className='text-sm font-medium'>{t.settings.theme}</p>
-                  <p className='text-xs text-muted-foreground'>
-                    {t.settings.themeDescription}
-                  </p>
-                </div>
-                <div className='flex gap-1'>
-                  <Button
-                    variant={currentTheme === 'light' ? 'default' : 'outline'}
-                    size='sm'
-                    onClick={() => {
-                      document.documentElement.classList.remove('dark');
-                      setCurrentTheme('light');
-                    }}
-                    className='px-2'
-                  >
-                    ☀️ {t.settings.themeLight}
-                  </Button>
-                  <Button
-                    variant={currentTheme === 'dark' ? 'default' : 'outline'}
-                    size='sm'
-                    onClick={() => {
-                      document.documentElement.classList.add('dark');
-                      setCurrentTheme('dark');
-                    }}
-                    className='px-2'
-                  >
-                    🌙 {t.settings.themeDark}
-                  </Button>
-                </div>
-              </div>
+                          <div className='space-y-2'>
+                            <label
+                              htmlFor='new-password'
+                              className='text-sm font-medium'
+                            >
+                              {t.settings?.masterPasswordNew}
+                            </label>
+                            <Input
+                              id='new-password'
+                              type='password'
+                              value={newPassword}
+                              onChange={(e) => {
+                                setNewPassword(e.target.value);
+                                setPasswordError(null);
+                              }}
+                              placeholder='••••••••'
+                              minLength={8}
+                            />
+                            <p className='text-xs text-muted-foreground'>
+                              {t.settings?.masterPasswordMinLength}
+                            </p>
+                          </div>
+
+                          <div className='space-y-2'>
+                            <label
+                              htmlFor='confirm-password'
+                              className='text-sm font-medium'
+                            >
+                              {t.settings?.masterPasswordConfirm}
+                            </label>
+                            <Input
+                              id='confirm-password'
+                              type='password'
+                              value={confirmPassword}
+                              onChange={(e) => {
+                                setConfirmPassword(e.target.value);
+                                setPasswordError(null);
+                              }}
+                              placeholder='••••••••'
+                              minLength={8}
+                            />
+                          </div>
+
+                          {passwordError && (
+                            <p className='flex items-center gap-2 text-sm text-red-700 dark:text-red-400'>
+                              <AlertTriangle className='h-4 w-4' />
+                              {passwordError}
+                            </p>
+                          )}
+                        </div>
+
+                        <DialogFooter>
+                          <Button
+                            variant='outline'
+                            onClick={() => {
+                              setIsPasswordDialogOpen(false);
+                              resetPasswordForm();
+                            }}
+                          >
+                            {t.common?.cancel}
+                          </Button>
+                          <Button
+                            onClick={handleChangePassword}
+                            disabled={
+                              isChangingPassword ||
+                              !currentPassword ||
+                              !newPassword ||
+                              !confirmPassword
+                            }
+                            className='bg-purple-600 hover:bg-purple-700'
+                          >
+                            {isChangingPassword
+                              ? t.settings?.masterPasswordChanging
+                              : t.settings?.masterPasswordChange ||
+                                t.security?.changePassword}
+                          </Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
+                </>
+              )}
+              {showGeneral && (
+                <>
+                  {/* Language */}
+                  <div className='flex flex-wrap items-center justify-between gap-3 border-b py-4 last:border-b-0'>
+                    <div className='min-w-0 flex-1 basis-48'>
+                      <p className='text-sm font-medium'>
+                        {t.settings.language}
+                      </p>
+                      <p className='text-xs text-muted-foreground'>
+                        {t.settings.languageDescription}
+                      </p>
+                    </div>
+                    <div className='flex gap-1'>
+                      {(
+                        Object.keys(languages) as Array<keyof typeof languages>
+                      ).map((lang) => (
+                        <Button
+                          key={lang}
+                          variant={language === lang ? 'default' : 'outline'}
+                          size='sm'
+                          onClick={() => setLanguage(lang)}
+                          onPointerEnter={() => preloadTranslations(lang)}
+                          onFocus={() => preloadTranslations(lang)}
+                          className='px-3'
+                        >
+                          {languages[lang].flag} {languages[lang].name}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Currency */}
+                  <div className='flex flex-wrap items-center justify-between gap-3 border-b py-4 last:border-b-0'>
+                    <div className='min-w-0 flex-1 basis-48'>
+                      <p className='text-sm font-medium'>
+                        {t.settings.currency}
+                      </p>
+                      <p className='text-xs text-muted-foreground'>
+                        {t.settings.currencyDescription}
+                      </p>
+                    </div>
+                    <span className='text-sm text-muted-foreground'>€</span>
+                  </div>
+
+                  {/* Theme */}
+                  <div className='flex flex-wrap items-center justify-between gap-3 border-b py-4 last:border-b-0'>
+                    <div className='min-w-0 flex-1 basis-48'>
+                      <p className='text-sm font-medium'>{t.settings.theme}</p>
+                      <p className='text-xs text-muted-foreground'>
+                        {t.settings.themeDescription}
+                      </p>
+                    </div>
+                    <div className='flex gap-1'>
+                      <Button
+                        variant={
+                          currentTheme === 'light' ? 'default' : 'outline'
+                        }
+                        size='sm'
+                        onClick={() => {
+                          document.documentElement.classList.remove('dark');
+                          setCurrentTheme('light');
+                        }}
+                        className='px-2'
+                      >
+                        ☀️ {t.settings.themeLight}
+                      </Button>
+                      <Button
+                        variant={
+                          currentTheme === 'dark' ? 'default' : 'outline'
+                        }
+                        size='sm'
+                        onClick={() => {
+                          document.documentElement.classList.add('dark');
+                          setCurrentTheme('dark');
+                        }}
+                        className='px-2'
+                      >
+                        🌙 {t.settings.themeDark}
+                      </Button>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -964,7 +1024,7 @@ export function AppSettings() {
             <DialogDescription>
               {updateInfo?.date && (
                 <span className='text-xs text-muted-foreground'>
-                  {new Date(updateInfo.date).toLocaleDateString()}
+                  {formatDate(updateInfo.date)}
                 </span>
               )}
             </DialogDescription>
@@ -998,14 +1058,6 @@ export function AppSettings() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      {localToast && (
-        <Toast
-          message={localToast.message}
-          type={localToast.type}
-          onClose={() => setLocalToast(null)}
-        />
-      )}
     </div>
   );
 }

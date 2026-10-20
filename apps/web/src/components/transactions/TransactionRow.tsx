@@ -455,10 +455,9 @@ export const TransactionRow = memo(function TransactionRow({
                 <PopoverTrigger asChild onClick={(e) => e.stopPropagation()}>
                   <button
                     data-onboarding='transaction-category-badge'
-                    className='cursor-pointer rounded px-2 py-0.5 text-xs font-medium transition-all hover:ring-2 hover:ring-primary/50 hover:ring-offset-1'
+                    className='cursor-pointer rounded px-2 py-0.5 text-xs font-medium text-gray-900 transition-all hover:ring-2 hover:ring-primary/50 hover:ring-offset-1 dark:text-gray-100'
                     style={{
                       backgroundColor: `${getCategoryColor(tx.categoryId)}5C`,
-                      color: '#374151',
                     }}
                   >
                     {getCategoryName(tx.categoryId)}
@@ -564,7 +563,7 @@ export const TransactionRow = memo(function TransactionRow({
                       'flex cursor-pointer items-center gap-1 rounded px-1.5 py-0.5 text-xs font-medium transition-all hover:ring-2 hover:ring-primary/50 hover:ring-offset-1',
                       tx.paymentMethod
                         ? paymentInfo.color
-                        : 'bg-gray-100 text-gray-500'
+                        : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300'
                     )}
                   >
                     {paymentInfo.icon || <CreditCard className='h-3.5 w-3.5' />}
@@ -651,7 +650,7 @@ export const TransactionRow = memo(function TransactionRow({
                         )}
                         onClick={() => onPaymentProcessorSelect(tx, null)}
                       >
-                        <span className='flex h-6 w-6 flex-shrink-0 items-center justify-center rounded bg-gray-100 text-gray-500'>
+                        <span className='flex h-6 w-6 flex-shrink-0 items-center justify-center rounded bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300'>
                           <X className='h-3.5 w-3.5' />
                         </span>
                         <span className='truncate'>{t.common?.remove}</span>
@@ -830,8 +829,8 @@ export const TransactionRow = memo(function TransactionRow({
               tx.type === 'transfer'
                 ? 'text-blue-600'
                 : tx.amount > 0
-                  ? 'text-emerald-600'
-                  : 'text-rose-600'
+                  ? 'text-emerald-700 dark:text-emerald-400'
+                  : 'text-rose-700 dark:text-rose-400'
             )}
           >
             {tx.type === 'transfer' ? '' : tx.amount > 0 ? '+' : ''}

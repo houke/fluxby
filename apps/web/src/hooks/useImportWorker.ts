@@ -9,10 +9,13 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import type {
   WorkerMessage,
   WorkerResponse,
+  ParseRequest,
   ColumnMapping,
   PreviewResult,
   ParseResult,
+  PreparedImportResult,
 } from '../workers/import-worker';
+import type { ImportOptions } from '../lib/importers/import-options';
 
 export interface UseImportWorkerState {
   isProcessing: boolean;
@@ -22,7 +25,15 @@ export interface UseImportWorkerState {
 }
 
 export interface UseImportWorkerReturn extends UseImportWorkerState {
-  parseCSV: (csvContent: string) => Promise<PreviewResult>;
+  parseCSV: (
+    csvContent: string,
+    options?: ImportOptions
+  ) => Promise<PreviewResult>;
+  prepareCSV: (
+    csvContent: string,
+    mapping: ColumnMapping,
+    options: ImportOptions
+  ) => Promise<PreparedImportResult>;
   parseWithMapping: (
     csvContent: string,
     mapping: ColumnMapping,
@@ -61,28 +72,41 @@ export function useImportWorker(messages: {
   const workerRef = useRef<Worker | null>(null);
   const resolveRef = useRef<((value: unknown) => void) | null>(null);
   const rejectRef = useRef<((reason: unknown) => void) | null>(null);
+  const messagesRef = useRef(messages);
+  messagesRef.current = messages;
+
+  const stopWorker = useCallback((reason?: unknown) => {
+    const worker = workerRef.current;
+    workerRef.current = null;
+    if (worker) {
+      worker.onmessage = null;
+      worker.onerror = null;
+      worker.terminate();
+    }
+    const reject = rejectRef.current;
+    resolveRef.current = null;
+    rejectRef.current = null;
+    reject?.(reason ?? new Error(messagesRef.current.importCancelled));
+  }, []);
 
   // Clean up worker on unmount
   useEffect(() => {
-    return () => {
-      if (workerRef.current) {
-        workerRef.current.terminate();
-        workerRef.current = null;
-      }
-    };
-  }, []);
+    return () => stopWorker();
+  }, [stopWorker]);
 
   /**
    * Get or create the worker instance
    */
   const getWorker = useCallback(() => {
     if (!workerRef.current) {
-      workerRef.current = new Worker(
+      const worker = new Worker(
         new URL('../workers/import-worker.ts', import.meta.url),
         { type: 'module' }
       );
+      workerRef.current = worker;
 
-      workerRef.current.onmessage = (event: MessageEvent<WorkerResponse>) => {
+      worker.onmessage = (event: MessageEvent<WorkerResponse>) => {
+        if (workerRef.current !== worker || !resolveRef.current) return;
         const { type, progress, stage, data, error } = event.data;
 
         switch (type) {
@@ -95,49 +119,58 @@ export function useImportWorker(messages: {
             break;
 
           case 'preview':
-          case 'result':
+          case 'prepared':
+          case 'result': {
+            const resolve = resolveRef.current;
+            resolveRef.current = null;
+            rejectRef.current = null;
             setState((prev) => ({
               ...prev,
               isProcessing: false,
               progress: 100,
               stage: '',
             }));
-            resolveRef.current?.(data);
+            resolve(data);
             break;
+          }
 
-          case 'error':
+          case 'error': {
+            const message = error || messagesRef.current.unknownError;
+            stopWorker(new Error(message));
             setState((prev) => ({
               ...prev,
               isProcessing: false,
-              error: error || messages.unknownError,
+              error: message,
             }));
-            rejectRef.current?.(new Error(error || messages.unknownError));
             break;
+          }
         }
       };
 
-      workerRef.current.onerror = (error) => {
+      worker.onerror = (error) => {
+        if (workerRef.current !== worker || !rejectRef.current) return;
+        const message = error.message || messagesRef.current.error;
+        stopWorker(new Error(message));
         setState((prev) => ({
           ...prev,
           isProcessing: false,
-          error: error.message || messages.error,
+          error: message,
         }));
-        rejectRef.current?.(error);
       };
     }
 
     return workerRef.current;
-  }, [messages.error, messages.unknownError]);
+  }, [stopWorker]);
 
-  /**
-   * Parse CSV and return preview (headers + sample rows)
-   */
-  const parseCSV = useCallback(
-    async (csvContent: string): Promise<PreviewResult> => {
-      return new Promise((resolve, reject) => {
+  const startParse = useCallback(
+    <T>(payload: ParseRequest): Promise<T> => {
+      // A synchronous parse cannot process an abort message until it finishes.
+      // Retire its worker before replacing the pending request callbacks.
+      if (rejectRef.current) stopWorker();
+
+      return new Promise<T>((resolve, reject) => {
         resolveRef.current = resolve as (value: unknown) => void;
         rejectRef.current = reject;
-
         setState({
           isProcessing: true,
           progress: 0,
@@ -145,48 +178,55 @@ export function useImportWorker(messages: {
           error: null,
         });
 
-        const worker = getWorker();
-        const message: WorkerMessage = {
-          type: 'parse',
-          payload: { csvContent },
-        };
-
-        worker.postMessage(message);
+        try {
+          const message: WorkerMessage = { type: 'parse', payload };
+          getWorker().postMessage(message);
+        } catch (error) {
+          stopWorker(error);
+          setState((prev) => ({
+            ...prev,
+            isProcessing: false,
+            error:
+              error instanceof Error
+                ? error.message
+                : messagesRef.current.unknownError,
+          }));
+        }
       });
     },
-    [getWorker]
+    [getWorker, stopWorker]
+  );
+
+  /**
+   * Parse CSV and return preview (headers + sample rows)
+   */
+  const parseCSV = useCallback(
+    (csvContent: string, options?: ImportOptions) =>
+      startParse<PreviewResult>({
+        csvContent,
+        ...(options ? { options } : {}),
+      }),
+    [startParse]
+  );
+
+  const prepareCSV = useCallback(
+    (csvContent: string, mapping: ColumnMapping, options: ImportOptions) =>
+      startParse<PreparedImportResult>({
+        csvContent,
+        mapping,
+        options,
+        prepare: true,
+      }),
+    [startParse]
   );
 
   /**
    * Parse CSV with column mapping for full validation
    */
   const parseWithMapping = useCallback(
-    async (
-      csvContent: string,
-      mapping: ColumnMapping,
-      bank?: string
-    ): Promise<ParseResult> => {
-      return new Promise((resolve, reject) => {
-        resolveRef.current = resolve as (value: unknown) => void;
-        rejectRef.current = reject;
-
-        setState({
-          isProcessing: true,
-          progress: 0,
-          stage: '',
-          error: null,
-        });
-
-        const worker = getWorker();
-        const message: WorkerMessage = {
-          type: 'parse',
-          payload: { csvContent, mapping, bank },
-        };
-
-        worker.postMessage(message);
-      });
-    },
-    [getWorker]
+    (csvContent: string, mapping: ColumnMapping, bank?: string) =>
+      startParse<ParseResult>({ csvContent, mapping, bank }),
+    [startParse]
   );
 
   /**
@@ -194,34 +234,32 @@ export function useImportWorker(messages: {
    */
   const abort = useCallback(() => {
     if (workerRef.current) {
-      const message: WorkerMessage = { type: 'abort' };
-      workerRef.current.postMessage(message);
-
+      stopWorker();
       setState((prev) => ({
         ...prev,
         isProcessing: false,
         error: messages.importCancelled,
       }));
-
-      rejectRef.current?.(new Error(messages.importCancelled));
     }
-  }, [messages.importCancelled]);
+  }, [messages.importCancelled, stopWorker]);
 
   /**
    * Reset state for new import
    */
   const reset = useCallback(() => {
+    stopWorker();
     setState({
       isProcessing: false,
       progress: 0,
       stage: '',
       error: null,
     });
-  }, []);
+  }, [stopWorker]);
 
   return {
     ...state,
     parseCSV,
+    prepareCSV,
     parseWithMapping,
     abort,
     reset,
@@ -233,5 +271,6 @@ export type {
   ColumnMapping,
   PreviewResult,
   ParseResult,
+  PreparedImportResult,
   ParsedRow,
 } from '../workers/import-worker';

@@ -100,6 +100,11 @@ export default function HelpSidebar({ isOpen, onClose }: HelpSidebarProps) {
       title: copy.userNav.budgeting,
       items: [
         {
+          title: copy.planning.title,
+          path: '/help/planning',
+          icon: '🎯',
+        },
+        {
           title: copy.userNav.createBudget,
           path: '/help/budgeting',
           icon: '📊',

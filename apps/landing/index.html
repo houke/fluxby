@@ -2,10 +2,11 @@
 <html lang="en" class="">
   <head>
     <meta charset="UTF-8" />
-    <!-- CSP: 'unsafe-inline' needed for dark mode FOUC prevention script below -->
+    <!-- CSP: the dark mode FOUC script below is allowed by its SHA-256 hash.
+         Update the hash when editing it (tests/web/csp-hashes.test.ts checks this). -->
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' ws: wss:; img-src 'self' data: blob:;"
+      content="default-src 'self'; script-src 'self' 'sha256-FzBHek/IEN/zBWizrCMKE0j0hDCl8j0njqcedW/i3KI='; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self' ws: wss:; img-src 'self' data: blob:; object-src 'none'; base-uri 'self'; form-action 'self';"
     />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -14,12 +15,6 @@
     <meta
       name="description"
       content="Fluxby - Personal finance management made fun and simple."
-    />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&display=swap"
-      rel="stylesheet"
     />
     <script>
       // Prevent flash of unstyled content (FOUC) for dark mode

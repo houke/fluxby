@@ -1,19 +1,9 @@
+import { lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { User } from 'lucide-react';
 import Layout from './components/layout/Layout';
-import Dashboard from './pages/Dashboard';
-import Transactions from './pages/Transactions';
-import Analytics from './pages/Analytics';
-import Budgets from './pages/Budgets';
-import Subscriptions from './pages/Subscriptions';
-import Categories from './pages/Categories';
-import AddressBook from './pages/AddressBook';
-import Import from './pages/Import';
-import Settings from './pages/Settings';
-import Help from './pages/Help';
 import { WebMcpBridge } from './components/WebMcpBridge';
 import { WebMcpProvider } from './contexts/WebMcpContext';
-import NotFound from './pages/NotFound';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { FilterProvider } from './contexts/FilterContext';
 import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
@@ -38,6 +28,19 @@ import { SpotlightProvider } from './contexts/SpotlightContext';
 import { MigrationGate } from './components/MigrationGate';
 import { debugLog } from './lib/debug';
 
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const Transactions = lazy(() => import('./pages/Transactions'));
+const Analytics = lazy(() => import('./pages/Analytics'));
+const Budgets = lazy(() => import('./pages/Budgets'));
+const Planning = lazy(() => import('./pages/Planning'));
+const Subscriptions = lazy(() => import('./pages/Subscriptions'));
+const Categories = lazy(() => import('./pages/Categories'));
+const AddressBook = lazy(() => import('./pages/AddressBook'));
+const Import = lazy(() => import('./pages/Import'));
+const Settings = lazy(() => import('./pages/Settings'));
+const Help = lazy(() => import('./pages/Help'));
+const NotFound = lazy(() => import('./pages/NotFound'));
+
 // Inner component that can access onboarding context
 function AppContent() {
   const { skipOnboarding, state } = useOnboarding();
@@ -61,6 +64,7 @@ function AppContent() {
           <Route path='transactions' element={<Transactions />} />
           <Route path='analytics' element={<Analytics />} />
           <Route path='budgets' element={<Budgets />} />
+          <Route path='planning' element={<Planning />} />
           <Route path='subscriptions' element={<Subscriptions />} />
           <Route path='addressbook' element={<AddressBook />} />
           <Route path='categories' element={<Categories />} />

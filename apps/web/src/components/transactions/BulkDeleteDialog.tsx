@@ -123,7 +123,7 @@ export const BulkDeleteDialog = memo(function BulkDeleteDialog({
                       'flex-shrink-0 font-medium',
                       tx.amount < 0
                         ? 'text-red-600 dark:text-red-400'
-                        : 'text-emerald-600 dark:text-emerald-400'
+                        : 'text-emerald-700 dark:text-emerald-400'
                     )}
                   >
                     {tx.amount > 0 ? '+' : ''}
@@ -159,7 +159,7 @@ export const BulkDeleteDialog = memo(function BulkDeleteDialog({
               'text-lg font-bold',
               totalAmount < 0
                 ? 'text-red-600 dark:text-red-400'
-                : 'text-emerald-600 dark:text-emerald-400'
+                : 'text-emerald-700 dark:text-emerald-400'
             )}
           >
             {totalAmount > 0 ? '+' : ''}

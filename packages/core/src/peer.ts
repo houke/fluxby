@@ -7,7 +7,12 @@
  */
 /* eslint-disable @typescript-eslint/no-explicit-any, no-console */
 
-import { Peer, DataConnection } from 'peerjs';
+import type { Peer, DataConnection } from 'peerjs';
+import {
+  getLoadedPeerJs,
+  loadPeerJs,
+  type PeerJsModule,
+} from './peerjs-loader.js';
 import type { SyncChange, SyncableRow } from './sync.js';
 import {
   createEncryptionSession,
@@ -18,6 +23,21 @@ import {
   type SyncEncryptionSession,
   type SyncJsonWebKey,
 } from './sync-encryption.js';
+import {
+  computePairingProof,
+  computeReconnectProof,
+  derivePairingKey,
+  generateReconnectSecret,
+  homePeerId,
+  isValidDeviceId,
+  isValidReconnectSecret,
+  PEER_PROTOCOL_VERSION,
+  reconnectDelay,
+  verifyPairingProof,
+  verifyReconnectProof,
+  type PairingSessionKeys,
+  type ReconnectProofInput,
+} from './peer-reconnect.js';
 
 function peerDebugLog(...args: unknown[]): void {
   const env = (import.meta as any).env;
@@ -165,13 +185,79 @@ export function getPeerServerConfig(): PeerServerConfig | undefined {
 // Pairing message types
 export type PairingMessage =
   | { type: 'key-exchange'; publicKey: SyncJsonWebKey }
-  | { type: 'pairing-request'; pairingCode: string; deviceName: string }
-  | { type: 'pairing-accept'; deviceId: string; deviceName: string }
+  | {
+      type: 'pairing-request';
+      /** Proves the pairing code for this connection's session keys. */
+      proof: string;
+      deviceName: string;
+      deviceId: string;
+      profileId: string;
+      schemaVersion: number;
+      protocolVersion: 3;
+      supportsFragmentation?: true;
+      /** The requester can store a secret to reconnect after restarts. */
+      supportsReconnect?: true;
+    }
+  | {
+      type: 'pairing-accept';
+      deviceId: string;
+      deviceName: string;
+      profileId: string;
+      schemaVersion: number;
+      protocolVersion: 3;
+      supportsFragmentation?: true;
+      /** Proves the responder knows the pairing code for these session keys. */
+      proof: string;
+      /** Shared secret that authorizes later reconnections of this pairing. */
+      reconnectSecret?: string;
+    }
   | { type: 'pairing-reject'; reason: string }
-  | { type: 'sync-request'; sinceTimestamp: number }
-  | { type: 'sync-response'; changes: SyncChange[] }
-  | { type: 'sync-push'; changes: SyncChange[] }
-  | { type: 'sync-ack'; applied: number };
+  | {
+      type: 'reconnect-request';
+      deviceId: string;
+      deviceName: string;
+      profileId: string;
+      schemaVersion: number;
+      protocolVersion: 3;
+      supportsFragmentation?: true;
+      proof: string;
+    }
+  | {
+      type: 'reconnect-accept';
+      deviceId: string;
+      deviceName: string;
+      profileId: string;
+      schemaVersion: number;
+      protocolVersion: 3;
+      supportsFragmentation?: true;
+      proof: string;
+    }
+  | { type: 'reconnect-reject'; reason: ReconnectRejectReason }
+  /** The sender removed this pairing; sent over an authorized connection. */
+  | { type: 'unpair' }
+  | { type: 'sync-request'; sinceTimestamp: number; requestId: string }
+  | { type: 'sync-response'; changes: SyncChange[]; requestId: string }
+  | { type: 'sync-push'; changes: SyncChange[]; requestId: string }
+  | {
+      type: 'sync-fragment';
+      requestId: string;
+      messageType: 'sync-push' | 'sync-response';
+      index: number;
+      count: number;
+      payload: string;
+    }
+  | { type: 'sync-ack'; applied: number; requestId: string }
+  | { type: 'sync-error'; reason: string; requestId: string };
+
+/**
+ * Why a paired device refused to reconnect: it no longer knows the pairing,
+ * its app version differs, or the proof or profile did not match.
+ */
+export type ReconnectRejectReason =
+  'unknown-device' | 'version-mismatch' | 'profile-mismatch' | 'invalid-proof';
+
+/** Reconnection problems that need the user: pair again or update. */
+export type ReconnectIssue = 'pair-again' | 'update-required';
 
 export interface PeerDevice {
   id: string;
@@ -179,7 +265,40 @@ export interface PeerDevice {
   peerId: string;
   lastSyncAt: number | null;
   isConnected: boolean;
+  /** Only fresh, explicitly approved pairings authorize financial data. */
+  localProfileId?: string;
+  remoteProfileId?: string;
+  protocolVersion?: 3;
+  supportsFragmentation?: boolean;
 }
+
+/**
+ * Whether a profile has a paired device, which is when the PeerJS signalling
+ * server should be contacted without the user starting a pairing flow.
+ */
+export function hasPairedDeviceForProfile(
+  devices: readonly PeerDevice[],
+  profileId: string | null | undefined
+): boolean {
+  return (
+    !!profileId && devices.some((device) => device.localProfileId === profileId)
+  );
+}
+
+const SYNC_FRAME_CHARS = 32768;
+const MAX_SYNC_BUFFER_CHARS = 32_000_000;
+const MAX_SYNC_FRAMES = Math.ceil(MAX_SYNC_BUFFER_CHARS / SYNC_FRAME_CHARS);
+const LARGE_SYNC_TIMEOUT_MS = 5 * 60 * 1000;
+const MAX_INCOMING_SNAPSHOTS = 4;
+type IncomingSnapshot = {
+  peerId: string;
+  connection: DataConnection;
+  messageType: 'sync-push' | 'sync-response';
+  count: number;
+  chunks: Map<number, string>;
+  chars: number;
+  timer: ReturnType<typeof setTimeout>;
+};
 
 /**
  * PeerJS server configuration for self-hosted servers
@@ -202,6 +321,9 @@ export interface PeerOptions {
   deviceId: string;
   /** Human-readable device name */
   deviceName: string;
+  profileId?: string;
+  schemaVersion?: number;
+  getActiveProfileId?: () => string | null;
   /** Custom ICE servers configuration (optional) */
   iceServers?: IceServerConfig[];
   /** Custom PeerJS server configuration for self-hosted servers (optional) */
@@ -212,12 +334,37 @@ export interface PeerOptions {
     accept: () => void,
     reject: () => void
   ) => void;
-  /** Callback when pairing is complete */
-  onPaired?: (device: PeerDevice) => void;
+  /**
+   * Callback when a failed or rejected attempt used up the shown pairing
+   * code (each code allows one attempt), so a new one can be shown.
+   */
+  onPairingCodeUsed?: () => void;
+  /**
+   * Callback when pairing is complete. The reconnect secret (when both devices
+   * support reconnection) must be stored securely to restore the pairing.
+   */
+  onPaired?: (device: PeerDevice, reconnectSecret?: string) => void;
+  /** Callback when a restored pairing has reconnected and is authorized. */
+  onReconnected?: (device: PeerDevice) => void;
+  /** Callback when the other device removed this pairing. */
+  onUnpaired?: (device: PeerDevice) => void;
+  /** Callback when a restored pairing cannot reconnect without the user. */
+  onReconnectIssue?: (device: PeerDevice, issue: ReconnectIssue) => void;
+  /**
+   * Whether a device is paired with any local profile, so a reconnect for an
+   * inactive profile is postponed instead of reported as removed.
+   */
+  isKnownDevice?: (deviceId: string) => boolean;
   /** Callback when sync data is received */
-  onSyncReceived?: (changes: SyncChange<SyncableRow>[]) => void;
+  onSyncReceived?: (
+    changes: SyncChange<SyncableRow>[],
+    device: PeerDevice
+  ) => Promise<number>;
   /** Callback when a peer requests sync - should return local changes to send back */
-  onSyncRequested?: (peerId: string) => Promise<SyncChange<SyncableRow>[]>;
+  onSyncRequested?: (
+    peerId: string,
+    sinceTimestamp: number
+  ) => Promise<SyncChange<SyncableRow>[]>;
   /** Callback when connection status changes */
   onConnectionChange?: (peerId: string, connected: boolean) => void;
   /** Callback for errors */
@@ -229,10 +376,14 @@ export interface PeerOptions {
  */
 export function generatePairingCode(): string {
   const chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'; // Avoid ambiguous chars (0,O,1,I,L removed)
+  // Reject values above the largest multiple of chars.length so the modulo
+  // below does not favour the first characters of the alphabet.
+  const limit = Math.floor(0x100000000 / chars.length) * chars.length;
+  const buffer = new Uint32Array(1);
   let code = '';
-  for (let i = 0; i < 6; i++) {
-    const randomIndex = Math.floor(Math.random() * chars.length);
-    code += chars[randomIndex];
+  while (code.length < 6) {
+    crypto.getRandomValues(buffer);
+    if (buffer[0] < limit) code += chars[buffer[0] % chars.length];
   }
   return code;
 }
@@ -245,9 +396,51 @@ export class PeerSync {
   private connections: Map<string, DataConnection> = new Map();
   private pairedDevices: Map<string, PeerDevice> = new Map();
   private encryptionSessions: Map<string, SyncEncryptionSession> = new Map();
+  private encryptionInitializers = new Map<
+    string,
+    Promise<SyncEncryptionSession>
+  >();
+  private sentKeyExchanges = new Set<string>();
+  /** Connections (by remote peer ID) that completed pairing or reconnection. */
+  private authorizedPeers = new Map<string, string>();
+  /** Reconnect secrets by device ID; never exposed through PeerDevice. */
+  private reconnectSecrets = new Map<string, string>();
+  private outgoingConnections = new WeakSet<DataConnection>();
+  /** Outgoing reconnect attempts by device ID. */
+  private reconnectDials = new Map<string, DataConnection>();
+  private reconnectTimers = new Map<string, ReturnType<typeof setTimeout>>();
+  private reconnectAttempts = new Map<string, number>();
+  /** Devices that need the user (pair again or update) before retrying. */
+  private blockedReconnects = new Set<string>();
+  /** Handlers for "peer unavailable" signalling errors by target peer ID. */
+  private dialFailures = new Map<string, (error: Error) => void>();
+  private afterKeyExchange = new Map<DataConnection, () => Promise<void>>();
+  private reconnectTimeouts = new WeakMap<
+    DataConnection,
+    ReturnType<typeof setTimeout>
+  >();
   private options: PeerOptions;
   private pendingPairingCode: string | null = null;
   private isInitialized = false;
+  private pairingExpiresAt = 0;
+  private cancelInitialization: (() => void) | null = null;
+  private incomingSnapshots = new Map<string, IncomingSnapshot>();
+  private processingSnapshots = new Map<
+    string,
+    { peerId: string; chars: number }
+  >();
+  private completedSnapshots = new Map<string, string>();
+  private bufferedSnapshotChars = 0;
+  private pendingSync = new Map<
+    string,
+    {
+      peerId: string;
+      kind: 'push' | 'request';
+      resolve: (applied: number) => void;
+      reject: (error: Error) => void;
+      timer: ReturnType<typeof setTimeout>;
+    }
+  >();
   // Track session ID to ensure unique peer IDs across page refreshes
   private sessionId: string = crypto.randomUUID().slice(0, 8);
 
@@ -263,6 +456,7 @@ export class PeerSync {
       return this.peer.id;
     }
 
+    this.cancelInitialization?.();
     this.isInitialized = false;
     if (this.peer) {
       try {
@@ -276,13 +470,29 @@ export class PeerSync {
     }
 
     return new Promise((resolve, reject) => {
+      let settled = false;
+      let peerJs: PeerJsModule | null = getLoadedPeerJs();
+      let retryTimer: ReturnType<typeof setTimeout> | undefined;
+      const finish = (error?: Error, peerId?: string) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timeout);
+        if (retryTimer) clearTimeout(retryTimer);
+        if (this.cancelInitialization === cancel)
+          this.cancelInitialization = null;
+        if (error) reject(error);
+        else if (peerId !== undefined) resolve(peerId);
+        else reject(new Error('Peer initialization failed'));
+      };
+      const cancel = () => finish(new Error('Peer destroyed'));
+      this.cancelInitialization = cancel;
       const timeoutMs = 15000; // 15s timeout
       const timeout = setTimeout(() => {
         if (this.peer) {
           this.peer.destroy();
           this.peer = null;
         }
-        reject(
+        finish(
           new Error(
             'Connection to peer server timed out. Check your internet connection.'
           )
@@ -290,6 +500,7 @@ export class PeerSync {
       }, timeoutMs);
 
       const setupPeer = (id: string, _isRetry = false) => {
+        if (settled) return;
         try {
           if (this.peer && !this.peer.destroyed) {
             this.peer.destroy();
@@ -321,19 +532,26 @@ export class PeerSync {
             }
           }
 
-          const peer = new Peer(id, peerOptions);
+          if (!peerJs) throw new Error('PeerJS is not loaded');
+          const peer = new peerJs.Peer(id, peerOptions);
           this.peer = peer;
 
           peer.on('open', (peerId) => {
             if (this.peer !== peer || (peer as any)._ignoreEvents) return;
             peerDebugLog('PeerJS connection opened with ID:', peerId);
-            clearTimeout(timeout);
             this.isInitialized = true;
-            resolve(peerId);
+            finish(undefined, peerId);
+            // Also after reconnecting to the signalling server.
+            this.reconnectPairedDevices({ resetBackoff: false });
           });
 
           peer.on('error', (err) => {
             if (this.peer !== peer || (peer as any)._ignoreEvents) return;
+
+            // The signalling server reports unreachable dial targets on the
+            // peer, not the connection; route them to the pending dial.
+            if (err.type === 'peer-unavailable' && this.failDial(err.message))
+              return;
 
             // Suppress network-related WebSocket errors (expected when offline)
             const isNetworkError =
@@ -350,10 +568,9 @@ export class PeerSync {
                 'PeerJS network error (expected when offline):',
                 err.type || err.message
               );
-              clearTimeout(timeout);
               // Don't reject - allow offline operation
               this.isInitialized = true; // Mark as initialized anyway so app doesn't hang
-              resolve(id); // Return the ID even if connection failed
+              finish(undefined, id); // Return the ID even if connection failed
               return;
             }
 
@@ -371,54 +588,40 @@ export class PeerSync {
                 console.warn('Error destroying peer after unavailable-id:', e);
               }
 
-              // Track retry count to implement exponential backoff
-              // Extract retry count from ID if it's a retry ID
-              const retryMatch = id.match(/-retry(\d+)$/);
-              const currentRetryCount = retryMatch
-                ? parseInt(retryMatch[1], 10)
-                : 0;
-
-              if (currentRetryCount < 3) {
-                // Retry up to 3 times with the same base ID but increasing delays
-                // Wait longer each time: 3s, 5s, 8s
-                const waitTime = [3000, 5000, 8000][currentRetryCount];
-                const nextRetryCount = currentRetryCount + 1;
-                const retryId =
-                  nextRetryCount === 1
-                    ? `fluxby-${this.options.deviceId}`
-                    : `fluxby-${this.options.deviceId}-retry${nextRetryCount}`;
-
+              // The stable ID is reachable by paired devices, so wait for the
+              // server to release it (3s, 5s, 8s) before using a session ID
+              // that only allows outgoing reconnects and pairing.
+              if (id === stableId && stableRetries < 3) {
+                const waitTime = [3000, 5000, 8000][stableRetries];
+                stableRetries += 1;
                 peerDebugLog(
-                  `Peer ID unavailable, retry ${nextRetryCount}/3 in ${waitTime / 1000}s...`
+                  `Peer ID unavailable, retry ${stableRetries}/3 in ${waitTime / 1000}s...`
                 );
-                setTimeout(() => {
-                  setupPeer(retryId, true);
+                retryTimer = setTimeout(() => {
+                  setupPeer(stableId, true);
                 }, waitTime);
               } else {
-                // After 3 retries, use a timestamp-based fallback
-                // This ensures the app can still function even if the ID is stuck
                 console.warn(
-                  'Peer ID unavailable after 3 retries. Using fallback ID with timestamp.'
+                  'Peer ID unavailable after 3 retries. Using a session ID.'
                 );
-                setTimeout(() => {
+                retryTimer = setTimeout(() => {
                   setupPeer(
-                    `fluxby-${this.options.deviceId}-${Date.now()}`,
+                    `${stableId ?? `fluxby-${this.options.deviceId}`}-${this.sessionId}-${Date.now()}`,
                     true
                   );
                 }, 500);
               }
             } else {
-              clearTimeout(timeout);
               this.options.onError?.(err);
               // Don't reject for non-critical errors
               if (
                 err.type !== 'peer-unavailable' &&
                 err.type !== 'server-error'
               ) {
-                reject(err);
+                finish(err);
               } else {
                 this.isInitialized = true;
-                resolve(id);
+                finish(undefined, id);
               }
             }
           });
@@ -457,15 +660,163 @@ export class PeerSync {
           });
         } catch (error) {
           console.error('PeerJS setup catch error:', error);
-          clearTimeout(timeout);
-          reject(error instanceof Error ? error : new Error(String(error)));
+          finish(error instanceof Error ? error : new Error(String(error)));
         }
       };
 
-      // Use session ID to create unique peer ID per browser session
-      // This prevents "ID taken" errors after page refresh while old connection times out
-      setupPeer(`fluxby-${this.options.deviceId}-${this.sessionId}`);
+      // Paired devices find this device again through its stable ID. While a
+      // previous page still holds it, the retries above fall back to a session ID.
+      const stableId = isValidDeviceId(this.options.deviceId)
+        ? homePeerId(this.options.deviceId)
+        : null;
+      let stableRetries = 0;
+      const peerId =
+        stableId ?? `fluxby-${this.options.deviceId}-${this.sessionId}`;
+      if (peerJs) {
+        setupPeer(peerId);
+        return;
+      }
+      loadPeerJs().then(
+        (module) => {
+          peerJs = module;
+          setupPeer(peerId);
+        },
+        (error: unknown) =>
+          finish(error instanceof Error ? error : new Error(String(error)))
+      );
     });
+  }
+
+  private async ensureEncryptionSession(
+    peerId: string
+  ): Promise<SyncEncryptionSession> {
+    const existing = this.encryptionSessions.get(peerId);
+    if (existing) return existing;
+    let pending = this.encryptionInitializers.get(peerId);
+    if (!pending) {
+      pending = createEncryptionSession(peerId).then((session) => {
+        if (this.encryptionInitializers.get(peerId) !== pending)
+          throw new Error('Sync disconnected during key exchange');
+        this.encryptionSessions.set(peerId, session);
+        return session;
+      });
+      this.encryptionInitializers.set(peerId, pending);
+    }
+    try {
+      return await pending;
+    } finally {
+      if (this.encryptionInitializers.get(peerId) === pending)
+        this.encryptionInitializers.delete(peerId);
+    }
+  }
+  private sendPublicKeyOnce(
+    conn: DataConnection,
+    session: SyncEncryptionSession
+  ): void {
+    if (!conn.open || this.connections.get(conn.peer) !== conn)
+      throw new Error('Sync connection closed');
+    if (this.sentKeyExchanges.has(conn.peer)) return;
+    this.sentKeyExchanges.add(conn.peer);
+    conn.send({
+      type: 'key-exchange',
+      publicKey: session.localKeyPair.publicKeyJwk,
+    });
+  }
+
+  /** Device whose stable ID or authorized connection matches a peer ID. */
+  private deviceForPeer(peerId: string): PeerDevice | undefined {
+    const authorized = this.authorizedPeers.get(peerId);
+    if (authorized) return this.pairedDevices.get(authorized);
+    for (const device of this.pairedDevices.values())
+      if (
+        isValidDeviceId(device.id) &&
+        homePeerId(device.id) === peerId &&
+        this.reconnectSecrets.has(device.id)
+      )
+        return device;
+    return undefined;
+  }
+
+  /**
+   * When both devices dial each other at the same time, keep the connection
+   * that the device with the lower ID started; both sides decide the same.
+   */
+  private preferConnection(
+    existing: DataConnection,
+    candidate: DataConnection,
+    remoteDeviceId: string | undefined
+  ): DataConnection {
+    if (!existing.open || !remoteDeviceId) return candidate;
+    const starter = (conn: DataConnection) =>
+      this.outgoingConnections.has(conn)
+        ? this.options.deviceId
+        : remoteDeviceId;
+    if (starter(existing) === starter(candidate)) return candidate;
+    const preferred =
+      this.options.deviceId < remoteDeviceId
+        ? this.options.deviceId
+        : remoteDeviceId;
+    return starter(existing) === preferred ? existing : candidate;
+  }
+
+  /** Register an opened connection; false when a duplicate is kept instead. */
+  private adoptConnection(conn: DataConnection): boolean {
+    const existing = this.connections.get(conn.peer);
+    if (existing && existing !== conn) {
+      const keep = this.preferConnection(
+        existing,
+        conn,
+        this.deviceForPeer(conn.peer)?.id
+      );
+      if (keep === existing) {
+        conn.close();
+        return false;
+      }
+      this.replaceConnection(existing);
+    }
+    this.connections.set(conn.peer, conn);
+    return true;
+  }
+
+  /** Close a connection that a newer one replaces, without retrying it. */
+  private replaceConnection(conn: DataConnection): void {
+    const deviceId = this.authorizedPeers.get(conn.peer);
+    this.closeConnection(conn, false);
+    if (deviceId) this.clearReconnectTimer(deviceId);
+    try {
+      conn.close();
+    } catch {
+      // Already closed
+    }
+  }
+
+  private closeConnection(conn: DataConnection, retry = true): void {
+    for (const [deviceId, dial] of this.reconnectDials)
+      if (dial === conn) {
+        this.reconnectDials.delete(deviceId);
+        if (retry) this.scheduleReconnect(deviceId);
+      }
+    this.afterKeyExchange.delete(conn);
+    if (this.connections.get(conn.peer) !== conn) return;
+    const authorizedDevice = this.authorizedPeers.get(conn.peer);
+    this.authorizedPeers.delete(conn.peer);
+    this.connections.delete(conn.peer);
+    this.encryptionSessions.delete(conn.peer);
+    this.sentKeyExchanges.delete(conn.peer);
+    this.encryptionInitializers.delete(conn.peer);
+    for (const [key, snapshot] of this.incomingSnapshots)
+      if (snapshot.peerId === conn.peer) this.discardSnapshot(key);
+    for (const [key, peerId] of this.completedSnapshots)
+      if (peerId === conn.peer) this.completedSnapshots.delete(key);
+    for (const [requestId, pending] of this.pendingSync) {
+      if (pending.peerId === conn.peer)
+        this.completeSync(conn, requestId, 0, 'Sync disconnected');
+    }
+    for (const device of this.pairedDevices.values()) {
+      if (device.peerId === conn.peer) device.isConnected = false;
+    }
+    this.options.onConnectionChange?.(conn.peer, false);
+    if (retry && authorizedDevice) this.scheduleReconnect(authorizedDevice);
   }
 
   /**
@@ -473,18 +824,12 @@ export class PeerSync {
    */
   private handleIncomingConnection(conn: DataConnection): void {
     conn.on('open', async () => {
-      this.connections.set(conn.peer, conn);
-      this.options.onConnectionChange?.(conn.peer, true);
+      if (!this.adoptConnection(conn)) return;
 
       // Start encryption key exchange
       try {
-        const session = await createEncryptionSession(conn.peer);
-        this.encryptionSessions.set(conn.peer, session);
-        // Send our public key
-        conn.send({
-          type: 'key-exchange',
-          publicKey: session.localKeyPair.publicKeyJwk,
-        });
+        const session = await this.ensureEncryptionSession(conn.peer);
+        this.sendPublicKeyOnce(conn, session);
       } catch (err) {
         console.error('Failed to create encryption session:', err);
         this.options.onError?.(
@@ -505,16 +850,7 @@ export class PeerSync {
     });
 
     conn.on('close', () => {
-      this.connections.delete(conn.peer);
-      this.encryptionSessions.delete(conn.peer);
-      this.options.onConnectionChange?.(conn.peer, false);
-
-      // Update paired device status
-      for (const device of this.pairedDevices.values()) {
-        if (device.peerId === conn.peer) {
-          device.isConnected = false;
-        }
-      }
+      this.closeConnection(conn);
     });
 
     conn.on('error', (err) => {
@@ -539,45 +875,27 @@ export class PeerSync {
         type: 'key-exchange';
         publicKey: SyncJsonWebKey;
       };
-      const session = this.encryptionSessions.get(conn.peer);
-      if (session) {
-        try {
-          const updatedSession = await completeKeyExchange(
-            session,
-            keyExchangeMsg.publicKey
-          );
-          this.encryptionSessions.set(conn.peer, updatedSession);
-          peerDebugLog('Encryption key exchange completed with:', conn.peer);
-        } catch (err) {
-          console.error('Failed to complete key exchange:', err);
-          this.options.onError?.(
-            err instanceof Error ? err : new Error(String(err))
-          );
-          // Close connection if key exchange fails
-          conn.close();
-        }
-      } else {
-        // We received their key first, create our session and respond
-        try {
-          const newSession = await createEncryptionSession(conn.peer);
-          const updatedSession = await completeKeyExchange(
-            newSession,
-            keyExchangeMsg.publicKey
-          );
-          this.encryptionSessions.set(conn.peer, updatedSession);
-          // Send our public key
-          conn.send({
-            type: 'key-exchange',
-            publicKey: newSession.localKeyPair.publicKeyJwk,
-          });
-          peerDebugLog('Encryption key exchange completed with:', conn.peer);
-        } catch (err) {
-          console.error('Failed to create/complete key exchange:', err);
-          this.options.onError?.(
-            err instanceof Error ? err : new Error(String(err))
-          );
-          conn.close();
-        }
+      try {
+        const session = await this.ensureEncryptionSession(conn.peer);
+        if (session.isReady)
+          throw new Error('Repeated key exchange is not allowed');
+        const updatedSession = await completeKeyExchange(
+          session,
+          keyExchangeMsg.publicKey
+        );
+        if (
+          this.connections.get(conn.peer) !== conn ||
+          this.encryptionSessions.get(conn.peer) !== session
+        )
+          throw new Error('Sync disconnected during key exchange');
+        this.encryptionSessions.set(conn.peer, updatedSession);
+        this.sendPublicKeyOnce(conn, session);
+        const next = this.afterKeyExchange.get(conn);
+        this.afterKeyExchange.delete(conn);
+        await next?.();
+      } catch (error) {
+        conn.close();
+        throw error;
       }
       return;
     }
@@ -600,30 +918,10 @@ export class PeerSync {
         return;
       }
     } else {
-      // Check if key exchange is complete - reject plaintext if so
-      const session = this.encryptionSessions.get(conn.peer);
-      if (session?.isReady) {
-        console.error(
-          'SECURITY: Received unencrypted message after key exchange from:',
-          conn.peer
-        );
-        this.options.onError?.(
-          new Error(
-            'Security violation: received unencrypted message after key exchange'
-          )
-        );
-        return; // REJECT the message
-      }
-
-      // Allow plaintext only BEFORE key exchange completes (for the initial key-exchange message itself)
-      console.warn(
-        'Received unencrypted message before key exchange from:',
-        conn.peer
-      );
-      message = data as PairingMessage;
+      throw new Error('Only encrypted pairing and sync messages are accepted');
     }
 
-    this.handleMessage(conn, message);
+    await this.handleMessage(conn, message);
   }
 
   /**
@@ -639,7 +937,20 @@ export class PeerSync {
         session,
         message
       );
-      this.encryptionSessions.set(conn.peer, updatedSession);
+      const currentSession = this.encryptionSessions.get(conn.peer);
+      if (
+        !conn.open ||
+        this.connections.get(conn.peer) !== conn ||
+        currentSession?.localKeyPair !== session.localKeyPair
+      )
+        throw new Error('Sync connection closed');
+      this.encryptionSessions.set(conn.peer, {
+        ...currentSession,
+        messageCounter: Math.max(
+          currentSession.messageCounter,
+          updatedSession.messageCounter
+        ),
+      });
       conn.send(envelope);
     } else {
       // Session not ready - this shouldn't happen in normal flow
@@ -655,182 +966,607 @@ export class PeerSync {
   /**
    * Handle incoming messages
    */
-  private handleMessage(conn: DataConnection, message: PairingMessage): void {
-    switch (message.type) {
-      case 'pairing-request':
-        this.handlePairingRequest(conn, message);
-        break;
+  private authorizedDevice(conn: DataConnection): PeerDevice {
+    const deviceId = this.authorizedPeers.get(conn.peer);
+    const device = deviceId ? this.pairedDevices.get(deviceId) : undefined;
+    if (
+      !device ||
+      device.peerId !== conn.peer ||
+      !conn.open ||
+      this.connections.get(conn.peer) !== conn ||
+      device.protocolVersion !== PEER_PROTOCOL_VERSION ||
+      !device.localProfileId ||
+      !device.remoteProfileId ||
+      device.localProfileId !== this.options.profileId ||
+      (this.options.getActiveProfileId &&
+        this.options.getActiveProfileId() !== device.localProfileId) ||
+      !this.encryptionSessions.get(conn.peer)?.isReady
+    ) {
+      throw new Error('Sync is not authorized for the active profile');
+    }
+    return device;
+  }
 
-      case 'pairing-accept':
-        this.handlePairingAccept(conn, message);
-        break;
+  private waitForSync(
+    conn: DataConnection,
+    requestId: string,
+    kind: 'push' | 'request',
+    timeoutMs = 15000
+  ): Promise<number> {
+    if (this.pendingSync.has(requestId))
+      throw new Error('Duplicate sync request');
+    return new Promise((resolve, reject) => {
+      const timer = setTimeout(() => {
+        this.pendingSync.delete(requestId);
+        reject(new Error('Sync acknowledgement timed out'));
+      }, timeoutMs);
+      this.pendingSync.set(requestId, {
+        peerId: conn.peer,
+        kind,
+        resolve,
+        reject,
+        timer,
+      });
+    });
+  }
+  private extendSyncTimeout(conn: DataConnection, requestId: string): void {
+    const pending = this.pendingSync.get(requestId);
+    if (!pending || pending.peerId !== conn.peer) return;
+    clearTimeout(pending.timer);
+    pending.timer = setTimeout(() => {
+      this.pendingSync.delete(requestId);
+      pending.reject(new Error('Sync acknowledgement timed out'));
+    }, LARGE_SYNC_TIMEOUT_MS);
+  }
 
-      case 'pairing-reject':
-        this.options.onError?.(
-          new Error(`Pairing rejected: ${message.reason}`)
+  private fragmentedPayload(
+    conn: DataConnection,
+    changes: SyncChange[]
+  ): string | null {
+    if (!this.authorizedDevice(conn).supportsFragmentation) {
+      if (changes.length > 50000)
+        throw new Error(
+          'Peer does not support large sync snapshots; update both devices and pair again'
         );
-        break;
+      return null;
+    }
+    const payload = JSON.stringify(changes);
+    if (payload.length > MAX_SYNC_BUFFER_CHARS)
+      throw new Error('Sync snapshot exceeds the supported transfer size');
+    return payload.length > SYNC_FRAME_CHARS || changes.length > 50000
+      ? payload
+      : null;
+  }
 
-      case 'sync-request':
-        // Handle sync request by fetching local changes and sending them back
-        this.handleSyncRequest(conn);
-        break;
+  private async sendSyncPayload(
+    conn: DataConnection,
+    message: Extract<PairingMessage, { type: 'sync-push' | 'sync-response' }>,
+    payload: string | null
+  ): Promise<void> {
+    if (payload === null) {
+      await this.sendEncrypted(conn, message);
+      return;
+    }
+    const count = Math.ceil(payload.length / SYNC_FRAME_CHARS);
+    for (let index = 0; index < count; index++) {
+      if (!this.pendingSync.has(message.requestId)) return;
+      this.authorizedDevice(conn);
+      await this.sendEncrypted(conn, {
+        type: 'sync-fragment',
+        requestId: message.requestId,
+        messageType: message.type,
+        index,
+        count,
+        payload: payload.slice(
+          index * SYNC_FRAME_CHARS,
+          (index + 1) * SYNC_FRAME_CHARS
+        ),
+      });
+    }
+    this.extendSyncTimeout(conn, message.requestId);
+  }
 
-      case 'sync-response':
-      case 'sync-push':
-        this.options.onSyncReceived?.(
-          message.changes as SyncChange<SyncableRow>[]
-        );
-        break;
+  private discardSnapshot(key: string, completed = false): void {
+    const snapshot = this.incomingSnapshots.get(key);
+    if (!snapshot) return;
+    clearTimeout(snapshot.timer);
+    this.bufferedSnapshotChars -= snapshot.chars;
+    this.incomingSnapshots.delete(key);
+    if (completed) this.markSnapshotCompleted(key, snapshot.peerId);
+  }
 
-      case 'sync-ack':
-        // Sync acknowledged
-        break;
+  private markSnapshotCompleted(key: string, peerId: string): void {
+    this.completedSnapshots.set(key, peerId);
+    if (this.completedSnapshots.size > 128) {
+      const oldest = this.completedSnapshots.keys().next().value;
+      if (oldest !== undefined) this.completedSnapshots.delete(oldest);
     }
   }
 
-  /**
-   * Handle sync request from a peer - fetch local changes and respond
-   */
-  private async handleSyncRequest(conn: DataConnection): Promise<void> {
+  private async handleSyncFragment(
+    conn: DataConnection,
+    message: Extract<PairingMessage, { type: 'sync-fragment' }>
+  ): Promise<void> {
+    const key = JSON.stringify([conn.peer, message.requestId]);
     try {
-      // If we have an onSyncRequested callback, use it to get local changes
-      const changes = this.options.onSyncRequested
-        ? await this.options.onSyncRequested(conn.peer)
-        : [];
-
-      // Send encrypted sync response with our changes
-      await this.sendEncrypted(conn, {
-        type: 'sync-response',
-        changes,
+      if (
+        !this.authorizedDevice(conn).supportsFragmentation ||
+        !['sync-push', 'sync-response'].includes(message.messageType) ||
+        !Number.isSafeInteger(message.count) ||
+        message.count < 2 ||
+        message.count > MAX_SYNC_FRAMES ||
+        !Number.isSafeInteger(message.index) ||
+        message.index < 0 ||
+        message.index >= message.count ||
+        typeof message.payload !== 'string' ||
+        !message.payload.length ||
+        message.payload.length > SYNC_FRAME_CHARS ||
+        (message.index < message.count - 1 &&
+          message.payload.length !== SYNC_FRAME_CHARS) ||
+        this.completedSnapshots.has(key) ||
+        this.processingSnapshots.has(key)
+      )
+        throw new Error('Invalid or stale sync frame');
+      const pending = this.pendingSync.get(message.requestId);
+      if (
+        message.messageType === 'sync-response' &&
+        (pending?.kind !== 'request' || pending.peerId !== conn.peer)
+      )
+        throw new Error('Unsolicited sync response');
+      let snapshot = this.incomingSnapshots.get(key);
+      if (!snapshot) {
+        if (
+          this.incomingSnapshots.size + this.processingSnapshots.size >=
+          MAX_INCOMING_SNAPSHOTS
+        )
+          throw new Error('Too many concurrent sync snapshots');
+        snapshot = {
+          peerId: conn.peer,
+          connection: conn,
+          messageType: message.messageType,
+          count: message.count,
+          chunks: new Map(),
+          chars: 0,
+          timer: setTimeout(() => {
+            this.discardSnapshot(key, true);
+            const reason = 'Large sync transfer timed out';
+            this.completeSync(conn, message.requestId, 0, reason);
+            this.options.onError?.(new Error(reason));
+            void this.sendEncrypted(conn, {
+              type: 'sync-error',
+              requestId: message.requestId,
+              reason,
+            }).catch(() => undefined);
+          }, LARGE_SYNC_TIMEOUT_MS),
+        };
+        this.incomingSnapshots.set(key, snapshot);
+      }
+      if (
+        snapshot.count !== message.count ||
+        snapshot.connection !== conn ||
+        snapshot.messageType !== message.messageType ||
+        snapshot.chunks.has(message.index) ||
+        this.bufferedSnapshotChars + message.payload.length >
+          MAX_SYNC_BUFFER_CHARS
+      )
+        throw new Error('Invalid or duplicate sync frame');
+      snapshot.chunks.set(message.index, message.payload);
+      snapshot.chars += message.payload.length;
+      this.bufferedSnapshotChars += message.payload.length;
+      if (message.messageType === 'sync-response')
+        this.extendSyncTimeout(conn, message.requestId);
+      if (snapshot.chunks.size !== snapshot.count) return;
+      const changes: unknown = JSON.parse(
+        Array.from({ length: snapshot.count }, (_, index) =>
+          snapshot.chunks.get(index)
+        ).join('')
+      );
+      if (!Array.isArray(changes)) throw new Error('Invalid sync snapshot');
+      // Reserve the same slot and character budget until the atomic apply settles.
+      clearTimeout(snapshot.timer);
+      this.incomingSnapshots.delete(key);
+      this.processingSnapshots.set(key, {
+        peerId: conn.peer,
+        chars: snapshot.chars,
       });
+      snapshot.chunks.clear();
+      this.markSnapshotCompleted(key, conn.peer);
+      try {
+        await this.handleMessage(
+          conn,
+          { type: message.messageType, requestId: message.requestId, changes },
+          true
+        );
+      } finally {
+        this.processingSnapshots.delete(key);
+        this.bufferedSnapshotChars -= snapshot.chars;
+      }
     } catch (error) {
+      this.discardSnapshot(key);
+      this.markSnapshotCompleted(key, conn.peer);
+      throw error;
+    }
+  }
+  private completeSync(
+    conn: DataConnection,
+    requestId: string,
+    applied: number,
+    error?: string
+  ): void {
+    const pending = this.pendingSync.get(requestId);
+    if (!pending || pending.peerId !== conn.peer) return;
+    clearTimeout(pending.timer);
+    this.pendingSync.delete(requestId);
+    if (error) pending.reject(new Error(error));
+    else pending.resolve(applied);
+  }
+
+  private async handleMessage(
+    conn: DataConnection,
+    message: PairingMessage,
+    reassembled = false
+  ): Promise<void> {
+    if (
+      !message ||
+      typeof message !== 'object' ||
+      typeof message.type !== 'string'
+    )
+      throw new Error('Invalid peer message');
+    if (message.type === 'pairing-request') {
+      await this.handlePairingRequest(conn, message);
+      return;
+    }
+    if (message.type === 'pairing-accept') {
+      throw new Error('Unsolicited pairing acceptance');
+    }
+    if (message.type === 'pairing-reject') {
+      this.options.onError?.(new Error(`Pairing rejected: ${message.reason}`));
+      return;
+    }
+    if (message.type === 'reconnect-request') {
+      await this.handleReconnectRequest(conn, message);
+      return;
+    }
+    if (message.type === 'reconnect-accept') {
+      await this.handleReconnectAccept(conn, message);
+      return;
+    }
+    if (message.type === 'reconnect-reject') {
+      this.handleReconnectReject(conn, message.reason);
+      return;
+    }
+    if (message.type === 'unpair') {
+      const removed = this.authorizedDevice(conn);
+      this.forgetDevice(removed.id);
+      this.closeConnection(conn, false);
+      conn.close();
+      this.options.onUnpaired?.(removed);
+      return;
+    }
+    const device = this.authorizedDevice(conn);
+    if (
+      !('requestId' in message) ||
+      typeof message.requestId !== 'string' ||
+      !message.requestId ||
+      message.requestId.length > 100
+    )
+      throw new Error('Invalid sync request');
+    if (message.type === 'sync-ack') {
+      if (
+        !Number.isSafeInteger(message.applied) ||
+        message.applied < 0 ||
+        this.pendingSync.get(message.requestId)?.kind !== 'push'
+      )
+        throw new Error('Invalid sync acknowledgement');
+      this.completeSync(conn, message.requestId, message.applied);
+      device.lastSyncAt = Date.now();
+      return;
+    }
+    if (message.type === 'sync-error') {
+      const key = JSON.stringify([conn.peer, message.requestId]);
+      this.discardSnapshot(key);
+      this.markSnapshotCompleted(key, conn.peer);
+      this.completeSync(conn, message.requestId, 0, message.reason);
+      return;
+    }
+    try {
+      if (message.type === 'sync-fragment') {
+        await this.handleSyncFragment(conn, message);
+        return;
+      }
+      if (message.type === 'sync-request') {
+        if (
+          !Number.isSafeInteger(message.sinceTimestamp) ||
+          message.sinceTimestamp < 0 ||
+          !this.options.onSyncRequested
+        )
+          throw new Error('Invalid sync request');
+        const changes = await this.options.onSyncRequested(
+          conn.peer,
+          message.sinceTimestamp
+        );
+        this.authorizedDevice(conn);
+        const payload = this.fragmentedPayload(conn, changes);
+        const acknowledgement = this.waitForSync(
+          conn,
+          message.requestId,
+          'push',
+          payload === null ? 15000 : LARGE_SYNC_TIMEOUT_MS
+        );
+        void acknowledgement.catch(() => undefined);
+        await this.sendSyncPayload(
+          conn,
+          {
+            type: 'sync-response',
+            changes,
+            requestId: message.requestId,
+          },
+          payload
+        );
+        await acknowledgement;
+        device.lastSyncAt = Date.now();
+      } else if (
+        message.type === 'sync-push' ||
+        message.type === 'sync-response'
+      ) {
+        const snapshotKey = JSON.stringify([conn.peer, message.requestId]);
+        if (
+          !reassembled &&
+          (this.incomingSnapshots.has(snapshotKey) ||
+            this.processingSnapshots.has(snapshotKey) ||
+            this.completedSnapshots.has(snapshotKey))
+        ) {
+          this.discardSnapshot(snapshotKey);
+          this.markSnapshotCompleted(snapshotKey, conn.peer);
+          throw new Error('Invalid or duplicate sync snapshot');
+        }
+        if (
+          !Array.isArray(message.changes) ||
+          (!reassembled && message.changes.length > 50000) ||
+          !this.options.onSyncReceived
+        )
+          throw new Error('Invalid sync data');
+        if (
+          message.type === 'sync-response' &&
+          (this.pendingSync.get(message.requestId)?.kind !== 'request' ||
+            this.pendingSync.get(message.requestId)?.peerId !== conn.peer)
+        )
+          throw new Error('Unsolicited sync response');
+        const applied = await this.options.onSyncReceived(
+          message.changes,
+          device
+        );
+        this.authorizedDevice(conn);
+        await this.sendEncrypted(conn, {
+          type: 'sync-ack',
+          requestId: message.requestId,
+          applied,
+        });
+        if (message.type === 'sync-response')
+          this.completeSync(conn, message.requestId, applied);
+        device.lastSyncAt = Date.now();
+      }
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : String(error);
+      this.completeSync(conn, message.requestId, 0, reason);
+      await this.sendEncrypted(conn, {
+        type: 'sync-error',
+        requestId: message.requestId,
+        reason,
+      });
       this.options.onError?.(
-        error instanceof Error
-          ? error
-          : new Error(`Failed to handle sync request: ${String(error)}`)
+        error instanceof Error ? error : new Error(reason)
       );
     }
   }
 
-  /**
-   * Handle incoming pairing request
-   */
+  private validatePairing(message: {
+    profileId: string;
+    schemaVersion: number;
+    protocolVersion: number;
+    deviceId: string;
+    deviceName: string;
+  }): void {
+    if (message.protocolVersion !== PEER_PROTOCOL_VERSION)
+      throw new Error(
+        'Sync protocol version mismatch; update both devices and pair again'
+      );
+    if (message.schemaVersion !== this.options.schemaVersion)
+      throw new Error(
+        'Sync schema version mismatch; update both devices and pair again'
+      );
+    if (
+      !this.options.profileId ||
+      !message.profileId ||
+      message.profileId.length > 200 ||
+      typeof message.deviceId !== 'string' ||
+      !message.deviceId ||
+      message.deviceId.length > 200 ||
+      typeof message.deviceName !== 'string' ||
+      message.deviceName.length > 100 ||
+      (this.options.getActiveProfileId &&
+        this.options.getActiveProfileId() !== this.options.profileId)
+    )
+      throw new Error('Pairing requires an active profile on both devices');
+  }
   private async handlePairingRequest(
     conn: DataConnection,
-    message: {
-      type: 'pairing-request';
-      pairingCode: string;
-      deviceName: string;
-    }
+    message: Extract<PairingMessage, { type: 'pairing-request' }>
   ): Promise<void> {
-    // Verify pairing code
+    try {
+      this.validatePairing(message);
+    } catch (error) {
+      await this.sendEncrypted(conn, {
+        type: 'pairing-reject',
+        reason: (error as Error).message,
+      });
+      return;
+    }
+    // Each code allows one attempt: it is cleared before the slow check, so
+    // a wrong guess (or a relayed attempt) needs a new code on this device.
+    const pairingCode = this.pendingPairingCode;
+    const expiresAt = this.pairingExpiresAt;
+    this.pendingPairingCode = null;
+    let pairingKey: CryptoKey | null = null;
+    let keys: PairingSessionKeys | null = null;
     if (
-      this.pendingPairingCode &&
-      message.pairingCode === this.pendingPairingCode
+      pairingCode &&
+      Date.now() <= expiresAt &&
+      this.options.onPairingRequest &&
+      typeof message.deviceId === 'string'
     ) {
-      // Auto-accept if code matches
-      const device: PeerDevice = {
-        id: conn.peer,
-        name: message.deviceName,
-        peerId: conn.peer,
-        lastSyncAt: null,
-        isConnected: true,
-      };
-
-      this.pairedDevices.set(device.id, device);
-      this.pendingPairingCode = null;
-
-      // Send encrypted acceptance
       try {
-        await this.sendEncrypted(conn, {
-          type: 'pairing-accept',
-          deviceId: this.options.deviceId,
-          deviceName: this.options.deviceName,
-        });
-      } catch (err) {
-        console.error('Failed to send pairing accept:', err);
-        this.options.onError?.(
-          err instanceof Error ? err : new Error(String(err))
-        );
-        return;
+        const session = await this.sessionPublicKeys(conn);
+        keys = {
+          requesterPublicKey: session.remote,
+          responderPublicKey: session.local,
+        };
+        pairingKey = await derivePairingKey(pairingCode, keys);
+        if (
+          !(await verifyPairingProof(pairingKey, message.proof, {
+            role: 'request',
+            requesterDeviceId: message.deviceId,
+            ...keys,
+          }))
+        )
+          pairingKey = null;
+      } catch {
+        pairingKey = null;
       }
-
-      this.options.onPaired?.(device);
-    } else if (this.options.onPairingRequest) {
-      // Ask user to accept/reject
-      this.options.onPairingRequest(
-        message.deviceName,
-        async () => {
-          // Accept
+    }
+    if (!pairingKey || !keys || !this.options.onPairingRequest) {
+      if (pairingCode) this.options.onPairingCodeUsed?.();
+      await this.sendEncrypted(conn, {
+        type: 'pairing-reject',
+        reason: 'Invalid or expired pairing code',
+      });
+      return;
+    }
+    const verifiedKey = pairingKey;
+    const sessionKeys = keys;
+    // A valid proof shows the code was entered, but merging still needs approval.
+    let handled = false;
+    this.options.onPairingRequest(
+      message.deviceName,
+      async () => {
+        if (handled) return;
+        handled = true;
+        try {
+          this.validatePairing(message);
+          if (!conn.open || this.connections.get(conn.peer) !== conn)
+            throw new Error('Pairing connection closed');
+          if (Date.now() > expiresAt) throw new Error('Pairing code expired');
           const device: PeerDevice = {
-            id: conn.peer,
+            id: message.deviceId,
             name: message.deviceName,
             peerId: conn.peer,
             lastSyncAt: null,
             isConnected: true,
+            localProfileId: this.options.profileId,
+            remoteProfileId: message.profileId,
+            protocolVersion: PEER_PROTOCOL_VERSION,
+            supportsFragmentation: message.supportsFragmentation === true,
           };
-
-          this.pairedDevices.set(device.id, device);
-
-          try {
-            await this.sendEncrypted(conn, {
-              type: 'pairing-accept',
-              deviceId: this.options.deviceId,
-              deviceName: this.options.deviceName,
-            });
-          } catch (err) {
-            console.error('Failed to send pairing accept:', err);
-            this.options.onError?.(
-              err instanceof Error ? err : new Error(String(err))
-            );
-            return;
-          }
-
-          this.options.onPaired?.(device);
-        },
-        async () => {
-          // Reject
-          try {
-            await this.sendEncrypted(conn, {
-              type: 'pairing-reject',
-              reason: 'User rejected pairing request',
-            });
-          } catch (err) {
-            console.error('Failed to send pairing reject:', err);
-          }
+          // Only devices that can store the secret (and can be dialled by
+          // their stable ID) get one; older versions pair per session.
+          const reconnectSecret =
+            message.supportsReconnect === true &&
+            isValidDeviceId(message.deviceId)
+              ? generateReconnectSecret()
+              : undefined;
+          await this.sendEncrypted(conn, {
+            type: 'pairing-accept',
+            deviceId: this.options.deviceId,
+            deviceName: this.options.deviceName,
+            profileId: this.options.profileId || '',
+            schemaVersion: this.options.schemaVersion || 0,
+            protocolVersion: PEER_PROTOCOL_VERSION,
+            supportsFragmentation: true,
+            proof: await computePairingProof(verifiedKey, {
+              role: 'accept',
+              requesterDeviceId: message.deviceId,
+              responderDeviceId: this.options.deviceId,
+              ...sessionKeys,
+            }),
+            ...(reconnectSecret ? { reconnectSecret } : {}),
+          });
+          this.authorizeDevice(conn, device, reconnectSecret);
+          if (reconnectSecret) this.options.onPaired?.(device, reconnectSecret);
+          else this.options.onPaired?.(device);
+          this.options.onConnectionChange?.(conn.peer, true);
+        } catch (error) {
+          this.options.onError?.(
+            error instanceof Error ? error : new Error(String(error))
+          );
         }
-      );
-    } else {
-      // No handler, reject
-      try {
+      },
+      async () => {
+        if (handled) return;
+        handled = true;
+        this.options.onPairingCodeUsed?.();
         await this.sendEncrypted(conn, {
           type: 'pairing-reject',
-          reason: 'Pairing not allowed',
+          reason: 'User rejected profile merge',
         });
-      } catch (err) {
-        console.error('Failed to send pairing reject:', err);
       }
-    }
+    );
   }
-
-  /**
-   * Handle pairing acceptance
-   */
   private handlePairingAccept(
     conn: DataConnection,
-    message: { type: 'pairing-accept'; deviceId: string; deviceName: string }
+    message: Extract<PairingMessage, { type: 'pairing-accept' }>
   ): void {
+    this.validatePairing(message);
     const device: PeerDevice = {
       id: message.deviceId,
       name: message.deviceName,
       peerId: conn.peer,
       lastSyncAt: null,
       isConnected: true,
+      localProfileId: this.options.profileId,
+      remoteProfileId: message.profileId,
+      protocolVersion: PEER_PROTOCOL_VERSION,
+      supportsFragmentation: message.supportsFragmentation === true,
     };
+    const reconnectSecret =
+      isValidReconnectSecret(message.reconnectSecret) &&
+      isValidDeviceId(message.deviceId)
+        ? message.reconnectSecret
+        : undefined;
+    this.authorizeDevice(conn, device, reconnectSecret);
+    if (reconnectSecret) this.options.onPaired?.(device, reconnectSecret);
+    else this.options.onPaired?.(device);
+    this.options.onConnectionChange?.(conn.peer, true);
+  }
 
+  /** Mark a connection as carrying an approved pairing for a device. */
+  private authorizeDevice(
+    conn: DataConnection,
+    device: PeerDevice,
+    reconnectSecret?: string
+  ): void {
+    for (const [peerId, deviceId] of this.authorizedPeers) {
+      if (deviceId !== device.id || peerId === conn.peer) continue;
+      const previous = this.connections.get(peerId);
+      if (previous) this.replaceConnection(previous);
+      else this.authorizedPeers.delete(peerId);
+    }
+    device.peerId = conn.peer;
+    device.isConnected = true;
     this.pairedDevices.set(device.id, device);
-    this.options.onPaired?.(device);
+    this.authorizedPeers.set(conn.peer, device.id);
+    if (reconnectSecret) this.reconnectSecrets.set(device.id, reconnectSecret);
+    this.blockedReconnects.delete(device.id);
+    this.reconnectAttempts.delete(device.id);
+    this.clearReconnectTimer(device.id);
+    const dial = this.reconnectDials.get(device.id);
+    if (dial && dial !== conn) {
+      this.reconnectDials.delete(device.id);
+      try {
+        dial.close();
+      } catch {
+        // Already closed
+      }
+    } else if (dial) this.reconnectDials.delete(device.id);
   }
 
   /**
@@ -838,7 +1574,10 @@ export class PeerSync {
    * Returns the pairing code to display to user
    */
   startPairing(): string {
+    if (!this.options.profileId)
+      throw new Error('Select a profile before pairing');
     this.pendingPairingCode = generatePairingCode();
+    this.pairingExpiresAt = Date.now() + 120000;
     return this.pendingPairingCode;
   }
 
@@ -867,10 +1606,26 @@ export class PeerSync {
       let connectionAttempted = false;
       // Note: keyExchangeComplete flag tracked for future debugging/assertions
       let _keyExchangeComplete = false;
+      let pairing: { key: CryptoKey; keys: PairingSessionKeys } | null = null;
 
       const conn = this.peer.connect(targetPeerId, {
         reliable: true,
       });
+      this.outgoingConnections.add(conn);
+      const fail = (error: Error) => {
+        if (isResolved) return;
+        isResolved = true;
+        clearTimeout(timeout);
+        try {
+          conn.close();
+        } catch {
+          // Ignore close errors
+        }
+        reject(error);
+      };
+      this.dialFailures.set(targetPeerId, () =>
+        fail(new Error('peer-unavailable'))
+      );
 
       // Reduced timeout to 20s - if it takes longer, likely a NAT/firewall issue
       const timeout = setTimeout(() => {
@@ -893,18 +1648,16 @@ export class PeerSync {
       conn.on('open', async () => {
         if (isResolved) return;
         connectionAttempted = true;
-        this.connections.set(conn.peer, conn);
-        this.options.onConnectionChange?.(conn.peer, true);
+        this.dialFailures.delete(targetPeerId);
+        if (!this.adoptConnection(conn)) {
+          fail(new Error('Connection closed unexpectedly'));
+          return;
+        }
 
         // Start encryption key exchange
         try {
-          const session = await createEncryptionSession(conn.peer);
-          this.encryptionSessions.set(conn.peer, session);
-          // Send our public key
-          conn.send({
-            type: 'key-exchange',
-            publicKey: session.localKeyPair.publicKeyJwk,
-          });
+          const session = await this.ensureEncryptionSession(conn.peer);
+          this.sendPublicKeyOnce(conn, session);
         } catch (err) {
           console.error('Failed to create encryption session:', err);
           isResolved = true;
@@ -914,7 +1667,16 @@ export class PeerSync {
       });
 
       conn.on('data', async (data) => {
-        if (isResolved) return;
+        if (isResolved) {
+          try {
+            await this.handleIncomingData(conn, data);
+          } catch (error) {
+            this.options.onError?.(
+              error instanceof Error ? error : new Error(String(error))
+            );
+          }
+          return;
+        }
 
         // Handle key-exchange message (sent unencrypted)
         if (
@@ -926,13 +1688,20 @@ export class PeerSync {
             type: 'key-exchange';
             publicKey: SyncJsonWebKey;
           };
-          const session = this.encryptionSessions.get(conn.peer);
+          const session = await this.ensureEncryptionSession(conn.peer);
           if (session) {
             try {
+              if (session.isReady)
+                throw new Error('Repeated key exchange is not allowed');
               const updatedSession = await completeKeyExchange(
                 session,
                 keyExchangeMsg.publicKey
               );
+              if (
+                this.connections.get(conn.peer) !== conn ||
+                this.encryptionSessions.get(conn.peer) !== session
+              )
+                throw new Error('Sync disconnected during key exchange');
               this.encryptionSessions.set(conn.peer, updatedSession);
               _keyExchangeComplete = true;
               peerDebugLog(
@@ -940,11 +1709,31 @@ export class PeerSync {
                 conn.peer
               );
 
-              // Now send encrypted pairing request
+              // Prove the code for exactly these session keys; the code
+              // itself never leaves this device.
+              const publicKeys = await this.sessionPublicKeys(conn);
+              const keys: PairingSessionKeys = {
+                requesterPublicKey: publicKeys.local,
+                responderPublicKey: publicKeys.remote,
+              };
+              const key = await derivePairingKey(pairingCode, keys);
+              pairing = { key, keys };
               await this.sendEncrypted(conn, {
                 type: 'pairing-request',
-                pairingCode,
+                proof: await computePairingProof(key, {
+                  role: 'request',
+                  requesterDeviceId: this.options.deviceId,
+                  ...keys,
+                }),
                 deviceName: this.options.deviceName,
+                deviceId: this.options.deviceId,
+                profileId: this.options.profileId || '',
+                schemaVersion: this.options.schemaVersion || 0,
+                protocolVersion: PEER_PROTOCOL_VERSION,
+                supportsFragmentation: true,
+                ...(isValidDeviceId(this.options.deviceId)
+                  ? { supportsReconnect: true as const }
+                  : {}),
               });
             } catch (err) {
               console.error('Failed to complete key exchange:', err);
@@ -971,13 +1760,40 @@ export class PeerSync {
             return;
           }
         } else {
-          message = data as PairingMessage;
+          isResolved = true;
+          clearTimeout(timeout);
+          conn.close();
+          reject(new Error('Unencrypted pairing message rejected'));
+          return;
         }
 
         if (message.type === 'pairing-accept') {
           isResolved = true;
           clearTimeout(timeout);
-          this.handlePairingAccept(conn, message);
+          try {
+            // Only a device that knows the code for these session keys may
+            // pair; anyone relaying the key exchange cannot produce this.
+            if (
+              !pairing ||
+              typeof message.deviceId !== 'string' ||
+              !(await verifyPairingProof(pairing.key, message.proof, {
+                role: 'accept',
+                requesterDeviceId: this.options.deviceId,
+                responderDeviceId: message.deviceId,
+                ...pairing.keys,
+              }))
+            )
+              throw new Error('Pairing could not be verified');
+            this.handlePairingAccept(conn, message);
+          } catch (error) {
+            try {
+              conn.close();
+            } catch {
+              // Already closed
+            }
+            reject(error instanceof Error ? error : new Error(String(error)));
+            return;
+          }
           const device = this.pairedDevices.get(message.deviceId);
           if (device) {
             resolve(device);
@@ -991,7 +1807,7 @@ export class PeerSync {
           reject(new Error(message.reason));
         } else {
           // Handle other message types
-          this.handleMessage(conn, message);
+          await this.handleMessage(conn, message);
         }
       });
 
@@ -1009,6 +1825,7 @@ export class PeerSync {
 
       // Handle connection close before success
       conn.on('close', () => {
+        this.closeConnection(conn);
         if (!isResolved) {
           isResolved = true;
           clearTimeout(timeout);
@@ -1021,77 +1838,550 @@ export class PeerSync {
   /**
    * Send sync changes to a specific device
    */
-  async sendChanges(deviceId: string, changes: SyncChange[]): Promise<void> {
+  async sendChanges(deviceId: string, changes: SyncChange[]): Promise<number> {
     const device = this.pairedDevices.get(deviceId);
-    if (!device) {
-      throw new Error(`Device ${deviceId} not found`);
+    const conn = device && this.connections.get(device.peerId);
+    if (!conn?.open) throw new Error('Paired device is not connected');
+    this.authorizedDevice(conn);
+    const payload = this.fragmentedPayload(conn, changes);
+    const requestId = crypto.randomUUID();
+    const acknowledgement = this.waitForSync(
+      conn,
+      requestId,
+      'push',
+      payload === null ? 15000 : LARGE_SYNC_TIMEOUT_MS
+    );
+    void acknowledgement.catch(() => undefined);
+    try {
+      await this.sendSyncPayload(
+        conn,
+        { type: 'sync-push', changes, requestId },
+        payload
+      );
+    } catch (error) {
+      this.completeSync(conn, requestId, 0, String(error));
     }
-
-    const conn = this.connections.get(device.peerId);
-    if (!conn || !conn.open) {
-      throw new Error(`Not connected to device ${deviceId}`);
-    }
-
-    await this.sendEncrypted(conn, {
-      type: 'sync-push',
-      changes,
-    });
-
-    device.lastSyncAt = Date.now();
+    return acknowledgement;
   }
 
-  /**
-   * Request sync from a specific device
-   */
-  async requestSync(
-    deviceId: string,
-    sinceTimestamp: number = 0
-  ): Promise<void> {
+  async requestSync(deviceId: string, sinceTimestamp = 0): Promise<number> {
     const device = this.pairedDevices.get(deviceId);
-    if (!device) {
-      throw new Error(`Device ${deviceId} not found`);
+    const conn = device && this.connections.get(device.peerId);
+    if (!conn?.open) throw new Error('Paired device is not connected');
+    this.authorizedDevice(conn);
+    const requestId = crypto.randomUUID();
+    const response = this.waitForSync(conn, requestId, 'request');
+    void response.catch(() => undefined);
+    try {
+      await this.sendEncrypted(conn, {
+        type: 'sync-request',
+        sinceTimestamp,
+        requestId,
+      });
+    } catch (error) {
+      this.completeSync(conn, requestId, 0, String(error));
     }
-
-    const conn = this.connections.get(device.peerId);
-    if (!conn || !conn.open) {
-      throw new Error(`Not connected to device ${deviceId}`);
-    }
-
-    await this.sendEncrypted(conn, {
-      type: 'sync-request',
-      sinceTimestamp,
-    });
+    return response;
   }
 
-  /**
-   * Broadcast changes to all connected devices
-   */
   async broadcastChanges(changes: SyncChange[]): Promise<void> {
-    const sendPromises: Promise<void>[] = [];
+    const devices = this.getPairedDevices().filter(
+      (device) => device.isConnected
+    );
+    if (!devices.length) throw new Error('No paired devices connected');
+    await Promise.all(
+      devices.map((device) => this.sendChanges(device.id, changes))
+    );
+  }
 
-    for (const [peerId, conn] of this.connections) {
-      if (conn.open) {
-        sendPromises.push(
-          this.sendEncrypted(conn, {
-            type: 'sync-push',
-            changes,
-          })
-            .then(() => {
-              // Update last sync time for paired devices
-              for (const device of this.pairedDevices.values()) {
-                if (device.peerId === peerId) {
-                  device.lastSyncAt = Date.now();
-                }
-              }
-            })
-            .catch((err) => {
-              console.error(`Failed to broadcast to ${peerId}:`, err);
-            })
+  /**
+   * Restore a pairing from an earlier session so it can reconnect. Only
+   * pairings of this profile with a valid reconnect secret are accepted.
+   */
+  restorePairedDevice(device: PeerDevice, reconnectSecret: string): boolean {
+    if (
+      !isValidDeviceId(device.id) ||
+      !isValidReconnectSecret(reconnectSecret) ||
+      device.protocolVersion !== PEER_PROTOCOL_VERSION ||
+      !device.remoteProfileId ||
+      !this.options.profileId ||
+      device.localProfileId !== this.options.profileId ||
+      device.id === this.options.deviceId
+    )
+      return false;
+    // A pairing that is already connected this session stays as it is.
+    if (!this.pairedDevices.get(device.id)?.isConnected)
+      this.pairedDevices.set(device.id, {
+        ...device,
+        peerId: homePeerId(device.id),
+        isConnected: false,
+      });
+    this.reconnectSecrets.set(device.id, reconnectSecret);
+    return true;
+  }
+
+  /** Whether a pairing can reconnect by itself after a restart. */
+  canReconnect(deviceId: string): boolean {
+    return this.reconnectSecrets.has(deviceId);
+  }
+
+  /** Whether the signalling connection is open (paired devices can dial in). */
+  isSignallingOpen(): boolean {
+    return !!this.peer && !this.peer.destroyed && this.peer.open;
+  }
+
+  /**
+   * Dial every restored pairing that is not connected, resuming a dropped
+   * signalling connection first. By default waiting attempts are retried now
+   * (e.g. when the browser comes back online); `retryBlocked` also retries
+   * pairings that needed the user, for an explicit "reconnect" action.
+   * Returns false when the peer is gone and must be initialized again.
+   */
+  reconnectPairedDevices({
+    resetBackoff = true,
+    retryBlocked = false,
+  }: { resetBackoff?: boolean; retryBlocked?: boolean } = {}): boolean {
+    const peer = this.peer;
+    if (!peer || peer.destroyed) return false;
+    if (peer.disconnected) {
+      try {
+        // Dials resume from the 'open' event once the server accepts us.
+        peer.reconnect();
+      } catch (error) {
+        peerDebugLog('Signalling reconnect failed:', error);
+      }
+    }
+    for (const deviceId of this.reconnectSecrets.keys()) {
+      if (resetBackoff) this.reconnectAttempts.delete(deviceId);
+      if (retryBlocked) this.blockedReconnects.delete(deviceId);
+      this.dialReconnect(deviceId);
+    }
+    return true;
+  }
+
+  private clearReconnectTimer(deviceId: string): void {
+    const timer = this.reconnectTimers.get(deviceId);
+    if (timer) clearTimeout(timer);
+    this.reconnectTimers.delete(deviceId);
+  }
+
+  private scheduleReconnect(deviceId: string): void {
+    if (
+      !this.reconnectSecrets.has(deviceId) ||
+      this.blockedReconnects.has(deviceId) ||
+      this.reconnectTimers.has(deviceId) ||
+      !this.peer ||
+      this.peer.destroyed
+    )
+      return;
+    const attempt = this.reconnectAttempts.get(deviceId) ?? 0;
+    this.reconnectAttempts.set(deviceId, attempt + 1);
+    this.reconnectTimers.set(
+      deviceId,
+      setTimeout(() => {
+        this.reconnectTimers.delete(deviceId);
+        this.dialReconnect(deviceId);
+      }, reconnectDelay(attempt))
+    );
+  }
+
+  /** Route a "Could not connect to peer X" signalling error to its dial. */
+  private failDial(message: string | undefined): boolean {
+    const target = message?.match(/peer (\S+)$/)?.[1];
+    const handler = target && this.dialFailures.get(target);
+    if (!target || !handler) return false;
+    this.dialFailures.delete(target);
+    handler(new Error('peer-unavailable'));
+    return true;
+  }
+
+  private dialReconnect(deviceId: string): void {
+    const device = this.pairedDevices.get(deviceId);
+    const secret = this.reconnectSecrets.get(deviceId);
+    if (
+      !device ||
+      !secret ||
+      device.isConnected ||
+      this.blockedReconnects.has(deviceId) ||
+      this.reconnectDials.has(deviceId) ||
+      !this.isSignallingOpen() ||
+      (this.options.getActiveProfileId &&
+        this.options.getActiveProfileId() !== this.options.profileId)
+    )
+      return;
+    this.clearReconnectTimer(deviceId);
+    const target = homePeerId(deviceId);
+    const peer = this.peer;
+    if (!peer) return;
+    let conn: DataConnection;
+    try {
+      conn = peer.connect(target, { reliable: true });
+    } catch (error) {
+      peerDebugLog('Reconnect dial failed:', error);
+      this.scheduleReconnect(deviceId);
+      return;
+    }
+    this.outgoingConnections.add(conn);
+    this.reconnectDials.set(deviceId, conn);
+    const abandon = () => {
+      clearTimeout(timeout);
+      if (this.dialFailures.get(target) === onUnavailable)
+        this.dialFailures.delete(target);
+      if (this.reconnectDials.get(deviceId) !== conn) return;
+      this.reconnectDials.delete(deviceId);
+      try {
+        conn.close();
+      } catch {
+        // Already closed
+      }
+      if (this.connections.get(conn.peer) === conn)
+        this.closeConnection(conn, false);
+      this.scheduleReconnect(deviceId);
+    };
+    // The other device is offline (or still behind its session ID) — it
+    // dials this device when it comes online, and the backoff retries.
+    const onUnavailable = () => abandon();
+    this.dialFailures.set(target, onUnavailable);
+    const timeout = setTimeout(abandon, 20000);
+    this.afterKeyExchange.set(conn, async () => {
+      const proof = await this.reconnectProof(conn, secret, 'request', {
+        initiatorDeviceId: this.options.deviceId,
+        responderDeviceId: deviceId,
+        local: 'initiator',
+      });
+      await this.sendEncrypted(conn, {
+        type: 'reconnect-request',
+        deviceId: this.options.deviceId,
+        deviceName: this.options.deviceName,
+        profileId: this.options.profileId || '',
+        schemaVersion: this.options.schemaVersion || 0,
+        protocolVersion: PEER_PROTOCOL_VERSION,
+        supportsFragmentation: true,
+        proof,
+      });
+    });
+    conn.on('open', async () => {
+      if (this.reconnectDials.get(deviceId) !== conn) return;
+      if (this.dialFailures.get(target) === onUnavailable)
+        this.dialFailures.delete(target);
+      if (!this.adoptConnection(conn)) {
+        clearTimeout(timeout);
+        this.reconnectDials.delete(deviceId);
+        return;
+      }
+      try {
+        const session = await this.ensureEncryptionSession(conn.peer);
+        this.sendPublicKeyOnce(conn, session);
+      } catch (error) {
+        peerDebugLog('Reconnect key exchange failed:', error);
+        abandon();
+      }
+    });
+    conn.on('data', async (data) => {
+      try {
+        await this.handleIncomingData(conn, data);
+      } catch (error) {
+        // Failed reconnects are retried; only authorized sync errors surface.
+        peerDebugLog('Reconnect message failed:', error);
+        if (this.authorizedPeers.get(conn.peer) === deviceId)
+          this.options.onError?.(
+            error instanceof Error ? error : new Error(String(error))
+          );
+        else abandon();
+      }
+    });
+    conn.on('close', () => {
+      clearTimeout(timeout);
+      this.closeConnection(conn);
+    });
+    conn.on('error', (error) => {
+      peerDebugLog('Reconnect connection error:', error);
+      abandon();
+    });
+    // completeReconnect clears the timeout once the pairing is confirmed.
+    this.reconnectTimeouts.set(conn, timeout);
+  }
+
+  private async reconnectProof(
+    conn: DataConnection,
+    secret: string,
+    role: 'request' | 'accept',
+    ids: {
+      initiatorDeviceId: string;
+      responderDeviceId: string;
+      local: 'initiator' | 'responder';
+    },
+    proof?: unknown
+  ): Promise<string> {
+    const input = await this.reconnectProofInput(conn, role, ids);
+    if (proof === undefined) return computeReconnectProof(secret, input);
+    if (!(await verifyReconnectProof(secret, proof, input)))
+      throw new Error('Invalid reconnect proof');
+    return proof as string;
+  }
+
+  /** The ECDH public keys of a connection's ready encryption session. */
+  private async sessionPublicKeys(
+    conn: DataConnection
+  ): Promise<{ local: SyncJsonWebKey; remote: SyncJsonWebKey }> {
+    const session = this.encryptionSessions.get(conn.peer);
+    if (!session?.isReady || !session.remotePublicKey)
+      throw new Error('Encryption session not ready');
+    return {
+      local: session.localKeyPair.publicKeyJwk,
+      remote: (await crypto.subtle.exportKey(
+        'jwk',
+        session.remotePublicKey
+      )) as SyncJsonWebKey,
+    };
+  }
+
+  private async reconnectProofInput(
+    conn: DataConnection,
+    role: 'request' | 'accept',
+    ids: {
+      initiatorDeviceId: string;
+      responderDeviceId: string;
+      local: 'initiator' | 'responder';
+    }
+  ): Promise<ReconnectProofInput> {
+    const { local: localKey, remote: remoteKey } =
+      await this.sessionPublicKeys(conn);
+    return {
+      role,
+      initiatorDeviceId: ids.initiatorDeviceId,
+      responderDeviceId: ids.responderDeviceId,
+      initiatorPublicKey: ids.local === 'initiator' ? localKey : remoteKey,
+      responderPublicKey: ids.local === 'initiator' ? remoteKey : localKey,
+    };
+  }
+
+  /** Versions must match, as for pairing; the device must stay the same. */
+  private reconnectMismatch(
+    device: PeerDevice,
+    message: Extract<
+      PairingMessage,
+      { type: 'reconnect-request' | 'reconnect-accept' }
+    >
+  ): ReconnectRejectReason | null {
+    if (
+      message.protocolVersion !== PEER_PROTOCOL_VERSION ||
+      message.schemaVersion !== this.options.schemaVersion
+    )
+      return 'version-mismatch';
+    if (
+      message.profileId !== device.remoteProfileId ||
+      device.localProfileId !== this.options.profileId ||
+      (this.options.getActiveProfileId &&
+        this.options.getActiveProfileId() !== this.options.profileId)
+    )
+      return 'profile-mismatch';
+    return null;
+  }
+
+  /** Whether an existing authorized connection should win over a new one. */
+  private keepsExistingConnection(
+    device: PeerDevice,
+    conn: DataConnection
+  ): boolean {
+    for (const [peerId, deviceId] of this.authorizedPeers) {
+      if (deviceId !== device.id || peerId === conn.peer) continue;
+      const existing = this.connections.get(peerId);
+      if (
+        existing &&
+        this.preferConnection(existing, conn, device.id) === existing
+      )
+        return true;
+    }
+    return false;
+  }
+
+  private completeReconnect(
+    conn: DataConnection,
+    device: PeerDevice,
+    message: Extract<
+      PairingMessage,
+      { type: 'reconnect-request' | 'reconnect-accept' }
+    >
+  ): void {
+    const timeout = this.reconnectTimeouts.get(conn);
+    if (timeout) clearTimeout(timeout);
+    if (
+      typeof message.deviceName === 'string' &&
+      message.deviceName.length <= 100
+    )
+      device.name = message.deviceName || device.name;
+    device.supportsFragmentation = message.supportsFragmentation === true;
+    this.authorizeDevice(conn, device);
+    peerDebugLog('Reconnected paired device:', device.id);
+    this.options.onReconnected?.(device);
+    this.options.onConnectionChange?.(conn.peer, true);
+  }
+
+  private async handleReconnectRequest(
+    conn: DataConnection,
+    message: Extract<PairingMessage, { type: 'reconnect-request' }>
+  ): Promise<void> {
+    const reject = async (reason: ReconnectRejectReason) => {
+      await this.sendEncrypted(conn, { type: 'reconnect-reject', reason });
+      this.closeAfterDelivery(conn);
+    };
+    const device =
+      typeof message.deviceId === 'string'
+        ? this.pairedDevices.get(message.deviceId)
+        : undefined;
+    const secret = device && this.reconnectSecrets.get(device.id);
+    if (!device || !secret || this.outgoingConnections.has(conn))
+      // Paired with another local profile: retry once that profile is open.
+      return reject(
+        typeof message.deviceId === 'string' &&
+          this.options.isKnownDevice?.(message.deviceId)
+          ? 'profile-mismatch'
+          : 'unknown-device'
+      );
+    try {
+      await this.reconnectProof(
+        conn,
+        secret,
+        'request',
+        {
+          initiatorDeviceId: device.id,
+          responderDeviceId: this.options.deviceId,
+          local: 'responder',
+        },
+        message.proof
+      );
+    } catch {
+      return reject('invalid-proof');
+    }
+    const mismatch = this.reconnectMismatch(device, message);
+    if (mismatch) {
+      if (mismatch === 'version-mismatch') {
+        this.blockedReconnects.add(device.id);
+        this.options.onReconnectIssue?.(device, 'update-required');
+      }
+      return reject(mismatch);
+    }
+    if (this.connections.get(conn.peer) !== conn) return;
+    if (this.keepsExistingConnection(device, conn)) {
+      conn.close();
+      return;
+    }
+    const proof = await this.reconnectProof(conn, secret, 'accept', {
+      initiatorDeviceId: device.id,
+      responderDeviceId: this.options.deviceId,
+      local: 'responder',
+    });
+    // Authorize before answering: the other device may sync right away.
+    this.completeReconnect(conn, device, message);
+    try {
+      await this.sendEncrypted(conn, {
+        type: 'reconnect-accept',
+        deviceId: this.options.deviceId,
+        deviceName: this.options.deviceName,
+        profileId: this.options.profileId || '',
+        schemaVersion: this.options.schemaVersion || 0,
+        protocolVersion: PEER_PROTOCOL_VERSION,
+        supportsFragmentation: true,
+        proof,
+      });
+    } catch (error) {
+      this.closeConnection(conn);
+      throw error;
+    }
+  }
+
+  private async handleReconnectAccept(
+    conn: DataConnection,
+    message: Extract<PairingMessage, { type: 'reconnect-accept' }>
+  ): Promise<void> {
+    const device = this.pairedDevices.get(message.deviceId);
+    const secret = device && this.reconnectSecrets.get(device.id);
+    if (!device || !secret || this.reconnectDials.get(device.id) !== conn)
+      throw new Error('Unsolicited reconnect acceptance');
+    await this.reconnectProof(
+      conn,
+      secret,
+      'accept',
+      {
+        initiatorDeviceId: this.options.deviceId,
+        responderDeviceId: device.id,
+        local: 'initiator',
+      },
+      message.proof
+    );
+    const mismatch = this.reconnectMismatch(device, message);
+    if (mismatch) {
+      if (mismatch === 'version-mismatch') {
+        this.blockedReconnects.add(device.id);
+        this.options.onReconnectIssue?.(device, 'update-required');
+      }
+      throw new Error('Reconnect rejected: ' + mismatch);
+    }
+    if (this.keepsExistingConnection(device, conn)) {
+      this.reconnectDials.delete(device.id);
+      conn.close();
+      return;
+    }
+    this.completeReconnect(conn, device, message);
+  }
+
+  private handleReconnectReject(
+    conn: DataConnection,
+    reason: ReconnectRejectReason
+  ): void {
+    const entry = [...this.reconnectDials].find(([, dial]) => dial === conn);
+    const device = entry && this.pairedDevices.get(entry[0]);
+    if (device) {
+      peerDebugLog('Reconnect rejected:', device.id, reason);
+      // A reject is not authenticated, so the pairing is kept; retries pause
+      // until the user acts (pair again or update) or the next session.
+      if (reason === 'unknown-device' || reason === 'version-mismatch') {
+        this.blockedReconnects.add(device.id);
+        this.options.onReconnectIssue?.(
+          device,
+          reason === 'version-mismatch' ? 'update-required' : 'pair-again'
         );
       }
     }
+    // Closing schedules the next attempt unless retries are paused.
+    conn.close();
+  }
 
-    await Promise.all(sendPromises);
+  /**
+   * Close after a final message: the receiver closes once it has handled it,
+   * since closing right after sending can drop the message in transit.
+   */
+  private closeAfterDelivery(
+    conn: DataConnection,
+    onClosed?: () => void
+  ): void {
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      clearTimeout(timer);
+      onClosed?.();
+      try {
+        conn.close();
+      } catch {
+        // Already closed
+      }
+    };
+    const timer = setTimeout(finish, 5000);
+    conn.once('close', finish);
+  }
+
+  /** Drop a pairing and its reconnect secret from this session. */
+  private forgetDevice(deviceId: string): void {
+    this.pairedDevices.delete(deviceId);
+    this.reconnectSecrets.delete(deviceId);
+    this.reconnectAttempts.delete(deviceId);
+    this.blockedReconnects.delete(deviceId);
+    this.clearReconnectTimer(deviceId);
+    const dial = this.reconnectDials.get(deviceId);
+    this.reconnectDials.delete(deviceId);
+    dial?.close();
   }
 
   /**
@@ -1120,25 +2410,66 @@ export class PeerSync {
    */
   disconnect(deviceId: string): void {
     const device = this.pairedDevices.get(deviceId);
-    if (device) {
-      const conn = this.connections.get(device.peerId);
-      conn?.close();
+    if (!device) return;
+    const conn =
+      this.authorizedPeers.get(device.peerId) === deviceId
+        ? this.connections.get(device.peerId)
+        : undefined;
+    this.forgetDevice(deviceId);
+    const cleanup = () => {
+      if (conn) {
+        this.closeConnection(conn, false);
+        conn.close();
+      }
       this.connections.delete(device.peerId);
       this.encryptionSessions.delete(device.peerId);
-      this.pairedDevices.delete(deviceId);
+      this.sentKeyExchanges.delete(device.peerId);
+      this.encryptionInitializers.delete(device.peerId);
+    };
+    if (!conn?.open) {
+      cleanup();
+      return;
     }
+    // Tell the other device, so it stops reconnecting and drops the pairing.
+    this.authorizedPeers.delete(conn.peer);
+    void this.sendEncrypted(conn, { type: 'unpair' }).then(
+      () => this.closeAfterDelivery(conn, cleanup),
+      cleanup
+    );
   }
 
   /**
    * Destroy peer connection
    */
   destroy(): void {
+    this.cancelInitialization?.();
+    // Forget reconnect state first so closing connections does not retry.
+    this.reconnectSecrets.clear();
+    for (const timer of this.reconnectTimers.values()) clearTimeout(timer);
+    this.reconnectTimers.clear();
+    this.reconnectAttempts.clear();
+    this.blockedReconnects.clear();
+    this.dialFailures.clear();
+    this.afterKeyExchange.clear();
+    const dials = [...this.reconnectDials.values()];
+    this.reconnectDials.clear();
+    for (const dial of dials) dial.close();
+    this.authorizedPeers.clear();
+    for (const key of this.incomingSnapshots.keys()) this.discardSnapshot(key);
+    this.completedSnapshots.clear();
+    for (const pending of this.pendingSync.values()) {
+      clearTimeout(pending.timer);
+      pending.reject(new Error('Sync disconnected'));
+    }
+    this.pendingSync.clear();
     for (const conn of this.connections.values()) {
       conn.close();
     }
     this.connections.clear();
     this.pairedDevices.clear();
     this.encryptionSessions.clear();
+    this.encryptionInitializers.clear();
+    this.sentKeyExchanges.clear();
     this.peer?.destroy();
     this.peer = null;
     this.isInitialized = false;

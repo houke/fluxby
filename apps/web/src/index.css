@@ -43,7 +43,7 @@
   --radius-sm: calc(var(--radius) - 4px);
 
   /* Font Family */
-  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-sans: 'Inter Variable', 'Inter', system-ui, sans-serif;
 
   /* Animations */
   --animate-accordion-down: accordion-down 0.2s ease-out;
@@ -84,7 +84,7 @@
   --muted-foreground: 220 9% 46%;
   --accent: 262 83% 58%;
   --accent-foreground: 0 0% 100%;
-  --destructive: 0 84% 60%;
+  --destructive: 0 74% 41%;
   --destructive-foreground: 0 0% 100%;
   --success: 160 84% 39%;
   --success-foreground: 0 0% 100%;
@@ -110,7 +110,7 @@
   --muted-foreground: 215 20% 65%;
   --accent: 262 83% 58%;
   --accent-foreground: 0 0% 100%;
-  --destructive: 0 84% 60%;
+  --destructive: 0 74% 41%;
   --destructive-foreground: 0 0% 100%;
   --success: 160 84% 39%;
   --success-foreground: 0 0% 100%;
@@ -189,9 +189,62 @@ body {
   animation: revealFromRight 1.5s ease-out forwards;
 }
 
+/* Keep page changes calm and short when app navigation uses the View Transition API. */
+.app-page-view-transition {
+  view-transition-name: app-page;
+}
+
+/* Keep the app shell still and avoid stretching captured text between pages. */
+::view-transition-group(root),
+::view-transition-group(app-page),
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+}
+
+::view-transition-old(root),
+::view-transition-new(root),
+::view-transition-old(app-page),
+::view-transition-new(app-page) {
+  mix-blend-mode: normal;
+}
+
+@keyframes app-page-transition-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes app-page-transition-out {
+  to {
+    opacity: 0;
+  }
+}
+
+::view-transition-old(app-page) {
+  animation: 90ms ease-out both app-page-transition-out;
+}
+
+::view-transition-new(app-page) {
+  animation: 200ms cubic-bezier(0.2, 0.7, 0.2, 1) both app-page-transition-in;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(app-page),
+  ::view-transition-old(app-page),
+  ::view-transition-new(app-page) {
+    animation-duration: 0s;
+  }
+}
+
 /* Card hover effects */
 .card-hover {
-  transition-property: all;
+  transition-property: transform, box-shadow;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   transition-duration: 200ms;
 }
@@ -236,4 +289,19 @@ body {
 html,
 body {
   overscroll-behavior: none;
+}
+
+/* Finish entrance/exit animations so content and completion events survive,
+   while removing repeated motion, delays, and smooth scrolling. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0s !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0s !important;
+    transition-delay: 0s !important;
+    scroll-behavior: auto !important;
+  }
 }

@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import type { AsyncDatabaseConnection } from '@fluxby/database';
 
 // Lightweight test that verifies insertDemoRecurringPatterns uses the latest tx when present
 import {
@@ -11,6 +12,12 @@ describe('web createDemoData recurring patterns', () => {
   it('seeds the shared uncategorized Jev examples', async () => {
     const transactionRows: unknown[][] = [];
     const fakeDb = {
+      transactionAsync: async function <T>(
+        this: unknown,
+        fn: (connection: AsyncDatabaseConnection) => Promise<T>
+      ) {
+        return fn(this as AsyncDatabaseConnection);
+      },
       queryOneAsync: async () => null,
       runAsync: async (sql: string, params: unknown[]) => {
         if (sql.includes('INSERT INTO transactions')) {

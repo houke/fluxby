@@ -1,5 +1,26 @@
-import * as Sentry from '@sentry/react';
 import { debugLog } from './debug';
+
+type SentryModule = typeof import('@sentry/react');
+
+// Sentry loads only when a DSN is configured, keeping it out of the startup
+// bundle for the default (tracking-free) build.
+let sentry: SentryModule | null = null;
+const MAX_PENDING_ERRORS = 20;
+let pendingErrors: Array<[Error, Record<string, unknown> | undefined]> | null =
+  null;
+
+function reportToSentry(
+  module: SentryModule,
+  error: Error,
+  context?: Record<string, unknown>
+): void {
+  module.withScope((scope) => {
+    if (context) {
+      scope.setExtras(context);
+    }
+    module.captureException(error);
+  });
+}
 
 /**
  * Initialize Sentry error tracking with privacy-conscious settings.
@@ -20,6 +41,23 @@ export function initErrorTracking(): void {
     return;
   }
 
+  pendingErrors = [];
+  void import('@sentry/react')
+    .then((module) => {
+      startSentry(module, dsn);
+      sentry = module;
+      for (const [error, context] of pendingErrors ?? [])
+        reportToSentry(module, error, context);
+    })
+    .catch((error: unknown) => {
+      debugLog('[Sentry] Failed to load', error);
+    })
+    .finally(() => {
+      pendingErrors = null;
+    });
+}
+
+function startSentry(Sentry: SentryModule, dsn: string): void {
   Sentry.init({
     dsn,
     environment: import.meta.env.MODE,
@@ -92,12 +130,12 @@ export function captureError(
     return;
   }
 
-  Sentry.withScope((scope) => {
-    if (context) {
-      scope.setExtras(context);
-    }
-    Sentry.captureException(error);
-  });
+  if (sentry) {
+    reportToSentry(sentry, error, context);
+  } else if (pendingErrors && pendingErrors.length < MAX_PENDING_ERRORS) {
+    // Errors raised while Sentry is still loading are reported once it starts.
+    pendingErrors.push([error, context]);
+  }
 }
 
 /**
@@ -122,6 +160,3 @@ export function setupGlobalErrorHandlers(): void {
     }
   });
 }
-
-// Re-export Sentry's ErrorBoundary for convenience
-export const SentryErrorBoundary = Sentry.ErrorBoundary;

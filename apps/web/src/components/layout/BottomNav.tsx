@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
   ArrowLeftRight,
@@ -7,6 +7,7 @@ import {
   Upload,
   MoreHorizontal,
   Wallet,
+  Target,
   CalendarClock,
   Tags,
   BookUser,
@@ -23,6 +24,7 @@ import {
 } from '@/components/ui/sheet';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Separator } from '@/components/ui/separator';
+import { TransitionNavLink } from './TransitionLink';
 
 interface BottomNavItem {
   to: string;
@@ -46,6 +48,7 @@ export function BottomNav() {
   // Secondary items for "More" sheet
   const moreNavItems: BottomNavItem[] = [
     { to: '/budgets', icon: Wallet, label: t.nav.budgets },
+    { to: '/planning', icon: Target, label: t.nav.planning },
     {
       to: '/subscriptions',
       icon: CalendarClock,
@@ -73,28 +76,35 @@ export function BottomNav() {
   return (
     <>
       {/* Bottom Navigation Bar */}
-      <nav className='fixed right-0 bottom-0 left-0 z-30 flex h-16 items-center justify-around border-t bg-card md:hidden'>
+      <nav
+        data-onboarding='mobile-navigation'
+        className='fixed right-0 bottom-0 left-0 z-30 flex h-16 items-center justify-around border-t bg-card md:hidden'
+      >
         {primaryNavItems.map((item) => (
-          <NavLink
+          <TransitionNavLink
             key={item.to}
             to={item.to}
             className={({ isActive }) =>
               cn(
                 'flex flex-1 flex-col items-center justify-center gap-1 py-2',
-                isActive ? 'text-primary' : 'text-muted-foreground'
+                isActive
+                  ? 'text-primary dark:text-purple-300'
+                  : 'text-muted-foreground'
               )
             }
           >
             <item.icon className='h-5 w-5' />
             <span className='text-[10px] font-medium'>{item.label}</span>
-          </NavLink>
+          </TransitionNavLink>
         ))}
         {/* More button */}
         <button
           onClick={() => setMoreOpen(true)}
           className={cn(
             'flex flex-1 flex-col items-center justify-center gap-1 py-2',
-            isMoreActive ? 'text-primary' : 'text-muted-foreground'
+            isMoreActive
+              ? 'text-primary dark:text-purple-300'
+              : 'text-muted-foreground'
           )}
         >
           <MoreHorizontal className='h-5 w-5' />
@@ -115,7 +125,7 @@ export function BottomNav() {
           <div className='mt-6 space-y-1'>
             {/* Secondary navigation items */}
             {moreNavItems.map((item) => (
-              <NavLink
+              <TransitionNavLink
                 key={item.to}
                 to={item.to}
                 onClick={() => setMoreOpen(false)}
@@ -130,14 +140,14 @@ export function BottomNav() {
               >
                 <item.icon className='h-5 w-5' />
                 {item.label}
-              </NavLink>
+              </TransitionNavLink>
             ))}
 
             <Separator className='my-3' />
 
             {/* Settings and help */}
             {settingsNavItems.map((item) => (
-              <NavLink
+              <TransitionNavLink
                 key={item.to}
                 to={item.to}
                 onClick={() => setMoreOpen(false)}
@@ -152,7 +162,7 @@ export function BottomNav() {
               >
                 <item.icon className='h-5 w-5' />
                 {item.label}
-              </NavLink>
+              </TransitionNavLink>
             ))}
 
             <Separator className='my-3' />

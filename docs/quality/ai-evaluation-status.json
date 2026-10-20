@@ -1,0 +1,17 @@
+{
+  "status": "live_not_run",
+  "dataset": "synthetic-v1",
+  "cases": 64,
+  "model": [],
+  "timestamp": "2026-09-29T16:01:31.315Z",
+  "note": "Hand-labeled synthetic cases; not a representative production accuracy estimate. Confidence is not accuracy. Empty precision is null, never 100%.",
+  "metrics": null,
+  "byLanguage": null,
+  "thresholdSweep": null,
+  "requestLatencyMs": {
+    "p50": null,
+    "p95": null
+  },
+  "usage": null,
+  "judgments": []
+}

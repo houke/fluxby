@@ -60,10 +60,8 @@ describe('WebMCP tool surface', () => {
     const { tools } = setup();
     const names = tools.map((tool) => tool.name);
     expect(new Set(names).size).toBe(names.length);
-    expect(names).toHaveLength(17);
-    expect(names).not.toContain('fluxby_planning');
+    expect(names).toHaveLength(19);
     expect(names).not.toContain('fluxby_saved_views');
-    expect(names).not.toContain('fluxby_create_goal');
     expect(
       tools.find((tool) => tool.name === 'fluxby_create_transaction')
         ?.annotations.consequentialHint
@@ -91,7 +89,7 @@ describe('WebMCP tool surface', () => {
   });
 
   it('bounds transaction reads and excludes raw import fields', async () => {
-    const { find, service, confirm } = setup();
+    const { find, service } = setup();
     const tool = find('transactions');
     const result = await tool.execute({ limit: 2, offset: 5 }, { signal });
     expect(service.getTransactions).toHaveBeenCalledWith({
@@ -110,7 +108,7 @@ describe('WebMCP tool surface', () => {
     await expect(tool.execute({ secret: 'x' }, { signal })).rejects.toThrow(
       webMcpEn.invalidInput
     );
-    expect(confirm).not.toHaveBeenCalled();
+    expect(service.createAccount).not.toHaveBeenCalled();
   });
 
   it('requires a confirmation and active-profile ownership before a write', async () => {
@@ -134,29 +132,32 @@ describe('WebMCP tool surface', () => {
     expect(changed).toHaveBeenCalledOnce();
   });
 
-  it('requires an IBAN and a main-supported account type', async () => {
-    const { find, service, confirm } = setup();
+  it('requires bank IBANs and permits supported manual account types', async () => {
+    const { find, service } = setup();
     const tool = find('create_account');
-    await expect(
-      tool.execute({ name: 'Cash', type: 'cash' }, { signal })
-    ).rejects.toThrow(webMcpEn.invalidInput);
     await expect(
       tool.execute({ name: 'Current', type: 'checking' }, { signal })
     ).rejects.toThrow(webMcpEn.invalidInput);
-    expect(confirm).not.toHaveBeenCalled();
     await expect(
-      tool.execute(
-        { name: 'Current', type: 'checking', iban: 'NL91ABNA0417164300' },
-        { signal }
-      )
+      tool.execute({ name: 'Unsupported', type: 'wallet' }, { signal })
+    ).rejects.toThrow(webMcpEn.invalidInput);
+    expect(service.createAccount).not.toHaveBeenCalled();
+    await expect(
+      tool.execute({ name: 'Cash', type: 'cash' }, { signal })
     ).resolves.toEqual({ id: 'account-2' });
     expect(service.createAccount).toHaveBeenCalledWith({
-      name: 'Current',
-      type: 'checking',
-      iban: 'NL91ABNA0417164300',
+      name: 'Cash',
+      type: 'cash',
+      iban: undefined,
       bank: undefined,
       currentBalance: undefined,
     });
+    await expect(
+      tool.execute(
+        { name: 'Bank', type: 'checking', iban: 'NL91ABNA0417164300' },
+        { signal }
+      )
+    ).resolves.toEqual({ id: 'account-2' });
   });
 
   it('rejects invalid input and revoked access without writing', async () => {

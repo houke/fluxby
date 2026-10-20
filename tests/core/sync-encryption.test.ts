@@ -149,6 +149,22 @@ describe('Sync Encryption', () => {
       expect(decrypted).toEqual(originalMessage);
     });
 
+    it('encrypts full profile snapshots beyond the function argument limit', async () => {
+      const snapshot = {
+        type: 'sync-push',
+        changes: Array.from({ length: 1000 }, (_, index) => ({
+          table: 'transactions',
+          row: {
+            id: `transaction-${index}`,
+            description: 'Bank transaction '.repeat(20),
+            amount: -12.34,
+          },
+        })),
+      };
+      const { envelope } = await encryptMessage(aliceSession, snapshot);
+      expect(await decryptMessage(bobSession, envelope)).toEqual(snapshot);
+    });
+
     it('encrypts and decrypts complex objects', async () => {
       const originalMessage = {
         type: 'sync:data',

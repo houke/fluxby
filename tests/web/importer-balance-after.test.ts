@@ -10,6 +10,7 @@ describe('importers balance_after mapping', () => {
     };
     const options = {
       accountId: 'acc-main',
+      accountIban: 'NL00INGB0001234567',
       profileId: 'profile-1',
       mapping: {
         date: 'Date',
@@ -61,6 +62,7 @@ describe('importers balance_after mapping', () => {
     expect(debit.transaction.paymentMethod).toBe('pin');
     expect(credit.transaction.amount).toBe(9.52);
     expect(credit.transaction.type).toBe('income');
+    expect(db.queryOneAsync).not.toHaveBeenCalled();
   });
 
   it('stores ING balance column as balanceAfter', async () => {
@@ -129,6 +131,7 @@ describe('importers balance_after mapping', () => {
       },
       {
         accountId: 'acc-asn',
+        accountIban: 'NL91ASNB0123456789',
         profileId: 'profile-1',
         mapping: {
           date: 'Datum',
@@ -159,5 +162,6 @@ describe('importers balance_after mapping', () => {
     }
 
     expect(result.transaction.balanceAfter).toBe(2474.5);
+    expect(db.queryOneAsync).not.toHaveBeenCalled();
   });
 });

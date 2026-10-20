@@ -20,7 +20,7 @@ import {
   Eye,
   EyeOff,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, formatDate } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -724,7 +724,7 @@ export function ProfileManager() {
                     </div>
                   </div>
                   {isActive && (
-                    <span className='flex h-6 items-center rounded-full bg-primary/10 px-2 text-xs font-medium text-primary'>
+                    <span className='flex h-6 items-center rounded-full bg-primary/10 px-2 text-xs font-medium text-primary dark:text-purple-300'>
                       {t.settings.profileManager.active}
                     </span>
                   )}
@@ -734,7 +734,7 @@ export function ProfileManager() {
                 <div className='flex items-center justify-between'>
                   <div className='text-sm text-muted-foreground'>
                     {t.settings.profileManager.profileId}:{' '}
-                    <code className='rounded bg-muted px-1 py-0.5 font-mono text-xs'>
+                    <code className='rounded bg-muted px-1 py-0.5 font-mono text-xs text-slate-600 dark:text-slate-300'>
                       {profile.id}
                     </code>
                   </div>
@@ -770,9 +770,7 @@ export function ProfileManager() {
                 </div>
                 <div className='mt-1 text-sm text-muted-foreground'>
                   {t.settings.profileManager.createdOn}{' '}
-                  {new Date(
-                    profile.createdAt || Date.now()
-                  ).toLocaleDateString()}
+                  {formatDate(new Date(profile.createdAt || Date.now()))}
                 </div>
               </CardContent>
               <CardFooter className='flex justify-between border-t bg-muted/20 p-3'>

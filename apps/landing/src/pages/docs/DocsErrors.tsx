@@ -22,9 +22,8 @@ export default function DocsErrors() {
       <div className='not-prose mt-6'>
         <CodeBlock
           code={`{
-  "error": "Error type or title",
-  "message": "A human-readable description of what went wrong",
-  "details": { /* Optional additional information */ }
+  "success": false,
+  "error": "Valid bearer token required"
 }`}
           language='json'
         />

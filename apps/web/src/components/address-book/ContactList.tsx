@@ -33,6 +33,8 @@ interface ContactListProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   contactTransactions: any[] | undefined;
   isLoadingTransactions: boolean;
+  transactionPage?: number;
+  onTransactionPageChange?: (page: number) => void;
   onSplitContact: (contact: AddressBookEntryWithStats) => void;
   onSelectContactTransactions: (contact: AddressBookEntryWithStats) => void;
   hasSharedIban: (contact: AddressBookEntryWithStats) => boolean;
@@ -67,6 +69,8 @@ export const ContactList: React.FC<ContactListProps> = ({
   onToggleExpand,
   contactTransactions,
   isLoadingTransactions,
+  transactionPage,
+  onTransactionPageChange,
   onSplitContact,
   onSelectContactTransactions,
   hasSharedIban,
@@ -219,6 +223,8 @@ export const ContactList: React.FC<ContactListProps> = ({
               onToggleExpand={onToggleExpand}
               contactTransactions={contactTransactions}
               isLoadingTransactions={isLoadingTransactions}
+              transactionPage={transactionPage}
+              onTransactionPageChange={onTransactionPageChange}
               onSplitContact={onSplitContact}
               onSelectContactTransactions={onSelectContactTransactions}
               hasSharedIban={hasSharedIban}
@@ -269,6 +275,8 @@ export const ContactList: React.FC<ContactListProps> = ({
                             ? contactTransactions
                             : undefined
                         }
+                        transactionPage={transactionPage}
+                        onTransactionPageChange={onTransactionPageChange}
                         isLoadingTransactions={
                           expandedContactId === contact.id
                             ? isLoadingTransactions

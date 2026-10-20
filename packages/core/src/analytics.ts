@@ -188,27 +188,33 @@ export function calculateAverageSpending(
   transactions: Transaction[],
   dateRange?: DateRange
 ): number {
-  let filtered = transactions.filter(
-    (t) => t.amount < 0 && t.type !== 'transfer'
-  );
+  let totalExpenses = 0;
+  let minDate = Infinity;
+  let maxDate = -Infinity;
+  let expenseCount = 0;
 
-  if (dateRange) {
-    filtered = filtered.filter((t) => {
-      return t.date >= dateRange.startDate && t.date <= dateRange.endDate;
-    });
+  for (const transaction of transactions) {
+    if (!(transaction.amount < 0) || transaction.type === 'transfer') continue;
+    if (
+      dateRange &&
+      !(
+        transaction.date >= dateRange.startDate &&
+        transaction.date <= dateRange.endDate
+      )
+    ) {
+      continue;
+    }
+
+    totalExpenses += Math.abs(transaction.amount);
+    const date = new Date(transaction.date).getTime();
+    minDate = Math.min(minDate, date);
+    maxDate = Math.max(maxDate, date);
+    expenseCount++;
   }
 
-  if (filtered.length === 0) return 0;
-
-  const totalExpenses = filtered.reduce(
-    (sum, t) => sum + Math.abs(t.amount),
-    0
-  );
+  if (expenseCount === 0) return 0;
 
   // Calculate number of days in range
-  const dates = filtered.map((t) => new Date(t.date).getTime());
-  const minDate = Math.min(...dates);
-  const maxDate = Math.max(...dates);
   const days = Math.max(
     1,
     Math.ceil((maxDate - minDate) / (1000 * 60 * 60 * 24))

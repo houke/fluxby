@@ -1,10 +1,19 @@
+import { settingsNavigationEn } from './settings-navigation';
 import { webMcpEn } from '../webmcp-copy';
+import { householdPlanningEn } from './household-planning';
+import { transactionReviewEn } from './transaction-review-translations';
+import { householdBudgetEn } from './household-budget-translations';
 // English translations for the Fluxby web app
 import type { TranslationKeys } from './nl';
 import { DEMO_TRANSLATIONS } from '@fluxby/shared';
+import { onboardingGuideEn } from './onboarding-guide';
 
 export const en: TranslationKeys = {
+  onboardingGuide: onboardingGuideEn,
   webMcp: webMcpEn,
+  householdPlanning: householdPlanningEn,
+  transactionReview: transactionReviewEn,
+  householdBudget: householdBudgetEn,
   demoData: DEMO_TRANSLATIONS.en,
   common: {
     save: 'Save',
@@ -167,7 +176,7 @@ export const en: TranslationKeys = {
     finish: 'Finish',
     next: 'Next',
     settings: {
-      title: 'Onboarding Tour',
+      title: 'Onboarding tour',
       progress: 'Progress',
       completed: 'Completed',
       notStarted: 'Not started',
@@ -225,6 +234,8 @@ export const en: TranslationKeys = {
     newPassword: 'Create password',
     enterPassword: 'Enter password',
     confirmPassword: 'Confirm password',
+    showPassword: 'Show password',
+    hidePassword: 'Hide password',
     createPassword: 'Create password',
     unlock: 'Unlock',
     useBiometric: 'Use biometric',
@@ -322,6 +333,7 @@ export const en: TranslationKeys = {
       'Are you sure? The update will proceed without a database backup.',
   },
   nav: {
+    planning: 'Planning',
     dashboard: 'Dashboard',
     transactions: 'Transactions',
     analytics: 'Analytics',
@@ -416,7 +428,7 @@ export const en: TranslationKeys = {
   transactions: {
     title: 'Transactions',
     subtitle: 'Manage your income and expenses',
-    allTransactions: 'All Transactions',
+    allTransactions: 'All transactions',
     transactionsFound: 'transactions found',
     searchPlaceholder: 'Search by description, IBAN or category...',
     income: 'Income',
@@ -604,7 +616,95 @@ export const en: TranslationKeys = {
     spendingByCategory: 'Spending by category',
     legendLabel: 'Category filter',
   },
+  transactionTools: {
+    compact: 'Compact view',
+    comfortable: 'Comfortable view',
+  },
+  planning: {
+    title: 'Planning',
+    subtitle: 'Plan savings, upcoming bills, and your monthly finances.',
+    safeToSpend: 'Safe to spend',
+    safeToSpendDescription:
+      'A 30-day estimate using your account balances and confirmed recurring payments.',
+    availableBalance: 'Account balances',
+    upcomingObligations: 'Upcoming payments',
+    goalReservations: 'Monthly savings plans',
+    minimumBalance: 'Minimum balance',
+    reservedSavings: 'Other reserved savings',
+    preferencesSaved: 'Planning preferences saved',
+    savePreferences: 'Save reserves',
+    goals: 'Savings goals',
+    goalsDescription:
+      'Set targets and monthly contributions for savings goals and future expenses. Contributions track progress; they do not move money between accounts.',
+    addGoal: 'Add savings goal',
+    editGoal: 'Edit savings goal',
+    name: 'Name',
+    targetAmount: 'Target amount',
+    currentAmount: 'Saved so far',
+    deadline: 'Target date (optional)',
+    monthlyContribution: 'Monthly contribution',
+    contribute: 'Record contribution',
+    contributionAmount: 'Contribution amount',
+    goalCreated: 'Savings goal created',
+    goalUpdated: 'Savings goal updated',
+    goalDeleted: 'Savings goal removed',
+    contributionSaved: 'Savings contribution recorded',
+    deleteGoalConfirm: 'Remove this savings goal and its contribution history?',
+    noGoals: 'Create a goal for an emergency fund, holiday, or annual bill.',
+    goalComplete: 'Target reached',
+    netWorth: 'Net worth',
+    netWorthDescription:
+      'Account balances are included automatically. Add other assets and liabilities at their current value. Avoid counting the same money twice.',
+    cash: 'Cash in accounts',
+    assets: 'Other assets',
+    liabilities: 'Liabilities',
+    total: 'Total net worth',
+    addItem: 'Add asset or liability',
+    editItem: 'Edit asset or liability',
+    itemType: 'Type',
+    asset: 'Asset',
+    liability: 'Liability',
+    amount: 'Current value',
+    itemCreated: 'Net-worth item created',
+    itemUpdated: 'Net-worth item updated',
+    itemDeleted: 'Net-worth item removed',
+    deleteItemConfirm: 'Remove this asset or liability?',
+    noItems:
+      'Add investments, property, loans, or other balances you track manually.',
+    monthlyReview: 'Monthly review',
+    monthlyReviewDescription:
+      'Review each area, record your progress, and finish the month when every step is checked.',
+    reviewMonth: 'Review month',
+    reviewUncategorized: 'Categorize transactions that need attention',
+    reviewSpending: 'Review unusual spending and reimbursements',
+    reviewBudgets: 'Review budget amounts and rollover',
+    reviewSubscriptions: 'Review subscriptions and upcoming renewals',
+    reviewBackup: 'Download a current encrypted backup',
+    openArea: 'Open page',
+    finishReview: 'Finish monthly review',
+    reopenReview: 'Reopen monthly review',
+    reviewComplete: 'Review completed',
+    reviewSaved: 'Review progress saved',
+    reviewProgress: '{done} of {total} steps completed',
+    invalidAmount:
+      'Enter a valid name and positive amount. Reserved amounts may be zero.',
+    saveFailed: 'Could not save your change. Please try again.',
+    loadFailed: 'Planning could not be loaded. Try again.',
+    retry: 'Retry',
+    helpTitle: 'Using financial planning',
+    helpGoals:
+      'Create goals for planned expenses and record contributions as you save. Set a target date and a monthly contribution to include that reserve in safe-to-spend.',
+    helpForecast:
+      'Safe-to-spend subtracts confirmed payments expected within 30 days, your monthly goal contributions, other reserved savings, and your minimum balance. It is an estimate; missing bills or outdated account balances affect it.',
+    helpReview:
+      'Use the monthly checklist to review transactions, budgets, subscriptions, and backups. Progress is saved separately for each month and profile.',
+    helpNetWorth:
+      'Net worth combines account balances with manually entered assets and liabilities. Update values when they change and avoid entering existing bank balances twice.',
+  },
   budgets: {
+    selectCategory: 'Select category',
+    rolloverUnused: 'Carry unused budget forward',
+    carriedForward: 'Carried forward',
     title: 'Budgets',
     subtitle: 'Set goals and track your spending',
     newBudget: 'New Budget',
@@ -620,7 +720,7 @@ export const en: TranslationKeys = {
     noBudgets: 'No budgets set yet',
     createFirst: 'Create your first budget to track your spending',
     deleteBudget: 'Delete Budget',
-    monthlyOverview: 'Monthly Overview',
+    monthlyOverview: 'Monthly overview',
     budgetsSet: 'budgets set',
     addNewBudget: 'Add new budget',
     totalBudget: 'Total budget',
@@ -640,8 +740,17 @@ export const en: TranslationKeys = {
     monthCountUnit: 'mo.',
     searchPlaceholder: 'Search budgets...',
     createSelected: 'Create',
+    created: 'Budget created',
+    updated: 'Budget updated',
+    deleted: 'Budget deleted',
+    createdMultiple: '{count} budgets created',
+    invalidAmount: 'Enter an amount greater than zero.',
   },
   subscriptions: {
+    renewalDate: 'Renewal date',
+    cancellationDeadline: 'Cancellation deadline',
+    renewalReminder: 'Renewal within 30 days',
+    cancellationReminder: 'Cancellation deadline approaching or passed',
     title: 'Subscriptions',
     subtitle: 'Manage your recurring payments',
     noSubscriptions: 'No subscriptions detected yet',
@@ -707,7 +816,7 @@ export const en: TranslationKeys = {
     alerts: 'Alerts',
     noAlerts: 'No alerts',
     stale: 'Inactive',
-    staleTooltip: 'No transactions for more than 2 months',
+    staleTooltip: 'No payments for more than two expected cycles',
     staleDescription:
       'This subscription appears to be inactive. Would you like to remove it?',
     removeStale: 'Remove',
@@ -991,6 +1100,7 @@ export const en: TranslationKeys = {
     importingTo: 'Importing to',
   },
   settings: {
+    navigation: settingsNavigationEn,
     title: 'Settings',
     subtitle: 'Manage your accounts and app settings',
     tabs: {
@@ -998,14 +1108,15 @@ export const en: TranslationKeys = {
       manageProfiles: 'Manage profiles',
       appSettings: 'App settings',
     },
-    appSettings: 'App Settings',
-    appSettingsDescription: 'Manage language, currency and theme',
-    versions: 'Versions & Updates',
+    appSettings: 'App settings',
+    appSettingsDescription: 'Manage language, appearance and app preferences',
+    versions: 'Versions and updates',
     versionsDescription: 'App versions and software updates',
     language: 'Language',
     languageDescription: 'Choose the interface language',
     currency: 'Currency',
-    currencyDescription: 'Choose the currency for your transactions',
+    currencyDescription:
+      'Amounts are recorded in euros (EUR). Number formatting follows your interface language.',
     theme: 'Theme',
     themeDescription: 'Choose between light or dark theme',
     themeLight: 'Light',
@@ -1014,6 +1125,8 @@ export const en: TranslationKeys = {
     appNameDescription: 'Used in the greeting',
     appNamePlaceholder: 'Your name...',
     appNameUnset: 'Not set',
+    appNameSaved: 'Name saved',
+    appNameSaveError: 'Your name could not be saved. Try again.',
     masterPasswordTitle: 'Master password',
     masterPasswordDescription: 'Encrypts all your financial data locally',
     masterPasswordDialogTitle: 'Change master password',
@@ -1078,7 +1191,7 @@ export const en: TranslationKeys = {
       save: 'Save Changes',
       accountsTipTitle: 'Tip: Add your savings account',
       accountsTip:
-        'After importing transactions, you can set up your savings account in Settings → Accounts. Transfers between your accounts will be automatically detected and will not count towards your income and expenses analysis.',
+        'After importing transactions, you can set up your savings account in Settings → Profiles & accounts → Bank accounts. Transfers between your accounts will be automatically detected and will not count towards your income and expenses analysis.',
       addAccountsTitle: 'Add Accounts',
       addAccountsDescription:
         'Add bank accounts to your new profile. You can also do this later via Settings.',
@@ -1104,7 +1217,7 @@ export const en: TranslationKeys = {
       successReset: 'API server reset to local (same host).',
     },
     accounts: {
-      title: 'Accounts',
+      title: 'Bank accounts',
       description:
         'Manage your bank accounts. The order is used on the dashboard.',
       types: {
@@ -1120,6 +1233,8 @@ export const en: TranslationKeys = {
       ibanPlaceholder: 'IBAN (e.g. NL00BANK0123456789)',
       namePlaceholder: 'Name',
       add: 'Add',
+      accountType: 'Account type',
+      reorderAccount: 'Reorder {name}',
       orderSaved: 'Account order saved',
       orderSaveError: 'Failed to save account order',
     },
@@ -1162,6 +1277,35 @@ export const en: TranslationKeys = {
       failedToApplyRules: 'Failed to apply payment processor rules',
     },
     dataManagement: {
+      backupHealthHelp:
+        'Exports are encrypted by default and include your financial profiles and planning data. Backup health records when a download starts; confirm the file was saved by your browser.',
+      restoreHelp:
+        'Import validates the format and integrity before replacing data. Review the backup contents and choose a recovery password. Fluxby saves an encrypted recovery copy on this device first. Keep that password safe so you can download and restore the recovery copy if needed.',
+      backupHealthTitle: 'Backup health',
+      noBackupYet: 'No backup downloaded yet',
+      lastBackup: 'Last backup download started: {date}',
+      backupEncrypted: 'Encrypted',
+      backupPlain: 'Unencrypted',
+      backupVerification: 'Last restore verified: {date}',
+      noVerifiedRestore: 'No restore has been verified yet',
+      previewTitle: 'Review backup',
+      previewDescription:
+        'This backup contains {profiles} profiles, {accounts} accounts, and {transactions} transactions ({rows} records). Exported {date}.',
+      previewLegacy:
+        'This older backup does not include every feature. Missing tables will be empty after restoring.',
+      recoveryDescription:
+        'An encrypted recovery snapshot will be saved on this device before replacement.',
+      recoveryAvailable: 'Download recovery snapshot',
+      recoveryPassword: 'Recovery password',
+      recoveryPasswordDescription:
+        'Choose a password to protect a recovery copy of your current data.',
+      previewRestore: 'Save recovery snapshot and restore',
+      importInvalid:
+        'This backup is invalid or incompatible. Your data has not changed.',
+      backupChecksumInvalid:
+        'Backup integrity verification failed. Your data has not changed.',
+      recoveryDownload: 'Recovery snapshot download started.',
+      backupDownloaded: 'Backup download started.',
       title: 'Data Management',
       description: 'Export or delete your data',
       exportTitle: 'Export Data',
@@ -1308,9 +1452,12 @@ export const en: TranslationKeys = {
         'An error occurred while deleting subscriptions',
     },
     sync: {
+      mergeConfirmTitle: 'Merge profiles across devices?',
+      mergeConfirmDescription:
+        'Pairing merges the active profiles on both devices. The latest change wins when records differ. Export a backup before connecting if you need a recovery copy.',
       title: 'Device sync',
       description:
-        'Sync your data across devices using peer-to-peer connections. No server required.',
+        'Sync your data directly between your devices over encrypted peer-to-peer connections. A pairing server only helps the devices find each other.',
       thisDevice: 'This device',
       pairingCode: 'Pairing code',
       pairingCodeDescription: 'Share this code with another device to connect.',
@@ -1323,12 +1470,26 @@ export const en: TranslationKeys = {
       cannotConnectToSelf: 'Cannot connect to yourself',
       peerUnavailable:
         'Peer unavailable (ensure code is correct and peer is online)',
+      invalidPairingCode:
+        'This code is invalid, expired or already used. Enter the new code shown on the other device and try again.',
+      pairingNotVerified:
+        'The other device could not prove it knows the code. Generate a new code and try again. If it keeps failing, the connection may be intercepted.',
       connectionTimeout:
         'Connection timeout - the other device may be behind a firewall. Try a different network.',
       pairedDevices: 'Paired devices',
       lastSync: 'Last sync',
       neverSynced: 'Never synced',
       removeDevice: 'Remove device',
+      removeDeviceConfirmTitle: 'Remove this device?',
+      removeDeviceConfirmDescription:
+        '{device} will stop syncing with this device. If it is online, it removes the pairing too. You can pair again at any time.',
+      deviceRemoved: 'Device removed',
+      reconnectNow: 'Reconnect now',
+      deviceWaiting:
+        'Reconnects automatically when both devices are unlocked and online',
+      devicePairAgain: 'Pair again to reconnect automatically',
+      deviceUpdateRequired:
+        'Update both devices to the same version to reconnect',
       pairingRequest: 'Pairing request',
       showQRCode: 'Show QR code',
       pairDevice: 'Pair device',
@@ -1336,7 +1497,8 @@ export const en: TranslationKeys = {
       orEnterManually: 'Or enter manually',
       newCode: 'New code',
       qrCodeExpiry: 'Code expires in',
-      qrCodeValid: 'This code remains valid until you generate a new one.',
+      qrCodeValid:
+        'This code works once and expires after 2 minutes. After a failed attempt a new code appears here.',
       pairingPlaceholder: 'fluxby-abc123...:ABCDEF',
       pairingHint:
         'Enter the full pairing code including the colon. The code is case-sensitive.',
@@ -1344,14 +1506,21 @@ export const en: TranslationKeys = {
       accept: 'Accept',
       ready: 'Ready',
       initializing: 'Initializing...',
+      standby: 'Inactive',
+      connectingToServer: 'Connecting to the pairing server...',
       syncing: 'Syncing...',
       connected: 'Connected',
       notConnected: 'Not connected',
       syncNow: 'Sync now',
       syncNowTooltip: 'Force sync with all connected devices',
+      connectToSync: 'Connect to a device to sync',
       autoSync: 'Auto-sync',
+      autoSyncOnTooltip: 'Changes sync automatically',
+      autoSyncOffTooltip: 'Manual sync only',
       autoSyncDescription: 'Automatically sync changes as you make them',
       connectionSettings: 'Connection settings',
+      connectsOnDemand:
+        'Fluxby only connects to the pairing server when you pair a device or when this profile has paired devices. Paired devices then reconnect by themselves.',
       syncSuccess: '{received} received, {pushed} sent',
       syncNoChanges: 'No new changes to sync',
       syncError: 'Sync failed',
@@ -1478,10 +1647,10 @@ export const en: TranslationKeys = {
     subtitle: 'Learn how to make the most of the Financial Dashboard',
     features: 'Features',
     featuresDescription: 'An overview of all available features in the app',
-    quickStart: 'Quick Start',
+    quickStart: 'Quick start',
     quickStartDescription: 'Get started in 3 steps',
-    faq: 'Frequently Asked Questions',
-    needHelp: 'Need Help?',
+    faq: 'Frequently asked questions',
+    needHelp: 'Need help?',
     needHelpDescription:
       'Have a question not in the FAQ? Check out our documentation or get in touch with us.',
     externalLinks: 'More information',
@@ -1491,12 +1660,12 @@ export const en: TranslationKeys = {
     developerDocsLink: 'Developer documentation',
     featureList: [
       {
-        title: 'Import Transactions',
+        title: 'Import transactions',
         description:
           'Upload your bank CSV export to import transactions. The app automatically recognizes accounts and categorizes transactions.',
       },
       {
-        title: 'View Transactions',
+        title: 'View transactions',
         description:
           'View, filter and search through all your transactions. Adjust categories and add notes.',
       },
@@ -1516,12 +1685,12 @@ export const en: TranslationKeys = {
           'Manage categories and set rules for automatic categorization of transactions.',
       },
       {
-        title: 'Accounts',
+        title: 'Bank accounts',
         description:
           'Manage your bank accounts and view current balances per account.',
       },
       {
-        title: 'Address Book',
+        title: 'Address book',
         description:
           'Manage your contacts and keep track of people and businesses you transact with.',
       },
@@ -1562,7 +1731,7 @@ export const en: TranslationKeys = {
       {
         question: 'Is my data stored online?',
         answer:
-          'No, all your data is stored locally on your computer. Nothing is sent to external servers.',
+          'Your financial database is stored locally. Optional sync shares records with paired devices. If you add a TypeSafe key, enabled AI features send limited request data to TypeSafe; the web app uses a Fluxby gateway.',
       },
       {
         question: "How can I change a transaction's category?",
@@ -1577,12 +1746,12 @@ export const en: TranslationKeys = {
       {
         question: 'How do I set a budget?',
         answer:
-          'Go to "Budgets" and click "New Budget". Choose a category, set the amount and select whether the budget is monthly or yearly.',
+          'Go to Budgets and click Add budget. Choose a category and enter a monthly limit, then click Save. You can also enable rollover to carry unused allowance into later months.',
       },
       {
         question: 'Can I add transactions manually?',
         answer:
-          'Currently, transactions are only added via CSV import. Manual entry will be added in a future version.',
+          'Yes. On Transactions, click Add transaction. Choose the type, enter a positive amount and date, and optionally select an account, category and counterparty. Click Add; the app applies the correct sign for the chosen type.',
       },
     ],
   },

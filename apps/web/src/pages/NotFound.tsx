@@ -1,11 +1,12 @@
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
+import { useViewTransitionNavigate } from '@/lib/view-transitions';
 import { Home, ArrowLeft, FileQuestion, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { EmptyState } from '@/components/ui/EmptyState';
 
 export default function NotFound() {
-  const navigate = useNavigate();
+  const navigate = useViewTransitionNavigate();
   const location = useLocation();
   const { t } = useLanguage();
 

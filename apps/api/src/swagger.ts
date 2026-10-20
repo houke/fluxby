@@ -1,4 +1,5 @@
 import swaggerJsdoc from 'swagger-jsdoc';
+import { getApiAccessConfig } from './middleware/api-access.js';
 
 const options: swaggerJsdoc.Options = {
   definition: {
@@ -15,6 +16,13 @@ const options: swaggerJsdoc.Options = {
         description: 'Development server',
       },
     ],
+    components: {
+      securitySchemes: {
+        bearerAuth: { type: 'http', scheme: 'bearer' },
+      },
+    },
+    // Authentication is optional on loopback only; required when API_AUTH_TOKEN is set.
+    security: getApiAccessConfig().token ? [{ bearerAuth: [] }] : [],
     tags: [
       { name: 'Transactions', description: 'Transaction management' },
       { name: 'Categories', description: 'Category management' },

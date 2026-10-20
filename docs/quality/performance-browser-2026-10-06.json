@@ -1,0 +1,360 @@
+{
+  "timestamp": "2026-10-06T05:07:30.427Z",
+  "base": "https://fluxby.local:5177/app/",
+  "browser": "153.0.8010.12",
+  "mode": "development",
+  "isolatedContext": true,
+  "idleWindows": 15,
+  "startup": {
+    "freshToSetupMs": 1366.8,
+    "encryptedToLockMs": 461.8,
+    "unlockToReadyMs": 1142.4
+  },
+  "imports": [
+    {
+      "rows": 1000,
+      "bytes": 147893,
+      "elapsedMs": 1548,
+      "imported": 1000,
+      "skipped": 0,
+      "errors": 0,
+      "integrity": [
+        {
+          "integrity_check": "ok"
+        }
+      ]
+    },
+    {
+      "rows": 10000,
+      "bytes": 1507865,
+      "elapsedMs": 65939,
+      "imported": 10000,
+      "skipped": 0,
+      "errors": 0,
+      "integrity": [
+        {
+          "integrity_check": "ok"
+        }
+      ]
+    }
+  ],
+  "queries": [
+    {
+      "datasetRows": 1000,
+      "pageRows": 100,
+      "samplesMs": [3.9, 4.3, 3.9, 4.2, 4.3]
+    },
+    {
+      "datasetRows": 11000,
+      "pageRows": 100,
+      "samplesMs": [2.9, 3.6, 3.2, 3.4, 3.8]
+    }
+  ],
+  "idle": [
+    {
+      "elapsedSeconds": 20,
+      "sampleSeconds": 20.003,
+      "rendererTaskSeconds": 1.195,
+      "rendererTaskPercent": 5.97,
+      "scriptSeconds": 0.681,
+      "layoutSeconds": 0.001,
+      "jsHeapMB": 54.09,
+      "nodes": 3865,
+      "documents": 1,
+      "frames": 1,
+      "state": "visible",
+      "transactionViewVisible": true
+    },
+    {
+      "elapsedSeconds": 40,
+      "sampleSeconds": 20.004,
+      "rendererTaskSeconds": 0.268,
+      "rendererTaskPercent": 1.34,
+      "scriptSeconds": 0.044,
+      "layoutSeconds": 0,
+      "jsHeapMB": 54.14,
+      "nodes": 3865,
+      "documents": 1,
+      "frames": 1,
+      "state": "visible",
+      "transactionViewVisible": true
+    },
+    {
+      "elapsedSeconds": 60,
+      "sampleSeconds": 20.003,
+      "rendererTaskSeconds": 0.257,
+      "rendererTaskPercent": 1.29,
+      "scriptSeconds": 0.041,
+      "layoutSeconds": 0,
+      "jsHeapMB": 53.6,
+      "nodes": 3865,
+      "documents": 1,
+      "frames": 1,
+      "state": "visible",
+      "transactionViewVisible": true
+    },
+    {
+      "elapsedSeconds": 80,
+      "sampleSeconds": 20.006,
+      "rendererTaskSeconds": 0.277,
+      "rendererTaskPercent": 1.38,
+      "scriptSeconds": 0.042,
+      "layoutSeconds": 0,
+      "jsHeapMB": 53.77,
+      "nodes": 3865,
+      "documents": 1,
+      "frames": 1,
+      "state": "visible",
+      "transactionViewVisible": true
+    },
+    {
+      "elapsedSeconds": 100,
+      "sampleSeconds": 20.005,
+      "rendererTaskSeconds": 0.255,
+      "rendererTaskPercent": 1.27,
+      "scriptSeconds": 0.042,
+      "layoutSeconds": 0,
+      "jsHeapMB": 53.64,
+      "nodes": 3865,
+      "documents": 1,
+      "frames": 1,
+      "state": "visible",
+      "transactionViewVisible": true
+    },
+    {
+      "elapsedSeconds": 120,
+      "sampleSeconds": 20.004,
+      "rendererTaskSeconds": 0.258,
+      "rendererTaskPercent": 1.29,
+      "scriptSeconds": 0.042,
+      "layoutSeconds": 0,
+      "jsHeapMB": 53.68,
+      "nodes": 3865,
+      "documents": 1,
+      "frames": 1,
+      "state": "visible",
+      "transactionViewVisible": true
+    },
+    {
+      "elapsedSeconds": 140,
+      "sampleSeconds": 20.004,
+      "rendererTaskSeconds": 0.257,
+      "rendererTaskPercent": 1.28,
+      "scriptSeconds": 0.042,
+      "layoutSeconds": 0,
+      "jsHeapMB": 53.71,
+      "nodes": 3865,
+      "documents": 1,
+      "frames": 1,
+      "state": "visible",
+      "transactionViewVisible": true
+    },
+    {
+      "elapsedSeconds": 160,
+      "sampleSeconds": 20.003,
+      "rendererTaskSeconds": 0.27,
+      "rendererTaskPercent": 1.35,
+      "scriptSeconds": 0.041,
+      "layoutSeconds": 0,
+      "jsHeapMB": 49.53,
+      "nodes": 3865,
+      "documents": 1,
+      "frames": 1,
+      "state": "visible",
+      "transactionViewVisible": true
+    },
+    {
+      "elapsedSeconds": 180,
+      "sampleSeconds": 20.004,
+      "rendererTaskSeconds": 0.244,
+      "rendererTaskPercent": 1.22,
+      "scriptSeconds": 0.04,
+      "layoutSeconds": 0,
+      "jsHeapMB": 49.57,
+      "nodes": 3865,
+      "documents": 1,
+      "frames": 1,
+      "state": "visible",
+      "transactionViewVisible": true
+    },
+    {
+      "elapsedSeconds": 200,
+      "sampleSeconds": 20.004,
+      "rendererTaskSeconds": 0.251,
+      "rendererTaskPercent": 1.25,
+      "scriptSeconds": 0.041,
+      "layoutSeconds": 0,
+      "jsHeapMB": 49.55,
+      "nodes": 3865,
+      "documents": 1,
+      "frames": 1,
+      "state": "visible",
+      "transactionViewVisible": true
+    },
+    {
+      "elapsedSeconds": 220,
+      "sampleSeconds": 20.003,
+      "rendererTaskSeconds": 0.273,
+      "rendererTaskPercent": 1.37,
+      "scriptSeconds": 0.042,
+      "layoutSeconds": 0,
+      "jsHeapMB": 49.07,
+      "nodes": 3865,
+      "documents": 1,
+      "frames": 1,
+      "state": "visible",
+      "transactionViewVisible": true
+    },
+    {
+      "elapsedSeconds": 240,
+      "sampleSeconds": 20.005,
+      "rendererTaskSeconds": 0.251,
+      "rendererTaskPercent": 1.25,
+      "scriptSeconds": 0.041,
+      "layoutSeconds": 0,
+      "jsHeapMB": 49.11,
+      "nodes": 3865,
+      "documents": 1,
+      "frames": 1,
+      "state": "visible",
+      "transactionViewVisible": true
+    },
+    {
+      "elapsedSeconds": 260,
+      "sampleSeconds": 20.005,
+      "rendererTaskSeconds": 0.253,
+      "rendererTaskPercent": 1.26,
+      "scriptSeconds": 0.041,
+      "layoutSeconds": 0,
+      "jsHeapMB": 49.15,
+      "nodes": 3865,
+      "documents": 1,
+      "frames": 1,
+      "state": "visible",
+      "transactionViewVisible": true
+    },
+    {
+      "elapsedSeconds": 280,
+      "sampleSeconds": 20.004,
+      "rendererTaskSeconds": 0.252,
+      "rendererTaskPercent": 1.26,
+      "scriptSeconds": 0.041,
+      "layoutSeconds": 0,
+      "jsHeapMB": 49.19,
+      "nodes": 3865,
+      "documents": 1,
+      "frames": 1,
+      "state": "visible",
+      "transactionViewVisible": true
+    },
+    {
+      "elapsedSeconds": 300,
+      "sampleSeconds": 20.005,
+      "rendererTaskSeconds": 0.279,
+      "rendererTaskPercent": 1.39,
+      "scriptSeconds": 0.043,
+      "layoutSeconds": 0,
+      "jsHeapMB": 49.09,
+      "nodes": 3865,
+      "documents": 1,
+      "frames": 1,
+      "state": "visible",
+      "transactionViewVisible": true
+    },
+    {
+      "elapsedSeconds": 310,
+      "state": "cdp-freeze-request",
+      "visibilityState": "visible",
+      "visibilityObservation": "before-freeze-request",
+      "sampleSeconds": 10.002,
+      "rendererTaskSeconds": 0.121,
+      "rendererTaskPercent": 1.21,
+      "scriptSeconds": 0.022,
+      "layoutSeconds": 0,
+      "jsHeapMB": 49.28
+    }
+  ],
+  "restore": {
+    "success": true,
+    "before": 11000,
+    "after": 11000,
+    "elapsedMs": 8129,
+    "exportMs": 113,
+    "tables": [
+      "accounts",
+      "address_book",
+      "advanced_category_rules",
+      "budget_income_plans",
+      "budget_months",
+      "budget_preferences",
+      "budgets",
+      "categories",
+      "category_preferences",
+      "category_rules",
+      "contact_ibans",
+      "goal_archive_state",
+      "goal_transaction_links",
+      "household_planning_preferences",
+      "import_batches",
+      "import_profiles",
+      "imports",
+      "monthly_reviews",
+      "name_cleanup_rules",
+      "net_worth_items",
+      "net_worth_snapshots",
+      "payment_provider_rules",
+      "planned_cashflows",
+      "planning_preferences",
+      "profiles",
+      "recurring_pattern_source_decisions",
+      "recurring_patterns",
+      "saved_transaction_views",
+      "savings_contributions",
+      "savings_goals",
+      "shared_iban_merchants",
+      "shared_ibans",
+      "subscription_dismissed_alerts",
+      "transaction_category_decisions",
+      "transaction_links",
+      "transaction_review_decisions",
+      "transactions",
+      "users",
+      "weekly_reviews"
+    ],
+    "integrity": [
+      {
+        "integrity_check": "ok"
+      }
+    ]
+  },
+  "errors": [],
+  "schemaVersion": 23,
+  "databaseSettings": {
+    "cache_size": {
+      "cache_size": -32768
+    },
+    "cache_spill": {
+      "cache_spill": 8019
+    },
+    "page_count": {
+      "page_count": 205
+    },
+    "page_size": {
+      "page_size": 4096
+    },
+    "journal_mode": {
+      "journal_mode": "delete"
+    },
+    "synchronous": {
+      "synchronous": 2
+    }
+  },
+  "storage": {
+    "backend": "opfs",
+    "encrypted": true
+  },
+  "transactionList": {
+    "firstRenderedRowMs": 2112.6,
+    "rowsInDom": 50
+  }
+}

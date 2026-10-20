@@ -33,6 +33,12 @@ The `local` environment includes:
 - `baseUrl`: `http://localhost:3001/api`
 - `profileId`: `1` (default profile)
 
+## Authentication
+
+The server binds to `127.0.0.1` by default. Local requests need no token unless `API_AUTH_TOKEN` is configured. When a token is configured, add `Authorization: Bearer {{apiToken}}` to every request and store `apiToken` as a secret in your private Bruno environment; do not commit it. `X-Profile-ID` only selects a dataset.
+
+Remote access also requires `API_ALLOW_REMOTE=1`, a non-loopback `HOST`, an authentication token of at least 32 characters, and explicitly allowed `CORS_ORIGIN` values. See [API access](../API_ACCESS.md).
+
 ## Adding New Endpoints
 
 When adding a new API endpoint, always create a corresponding Bruno request file:

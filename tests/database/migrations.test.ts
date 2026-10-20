@@ -1,3 +1,4 @@
+import type { AsyncDatabaseConnection } from '@fluxby/database';
 /**
  * Tests for migration system
  * Verifies migration runner handles various scenarios correctly
@@ -67,6 +68,9 @@ function createMockDb() {
     profiles: [],
     recurring_patterns: [],
     recurring_pattern_source_decisions: [],
+    sync_tombstones: [],
+    sync_row_aliases: [],
+    subscription_dismissed_alerts: [],
   };
 
   const tableColumns: Record<string, string[]> = {
@@ -84,6 +88,27 @@ function createMockDb() {
       'status',
       'profile_id',
       'created_at',
+      'updated_at',
+      'is_deleted',
+      'device_id',
+    ],
+    sync_tombstones: [
+      'profile_id',
+      'table_name',
+      'row_id',
+      'row_data',
+      'updated_at',
+      'device_id',
+    ],
+    sync_row_aliases: [
+      'profile_id',
+      'remote_device_id',
+      'table_name',
+      'remote_id',
+      'local_id',
+    ],
+    subscription_dismissed_alerts: [
+      'id',
       'updated_at',
       'is_deleted',
       'device_id',
@@ -136,9 +161,12 @@ function createMockDb() {
       // Simplistic mock for runAsync
       return { changes: 1, lastInsertRowId: 1 };
     }),
-    transactionAsync: vi.fn(async (fn: () => Promise<any>) => {
+    transactionAsync: vi.fn(async function (
+      this: unknown,
+      fn: (connection: AsyncDatabaseConnection) => Promise<any>
+    ) {
       // Transactions just execute the inner function in our mock
-      return await fn();
+      return await fn(this as AsyncDatabaseConnection);
     }),
     queryAsync: vi.fn(
       async <T>(sql: string, params?: unknown[]): Promise<T[]> => {

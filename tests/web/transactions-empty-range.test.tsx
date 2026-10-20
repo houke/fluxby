@@ -1,4 +1,10 @@
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import {
+  cleanup,
+  render,
+  screen,
+  waitFor,
+  fireEvent,
+} from '@testing-library/react';
 /** @vitest-environment jsdom */
 import React from 'react';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
@@ -7,6 +13,7 @@ import { MemoryRouter } from 'react-router-dom';
 import Transactions from '@/pages/Transactions';
 import { api } from '@/lib/api';
 import { ToastProvider } from '@/contexts/ToastContext';
+import { ConfirmProvider } from '@/contexts/ConfirmContext';
 import * as lang from '@/contexts/LanguageContext';
 import { en } from '@/lib/i18n/en';
 import * as filters from '@/contexts/FilterContext';
@@ -25,13 +32,16 @@ describe('Transactions empty state when period has no matches but full data does
     <QueryClientProvider client={queryClient}>
       <ProfileProvider>
         <MemoryRouter>
-          <ToastProvider>{children}</ToastProvider>
+          <ToastProvider>
+            <ConfirmProvider>{children}</ConfirmProvider>
+          </ToastProvider>
         </MemoryRouter>
       </ProfileProvider>
     </QueryClientProvider>
   );
 
   beforeEach(() => {
+    queryClient.clear();
     vi.spyOn(db, 'useDatabase').mockReturnValue({
       db: null,
       isInitialized: true,
@@ -129,6 +139,21 @@ describe('Transactions empty state when period has no matches but full data does
       maxDate: '2025-12-31',
     } as any);
 
+    vi.spyOn(api, 'getTransactionsCountOutsideRange').mockResolvedValue({
+      before: 1,
+      after: 0,
+      total: 1,
+    });
+    vi.spyOn(api, 'getCategories').mockResolvedValue([]);
+    vi.spyOn(api, 'getAccounts').mockResolvedValue([]);
+    vi.spyOn(api, 'getCategoryRules').mockResolvedValue([]);
+    vi.spyOn(api, 'getPaymentProviderRules').mockResolvedValue([]);
+    vi.spyOn(api, 'getAddressBook').mockResolvedValue([]);
+    vi.spyOn(api, 'getCleanupRules').mockResolvedValue([]);
+    vi.spyOn(api, 'getSuggestedContacts').mockResolvedValue([]);
+    vi.spyOn(api, 'getSharedIbans').mockResolvedValue([]);
+    vi.spyOn(api, 'suggestCategory').mockResolvedValue(null);
+
     // Mock the new optimized totals API
     vi.spyOn(api, 'getTransactionTotals' as any).mockResolvedValue({
       income: 0,
@@ -141,8 +166,10 @@ describe('Transactions empty state when period has no matches but full data does
   });
 
   afterEach(() => {
+    cleanup();
     // Restore any globals we replaced in beforeEach
     (global as any).IntersectionObserver = OriginalIntersectionObserver;
+    queryClient.clear();
     vi.restoreAllMocks();
   });
 
@@ -168,5 +195,88 @@ describe('Transactions empty state when period has no matches but full data does
       expect(callArgs[0]).toEqual(new Date('2024-01-01'));
       expect(callArgs[1]).toEqual(new Date('2025-12-31'));
     });
+
+    // The outside-range aggregate supplies the existence check without
+    // materializing the entire matching history a second time.
+    expect(api.getTransactions).toHaveBeenCalled();
+    for (const [transactionFilters] of vi.mocked(api.getTransactions).mock
+      .calls) {
+      expect(transactionFilters?.startDate).toBe('2025-01-01');
+      expect(transactionFilters?.endDate).toBe('2025-01-31');
+    }
+  });
+
+  it('shows the no-match state when no matching transactions exist outside the period', async () => {
+    vi.mocked(api.getTransactionsCountOutsideRange).mockResolvedValue({
+      before: 0,
+      after: 0,
+      total: 0,
+    });
+
+    render(
+      <TestWrapper>
+        <Transactions />
+      </TestWrapper>
+    );
+
+    await screen.findByText(en.transactions.noTransactionsFound);
+    expect(screen.queryByText(en.transactions.viewAllData)).toBeNull();
+  });
+
+  it('only sums recurring history when its row is expanded and does not fetch unused suggestions', async () => {
+    const unseenAmount = vi.fn(() => -1);
+    const transactions = Array.from({ length: 1000 }, (_, index) => ({
+      id: `tx-${index}`,
+      date: '2025-01-15',
+      amount: -1,
+      type: 'expense' as const,
+      description: 'Recurring merchant',
+      merchantName: 'Recurring merchant',
+      opposingAccountName: 'Recurring merchant',
+      opposingAccountIban: 'NL91ABNA0417164300',
+      accountId: 'account-1',
+      categoryId: null,
+      notes: null,
+      paymentMethod: null,
+      rawData: null,
+      importHash: `hash-${index}`,
+      createdAt: '2025-01-15',
+      paymentProvider: null,
+      addressBookId: null,
+    }));
+    Object.defineProperty(transactions[999], 'amount', { get: unseenAmount });
+    vi.mocked(api.getTransactions).mockResolvedValue(transactions);
+    vi.mocked(api.getTransactionTotals).mockResolvedValue({
+      income: 0,
+      expenses: 1000,
+      transferToSavings: 0,
+      transferFromSavings: 0,
+      balance: -1000,
+      count: 1000,
+    });
+
+    const { container } = render(
+      <TestWrapper>
+        <Transactions />
+      </TestWrapper>
+    );
+
+    await screen.findAllByTestId('transaction-checkbox', {}, { timeout: 5000 });
+    // The unseen amount is needed by the one fallback totals calculation;
+    // collapsed rows must not each scan the same 1,000-item merchant history.
+    expect(unseenAmount.mock.calls.length).toBeLessThan(10);
+    expect(api.suggestCategory).not.toHaveBeenCalled();
+
+    const readsBeforeExpansion = unseenAmount.mock.calls.length;
+    const firstRow = container.querySelector(
+      '[data-onboarding="transaction-row"] > div'
+    );
+    if (!firstRow) throw new Error('Missing recurring transaction row');
+    fireEvent.click(firstRow);
+
+    await screen.findByText(en.transactions.recurringHistory);
+    expect(unseenAmount.mock.calls.length).toBeGreaterThan(
+      readsBeforeExpansion
+    );
   });
 });

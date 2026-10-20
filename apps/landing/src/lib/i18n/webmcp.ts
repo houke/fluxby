@@ -61,14 +61,14 @@ export const webMcpNl: LandingWebMcpCopy = {
     stepsTitle: 'Toegang inschakelen',
     steps: [
       'Open Fluxby en ontgrendel je profiel.',
-      'Ga naar Instellingen → App-instellingen → WebMCP voor browserassistenten.',
+      'Ga naar Instellingen → AI & automatisering → WebMCP voor browserassistenten.',
       'Kies Toegang inschakelen. Laat het Fluxby-tabblad open terwijl je de browserassistent gebruikt.',
       'Vraag je assistent om een overzicht, zoekactie of wijziging. Controleer elke bevestiging voor een wijziging.',
       'Kies Toegang uitschakelen zodra je klaar bent.',
     ],
     accessTitle: 'Welke gegevens zijn beschikbaar?',
     access:
-      'De assistent kan het actieve profiel, rekeningen, transacties, analyses, budgetten, abonnementen, categorieën, contacten en importgeschiedenis lezen. Fluxby beperkt transactielijsten tot 100 per aanvraag. Je kunt ook rekeningen, transacties, categorieën en contacten toevoegen, transacties bijwerken en budgetten aanmaken of wijzigen. Een nieuw contact kan met een bestaand contact worden samengevoegd en bijpassende transacties koppelen.',
+      'De assistent kan het actieve profiel, rekeningen, transacties, analyses, budgetten, planning, abonnementen, contacten, importgeschiedenis en opgeslagen transactiefilters lezen. Fluxby beperkt transactielijsten tot 100 per aanvraag. Je kunt ook rekeningen, transacties, categorieën, spaardoelen en contacten toevoegen, transacties bijwerken en budgetten aanmaken of wijzigen. Een nieuw contact kan met een bestaand contact worden samengevoegd en bijpassende transacties koppelen.',
     privacyTitle: 'Privacy en bevestiging',
     privacy:
       'Toegang geldt alleen in deze appsessie. Vergrendelen, privacy-modus, uitschakelen of herladen verwijdert de hulpmiddelen. Iedere wijziging toont een bevestigingsvenster in Fluxby. De browserassistent kan gelezen gegevens verwerken of naar zijn eigen aanbieder sturen; controleer diens privacyvoorwaarden voordat je toegang geeft.',
@@ -92,7 +92,7 @@ export const webMcpNl: LandingWebMcpCopy = {
       'Alle bewerkingen blijven beperkt tot het actieve profiel. Leesresultaten bevatten geen ruwe importdata of importhashes. Transactieverzoeken zijn gepagineerd. Leeshulpmiddelen gebruiken readOnlyHint en untrustedContentHint; schrijfhulpmiddelen gebruiken consequentialHint. Schrijfacties vragen een bevestiging in de app en verversen daarna de weergaven. Een browserassistent kan ontvangen gegevens elders verwerken; Fluxby heeft daar geen controle over.',
     toolsTitle: 'Hulpmiddelen per weergave',
     toolsIntro:
-      'De stabiele namen hieronder zijn de namen die een browserassistent kan ontdekken. Open eerst Instellingen → App-instellingen en schakel WebMCP in.',
+      'De stabiele namen hieronder zijn de namen die een browserassistent kan ontdekken. Open eerst Instellingen → AI & automatisering en schakel WebMCP in.',
     viewHeader: 'Weergave',
     toolsHeader: 'Hulpmiddelen',
     rows: [
@@ -103,6 +103,7 @@ export const webMcpNl: LandingWebMcpCopy = {
       ],
       ['Analytics', 'fluxby_analytics'],
       ['Budgetten', 'fluxby_budgets, fluxby_set_budget'],
+      ['Planning', 'fluxby_planning, fluxby_create_goal'],
       ['Abonnementen', 'fluxby_subscriptions'],
       ['Adresboek', 'fluxby_contacts, fluxby_create_contact'],
       ['Categorieën', 'fluxby_categories, fluxby_create_category'],
@@ -137,6 +138,11 @@ export const webMcpNl: LandingWebMcpCopy = {
       ],
       ['fluxby_categories', 'Geen', 'Lijst categorieën en bestedingen'],
       ['fluxby_budgets', 'month? (JJJJ-MM)', 'Lijst budgetten en voortgang'],
+      [
+        'fluxby_planning',
+        'Geen',
+        'Vrij te besteden, vermogen, spaardoelen en geplande kasstromen',
+      ],
       ['fluxby_subscriptions', 'Geen', 'Terugkerende patronen en statistieken'],
       ['fluxby_contacts', 'limit?, offset?', 'items, limit, offset, total'],
       [
@@ -146,7 +152,7 @@ export const webMcpNl: LandingWebMcpCopy = {
       ],
       [
         'fluxby_create_account',
-        'name, type (checking/savings/credit), iban, bank?, currentBalance?',
+        'name, type, iban?, bank?, currentBalance?',
         'id of cancelled',
       ],
       [
@@ -164,6 +170,11 @@ export const webMcpNl: LandingWebMcpCopy = {
         'fluxby_set_budget',
         'amount, budgetId? of categoryId?',
         'id en created/updated, of cancelled',
+      ],
+      [
+        'fluxby_create_goal',
+        'name, targetAmount, monthlyContribution?, deadline?',
+        'id of cancelled',
       ],
       [
         'fluxby_create_contact',
@@ -204,14 +215,14 @@ export const webMcpEn: LandingWebMcpCopy = {
     stepsTitle: 'Enable access',
     steps: [
       'Open Fluxby and unlock your profile.',
-      'Go to Settings → App settings → WebMCP for browser assistants.',
+      'Go to Settings → AI & automation → WebMCP for browser assistants.',
       'Select Enable access. Keep the Fluxby tab open while using your browser assistant.',
       'Ask your assistant for a summary, search, or change. Review each confirmation for a change.',
       'Select Disable access when you finish.',
     ],
     accessTitle: 'What data is available?',
     access:
-      'The assistant can read the active profile, accounts, transactions, analytics, budgets, subscriptions, categories, contacts, and import history. Fluxby limits transaction lists to 100 per request. It can also add accounts, transactions, categories, and contacts, update transactions, and create or change budgets. Adding a contact may merge a match and link transactions.',
+      'The assistant can read the active profile, accounts, transactions, analytics, budgets, planning, subscriptions, contacts, import history, and saved transaction filters. Fluxby limits transaction lists to 100 per request. It can also add accounts, transactions, categories, savings goals, and contacts, update transactions, and create or change budgets. Adding a contact may merge a match and link transactions.',
     privacyTitle: 'Privacy and confirmation',
     privacy:
       'Access lasts only for this app session. Locking, privacy mode, disabling access, or reloading removes the tools. Every change opens a confirmation dialog in Fluxby. Your browser assistant may process or send read data to its own provider; review its privacy terms before granting access.',
@@ -235,7 +246,7 @@ export const webMcpEn: LandingWebMcpCopy = {
       'All operations are scoped to the active profile. Read results exclude raw import data and import hashes. Transaction requests are paginated. Read tools use readOnlyHint and untrustedContentHint; write tools use consequentialHint. Writes require an in-app confirmation and then refresh the views. A browser assistant may process received data elsewhere; Fluxby cannot control that.',
     toolsTitle: 'Tools by view',
     toolsIntro:
-      'The stable names below are what a browser assistant can discover. First open Settings → App settings and enable WebMCP.',
+      'The stable names below are what a browser assistant can discover. First open Settings → AI & automation and enable WebMCP.',
     viewHeader: 'View',
     toolsHeader: 'Tools',
     rows: [
@@ -246,6 +257,7 @@ export const webMcpEn: LandingWebMcpCopy = {
       ],
       ['Analytics', 'fluxby_analytics'],
       ['Budgets', 'fluxby_budgets, fluxby_set_budget'],
+      ['Planning', 'fluxby_planning, fluxby_create_goal'],
       ['Subscriptions', 'fluxby_subscriptions'],
       ['Address book', 'fluxby_contacts, fluxby_create_contact'],
       ['Categories', 'fluxby_categories, fluxby_create_category'],
@@ -277,12 +289,17 @@ export const webMcpEn: LandingWebMcpCopy = {
       ],
       ['fluxby_categories', 'None', 'Categories and spending'],
       ['fluxby_budgets', 'month? (YYYY-MM)', 'Budgets and progress'],
+      [
+        'fluxby_planning',
+        'None',
+        'Safe to spend, net worth, goals, and planned cashflows',
+      ],
       ['fluxby_subscriptions', 'None', 'Recurring patterns and statistics'],
       ['fluxby_contacts', 'limit?, offset?', 'items, limit, offset, total'],
       ['fluxby_imports', 'None', 'Recent imports with skipped-row counts'],
       [
         'fluxby_create_account',
-        'name, type (checking/savings/credit), iban, bank?, currentBalance?',
+        'name, type, iban?, bank?, currentBalance?',
         'id or cancelled',
       ],
       [
@@ -300,6 +317,11 @@ export const webMcpEn: LandingWebMcpCopy = {
         'fluxby_set_budget',
         'amount, budgetId? or categoryId?',
         'id and created/updated, or cancelled',
+      ],
+      [
+        'fluxby_create_goal',
+        'name, targetAmount, monthlyContribution?, deadline?',
+        'id or cancelled',
       ],
       [
         'fluxby_create_contact',

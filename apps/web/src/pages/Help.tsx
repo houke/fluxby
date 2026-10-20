@@ -123,6 +123,32 @@ export default function Help() {
       </div>
 
       {/* FAQ */}
+      <Card className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'>
+        <CardHeader className='px-3 py-3 sm:px-6 sm:py-4'>
+          <CardTitle className='text-base sm:text-lg'>
+            {t.planning.helpTitle}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className='space-y-4 px-3 pt-0 pb-3 text-sm text-muted-foreground sm:px-6 sm:pb-6'>
+          <p>{t.planning.helpGoals}</p>
+          <p>{t.planning.helpForecast}</p>
+          <p>{t.planning.helpNetWorth}</p>
+          <p>{t.planning.helpReview}</p>
+        </CardContent>
+      </Card>
+
+      <Card className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'>
+        <CardHeader className='px-3 py-3 sm:px-6 sm:py-4'>
+          <CardTitle className='text-base sm:text-lg'>
+            {t.settings.dataManagement.title}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className='space-y-4 px-3 pt-0 pb-3 text-sm text-muted-foreground sm:px-6 sm:pb-6'>
+          <p>{t.settings.dataManagement.backupHealthHelp}</p>
+          <p>{t.settings.dataManagement.restoreHelp}</p>
+        </CardContent>
+      </Card>
+
       <div className=''>
         <Card
           className='rounded-none border-x-0 shadow-none sm:rounded-2xl sm:border-x sm:shadow-sm'
