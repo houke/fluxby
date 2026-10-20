@@ -35,6 +35,12 @@ test('primary pages expose named controls and readable text', async ({
     }
     await destination.click();
     await page.waitForTimeout(700); // Charts and route enter transitions settle before contrast sampling.
+    // Nav links animate colors (transition-colors); a slow runner can sample the
+    // previous active background mid-fade and report a false contrast failure.
+    await page.addStyleTag({
+      content:
+        '*, *::before, *::after { transition: none !important; animation: none !important; }',
+    });
     const result = await new AxeBuilder({ page })
       .withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'])
       .analyze();

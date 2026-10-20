@@ -24,6 +24,10 @@ test.describe('Recurring Transaction Expansion', () => {
 
     console.log('Testing with merchant:', merchantName);
 
+    // The selection toolbar is fixed to the bottom of the viewport and would
+    // cover a row near the fold, so keep the row at the top while toggling.
+    await recurringRow.evaluate((el) => el.scrollIntoView({ block: 'start' }));
+
     // Test 1: Click checkbox should toggle selection
     const checkbox = recurringRow.locator(
       '[data-testid="transaction-checkbox"]'
@@ -119,6 +123,9 @@ test.describe('Recurring Transaction Expansion', () => {
     const thirdCheckbox = rows
       .nth(2)
       .locator('[data-testid="transaction-checkbox"]');
+
+    // Keep the rows above the fixed selection toolbar that appears on selection.
+    await rows.nth(0).evaluate((el) => el.scrollIntoView({ block: 'start' }));
 
     // Hover over first row to make checkbox visible
     await rows.nth(0).hover();

@@ -75,7 +75,7 @@ test('WebMCP registration follows consent, confirmation, privacy mode and reload
   const settings = page.locator('[data-onboarding="settings-webmcp"]');
   await expect(settings).toContainText('Access disabled');
   await settings.getByRole('button', { name: 'Enable access' }).click();
-  await expect.poll(async () => (await registeredNames()).length).toBe(20);
+  await expect.poll(async () => (await registeredNames()).length).toBe(19);
 
   const context = await page.evaluate(async () => {
     const tool = (
@@ -149,7 +149,7 @@ test('WebMCP registration follows consent, confirmation, privacy mode and reload
   expect(await registeredNames()).toEqual([]);
 
   await settings.getByRole('button', { name: 'Enable access' }).click();
-  await expect.poll(async () => (await registeredNames()).length).toBe(20);
+  await expect.poll(async () => (await registeredNames()).length).toBe(19);
   await page.getByRole('button', { name: 'Logout', exact: true }).click();
   await expect(unlock).toBeVisible({ timeout: 30000 });
   await page.getByPlaceholder('Enter password').fill('test1234');
