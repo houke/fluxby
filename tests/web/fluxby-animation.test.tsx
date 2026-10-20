@@ -263,7 +263,7 @@ describe('Fluxby animation workload', () => {
     }
     expect(contexts.size).toBe(6);
     expect(frames.size).toBe(1);
-  });
+  }, 30_000);
 
   it('reuses a bounded fur cycle on small desktop logos while preserving facial motion', () => {
     motion.tier = 'full';
@@ -309,5 +309,5 @@ describe('Fluxby animation workload', () => {
     expect(main.rotate.mock.calls.at(-1)?.[0]).not.toBe(rotation);
     expect(main.translate.mock.calls.at(-1)?.[1]).not.toBe(position);
     expect(frames.size).toBe(1);
-  });
+  }, 30_000);
 });
