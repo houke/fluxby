@@ -38,7 +38,7 @@ for (const language of ['nl', 'en'] as const) {
       await unlock.click();
     }
     await expect(dashboard).toBeVisible({ timeout: 60000 });
-    await dismissOnboardingTour(page);
+    await dismissOnboardingTour(page, { waitForWelcome: true });
     await page
       .getByRole('link', {
         name: nl ? 'Transacties' : 'Transactions',

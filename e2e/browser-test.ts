@@ -65,8 +65,13 @@ export const test = base.extend({
       try {
         const target = baseURL ?? page.url();
         // Destroy the app page first to release native file/stream handles.
-        await page.close();
-        if (target.startsWith('http')) {
+        await page.close().catch(() => undefined);
+        // WebKit can abort its MiniBrowser process after a page closes. Its
+        // per-test OPFS directory cannot be removed through a disconnected context.
+        if (
+          persistentContext.browser()?.isConnected() &&
+          target.startsWith('http')
+        ) {
           const cleanup = await persistentContext.newPage();
           const url = new URL('/__playwright_opfs_cleanup__', target).href;
           await cleanup.route(url, (route) =>
@@ -85,8 +90,14 @@ export const test = base.extend({
             }
           }, storageRoot);
         }
+      } catch (error) {
+        // A disconnect between the liveness check and newPage is also benign;
+        // report cleanup failures if WebKit is still connected.
+        if (persistentContext.browser()?.isConnected()) {
+          console.warn('Failed to clean up WebKit OPFS test storage:', error);
+        }
       } finally {
-        await persistentContext.close();
+        await persistentContext.close().catch(() => undefined);
         await rm(profile, { recursive: true, force: true });
       }
     }

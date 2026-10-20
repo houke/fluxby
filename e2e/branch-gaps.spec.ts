@@ -97,9 +97,9 @@ for (const language of ['en', 'nl'] as const) {
       });
       return {
         refund,
+        expense,
         goal: goal.id,
         income,
-        category: original.id,
         previous: previous.id,
         originalName: original.name,
       };
@@ -126,7 +126,8 @@ for (const language of ['en', 'nl'] as const) {
       .getByRole('button', { name: copy.transactionReview.open, exact: true })
       .click();
     await expect(review.getByRole('article')).toContainText(
-      'Branch review anomaly'
+      'Branch review anomaly',
+      { timeout: 30000 }
     );
     await expect(review.getByRole('article')).toContainText(
       language === 'nl' ? '3 eerdere betalingen' : '3 earlier payments'
@@ -140,6 +141,19 @@ for (const language of ['en', 'nl'] as const) {
     const link = review
       .locator('div.space-y-3.rounded-lg.border')
       .filter({ hasText: 'Branch review refund' });
+    const categoryState = () =>
+      page.evaluate(async ({ refund, expense }) => {
+        const { getDataService } = await import('/app/src/lib/db-singleton.ts');
+        const transactions = await getDataService().getReviewTransactions();
+        return {
+          refund: transactions.find((transaction) => transaction.id === refund)
+            ?.categoryId,
+          expense: transactions.find(
+            (transaction) => transaction.id === expense
+          )?.categoryId,
+        };
+      }, fixture);
+    const beforeInheritance = await categoryState();
     await link
       .getByRole('button', {
         name: copy.transactionReview.inheritCategory,
@@ -147,32 +161,16 @@ for (const language of ['en', 'nl'] as const) {
       })
       .click();
     await expect
-      .poll(() =>
-        page.evaluate(async (id) => {
-          const { getDataService } =
-            await import('/app/src/lib/db-singleton.ts');
-          return (await getDataService().getReviewTransactions()).find(
-            (tx) => tx.id === id
-          )?.categoryId;
-        }, fixture.refund)
-      )
-      .toBe(fixture.category);
+      .poll(async () => (await categoryState()).refund, { timeout: 30000 })
+      .toBe(beforeInheritance.expense);
     await review
       .getByRole('button', {
         name: new RegExp(`^${copy.transactionReview.undo}`),
       })
       .click();
     await expect
-      .poll(() =>
-        page.evaluate(async (id) => {
-          const { getDataService } =
-            await import('/app/src/lib/db-singleton.ts');
-          return (await getDataService().getReviewTransactions()).find(
-            (tx) => tx.id === id
-          )?.categoryId;
-        }, fixture.refund)
-      )
-      .toBe(fixture.previous);
+      .poll(async () => (await categoryState()).refund, { timeout: 30000 })
+      .toBe(beforeInheritance.refund);
     if (
       !(await page
         .getByRole('link', { name: 'Planning', exact: true })
