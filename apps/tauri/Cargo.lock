@@ -470,7 +470,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d045de693cb712d0b22c6a64be5b953f67b3ce00ab5ad3dd5d8b441886ab8e1a"
 dependencies = [
  "quote",
- "syn 2.0.117",
+ "syn 3.0.2",
 ]
 
 [[package]]
@@ -3590,9 +3590,9 @@ dependencies = [
 
 [[package]]
 name = "tauri-plugin-shell"
-version = "2.5.0"
+version = "2.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8567d42b2c7264355daa1df415ec77f52aa42e885924c86a969be2e920e05521"
+checksum = "7375b25f72f70f6168f27f1ba3a413e30eaa0a2098cff53a4046ebfe9e2f142d"
 dependencies = [
  "encoding_rs",
  "libc",
