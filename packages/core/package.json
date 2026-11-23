@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "@fluxby/shared": "*",
-    "papaparse": "^5.7.0",
+    "papaparse": "^5.7.1",
     "peerjs": "^1.5.4"
   },
   "devDependencies": {
